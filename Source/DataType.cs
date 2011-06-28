@@ -128,27 +128,62 @@ namespace LinqToDB
 		/// </summary>
 		SmallMoney,
 
+		/// <summary>
+		/// A type representing a date value.
+		/// </summary>
+		Date,
+
+		/// <summary>
+		/// A type representing a time value.
+		/// </summary>
+		Time,
+
+		/// <summary>
+		/// Date and time data ranging in value from January 1, 1753 to December 31, 9999 to an accuracy of 3.33 milliseconds.
+		/// </summary>
+		DateTime,
+
+		/// <summary>
+		/// Date and time data.
+		/// Date value range is from January 1,1 AD through December 31, 9999 AD.
+		/// Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
+		/// </summary>
+		DateTime2,
+
+		/// <summary>
+		/// Date and time data ranging in value from January 1, 1900 to June 6, 2079 to an accuracy of one minute.
+		/// </summary>
+		SmallDateTime,
+
+		/// <summary>
+		/// Date and time data with time zone awareness.
+		/// Date value range is from January 1,1 AD through December 31, 9999 AD.
+		/// Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
+		/// Time zone value range is -14:00 through +14:00.
+		/// </summary>
+		DateTimeOffset,
+
+		/// <summary>
+		/// Array of type Byte.
+		/// Automatically generated binary numbers, which are guaranteed to be unique within a database.
+		/// timestamp is used typically as a mechanism for version-stamping table rows. The storage size is 8 bytes.
+		/// </summary>
+		Timestamp,
+
+		/// <summary>
+		/// An XML value. Obtain the XML as a string using the GetValue method or Value property,
+		/// or as an XmlReader by calling the CreateReader method.
+		/// </summary>
+		Xml,
+
+		/// <summary>
+		/// A general type representing any reference or value type not explicitly represented by another DataType value.
+		/// </summary>
+		Variant,
 
 	/*
-	DateTime	 DateTime . Date and time data ranging in value from January 1, 1753 to December 31, 9999 to an accuracy of 3.33 milliseconds.
-	SmallDateTime	 DateTime . Date and time data ranging in value from January 1, 1900 to June 6, 2079 to an accuracy of one minute.
-	Timestamp	 Array of type Byte. Automatically generated binary numbers, which are guaranteed to be unique within a database. timestamp is used typically as a mechanism for version-stamping table rows. The storage size is 8 bytes.
-	Variant	 Object . A special data type that can contain numeric, string, binary, or date data as well as the SQL Server values Empty and Null, which is assumed if no other type is declared.
-	Xml	An XML value. Obtain the XML as a string using the GetValue method or Value property, or as an XmlReader by calling the CreateReader method.
 	Udt	A SQL Server 2005 user-defined type (UDT).
 	Structured	A special data type for specifying structured data contained in table-valued parameters.
-	Date	Date data ranging in value from January 1,1 AD through December 31, 9999 AD.
-	Time	Time data based on a 24-hour clock. Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds. Corresponds to a SQL Server time value.
-	DateTime2	Date and time data. Date value range is from January 1,1 AD through December 31, 9999 AD. Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
-	DateTimeOffset	Date and time data with time zone awareness. Date value range is from January 1,1 AD through December 31, 9999 AD. Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds. Time zone value range is -14:00 through +14:00.
-
-	Date	A type representing a date value.
-	DateTime	A type representing a date and time value.
-	Object	A general type representing any reference or value type not explicitly represented by another DbType value.
-	Time	A type representing a SQL Server DateTime value. If you want to use a SQL Server time value, use Time.
-	VarNumeric	A variable-length numeric value.
-	Xml	A parsed representation of an XML document or fragment.
-	DateTime2	Date and time data. Date value range is from January 1,1 AD through December 31, 9999 AD. Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
-	DateTimeOffset	Date and time data with time zone awareness. Date value range is from January 1,1 AD through December 31, 9999 AD. Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds. Time zone value range is -14:00 through +14:00.		 */
+	 */
 	}
 }
