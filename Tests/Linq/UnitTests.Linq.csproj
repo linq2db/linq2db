@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{07997A18-86D3-47AC-A514-AB1B03E6AEC8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Data.Linq</RootNamespace>
+    <AssemblyName>UnitTests.Linq</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;FW4</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug FW 3.5|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug FW 3.5\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\DebugMono\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU'">
+    <OutputPath>bin\ReleaseMono\</OutputPath>
+    <DefineConstants>TRACE;FW4</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\UnitTests.Linq.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Accessibility" />
+    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=2.6.5.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.2.6.5\lib\net40\FirebirdSql.Data.FirebirdClient.dll</HintPath>
+    </Reference>
+    <Reference Include="IBM.Data.DB2, Version=9.0.0.2, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
+    </Reference>
+    <Reference Include="IBM.Data.Informix, Version=3.0.0.2, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.0.11\lib\Net40\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="mysql.data, Version=6.4.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\MySql.Data.6.4.4\lib\net40\mysql.data.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql, Version=2.0.11.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Npgsql.2.0.11\lib\Net40\Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.5.0.9122, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Tools\NUnit\framework\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Oracle.DataAccess, Version=2.102.4.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Sybase.AdoNet2.AseClient, Version=1.15.192.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet2.AseClient.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.Services" />
+    <Reference Include="System.Data.SQLite, Version=1.0.77.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\System.Data.SQLite.1.0.77.0\lib\net40\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.77.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\System.Data.SQLite.1.0.77.0\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BatchTest.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="ConvertTest.cs" />
+    <Compile Include="CompileTest.cs" />
+    <Compile Include="ComplexTest.cs" />
+    <Compile Include="Association.cs" />
+    <Compile Include="ConvertExpression.cs" />
+    <Compile Include="ConcatUnionTest.cs" />
+    <Compile Include="MultipleQuery.cs" />
+    <Compile Include="CountTest.cs" />
+    <Compile Include="DataContextTest.cs" />
+    <Compile Include="DataServiceTest.cs" />
+    <Compile Include="Exceptions\Common.cs" />
+    <Compile Include="Exceptions\Aggregation.cs" />
+    <Compile Include="Exceptions\DmlTest.cs" />
+    <Compile Include="ExtensionTests.cs" />
+    <Compile Include="GenerateTest.cs" />
+    <Compile Include="IdlTest.cs" />
+    <Compile Include="L2SAttributes.cs" />
+    <Compile Include="ParserTest.cs" />
+    <Compile Include="Providers.cs" />
+    <Compile Include="ProviderSpecific\PostgreSQL.cs" />
+    <Compile Include="ProviderSpecific\Firebird.cs" />
+    <Compile Include="ProviderSpecific\MySqlSprocParameterPrefixTests.cs" />
+    <Compile Include="ProviderSpecific\Oracle.cs" />
+    <Compile Include="TableFunctionTest.cs" />
+    <Compile Include="VisualBasicTest.cs" />
+    <Compile Include="DmlTest.cs" />
+    <Compile Include="ExpressionsTest.cs" />
+    <Compile Include="MathFunctions.cs" />
+    <Compile Include="Exceptions\Inheritance.cs" />
+    <Compile Include="Inheritance.cs" />
+    <Compile Include="ProviderSpecific\Access.cs" />
+    <Compile Include="ProviderSpecific\MsSql2008s.cs" />
+    <Compile Include="ProviderSpecific\SqlCe.cs" />
+    <Compile Include="SetTest.cs" />
+    <Compile Include="SubQuery.cs" />
+    <Compile Include="Types.cs" />
+    <Compile Include="Exceptions\Mapping.cs" />
+    <Compile Include="Functions.cs" />
+    <Compile Include="Distinct.cs" />
+    <Compile Include="ElementOperationTest.cs" />
+    <Compile Include="Exceptions\ElementOperationTest.cs" />
+    <Compile Include="Mapping.cs" />
+    <Compile Include="TakeSkipTest.cs" />
+    <Compile Include="OrderByTest.cs" />
+    <Compile Include="CreateData.cs" />
+    <Compile Include="GroupByTest.cs" />
+    <Compile Include="Exceptions\JoinTest.cs" />
+    <Compile Include="JoinTest.cs" />
+    <Compile Include="DateTimeFunctions.cs" />
+    <Compile Include="SelectManyTest.cs" />
+    <Compile Include="StringFunctions.cs" />
+    <Compile Include="SelectTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectScalar.cs" />
+    <Compile Include="TestBase.cs" />
+    <Compile Include="WhereTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Data\BLToolkitData.sqlite">
+      <Link>BLToolkitData.sqlite</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.DB2.4.csproj">
+      <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
+      <Name>LinqToDB.Data.DataProvider.DB2.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.Firebird.4.csproj">
+      <Project>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</Project>
+      <Name>LinqToDB.Data.DataProvider.Firebird.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.Informix.4.csproj">
+      <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
+      <Name>LinqToDB.Data.DataProvider.Informix.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.MySql.4.csproj">
+      <Project>{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}</Project>
+      <Name>LinqToDB.Data.DataProvider.MySql.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.Oracle.4.csproj">
+      <Project>{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}</Project>
+      <Name>LinqToDB.Data.DataProvider.Oracle.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.PostgreSQL.4.csproj">
+      <Project>{5A556D57-0D68-433B-AD78-02849583582B}</Project>
+      <Name>LinqToDB.Data.DataProvider.PostgreSQL.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.SqlCe.4.csproj">
+      <Project>{85E90F57-8DE1-4912-8414-28578F4D71CD}</Project>
+      <Name>LinqToDB.Data.DataProvider.SqlCe.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.SQLite.4.csproj">
+      <Project>{3E414663-B673-47A8-AB59-0E08FE43DA86}</Project>
+      <Name>LinqToDB.Data.DataProvider.SQLite.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\LinqToDB.Data.DataProvider.Sybase.4.csproj">
+      <Project>{6CD8CC3D-643D-4D09-8660-A26085C44FBC}</Project>
+      <Name>LinqToDB.Data.DataProvider.Sybase.4</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Source\linq2db.csproj">
+      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
+      <Name>linq2db</Name>
+    </ProjectReference>
+    <ProjectReference Include="UnitTests.Linq.Interface.csproj">
+      <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
+      <Name>UnitTests.Linq.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="UnitTests.Linq.VisualBasic.vbproj">
+      <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
+      <Name>UnitTests.Linq.VisualBasic</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.SQL.Server.Compact.3.5">
+      <Visible>False</Visible>
+      <ProductName>SQL Server Compact 3.5 SP2</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Data\BLToolkitData.mdb">
+      <Link>BLToolkitData.mdb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Data\BLToolkitData.sdf">
+      <Link>BLToolkitData.sdf</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="DbManager_ConnectionTypeMismatch" xml:space="preserve">
+    <value>The connection does not match the data provider type.</value>
+  </data>
+  <data name="DbManager_UnknownDataProvider" xml:space="preserve">
+    <value>A suitable data provider is not available for configuration '{0}'.</value>
+  </data>
+  <data name="DbManager_UnknownConfiguration" xml:space="preserve">
+    <value>The '{0}' key does not exist in the configuration file.</value>
+  </data>
+  <data name="DbManager_UnknownConnectionType" xml:space="preserve">
+    <value>The '{0}' type of the connection could not be recognized.</value>
+  </data>
+  <data name="DbManager_NotDbDataParameter" xml:space="preserve">
+    <value>Only objects of type IDbDataParameter or arrays of IDbDataParameter are supported</value>
+  </data>
+  <data name="DbManager_MismatchParameterCount" xml:space="preserve">
+    <value>Parameter count does not match Parameter Value count.</value>
+  </data>
+  <data name="DbManager_InvalidDataProviderName" xml:space="preserve">
+    <value>dataProvider.Name must be a valid string</value>
+  </data>
+  <data name="DbManager_InvalidDataProviderProviderName" xml:space="preserve">
+    <value>dataProvider.ProviderName must be a valid string</value>
+  </data>
+  <data name="DbManager_InvalidDataProviderConnectionType" xml:space="preserve">
+    <value>dataProvider.ConnectionType must be a valid connection type</value>
+  </data>
+  <data name="DbManager_InvalidProviderName" xml:space="preserve">
+    <value>providerName must be a valid string</value>
+  </data>
+  <data name="DbManager_CannotUpdateNullDataset" xml:space="preserve">
+    <value>DataSet must be initialized before calling Update routine. Cannot update database from a null dataset.</value>
+  </data>
+  <data name="DbManager_CannotUpdateNullDataTable" xml:space="preserve">
+    <value>DataTable must be initialized before calling Update routine. Cannot update database from a null data table.</value>
+  </data>
+  <data name="EmitHelper_NotExpectedType" xml:space="preserve">
+    <value>Type '{0}' is not expected.</value>
+  </data>
+  <data name="EmitHelper_NoSuchMethod" xml:space="preserve">
+    <value>Failed to query type '{0}' for method '{1}'.</value>
+  </data>
+  <data name="Convert_InvalidCast" xml:space="preserve">
+    <value>Invalid cast from {0} to {1}</value>
+  </data>
+  <data name="TypeBuilder_CannotGetGetter" xml:space="preserve">
+    <value>The '{0}' type does not have appropriate getter. See '{1}' member '{2}' of '{3}' type.</value>
+  </data>
+  <data name="TypeBuilder_CannotGetSetter" xml:space="preserve">
+    <value>The '{0}' type does not have appropriate setter. See '{1}' member '{2}' of '{3}' type.</value>
+  </data>
+  <data name="TypeBuilder_UnknownParameterType" xml:space="preserve">
+    <value>The method '{0}' of '{1}' has parameter '{2}' wich can't be handled. Please specify attrbutes [Parent] or [PropertyInfo] to get access to them.</value>
+  </data>
+  <data name="TypeBuilder_NoDefaultCtor" xml:space="preserve">
+    <value>Could not build the '{0}' type: default constructor not found.</value>
+  </data>
+  <data name="TypeBuilder_PropertyTypeHasNoPublicDefaultCtor" xml:space="preserve">
+    <value>Could not build the '{0}' property of the '{1}' type: type '{2}' has to have public default constructor.</value>
+  </data>
+  <data name="TypeBuilder_PropertyTypeHasNoPublicCtor" xml:space="preserve">
+    <value>Could not build the '{0}' property of the '{1}' type: type '{2}' has to have public constructor.</value>
+  </data>
+  <data name="TypeBuilder_PropertyTypeHasNoCtorWithParamType" xml:space="preserve">
+    <value>Could not build the '{0}' property of the '{1}' type: type '{2}' has to have constructor taking type '{3}'.</value>
+  </data>
+  <data name="TypeBuilder_PublicMethodMustBeImplemented" xml:space="preserve">
+    <value>Type '{0}' must implement required public method '{1}'</value>
+  </data>
+  <data name="TypeBuilder_PublicMethodNotImplemented" xml:space="preserve">
+    <value>Type '{0}' does not implement public method '{1}'</value>
+  </data>
+  <data name="DuckTyping_InterfaceMustBePublic" xml:space="preserve">
+    <value>The interface must be public.</value>
+  </data>
+  <data name="DuckTyping_InterfaceTypeMustBeAnInterface" xml:space="preserve">
+    <value>'interfaceType' must be an interface.</value>
+  </data>
+  <data name="DuckTyping_NotASubtypeOf" xml:space="preserve">
+    <value>'{0}' is not a subtype of '{1}'.</value>
+  </data>
+  <data name="DuckTyping_InvalidNumberOfObjs" xml:space="preserve">
+    <value>Invalid number of 'baseObjectTypes' or 'objs'.</value>
+  </data>
+  <data name="MapIndex_EmptyNames" xml:space="preserve">
+    <value>At least one field name must be specified</value>
+  </data>
+  <data name="MapIndex_EmptyIndices" xml:space="preserve">
+    <value>At least one field index must be specified</value>
+  </data>
+  <data name="MapIndex_EmptyFields" xml:space="preserve">
+    <value>At least one field name or index must be specified</value>
+  </data>
+  <data name="MapIndex_BadField" xml:space="preserve">
+    <value>Type '{0}' does not contain field '{1}'.</value>
+  </data>
+  <data name="MappingSchema_IncompatibleArrayTypes" xml:space="preserve">
+    <value>Can not convert array of type '{0}' to array of '{1}'.</value>
+  </data>
+  <data name="AsyncAspectBuilder_NoTargetMethod" xml:space="preserve">
+    <value>Can not figure out the target method for the method '{0}.{1}'.</value>
+  </data>
+  <data name="OverloadAspectBuilder_NoOverloadedMethod" xml:space="preserve">
+    <value>Can not figure out the overloaded method for the method '{0}.{1}'.</value>
+  </data>
+  <data name="DbManager_MoreThenOneDefaultProvider" xml:space="preserve">
+    <value>Both `{0}' and `{1}' data providers are default</value>
+  </data>
+  <data name="TypeFactory_BuildFailed" xml:space="preserve">
+    <value>Could not build the '{0}' type.</value>
+  </data>
+  <data name="AbstractClassBuilder_TypeIsNotAnInterface" xml:space="preserve">
+    <value>The '{0}' must be an interface.</value>
+  </data>
+  <data name="DataAccessor_UnknownIndex" xml:space="preserve">
+    <value>Index is not defined for the method '{0}.{1}'.</value>
+  </data>
+  <data name="DataAccessor_InvalidKeyType" xml:space="preserve">
+    <value>Key type for the method '{0}.{1}' can be of type object or CompoundValue.</value>
+  </data>
+  <data name="DataAccessot_ParameterNotFound" xml:space="preserve">
+    <value>No such parameter: '{0}'</value>
+  </data>
+  <data name="DataAccessor_IndexIsComplex" xml:space="preserve">
+    <value>Index has more then one field for the method '{0}.{1}'. Use CompoundValue as the Key type</value>
+  </data>
+  <data name="DataAccessorBuilder_BadListItemType" xml:space="preserve">
+    <value>Can not determine object type for the method '{0}.{1}'</value>
+  </data>
+  <data name="DataAccessorBuilder_BadKeyType" xml:space="preserve">
+    <value>Key type for the method '{0}.{1}' can be of type object, CompoundValue, or a scalar type.</value>
+  </data>
+  <data name="DataAccessorBuilder_ScalarFieldNameMissing" xml:space="preserve">
+    <value>Scalar field name is not defined for the method '{0}.{1}'.</value>
+  </data>
+  <data name="DataAccessorBuilderTooManyDestinations" xml:space="preserve">
+    <value>More then one parameter is marked as destination</value>
+  </data>
+  <data name="DataAccessorBuilder_DataSetTableMustBeByName" xml:space="preserve">
+    <value>DataSetTable attribute for method '{0}.{1}' may not be an index</value>
+  </data>
+  <data name="DataAccessorBuilder_CantExecuteNonQueryToDestination" xml:space="preserve">
+    <value>ExecuteNonQuery does not support the Destination attribute</value>
+  </data>
+  <data name="DataAccessorBuilder_ScalarDestinationIsNotByRef" xml:space="preserve">
+    <value>ExecuteScalar destination must be an out or a ref parameter.</value>
+  </data>
+  <data name="DataAccessorBuilder_IncompatibleDestinationType" xml:space="preserve">
+    <value>The return type '{0}' of the method '{1}' is incompatible with the destination parameter type '{2}'.</value>
+  </data>
+  <data name="DataAccessorBuilder_CantCreateTypeInstance" xml:space="preserve">
+    <value>Cannot create an instance of the type '{0}'</value>
+  </data>
+  <data name="DataAccessorBuilder_EqualsMethodIsNotPublic" xml:space="preserve">
+    <value>The type '{0}' does not have 'Equals' method</value>
+  </data>
+  <data name="CacheAttribute_ParentTypeConstraintViolated" xml:space="preserve">
+    <value>Parameter 'cacheAspectType' must be of CacheAspect type</value>
+  </data>
+  <data name="InterceptCallInfo_CallMethodInfoIsNotMutable" xml:space="preserve">
+    <value>MethodInfo can not be changed.</value>
+  </data>
+  <data name="NameOrIndexParameter_BadName" xml:space="preserve">
+    <value>Name must be a valid string.</value>
+  </data>
+  <data name="NameOrIndexParameter_BadIndex" xml:space="preserve">
+    <value>The index parameter must be greater or equal to zero.</value>
+  </data>
+  <data name="DataAccessorBase_NoDbManager" xml:space="preserve">
+    <value>DbManager object is not provided.</value>
+  </data>
+  <data name="TypeBuilder_GenericShouldBeSingleTyped" xml:space="preserve">
+    <value>Could not build the '{0}' property of the '{1}' type: generic type '{2}' and it's generic parameter types should have only one parameter type.</value>
+  </data>
+</root>
