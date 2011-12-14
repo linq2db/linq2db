@@ -27,18 +27,6 @@ namespace LinqToDB.Data.Sql
 			_valueConverter = valueConverter;
 		}
 
-		[Obsolete]
-		public SqlParameter(string name, object value)
-			: this(value == null ? null : value.GetType(), name, value, (MappingSchema)null)
-		{
-		}
-
-		[Obsolete]
-		public SqlParameter(string name, object value, Converter<object,object> valueConverter)
-			: this(value == null ? null : value.GetType(), name, value, valueConverter)
-		{
-		}
-
 		public string Name             { get; set; }
 		public Type   SystemType       { get; set; }
 		public bool   IsQueryParameter { get; set; }

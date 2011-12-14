@@ -7,18 +7,6 @@ namespace LinqToDB.Data.Sql
 {
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
-		[Obsolete]
-		public SqlFunction(string name, params ISqlExpression[] parameters)
-			: this(null, name, Sql.Precedence.Primary, parameters)
-		{
-		}
-
-		[Obsolete]
-		public SqlFunction(string name, int precedence, params ISqlExpression[] parameters)
-			: this(null, name, precedence, parameters)
-		{
-		}
-
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, Sql.Precedence.Primary, parameters)
 		{
@@ -66,7 +54,6 @@ namespace LinqToDB.Data.Sql
 
 		#region ISqlExpressionWalkable Members
 
-		[Obsolete]
 		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 		{
 			for (var i = 0; i < Parameters.Length; i++)

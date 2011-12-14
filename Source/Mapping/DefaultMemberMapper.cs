@@ -1,3 +1,5 @@
+using System;
+
 namespace LinqToDB.Mapping
 {
 	class DefaultMemberMapper : MemberMapper

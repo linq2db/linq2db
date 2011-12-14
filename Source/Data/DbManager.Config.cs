@@ -283,17 +283,6 @@ namespace LinqToDB.Data
 				}
 			}
 
-			var dataProviders = ConfigurationManager.AppSettings.Get("LinqToDB.DataProviders");
-
-			if (dataProviders != null)
-			{
-				if (TraceSwitch.TraceWarning)
-					WriteTraceLine("Using appSettings\\LinqToDB.DataProviders is obsolete. Consider using LinqToDB configuration section instead.", TraceSwitch.DisplayName);
-
-				foreach (var dataProviderTypeName in dataProviders.Split(';'))
-					AddDataProvider(Type.GetType(dataProviderTypeName, true));
-			}
-
 			if (string.IsNullOrEmpty(_defaultConfiguration))
 				_defaultConfiguration = ConfigurationManager.AppSettings.Get("LinqToDB.DefaultConfiguration");
 
@@ -556,7 +545,6 @@ namespace LinqToDB.Data
 		/// <remarks>
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
-		/// <include file="Examples1.xml" path='examples/db[@name="AddDataProvider(DataProvider.IDataProvider)"]/*' />
 		/// <seealso cref="AddConnectionString(string)"/>
 		/// <seealso cref="LinqToDB.Data.DataProvider.DataProviderBase.Name"/>
 		/// <param name="dataProvider">An instance of the <see cref="LinqToDB.Data.DataProvider.DataProviderBase"/> interface.</param>

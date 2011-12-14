@@ -47,13 +47,6 @@ namespace LinqToDB.Data.DataProvider
 			set { MySqlSqlProvider.ConvertParameterSymbols = value; }
 		}
 
-		[Obsolete("Use CommandParameterPrefix or SprocParameterPrefix instead.")]
-		public  static string  ParameterPrefix
-		{
-			get { return MySqlSqlProvider.SprocParameterPrefix; }
-			set { SprocParameterPrefix = CommandParameterPrefix = string.IsNullOrEmpty(value) ? string.Empty : value; }
-		}
-
 		public static void ConfigureOldStyle()
 		{
 			ParameterSymbol           = '?';

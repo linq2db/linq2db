@@ -26,8 +26,6 @@ namespace LinqToDB.Reflection.Emit
 			if (methodBuilder == null) throw new ArgumentNullException("methodBuilder");
 
 			_methodBuilder = methodBuilder;
-
-			methodBuilder.SetCustomAttribute(Type.Assembly.LinqToDBAttribute);
 		}
 
 		/// <summary>
@@ -144,10 +142,6 @@ namespace LinqToDB.Reflection.Emit
 
 			methodBuilder.SetParameters(parameterTypes);
 			methodBuilder.SetReturnType(TypeHelper.TranslateGenericParameters(returnType, genParams));
-
-			// Once all generic stuff is done is it is safe to call SetCustomAttribute
-			//
-			methodBuilder.SetCustomAttribute(Type.Assembly.LinqToDBAttribute);
 		}
 
 		private readonly MethodBuilder _methodBuilder;

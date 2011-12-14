@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
@@ -934,60 +933,6 @@ namespace LinqToDB.Mapping
 			return new DataReaderMapper(this, dataReader);
 		}
 
-		public virtual DataReaderListMapper CreateDataReaderListMapper(IDataReader reader)
-		{
-			return new DataReaderListMapper(CreateDataReaderMapper(reader));
-		}
-
-		public virtual DataReaderMapper CreateDataReaderMapper(
-			IDataReader          dataReader,
-			NameOrIndexParameter nameOrIndex)
-		{
-			return new ScalarDataReaderMapper(this, dataReader, nameOrIndex);
-		}
-
-		public virtual DataReaderListMapper CreateDataReaderListMapper(
-			IDataReader          reader,
-			NameOrIndexParameter nameOrIndex)
-		{
-			return new DataReaderListMapper(CreateDataReaderMapper(reader, nameOrIndex));
-		}
-
-		public virtual EnumeratorMapper CreateEnumeratorMapper(IEnumerator enumerator)
-		{
-			return new EnumeratorMapper(enumerator);
-		}
-
-		public virtual ObjectListMapper CreateObjectListMapper(IList list, ObjectMapper objectMapper)
-		{
-			return new ObjectListMapper(list, objectMapper);
-		}
-
-		public virtual ScalarListMapper CreateScalarListMapper(IList list, Type type)
-		{
-			return new ScalarListMapper(list, type);
-		}
-
-		public virtual SimpleDestinationListMapper CreateScalarDestinationListMapper(IList list, Type type)
-		{
-			return new SimpleDestinationListMapper(CreateScalarListMapper(list, type));
-		}
-
-		public virtual SimpleSourceListMapper CreateScalarSourceListMapper(IList list, Type type)
-		{
-			return new SimpleSourceListMapper(CreateScalarListMapper(list, type));
-		}
-
-		public virtual ScalarListMapper<T> CreateScalarListMapper<T>(IList<T> list)
-		{
-			return new ScalarListMapper<T>(this, list);
-		}
-
-		public virtual SimpleDestinationListMapper CreateScalarDestinationListMapper<T>(IList<T> list)
-		{
-			return new SimpleDestinationListMapper(CreateScalarListMapper<T>(list));
-		}
-
 		#endregion
 
 		#region GetNullValue
@@ -1028,68 +973,6 @@ namespace LinqToDB.Mapping
 
 				return mapValues;
 			}
-		}
-
-		#endregion
-
-		#region GetDataSource, GetDataDestination
-
-		[CLSCompliant(false)]
-		public virtual IMapDataSource GetDataSource(object obj)
-		{
-			if (obj == null) throw new ArgumentNullException("obj");
-
-			if (obj is IMapDataSource)
-				return (IMapDataSource)obj;
-
-			if (obj is IDataReader)
-				return CreateDataReaderMapper((IDataReader)obj);
-
-			return GetObjectMapper(obj.GetType());
-		}
-
-		[CLSCompliant(false)]
-		public virtual IMapDataDestination GetDataDestination(object obj)
-		{
-			if (obj == null) throw new ArgumentNullException("obj");
-
-			if (obj is IMapDataDestination)
-				return (IMapDataDestination)obj;
-
-			return GetObjectMapper(obj.GetType());
-		}
-
-		[CLSCompliant(false)]
-		public virtual IMapDataSourceList GetDataSourceList(object obj)
-		{
-			if (obj == null) throw new ArgumentNullException("obj");
-
-			if (obj is IMapDataSourceList)
-				return (IMapDataSourceList)obj;
-
-			if (obj is IDataReader)
-				return CreateDataReaderListMapper((IDataReader)obj);
-
-			Type type = obj.GetType().GetElementType();
-
-			return TypeHelper.IsScalar(type)?
-				(IMapDataSourceList)CreateScalarSourceListMapper((IList)obj, type):
-				CreateObjectListMapper((IList)obj, CreateObjectMapper(type));
-		}
-
-		[CLSCompliant(false)]
-		public virtual IMapDataDestinationList GetDataDestinationList(object obj)
-		{
-			if (obj == null) throw new ArgumentNullException("obj");
-
-			if (obj is IMapDataDestinationList)
-				return (IMapDataDestinationList)obj;
-
-			Type type = obj.GetType().GetElementType();
-
-			return TypeHelper.IsScalar(type)?
-				(IMapDataDestinationList)CreateScalarDestinationListMapper((IList)obj, type):
-				CreateObjectListMapper((IList)obj, CreateObjectMapper(type));
 		}
 
 		#endregion
@@ -1218,21 +1101,6 @@ namespace LinqToDB.Mapping
 			return index;
 		}
 
-		[CLSCompliant(false), Obsolete]
-		protected static void MapInternal(
-			IMapDataSource      source, object sourceObject,
-			IMapDataDestination dest,   object destObject,
-			int[]               index)
-		{
-			for (int i = 0; i < index.Length; i++)
-			{
-				int n = index[i];
-
-				if (n >= 0)
-					dest.SetValue(destObject, n, source.GetValue(sourceObject, i));
-			}
-		}
-
 		[CLSCompliant(false)]
 		internal protected static void MapInternal(
 			IMapDataSource      source, object sourceObject,
@@ -1331,142 +1199,6 @@ namespace LinqToDB.Mapping
 			}
 
 			return dest;
-		}
-
-		[CLSCompliant(false)]
-		public void MapSourceToDestination(
-			IMapDataSource      source, object sourceObject, 
-			IMapDataDestination dest,   object destObject,
-			params object[]     parameters)
-		{
-			MapInternal(null, source, sourceObject, dest, destObject, parameters);
-		}
-
-		public void MapSourceToDestination(
-			object          sourceObject,
-			object          destObject,
-			params object[] parameters)
-		{
-			IMapDataSource      source = GetDataSource     (sourceObject);
-			IMapDataDestination dest   = GetDataDestination(destObject);
-
-			MapInternal(null, source, sourceObject, dest, destObject, parameters);
-		}
-
-		private static readonly ObjectMapper _nullMapper = new ObjectMapper();
-
-		private class MapInfo
-		{
-			public int[]          Index;
-			public IValueMapper[] Mappers;
-		}
-
-		[CLSCompliant(false)]
-		public virtual void MapSourceListToDestinationList(
-			IMapDataSourceList      dataSourceList,
-			IMapDataDestinationList dataDestinationList,
-			params object[]         parameters)
-		{
-			if (dataSourceList      == null) throw new ArgumentNullException("dataSourceList");
-			if (dataDestinationList == null) throw new ArgumentNullException("dataDestinationList");
-
-			Dictionary<ObjectMapper,MapInfo> infos = new Dictionary<ObjectMapper,MapInfo>();
-
-			InitContext ctx = new InitContext();
-
-			ctx.MappingSchema = this;
-			ctx.Parameters    = parameters;
-
-			dataSourceList.     InitMapping(ctx); if (ctx.StopMapping) return;
-			dataDestinationList.InitMapping(ctx); if (ctx.StopMapping) return;
-
-			int[]               index   = null;
-			IValueMapper[]      mappers = null;
-			ObjectMapper        current = _nullMapper;
-			IMapDataDestination dest    = dataDestinationList.GetDataDestination(ctx);
-			ObjectMapper        om      = dest as ObjectMapper;
-
-			while (dataSourceList.SetNextDataSource(ctx))
-			{
-				ctx.ObjectMapper = om;
-				ctx.StopMapping  = false;
-
-				object destObject = dataDestinationList.GetNextObject(ctx);
-
-				if (ctx.StopMapping) continue;
-
-				ISupportMapping smSource = ctx.SourceObject as ISupportMapping;
-				ISupportMapping smDest   = destObject       as ISupportMapping;
-
-				if (smSource != null)
-				{
-					ctx.IsSource = true;
-					smSource.BeginMapping(ctx);
-					ctx.IsSource = false;
-
-					if (ctx.StopMapping)
-						continue;
-				}
-
-				if (smDest != null)
-				{
-					smDest.BeginMapping(ctx);
-
-					if (ctx.StopMapping)
-						continue;
-				}
-
-				IMapDataDestination currentDest = current ?? dest;
-
-				if (current != ctx.ObjectMapper)
-				{
-					current     = ctx.ObjectMapper;
-					currentDest = current ?? dest;
-
-					if (current != null)
-					{
-						MapInfo info;
-						if (!infos.TryGetValue(current, out info))
-						{
-							info = new MapInfo();
-
-							info.Index   = GetIndex(ctx.DataSource, currentDest);
-							info.Mappers = GetValueMappers(ctx.DataSource, currentDest, info.Index);
-
-							infos.Add(current, info);
-						}
-
-						index   = info.Index;
-						mappers = info.Mappers;
-					}
-					else
-					{
-						index   = GetIndex(ctx.DataSource, currentDest);
-						mappers = GetValueMappers(ctx.DataSource, currentDest, index);
-					}
-				}
-
-				MapInternal(
-					ctx.DataSource,
-					ctx.SourceObject,
-					currentDest,
-					destObject,
-					index,
-					mappers);
-
-				if (smDest != null)
-					smDest.EndMapping(ctx);
-
-				if (smSource != null)
-				{
-					ctx.IsSource = true;
-					smSource.EndMapping(ctx);
-					ctx.IsSource = false;
-				}
-			}
-
-			dataDestinationList.EndMapping(ctx);
-			dataSourceList.     EndMapping(ctx);
 		}
 
 		#endregion

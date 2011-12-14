@@ -24,9 +24,6 @@ namespace LinqToDB.Data.DataProvider
 		/// </summary>
 		NameToCommandParameter,
 
-		[Obsolete("Use NameToCommandParameter or NameToSprocParameter instead.")]
-		NameToParameter = NameToCommandParameter,
-
 		/// <summary>
 		/// Provided name should be converted to stored procedure parameter name.
 		/// For example:
@@ -106,9 +103,6 @@ namespace LinqToDB.Data.DataProvider
 		///                   ^ '@' has to be removed
 		/// </summary>
 		SprocParameterToName,
-
-		[Obsolete("Use SprocParameterToName instead.")]
-		ParameterToName = SprocParameterToName,
 
 		/// <summary>
 		/// Gets error number from a native exception.

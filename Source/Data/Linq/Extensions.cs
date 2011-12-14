@@ -194,22 +194,10 @@ namespace LinqToDB.Data.Linq
 
 		#region InsertOrUpdate
 
-		[Obsolete("Use 'InsertOrReplace' instead.")]
-		public static int InsertOrUpdate<T>(this IDataContextInfo dataContextInfo, T obj)
-		{
-			return InsertOrReplace(dataContextInfo, obj);
-		}
-
 		public static int InsertOrReplace<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
 			return Query<T>.InsertOrReplace(dataContextInfo, obj);
-		}
-
-		[Obsolete("Use 'InsertOrReplace' instead.")]
-		public static int InsertOrUpdate<T>(this IDataContext dataContext, T obj)
-		{
-			return InsertOrReplace(dataContext, obj);
 		}
 
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj)
@@ -236,24 +224,6 @@ namespace LinqToDB.Data.Linq
 		public static int InsertBatch<T>(this DbManager dataContext, T[] list)
 		{
 			return InsertBatch(dataContext, int.MaxValue, list);
-		}
-
-		[Obsolete("Use InsertBatch instead.")]
-		public static int Insert<T>(this DbManager dataContext, T[] list)
-		{
-			return Insert(dataContext, int.MaxValue, list);
-		}
-
-		[Obsolete("Use InsertBatch instead.")]
-		public static int Insert<T>(this DbManager dataContext, int maxBatchSize, IEnumerable<T> list)
-		{
-			return new SqlQuery<T>().Insert(dataContext, maxBatchSize, list);
-		}
-
-		[Obsolete("Use InsertBatch instead.")]
-		public static int Insert<T>(this DbManager dataContext, IEnumerable<T> list)
-		{
-			return Insert(dataContext, int.MaxValue, list);
 		}
 
 #endif

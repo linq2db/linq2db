@@ -190,12 +190,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		[Obsolete]
-		protected virtual string GetConnectionString(IDbConnection connection)
-		{
-			return connection.ConnectionString;
-		}
-
 		private void OpenConnection()
 		{
 			ExecuteOperation(OperationType.OpenConnection, _connection.Open);
@@ -899,58 +893,6 @@ namespace LinqToDB.Data
 				paramList.AddRange(commandParameters);
 
 			return (IDbDataParameter[])paramList.ToArray(typeof(IDbDataParameter));
-		}
-
-		/// <summary>
-		/// Maps all parameters returned from the server to all given objects.
-		/// </summary>
-		/// <param name="returnValueMember">Name of a <see cref="MemberMapper"/> to map return value.</param>
-		/// <param name="obj">An <see cref="System.Object"/> to map from command parameters.</param>
-		public void MapOutputParameters(
-			string returnValueMember,
-			object obj)
-		{
-			var dest = _mappingSchema.GetDataDestination(obj);
-
-			foreach (IDbDataParameter parameter in Command.Parameters)
-			{
-				var ordinal = -1;
-
-				switch (parameter.Direction)
-				{
-					case ParameterDirection.InputOutput:
-					case ParameterDirection.Output:
-						ordinal = dest.GetOrdinal(
-							_dataProvider.Convert(parameter.ParameterName, ConvertType.SprocParameterToName).ToString());
-						break;
-
-					case ParameterDirection.ReturnValue:
-
-						if (returnValueMember != null)
-						{
-							if (!returnValueMember.StartsWith("@") && dest is ObjectMapper)
-							{
-								var om = (ObjectMapper) dest;
-								var ma = om.TypeAccessor[returnValueMember];
-
-								if (ma != null)
-								{
-									ma.SetValue(obj, _mappingSchema.ConvertChangeType(parameter.Value, ma.Type));
-									continue;
-								}
-							}
-							else
-								returnValueMember = returnValueMember.Substring(1);
-
-							ordinal = dest.GetOrdinal(returnValueMember);
-						}
-
-						break;
-				}
-
-				if (ordinal >= 0)
-					dest.SetValue(obj, ordinal, _mappingSchema.ConvertChangeType(parameter.Value, dest.GetFieldType(ordinal)));
-			}
 		}
 
 		/// <summary>

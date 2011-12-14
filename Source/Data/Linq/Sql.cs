@@ -19,14 +19,6 @@ namespace LinqToDB.Data.Linq
 			return obj;
 		}
 
-		[Obsolete("Use AsSql instead.")]
-		[CLSCompliant(false)]
-		[SqlExpression("{0}", 0, ServerSideOnly = true)]
-		public static T OnServer<T>(T obj)
-		{
-			return obj;
-		}
-
 		[CLSCompliant(false)]
 		[SqlExpression("{0}", 0)]
 		public static T ConvertNullable<T>(T? value)

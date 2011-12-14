@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -8,10 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Security.Permissions;
-
-using JetBrains.Annotations;
 
 using LinqToDB.Reflection;
 using LinqToDB.Reflection.Emit;
@@ -289,11 +285,9 @@ namespace LinqToDB.TypeBuilder
 
 		public static Type GetType(Type sourceType)
 		{
-			return
-				TypeHelper.IsScalar(sourceType) || sourceType.IsSealed ||
-						(!sourceType.IsAbstract && sourceType.IsDefined(typeof(LinqToDBGeneratedAttribute), true)) ?
-					sourceType:
-					GetType(sourceType, sourceType, new AbstractClassBuilder(sourceType));
+			return TypeHelper.IsScalar(sourceType) || sourceType.IsSealed ?
+				sourceType:
+				GetType(sourceType, sourceType, new AbstractClassBuilder(sourceType));
 		}
 
 		static class InstanceCreator<T>

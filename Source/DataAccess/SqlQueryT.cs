@@ -7,7 +7,7 @@ using LinqToDB.Reflection.Extension;
 
 namespace LinqToDB.DataAccess
 {
-	public class SqlQuery<T> : SqlQueryBase
+	class SqlQuery<T> : SqlQueryBase
 	{
 		#region Constructors
 

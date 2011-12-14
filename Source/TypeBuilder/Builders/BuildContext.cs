@@ -101,8 +101,6 @@ namespace LinqToDB.TypeBuilder.Builders
 		{
 			var field = TypeBuilder.DefineField(fieldName, type, attributes);
 
-			field.SetCustomAttribute(MethodBuilder.Type.Assembly.LinqToDBAttribute);
-
 			Items.Add("$LinqToDB.Field." + fieldName, field);
 
 			return field;

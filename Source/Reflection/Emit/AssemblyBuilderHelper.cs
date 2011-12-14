@@ -10,8 +10,6 @@ namespace LinqToDB.Reflection.Emit
 	/// <summary>
 	/// A wrapper around the <see cref="AssemblyBuilder"/> and <see cref="ModuleBuilder"/> classes.
 	/// </summary>
-	/// <include file="Examples.CS.xml" path='examples/emit[@name="Emit"]/*' />
-	/// <include file="Examples.VB.xml" path='examples/emit[@name="Emit"]/*' />
 	/// <seealso cref="System.Reflection.Emit.AssemblyBuilder">AssemblyBuilder Class</seealso>
 	/// <seealso cref="System.Reflection.Emit.ModuleBuilder">ModuleBuilder Class</seealso>
 	public class AssemblyBuilderHelper
@@ -111,8 +109,6 @@ namespace LinqToDB.Reflection.Emit
 					Thread.GetDomain().DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave, assemblyDir);
 #endif
 
-				_assemblyBuilder.SetCustomAttribute(LinqToDBAttribute);
-
 #if !SILVERLIGHT
 
 				_assemblyBuilder.SetCustomAttribute(
@@ -169,37 +165,7 @@ namespace LinqToDB.Reflection.Emit
 		/// </summary>
 		public  ModuleBuilder  ModuleBuilder
 		{
-			get 
-			{
-				if (_moduleBuilder == null)
-				{
-					_moduleBuilder = AssemblyBuilder.DefineDynamicModule(ModulePath);
-					_moduleBuilder.SetCustomAttribute(LinqToDBAttribute);
-
-				}
-
-				return _moduleBuilder;
-			}
-		}
-
-		private CustomAttributeBuilder _LinqToDBAttribute;
-		/// <summary>
-		/// Retrieves a cached instance of <see cref="LinqToDB.TypeBuilder.LinqToDBGeneratedAttribute"/> builder.
-		/// </summary>
-		public  CustomAttributeBuilder  LinqToDBAttribute
-		{
-			get 
-			{
-				if (_LinqToDBAttribute == null)
-				{
-					var at = typeof(TypeBuilder.LinqToDBGeneratedAttribute);
-					var ci = at.GetConstructor(Type.EmptyTypes);
-
-					_LinqToDBAttribute = new CustomAttributeBuilder(ci, new object[0]);
-				}
-
-				return _LinqToDBAttribute;
-			}
+			get { return _moduleBuilder ?? (_moduleBuilder = AssemblyBuilder.DefineDynamicModule(ModulePath)); }
 		}
 
 		/// <summary>

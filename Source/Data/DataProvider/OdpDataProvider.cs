@@ -641,13 +641,6 @@ namespace LinqToDB.Data.DataProvider
 				return new OracleDataReaderMapper(this, dataReader);
 			}
 
-			public override DataReaderMapper CreateDataReaderMapper(
-				IDataReader          dataReader,
-				NameOrIndexParameter nip)
-			{
-				return new OracleScalarDataReaderMapper(this, dataReader, nip);
-			}
-
 			#region Convert
 
 			#region Primitive Types
@@ -1208,82 +1201,6 @@ namespace LinqToDB.Data.DataProvider
 			public override UInt64?  GetNullableUInt64 (object o, int index) { return _dataReader.IsDBNull(index)? null: (UInt64?)_dataReader.GetDecimal(index); }
 
 			public override Decimal? GetNullableDecimal(object o, int index) { return _dataReader.IsDBNull(index)? (decimal?)null: OracleDecimal.SetPrecision(_dataReader.GetOracleDecimal(index), 28).Value; }
-		}
-
-		public class OracleScalarDataReaderMapper : ScalarDataReaderMapper
-		{
-			private readonly OracleDataReader _dataReader;
-
-			public OracleScalarDataReaderMapper(
-				MappingSchema        mappingSchema,
-				IDataReader          dataReader,
-				NameOrIndexParameter nameOrIndex)
-				: base(mappingSchema, dataReader, nameOrIndex)
-			{
-				_dataReader = dataReader is OracleDataReaderEx?
-					((OracleDataReaderEx)dataReader).DataReader:
-					(OracleDataReader)dataReader;
-
-				_fieldType = _dataReader.GetProviderSpecificFieldType(Index);
-
-				if (_fieldType != typeof(OracleXmlType) && _fieldType != typeof(OracleBlob))
-					_fieldType = _dataReader.GetFieldType(Index);
-			}
-
-			private readonly Type _fieldType;
-
-			public override Type GetFieldType(int index)
-			{
-				return _fieldType;
-			}
-
-			public override object GetValue(object o, int index)
-			{
-				if (_fieldType == typeof(OracleXmlType))
-				{
-					var xml = _dataReader.GetOracleXmlType(Index);
-					return MappingSchema.ConvertToXmlDocument(xml);
-				}
-
-				if (_fieldType == typeof(OracleBlob))
-				{
-					var blob = _dataReader.GetOracleBlob(Index);
-					return MappingSchema.ConvertToStream(blob);
-				}
-
-				return _dataReader.IsDBNull(index)? null:
-					_dataReader.GetValue(Index);
-			}
-
-			public override Boolean  GetBoolean(object o, int index) { return MappingSchema.ConvertToBoolean(GetValue(o, Index)); }
-			public override Char     GetChar   (object o, int index) { return MappingSchema.ConvertToChar   (GetValue(o, Index)); }
-			public override Guid     GetGuid   (object o, int index) { return MappingSchema.ConvertToGuid   (GetValue(o, Index)); }
-
-			[CLSCompliant(false)]
-			public override SByte    GetSByte  (object o, int index) { return  (SByte)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt16   GetUInt16 (object o, int index) { return (UInt16)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt32   GetUInt32 (object o, int index) { return (UInt32)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt64   GetUInt64 (object o, int index) { return (UInt64)_dataReader.GetDecimal(Index); }
-
-			public override Decimal  GetDecimal(object o, int index) { return OracleDecimal.SetPrecision(_dataReader.GetOracleDecimal(Index), 28).Value; }
-
-			public override Boolean? GetNullableBoolean(object o, int index) { return MappingSchema.ConvertToNullableBoolean(GetValue(o, Index)); }
-			public override Char?    GetNullableChar   (object o, int index) { return MappingSchema.ConvertToNullableChar   (GetValue(o, Index)); }
-			public override Guid?    GetNullableGuid   (object o, int index) { return MappingSchema.ConvertToNullableGuid   (GetValue(o, Index)); }
-
-			[CLSCompliant(false)]
-			public override SByte?   GetNullableSByte  (object o, int index) { return _dataReader.IsDBNull(index)? null:  (SByte?)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt16?  GetNullableUInt16 (object o, int index) { return _dataReader.IsDBNull(index)? null: (UInt16?)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt32?  GetNullableUInt32 (object o, int index) { return _dataReader.IsDBNull(index)? null: (UInt32?)_dataReader.GetDecimal(Index); }
-			[CLSCompliant(false)]
-			public override UInt64?  GetNullableUInt64 (object o, int index) { return _dataReader.IsDBNull(index)? null: (UInt64?)_dataReader.GetDecimal(Index); }
-
-			public override Decimal? GetNullableDecimal(object o, int index) { return _dataReader.IsDBNull(index)? (decimal?)null: OracleDecimal.SetPrecision(_dataReader.GetOracleDecimal(Index), 28).Value; }
 		}
 
 		[CLSCompliant(false)]

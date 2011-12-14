@@ -256,7 +256,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				if (!(skipColumns && Expression is Column))
@@ -450,7 +449,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				Source = (ISqlTableSource)Source.Walk(skipColumns, func);
@@ -621,7 +619,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			public ISqlExpression Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 			{
 				Condition = (SearchCondition)((ISqlExpressionWalkable)Condition).Walk(skipColumns, action);
@@ -703,7 +700,6 @@ namespace LinqToDB.Data.Sql
 
 				public ISqlExpression Expr1 { get; set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					Expr1 = Expr1.Walk(skipColumns, func);
@@ -791,7 +787,6 @@ namespace LinqToDB.Data.Sql
 				public new Operator   Operator { get; private set; }
 				public ISqlExpression Expr2    { get; internal set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					base.Walk(skipColumns, func);
@@ -861,7 +856,6 @@ namespace LinqToDB.Data.Sql
 				public ISqlExpression Expr2  { get; internal set; }
 				public ISqlExpression Escape { get; internal set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					base.Walk(skipColumns, func);
@@ -921,7 +915,6 @@ namespace LinqToDB.Data.Sql
 				public ISqlExpression Expr2 { get; internal set; }
 				public ISqlExpression Expr3 { get; internal set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					base.Walk(skipColumns, func);
@@ -1013,7 +1006,6 @@ namespace LinqToDB.Data.Sql
 
 				public SqlQuery SubQuery { get; private set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					base.Walk(skipColumns, func);
@@ -1072,7 +1064,6 @@ namespace LinqToDB.Data.Sql
 				readonly List<ISqlExpression> _values = new List<ISqlExpression>();
 				public   List<ISqlExpression>  Values { get { return _values; } }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 				{
 					base.Walk(skipColumns, action);
@@ -1138,7 +1129,6 @@ namespace LinqToDB.Data.Sql
 
 				public SqlFunction Function { get; private set; }
 
-				[Obsolete]
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 				{
 					Function = (SqlFunction)((ISqlExpression)Function).Walk(skipColumns, func);
@@ -1197,10 +1187,8 @@ namespace LinqToDB.Data.Sql
 
 			public    abstract bool              CanBeNull();
 			protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
-			[Obsolete]
 			protected abstract void              Walk     (bool skipColumns, Func<ISqlExpression,ISqlExpression> action);
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				Walk(skipColumns, func);
@@ -1410,7 +1398,6 @@ namespace LinqToDB.Data.Sql
 				get { return typeof(bool); }
 			}
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				foreach (var condition in Conditions)
@@ -1673,7 +1660,6 @@ namespace LinqToDB.Data.Sql
 			public ISqlExpression Expression   { get; internal set; }
 			public bool           IsDescending { get; private set; }
 
-			[Obsolete]
 			internal void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				Expression = Expression.Walk(skipColumns, func);
@@ -2050,7 +2036,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				for (var i = 0; i < Columns.Count; i++)
@@ -2183,7 +2168,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				Column     = Column.    Walk(skipColumns, func);
@@ -2257,7 +2241,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				if (Into != null)
@@ -2364,7 +2347,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				if (Table != null)
@@ -2610,7 +2592,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				for (var i = 0; i <	Tables.Count; i++)
@@ -2739,7 +2720,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> action)
 			{
 				SearchCondition = (SearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(skipColumns, action);
@@ -2840,7 +2820,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				for (var i = 0; i < Items.Count; i++)
@@ -2963,7 +2942,6 @@ namespace LinqToDB.Data.Sql
 
 			#region ISqlExpressionWalkable Members
 
-			[Obsolete]
 			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 			{
 				foreach (var t in Items)
@@ -4500,7 +4478,6 @@ namespace LinqToDB.Data.Sql
 
 		#region ISqlExpressionWalkable Members
 
-		[Obsolete]
 		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);

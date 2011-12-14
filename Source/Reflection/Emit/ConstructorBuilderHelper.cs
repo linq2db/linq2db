@@ -20,7 +20,6 @@ namespace LinqToDB.Reflection.Emit
 			if (constructorBuilder == null) throw new ArgumentNullException("constructorBuilder");
 
 			_constructorBuilder = constructorBuilder;
-			_constructorBuilder.SetCustomAttribute(Type.Assembly.LinqToDBAttribute);
 		}
 
 		private readonly ConstructorBuilder _constructorBuilder;

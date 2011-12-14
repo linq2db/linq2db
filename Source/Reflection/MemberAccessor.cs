@@ -50,27 +50,11 @@ namespace LinqToDB.Reflection
 			return MemberInfo.IsDefined(typeof(T), true);
 		}
 
-		[Obsolete("Use generic version instead")]
-		public Attribute GetAttribute(Type attributeType)
-		{
-			var attrs = MemberInfo.GetCustomAttributes(attributeType, true);
-
-			return attrs.Length > 0? (Attribute)attrs[0]: null;
-		}
-
 		public T GetAttribute<T>() where T : Attribute
 		{
 			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 
 			return attrs.Length > 0? (T)attrs[0]: null;
-		}
-
-		[Obsolete("Use generic version instead")]
-		public object[] GetAttributes(Type attributeType)
-		{
-			var attrs = MemberInfo.GetCustomAttributes(attributeType, true);
-
-			return attrs.Length > 0? attrs: null;
 		}
 
 		public T[] GetAttributes<T>() where T : Attribute

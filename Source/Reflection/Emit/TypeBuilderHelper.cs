@@ -28,8 +28,6 @@ namespace LinqToDB.Reflection.Emit
 
 			_assembly    = assemblyBuilder;
 			_typeBuilder = typeBuilder;
-
-			_typeBuilder.SetCustomAttribute(_assembly.LinqToDBAttribute);
 		}
 
 		private readonly AssemblyBuilderHelper _assembly;

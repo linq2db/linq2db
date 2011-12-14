@@ -49,7 +49,6 @@ namespace LinqToDB.Data.Sql
 
 		#region ISqlExpressionWalkable Members
 
-		[Obsolete]
 		ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
 		{
 			Expr1 = Expr1.Walk(skipColumns, func);

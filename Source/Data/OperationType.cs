@@ -16,8 +16,6 @@ namespace LinqToDB.Data
 		DeriveParameters,
 		PrepareCommand,
 		ExecuteNonQuery,
-		[Obsolete]
-		ExecuteScalar,
 		ExecuteReader,
 		Fill,
 		Update,

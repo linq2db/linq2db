@@ -216,13 +216,6 @@ namespace LinqToDB.Reflection
 
 		#region Static Members
 
-		[Obsolete("Use TypeFactory.LoadTypes instead")]
-		public static bool LoadTypes
-		{
-			get { return TypeFactory.LoadTypes;  }
-			set { TypeFactory.LoadTypes = value; }
-		}
-
 		private static readonly Dictionary<Type,TypeAccessor> _accessors = new Dictionary<Type,TypeAccessor>(10);
 
 		public static TypeAccessor GetAccessor(Type originalType)
