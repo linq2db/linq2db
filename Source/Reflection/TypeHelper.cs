@@ -2,11 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+using System.Data.Linq;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Reflection
 {
@@ -15,7 +17,7 @@ namespace LinqToDB.Reflection
 	/// <summary>
 	/// A wrapper around the <see cref="Type"/> class.
 	/// </summary>
-	[System.Diagnostics.DebuggerDisplay("Type = {Type}")]
+	[DebuggerDisplay("Type = {Type}")]
 	public class TypeHelper
 	{
 		/// <summary>
@@ -156,7 +158,7 @@ namespace LinqToDB.Reflection
 			}
 		}
 
-		static readonly Dictionary<Type,object[]> _typeAttributesTopInternal = new Dictionary<Type,object[]>(10);
+		static readonly Dictionary<Type, object[]> _typeAttributesTopInternal = new Dictionary<Type, object[]>(10);
 
 		static void GetAttributesInternal(List<object> list, Type type)
 		{
@@ -171,7 +173,7 @@ namespace LinqToDB.Reflection
 			}
 		}
 
-		static readonly Dictionary<Type,object[]> _typeAttributesInternal = new Dictionary<Type,object[]>(10);
+		static readonly Dictionary<Type, object[]> _typeAttributesInternal = new Dictionary<Type, object[]>(10);
 
 		static void GetAttributesTreeInternal(List<object> list, Type type)
 		{
@@ -228,7 +230,7 @@ namespace LinqToDB.Reflection
 				GetAttributesTreeInternal(list, type.BaseType);
 		}
 
-		static readonly Dictionary<string,object[]> _typeAttributes = new Dictionary<string, object[]>(10);
+		static readonly Dictionary<string, object[]> _typeAttributes = new Dictionary<string, object[]>(10);
 
 		#endregion
 
@@ -946,7 +948,7 @@ namespace LinqToDB.Reflection
 		/// <remarks>Note that nullable types does not have a parent-child relation to it's underlying type.
 		/// For example, the 'int?' type (nullable int) and the 'int' type
 		/// aren't a parent and it's child.</remarks>
-		public static bool IsSameOrParent([JetBrains.Annotations.NotNull] Type parent, [JetBrains.Annotations.NotNull] Type child)
+		public static bool IsSameOrParent([NotNull] Type parent, [NotNull] Type child)
 		{
 			if (parent == null) throw new ArgumentNullException("parent");
 			if (child  == null) throw new ArgumentNullException("child");
@@ -982,7 +984,7 @@ namespace LinqToDB.Reflection
 			return false;
 		}
 
-		public static Type GetGenericType([JetBrains.Annotations.NotNull] Type genericType, Type type)
+		public static Type GetGenericType([NotNull] Type genericType, Type type)
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
@@ -1020,7 +1022,7 @@ namespace LinqToDB.Reflection
 		/// that specify how the search is conducted.</param>
 		/// <returns>A <see cref="MethodInfo"/> object representing the method
 		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public static MethodInfo GetMethod([JetBrains.Annotations.NotNull] Type type, bool generic, string methodName, BindingFlags flags)
+		public static MethodInfo GetMethod([NotNull] Type type, bool generic, string methodName, BindingFlags flags)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
@@ -1087,7 +1089,6 @@ namespace LinqToDB.Reflection
 			return null;
 		}
 
-		[SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
 		public static object[] GetPropertyParameters(PropertyInfo propertyInfo)
 		{
 			if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
@@ -1096,19 +1097,6 @@ namespace LinqToDB.Reflection
 
 			if (attrs != null && attrs.Length > 0)
 				return ((ParameterAttribute)attrs[0]).Parameters;
-
-			attrs = propertyInfo.GetCustomAttributes(typeof(InstanceTypeAttribute), true);
-
-			if (attrs.Length > 0)
-				return ((InstanceTypeAttribute)attrs[0]).Parameters;
-
-			attrs = new TypeHelper(
-				propertyInfo.DeclaringType).GetAttributes(typeof(GlobalInstanceTypeAttribute));
-
-			foreach (GlobalInstanceTypeAttribute attr in attrs)
-				if (IsSameOrParent(attr.PropertyType, propertyInfo.PropertyType))
-//				if (attr.PropertyType == propertyInfo.PropertyType)
-					return attr.Parameters;
 
 			return null;
 		}
@@ -1297,7 +1285,7 @@ namespace LinqToDB.Reflection
 
 			return type.IsValueType
 				|| type == typeof(string)
-				|| type == typeof(System.Data.Linq.Binary)
+				|| type == typeof(Binary)
 				|| type == typeof(Stream)
 				|| type == typeof(XmlReader)
 #if !SILVERLIGHT
@@ -1566,5 +1554,20 @@ namespace LinqToDB.Reflection
 		}
 
 		#endregion
+
+		internal static string GetTypeFullName(Type type)
+		{
+			var name = type.FullName;
+
+			if (type.IsGenericType)
+			{
+				name = name.Split('`')[0];
+
+				foreach (var t in type.GetGenericArguments())
+					name += "_" + GetTypeFullName(t).Replace('+', '_').Replace('.', '_');
+			}
+
+			return name;
+		}
 	}
 }

@@ -1204,7 +1204,7 @@ namespace LinqToDB.Data.DataProvider
 		}
 
 		[CLSCompliant(false)]
-		public abstract class OracleParameterWrap : IDbDataParameter, IDisposable, ICloneable
+		public class OracleParameterWrap : IDbDataParameter, IDisposable, ICloneable
 		{
 			protected OracleParameter _oracleParameter;
 			public    OracleParameter  OracleParameter

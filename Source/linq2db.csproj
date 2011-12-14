@@ -55,7 +55,6 @@
     <Compile Include="Configuration\DataProviderElementCollection.cs" />
     <Compile Include="Configuration\ElementBase.cs" />
     <Compile Include="Configuration\ElementCollectionBase.cs" />
-    <Compile Include="Configuration\TypeFactoryElement.cs" />
     <Compile Include="DataAccess\DataAccessException.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -334,7 +333,6 @@
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="TypeBuilder\AutoImplementInterfaceAttribute.cs" />
-    <Compile Include="TypeBuilder\Builders\AbstractClassBuilder.cs" />
     <Compile Include="TypeBuilder\Builders\AbstractTypeBuilderBase.cs" />
     <Compile Include="TypeBuilder\Builders\AbstractTypeBuilderList.cs" />
     <Compile Include="TypeBuilder\Builders\BuildContext.cs" />
@@ -346,17 +344,12 @@
     <Compile Include="TypeBuilder\Builders\FakeParameterInfo.cs" />
     <Compile Include="TypeBuilder\Builders\FakeSetter.cs" />
     <Compile Include="TypeBuilder\Builders\IAbstractTypeBuilder.cs" />
-    <Compile Include="TypeBuilder\Builders\ImplementInterfaceBuilder.cs" />
-    <Compile Include="TypeBuilder\Builders\InstanceTypeBuilder.cs" />
     <Compile Include="TypeBuilder\Builders\ITypeBuilder.cs" />
     <Compile Include="TypeBuilder\Builders\PropertyChangedBuilder.cs" />
     <Compile Include="TypeBuilder\Builders\TypeAccessorBuilder.cs" />
     <Compile Include="TypeBuilder\Builders\TypeBuilderAttribute.cs" />
     <Compile Include="TypeBuilder\Builders\TypeBuilderConsts.cs" />
     <Compile Include="TypeBuilder\GetValueAttribute.cs" />
-    <Compile Include="TypeBuilder\GlobalInstanceTypeAttribute.cs" />
-    <Compile Include="TypeBuilder\ImplementInterfaceAttribute.cs" />
-    <Compile Include="TypeBuilder\InstanceTypeAttribute.cs" />
     <Compile Include="TypeBuilder\IPropertyChanged.cs" />
     <Compile Include="TypeBuilder\ISetParent.cs" />
     <Compile Include="TypeBuilder\LazyInstanceAttribute.cs" />

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace LinqToDB.Mapping
@@ -65,7 +64,6 @@ namespace LinqToDB.Mapping
 			return mm;
 		}
 
-		[SuppressMessage("Microsoft.Performance", "CA1807:AvoidUnnecessaryStringCreation", MessageId = "stack1")]
 		protected virtual void Add(MemberMapper memberMapper)
 		{
 			if (memberMapper == null) throw new ArgumentNullException("memberMapper");
@@ -340,8 +338,6 @@ namespace LinqToDB.Mapping
 
 		private readonly Dictionary<string,MemberMapper> _nameToComplexMapper = new Dictionary<string,MemberMapper>();
 
-		[SuppressMessage("Microsoft.Performance", "CA1807:AvoidUnnecessaryStringCreation", MessageId = "stack0")]
-		[SuppressMessage("Microsoft.Performance", "CA1807:AvoidUnnecessaryStringCreation", MessageId = "origName")]
 		protected MemberMapper GetComplexMapper(string mapName, string origName)
 		{
 			if (origName == null) throw new ArgumentNullException("origName");

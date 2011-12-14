@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Diagnostics;
@@ -214,7 +213,6 @@ namespace LinqToDB.TypeBuilder.Builders
 
 		#region Helpers
 
-		[SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
 		protected bool CallLazyInstanceInsurer(FieldBuilder field)
 		{
 			if (field == null) throw new ArgumentNullException("field");
@@ -231,7 +229,6 @@ namespace LinqToDB.TypeBuilder.Builders
 			return ensurer != null;
 		}
 
-		[SuppressMessage("Microsoft.Performance", "CA1818:DoNotConcatenateStringsInsideLoops")]
 		protected virtual string GetFieldName(PropertyInfo propertyInfo)
 		{
 			string name = propertyInfo.Name;

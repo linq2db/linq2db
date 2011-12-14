@@ -482,22 +482,5 @@ namespace Data.Linq
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent)null, ch = p2.Children.First() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })));
 		}
-
-		[TableName("Parent")]
-		public abstract class AbstractParent
-		{
-			public abstract int  ParentID { get; set; }
-			public abstract int? Value1   { get; set; }
-		}
-
-		[Test]
-		public void UnionAbstract1()
-		{
-			ForEachProvider(db =>
-			{
-				var list = db.GetTable<AbstractParent>().Union(db.GetTable<AbstractParent>()).ToList();
-				Assert.AreEqual(Parent.Count(), list.Count);
-			});
-		}
 	}
 }

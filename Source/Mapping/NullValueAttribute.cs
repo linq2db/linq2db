@@ -1,9 +1,7 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Mapping
 {
-	[SuppressMessage("Microsoft.Performance", "CA1813:AvoidUnsealedAttributes")]
 	[AttributeUsage(
 		AttributeTargets.Class | AttributeTargets.Interface |
 		AttributeTargets.Property | AttributeTargets.Field | 

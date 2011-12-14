@@ -1,9 +1,7 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.TypeBuilder
 {
-	[SuppressMessage("Microsoft.Performance", "CA1813:AvoidUnsealedAttributes")]
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class LazyInstancesAttribute : Attribute
 	{

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 
@@ -232,7 +231,7 @@ namespace LinqToDB.Reflection
 				if (IsAssociatedType(originalType))
 					return _accessors[originalType];
 
-				var instanceType = (IsClassBulderNeeded(originalType) ? null : originalType) ?? TypeFactory.GetType(originalType);
+				var instanceType = originalType;
 
 				var accessorType = TypeFactory.GetType(originalType, originalType, new TypeAccessorBuilder(instanceType, originalType));
 
@@ -256,30 +255,6 @@ namespace LinqToDB.Reflection
 		public static TypeAccessor GetAccessor<T>()
 		{
 			return TypeAccessor<T>.Instance;
-		}
-
-		private static bool IsClassBulderNeeded(Type type)
-		{
-			if (type.IsAbstract && !type.IsSealed)
-			{
-				if (!type.IsInterface)
-				{
-					if (TypeHelper.GetDefaultConstructor(type) != null)
-						return true;
-
-					if (TypeHelper.GetConstructor(type, typeof(InitContext)) != null)
-						return true;
-				}
-				else
-				{
-					var attrs = TypeHelper.GetAttributes(type, typeof(AutoImplementInterfaceAttribute));
-
-					if (attrs != null && attrs.Length > 0)
-						return true;
-				}
-			}
-
-			return false;
 		}
 
 		internal static bool IsInstanceBuildable(Type type)
@@ -587,7 +562,6 @@ namespace LinqToDB.Reflection
 			Write(o, Console.WriteLine);
 		}
 
-		[SuppressMessage("Microsoft.Performance", "CA1818:DoNotConcatenateStringsInsideLoops")]
 		private static string MapTypeName(Type type)
 		{
 			if (type.IsGenericType)
@@ -636,7 +610,6 @@ namespace LinqToDB.Reflection
 
 		public delegate void WriteLine(string text);
 
-		[SuppressMessage("Microsoft.Usage", "CA2241:ProvideCorrectArgumentsToFormattingMethods")]
 		public static void Write(object o, WriteLine writeLine)
 		{
 			if (o == null)

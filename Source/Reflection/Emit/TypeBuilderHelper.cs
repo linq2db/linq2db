@@ -10,8 +10,6 @@ namespace LinqToDB.Reflection.Emit
 	/// <summary>
 	/// A wrapper around the <see cref="TypeBuilder"/> class.
 	/// </summary>
-	/// <include file="Examples.CS.xml" path='examples/emit[@name="Emit"]/*' />
-	/// <include file="Examples.VB.xml" path='examples/emit[@name="Emit"]/*' />
 	/// <seealso cref="System.Reflection.Emit.TypeBuilder">TypeBuilder Class</seealso>
 	public class TypeBuilderHelper
 	{

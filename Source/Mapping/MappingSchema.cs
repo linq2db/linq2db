@@ -6,7 +6,6 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Xml;
 
@@ -1205,7 +1204,6 @@ namespace LinqToDB.Mapping
 
 		#region ValueToEnum, EnumToValue
 
-		[SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
 		public virtual object MapValueToEnum(object value, Type type)
 		{
 			if (value == null)
@@ -1262,7 +1260,6 @@ namespace LinqToDB.Mapping
 			return Enum.ToObject(type, value);
 		}
 
-		[SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
 		public virtual object MapEnumToValue(object value, [JetBrains.Annotations.NotNull] Type type, bool convertToUnderlyingType)
 		{
 			if (value == null)
@@ -1312,7 +1309,6 @@ namespace LinqToDB.Mapping
 				value;
 		}
 
-		[SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
 		public virtual object MapEnumToValue(object value, bool convertToUnderlyingType)
 		{
 			if (value == null)

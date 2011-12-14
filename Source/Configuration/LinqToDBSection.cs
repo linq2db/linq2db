@@ -19,15 +19,11 @@ namespace LinqToDB.Configuration
 		private static readonly ConfigurationProperty           _propDefaultConfiguration =
 			new ConfigurationProperty("defaultConfiguration",    typeof(string),
 			null,                                                ConfigurationPropertyOptions.None);
-		private static readonly ConfigurationProperty           _propTypeFactory =
-			new ConfigurationProperty("typeFactory",             typeof(TypeFactoryElement),
-			null,                                                ConfigurationPropertyOptions.None);
 
 		static LinqToDBSection()
 		{
 			_properties.Add(_propDataProviders);
 			_properties.Add(_propDefaultConfiguration);
-			_properties.Add(_propTypeFactory);
 		}
 
 		public static LinqToDBSection Instance
@@ -58,11 +54,6 @@ namespace LinqToDB.Configuration
 		public string DefaultConfiguration
 		{
 			get { return (string)base[_propDefaultConfiguration]; }
-		}
-
-		public TypeFactoryElement TypeFactory
-		{
-			get { return (TypeFactoryElement)base[_propTypeFactory]; }
 		}
 	}
 }
