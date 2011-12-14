@@ -36,15 +36,15 @@ namespace LinqToDB.Reflection
 			Type[]              parameterTypes,
 			ParameterModifier[] modifiers)
 		{
-			for (int i = 0; i < matchMethods.Length; ++i)
+			for (var i = 0; i < matchMethods.Length; ++i)
 			{
 				if (matchMethods[i].IsGenericMethodDefinition != _genericMethodDefinition)
 					continue;
 
-				ParameterInfo[] pis = matchMethods[i].GetParameters();
-				bool          match = (pis.Length == parameterTypes.Length);
+				var pis = matchMethods[i].GetParameters();
+				var match = (pis.Length == parameterTypes.Length);
 
-				for (int j = 0; match && j < pis.Length; ++j)
+				for (var j = 0; match && j < pis.Length; ++j)
 				{
 					match = TypeHelper.CompareParameterTypes(pis[j].ParameterType, parameterTypes[j]);
 				}

@@ -9,6 +9,5 @@ namespace LinqToDB.TypeBuilder.Builders
 		string AssemblyNameSuffix { get; }
 		Type   Build          (AssemblyBuilderHelper assemblyBuilder);
 		string GetTypeName    ();
-		Type   GetBuildingType();
 	}
 }

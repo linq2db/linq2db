@@ -42,11 +42,6 @@ namespace LinqToDB.TypeBuilder.Builders
 			return _type.FullName.Replace('+', '.') + "$TypeAccessor";
 		}
 
-		public Type GetBuildingType()
-		{
-			return _type;
-		}
-
 		public Type Build(AssemblyBuilderHelper assemblyBuilder)
 		{
 			if (assemblyBuilder == null) throw new ArgumentNullException("assemblyBuilder");

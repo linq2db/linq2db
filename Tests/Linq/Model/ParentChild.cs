@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using LinqToDB.Data.Linq;
 using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
@@ -411,7 +412,7 @@ namespace Data.Linq.Model
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase2))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance12))]
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance12))]
-	public abstract class ParentInheritanceBase2
+	public class ParentInheritanceBase2
 	{
 		[PrimaryKey]
 		public int ParentID;

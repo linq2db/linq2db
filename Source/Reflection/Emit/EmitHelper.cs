@@ -854,29 +854,6 @@ namespace LinqToDB.Reflection.Emit
 		}
 
 		/// <summary>
-		/// Calls ILGenerator.EmitCall(<see cref="OpCodes.Callvirt"/>, methodInfo, optionalParameterTypes) that
-		/// calls a late-bound method on an object, pushing the return value onto the evaluation stack.
-		/// </summary>
-		/// <param name="methodName">The non-generic method to be called.</param>
-		/// <param name="type">The declaring type of the method.</param>
-		/// <param name="optionalParameterTypes">The types of the optional arguments if the method is a varargs method.</param>
-		/// <seealso cref="OpCodes.Callvirt">OpCodes.Callvirt</seealso>
-		/// <seealso cref="System.Reflection.Emit.ILGenerator.EmitCall(OpCode,MethodInfo,Type[])">ILGenerator.EmitCall</seealso>
-		public EmitHelper callvirtNoGenerics(Type type, string methodName, params Type[] optionalParameterTypes)
-		{
-			MethodInfo methodInfo = type.GetMethod(
-				methodName,
-				BindingFlags.Instance | BindingFlags.Public,
-				GenericBinder.NonGeneric,
-				optionalParameterTypes, null);
-
-			if (methodInfo == null)
-				throw CreateNoSuchMethodException(type, methodName);
-
-			return callvirt(methodInfo);
-		}
-
-		/// <summary>
 		/// Calls ILGenerator.Emit(<see cref="OpCodes.Castclass"/>, type) that
 		/// attempts to cast an object passed by reference to the specified class.
 		/// </summary>

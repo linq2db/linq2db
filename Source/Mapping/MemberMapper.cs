@@ -4,9 +4,9 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Xml;
+
 using LinqToDB.Data.Sql;
 using LinqToDB.Reflection;
-using LinqToDB.TypeBuilder;
 
 using Convert = LinqToDB.Common.Convert;
 
@@ -42,17 +42,10 @@ namespace LinqToDB.Mapping
 			if (type.IsPrimitive || type.IsEnum)
 				mm = GetPrimitiveMemberMapper(mi);
 
-			if (mm == null)
-			{
-				mm = GetNullableMemberMapper(mi);
-
-				//if (mm != null)
-				//    mi.IsNullable = true;
-			}
-
-			if (mm == null) mm = GetSimpleMemberMapper(mi);
+			if (mm == null) mm = GetNullableMemberMapper(mi);
+			if (mm == null) mm = GetSimpleMemberMapper  (mi);
 #if !SILVERLIGHT
-			if (mm == null) mm = GetSqlTypeMemberMapper(mi);
+			if (mm == null) mm = GetSqlTypeMemberMapper (mi);
 #endif
 			return mm ?? new DefaultMemberMapper();
 		}
@@ -371,36 +364,9 @@ namespace LinqToDB.Mapping
 
 			private readonly MemberMapper _mapper;
 
-			public override void Init(MapMemberInfo mapMemberInfo)
-			{
-				base.Init(mapMemberInfo);
-
-				var attr = MemberAccessor.GetAttribute<NoInstanceAttribute>();
-
-				if (attr != null)
-				{
-					_createInstance = true;
-				}
-			}
-
-			bool         _createInstance;
-			TypeAccessor _typeAccessor;
-
 			object GetObject(object o)
 			{
-				var obj = MemberAccessor.GetValue(o);
-
-				if (_createInstance && obj == null)
-				{
-					if (_typeAccessor == null)
-						_typeAccessor = TypeAccessor.GetAccessor(MemberAccessor.Type);
-
-					obj = _typeAccessor.CreateInstanceEx();
-
-					MemberAccessor.SetValue(o, obj);
-				}
-
-				return obj;
+				return MemberAccessor.GetValue(o);
 			}
 
 			#region GetValue

@@ -219,11 +219,7 @@ namespace LinqToDB.Reflection.Emit
 			// and the following condition should've been used below:
 			// if ((methodInfoDeclaration is FakeMethodInfo) == false)
 			//
-			if (methodInfoDeclaration.DeclaringType.IsInterface
-#if !SILVERLIGHT
-				&& !(methodInfoDeclaration is FakeMethodInfo)
-#endif
-				)
+			if (methodInfoDeclaration.DeclaringType.IsInterface)
 			{
 				OverriddenMethods.Add(methodInfoDeclaration, method.MethodBuilder);
 				_typeBuilder.DefineMethodOverride(method.MethodBuilder, methodInfoDeclaration);
@@ -258,23 +254,17 @@ namespace LinqToDB.Reflection.Emit
 			if (methodInfoDeclaration == null) throw new ArgumentNullException("methodInfoDeclaration");
 
 			var isInterface = methodInfoDeclaration.DeclaringType.IsInterface;
-#if SILVERLIGHT
-			var isFake      = false;
-#else
-			var isFake      = methodInfoDeclaration is FakeMethodInfo;
-#endif
-
-			var name = isInterface && !isFake?
+			var name        = isInterface?
 				methodInfoDeclaration.DeclaringType.FullName + "." + methodInfoDeclaration.Name:
 				methodInfoDeclaration.Name;
 
-			var attributes = 
+			var attributes  =
 				MethodAttributes.Virtual |
 				MethodAttributes.HideBySig |
 				MethodAttributes.PrivateScope |
 				methodInfoDeclaration.Attributes & MethodAttributes.SpecialName;
 
-			if (isInterface && !isFake)
+			if (isInterface)
 				attributes |= MethodAttributes.Private;
 			else if ((attributes & MethodAttributes.SpecialName) != 0)
 				attributes |= MethodAttributes.Public;

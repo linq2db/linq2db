@@ -592,26 +592,6 @@ namespace LinqToDB.Reflection
 		}
 
 		/// <summary>
-		/// Searches for the specified public instance method, using the specified name and argument types.
-		/// </summary>
-		/// <param name="methodName">The String containing the name of the method to get.</param>
-		/// <param name="generic">True to search only for a generic method, or
-		/// False to search only for non-generic method.</param>
-		/// <param name="types">An array of <see cref="System.Type"/> objects representing
-		/// the number, order, and type of the parameters for the method to get.-or-
-		/// An empty array of the type <see cref="System.Type"/> (for example, <see cref="System.Type.EmptyTypes"/>)
-		/// to get a method that takes no parameters.</param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public MethodInfo GetPublicMethod(bool generic, string methodName, params Type[] types)
-		{
-			return Type.GetMethod(methodName,
-				BindingFlags.Instance | BindingFlags.Public,
-				generic ? GenericBinder.Generic : GenericBinder.NonGeneric,
-				types, null);
-		}
-
-		/// <summary>
 		/// Searches for the specified instance method (public or non-public),
 		/// using the specified name and argument types.
 		/// </summary>
@@ -1087,43 +1067,6 @@ namespace LinqToDB.Reflection
 			}
 
 			return null;
-		}
-
-		public static object[] GetPropertyParameters(PropertyInfo propertyInfo)
-		{
-			if (propertyInfo == null) throw new ArgumentNullException("propertyInfo");
-
-			var attrs = propertyInfo.GetCustomAttributes(typeof(ParameterAttribute), true);
-
-			if (attrs != null && attrs.Length > 0)
-				return ((ParameterAttribute)attrs[0]).Parameters;
-
-			return null;
-		}
-
-		/// <summary>
-		/// Searches for the property defined for a <see cref="System.Type"/>,
-		/// using the specified name and parameter types.
-		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
-		/// <param name="propertyName">The String containing the name of the method to get.</param>
-		/// <param name="types">An array of Type objects representing the number,
-		/// order, and type of the parameters for the constructor to get.</param>
-		/// <param name="returnType">The property return <see cref="System.Type"/>. </param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public static PropertyInfo GetPropertyInfo(
-			Type type, string propertyName, Type returnType, Type[] types)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			return type.GetProperty(
-				propertyName,
-				BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-				null,
-				returnType,
-				types,
-				null);
 		}
 
 		///<summary>

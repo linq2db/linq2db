@@ -257,25 +257,6 @@ namespace LinqToDB.Reflection
 			return TypeAccessor<T>.Instance;
 		}
 
-		internal static bool IsInstanceBuildable(Type type)
-		{
-			if (!type.IsInterface)
-				return true;
-
-			lock (_accessors)
-			{
-				if (_accessors.ContainsKey(type))
-					return true;
-
-				if (IsAssociatedType(type))
-					return true;
-			}
-
-			var attrs = TypeHelper.GetAttributes(type, typeof(AutoImplementInterfaceAttribute));
-
-			return attrs != null && attrs.Length > 0;
-		}
-
 		private static bool IsAssociatedType(Type type)
 		{
 			if (AssociatedTypeHandler != null)
