@@ -191,7 +191,6 @@
     <Compile Include="Providers.cs" />
     <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="ProviderSpecific\Firebird.cs" />
-    <Compile Include="ProviderSpecific\MySqlSprocParameterPrefixTests.cs" />
     <Compile Include="ProviderSpecific\Oracle.cs" />
     <Compile Include="TableFunctionTest.cs" />
     <Compile Include="VisualBasicTest.cs" />

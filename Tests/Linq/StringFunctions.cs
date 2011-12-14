@@ -632,42 +632,5 @@ namespace Data.Linq
 				Assert.AreEqual(false, q.ToList().First());
 			});
 		}
-
-		//[Test]
-		public void Test()
-		{
-			using (var db = new TestDbManager(ProviderName.Firebird))
-			{
-				var p = db
-					.SetCommand(@"
-						SELECT
-							t1.ParentID,
-							t1.Value1
-						FROM
-							Parent t1
-								LEFT JOIN (
-									SELECT
-										t3.ParentID as ParentID1,
-										Coalesce(t3.ParentID, 1) as c1
-									FROM
-										Child t3
-								) t2 ON t1.ParentID = t2.ParentID1
-						WHERE
-							t2.c1 IS NULL")
-					.ExecuteList<Parent>();
-
-				var p1 = p.First();
-				Assert.AreEqual(1, p1.ParentID);
-
-
-				var da = new SqlQuery();
-				var pr  = (Person)da.SelectByKey(typeof(Person), 1);
-
-				Assert.AreEqual("Pupkin", pr.LastName);
-
-
-				//Assert.AreEqual(1, p.ID);
-			}
-		}
 	}
 }

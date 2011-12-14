@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Text;
@@ -15,11 +14,9 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using Common;
 	using DataProvider;
 	using Mapping;
 	using Properties;
-	using Reflection;
 	using Sql;
 
 	/// <summary>
@@ -29,11 +26,11 @@ namespace LinqToDB.Data
 	/// <remarks>
 	/// When the <b>DbManager</b> goes out of scope, it does not close the internal connection object.
 	/// Therefore, you must explicitly close the connection by calling <see cref="Close"/> or 
-	/// <see cref="Dispose(bool)"/>. Also, you can use the C# <b>using</b> statement.
+	/// <see cref="Dispose"/>. Also, you can use the C# <b>using</b> statement.
 	/// </remarks>
 	/// <include file="Examples.xml" path='examples/db[@name="DbManager"]/*' />
 	[DesignerCategory(@"Code")]
-	public partial class DbManager: Component
+	public partial class DbManager
 	{
 		#region Init
 
@@ -151,13 +148,6 @@ namespace LinqToDB.Data
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
-		private    bool _canRaiseEvents = true;
-		public new bool  CanRaiseEvents
-		{
-			get { return _canRaiseEvents && base.CanRaiseEvents; }
-			set { _canRaiseEvents = value; }
-		}
-
 		#endregion
 
 		#region Connection
@@ -220,16 +210,13 @@ namespace LinqToDB.Data
 		/// and then closes the connection.
 		/// </remarks>
 		/// <include file="Examples.xml" path='examples/db[@name="Close()"]/*' />
-		/// <seealso cref="Dispose(bool)"/>
+		/// <seealso cref="Dispose"/>
 		public void Close()
 		{
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
 
 			if (_selectCommand != null) { _selectCommand.Dispose(); _selectCommand = null; }
-			if (_insertCommand != null) { _insertCommand.Dispose(); _insertCommand = null; }
-			if (_updateCommand != null) { _updateCommand.Dispose(); _updateCommand = null; }
-			if (_deleteCommand != null) { _deleteCommand.Dispose(); _deleteCommand = null; }
 
 			if (_transaction != null && _closeTransaction)
 			{
@@ -317,9 +304,6 @@ namespace LinqToDB.Data
 			// If the active command exists.
 			//
 			if (_selectCommand != null) _selectCommand.Transaction = _transaction;
-			if (_insertCommand != null) _insertCommand.Transaction = _transaction;
-			if (_updateCommand != null) _updateCommand.Transaction = _transaction;
-			if (_deleteCommand != null) _deleteCommand.Transaction = _transaction;
 
 			return this;
 		}
@@ -401,59 +385,8 @@ namespace LinqToDB.Data
 			get { return _selectCommand = OnInitCommand(_selectCommand); }
 		}
 
-		private IDbCommand _insertCommand;
 		/// <summary>
-		/// Gets the insert <see cref="IDbCommand"/> used by this instance of the <see cref="DbManager"/>.
-		/// </summary>
-		/// <value>
-		/// A <see cref="IDbCommand"/> used during executing query.
-		/// </value>
-		/// <remarks>
-		/// The <b>InsertCommand</b> can be used to access insert command parameters.
-		/// </remarks>
-		/// <include file="Examples.xml" path='examples/db[@name="Command"]/*' />
-		public IDbCommand InsertCommand
-		{
-			[DebuggerStepThrough]
-			get { return _insertCommand = OnInitCommand(_insertCommand); }
-		}
-
-		private IDbCommand _updateCommand;
-		/// <summary>
-		/// Gets the update <see cref="IDbCommand"/> used by this instance of the <see cref="DbManager"/>.
-		/// </summary>
-		/// <value>
-		/// A <see cref="IDbCommand"/> used during executing query.
-		/// </value>
-		/// <remarks>
-		/// The <b>UpdateCommand</b> can be used to access update command parameters.
-		/// </remarks>
-		/// <include file="Examples.xml" path='examples/db[@name="Command"]/*' />
-		public IDbCommand UpdateCommand
-		{
-			[DebuggerStepThrough]
-			get { return _updateCommand = OnInitCommand(_updateCommand); }
-		}
-
-		private IDbCommand _deleteCommand;
-		/// <summary>
-		/// Gets the delete <see cref="IDbCommand"/> used by this instance of the <see cref="DbManager"/>.
-		/// </summary>
-		/// <value>
-		/// A <see cref="IDbCommand"/> used during executing query.
-		/// </value>
-		/// <remarks>
-		/// The <b>DeleteCommand</b> can be used to access delete command parameters.
-		/// </remarks>
-		/// <include file="Examples.xml" path='examples/db[@name="Command"]/*' />
-		public IDbCommand DeleteCommand
-		{
-			[DebuggerStepThrough]
-			get { return _deleteCommand = OnInitCommand(_deleteCommand); }
-		}
-
-		/// <summary>
-		/// Initializes a command and raises the <see cref="InitCommand"/> event.
+		/// Initializes a command.
 		/// </summary>
 		protected virtual IDbCommand OnInitCommand(IDbCommand command)
 		{
@@ -471,28 +404,19 @@ namespace LinqToDB.Data
 				}
 			}
 
-			if (CanRaiseEvents)
-			{
-				var handler = (InitCommandEventHandler)Events[_eventInitCommand];
-
-				if (handler != null)
-					handler(this, new InitCommandEventArgs(command));
-			}
-
 			return command;
 		}
 
 		/// <summary>
 		/// Helper function. Creates the command object and sets command type and command text.
 		/// </summary>
-		/// <param name="commandAction">Command action.</param>
 		/// <param name="commandType">The <see cref="System.Data.CommandType"/>
 		/// (stored procedure, text, etc.)</param>
 		/// <param name="sql">The SQL statement.</param>
 		/// <returns>The command object.</returns>
-		private IDbCommand GetCommand(CommandAction commandAction, CommandType commandType, string sql)
+		private IDbCommand GetCommand(CommandType commandType, string sql)
 		{
-			var command = GetCommand(commandAction, commandType);
+			var command = GetCommand(commandType);
 
 			command.Parameters.Clear();
 			command.CommandType = commandType;
@@ -507,91 +431,6 @@ namespace LinqToDB.Data
 
 		public event EventHandler OnClosing;
 		public event EventHandler OnClosed;
-
-		private static readonly object _eventBeforeOperation = new object();
-		/// <summary>
-		/// Occurs when a server-side operation is about to start.
-		/// </summary>
-		public event OperationTypeEventHandler BeforeOperation
-		{
-			add    { Events.AddHandler   (_eventBeforeOperation, value); }
-			remove { Events.RemoveHandler(_eventBeforeOperation, value); }
-		}
-
-		private static readonly object _eventAfterOperation = new object();
-		/// <summary>
-		/// Occurs when a server-side operation is complete.
-		/// </summary>
-		public event OperationTypeEventHandler AfterOperation
-		{
-			add    { Events.AddHandler   (_eventAfterOperation, value); }
-			remove { Events.RemoveHandler(_eventAfterOperation, value); }
-		}
-
-		private static readonly object _eventOperationException = new object();
-		/// <summary>
-		/// Occurs when a server-side operation is failed to execute.
-		/// </summary>
-		public event OperationExceptionEventHandler OperationException
-		{
-			add    { Events.AddHandler   (_eventOperationException, value); }
-			remove { Events.RemoveHandler(_eventOperationException, value); }
-		}
-
-		private static readonly object _eventInitCommand = new object();
-		/// <summary>
-		/// Occurs when the <see cref="Command"/> is initializing.
-		/// </summary>
-		public event InitCommandEventHandler InitCommand
-		{
-			add    { Events.AddHandler   (_eventInitCommand, value); }
-			remove { Events.RemoveHandler(_eventInitCommand, value); }
-		}
-
-		/// <summary>
-		/// Raises the <see cref="BeforeOperation"/> event.
-		/// </summary>
-		/// <param name="op">The <see cref="OperationType"/>.</param>
-		protected virtual void OnBeforeOperation(OperationType op)
-		{
-			if (CanRaiseEvents)
-			{
-				var handler = (OperationTypeEventHandler)Events[_eventBeforeOperation];
-				if (handler != null)
-					handler(this, new OperationTypeEventArgs(op));
-			}
-		}
-
-		/// <summary>
-		/// Raises the <see cref="AfterOperation"/> event.
-		/// </summary>
-		/// <param name="op">The <see cref="OperationType"/>.</param>
-		protected virtual void OnAfterOperation(OperationType op)
-		{
-			if (CanRaiseEvents)
-			{
-				var handler = (OperationTypeEventHandler)Events[_eventAfterOperation];
-				if (handler != null)
-					handler(this, new OperationTypeEventArgs(op));
-			}
-		}
-
-		/// <summary>
-		/// Raises the <see cref="OperationException"/> event.
-		/// </summary>
-		/// <param name="op">The <see cref="OperationType"/>.</param>
-		/// <param name="ex">The <see cref="Exception"/> occurred.</param>
-		protected virtual void OnOperationException(OperationType op, DataException ex)
-		{
-			if (CanRaiseEvents)
-			{
-				var handler = (OperationExceptionEventHandler)Events[_eventOperationException];
-				if (handler != null)
-					handler(this, new OperationExceptionEventArgs(op, ex));
-			}
-
-			throw ex;
-		}
 
 		#endregion
 
@@ -618,109 +457,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Parameters
-
-		private IDbDataParameter[] CreateSpParameters(string spName, object[] parameterValues, bool openNewConnectionToDiscoverParameters)
-		{
-			// Pull the parameters for this stored procedure from 
-			// the parameter cache (or discover them & populate the cache)
-			//
-			var spParameters = GetSpParameters(spName, true, openNewConnectionToDiscoverParameters);
-
-			// DbParameters are bound by name, plain parameters by order
-			//
-			var dbParameters = false;
-
-			if (parameterValues == null || parameterValues.Length == 0 ||
-				parameterValues[0] is IDbDataParameter || parameterValues[0] is IDbDataParameter[])
-			{
-				// The PrepareParameters method may add some additional parameters.
-				//
-				parameterValues = PrepareParameters(parameterValues);
-
-				if (parameterValues == null || parameterValues.Length == 0)
-					return spParameters;
-
-				dbParameters = true;
-			}
-
-			if (spParameters == null/* || commandParameters.Length == 0*/)
-			{
-				spParameters = new IDbDataParameter[parameterValues.Length];
-
-				if (dbParameters)
-					parameterValues.CopyTo(spParameters, 0);
-				else
-					for (var i = 0; i < parameterValues.Length; i++)
-						spParameters[i] = Parameter("?", parameterValues[i]);
-
-				return spParameters;
-			}
-
-			if (dbParameters)
-			{
-				// If we receive an array of IDbDataParameter, 
-				// we need to copy parameters to the IDbDataParameter[].
-				//
-				foreach (var spParam in spParameters)
-				{
-					var spParamName = spParam.ParameterName;
-					var found = false;
-
-					foreach (IDbDataParameter paramWithValue in parameterValues)
-					{
-						var parameterNamesEqual = _dataProvider.ParameterNamesEqual(spParamName, paramWithValue.ParameterName);
-						if (!parameterNamesEqual)
-						{
-							var convertedParameterName =
-								_dataProvider.Convert(paramWithValue.ParameterName, ConvertType.NameToSprocParameter).ToString();
-
-							parameterNamesEqual = _dataProvider.ParameterNamesEqual(spParamName, convertedParameterName);
-						}
-
-						if (!parameterNamesEqual) continue;
-
-						if (spParam.Direction != paramWithValue.Direction)
-						{
-							if (TraceSwitch.TraceWarning)
-								WriteTraceLine(
-									string.Format(
-										"Stored Procedure '{0}'. Parameter '{1}' has different direction '{2}'. Should be '{3}'.",
-										spName, spParamName, spParam.Direction, paramWithValue.Direction),
-									TraceSwitch.DisplayName);
-
-							spParam.Direction = paramWithValue.Direction;
-						}
-
-						if (spParam.Direction != ParameterDirection.Output)
-							spParam.Value = paramWithValue.Value;
-
-						paramWithValue.ParameterName = spParamName;
-						found = true;
-						break;
-					}
-
-					if (found == false && (
-					                       spParam.Direction == ParameterDirection.Input || 
-					                       spParam.Direction == ParameterDirection.InputOutput))
-					{
-						if (TraceSwitch.TraceWarning)
-							WriteTraceLine(
-								string.Format("Stored Procedure '{0}'. Parameter '{1}' not assigned.", spName, spParamName),
-								TraceSwitch.DisplayName);
-
-						spParam.SourceColumn = _dataProvider.Convert(spParamName, ConvertType.SprocParameterToName).ToString();
-					}
-				}
-			}
-			else
-			{
-				// Assign the provided values to the parameters based on parameter order.
-				//
-				AssignParameterValues(spName, spParameters, parameterValues);
-			}
-
-			return spParameters;
-		}
 
 		///<summary>
 		/// Creates an one-dimension array of <see cref="IDbDataParameter"/>
@@ -926,88 +662,6 @@ namespace LinqToDB.Data
 			return CloneParameters(cachedParameters);
 		}
 
-		/// <summary>
-		/// This method assigns an array of values to an array of parameters.
-		/// </summary>
-		/// <param name="spName"></param>
-		/// <param name="commandParameters">array of IDbDataParameters to be assigned values</param>
-		/// <param name="parameterValues">array of objects holding the values to be assigned</param>
-		private void AssignParameterValues(string spName, IDbDataParameter[] commandParameters, object[] parameterValues)
-		{
-			if (commandParameters == null || parameterValues == null)
-			{
-				// Do nothing if we get no data.
-				//
-				return;
-			}
-
-			var nValues = 0;
-
-			// Iterate through the parameters, assigning the values from 
-			// the corresponding position in the value array.
-			//
-			for (var index = 0; index < commandParameters.Length; index++)
-			{
-				var parameter = commandParameters[index];
-
-				if (_dataProvider.IsValueParameter(parameter))
-				{
-					if (nValues >= parameterValues.Length)
-						throw new ArgumentException(string.Format("Parsing for {0} failed: {1}", spName, GetMissedColumnNames(index, commandParameters)));
-
-					var value = parameterValues[nValues++];
-
-					_dataProvider.SetParameterValue(parameter, value ?? DBNull.Value);
-				}
-			}
-
-			// We must have the same number of values as we pave parameters to put them in.
-			//
-			if (nValues != parameterValues.Length)
-				throw new ArgumentException(string.Format("Parsing for {0} failed: {1}", spName, GetExceedParameters(nValues, parameterValues)));
-		}
-
-		string GetMissedColumnNames(int startIndex, IDbDataParameter[] commandParameters)
-		{
-			var columnNames = new List<string>();
-
-			for (var index = startIndex; index < commandParameters.Length; index++)
-			{
-				var parameter = commandParameters[index];
-
-				if (_dataProvider.IsValueParameter(parameter))
-				{
-					columnNames.Add(string.Format("{0} {{{1}}}", parameter.ParameterName, parameter.DbType));
-				}
-			}
-
-#if FW4
-			return "Missed columns: " + string.Join(", ", columnNames);
-#else
-			return "Missed columns: " + string.Join(", ", columnNames.ToArray());
-#endif
-		}
-
-		static string GetExceedParameters(int startIndex, object[] parameterValues)
-		{
-			var columnNames = new List<string>();
-
-			for (var index = startIndex; index < parameterValues.Length; index++)
-			{
-				var parameter = parameterValues[index];
-				columnNames.Add(
-					parameter == null
-						? "<null>"
-						: string.Format("{0} {{{1}}}", parameter, parameter.GetType().Name));
-			}
-
-#if FW4
-			return "Exceed parameters: " + string.Join(", ", columnNames);
-#else
-			return "Exceed parameters: " + string.Join(", ", columnNames.ToArray());
-#endif
-		}
-
 		/// <overloads>
 		/// Assigns a business object to command parameters.
 		/// </overloads>
@@ -1036,7 +690,7 @@ namespace LinqToDB.Data
 				}
 
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			return this;
 		}
@@ -1073,7 +727,7 @@ namespace LinqToDB.Data
 			}
 
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			return this;
 		}
@@ -1228,7 +882,7 @@ namespace LinqToDB.Data
 
 				var parameter =
 					value == null ?
-						NullParameter(name, value, mm.MapMemberInfo.NullValue) :
+						NullParameter(name, null, mm.MapMemberInfo.NullValue) :
 						(mm.DbType != DbType.Object) ?
 							Parameter(name, value, mm.DbType):
 							Parameter(name, value);
@@ -1858,105 +1512,45 @@ namespace LinqToDB.Data
 
 		#region SetCommand
 
-		/// <summary>
-		/// Specifies the action that command is supposed to perform, i.e. Select, Insert, Update, Delete.
-		/// It is used in Execute methods of the <see cref="DbManager"/> class to identify command instance 
-		/// to be used.
-		/// </summary>
-		enum CommandAction
-		{
-			Select,
-			Insert,
-			Update,
-			Delete
-		}
-
 		private bool _executed;
 		private bool _prepared;
 
 		private IDbDataParameter[] _selectCommandParameters;
-		private IDbDataParameter[] _insertCommandParameters;
-		private IDbDataParameter[] _updateCommandParameters;
-		private IDbDataParameter[] _deleteCommandParameters;
 
-		private void SetCommand(CommandAction commandAction, IDbCommand command)
+		private void SetCommand(IDbCommand command)
 		{
-			switch (commandAction)
-			{
-				case CommandAction.Select: _selectCommand = command; break;
-				case CommandAction.Insert: _insertCommand = command; break;
-				case CommandAction.Update: _updateCommand = command; break;
-				case CommandAction.Delete: _deleteCommand = command; break;
-			}
+			_selectCommand = command;
 		}
 
-		private IDbCommand GetCommand(CommandAction commandAction)
+		private IDbCommand GetCommand()
 		{
-			switch (commandAction)
-			{
-				default:
-				//case CommandAction.Select:
-					return SelectCommand;
-				case CommandAction.Insert: return InsertCommand;
-				case CommandAction.Update: return UpdateCommand;
-				case CommandAction.Delete: return DeleteCommand;
-			}
+			return SelectCommand;
 		}
 
-		private IDbCommand GetCommand(CommandAction commandAction, CommandType commandType)
+		private IDbCommand GetCommand(CommandType commandType)
 		{
-			IDbCommand command;
-
-			switch (commandAction)
-			{
-				default                   : command = _selectCommand; break;
-				case CommandAction.Insert : command = _insertCommand; break;
-				case CommandAction.Update : command = _updateCommand; break;
-				case CommandAction.Delete : command = _deleteCommand; break;
-			}
+			var command = _selectCommand;
 
 			if (command != null && !DataProvider.CanReuseCommand(command, commandType))
 			{
 				command.Dispose();
-
-				switch (commandAction)
-				{
-					default                   : _selectCommand = null; break;
-					case CommandAction.Insert : _insertCommand = null; break;
-					case CommandAction.Update : _updateCommand = null; break;
-					case CommandAction.Delete : _deleteCommand = null; break;
-				}
+				_selectCommand = null;
 			}
 
-			return GetCommand(commandAction);
+			return GetCommand();
 		}
 
-		private void SetCommandParameters(CommandAction commandAction, IDbDataParameter[] commandParameters)
+		private void SetCommandParameters(IDbDataParameter[] commandParameters)
 		{
-			switch (commandAction)
-			{
-				case CommandAction.Select: _selectCommandParameters = commandParameters; break;
-				case CommandAction.Insert: _insertCommandParameters = commandParameters; break;
-				case CommandAction.Update: _updateCommandParameters = commandParameters; break;
-				case CommandAction.Delete: _deleteCommandParameters = commandParameters; break;
-			}
+			_selectCommandParameters = commandParameters;
 		}
 
-		private IDbDataParameter[] GetCommandParameters(CommandAction commandAction)
+		private IDbDataParameter[] GetCommandParameters()
 		{
-			switch (commandAction)
-			{
-				default:
-				//case CommandAction.Select:
-					return _selectCommandParameters;
-				case CommandAction.Insert: return _insertCommandParameters;
-				case CommandAction.Update: return _updateCommandParameters;
-				case CommandAction.Delete: return _deleteCommandParameters;
-			}
+			return _selectCommandParameters;
 		}
 
 		private DbManager SetCommand(
-			CommandAction commandAction,
 			CommandType   commandType,
 			string        commandText,
 			params        IDbDataParameter[] commandParameters)
@@ -1967,34 +1561,9 @@ namespace LinqToDB.Data
 				_prepared = false;
 			}
 
-			PrepareCommand(commandAction, commandType, commandText, commandParameters);
+			PrepareCommand(commandType, commandText, commandParameters);
 			
 			return this;
-		}
-
-		private DbManager SetSpCommand(
-			CommandAction   commandAction,
-			string          spName,
-			bool            openNewConnectionToDiscoverParameters,
-			params object[] parameterValues)
-		{
-			return SetCommand(
-				commandAction,
-				CommandType.StoredProcedure,
-				spName,
-				CreateSpParameters(spName, parameterValues, openNewConnectionToDiscoverParameters));
-		}
-
-		private DbManager SetSpCommand(
-			CommandAction   commandAction,
-			string          spName,
-			params object[] parameterValues)
-		{
-			return SetCommand(
-				commandAction,
-				CommandType.StoredProcedure,
-				spName,
-				CreateSpParameters(spName, parameterValues, Configuration.OpenNewConnectionToDiscoverParameters));
 		}
 
 		#region Select
@@ -2007,7 +1576,7 @@ namespace LinqToDB.Data
 		public DbManager SetCommand(
 			string commandText)
 		{
-			return SetCommand(CommandAction.Select, CommandType.Text, commandText, null);
+			return SetCommand(CommandType.Text, commandText, null);
 		}
 
 		/// <summary>
@@ -2020,7 +1589,7 @@ namespace LinqToDB.Data
 			CommandType commandType,
 			string      commandText)
 		{
-			return SetCommand(CommandAction.Select, commandType, commandText, null);
+			return SetCommand(commandType, commandText, null);
 		}
 
 		/// <summary>
@@ -2036,48 +1605,7 @@ namespace LinqToDB.Data
 			string commandText,
 			params IDbDataParameter[] commandParameters)
 		{
-			return SetCommand(CommandAction.Select, CommandType.Text, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates a SQL statement.
-		/// </summary>
-		/// <param name="commandType">The <see cref="System.Data.CommandType"/> (stored procedure, text, etc.)</param>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetCommand(
-			CommandType commandType,
-			string      commandText,
-			params      IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(CommandAction.Select, commandType, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates a command to be executed as a stored procedure using the provided parameter values.
-		/// </summary>
-		/// <remarks>
-		/// The method queries the database to discover the parameters for the stored procedure 
-		/// (the first time each stored procedure is called), 
-		/// and assign the values based on parameter order.
-		/// </remarks>
-		/// <param name="spName">The name of the stored procedure</param>
-		/// <param name="parameterValues">An array of objects to be assigned as the input values of the stored procedure</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetSpCommand(
-			string spName,
-			params object[] parameterValues)
-		{
-			return SetSpCommand(CommandAction.Select, spName, parameterValues);
-		}
-
-		public DbManager SetSpCommand(
-			string spName,
-			bool   openNewConnectionToDiscoverParameters,
-			params object[] parameterValues)
-		{
-			return SetSpCommand(CommandAction.Select, spName, openNewConnectionToDiscoverParameters, parameterValues);
+			return SetCommand(CommandType.Text, commandText, commandParameters);
 		}
 
 		public DbManager SetCommand(SqlQuery sql, params IDbDataParameter[] commandParameters)
@@ -2104,177 +1632,11 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		#region Insert
-
-		/// <summary>
-		/// Creates an Insert SQL statement.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to create the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetInsertCommand(
-			string commandText,
-			params IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Insert, CommandType.Text, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates an Insert SQL statement.
-		/// </summary>
-		/// <param name="commandType">The <see cref="System.Data.CommandType"/> (stored procedure, text, etc.)</param>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetInsertCommand(
-			CommandType commandType,
-			string      commandText,
-			params      IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Insert, commandType, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates an Insert command to be executed as a stored procedure using the provided parameter values.
-		/// </summary>
-		/// <remarks>
-		/// The method queries the database to discover the parameters for the stored procedure 
-		/// (the first time each stored procedure is called), 
-		/// and assign the values based on parameter order.
-		/// </remarks>
-		/// <param name="spName">The name of the stored procedure</param>
-		/// <param name="parameterValues">An array of objects to be assigned as the input values of the stored procedure</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetInsertSpCommand(
-			string spName,
-			params object[] parameterValues)
-		{
-			return SetSpCommand(CommandAction.Insert, spName, parameterValues);
-		}
-
-		#endregion
-
-		#region Update
-
-		/// <summary>
-		/// Creates an Update SQL statement.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to create the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetUpdateCommand(
-			string commandText,
-			params IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Update, CommandType.Text, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates an Update SQL statement.
-		/// </summary>
-		/// <param name="commandType">The <see cref="System.Data.CommandType"/> (stored procedure, text, etc.)</param>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetUpdateCommand(
-			CommandType commandType,
-			string      commandText,
-			params      IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Update, commandType, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates an Update command to be executed as a stored procedure using the provided parameter values.
-		/// </summary>
-		/// <remarks>
-		/// The method queries the database to discover the parameters for the stored procedure 
-		/// (the first time each stored procedure is called), 
-		/// and assign the values based on parameter order.
-		/// </remarks>
-		/// <param name="spName">The name of the stored procedure</param>
-		/// <param name="parameterValues">An array of objects to be assigned as the input values of the stored procedure</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetUpdateSpCommand(
-			string spName,
-			params object[] parameterValues)
-		{
-			return SetSpCommand(CommandAction.Update, spName, parameterValues);
-		}
-
-		#endregion
-
-		#region Delete
-
-		/// <summary>
-		/// Creates a Delete SQL statement.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to create the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetDeleteCommand(
-			string commandText,
-			params IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Delete, CommandType.Text, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates a Delete SQL statement.
-		/// </summary>
-		/// <param name="commandType">The <see cref="System.Data.CommandType"/> (stored procedure, text, etc.)</param>
-		/// <param name="commandText">The command text to execute.</param>
-		/// <param name="commandParameters">An array of parameters used to executes the command.</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetDeleteCommand(
-			CommandType commandType,
-			string      commandText,
-			params      IDbDataParameter[] commandParameters)
-		{
-			return SetCommand(
-				CommandAction.Delete, commandType, commandText, commandParameters);
-		}
-
-		/// <summary>
-		/// Creates a Delete command to be executed as a stored procedure using the provided parameter values.
-		/// </summary>
-		/// <remarks>
-		/// The method queries the database to discover the parameters for the stored procedure 
-		/// (the first time each stored procedure is called), 
-		/// and assign the values based on parameter order.
-		/// </remarks>
-		/// <param name="spName">The name of the stored procedure</param>
-		/// <param name="parameterValues">An array of objects to be assigned as the input values of the stored procedure</param>
-		/// <returns>Current instance.</returns>
-		public DbManager SetDeleteSpCommand(
-			string spName,
-			params object[] parameterValues)
-		{
-			return SetSpCommand(CommandAction.Delete, spName, parameterValues);
-		}
-
-		#endregion
-
 		#endregion
 
 		#region Prepare
 
 		private void PrepareCommand(
-			CommandAction      commandAction,
 			CommandType        commandType,
 			string             commandText,
 			IDbDataParameter[] commandParameters)
@@ -2283,10 +1645,10 @@ namespace LinqToDB.Data
 
 			LastQuery = commandText;
 
-			var command = GetCommand(commandAction, commandType, commandText);
+			var command = GetCommand(commandType, commandText);
 
-			SetCommand          (commandAction, command);
-			SetCommandParameters(commandAction, commandParameters);
+			SetCommand          (command);
+			SetCommandParameters(commandParameters);
 
 			if (commandParameters != null)
 			{
@@ -2300,9 +1662,9 @@ namespace LinqToDB.Data
 		/// <returns>Current instance.</returns>
 		public DbManager Prepare()
 		{
-			var command = GetCommand(CommandAction.Select);
+			var command = GetCommand();
 
-			if (InitParameters(CommandAction.Select) == false)
+			if (InitParameters() == false)
 				ExecuteOperation(OperationType.PrepareCommand, command.Prepare);
 
 			_prepared = true;
@@ -2310,11 +1672,11 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		bool InitParameters(CommandAction commandAction)
+		bool InitParameters()
 		{
 			var prepare = false;
 
-			var commandParameters = GetCommandParameters(commandAction);
+			var commandParameters = GetCommandParameters();
 
 			if (commandParameters != null)
 			{
@@ -2394,7 +1756,7 @@ namespace LinqToDB.Data
 				//
 				if (prepare)
 				{
-					var command = GetCommand(commandAction);
+					var command = GetCommand();
 
 					AttachParameters(command, commandParameters);
 					command.Prepare();
@@ -2433,13 +1795,13 @@ namespace LinqToDB.Data
 					{
 						initParameters = false;
 
-						var parameters = GetCommandParameters(CommandAction.Select);
+						var parameters = GetCommandParameters();
 
 						if (parameters == null || parameters.Length == 0)
 						{
 							parameters = CreateParameters(o);
 
-							SetCommandParameters(CommandAction.Select, parameters);
+							SetCommandParameters(parameters);
 							AttachParameters(SelectCommand, parameters);
 							Prepare();
 						}
@@ -2479,13 +1841,13 @@ namespace LinqToDB.Data
 					{
 						initParameters = false;
 
-						var parameters = GetCommandParameters(CommandAction.Select);
+						var parameters = GetCommandParameters();
 
 						if (parameters == null || parameters.Length == 0)
 						{
 							parameters = CreateParameters(o);
 
-							SetCommandParameters(CommandAction.Select, parameters);
+							SetCommandParameters(parameters);
 							AttachParameters(SelectCommand, parameters);
 							Prepare();
 						}
@@ -2541,9 +1903,6 @@ namespace LinqToDB.Data
 			var rowsTotal        = 0;
 			var nRows            = 0;
 			var initParameters   = true;
-			var saveCanRaseEvent = _canRaiseEvents;
-
-			_canRaiseEvents = false;
 
 			var                sb             = new StringBuilder();
 			var                rowSql         = new List<int>(maxRows);
@@ -2627,8 +1986,6 @@ namespace LinqToDB.Data
 						{
 							isPrepared = false;
 
-							var type   = members[i].MemberAccessor.Type;
-
 							if (value.GetType().IsEnum)
 								value = MappingSchema.MapEnumToValue(value, true);
 
@@ -2645,9 +2002,6 @@ namespace LinqToDB.Data
 							_dataProvider.SetParameterValue(
 								parameters[n + i],
 								value ?? DBNull.Value);
-								//value == null || members[i].MapMemberInfo.Nullable && _mappingSchema.IsNull(value)
-								//	? DBNull.Value
-								//	: value);
 						}
 
 					}
@@ -2665,7 +2019,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						InitParameters(CommandAction.Select);
+						InitParameters();
 					}
 
 					var n = ExecuteNonQueryInternal();
@@ -2694,83 +2048,7 @@ namespace LinqToDB.Data
 					rowsTotal += n;
 			}
 
-			_canRaiseEvents = saveCanRaseEvent;
-
 			return rowsTotal;
-		}
-
-		/// <summary>
-		/// Executes a SQL statement for the <see cref="DataTable"/> and 
-		/// returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method prepares the <see cref="Command"/> object 
-		/// and calls the <see cref="ExecuteNonQuery()"/> method for each item 
-		/// of the <see cref="DataTable"/>.
-		/// </remarks>
-		/// <include file="Examples1.xml" path='examples/db[@name="Execute(CommandType,string,DataTable)"]/*' />
-		/// <param name="table">An instance of the <see cref="DataTable"/> class to execute the command.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteForEach(DataTable table)
-		{
-			var rowsTotal = 0;
-
-			if (table != null && table.Rows.Count != 0)
-			{
-				var parameters = GetCommandParameters(CommandAction.Select);
-
-				if (parameters == null || parameters.Length == 0)
-				{
-					parameters = CreateParameters(table.Rows[0]);
-
-					SetCommandParameters(CommandAction.Select, parameters);
-					AttachParameters(SelectCommand, parameters);
-					Prepare();
-				}
-
-				foreach (DataRow dr in table.Rows)
-				{
-					AssignParameterValues(dr);
-					rowsTotal += ExecuteNonQueryInternal();
-				}
-			}
-		
-			return rowsTotal;
-		}
-
-		/// <summary>
-		/// Executes a SQL statement for the first table of the <see cref="DataSet"/> 
-		/// and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method prepares the <see cref="Command"/> object
-		/// and calls the <see cref="ExecuteNonQuery()"/> method for each item of the first table.
-		/// </remarks>
-		/// <include file="Examples1.xml" path='examples/db[@name="Execute(CommandType,string,DataSet)"]/*' />
-		/// <param name="dataSet">An instance of the <see cref="DataSet"/> class to execute the command.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteForEach(DataSet dataSet)
-		{
-			return ExecuteForEach(dataSet.Tables[0]);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement for the specified table of the <see cref="DataSet"/> 
-		/// and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method prepares the <see cref="Command"/> object
-		/// and calls the <see cref="ExecuteNonQuery()"/> method for each item of the first table.
-		/// </remarks>
-		/// <include file="Examples1.xml" path='examples/db[@name="Execute(CommandType,string,DataSet,string)"]/*' />
-		/// <param name="dataSet">An instance of the <see cref="DataSet"/> class to execute the command.</param>
-		/// <param name="nameOrIndex">The table name or index.
-		/// name/index.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteForEach(DataSet dataSet, NameOrIndexParameter nameOrIndex)
-		{
-			return nameOrIndex.ByName ? ExecuteForEach(dataSet.Tables[nameOrIndex.Name])
-				: ExecuteForEach(dataSet.Tables[nameOrIndex.Index]);
 		}
 
 		#endregion
@@ -2788,85 +2066,9 @@ namespace LinqToDB.Data
 		public int ExecuteNonQuery()
 		{
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			return ExecuteNonQueryInternal();
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to execute the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="returnValueMember">Name of a <see cref="MemberMapper"/> to map return value.</param>
-		/// <param name="obj">An <see cref="System.Object"/> to map from command parameters.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteNonQuery(
-			string returnValueMember,
-			object obj)
-		{
-			var rowsAffected = ExecuteNonQuery();
-
-			MapOutputParameters(returnValueMember, obj);
-
-			return rowsAffected;
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to execute the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="obj">An <see cref="System.Object"/> to map from command parameters.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteNonQuery(object obj)
-		{
-			var rowsAffected = ExecuteNonQuery();
-
-			MapOutputParameters(null, obj);
-
-			return rowsAffected;
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to execute the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="returnValueMember">Name of a <see cref="MemberMapper"/> to map return value.</param>
-		/// <param name="objects">An array of <see cref="System.Object"/> to map
-		/// from command parameters.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteNonQuery(
-			string          returnValueMember,
-			params object[] objects)
-		{
-			var rowsAffected = ExecuteNonQuery();
-
-			MapOutputParameters(returnValueMember, objects);
-
-			return rowsAffected;
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and returns the number of rows affected.
-		/// </summary>
-		/// <remarks>
-		/// The method can be used to execute the <i>INSERT</i>, <i>UPDATE</i>, and <i>DELETE</i> SQL statements.
-		/// </remarks>
-		/// <param name="objects">An array of <see cref="System.Object"/> to map
-		/// from command parameters.</param>
-		/// <returns>The number of rows affected by the command.</returns>
-		public int ExecuteNonQuery(params object[] objects)
-		{
-			var rowsAffected = ExecuteNonQuery();
-
-			MapOutputParameters(null, objects);
-
-			return rowsAffected;
 		}
 
 		#endregion
@@ -2879,696 +2081,13 @@ namespace LinqToDB.Data
 		/// ignored.
 		/// </summary>
 		/// <returns>The first column of the first row in the resultset.</returns>
-		/// <seealso cref="ExecuteScalar(ScalarSourceType, NameOrIndexParameter)"/>
 		public object ExecuteScalar()
 		{
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			using (var rd = ExecuteReaderInternal(CommandBehavior.Default))
 				return rd.Read() && rd.FieldCount > 0 ? rd.GetValue(0) : null;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the value with specified scalar
-		/// source type.
-		/// </summary>
-		/// <param name="sourceType">The method used to return the scalar
-		/// value.</param>
-		/// <returns><list type="table">
-		/// <listheader>
-		///  <term>ScalarSourceType</term>
-		///  <description>Return value</description>
-		/// </listheader>
-		/// <item>
-		///  <term>DataReader</term>
-		///  <description>The first column of the first row in the resultset.
-		///  </description>
-		/// </item>
-		/// <item>
-		///  <term>OutputParameter</term>
-		///  <description>The value of the first output or input/output
-		///  parameter returned.</description>
-		/// </item>
-		/// <item>
-		///  <term>ReturnValue</term>
-		///  <description>The value of the "return value" parameter returned.
-		///  </description>
-		/// </item>
-		/// <item>
-		///  <term>AffectedRows</term>
-		///  <description>The number of rows affected.</description>
-		/// </item>
-		/// </list>
-		/// </returns>
-		/// <seealso cref="ExecuteScalar(ScalarSourceType, NameOrIndexParameter)"/>
-		public object ExecuteScalar(ScalarSourceType sourceType)
-		{
-			return ExecuteScalar(sourceType, new NameOrIndexParameter());
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the value with specified scalar
-		/// source type.
-		/// </summary>
-		/// <param name="sourceType">The method used to return the scalar value.</param>
-		/// <param name="nameOrIndex">The column name/index or output parameter name/index.</param>
-		/// <returns><list type="table">
-		/// <listheader>
-		///  <term>ScalarSourceType</term>
-		///  <description>Return value</description>
-		/// </listheader>
-		/// <item>
-		///  <term>DataReader</term>
-		///  <description>The column with specified name or at specified index
-		///  of the first row in the resultset.</description>
-		/// </item>
-		/// <item>
-		///  <term>OutputParameter</term>
-		///  <description>The value of the output or input/output parameter
-		///  returned with specified name or at specified index.</description>
-		/// </item>
-		/// <item>
-		///  <term>ReturnValue</term>
-		///  <description>The value of the "return value" parameter returned.
-		///  The index parameter is ignored.</description>
-		/// </item>
-		/// <item>
-		///  <term>AffectedRows</term>
-		///  <description>The number of rows affected. The index parameter is
-		///  ignored.</description>
-		/// </item>
-		/// </list>
-		/// </returns>
-		public object ExecuteScalar(ScalarSourceType sourceType, NameOrIndexParameter nameOrIndex)
-		{
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			switch (sourceType)
-			{
-				case ScalarSourceType.DataReader:
-					using (var reader = ExecuteReaderInternal())
-						if (reader.Read())
-							return reader.GetValue(nameOrIndex.ByName ? reader.GetOrdinal(nameOrIndex.Name) : nameOrIndex.Index);
-
-					break;
-
-				case ScalarSourceType.OutputParameter:
-					ExecuteNonQueryInternal();
-
-					if (nameOrIndex.ByName)
-					{
-						var name = (string)_dataProvider.Convert(nameOrIndex.Name, GetConvertTypeToParameter());
-						return Parameter(name).Value;
-					}
-
-					var index = nameOrIndex.Index;
-					foreach (IDataParameter p in SelectCommand.Parameters)
-					{
-						// Skip the return value parameter.
-						//
-						if (p.Direction == ParameterDirection.ReturnValue)
-							continue;
-
-						if (0 == index)
-							return p.Value;
-
-						--index;
-					}
-					break;
-
-				case ScalarSourceType.ReturnValue:
-					ExecuteNonQueryInternal();
-
-					foreach (IDataParameter p in SelectCommand.Parameters)
-						if (p.Direction == ParameterDirection.ReturnValue)
-							return p.Value;
-
-					break;
-
-				case ScalarSourceType.AffectedRows:
-					return ExecuteNonQueryInternal();
-
-				default:
-					throw new InvalidEnumArgumentException("sourceType",
-						(int)sourceType, typeof(ScalarSourceType));
-			}
-
-			return null;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the first column of the first row
-		/// in the resultset returned by the query. Extra columns or rows are
-		/// ignored.
-		/// </summary>
-		/// <returns>
-		/// The first column of the first row in the resultset.</returns>
-		/// <seealso cref="ExecuteScalar{T}(ScalarSourceType, NameOrIndexParameter)"/>
-		public T ExecuteScalar<T>()
-		{
-			return (T)_mappingSchema.ConvertChangeType(ExecuteScalar(), typeof(T));
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the value with specified scalar
-		/// source type.
-		/// </summary>
-		/// <param name="sourceType">The method used to return the scalar
-		/// value.</param>
-		/// <returns><list type="table">
-		/// <listheader>
-		///  <term>ScalarSourceType</term>
-		///  <description>Return value</description>
-		/// </listheader>
-		/// <item>
-		///  <term>DataReader</term>
-		///  <description>The first column of the first row in the resultset.
-		///  </description>
-		/// </item>
-		/// <item>
-		///  <term>OutputParameter</term>
-		///  <description>The value of the first output or input/output
-		///  parameter returned.</description>
-		/// </item>
-		/// <item>
-		///  <term>ReturnValue</term>
-		///  <description>The value of the "return value" parameter returned.
-		///  </description>
-		/// </item>
-		/// <item>
-		///  <term>AffectedRows</term>
-		///  <description>The number of rows affected.</description>
-		/// </item>
-		/// </list>
-		/// </returns>
-		/// <seealso cref="ExecuteScalar{T}(ScalarSourceType, NameOrIndexParameter)"/>
-		public T ExecuteScalar<T>(ScalarSourceType sourceType)
-		{
-			return ExecuteScalar<T>(sourceType, new NameOrIndexParameter());
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the value with specified scalar
-		/// source type.
-		/// </summary>
-		/// <param name="sourceType">The method used to return the scalar value.</param>
-		/// <param name="nameOrIndex">The column name/index or output parameter name/index.</param>
-		/// <returns><list type="table">
-		/// <listheader>
-		///  <term>ScalarSourceType</term>
-		///  <description>Return value</description>
-		/// </listheader>
-		/// <item>
-		///  <term>DataReader</term>
-		///  <description>The column with specified name or at specified index
-		///  of the first row in the resultset.</description>
-		/// </item>
-		/// <item>
-		///  <term>OutputParameter</term>
-		///  <description>The value of the output or input/output parameter
-		///  returned with specified name or at specified index.</description>
-		/// </item>
-		/// <item>
-		///  <term>ReturnValue</term>
-		///  <description>The value of the "return value" parameter returned.
-		///  The index parameter is ignored.</description>
-		/// </item>
-		/// <item>
-		///  <term>AffectedRows</term>
-		///  <description>The number of rows affected. The index parameter is
-		///  ignored.</description>
-		/// </item>
-		/// </list>
-		/// </returns>
-		public T ExecuteScalar<T>(ScalarSourceType sourceType, NameOrIndexParameter nameOrIndex)
-		{
-			return (T)_mappingSchema.ConvertChangeType(ExecuteScalar(sourceType, nameOrIndex), typeof(T));
-		}
-
-		#endregion
-
-		#region ExecuteScalarList
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of the
-		/// specified column of  the every row in the resultset returned by the
-		/// query. Other columns are ignored.
-		/// </summary>
-		/// <param name="list">The array to fill in.</param>
-		/// <param name="nameOrIndex">The column name/index or output parameter name/index.</param>
-		/// <param name="type">The type of the each element.</param>
-		/// <returns>Array list of values of the specified column of the every
-		/// row in the resultset.</returns>
-		public IList ExecuteScalarList(
-			IList                list,
-			Type                 type,
-			NameOrIndexParameter nameOrIndex)
-		{
-			if (list == null)
-				list = new ArrayList();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToScalarList(dr, nameOrIndex, list, type);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of first
-		/// column of the every row in the resultset returned by the query.
-		/// Other columns are ignored.
-		/// </summary>
-		/// <param name="list">The array to fill in.</param>
-		/// <param name="type">The type of the each element.</param>
-		/// <returns>Array list of values of first column of the every row in
-		/// the resultset.</returns>
-		public IList ExecuteScalarList(IList list, Type type)
-		{
-			if (list == null)
-				list = new ArrayList();
-
-			return ExecuteScalarList(list, type, 0);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of the
-		/// specified column of  the every row in the resultset returned by the
-		/// query. Other columns are ignored.
-		/// </summary>
-		/// <param name="nameOrIndex">The column name/index.</param>
-		/// <param name="type">The type of the each element.</param>
-		/// <returns>Array list of values of the specified column of the every
-		/// row in the resultset.</returns>
-		public ArrayList ExecuteScalarList(Type type, NameOrIndexParameter nameOrIndex)
-		{
-			var list = new ArrayList();
-
-			ExecuteScalarList(list, type, nameOrIndex);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of first
-		/// column of the every row in the resultset returned by the query.
-		/// Other columns are ignored.
-		/// </summary>
-		/// <param name="type">The type of the each element.</param>
-		/// <returns>Array list of values of first column of the every row in
-		/// the resultset.</returns>
-		public ArrayList ExecuteScalarList(Type type)
-		{
-			var list = new ArrayList();
-
-			ExecuteScalarList(list, type, 0);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of the
-		/// specified column of  the every row in the resultset returned by the
-		/// query. Other columns are ignored.
-		/// </summary>
-		/// <param name="list">The array to fill in.</param>
-		/// <param name="nameOrIndex">The column name/index or output parameter
-		/// name/index.</param>
-		/// <typeparam name="T">The type of the each element.</typeparam>
-		/// <returns>Array list of values of the specified column of the every
-		/// row in the resultset.</returns>
-		public IList<T> ExecuteScalarList<T>(
-			IList<T>             list,
-			NameOrIndexParameter nameOrIndex)
-		{
-			if (list == null)
-				list = new List<T>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToScalarList(dr, nameOrIndex, list);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of first
-		/// column of the every row in the resultset returned by the query.
-		/// Other columns are ignored.
-		/// </summary>
-		/// <param name="list">The array to fill in.</param>
-		/// <typeparam name="T">The type of the each element.</typeparam>
-		/// <returns>Array list of values of first column of the every row in
-		/// the resultset.</returns>
-		public IList<T> ExecuteScalarList<T>(IList<T> list)
-		{
-			return ExecuteScalarList(list, 0);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the array list of values of the
-		/// specified column of the every row in the resultset returned by the
-		/// query. Other columns are ignored.
-		/// </summary>
-		/// <param name="nameOrIndex">The column name/index or output parameter name/index.</param>
-		/// <typeparam name="T">The type of the each element.</typeparam>
-		/// <returns>Array list of values of the specified column of the every
-		/// row in the resultset.</returns>
-		public List<T> ExecuteScalarList<T>(NameOrIndexParameter nameOrIndex)
-		{
-			var list = new List<T>();
-
-			ExecuteScalarList(list, nameOrIndex);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the list of values of first
-		/// column of the every row in the resultset returned by the query.
-		/// Other columns are ignored.
-		/// </summary>
-		/// <typeparam name="T">The type of the each element.</typeparam>
-		/// <returns>Array list of values of first column of the every row in
-		/// the resultset.</returns>
-		public List<T> ExecuteScalarList<T>()
-		{
-			var list = new List<T>();
-
-			ExecuteScalarList(list, 0);
-
-			return list;
-		}
-
-		#endregion
-
-		#region ExecuteScalarDictionary
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from a column specified by <paramref name="keyField"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<param name="dic">The dictionary to add values.</param>
-		///<param name="keyField">The column name/index to load keys.</param>
-		///<param name="keyFieldType">The key type.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<param name="valueFieldType">The value type.</param>
-		///<returns>The loaded dictionary.</returns>
-		public IDictionary ExecuteScalarDictionary(
-			IDictionary dic,
-			NameOrIndexParameter keyField,   Type keyFieldType,
-			NameOrIndexParameter valueField, Type valueFieldType)
-		{
-			if (dic == null)
-				dic = new Hashtable();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			//object nullValue = _mappingSchema.GetNullValue(type);
-
-			if (keyField.ByName && keyField.Name.Length > 0 && keyField.Name[0] == '@')
-				keyField = keyField.Name.Substring(1);
-
-			using (var dr = ExecuteReaderInternal())
-			{
-				if (dr.Read())
-				{
-					var keyIndex   = keyField.ByName   ? dr.GetOrdinal(keyField.Name)   : keyField.Index;
-					var valueIndex = valueField.ByName ? dr.GetOrdinal(valueField.Name) : valueField.Index;
-
-					do
-					{
-						var value = dr[valueIndex];
-						var key   = dr[keyIndex];
-
-						if (key == null || key.GetType() != keyFieldType)
-							key = key is DBNull ? null : _mappingSchema.ConvertChangeType(key, keyFieldType);
-
-						if (value == null || value.GetType() != valueFieldType)
-							value = value is DBNull ? null : _mappingSchema.ConvertChangeType(value, valueFieldType);
-
-						dic.Add(key, value);
-					}
-					while (dr.Read());
-				}
-			}
-
-			return dic;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from a column specified by <paramref name="keyField"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<param name="keyField">The column name/index to load keys.</param>
-		///<param name="keyFieldType">The key type.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<param name="valueFieldType">The value type.</param>
-		///<returns>The loaded dictionary.</returns>
-		public Hashtable ExecuteScalarDictionary(
-			NameOrIndexParameter keyField,   Type keyFieldType,
-			NameOrIndexParameter valueField, Type valueFieldType)
-		{
-			var table = new Hashtable();
-
-			ExecuteScalarDictionary(table, keyField, keyFieldType, valueField, valueFieldType);
-
-			return table;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from a column specified by <paramref name="keyField"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<typeparam name="TKey">The key type.</typeparam>
-		///<typeparam name="T">The value type.</typeparam>
-		///<param name="dic">The dictionary to add values.</param>
-		///<param name="keyField">The column name/index to load keys.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<returns>The loaded dictionary.</returns>
-		public IDictionary<TKey,T> ExecuteScalarDictionary<TKey,T>(
-			IDictionary<TKey,T>  dic,
-			NameOrIndexParameter keyField,
-			NameOrIndexParameter valueField)
-		{
-			if (dic == null)
-				dic = new Dictionary<TKey,T>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			//object nullValue = _mappingSchema.GetNullValue(type);
-
-			var keyFieldType   = typeof(TKey);
-			var valueFieldType = typeof(T);
-
-			using (var dr = ExecuteReaderInternal())
-				if (dr.Read())
-				{
-					var keyIndex = keyField.ByName ? dr.GetOrdinal(keyField.Name) : keyField.Index;
-					var valueIndex = valueField.ByName ? dr.GetOrdinal(valueField.Name) : valueField.Index;
-
-					do
-					{
-						var value = dr[valueIndex];
-						var key = dr[keyIndex];
-
-						if (key == null || key.GetType() != keyFieldType)
-							key = key is DBNull ? null : _mappingSchema.ConvertChangeType(key, keyFieldType);
-
-						if (value == null || value.GetType() != valueFieldType)
-							value = value is DBNull ? null : _mappingSchema.ConvertChangeType(value, valueFieldType);
-
-						dic.Add((TKey) key, (T) value);
-					} while (dr.Read());
-				}
-
-			return dic;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from a column specified by <paramref name="keyField"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<typeparam name="TKey">The key type.</typeparam>
-		///<typeparam name="T">The value type.</typeparam>
-		///<param name="keyField">The column name/index to load keys.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<returns>The loaded dictionary.</returns>
-		public Dictionary<TKey,T> ExecuteScalarDictionary<TKey,T>(
-			NameOrIndexParameter keyField,
-			NameOrIndexParameter valueField)
-		{
-			var dic = new Dictionary<TKey,T>();
-
-			ExecuteScalarDictionary(dic, keyField, valueField);
-
-			return dic;
-		}
-
-		#endregion
-
-		#region ExecuteScalarDictionary (Index)
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from columns specified by <paramref name="index"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<param name="dic">The dictionary to add values.</param>
-		///<param name="index">The <see cref="MapIndex"/> of the key columns.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<param name="valueFieldType">The value type.</param>
-		///<returns>The loaded dictionary.</returns>
-		public IDictionary ExecuteScalarDictionary(
-			IDictionary          dic,
-			MapIndex             index,
-			NameOrIndexParameter valueField,
-			Type                 valueFieldType)
-		{
-			if (dic == null)
-				dic = new Hashtable();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			//object nullValue = _mappingSchema.GetNullValue(type);
-
-			using (var dr = ExecuteReaderInternal())
-				if (dr.Read())
-				{
-					var valueIndex = valueField.ByName ? dr.GetOrdinal(valueField.Name) : valueField.Index;
-					var keyIndex = new int[index.Fields.Length];
-
-					for (var i = 0; i < keyIndex.Length; i++)
-						keyIndex[i] =
-							index.Fields[i].ByName
-								? dr.GetOrdinal(index.Fields[i].Name)
-								: index.Fields[i].Index;
-
-					do
-					{
-						var value = dr[valueIndex];
-
-						if (value == null || value.GetType() != valueFieldType)
-							value = value is DBNull ? null : _mappingSchema.ConvertChangeType(value, valueFieldType);
-
-						var key = new object[keyIndex.Length];
-
-						for (var i = 0; i < keyIndex.Length; i++)
-							key[i] = dr[keyIndex[i]];
-
-						dic.Add(new CompoundValue(key), value);
-					} while (dr.Read());
-				}
-
-			return dic;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from columns specified by <paramref name="index"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<param name="index">The <see cref="MapIndex"/> of the key columns.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<param name="valueFieldType">The value type.</param>
-		///<returns>The loaded dictionary.</returns>
-		public Hashtable ExecuteScalarDictionary(
-			MapIndex index, NameOrIndexParameter valueField, Type valueFieldType)
-		{
-			var table = new Hashtable();
-
-			ExecuteScalarDictionary(table, index, valueField, valueFieldType);
-
-			return table;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from columns specified by <paramref name="index"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<typeparam name="T">The value type.</typeparam>
-		///<param name="dic">The dictionary to add values.</param>
-		///<param name="index">The <see cref="MapIndex"/> of the key columns.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<returns>The loaded dictionary.</returns>
-		public IDictionary<CompoundValue,T> ExecuteScalarDictionary<T>(
-			IDictionary<CompoundValue, T> dic, MapIndex index, NameOrIndexParameter valueField)
-		{
-			if (dic == null)
-				dic = new Dictionary<CompoundValue, T>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			//object nullValue = _mappingSchema.GetNullValue(type);
-
-			var valueFieldType = typeof(T);
-
-			using (var dr = ExecuteReaderInternal())
-				if (dr.Read())
-				{
-					var valueIndex = valueField.ByName ? dr.GetOrdinal(valueField.Name) : valueField.Index;
-					var keyIndex = new int[index.Fields.Length];
-
-					for (var i = 0; i < keyIndex.Length; i++)
-						keyIndex[i] = index.Fields[i].ByName
-						              	? dr.GetOrdinal(index.Fields[i].Name)
-						              	: index.Fields[i].Index;
-
-					do
-					{
-						var value = dr[valueIndex];
-
-						if (value == null || value.GetType() != valueFieldType)
-							value = value is DBNull ? null : _mappingSchema.ConvertChangeType(value, valueFieldType);
-
-						var key = new object[keyIndex.Length];
-
-						for (var i = 0; i < keyIndex.Length; i++)
-							key[i] = dr[keyIndex[i]];
-
-						dic.Add(new CompoundValue(key), (T) value);
-					} while (dr.Read());
-				}
-
-			return dic;
-		}
-
-		///<summary>
-		/// Executes the query, and returns the dictionary.
-		/// The keys are loaded from columns specified by <paramref name="index"/> and
-		/// values are loaded from a column specified by <paramref name="valueField"/>.
-		/// Other columns are ignored.
-		///</summary>
-		///<typeparam name="T">The value type.</typeparam>
-		///<param name="index">The <see cref="MapIndex"/> of the key columns.</param>
-		///<param name="valueField">The column name/index to load values.</param>
-		///<returns>The loaded dictionary.</returns>
-		public Dictionary<CompoundValue,T> ExecuteScalarDictionary<T>(
-			MapIndex index, NameOrIndexParameter valueField)
-		{
-			var dic = new Dictionary<CompoundValue,T>();
-
-			ExecuteScalarDictionary(dic, index, valueField);
-
-			return dic;
 		}
 
 		#endregion
@@ -3582,7 +2101,7 @@ namespace LinqToDB.Data
 		public IDataReader ExecuteReader()
 		{
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			return ExecuteReaderInternal();
 		}
@@ -3595,776 +2114,9 @@ namespace LinqToDB.Data
 		public IDataReader ExecuteReader(CommandBehavior commandBehavior)
 		{
 			if (_prepared)
-				InitParameters(CommandAction.Select);
+				InitParameters();
 
 			return ExecuteReaderInternal(commandBehavior);
-		}
-
-		#endregion
-
-		#region ExecuteDataSet
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="ExecuteDataSet(NameOrIndexParameter)"/> method
-		/// to find an example.
-		/// </remarks>
-		/// <returns>The <see cref="DataSet"/>.</returns>
-		public DataSet ExecuteDataSet()
-		{
-			return ExecuteDataSet(null, 0, 0, "Table");
-		}
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="ExecuteDataSet(NameOrIndexParameter)"/> method
-		/// to find an example.
-		/// </remarks>
-		/// <param name="dataSet">The input <see cref="DataSet"/> object.</param>
-		/// <returns>The <see cref="DataSet"/>.</returns>
-		public DataSet ExecuteDataSet(
-			DataSet dataSet)
-		{
-			return ExecuteDataSet(dataSet, 0, 0, "Table");
-		}
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="ExecuteDataSet(NameOrIndexParameter)"/> method
-		/// to find an example.
-		/// </remarks>
-		/// <param name="table">The name or index of the populating table.</param>
-		/// <returns>The <see cref="DataSet"/>.</returns>
-		public DataSet ExecuteDataSet(
-			NameOrIndexParameter table)
-		{
-			return ExecuteDataSet(null, 0, 0, table);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <param name="dataSet">The <see cref="DataSet"/> object to populate.</param>
-		/// <param name="table">The name or index of the populating table.</param>
-		/// <returns>The <see cref="DataSet"/>.</returns>
-		public DataSet ExecuteDataSet(
-			DataSet              dataSet,
-			NameOrIndexParameter table)
-		{
-			return ExecuteDataSet(dataSet, 0, 0, table);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <param name="dataSet">The <see cref="DataSet"/> object to populate.</param>
-		/// <param name="table">The name or index of the populating table.</param>
-		/// <param name="startRecord">The zero-based record number to start with.</param>
-		/// <param name="maxRecords">The maximum number of records to retrieve.</param>
-		/// <returns>The <see cref="DataSet"/>.</returns>
-		public DataSet ExecuteDataSet(
-			DataSet              dataSet,
-			int                  startRecord,
-			int                  maxRecords,
-			NameOrIndexParameter table)
-		{
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			if (dataSet == null)
-				dataSet = new DataSet();
-
-			var da = _dataProvider.CreateDataAdapterObject();
-
-			((IDbDataAdapter)da).SelectCommand = SelectCommand;
-
-			ExecuteOperation(OperationType.Fill, delegate
-			{
-				if (table.ByName)
-					da.Fill(dataSet, startRecord, maxRecords, table.Name);
-				else
-					da.Fill(startRecord, maxRecords, dataSet.Tables[table.Index]);
-			});
-
-			return dataSet;
-		}
-
-		#endregion
-
-		#region ExecuteDataTable
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <returns>The <see cref="DataTable"/>.</returns>
-		public DataTable ExecuteDataTable()
-		{
-			return ExecuteDataTable(null);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement using the provided parameters.
-		/// </summary>
-		/// <param name="dataTable">The <see cref="DataTable"/> object to populate.</param>
-		/// <returns>The <see cref="DataTable"/>.</returns>
-		public DataTable ExecuteDataTable(DataTable dataTable)
-		{
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			if (dataTable == null)
-				dataTable = new DataTable();
-
-			var da = _dataProvider.CreateDataAdapterObject();
-			((IDbDataAdapter)da).SelectCommand = SelectCommand;
-
-			ExecuteOperation(OperationType.Fill, delegate { da.Fill(dataTable); });
-			return dataTable;
-		}
-
-		/// <summary>Adds or refreshes rows in a <see cref="System.Data.DataTable"/>
-		/// to match those in the data source starting at the specified record
-		/// and retrieving up to the specified maximum number of records.
-		/// </summary>
-		/// <param name="startRecord">The zero-based record number to start with.</param>
-		/// <param name="maxRecords">The maximum number of records to retrieve.</param>
-		/// <param name="tableList">The <see cref="System.Data.DataTable"/> objects
-		/// to fill from the data source.</param>
-		public void ExecuteDataTables(
-			int                startRecord,
-			int                maxRecords,
-			params DataTable[] tableList)
-		{
-			if (tableList == null || tableList.Length == 0)
-				return;
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			var da = _dataProvider.CreateDataAdapterObject();
-			((IDbDataAdapter)da).SelectCommand = SelectCommand;
-
-			ExecuteOperation(OperationType.Fill, delegate { da.Fill(startRecord, maxRecords, tableList); });
-		}
-
-		/// <summary>Adds or refreshes rows in a <see cref="System.Data.DataTable"/>
-		/// to match those in the data source starting at the specified record
-		/// and retrieving up to the specified maximum number of records.
-		/// </summary>
-		/// <param name="tableList">The <see cref="System.Data.DataTable"/> objects
-		/// to fill from the data source.</param>
-		public void ExecuteDataTables(params DataTable[] tableList)
-		{
-			ExecuteDataTables(0, 0, tableList);
-		}
-
-		#endregion
-
-		#region ExecuteObject
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <param name="entity">An object to populate.</param>
-		/// <param name="type">The System.Type of the object.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>A business object.</returns>
-		private object ExecuteObjectInternal(object entity, Type type, object[] parameters)
-		{
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal(/*CommandBehavior.SingleRow*/)) // Sybase provider does not support this flag.
-				return ExecuteOperation(OperationType.Read, () =>
-				{
-					while (dr.Read())
-						return
-							entity == null
-								? _mappingSchema.MapDataReaderToObject(dr, type, parameters)
-								: _mappingSchema.MapDataReaderToObject(dr, entity, parameters);
-
-					return null;
-				});
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <param name="entity">An object to populate.</param>
-		/// <returns>A business object.</returns>
-		public object ExecuteObject(object entity)
-		{
-			if (null == entity)
-				throw new ArgumentNullException("entity");
-
-			return ExecuteObjectInternal(entity, entity.GetType(), null);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <param name="entity">An object to populate.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>A business object.</returns>
-		public object ExecuteObject(object entity, params object[] parameters)
-		{
-			if (null == entity)
-				throw new ArgumentNullException("entity");
-
-			return ExecuteObjectInternal(entity, entity.GetType(), parameters);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <param name="type">Type of an object.</param>
-		/// <returns>A business object.</returns>
-		public object ExecuteObject(Type type)
-		{
-			return ExecuteObjectInternal(null, type, null);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <param name="type">Type of an object.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>A business object.</returns>
-		public object ExecuteObject(Type type, params object[] parameters)
-		{
-			return ExecuteObjectInternal(null, type, parameters);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <returns>A business object.</returns>
-		public T ExecuteObject<T>()
-		{
-			return (T)ExecuteObjectInternal(null, typeof(T), null);
-		}
-
-		/// <summary>
-		/// Executes a SQL statement and maps resultset to an object.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>A business object.</returns>
-		public T ExecuteObject<T>(params object[] parameters)
-		{
-			return (T)ExecuteObjectInternal(null, typeof(T), parameters);
-		}
-
-		#endregion
-
-		#region ExecuteList
-
-		private IList ExecuteListInternal(IList list, Type type, params object[] parameters)
-		{
-			if (list == null)
-				list = new ArrayList();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				//wrap this too, because of PostgreSQL lazy query execution
-				return ExecuteOperation(OperationType.Fill, () => _mappingSchema.MapDataReaderToList(dr, list, type, parameters));
-		}
-
-		private void ExecuteListInternal<T>(IList<T> list, params object[] parameters)
-		{
-			if (list == null)
-				list = new List<T>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				ExecuteOperation(OperationType.Fill, () => _mappingSchema.MapDataReaderToList(dr, list, parameters));
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities using the provided parameters.
-		/// </summary>
-		/// <param name="type">Type of the business object.</param>
-		/// <returns>An array of business objects.</returns>
-		public ArrayList ExecuteList(Type type)
-		{
-			var arrayList = new ArrayList();
-
-			ExecuteListInternal(arrayList, type, null);
-
-			return arrayList;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public List<T> ExecuteList<T>()
-		{
-			var list = new List<T>();
-
-			ExecuteListInternal<T>(list, null);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities using the provided parameters.
-		/// </summary>
-		/// <param name="type">Type of the business object.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>An array of business objects.</returns>
-		public ArrayList ExecuteList(Type type, params object[] parameters)
-		{
-			var arrayList = new ArrayList();
-
-			ExecuteListInternal(arrayList, type, parameters);
-
-			return arrayList;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public List<T> ExecuteList<T>(params object[] parameters)
-		{
-			var list = new List<T>();
-
-			ExecuteListInternal(list, parameters);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <param name="list">The list of mapped business objects to populate.</param>
-		/// <param name="type">Type of an object.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public IList ExecuteList(IList list, Type type)
-		{
-			return ExecuteListInternal(list, type, null);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="list">The list of mapped business objects to populate.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public IList<T> ExecuteList<T>(IList<T> list) 
-		{
-			ExecuteListInternal(list, null);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <param name="list">The list of mapped business objects to populate.</param>
-		/// <param name="type">Type of an object.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public IList ExecuteList(IList list, Type type, params object[] parameters)
-		{
-			return ExecuteListInternal(list, type, parameters);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="list">The list of mapped business objects to populate.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public IList<T> ExecuteList<T>(IList<T> list, params object[] parameters)
-		{
-			ExecuteListInternal(list, parameters);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="TList">Type of a list.</typeparam>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="list">The list of mapped business objects to populate.</param>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public TList ExecuteList<TList,T>(TList list, params object[] parameters)
-			where TList : IList<T>
-		{
-			ExecuteListInternal(list, typeof(T), parameters);
-
-			return list;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns an array of business entities.
-		/// </summary>
-		/// <typeparam name="TList">Type of a list.</typeparam>
-		/// <typeparam name="T">Type of an object.</typeparam>
-		/// <param name="parameters">Additional parameters passed to object constructor through <see cref="InitContext"/>.</param>
-		/// <returns>Populated list of mapped business objects.</returns>
-		public TList ExecuteList<TList,T>(params object[] parameters)
-			where TList : IList<T>, new()
-		{
-			var list = new TList();
-
-			ExecuteListInternal(list, typeof(T), parameters);
-
-			return list;
-		}
-
-		#endregion
-
-		#region ExecuteDictionary
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities 
-		/// using the provided parameters.
-		/// </summary>
-		/// <include file="Examples.xml" path='examples/db[@name="ExecuteDictionary(string,Type)"]/*' />
-		/// <param name="keyField">The field name or index that is used as a key to populate <see cref="Hashtable"/>.</param>
-		/// <param name="keyFieldType">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="Hashtable"/> class.</returns>
-		public Hashtable ExecuteDictionary(
-			NameOrIndexParameter keyField,
-			Type                 keyFieldType,
-			params object[]      parameters)
-		{
-			var hash = new Hashtable();
-
-			ExecuteDictionary(hash, keyField, keyFieldType, parameters);
-
-			return hash;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities.
-		/// </summary>
-		/// <include file="Examples.xml" path='examples/db[@name="ExecuteDictionary(Hashtable,string,Type)"]/*' />
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="keyField">The field name or index that is used as a key to populate <see cref="IDictionary"/>.</param>
-		/// <param name="type">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="IDictionary"/>.</returns>
-		public IDictionary ExecuteDictionary(
-			IDictionary          dictionary,
-			NameOrIndexParameter keyField,
-			Type                 type,
-			params object[]      parameters)
-		{
-			if (dictionary == null)
-				dictionary = new Hashtable();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToDictionary(dr, dictionary, keyField, type, parameters);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns a dictionary of business entities.
-		/// </summary>
-		/// <typeparam name="TKey">Key's type.</typeparam>
-		/// <typeparam name="TValue">Value's type.</typeparam>
-		/// <param name="keyField">The field name or index that is used as a key to populate the dictionary.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the dictionary.</returns>
-		public Dictionary<TKey, TValue> ExecuteDictionary<TKey, TValue>(
-			NameOrIndexParameter keyField,
-			params object[]      parameters)
-		{
-			var dictionary = new Dictionary<TKey, TValue>();
-
-			ExecuteDictionary<TKey, TValue>(dictionary, keyField, typeof(TValue), parameters);
-
-			return dictionary;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities.
-		/// </summary>
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="keyField">The field name or index that is used as a key to populate <see cref="IDictionary"/>.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="IDictionary"/>.</returns>
-		public IDictionary<TKey, TValue> ExecuteDictionary<TKey, TValue>(
-			IDictionary<TKey, TValue> dictionary,
-			NameOrIndexParameter      keyField,
-			params object[]           parameters)
-		{
-			return ExecuteDictionary(dictionary, keyField, typeof(TValue), parameters);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities.
-		/// </summary>
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="keyField">The field name or index that is used as a key to populate <see cref="IDictionary"/>.</param>
-		/// <param name="destObjectType">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="IDictionary"/>.</returns>
-		public IDictionary<TKey, TValue> ExecuteDictionary<TKey, TValue>(
-			IDictionary<TKey, TValue> dictionary,
-			NameOrIndexParameter      keyField,
-			Type                      destObjectType,
-			params object[]           parameters)
-		{
-			if (dictionary == null)
-				dictionary = new Dictionary<TKey, TValue>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToDictionary(
-					dr, dictionary, keyField, destObjectType, parameters);
-		}
-
-		#endregion
-
-		#region ExecuteDictionary (Index)
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities 
-		/// using the provided parameters.
-		/// </summary>
-		/// <include file="Examples.xml" path='examples/db[@name="ExecuteDictionary(string,Type)"]/*' />
-		/// <param name="index">Dictionary key fields.</param>
-		/// <param name="type">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="Hashtable"/> class.</returns>
-		public Hashtable ExecuteDictionary(
-			MapIndex        index,
-			Type            type,
-			params object[] parameters)
-		{
-			var hash = new Hashtable();
-
-			ExecuteDictionary(hash, index, type, parameters);
-
-			return hash;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns the <see cref="Hashtable"/> of business entities.
-		/// </summary>
-		/// <include file="Examples.xml" path='examples/db[@name="ExecuteDictionary(Hashtable,string,Type)"]/*' />
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="index">Dictionary key fields.</param>
-		/// <param name="type">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the <see cref="IDictionary"/>.</returns>
-		public IDictionary ExecuteDictionary(
-			IDictionary     dictionary,
-			MapIndex        index,
-			Type            type,
-			params object[] parameters)
-		{
-			if (dictionary == null)
-				dictionary = new Hashtable();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToDictionary(dr, dictionary, index, type, parameters);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns a dictionary of business entities.
-		/// </summary>
-		/// <typeparam name="TValue">Value's type.</typeparam>
-		/// <param name="index">Dictionary key fields.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the dictionary.</returns>
-		public Dictionary<CompoundValue, TValue> ExecuteDictionary<TValue>(
-			MapIndex        index,
-			params object[] parameters)
-		{
-			var dictionary = new Dictionary<CompoundValue, TValue>();
-
-			ExecuteDictionary<TValue>(dictionary, index, typeof(TValue), parameters);
-
-			return dictionary;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns a dictionary of business entities.
-		/// </summary>
-		/// <typeparam name="TValue">Value's type.</typeparam>
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="index">Dictionary key fields.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the dictionary.</returns>
-		public IDictionary<CompoundValue, TValue> ExecuteDictionary<TValue>(
-			IDictionary<CompoundValue, TValue> dictionary,
-			MapIndex                           index,
-			params object[]                    parameters)
-		{
-			return ExecuteDictionary(dictionary, index, typeof(TValue), parameters);
-		}
-
-		/// <summary>
-		/// Executes the query, and returns a dictionary of business entities.
-		/// </summary>
-		/// <typeparam name="TValue">Value's type.</typeparam>
-		/// <param name="dictionary">A dictionary of mapped business objects to populate.</param>
-		/// <param name="index">Dictionary key fields.</param>
-		/// <param name="destObjectType">Business object type.</param>
-		/// <param name="parameters">Any additional parameters passed to the constructor with <see cref="InitContext"/> parameter.</param>
-		/// <returns>An instance of the dictionary.</returns>
-		public IDictionary<CompoundValue, TValue> ExecuteDictionary<TValue>(
-			IDictionary<CompoundValue, TValue> dictionary,
-			MapIndex                           index,
-			Type                               destObjectType,
-			params object[]                    parameters)
-		{
-			if (dictionary == null)
-				dictionary = new Dictionary<CompoundValue, TValue>();
-
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				return _mappingSchema.MapDataReaderToDictionary(
-					dr, dictionary, index, destObjectType, parameters);
-		}
-
-		#endregion
-
-		#region ExecuteResultSet
-
-		/// <summary>
-		/// Executes the query, and returns multiple results.
-		/// </summary>
-		/// <param name="resultSets">Array of <see cref="MapResultSet"/> to populate.</param>
-		/// <returns>The populated <see cref="MapResultSet"/>.</returns>
-		public MapResultSet[] ExecuteResultSet(params MapResultSet[] resultSets)
-		{
-			if (_prepared)
-				InitParameters(CommandAction.Select);
-
-			using (var dr = ExecuteReaderInternal())
-				_mappingSchema.MapDataReaderToResultSet(dr, resultSets);
-
-			return resultSets;
-		}
-
-		/// <summary>
-		/// Executes the query, and returns multiple results.
-		/// </summary>
-		/// <param name="masterType">The type of the master business object.</param>
-		/// <param name="nextResults">Array of <see cref="MapNextResult"/> to populate.</param>
-		/// <returns>The populated <see cref="MapResultSet"/>.</returns>
-		public MapResultSet[] ExecuteResultSet(
-			Type masterType, params MapNextResult[] nextResults)
-		{
-			return ExecuteResultSet(_mappingSchema.ConvertToResultSet(masterType, nextResults));
-		}
-
-		/// <summary>
-		/// Executes the query, and returns multiple results.
-		/// </summary>
-		/// <typeparam name="T">The type of the master business object.</typeparam>
-		/// <param name="nextResults">Array of <see cref="MapNextResult"/> to populate.</param>
-		/// <returns>The populated <see cref="MapResultSet"/>.</returns>
-		public MapResultSet[] ExecuteResultSet<T>(params MapNextResult[] nextResults)
-		{
-			return ExecuteResultSet(_mappingSchema.ConvertToResultSet(typeof(T), nextResults));
-		}
-
-		#endregion
-
-		#region Update
-
-		private DbDataAdapter CreateDataAdapter()
-		{
-			var da = _dataProvider.CreateDataAdapterObject();
-
-			if (_insertCommand != null) ((IDbDataAdapter)da).InsertCommand = InsertCommand;
-			if (_updateCommand != null) ((IDbDataAdapter)da).UpdateCommand = UpdateCommand;
-			if (_deleteCommand != null) ((IDbDataAdapter)da).DeleteCommand = DeleteCommand;
-
-			return da;
-		}
-
-		/// <summary>
-		/// Calls the corresponding INSERT, UPDATE, or DELETE statements for each inserted, updated, or 
-		/// deleted row in the specified <see cref="DataSet"/>.
-		/// </summary>
-		/// <param name="dataSet">The <see cref="DataSet"/> used to update the data source.</param>
-		/// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-		public int Update(DataSet dataSet)
-		{
-			return Update(dataSet, "Table");
-		}
-
-		/// <summary>
-		/// Calls the corresponding INSERT, UPDATE, or DELETE statements for each inserted, updated, or 
-		/// deleted row in the <see cref="DataSet"/> with the specified <see cref="DataTable"/> name.
-		/// </summary>
-		/// <param name="dataSet">The <see cref="DataSet"/> used to update the data source.</param>
-		/// <param name="table">The name or index of the source table to use for table mapping.</param>
-		/// <returns>The number of rows successfully updated from the <see cref="DataSet"/>.</returns>
-		public int Update(
-			DataSet              dataSet,
-			NameOrIndexParameter table)
-		{
-			if (dataSet == null)
-				throw new ArgumentNullException(
-					"dataSet", Resources.DbManager_CannotUpdateNullDataset);
-
-			var da = CreateDataAdapter();
-
-			return
-				ExecuteOperation(
-					OperationType.Update,
-					() =>
-						(table.ByName)
-							? da.Update(dataSet, table.Name)
-							: da.Update(dataSet.Tables[table.Index]));
-		}
-
-		/// <summary>
-		/// Calls the corresponding INSERT, UPDATE, or DELETE statements for
-		/// each inserted, updated, or deleted row in the specified
-		/// <see cref="DataTable"/>.
-		/// </summary>
-		/// <param name="dataTable">The name or index of the source table to
-		/// use for table mapping.</param>
-		/// <returns>The number of rows successfully updated from the
-		/// <see cref="DataTable"/>.</returns>
-		public int Update(DataTable dataTable)
-		{
-			if (dataTable == null)
-				throw new ArgumentNullException(
-					"dataTable", Resources.DbManager_CannotUpdateNullDataTable);
-
-			return
-				ExecuteOperation(
-					OperationType.Update,
-					() => CreateDataAdapter().Update(dataTable));
 		}
 
 		#endregion
@@ -4375,9 +2127,7 @@ namespace LinqToDB.Data
 		{
 			try
 			{
-				OnBeforeOperation(operationType);
 				operation();
-				OnAfterOperation (operationType);
 			}
 			catch (Exception ex)
 			{
@@ -4388,24 +2138,15 @@ namespace LinqToDB.Data
 
 		private T ExecuteOperation<T>(OperationType operationType, Func<T> operation)
 		{
-			var res = default(T);
-
 			try
 			{
-				OnBeforeOperation(operationType);
-				res = operation();
-				OnAfterOperation (operationType);
+				return operation();
 			}
 			catch (Exception ex)
 			{
-				if (res is IDisposable)
-					((IDisposable)res).Dispose();
-
 				HandleOperationException(operationType, ex);
 				throw;
 			}
-
-			return res;
 		}
 
 		private void HandleOperationException(OperationType op, Exception ex)
@@ -4415,7 +2156,7 @@ namespace LinqToDB.Data
 			if (TraceSwitch.TraceError)
 				WriteTraceLine(string.Format("Operation '{0}' throws exception '{1}'", op, dex), TraceSwitch.DisplayName);
 
-			OnOperationException(op, dex);
+			throw dex;
 		}
 
 		#endregion
@@ -4430,13 +2171,9 @@ namespace LinqToDB.Data
 		/// This method is called by the public <see cref="IDisposable.Dispose()"/> method 
 		/// and the Finalize method.
 		/// </remarks>
-		/// <param name="disposing"><b>true</b> to release both managed and unmanaged resources; <b>false</b> to release only unmanaged resources.</param>
-		protected override void Dispose(bool disposing)
+		public void Dispose()
 		{
-			if (disposing)
-				Close();
-
-			base.Dispose(disposing);
+			Close();
 		}
 
 		#endregion

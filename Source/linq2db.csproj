@@ -77,9 +77,6 @@
     <Compile Include="DataAccess\SqlIgnoreAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\SqlQuery.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="DataAccess\SqlQueryBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -106,15 +103,9 @@
     <Compile Include="Data\DataProvider\Sql2008DataProvider.cs" />
     <Compile Include="Data\DataProvider\SqlDataProvider.cs" />
     <Compile Include="Data\DataProvider\SqlDataProviderBase.cs" />
-    <Compile Include="Data\DbManager.Config.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Data\DbManager.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Data\DbManager.Linq.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Data\DbManager.Config.cs" />
+    <Compile Include="Data\DbManager.cs" />
+    <Compile Include="Data\DbManager.Linq.cs" />
     <Compile Include="Data\IDataReaderEx.cs" />
     <Compile Include="Data\InitCommandEventArgs.cs" />
     <Compile Include="Data\Linq\Builder\AggregationBuilder.cs" />

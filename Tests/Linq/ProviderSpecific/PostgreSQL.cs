@@ -17,20 +17,5 @@ namespace Data.Linq.ProviderSpecific
 		{
 			[MapField("the_name") ] public string TheName { get; set; }
 		}
-
-		[Test]
-		public void SqlTest1()
-		{
-			using (var db = new TestDbManager(ProviderName.PostgreSQL))
-			{
-				db.BeginTransaction();
-
-				db
-					.SetSpCommand("add_if_not_exists", db.Parameter("p_name", "one"))
-					.ExecuteNonQuery();
-
-				db.Insert(new Entity { TheName = "two" });
-			}
-		}
 	}
 }
