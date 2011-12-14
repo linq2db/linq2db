@@ -1037,7 +1037,8 @@ namespace LinqToDB.ServiceModel
 							var isInsertable     = ReadBool();
 							var memberMapperType = Read<Type>();
 							var memberMapperName = ReadString();
-							var memberMapper     = memberMapperType == null ? null : Map.GetObjectMapper(memberMapperType)[memberMapperName];
+							var memberMapper     = memberMapperType == null ?
+								null : Map.DefaultSchema.GetObjectMapper(memberMapperType)[memberMapperName];
 
 							obj = new SqlField(
 								systemType,

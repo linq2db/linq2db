@@ -171,36 +171,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDefaultValue
-
-		public override object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetDefaultValue(mappingSchema, typeExtension, member, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetDefaultValue(mappingSchema, typeExtension, member, out isSet);
-		}
-
-		public override object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, Type type, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetDefaultValue(mappingSchema, typeExtension, type, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetDefaultValue(mappingSchema, typeExtension, type, out isSet);
-		}
-
-		#endregion
-
 		#region GetNullable
 
 		public override bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
@@ -333,23 +303,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 			}
 
 			return base.GetSqlIgnore(typeExtension, member, out isSet);
-		}
-
-		#endregion
-
-		#region GetRelations
-
-		public override List<MapRelationBase> GetRelations(MappingSchema schema, ExtensionList typeExt, Type master, Type slave, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var relations = p.GetRelations(schema, typeExt, master, slave, out isSet);
-
-				if (isSet)
-					return relations;
-			}
-
-			return base.GetRelations(schema, typeExt, master, slave, out isSet);
 		}
 
 		#endregion

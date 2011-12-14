@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
@@ -30,11 +29,8 @@ namespace LinqToDB.Mapping
 			return Common.Configuration.TrimOnMapping ? Yes : No;
 		}
 
-		[SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
 		public static readonly TrimmableAttribute Yes     = new TrimmableAttribute(true);
-		[SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
 		public static readonly TrimmableAttribute No      = new TrimmableAttribute(false);
-		[SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
 		public static readonly TrimmableAttribute Default = GetDefaultTrimmableAttribute();
 	}
 }

@@ -106,7 +106,7 @@ namespace LinqToDB.Common
 			public static DateTimeOffset DateTimeOffset = DateTimeOffset.MinValue;
 			public static Decimal        Decimal        = 0m;
 			public static Guid           Guid           = Guid.Empty;
-			public static String         String         = string.Empty;
+			public static String         String         = null;
 		}
 	}
 }

@@ -1565,7 +1565,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 
 				if (type.IsEnum)
 				{
-					value = Map.EnumToValue(value);
+					value = Map.DefaultSchema.MapEnumToValue(value);
 
 					if (value != null && !value.GetType().IsEnum)
 						BuildValue(sb, value);

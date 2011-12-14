@@ -145,31 +145,6 @@ namespace LinqToDB.DataAccess
 			sb.Remove(sb.Length - 5, 5);
 		}
 
-		protected SqlQueryInfo CreateSelectByKeySqlText(DbManager db, Type type)
-		{
-			var om    = db.MappingSchema.GetObjectMapper(type);
-			var sb    = new StringBuilder();
-			var query = new SqlQueryInfo(om);
-
-			sb.Append("SELECT\n");
-
-			foreach (var mm in GetFieldList(om))
-				sb.AppendFormat("\t{0},\n",
-					db.DataProvider.Convert(mm.Name, ConvertType.NameToQueryField));
-
-			sb.Remove(sb.Length - 2, 1);
-
-			sb.Append("FROM\n\t");
-
-			AppendTableName(sb, db, type);
-
-			AddWherePK(db, query, sb, -1);
-
-			query.QueryText = sb.ToString();
-
-			return query;
-		}
-
 		// NOTE changed to virtual
 		protected virtual void AppendTableName(StringBuilder sb, DbManager db, Type type)
 		{
@@ -183,28 +158,6 @@ namespace LinqToDB.DataAccess
 				name     == null ? null : db.DataProvider.Convert(name,     ConvertType.NameToQueryTable).ToString());
 
 			sb.AppendLine();
-		}
-
-		protected SqlQueryInfo CreateSelectAllSqlText(DbManager db, Type type)
-		{
-			var om    = db.MappingSchema.GetObjectMapper(type);
-			var sb    = new StringBuilder();
-			var query = new SqlQueryInfo(om);
-
-			sb.Append("SELECT\n");
-
-			foreach (var mm in GetFieldList(om))
-				sb.AppendFormat("\t{0},\n",
-					db.DataProvider.Convert(mm.Name, ConvertType.NameToQueryField));
-
-			sb.Remove(sb.Length - 2, 1);
-
-			sb.Append("FROM\n\t");
-			AppendTableName(sb, db, type);
-
-			query.QueryText = sb.ToString();
-
-			return query;
 		}
 
 		protected SqlQueryInfo CreateInsertSqlText(DbManager db, Type type, int nParameter)
@@ -286,7 +239,7 @@ namespace LinqToDB.DataAccess
 
 				var nonUpdatableAttribute = mp.GetNonUpdatableAttribute(type, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
 
-				if (nonUpdatableAttribute != null && isSet && nonUpdatableAttribute.OnUpdate == true)
+				if (nonUpdatableAttribute != null && isSet && nonUpdatableAttribute.OnUpdate)
 					continue;
 
 				mp.GetPrimaryKeyOrder(type, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
@@ -342,8 +295,6 @@ namespace LinqToDB.DataAccess
 		{
 			switch (actionName)
 			{
-				case "SelectByKey": return CreateSelectByKeySqlText(db, type);
-				case "SelectAll":   return CreateSelectAllSqlText  (db, type);
 				case "Insert":      return CreateInsertSqlText     (db, type, -1);
 				case "InsertBatch": return CreateInsertSqlText     (db, type,  0);
 				case "Update":      return CreateUpdateSqlText     (db, type, -1);

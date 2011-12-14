@@ -109,22 +109,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDefaultValue
-
-		public virtual object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		public virtual object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, Type type, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		#endregion
-
 		#region GetNullable
 
 		public virtual bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
@@ -227,13 +211,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetRelations
-
-		public virtual List<MapRelationBase> GetRelations(MappingSchema schema, ExtensionList typeExt, Type master, Type slave, out bool isSet)
-		{
-			isSet = false;
-			return new List<MapRelationBase>();
-		}
+		#region GetPrimaryKeyFields
 
 		protected static List<string> GetPrimaryKeyFields(MappingSchema schema, TypeAccessor ta, TypeExtension tex)
 		{

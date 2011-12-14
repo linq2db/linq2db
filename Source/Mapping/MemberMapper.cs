@@ -797,11 +797,6 @@ namespace LinqToDB.Mapping
 					{
 					}
 				}
-
-				// Default value.
-				//
-				if (mapInfo.DefaultValue != null)
-					return mapInfo.DefaultValue;
 			}
 
 			var valueType  = value.GetType();

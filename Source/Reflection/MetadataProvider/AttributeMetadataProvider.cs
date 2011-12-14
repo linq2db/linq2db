@@ -303,75 +303,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDefaultValue
-
-		public override object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			// Check member [DefaultValue(0)]
-			//
-			var attr = member.GetAttribute<DefaultValueAttribute>();
-
-			if (attr != null)
-			{
-				isSet = true;
-				return attr.Value;
-			}
-
-			// Check type [DefaultValues(typeof(int), 0)]
-			//
-			var attrs = member.GetTypeAttributes(typeof(DefaultValueAttribute));
-
-			foreach (DefaultValueAttribute a in attrs)
-				if (a.Type == null && a.Value != null && a.Value.GetType() == member.Type ||
-					a.Type != null && a.Type == member.Type)
-				{
-					isSet = true;
-					return a.Value;
-				}
-
-			return GetDefaultValue(mappingSchema, typeExtension, member.Type, out isSet);
-		}
-
-		public override object GetDefaultValue(MappingSchema mappingSchema, TypeExtension typeExtension, Type type, out bool isSet)
-		{
-			object value = null;
-
-			if (type.IsEnum)
-				value = GetEnumDefaultValueFromType(type);
-
-			if (value == null)
-			{
-				var attrs = TypeHelper.GetAttributes(type, typeof(DefaultValueAttribute));
-
-				if (attrs != null && attrs.Length != 0)
-					value = ((DefaultValueAttribute)attrs[0]).Value;
-			}
-
-			isSet = value != null;
-
-			return TypeExtension.ChangeType(value, type);
-		}
-
-		private static object GetEnumDefaultValueFromType(Type type)
-		{
-			var fields = type.GetFields();
-
-			foreach (var fi in fields)
-			{
-				if ((fi.Attributes & EnumField) == EnumField)
-				{
-					var attrs = Attribute.GetCustomAttributes(fi, typeof(DefaultValueAttribute));
-
-					if (attrs.Length > 0)
-						return Enum.Parse(type, fi.Name, false);
-				}
-			}
-
-			return null;
-		}
-
-		#endregion
-
 		#region GetNullable
 
 		public override bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
@@ -605,60 +536,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 			return base.GetSqlIgnore(typeExtension, member, out isSet);
 		}
 
-		#endregion
-
-		#region GetRelations
-
-		public override List<MapRelationBase> GetRelations(MappingSchema schema, ExtensionList typeExt, Type master, Type slave, out bool isSet)
-		{
-			var masterAccessor = TypeAccessor.GetAccessor(master);
-			var slaveAccessor  = slave != null ? TypeAccessor.GetAccessor(slave) : null;
-			var relations      = new List<MapRelationBase>();
-
-			foreach (MemberAccessor ma in masterAccessor)
-			{
-				var attr = ma.GetAttribute<RelationAttribute>();
-
-				if (attr == null || (slave != null && attr.Destination != slave && ma.Type != slave))
-					continue;
-
-				if (slave == null)
-					slaveAccessor = TypeAccessor.GetAccessor(attr.Destination ?? ma.Type);
-
-
-				var toMany = TypeHelper.IsSameOrParent(typeof(IEnumerable), ma.Type);
-
-				if (toMany && attr.Destination == null)
-					throw new InvalidOperationException("Destination type should be set for enumerable relations: " + ma.Type.FullName + "." + ma.Name);
-
-				var masterIndex = attr.MasterIndex;
-				var slaveIndex  = attr.SlaveIndex;
-
-				if (slaveIndex == null)
-				{
-					var accessor = toMany ? masterAccessor : slaveAccessor;
-					var tex      = TypeExtension.GetTypeExtension(accessor.Type, typeExt);
-					var keys     = GetPrimaryKeyFields(schema, accessor, tex);
-
-					if (keys.Count > 0)
-						slaveIndex = new MapIndex(keys.ToArray());
-				}
-
-				if (slaveIndex == null)
-					throw new InvalidOperationException("Slave index is not set for relation: " + ma.Type.FullName + "." + ma.Name);
-
-				if (masterIndex == null)
-					masterIndex = slaveIndex;
-
-				var relation = new MapRelationBase(attr.Destination ?? ma.Type, slaveIndex, masterIndex, ma.Name);
-
-				relations.Add(relation);
-			}
-
-			isSet = true;
-			return relations;
-		}
-		
 		#endregion
 
 		#region GetAssociation

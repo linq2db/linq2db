@@ -427,7 +427,7 @@ namespace Data.Linq
 		{
 			get
 			{
-				return _parent4 ?? (_parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = Map.ToEnum<TypeValue>(p.Value1) }).ToList());
+				return _parent4 ?? (_parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = Map.DefaultSchema.MapValueToEnum<TypeValue>(p.Value1) }).ToList());
 			}
 		}
 

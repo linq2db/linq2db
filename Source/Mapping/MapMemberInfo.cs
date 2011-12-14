@@ -25,7 +25,6 @@ namespace LinqToDB.Mapping
 		public bool            SqlIgnore                  { get; set; }
 		public bool            Nullable                   { get; set; }
 		public object          NullValue                  { get; set; }
-		public object          DefaultValue               { get; set; }
 		public Type            Type                       { get; set; }
 		public int             DbSize                     { get; set; }
 		public bool            IsDbTypeSet                { get; set; }

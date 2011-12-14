@@ -280,7 +280,6 @@ namespace LinqToDB.Mapping
 					mi.Trimmable                  = GetTrimmable   (ma);
 					mi.SqlIgnore                  = GetSqlIgnore   (ma);
 					mi.MapValues                  = GetMapValues   (ma);
-					mi.DefaultValue               = GetDefaultValue(ma);
 					mi.Nullable                   = GetNullable    (ma);
 					mi.NullValue                  = GetNullValue   (ma, mi.Nullable);
 
@@ -437,15 +436,6 @@ namespace LinqToDB.Mapping
 			var values = MetadataProvider.GetMapValues(Extension, member, out isSet);
 
 			return isSet? values: _mappingSchema.GetMapValues(member.Type);
-		}
-
-		protected virtual object GetDefaultValue(MemberAccessor memberAccessor)
-		{
-			bool isSet;
-
-			var value = MetadataProvider.GetDefaultValue(MappingSchema, Extension, memberAccessor, out isSet);
-
-			return isSet? value: _mappingSchema.GetDefaultValue(memberAccessor.Type);
 		}
 
 		protected virtual bool GetNullable(MemberAccessor memberAccessor)

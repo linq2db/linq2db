@@ -51,7 +51,7 @@ namespace LinqToDB.Mapping
 			_instance.SetValue(o, name, value);
 		}
 
-		private static readonly ObjectMapper _instance = Map.GetObjectMapper(typeof(T));
+		private static readonly ObjectMapper _instance = Map.DefaultSchema.GetObjectMapper(typeof(T));
 		public  static          ObjectMapper  Instance
 		{
 			get { return _instance; }
