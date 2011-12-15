@@ -392,36 +392,6 @@ namespace LinqToDB.Reflection.Emit
 			get { return _defaultConstructor != null; }
 		}
 
-		private ConstructorBuilderHelper _initConstructor;
-		/// <summary>
-		/// Gets the init context constructor for this type.
-		/// </summary>
-		public  ConstructorBuilderHelper  InitConstructor
-		{
-			get 
-			{
-				if (_initConstructor == null)
-				{
-					ConstructorBuilder builder = _typeBuilder.DefineConstructor(
-						MethodAttributes.Public, 
-						CallingConventions.Standard,
-						new Type[] { typeof(InitContext) });
-
-					_initConstructor = new ConstructorBuilderHelper(this, builder);
-				}
-
-				return _initConstructor;
-			}
-		}
-
-		/// <summary>
-		/// Returns true if a constructor with parameter of <see cref="InitContext"/> for this type has a body.
-		/// </summary>
-		public bool IsInitConstructorDefined
-		{
-			get { return _initConstructor != null; }
-		}
-
 		/// <summary>
 		/// Adds a new field to the class, with the given name, attributes and field type.
 		/// </summary>

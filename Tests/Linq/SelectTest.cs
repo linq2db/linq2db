@@ -386,11 +386,8 @@ namespace Data.Linq
 			{
 				#region IObjectFactory Members
 
-				public object CreateInstance(TypeAccessor typeAccessor, InitContext context)
+				public object CreateInstance(TypeAccessor typeAccessor)
 				{
-					if (context == null)
-						throw new Exception("InitContext is null while mapping from DataReader!");
-
 					return typeAccessor.CreateInstance();
 				}
 

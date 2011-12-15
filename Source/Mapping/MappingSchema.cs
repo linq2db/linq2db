@@ -1087,9 +1087,7 @@ namespace LinqToDB.Mapping
 		#region Base Mapping
 
 		[CLSCompliant(false)]
-		internal protected static int[] GetIndex(
-			IMapDataSource      source,
-			IMapDataDestination dest)
+		protected static int[] GetIndex(IMapDataSource source, IMapDataDestination dest)
 		{
 			int   count = source.Count;
 			int[] index = new int[count];
@@ -1101,12 +1099,15 @@ namespace LinqToDB.Mapping
 		}
 
 		[CLSCompliant(false)]
-		internal protected static void MapInternal(
-			IMapDataSource      source, object sourceObject,
-			IMapDataDestination dest,   object destObject,
-			int[]               index,
-			IValueMapper[]      mappers)
+		protected virtual void MapInternal(
+			IMapDataSource      source,
+			object              sourceObject,
+			IMapDataDestination dest,
+			object              destObject)
 		{
+			int[]          index   = GetIndex       (source, dest);
+			IValueMapper[] mappers = GetValueMappers(source, dest, index);
+
 			for (int i = 0; i < index.Length; i++)
 			{
 				int n = index[i];
@@ -1114,90 +1115,6 @@ namespace LinqToDB.Mapping
 				if (n >= 0)
 					mappers[i].Map(source, sourceObject, i, dest, destObject, n);
 			}
-		}
-
-		[CLSCompliant(false)]
-		protected virtual void MapInternal(
-			InitContext         initContext,
-			IMapDataSource      source, object sourceObject, 
-			IMapDataDestination dest,   object destObject,
-			params object[]     parameters)
-		{
-			ISupportMapping smSource = sourceObject as ISupportMapping;
-			ISupportMapping smDest   = destObject   as ISupportMapping;
-
-			if (smSource != null)
-			{
-				if (initContext == null)
-				{
-					initContext = new InitContext();
-
-					initContext.MappingSchema = this;
-					initContext.DataSource    = source;
-					initContext.SourceObject  = sourceObject;
-					initContext.ObjectMapper  = dest as ObjectMapper;
-					initContext.Parameters    = parameters;
-				}
-
-				initContext.IsSource = true;
-				smSource.BeginMapping(initContext);
-				initContext.IsSource = false;
-
-				if (initContext.StopMapping)
-					return;
-			}
-
-			if (smDest != null)
-			{
-				if (initContext == null)
-				{
-					initContext = new InitContext();
-
-					initContext.MappingSchema = this;
-					initContext.DataSource    = source;
-					initContext.SourceObject  = sourceObject;
-					initContext.ObjectMapper  = dest as ObjectMapper;
-					initContext.Parameters    = parameters;
-				}
-
-				smDest.BeginMapping(initContext);
-
-				if (initContext.StopMapping)
-					return;
-
-				if (dest != initContext.ObjectMapper && initContext.ObjectMapper != null)
-					dest = initContext.ObjectMapper;
-			}
-
-			int[]          index   = GetIndex       (source, dest);
-			IValueMapper[] mappers = GetValueMappers(source, dest, index);
-
-			MapInternal(source, sourceObject, dest, destObject, index, mappers);
-
-			if (smDest != null)
-				smDest.EndMapping(initContext);
-
-			if (smSource != null)
-			{
-				initContext.IsSource = true;
-				smSource.EndMapping(initContext);
-				initContext.IsSource = false;
-			}
-		}
-
-		protected virtual object MapInternal(InitContext initContext)
-		{
-			object dest = initContext.ObjectMapper.CreateInstance(initContext);
-
-			if (initContext.StopMapping == false)
-			{
-				MapInternal(initContext,
-					initContext.DataSource, initContext.SourceObject,
-					initContext.ObjectMapper, dest,
-					initContext.Parameters);
-			}
-
-			return dest;
 		}
 
 		#endregion

@@ -506,11 +506,6 @@ namespace LinqToDB.Mapping
 			return _typeAccessor.CreateInstanceEx();
 		}
 
-		public virtual object CreateInstance(InitContext context)
-		{
-			return _typeAccessor.CreateInstanceEx(context);
-		}
-
 		#endregion
 
 		#region IMapDataSource Members

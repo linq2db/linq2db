@@ -2,18 +2,11 @@ using System;
 
 namespace LinqToDB.Mapping
 {
-	using Reflection;
-
 	public static class ObjectMapper<T>
 	{
 		public static T CreateInstance()
 		{
 			return (T)_instance.CreateInstance();
-		}
-
-		public static T CreateInstance(InitContext context)
-		{
-			return (T)_instance.CreateInstance(context);
 		}
 
 		public static int Count

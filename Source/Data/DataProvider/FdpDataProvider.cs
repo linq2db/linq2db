@@ -43,11 +43,6 @@ namespace LinqToDB.Data.DataProvider
 {
 	public class FdpDataProvider : DataProviderBase
 	{
-		public FdpDataProvider()
-		{
-			MappingSchema = new FbMappingSchema();
-		}
-
 		#region InOut & ReturnValue emulation
 		public static string InOutInputParameterPrefix = "in_";
 		public static string ReturnParameterName = "RETURN_VALUE";
@@ -292,33 +287,6 @@ namespace LinqToDB.Data.DataProvider
 				return dt;
 			}
 			#endregion
-		}
-		#endregion
-
-		#region FbMappingSchema
-		public class FbMappingSchema : FirebirdMappingSchema
-		{
-			protected override object MapInternal(InitContext initContext)
-			{
-				var dr = initContext.SourceObject as FbDataReader;
-
-				// Fb's SP returns single row with nulls if selected object doesn't exists
-				// so for all DBNull's (null) should be returned, instead of object instance
-				//
-				if (dr != null)
-				{
-					var i = dr.FieldCount;
-					while (--i >= 0)
-						if (!dr.IsDBNull(i))
-							break;
-
-					// All field are DBNull.
-					//
-					if (i < 0)
-						return null;
-				}
-				return base.MapInternal(initContext);
-			}
 		}
 		#endregion
 	}

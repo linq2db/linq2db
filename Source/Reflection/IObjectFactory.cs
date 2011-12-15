@@ -4,6 +4,6 @@ namespace LinqToDB.Reflection
 {
 	public interface IObjectFactory
 	{
-		object CreateInstance(TypeAccessor typeAccessor, InitContext context);
+		object CreateInstance(TypeAccessor typeAccessor);
 	}
 }

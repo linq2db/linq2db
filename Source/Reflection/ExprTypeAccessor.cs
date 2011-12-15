@@ -13,40 +13,28 @@ namespace LinqToDB.Reflection
 		{
 			// Create Instance.
 			//
-			var type     = typeof(T);
-			var typeInit = typeof(InitContext);
-			var initPar  = Expression.Parameter(typeInit, "ctx");
+			var type = typeof(T);
 
 			if (type.IsValueType)
 			{
 				var body = Expression.Constant(default(T));
-
 				_createInstance = Expression.Lambda<Func<T>>(body).Compile();
-				_createInstanceInit = Expression.Lambda<Func<InitContext, T>>(body, initPar).Compile();
 			}
 			else
 			{
 				var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
-				var ctorInit = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeInit }, null);
 
-				if (ctor == null && ctorInit == null)
+				if (ctor == null)
 				{
 					Expression<Func<T>> mi = () => ThrowException();
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
 
 					_createInstance = Expression.Lambda<Func<T>>(body).Compile();
-					_createInstanceInit = Expression.Lambda<Func<InitContext, T>>(body, initPar).Compile();
 				}
 				else
 				{
-					_createInstance = ctor != null ?
-						Expression.Lambda<Func<T>>(Expression.New(ctor)).Compile() :
-						Expression.Lambda<Func<T>>(Expression.New(ctorInit, Expression.Constant(null))).Compile();
-
-					_createInstanceInit = ctorInit != null ?
-						Expression.Lambda<Func<InitContext, T>>(Expression.New(ctorInit, initPar), initPar).Compile() :
-						Expression.Lambda<Func<InitContext, T>>(Expression.New(ctor), initPar).Compile();
+					_createInstance = Expression.Lambda<Func<T>>(Expression.New(ctor)).Compile();
 				}
 			}
 
@@ -87,13 +75,6 @@ namespace LinqToDB.Reflection
 		public override object   CreateInstance()
 		{
 			return _createInstance();
-		}
-
-		static readonly Func<InitContext,T> _createInstanceInit;
-
-		public override object CreateInstance(InitContext context)
-		{
-			return _createInstanceInit(context);
 		}
 
 		public override Type Type         { get { return typeof(T);         } }

@@ -65,22 +65,9 @@ namespace LinqToDB.Reflection
 		}
 
 		[DebuggerStepThrough]
-		public virtual object CreateInstance(InitContext context)
-		{
-			return CreateInstance();
-		}
-
-		[DebuggerStepThrough]
 		public object CreateInstanceEx()
 		{
-			return _objectFactory != null?
-				_objectFactory.CreateInstance(this, null): CreateInstance((InitContext)null);
-		}
-
-		[DebuggerStepThrough]
-		public object CreateInstanceEx(InitContext context)
-		{
-			return _objectFactory != null? _objectFactory.CreateInstance(this, context): CreateInstance(context);
+			return _objectFactory != null ? _objectFactory.CreateInstance(this) : CreateInstance();
 		}
 
 		#endregion
@@ -163,12 +150,11 @@ namespace LinqToDB.Reflection
 			if (obj == null)
 				throw new ArgumentNullException("obj");
 
-			var    hash = 0;
-			object value;
+			var hash = 0;
 
 			foreach (MemberAccessor ma in GetAccessor(obj.GetType()))
 			{
-				value = ma.GetValue(obj);
+				var value = ma.GetValue(obj);
 				hash = ((hash << 5) + hash) ^ (value == null ? 0 : value.GetHashCode());
 			}
 
@@ -278,19 +264,9 @@ namespace LinqToDB.Reflection
 			return GetAccessor(type).CreateInstance();
 		}
 
-		public static object CreateInstance(Type type, InitContext context)
-		{
-			return GetAccessor(type).CreateInstance(context);
-		}
-
 		public static object CreateInstanceEx(Type type)
 		{
 			return GetAccessor(type).CreateInstanceEx();
-		}
-
-		public static object CreateInstanceEx(Type type, InitContext context)
-		{
-			return GetAccessor(type).CreateInstance(context);
 		}
 
 		public static T CreateInstance<T>()
@@ -298,19 +274,9 @@ namespace LinqToDB.Reflection
 			return TypeAccessor<T>.CreateInstance();
 		}
 
-		public static T CreateInstance<T>(InitContext context)
-		{
-			return TypeAccessor<T>.CreateInstance(context);
-		}
-
 		public static T CreateInstanceEx<T>()
 		{
 			return TypeAccessor<T>.CreateInstanceEx();
-		}
-
-		public static T CreateInstanceEx<T>(InitContext context)
-		{
-			return TypeAccessor<T>.CreateInstance(context);
 		}
 
 		public static TypeAccessor AssociateType(Type parent, Type child)
@@ -518,7 +484,7 @@ namespace LinqToDB.Reflection
 
 		IEnumerator<MemberAccessor> IEnumerable<MemberAccessor>.GetEnumerator()
 		{
-			foreach (MemberAccessor member in _members)
+			foreach (var member in _members)
 				yield return member;
 		}
 
@@ -531,11 +497,6 @@ namespace LinqToDB.Reflection
 #if DEBUG
 			Write(o, DebugWriteLine);
 #endif
-		}
-
-		private static void DebugWriteLine(string text)
-		{
-			Debug.WriteLine(text);
 		}
 
 		public static void WriteConsole(object o)

@@ -99,10 +99,9 @@ namespace LinqToDB.TypeBuilder.Builders
 		void BuildCreateInstanceMethods()
 		{
 			var isValueType  = _type.IsValueType;
-			var baseDefCtor  = isValueType? null: _type.GetPublicDefaultConstructor();
-			var baseInitCtor = _type.GetPublicConstructor(typeof(InitContext));
+			var baseDefCtor  = isValueType ? null : _type.GetPublicDefaultConstructor();
 
-			if (baseDefCtor == null && baseInitCtor == null && !isValueType)
+			if (baseDefCtor == null && !isValueType)
 				return;
 
 			// CreateInstance.
@@ -116,7 +115,7 @@ namespace LinqToDB.TypeBuilder.Builders
 					.ret()
 					;
 			}
-			else if (isValueType)
+			else
 			{
 				var locObj = method.Emitter.DeclareLocal(_type);
 				
@@ -125,47 +124,6 @@ namespace LinqToDB.TypeBuilder.Builders
 					.initobj (_type)
 					.ldloc   (locObj)
 					.box     (_type)
-					.ret()
-					;
-			}
-			else
-			{
-				method.Emitter
-					.ldnull
-					.newobj (baseInitCtor)
-					.ret()
-					;
-			}
-
-			// CreateInstance(IniContext).
-			//
-			method = _typeBuilder.DefineMethod(
-				_accessorType.GetMethod(false, "CreateInstance", typeof(InitContext)));
-
-			if (baseInitCtor != null)
-			{
-				method.Emitter
-					.ldarg_1
-					.newobj (baseInitCtor)
-					.ret()
-					;
-			}
-			else if (isValueType)
-			{
-				var locObj = method.Emitter.DeclareLocal(_type);
-				
-				method.Emitter
-					.ldloca  (locObj)
-					.initobj (_type)
-					.ldloc   (locObj)
-					.box     (_type)
-					.ret()
-					;
-			}
-			else
-			{
-				method.Emitter
-					.newobj (baseDefCtor)
 					.ret()
 					;
 			}

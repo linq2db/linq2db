@@ -26,7 +26,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;FW4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -44,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ArrayT.cs" />
-    <Compile Include="Common\CompoundValue.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\Convert.cs" />
     <Compile Include="Common\Convert.generated.cs" />
@@ -253,7 +252,6 @@
     <Compile Include="Mapping\IMapDataSource.cs" />
     <Compile Include="Mapping\IMappingSchemaProvider.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
-    <Compile Include="Mapping\ISupportMapping.cs" />
     <Compile Include="Mapping\IValueMapper.cs" />
     <Compile Include="Mapping\Map.cs" />
     <Compile Include="Mapping\MapDataSourceBase.cs" />
@@ -262,7 +260,6 @@
     <Compile Include="Mapping\MapGetDataT.cs" />
     <Compile Include="Mapping\MapIgnoreAttribute.cs" />
     <Compile Include="Mapping\MapImplicitAttribute.cs" />
-    <Compile Include="Mapping\MapIndex.cs" />
     <Compile Include="Mapping\MapMemberInfo.cs" />
     <Compile Include="Mapping\MappingException.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />
@@ -278,7 +275,6 @@
     <Compile Include="Mapping\ObjectMapper.cs" />
     <Compile Include="Mapping\ObjectMapperAttribute.cs" />
     <Compile Include="Mapping\ObjectMapperT.cs" />
-    <Compile Include="Mapping\RelationAttribute.cs" />
     <Compile Include="Mapping\TrimmableAttribute.cs" />
     <Compile Include="Mapping\ValueMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -307,7 +303,6 @@
     <Compile Include="Reflection\Extension\TypeExtensionException.cs" />
     <Compile Include="Reflection\Extension\ValueCollection.cs" />
     <Compile Include="Reflection\GenericBinder.cs" />
-    <Compile Include="Reflection\InitContext.cs" />
     <Compile Include="Reflection\IObjectFactory.cs" />
     <Compile Include="Reflection\MemberAccessor.cs" />
     <Compile Include="Reflection\MetadataProvider\AttributeMetadataProvider.cs" />

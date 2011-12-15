@@ -13,21 +13,9 @@ namespace LinqToDB.Reflection
 		}
 
 		[System.Diagnostics.DebuggerStepThrough]
-		public static T CreateInstance(InitContext context)
-		{
-			return (T)_instance.CreateInstance(context);
-		}
-
-		[System.Diagnostics.DebuggerStepThrough]
 		public static T CreateInstanceEx()
 		{
 			return (T)_instance.CreateInstanceEx();
-		}
-
-		[System.Diagnostics.DebuggerStepThrough]
-		public static T CreateInstanceEx(InitContext context)
-		{
-			return (T)_instance.CreateInstanceEx(context);
 		}
 
 		#endregion
