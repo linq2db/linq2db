@@ -74,7 +74,7 @@ namespace LinqToDB.Data.Linq
 
 		public virtual ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 		{
-			return new SqlFunction(ReflectionExtensions.GetMemberType(member), Name ?? member.Name, ConvertArgs(member, args));
+			return new SqlFunction(member.GetMemberType(), Name ?? member.Name, ConvertArgs(member, args));
 		}
 	}
 }

@@ -1009,9 +1009,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				if (add && member.DeclaringType.IsSameOrParentOf(Body.Type))
 				{
-					memberExpression = Expression.Constant(
-						ReflectionExtensions.GetDefaultValue(type), type);
-
+					memberExpression = Expression.Constant(type.GetDefaultValue(), type);
 					Members.Add(member, memberExpression);
 				}
 				else

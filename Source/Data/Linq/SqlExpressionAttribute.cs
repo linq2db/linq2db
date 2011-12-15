@@ -50,7 +50,7 @@ namespace LinqToDB.Data.Linq
 
 		public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 		{
-			return new SqlExpression(ReflectionExtensions.GetMemberType(member), Expression ?? member.Name, Precedence, ConvertArgs(member, args));
+			return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args));
 		}
 	}
 }

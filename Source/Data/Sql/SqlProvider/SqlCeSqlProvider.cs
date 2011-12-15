@@ -51,7 +51,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (be.Operation)
 				{
 					case "%":
-						return ReflectionExtensions.IsIntegerType(be.Expr1.SystemType)?
+						return be.Expr1.SystemType.IsIntegerType()?
 							be :
 							new SqlBinaryExpression(
 								typeof(int),
@@ -71,7 +71,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 						switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
 						{
 							case TypeCode.UInt64 :
-								if (ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
+								if (func.Parameters[1].SystemType.IsFloatType())
 									return new SqlFunction(
 										func.SystemType,
 										func.Name,

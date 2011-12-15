@@ -877,7 +877,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var levelMember = (MemberExpression)levelExpression;
 
-							if (ReflectionExtensions.IsNullableValueMember(memberExpression.Member) && memberExpression.Expression == levelExpression)
+							if (memberExpression.Member.IsNullableValueMember() && memberExpression.Expression == levelExpression)
 								memberExpression = levelMember;
 							else
 							{
@@ -914,7 +914,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (ReflectionExtensions.Equals(field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
+								if (field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 								{
 									if (field.MemberMapper is MemberMapper.ComplexMapper &&
 										field.MemberMapper.MemberName.IndexOf('.') > 0)
@@ -940,7 +940,7 @@ namespace LinqToDB.Data.Linq.Builder
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
 										foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(mapping.Type))
-											if (ReflectionExtensions.Equals(mm.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
+											if (mm.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 							}
 
@@ -1017,7 +1017,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var q =
 								from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
-								where ReflectionExtensions.Equals(a.MemberAccessor.MemberInfo, memberExpression.Member)
+								where a.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
 								select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
 
 							tableAssociation = q.FirstOrDefault();
@@ -1068,7 +1068,7 @@ namespace LinqToDB.Data.Linq.Builder
 			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, Association association)
 				: base(builder, parent.SqlQuery)
 			{
-				var type = ReflectionExtensions.GetMemberType(association.MemberAccessor.MemberInfo);
+				var type = association.MemberAccessor.MemberInfo.GetMemberType();
 				var left = association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))

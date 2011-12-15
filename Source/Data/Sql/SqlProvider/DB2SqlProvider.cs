@@ -93,7 +93,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				{
 					case "%":
 						{
-							var expr1 = !ReflectionExtensions.IsIntegerType(be.Expr1.SystemType) ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
+							var expr1 = !be.Expr1.SystemType.IsIntegerType() ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
 							return new SqlFunction(be.SystemType, "Mod", expr1, be.Expr2);
 						}
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);

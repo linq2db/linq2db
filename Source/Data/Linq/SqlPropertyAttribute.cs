@@ -27,7 +27,7 @@ namespace LinqToDB.Data.Linq
 
 		public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 		{
-			return new SqlExpression(ReflectionExtensions.GetMemberType(member), Name ?? member.Name, Precedence.Primary);
+			return new SqlExpression(member.GetMemberType(), Name ?? member.Name, Precedence.Primary);
 		}
 	}
 }

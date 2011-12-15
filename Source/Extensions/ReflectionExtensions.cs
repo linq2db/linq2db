@@ -456,89 +456,7 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		/// <summary>
-		/// Substitutes the elements of an array of types for the type parameters
-		/// of the current generic type definition and returns a Type object
-		/// representing the resulting constructed type.
-		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance.</param>
-		/// <param name="typeArguments">An array of types to be substituted for
-		/// the type parameters of the current generic type.</param>
-		/// <returns>A Type representing the constructed type formed by substituting
-		/// the elements of <paramref name="typeArguments"/> for the type parameters
-		/// of the current generic type.</returns>
-		/// <seealso cref="System.Type.MakeGenericType"/>
-		public static Type TranslateGenericParameters(Type type, Type[] typeArguments)
-		{
-			// 'T paramName' case
-			//
-			if (type.IsGenericParameter)
-				return typeArguments[type.GenericParameterPosition];
-
-			// 'List<T> paramName' or something like that.
-			//
-			if (type.IsGenericType && type.ContainsGenericParameters)
-			{
-				var genArgs = type.GetGenericArguments();
-
-				for (var i = 0; i < genArgs.Length; ++i)
-					genArgs[i] = TranslateGenericParameters(genArgs[i], typeArguments);
-
-				return type.GetGenericTypeDefinition().MakeGenericType(genArgs);
-			}
-
-			// Non-generic type.
-			//
-			return type;
-		}
-
-		public static bool CompareParameterTypes(Type goal, Type probe)
-		{
-			if (goal == probe)
-				return true;
-
-			if (goal.IsGenericParameter)
-				return CheckConstraints(goal, probe);
-			if (goal.IsGenericType && probe.IsGenericType)
-				return CompareGenericTypes(goal, probe);
-
-			return false;
-		}
-
-		public static bool CheckConstraints(Type goal, Type probe)
-		{
-			var constraints = goal.GetGenericParameterConstraints();
-
-			for (var i = 0; i < constraints.Length; i++)
-				if (!constraints[i].IsAssignableFrom(probe))
-					return false;
-
-			return true;
-		}
-
-		public static bool CompareGenericTypes(Type goal, Type probe)
-		{
-			var  genArgs =  goal.GetGenericArguments();
-			var specArgs = probe.GetGenericArguments();
-			var match    = (genArgs.Length == specArgs.Length);
-
-			for (var i = 0; match && i < genArgs.Length; i++)
-			{
-				if (genArgs[i] == specArgs[i])
-					continue;
-
-				if (genArgs[i].IsGenericParameter)
-					match = CheckConstraints(genArgs[i], specArgs[i]);
-				else if (genArgs[i].IsGenericType && specArgs[i].IsGenericType)
-					match = CompareGenericTypes(genArgs[i], specArgs[i]);
-				else
-					match = false;
-			}
-
-			return match;
-		}
-
-		public static PropertyInfo GetPropertyByMethod(MethodInfo method)
+		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
 		{
 			if (method != null)
 			{
@@ -558,7 +476,7 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		public static Type GetMemberType(MemberInfo memberInfo)
+		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
 			switch (memberInfo.MemberType)
 			{
@@ -571,7 +489,7 @@ namespace LinqToDB.Extensions
 			throw new InvalidOperationException();
 		}
 
-		public static bool IsFloatType(Type type)
+		public static bool IsFloatType(this Type type)
 		{
 			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
@@ -586,7 +504,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		public static bool IsIntegerType(Type type)
+		public static bool IsIntegerType(this Type type)
 		{
 			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
@@ -606,7 +524,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		public static bool IsNullableValueMember(MemberInfo member)
+		public static bool IsNullableValueMember(this MemberInfo member)
 		{
 			return
 				member.Name == "Value" &&
@@ -614,7 +532,7 @@ namespace LinqToDB.Extensions
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
-		public static bool Equals(MemberInfo member1, MemberInfo member2)
+		public static bool EqualsTo(this MemberInfo member1, MemberInfo member2)
 		{
 			if (ReferenceEquals(member1, member2))
 				return true;
@@ -660,7 +578,7 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		public static object GetDefaultValue(Type type)
+		public static object GetDefaultValue(this Type type)
 		{
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
@@ -669,20 +587,5 @@ namespace LinqToDB.Extensions
 		}
 
 		#endregion
-
-		internal static string GetTypeFullName(Type type)
-		{
-			var name = type.FullName;
-
-			if (type.IsGenericType)
-			{
-				name = name.Split('`')[0];
-
-				foreach (var t in type.GetGenericArguments())
-					name += "_" + GetTypeFullName(t).Replace('+', '_').Replace('.', '_');
-			}
-
-			return name;
-		}
 	}
 }

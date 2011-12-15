@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
-	using Reflection;
-
 	class MemberInfoComparer : IEqualityComparer<MemberInfo>
 	{
 		public bool Equals(MemberInfo x, MemberInfo y)
 		{
-			return ReflectionExtensions.Equals(x, y);
+			return x.EqualsTo(y);
 		}
 
 		public int GetHashCode(MemberInfo obj)

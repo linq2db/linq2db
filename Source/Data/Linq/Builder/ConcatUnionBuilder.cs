@@ -260,7 +260,7 @@ namespace LinqToDB.Data.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo ? ReflectionExtensions.GetPropertyByMethod((MethodInfo)m) : m)
+								.Select(m => m is MethodInfo ? ((MethodInfo)m).GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(

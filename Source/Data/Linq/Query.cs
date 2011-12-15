@@ -433,7 +433,7 @@ namespace LinqToDB.Data.Linq
 
 			var mm       = field.MemberMapper;
 			var members  = mm.MemberName.Split('.');
-			var defValue = Expression.Constant(ReflectionExtensions.GetDefaultValue(mm.MapMemberInfo.Type), mm.MapMemberInfo.Type);
+			var defValue = Expression.Constant(mm.MapMemberInfo.Type.GetDefaultValue(), mm.MapMemberInfo.Type);
 
 			for (var i = 0; i < members.Length; i++)
 			{

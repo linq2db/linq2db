@@ -72,7 +72,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ma = (MemberExpression)expr;
 
-							if (ReflectionExtensions.IsNullableValueMember(ma.Member))
+							if (ma.Member.IsNullableValueMember())
 								break;
 
 							if (SqlProvider.ConvertMember(ma.Member) == null)
@@ -369,7 +369,7 @@ namespace LinqToDB.Data.Linq.Builder
 								return new ExpressionHelper.ConvertInfo(ConvertExpression(expr));
 							}
 
-							if (ReflectionExtensions.IsNullableValueMember(ma.Member))
+							if (ma.Member.IsNullableValueMember())
 							{
 								var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
 								var helper = (IConvertHelper)Activator.CreateInstance(ntype);
@@ -513,7 +513,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var mi  = expr.Members[i];
 
 								if (mi is MethodInfo)
-									mi = ReflectionExtensions.GetPropertyByMethod((MethodInfo)mi);
+									mi = ((MethodInfo)mi).GetPropertyInfo();
 
 								return new SqlInfo { Sql = sql, Member = mi };
 							})
@@ -537,7 +537,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var mi  = a.Member;
 
 								if (mi is MethodInfo)
-									mi = ReflectionExtensions.GetPropertyByMethod((MethodInfo)mi);
+									mi = ((MethodInfo)mi).GetPropertyInfo();
 
 								return new SqlInfo { Sql = sql, Member = mi };
 							})
@@ -970,7 +970,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ma = (MemberExpression)ex;
 
-							if (ExpressionHelper.IsConstant(ma.Member.DeclaringType) || ReflectionExtensions.IsNullableValueMember(ma.Member))
+							if (ExpressionHelper.IsConstant(ma.Member.DeclaringType) || ma.Member.IsNullableValueMember())
 								return false;
 
 							break;
@@ -1637,7 +1637,7 @@ namespace LinqToDB.Data.Linq.Builder
 		ISqlExpression GetParameter(Expression ex, MemberInfo member)
 		{
 			if (member is MethodInfo)
-				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
+				member = ((MethodInfo)member).GetPropertyInfo();
 
 			var par    = ReplaceParameter(_expressionAccessors, ex, _ => {});
 			var expr   = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
@@ -1964,7 +1964,7 @@ namespace LinqToDB.Data.Linq.Builder
 				var code = m.m.Code;
 
 				if (code == null)
-					code = ReflectionExtensions.GetDefaultValue(left.Type);
+					code = left.Type.GetDefaultValue();
 				else if (left.Type != code.GetType())
 					code = MappingSchema.ConvertChangeType(code, left.Type);
 
@@ -2088,7 +2088,7 @@ namespace LinqToDB.Data.Linq.Builder
 							var ma   = (MemberExpression)pi;
 							var attr = GetFunctionAttribute(ma.Member);
 
-							if (attr == null && !ReflectionExtensions.IsNullableValueMember(ma.Member))
+							if (attr == null && !ma.Member.IsNullableValueMember())
 							{
 								if (canBeCompiled)
 								{
@@ -2305,7 +2305,7 @@ namespace LinqToDB.Data.Linq.Builder
 							members.Add(member, expr.Arguments[i]);
 
 							if (member is MethodInfo)
-								members.Add(ReflectionExtensions.GetPropertyByMethod((MethodInfo)member), expr.Arguments[i]);
+								members.Add(((MethodInfo)member).GetPropertyInfo(), expr.Arguments[i]);
 						}
 
 						return true;
@@ -2325,7 +2325,7 @@ namespace LinqToDB.Data.Linq.Builder
 							members.Add(binding.Member, binding.Expression);
 
 							if (binding.Member is MethodInfo)
-								members.Add(ReflectionExtensions.GetPropertyByMethod((MethodInfo)binding.Member), binding.Expression);
+								members.Add(((MethodInfo)binding.Member).GetPropertyInfo(), binding.Expression);
 						}
 
 						return true;

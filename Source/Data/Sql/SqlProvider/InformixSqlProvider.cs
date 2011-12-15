@@ -114,7 +114,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 									}
 
 								case TypeCode.UInt64:
-									if (ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
+									if (func.Parameters[1].SystemType.IsFloatType())
 										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
 									break;
 

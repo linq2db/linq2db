@@ -94,7 +94,7 @@ namespace LinqToDB.Data.Linq.Builder
 						idx = ConvertToParentIndex(idx, this);
 
 						var defaultValue = _methodCall.Method.Name.EndsWith("OrDefault") ?
-							Expression.Constant(ReflectionExtensions.GetDefaultValue(expr.Type), expr.Type) as Expression :
+							Expression.Constant(expr.Type.GetDefaultValue(), expr.Type) as Expression :
 							Expression.Convert(
 								Expression.Call(
 									null,

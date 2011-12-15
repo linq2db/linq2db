@@ -2014,7 +2014,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 		{
 			var par1 = func.Parameters[1];
 
-			return ReflectionExtensions.IsFloatType(par1.SystemType) && ReflectionExtensions.IsIntegerType(func.SystemType) ?
+			return par1.SystemType.IsFloatType() && func.SystemType.IsIntegerType() ?
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
@@ -2022,7 +2022,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 		{
 			var par = func.Parameters[paramNumber];
 
-			if (ReflectionExtensions.IsFloatType(par.SystemType) || ReflectionExtensions.IsIntegerType(par.SystemType))
+			if (par.SystemType.IsFloatType() || par.SystemType.IsIntegerType())
 			{
 				var sc = new SqlQuery.SearchCondition();
 

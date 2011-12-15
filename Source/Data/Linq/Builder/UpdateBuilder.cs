@@ -135,7 +135,7 @@ namespace LinqToDB.Data.Linq.Builder
 				var member  = binding.Member;
 
 				if (member is MethodInfo)
-					member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
+					member = ((MethodInfo)member).GetPropertyInfo();
 
 				if (binding is MemberAssignment)
 				{
@@ -188,7 +188,7 @@ namespace LinqToDB.Data.Linq.Builder
 			var member = body.Member;
 
 			if (member is MethodInfo)
-				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
+				member = ((MethodInfo)member).GetPropertyInfo();
 
 			var members = body.GetMembers();
 			var name    = members
@@ -203,11 +203,11 @@ namespace LinqToDB.Data.Linq.Builder
 					var m = me.Member;
 
 					if (m is MethodInfo)
-						m = ReflectionExtensions.GetPropertyByMethod((MethodInfo)m);
+						m = ((MethodInfo)m).GetPropertyInfo();
 
 					return m;
 				})
-				.Where(m => m != null && !ReflectionExtensions.IsNullableValueMember(m))
+				.Where(m => m != null && !m.IsNullableValueMember())
 				.Select(m => m.Name)
 				.Aggregate((s1,s2) => s1 + "." + s2);
 
@@ -254,7 +254,7 @@ namespace LinqToDB.Data.Linq.Builder
 			var member = body.Member;
 
 			if (member is MethodInfo)
-				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
+				member = ((MethodInfo)member).GetPropertyInfo();
 
 			var column = select.ConvertToSql(
 				body, 1, ConvertFlags.Field);

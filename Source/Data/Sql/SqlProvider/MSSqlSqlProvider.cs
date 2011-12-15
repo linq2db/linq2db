@@ -84,7 +84,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 							case "Convert" :
 								{
 									if (func.SystemType.GetUnderlyingType() == typeof(ulong) &&
-										ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
+										func.Parameters[1].SystemType.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,
