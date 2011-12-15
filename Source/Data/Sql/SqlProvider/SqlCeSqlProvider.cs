@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql.SqlProvider
 {
@@ -50,7 +51,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (be.Operation)
 				{
 					case "%":
-						return TypeHelper.IsIntegerType(be.Expr1.SystemType)?
+						return ReflectionExtensions.IsIntegerType(be.Expr1.SystemType)?
 							be :
 							new SqlBinaryExpression(
 								typeof(int),
@@ -67,10 +68,10 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert" :
-						switch (Type.GetTypeCode(TypeHelper.GetUnderlyingType(func.SystemType)))
+						switch (Type.GetTypeCode(ReflectionExtensions.GetUnderlyingType(func.SystemType)))
 						{
 							case TypeCode.UInt64 :
-								if (TypeHelper.IsFloatType(func.Parameters[1].SystemType))
+								if (ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
 									return new SqlFunction(
 										func.SystemType,
 										func.Name,
@@ -81,7 +82,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 								break;
 
 							case TypeCode.DateTime :
-								var type1 = TypeHelper.GetUnderlyingType(func.Parameters[1].SystemType);
+								var type1 = ReflectionExtensions.GetUnderlyingType(func.Parameters[1].SystemType);
 
 								if (IsTimeDataType(func.Parameters[0]))
 								{

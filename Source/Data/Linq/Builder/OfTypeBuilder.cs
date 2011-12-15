@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -26,7 +27,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				var objectType = methodCall.Type.GetGenericArguments()[0];
 
-				if (TypeHelper.IsSameOrParent(table.ObjectType, objectType))
+				if (ReflectionExtensions.IsSameOrParent(table.ObjectType, objectType))
 				{
 					var predicate = builder.MakeIsPredicate(table, objectType);
 
@@ -37,7 +38,7 @@ namespace LinqToDB.Data.Linq.Builder
 			else
 			{
 				var toType   = methodCall.Type.GetGenericArguments()[0];
-				var gargs    = TypeHelper.GetGenericArguments(methodCall.Arguments[0].Type, typeof(IQueryable<>));
+				var gargs    = ReflectionExtensions.GetGenericArguments(methodCall.Arguments[0].Type, typeof(IQueryable<>));
 				var fromType = gargs == null ? typeof(object) : gargs[0];
 
 				if (toType.IsSubclassOf(fromType))

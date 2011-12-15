@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Linq.Builder
@@ -93,7 +94,7 @@ namespace LinqToDB.Data.Linq.Builder
 						idx = ConvertToParentIndex(idx, this);
 
 						var defaultValue = _methodCall.Method.Name.EndsWith("OrDefault") ?
-							Expression.Constant(TypeHelper.GetDefaultValue(expr.Type), expr.Type) as Expression :
+							Expression.Constant(ReflectionExtensions.GetDefaultValue(expr.Type), expr.Type) as Expression :
 							Expression.Convert(
 								Expression.Call(
 									null,

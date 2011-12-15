@@ -2,6 +2,7 @@
 using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -547,7 +548,7 @@ namespace LinqToDB.Data.Linq
 				var part = (DateParts)((SqlValue)args[_datePartIndex]).Value;
 				var pstr = _partMapping != null ? _partMapping[(int)part] : part.ToString();
 				var str  = string.Format(Expression, pstr ?? part.ToString());
-				var type = TypeHelper.GetMemberType(member);
+				var type = ReflectionExtensions.GetMemberType(member);
 
 
 				return _isExpression ?

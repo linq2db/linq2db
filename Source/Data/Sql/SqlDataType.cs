@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql
 {
@@ -332,7 +333,7 @@ namespace LinqToDB.Data.Sql
 		{
 			if (type.IsValueType == false ||
 				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
-				TypeHelper.IsSameOrParent(typeof(INullable), type))
+				ReflectionExtensions.IsSameOrParent(typeof(INullable), type))
 				return true;
 
 			return false;

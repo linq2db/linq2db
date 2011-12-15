@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Threading;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Common
 {
@@ -59,12 +60,12 @@ namespace LinqToDB.Common
 			if (to.IsEnum)
 				to = Enum.GetUnderlyingType(to);
 
-			if (TypeHelper.IsSameOrParent(to, from))
+			if (ReflectionExtensions.IsSameOrParent(to, from))
 				return Assignable;
 
 			string methodName;
 
-			if (TypeHelper.IsNullable(to))
+			if (ReflectionExtensions.IsNullable(to))
 				methodName = "ToNullable" + to.GetGenericArguments()[0].Name;
 			else if (to.IsArray)
 				methodName = "To" + to.GetElementType().Name + "Array";
@@ -77,15 +78,15 @@ namespace LinqToDB.Common
 				BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding,
 				null, new[] { from }, null) ?? FindTypeCastOperator(to) ?? FindTypeCastOperator(from);
 
-			if (mi == null && TypeHelper.IsNullable(to))
+			if (mi == null && ReflectionExtensions.IsNullable(to))
 			{
 				// To-nullable conversion.
 				// We have to use reflection to enforce some constraints.
 				//
 				var toType   = to.GetGenericArguments()[0];
-				var fromType = TypeHelper.IsNullable(from)? from.GetGenericArguments()[0]: from;
+				var fromType = ReflectionExtensions.IsNullable(from)? from.GetGenericArguments()[0]: from;
 
-				methodName = TypeHelper.IsNullable(from) ? "FromNullable" : "From";
+				methodName = ReflectionExtensions.IsNullable(from) ? "FromNullable" : "From";
 
 				mi = typeof(NullableConvert<,>)
 					.MakeGenericType(toType, fromType)

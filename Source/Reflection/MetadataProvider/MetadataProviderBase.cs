@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using LinqToDB.Common;
 using LinqToDB.DataAccess;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {
@@ -77,7 +78,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			isSet = false;
 
 			return
-				TypeHelper.IsScalar(member.Type) == false;// ||
+				ReflectionExtensions.IsScalar(member.Type) == false;// ||
 				//(member.MemberInfo is FieldInfo && ((FieldInfo)member.MemberInfo).IsLiteral);
 		}
 

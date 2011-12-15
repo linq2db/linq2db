@@ -6,7 +6,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataAccess;
-
+using LinqToDB.Extensions;
 using Convert=System.Convert;
 
 namespace LinqToDB.Reflection.MetadataProvider
@@ -191,7 +191,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			if (TypeHelper.IsNullable(type))
+			if (ReflectionExtensions.IsNullable(type))
 				type = type.GetGenericArguments()[0];
 
 			if (type.IsEnum)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql.SqlProvider
 {
@@ -255,7 +256,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 
 					case "Convert"   : 
 						{
-							switch (Type.GetTypeCode(TypeHelper.GetUnderlyingType(func.SystemType)))
+							switch (Type.GetTypeCode(ReflectionExtensions.GetUnderlyingType(func.SystemType)))
 							{
 								case TypeCode.String   : return new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]);
 								case TypeCode.DateTime :

@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -293,13 +294,13 @@ namespace LinqToDB.Data.Linq.Builder
 								{
 									var mi = EnumerableMethods
 										.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
-										.MakeGenericMethod(TypeHelper.GetElementType(me.Expression.Type));
+										.MakeGenericMethod(ReflectionExtensions.GetElementType(me.Expression.Type));
 
 									return Expression.Call(null, mi, me.Expression);
 								}
 							}
 
-							if (CompiledParameters == null && TypeHelper.IsSameOrParent(typeof(IQueryable), expr.Type))
+							if (CompiledParameters == null && ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type))
 							{
 								var ex = ConvertIQueriable(expr);
 
@@ -356,7 +357,7 @@ namespace LinqToDB.Data.Linq.Builder
 								if (l != null)
 									return OptimizeExpression(ConvertMethod(call, l));
 
-								if (CompiledParameters == null && TypeHelper.IsSameOrParent(typeof(IQueryable), expr.Type))
+								if (CompiledParameters == null && ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type))
 								{
 									var attr = GetTableFunctionAttribute(call.Method);
 

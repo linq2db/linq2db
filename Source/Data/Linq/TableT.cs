@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -160,7 +161,7 @@ namespace LinqToDB.Data.Linq
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			var elementType = TypeHelper.GetElementType(expression.Type) ?? expression.Type;
+			var elementType = ReflectionExtensions.GetElementType(expression.Type) ?? expression.Type;
 
 			try
 			{

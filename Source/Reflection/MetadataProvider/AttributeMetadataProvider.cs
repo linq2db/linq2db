@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {
@@ -34,7 +35,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _mapFieldAttributes ?? (_mapFieldAttributes = TypeHelper.GetAttributes(typeAccessor.Type, typeof (MapFieldAttribute)));
+				return _mapFieldAttributes ?? (_mapFieldAttributes = ReflectionExtensions.GetAttributes(typeAccessor.Type, typeof (MapFieldAttribute)));
 			}
 		}
 
@@ -44,7 +45,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = TypeHelper.GetAttributes(typeAccessor.Type, typeof(NonUpdatableAttribute)));
+				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = ReflectionExtensions.GetAttributes(typeAccessor.Type, typeof(NonUpdatableAttribute)));
 			}
 		}
 
@@ -152,7 +153,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		public override bool GetMapIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
-			var attr = member.GetAttribute<MapIgnoreAttribute>() ?? (MapIgnoreAttribute)TypeHelper.GetFirstAttribute(member.Type, typeof(MapIgnoreAttribute));
+			var attr = member.GetAttribute<MapIgnoreAttribute>() ?? (MapIgnoreAttribute)ReflectionExtensions.GetFirstAttribute(member.Type, typeof(MapIgnoreAttribute));
 
 			if (attr != null)
 			{
@@ -162,7 +163,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			if (member.GetAttribute<MapFieldAttribute>()    != null ||
 				member.GetAttribute<MapImplicitAttribute>() != null ||
-				TypeHelper.GetFirstAttribute(member.Type, typeof(MapImplicitAttribute)) != null)
+				ReflectionExtensions.GetFirstAttribute(member.Type, typeof(MapImplicitAttribute)) != null)
 			{
 				isSet = true;
 				return false;
@@ -187,7 +188,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 					return attr.IsTrimmable;
 				}
 
-				attr = (TrimmableAttribute)TypeHelper.GetFirstAttribute(
+				attr = (TrimmableAttribute)ReflectionExtensions.GetFirstAttribute(
 					member.MemberInfo.DeclaringType, typeof(TrimmableAttribute));
 
 				if (attr != null)
@@ -276,13 +277,13 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			if (TypeHelper.IsNullable(type))
+			if (ReflectionExtensions.IsNullable(type))
 				type = type.GetGenericArguments()[0];
 
 			if (type.IsEnum)
 				list = GetEnumMapValues(type);
 
-			var attrs = TypeHelper.GetAttributes(type, typeof(MapValueAttribute));
+			var attrs = ReflectionExtensions.GetAttributes(type, typeof(MapValueAttribute));
 
 			if (attrs != null && attrs.Length != 0)
 			{
@@ -326,7 +327,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			// Check type [Nullable(true || false)]
 			//
-			attr1 = (NullableAttribute)TypeHelper.GetFirstAttribute(
+			attr1 = (NullableAttribute)ReflectionExtensions.GetFirstAttribute(
 				member.MemberInfo.DeclaringType, typeof(NullableAttribute));
 
 			if (attr1 != null)
@@ -525,7 +526,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			var attr = member.GetAttribute<SqlIgnoreAttribute>();
 
 			if (attr == null)
-				attr = (SqlIgnoreAttribute)TypeHelper.GetFirstAttribute(member.Type, typeof(SqlIgnoreAttribute));
+				attr = (SqlIgnoreAttribute)ReflectionExtensions.GetFirstAttribute(member.Type, typeof(SqlIgnoreAttribute));
 
 			if (attr != null)
 			{

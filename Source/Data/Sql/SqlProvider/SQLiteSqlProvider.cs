@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Sql.SqlProvider
@@ -57,7 +57,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 					case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(" "), func.Parameters[0]);
 					case "Convert" :
 						{
-							var ftype = TypeHelper.GetUnderlyingType(func.SystemType);
+							var ftype = ReflectionExtensions.GetUnderlyingType(func.SystemType);
 
 							if (ftype == typeof(bool))
 							{

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection
 {
@@ -52,7 +53,7 @@ namespace LinqToDB.Reflection
 
 			// ObjectFactory
 			//
-			var attr = TypeHelper.GetFirstAttribute(type, typeof(ObjectFactoryAttribute));
+			var attr = ReflectionExtensions.GetFirstAttribute(type, typeof(ObjectFactoryAttribute));
 
 			if (attr != null)
 				_objectFactory = ((ObjectFactoryAttribute)attr).ObjectFactory;

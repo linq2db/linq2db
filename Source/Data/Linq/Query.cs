@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -432,7 +433,7 @@ namespace LinqToDB.Data.Linq
 
 			var mm       = field.MemberMapper;
 			var members  = mm.MemberName.Split('.');
-			var defValue = Expression.Constant(TypeHelper.GetDefaultValue(mm.MapMemberInfo.Type), mm.MapMemberInfo.Type);
+			var defValue = Expression.Constant(ReflectionExtensions.GetDefaultValue(mm.MapMemberInfo.Type), mm.MapMemberInfo.Type);
 
 			for (var i = 0; i < members.Length; i++)
 			{
@@ -442,7 +443,7 @@ namespace LinqToDB.Data.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
-			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !TypeHelper.IsNullableType(mm.Type))
+			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !ReflectionExtensions.IsNullableType(mm.Type))
 			{
 				var method = ReflectionHelper.Expressor<int>.MethodExpressor(_ => ConvertNullable(0, 0))
 					.GetGenericMethodDefinition()

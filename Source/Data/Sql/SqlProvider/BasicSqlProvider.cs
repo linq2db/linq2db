@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql.SqlProvider
 {
@@ -2013,7 +2014,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 		{
 			var par1 = func.Parameters[1];
 
-			return TypeHelper.IsFloatType(par1.SystemType) && TypeHelper.IsIntegerType(func.SystemType) ?
+			return ReflectionExtensions.IsFloatType(par1.SystemType) && ReflectionExtensions.IsIntegerType(func.SystemType) ?
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
@@ -2021,7 +2022,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 		{
 			var par = func.Parameters[paramNumber];
 
-			if (TypeHelper.IsFloatType(par.SystemType) || TypeHelper.IsIntegerType(par.SystemType))
+			if (ReflectionExtensions.IsFloatType(par.SystemType) || ReflectionExtensions.IsIntegerType(par.SystemType))
 			{
 				var sc = new SqlQuery.SearchCondition();
 
@@ -2784,14 +2785,14 @@ namespace LinqToDB.Data.Sql.SqlProvider
 							case "Convert":
 								{
 									var from  = func.Parameters[1] as SqlFunction;
-									var typef = TypeHelper.GetUnderlyingType(func.SystemType);
+									var typef = ReflectionExtensions.GetUnderlyingType(func.SystemType);
 
-									if (from != null && from.Name == "Convert" && TypeHelper.GetUnderlyingType(from.Parameters[1].SystemType) == typef)
+									if (from != null && from.Name == "Convert" && ReflectionExtensions.GetUnderlyingType(from.Parameters[1].SystemType) == typef)
 										return from.Parameters[1];
 
 									var fe = func.Parameters[1] as SqlExpression;
 
-									if (fe != null && fe.Expr == "Cast({0} as {1})" && TypeHelper.GetUnderlyingType(fe.Parameters[0].SystemType) == typef)
+									if (fe != null && fe.Expr == "Cast({0} as {1})" && ReflectionExtensions.GetUnderlyingType(fe.Parameters[0].SystemType) == typef)
 										return fe.Parameters[0];
 								}
 

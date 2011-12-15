@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -10,7 +11,7 @@ namespace LinqToDB.Data.Linq
 	{
 		public bool Equals(MemberInfo x, MemberInfo y)
 		{
-			return TypeHelper.Equals(x, y);
+			return ReflectionExtensions.Equals(x, y);
 		}
 
 		public int GetHashCode(MemberInfo obj)

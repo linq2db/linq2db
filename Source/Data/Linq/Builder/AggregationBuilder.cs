@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -106,7 +107,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClass || _methodName == "Sum" || TypeHelper.IsNullableType(_returnType))
+				if (_returnType.IsClass || _methodName == "Sum" || ReflectionExtensions.IsNullableType(_returnType))
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}

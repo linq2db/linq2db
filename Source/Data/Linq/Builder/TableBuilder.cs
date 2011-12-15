@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -751,13 +752,13 @@ namespace LinqToDB.Data.Linq.Builder
 
 						while (e1.Type != e2.Type)
 						{
-							if (TypeHelper.IsNullableType(e1.Type))
+							if (ReflectionExtensions.IsNullableType(e1.Type))
 							{
 								e1 = Expression.PropertyOrField(e1, "Value");
 								continue;
 							}
 
-							if (TypeHelper.IsNullableType(e2.Type))
+							if (ReflectionExtensions.IsNullableType(e2.Type))
 							{
 								e2 = Expression.PropertyOrField(e2, "Value");
 								continue;
@@ -876,7 +877,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var levelMember = (MemberExpression)levelExpression;
 
-							if (TypeHelper.IsNullableValueMember(memberExpression.Member) && memberExpression.Expression == levelExpression)
+							if (ReflectionExtensions.IsNullableValueMember(memberExpression.Member) && memberExpression.Expression == levelExpression)
 								memberExpression = levelMember;
 							else
 							{
@@ -913,7 +914,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (TypeHelper.Equals(field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
+								if (ReflectionExtensions.Equals(field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
 								{
 									if (field.MemberMapper is MemberMapper.ComplexMapper &&
 										field.MemberMapper.MemberName.IndexOf('.') > 0)
@@ -939,7 +940,7 @@ namespace LinqToDB.Data.Linq.Builder
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
 										foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(mapping.Type))
-											if (TypeHelper.Equals(mm.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
+											if (ReflectionExtensions.Equals(mm.MapMemberInfo.MemberAccessor.MemberInfo, memberExpression.Member))
 												return field;
 							}
 
@@ -1016,7 +1017,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var q =
 								from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
-								where TypeHelper.Equals(a.MemberAccessor.MemberInfo, memberExpression.Member)
+								where ReflectionExtensions.Equals(a.MemberAccessor.MemberInfo, memberExpression.Member)
 								select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
 
 							tableAssociation = q.FirstOrDefault();
@@ -1067,13 +1068,13 @@ namespace LinqToDB.Data.Linq.Builder
 			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, Association association)
 				: base(builder, parent.SqlQuery)
 			{
-				var type = TypeHelper.GetMemberType(association.MemberAccessor.MemberInfo);
+				var type = ReflectionExtensions.GetMemberType(association.MemberAccessor.MemberInfo);
 				var left = association.CanBeNull;
 
-				if (TypeHelper.IsSameOrParent(typeof(IEnumerable), type))
+				if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), type))
 				{
-					var etypes = TypeHelper.GetGenericArguments(type, typeof(IEnumerable));
-					type       = etypes != null && etypes.Length > 0 ? etypes[0] : TypeHelper.GetListItemType(type);
+					var etypes = ReflectionExtensions.GetGenericArguments(type, typeof(IEnumerable));
+					type       = etypes != null && etypes.Length > 0 ? etypes[0] : ReflectionExtensions.GetListItemType(type);
 					IsList     = true;
 				}
 

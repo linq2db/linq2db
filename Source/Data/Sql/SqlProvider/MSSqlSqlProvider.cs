@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql.SqlProvider
 {
@@ -56,7 +57,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 						{
 							case "%":
 								{
-									var type1 = TypeHelper.GetUnderlyingType(be.Expr1.SystemType);
+									var type1 = ReflectionExtensions.GetUnderlyingType(be.Expr1.SystemType);
 
 									if (type1 == typeof(double) || type1 == typeof(float))
 									{
@@ -82,8 +83,8 @@ namespace LinqToDB.Data.Sql.SqlProvider
 						{
 							case "Convert" :
 								{
-									if (TypeHelper.GetUnderlyingType(func.SystemType) == typeof(ulong) &&
-										TypeHelper.IsFloatType(func.Parameters[1].SystemType))
+									if (ReflectionExtensions.GetUnderlyingType(func.SystemType) == typeof(ulong) &&
+										ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
 										return new SqlFunction(
 											func.SystemType,
 											func.Name,

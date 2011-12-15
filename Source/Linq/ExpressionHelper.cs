@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Data.Linq.Builder;
+using LinqToDB.Extensions;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 // ReSharper disable HeuristicUnreachableCode
@@ -43,7 +44,7 @@ namespace LinqToDB.Linq
 				case TypeCode.Char    : return true;
 			}
 
-			if (TypeHelper.IsNullableType(type))
+			if (ReflectionExtensions.IsNullableType(type))
 				return IsConstant(type.GetGenericArguments()[0]);
 
 			return false;

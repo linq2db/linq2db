@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql.SqlProvider
 {
@@ -15,13 +16,13 @@ namespace LinqToDB.Data.Sql.SqlProvider
 			{
 				var func = (SqlFunction)expr;
 
-				switch (Type.GetTypeCode(TypeHelper.GetUnderlyingType(func.SystemType)))
+				switch (Type.GetTypeCode(ReflectionExtensions.GetUnderlyingType(func.SystemType)))
 				{
 					case TypeCode.DateTime :
 
 						if (func.Name == "Convert")
 						{
-							var type1 = TypeHelper.GetUnderlyingType(func.Parameters[1].SystemType);
+							var type1 = ReflectionExtensions.GetUnderlyingType(func.Parameters[1].SystemType);
 
 							if (IsTimeDataType(func.Parameters[0]))
 							{

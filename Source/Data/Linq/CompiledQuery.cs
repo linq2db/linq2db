@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -76,8 +77,8 @@ namespace LinqToDB.Data.Linq
 
 							if (expr.IsQueryable())
 							{
-								var qtype  = TypeHelper.GetGenericType(
-									TypeHelper.IsSameOrParent(typeof(IQueryable), expr.Type) ?
+								var qtype  = ReflectionExtensions.GetGenericType(
+									ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type) ?
 										typeof(IQueryable<>) :
 										typeof(IEnumerable<>),
 									expr.Type);

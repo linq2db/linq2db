@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -71,7 +72,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ma = (MemberExpression)expr;
 
-							if (TypeHelper.IsNullableValueMember(ma.Member))
+							if (ReflectionExtensions.IsNullableValueMember(ma.Member))
 								break;
 
 							if (SqlProvider.ConvertMember(ma.Member) == null)
@@ -368,7 +369,7 @@ namespace LinqToDB.Data.Linq.Builder
 								return new ExpressionHelper.ConvertInfo(ConvertExpression(expr));
 							}
 
-							if (TypeHelper.IsNullableValueMember(ma.Member))
+							if (ReflectionExtensions.IsNullableValueMember(ma.Member))
 							{
 								var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
 								var helper = (IConvertHelper)Activator.CreateInstance(ntype);
@@ -512,7 +513,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var mi  = expr.Members[i];
 
 								if (mi is MethodInfo)
-									mi = TypeHelper.GetPropertyByMethod((MethodInfo)mi);
+									mi = ReflectionExtensions.GetPropertyByMethod((MethodInfo)mi);
 
 								return new SqlInfo { Sql = sql, Member = mi };
 							})
@@ -536,7 +537,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var mi  = a.Member;
 
 								if (mi is MethodInfo)
-									mi = TypeHelper.GetPropertyByMethod((MethodInfo)mi);
+									mi = ReflectionExtensions.GetPropertyByMethod((MethodInfo)mi);
 
 								return new SqlInfo { Sql = sql, Member = mi };
 							})
@@ -969,7 +970,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ma = (MemberExpression)ex;
 
-							if (ExpressionHelper.IsConstant(ma.Member.DeclaringType) || TypeHelper.IsNullableValueMember(ma.Member))
+							if (ExpressionHelper.IsConstant(ma.Member.DeclaringType) || ReflectionExtensions.IsNullableValueMember(ma.Member))
 								return false;
 
 							break;
@@ -1159,15 +1160,15 @@ namespace LinqToDB.Data.Linq.Builder
 						else if (e.Method.Name == "Contains")
 						{
 							if (e.Method.DeclaringType == typeof(Enumerable) ||
-							    TypeHelper.IsSameOrParent(typeof(IList), e.Method.DeclaringType) ||
-							    TypeHelper.IsSameOrParent(typeof(ICollection<>), e.Method.DeclaringType))
+							    ReflectionExtensions.IsSameOrParent(typeof(IList), e.Method.DeclaringType) ||
+							    ReflectionExtensions.IsSameOrParent(typeof(ICollection<>), e.Method.DeclaringType))
 							{
 								predicate = ConvertInPredicate(context, e);
 							}
 						}
-						else if (e.Method.Name == "ContainsValue" && TypeHelper.IsSameOrParent(typeof(Dictionary<,>), e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsValue" && ReflectionExtensions.IsSameOrParent(typeof(Dictionary<,>), e.Method.DeclaringType))
 						{
-							var args = TypeHelper.GetGenericArguments(e.Method.DeclaringType, typeof(Dictionary<,>));
+							var args = ReflectionExtensions.GetGenericArguments(e.Method.DeclaringType, typeof(Dictionary<,>));
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[1]);
@@ -1179,9 +1180,9 @@ namespace LinqToDB.Data.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-						else if (e.Method.Name == "ContainsKey" && TypeHelper.IsSameOrParent(typeof(IDictionary<,>), e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsKey" && ReflectionExtensions.IsSameOrParent(typeof(IDictionary<,>), e.Method.DeclaringType))
 						{
-							var args = TypeHelper.GetGenericArguments(e.Method.DeclaringType, typeof(IDictionary<,>));
+							var args = ReflectionExtensions.GetGenericArguments(e.Method.DeclaringType, typeof(IDictionary<,>));
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);
@@ -1636,7 +1637,7 @@ namespace LinqToDB.Data.Linq.Builder
 		ISqlExpression GetParameter(Expression ex, MemberInfo member)
 		{
 			if (member is MethodInfo)
-				member = TypeHelper.GetPropertyByMethod((MethodInfo)member);
+				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
 
 			var par    = ReplaceParameter(_expressionAccessors, ex, _ => {});
 			var expr   = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
@@ -1963,7 +1964,7 @@ namespace LinqToDB.Data.Linq.Builder
 				var code = m.m.Code;
 
 				if (code == null)
-					code = TypeHelper.GetDefaultValue(left.Type);
+					code = ReflectionExtensions.GetDefaultValue(left.Type);
 				else if (left.Type != code.GetType())
 					code = MappingSchema.ConvertChangeType(code, left.Type);
 
@@ -2087,7 +2088,7 @@ namespace LinqToDB.Data.Linq.Builder
 							var ma   = (MemberExpression)pi;
 							var attr = GetFunctionAttribute(ma.Member);
 
-							if (attr == null && !TypeHelper.IsNullableValueMember(ma.Member))
+							if (attr == null && !ReflectionExtensions.IsNullableValueMember(ma.Member))
 							{
 								if (canBeCompiled)
 								{
@@ -2304,7 +2305,7 @@ namespace LinqToDB.Data.Linq.Builder
 							members.Add(member, expr.Arguments[i]);
 
 							if (member is MethodInfo)
-								members.Add(TypeHelper.GetPropertyByMethod((MethodInfo)member), expr.Arguments[i]);
+								members.Add(ReflectionExtensions.GetPropertyByMethod((MethodInfo)member), expr.Arguments[i]);
 						}
 
 						return true;
@@ -2324,7 +2325,7 @@ namespace LinqToDB.Data.Linq.Builder
 							members.Add(binding.Member, binding.Expression);
 
 							if (binding.Member is MethodInfo)
-								members.Add(TypeHelper.GetPropertyByMethod((MethodInfo)binding.Member), binding.Expression);
+								members.Add(ReflectionExtensions.GetPropertyByMethod((MethodInfo)binding.Member), binding.Expression);
 						}
 
 						return true;

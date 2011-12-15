@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Text;
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Sql.SqlProvider
@@ -101,7 +102,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 							var par0 = func.Parameters[0];
 							var par1 = func.Parameters[1];
 
-							switch (Type.GetTypeCode(TypeHelper.GetUnderlyingType(func.SystemType)))
+							switch (Type.GetTypeCode(ReflectionExtensions.GetUnderlyingType(func.SystemType)))
 							{
 								case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 								case TypeCode.Boolean  :
@@ -113,7 +114,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 									}
 
 								case TypeCode.UInt64:
-									if (TypeHelper.IsFloatType(func.Parameters[1].SystemType))
+									if (ReflectionExtensions.IsFloatType(func.Parameters[1].SystemType))
 										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
 									break;
 
@@ -137,7 +138,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
 
 								default:
-									if (TypeHelper.GetUnderlyingType(func.SystemType) == typeof(DateTimeOffset))
+									if (ReflectionExtensions.GetUnderlyingType(func.SystemType) == typeof(DateTimeOffset))
 										goto case TypeCode.DateTime;
 									break;
 							}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -259,7 +260,7 @@ namespace LinqToDB.Data.Linq.Builder
 						if (nctor != null)
 						{
 							var members = nctor.Members
-								.Select(m => m is MethodInfo ? TypeHelper.GetPropertyByMethod((MethodInfo)m) : m)
+								.Select(m => m is MethodInfo ? ReflectionExtensions.GetPropertyByMethod((MethodInfo)m) : m)
 								.ToList();
 
 							expr = Expression.New(

@@ -307,7 +307,7 @@
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
-    <Compile Include="Reflection\TypeHelper.cs" />
+    <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="ServiceModel\DataService.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
     <Compile Include="ServiceModel\ILinqSoapService.cs" />

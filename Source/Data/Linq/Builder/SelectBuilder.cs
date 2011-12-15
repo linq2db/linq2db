@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -301,8 +302,8 @@ namespace LinqToDB.Data.Linq.Builder
 						var call = (MethodCallExpression)expression;
 
 						if (call.IsQueryable())
-							if (TypeHelper.IsSameOrParent(typeof(IEnumerable), call.Type) ||
-							    TypeHelper.IsSameOrParent(typeof(IQueryable),  call.Type))
+							if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), call.Type) ||
+							    ReflectionExtensions.IsSameOrParent(typeof(IQueryable),  call.Type))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 
 						break;

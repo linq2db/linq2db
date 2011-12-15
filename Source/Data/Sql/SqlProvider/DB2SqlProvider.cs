@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Sql.SqlProvider
@@ -93,7 +93,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				{
 					case "%":
 						{
-							var expr1 = !TypeHelper.IsIntegerType(be.Expr1.SystemType) ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
+							var expr1 = !ReflectionExtensions.IsIntegerType(be.Expr1.SystemType) ? new SqlFunction(typeof(int), "Int", be.Expr1) : be.Expr1;
 							return new SqlFunction(be.SystemType, "Mod", expr1, be.Expr2);
 						}
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
@@ -109,7 +109,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert"    :
-						if (TypeHelper.GetUnderlyingType(func.SystemType) == typeof(bool))
+						if (ReflectionExtensions.GetUnderlyingType(func.SystemType) == typeof(bool))
 						{
 							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
@@ -157,7 +157,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
 					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
 					case "VarChar"       :
-						if (TypeHelper.GetUnderlyingType(func.Parameters[0].SystemType) == typeof(decimal))
+						if (ReflectionExtensions.GetUnderlyingType(func.Parameters[0].SystemType) == typeof(decimal))
 							return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
 						break;
 					case "NChar"         :

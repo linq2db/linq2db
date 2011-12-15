@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -122,7 +123,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (IsSubQuery(context, ce))
 							{
-								if (TypeHelper.IsSameOrParent(typeof(IEnumerable), pi.Type))
+								if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), pi.Type))
 									return new ExpressionHelper.ConvertInfo(BuildMultipleQuery(context, pi));
 
 								return new ExpressionHelper.ConvertInfo(GetSubQuery(context, ce).BuildExpression(null, 0));

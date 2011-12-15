@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Text;
-
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Sql.SqlProvider
@@ -63,7 +63,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert"   :
-						if (TypeHelper.GetUnderlyingType(func.SystemType) == typeof(bool))
+						if (ReflectionExtensions.GetUnderlyingType(func.SystemType) == typeof(bool))
 						{
 							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)

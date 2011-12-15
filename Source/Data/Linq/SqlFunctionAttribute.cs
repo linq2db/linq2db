@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
@@ -73,7 +74,7 @@ namespace LinqToDB.Data.Linq
 
 		public virtual ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 		{
-			return new SqlFunction(TypeHelper.GetMemberType(member), Name ?? member.Name, ConvertArgs(member, args));
+			return new SqlFunction(ReflectionExtensions.GetMemberType(member), Name ?? member.Name, ConvertArgs(member, args));
 		}
 	}
 }

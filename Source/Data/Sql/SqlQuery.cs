@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql
 {
@@ -4270,7 +4271,7 @@ namespace LinqToDB.Data.Sql
 
 					if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
 					{
-						var type  = TypeHelper.GetListItemType(pr.Value);
+						var type  = ReflectionExtensions.GetListItemType(pr.Value);
 						var ta    = TypeAccessor.GetAccessor(type);
 						var items = (IEnumerable)pr.Value;
 						var names = expr.Expr.Substring(1).Split(',');

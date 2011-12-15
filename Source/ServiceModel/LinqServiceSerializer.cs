@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.ServiceModel
 {
@@ -491,7 +492,7 @@ namespace LinqToDB.ServiceModel
 							}
 							else
 							{
-								var elemType = TypeHelper.GetElementType(t);
+								var elemType = ReflectionExtensions.GetElementType(t);
 								GetType(GetArrayType(elemType));
 							}
 
@@ -564,7 +565,7 @@ namespace LinqToDB.ServiceModel
 							}
 							else
 							{
-								var elemType = TypeHelper.GetElementType(type);
+								var elemType = ReflectionExtensions.GetElementType(type);
 								var value    = ConvertIEnumerableToArray(elem.Value, elemType);
 
 								Append(GetArrayType(elemType), value);

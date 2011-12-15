@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -1006,10 +1007,10 @@ namespace LinqToDB.Data.Linq.Builder
 
 			if (!Members.TryGetValue(member, out memberExpression))
 			{
-				if (add && TypeHelper.IsSameOrParent(member.DeclaringType, Body.Type))
+				if (add && ReflectionExtensions.IsSameOrParent(member.DeclaringType, Body.Type))
 				{
 					memberExpression = Expression.Constant(
-						TypeHelper.GetDefaultValue(type), type);
+						ReflectionExtensions.GetDefaultValue(type), type);
 
 					Members.Add(member, memberExpression);
 				}

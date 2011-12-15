@@ -1,6 +1,7 @@
 using System;
 using System.Data.SqlTypes;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection
 {
@@ -38,7 +39,7 @@ namespace LinqToDB.Reflection
 		private Type _underlyingType;
 		public  Type  UnderlyingType
 		{
-			get { return _underlyingType ?? (_underlyingType = TypeHelper.GetUnderlyingType(Type)); }
+			get { return _underlyingType ?? (_underlyingType = ReflectionExtensions.GetUnderlyingType(Type)); }
 		}
 
 		#endregion
@@ -73,7 +74,7 @@ namespace LinqToDB.Reflection
 
 		public object[] GetTypeAttributes(Type attributeType)
 		{
-			return TypeHelper.GetAttributes(TypeAccessor.Type, attributeType);
+			return ReflectionExtensions.GetAttributes(TypeAccessor.Type, attributeType);
 		}
 
 		#endregion

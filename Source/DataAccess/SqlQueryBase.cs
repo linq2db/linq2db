@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Data.DataProvider;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Reflection.Extension;
@@ -97,7 +98,7 @@ namespace LinqToDB.DataAccess
 
 					var ma = mm.MapMemberInfo.MemberAccessor;
 
-					if (TypeHelper.IsScalar(ma.Type))
+					if (ReflectionExtensions.IsScalar(ma.Type))
 					{
 						bool isSet;
 						var order = MappingSchema.MetadataProvider.GetPrimaryKeyOrder(type, typeExt, ma, out isSet);

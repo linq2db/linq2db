@@ -1,6 +1,6 @@
 using System;
 using System.Data.SqlTypes;
-
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping
@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 
 			// Nullable Enums.
 			//
-			if (TypeHelper.IsNullable(t) && Nullable.GetUnderlyingType(t).IsEnum)
+			if (ReflectionExtensions.IsNullable(t) && Nullable.GetUnderlyingType(t).IsEnum)
 			{
 				Type enumType = Nullable.GetUnderlyingType(t);
 				t = Enum.GetUnderlyingType(enumType);

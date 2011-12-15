@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
@@ -134,7 +135,7 @@ namespace LinqToDB.Data.Linq.Builder
 				var member  = binding.Member;
 
 				if (member is MethodInfo)
-					member = TypeHelper.GetPropertyByMethod((MethodInfo)member);
+					member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
 
 				if (binding is MemberAssignment)
 				{
@@ -187,7 +188,7 @@ namespace LinqToDB.Data.Linq.Builder
 			var member = body.Member;
 
 			if (member is MethodInfo)
-				member = TypeHelper.GetPropertyByMethod((MethodInfo)member);
+				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
 
 			var members = body.GetMembers();
 			var name    = members
@@ -202,11 +203,11 @@ namespace LinqToDB.Data.Linq.Builder
 					var m = me.Member;
 
 					if (m is MethodInfo)
-						m = TypeHelper.GetPropertyByMethod((MethodInfo)m);
+						m = ReflectionExtensions.GetPropertyByMethod((MethodInfo)m);
 
 					return m;
 				})
-				.Where(m => m != null && !TypeHelper.IsNullableValueMember(m))
+				.Where(m => m != null && !ReflectionExtensions.IsNullableValueMember(m))
 				.Select(m => m.Name)
 				.Aggregate((s1,s2) => s1 + "." + s2);
 
@@ -253,7 +254,7 @@ namespace LinqToDB.Data.Linq.Builder
 			var member = body.Member;
 
 			if (member is MethodInfo)
-				member = TypeHelper.GetPropertyByMethod((MethodInfo)member);
+				member = ReflectionExtensions.GetPropertyByMethod((MethodInfo)member);
 
 			var column = select.ConvertToSql(
 				body, 1, ConvertFlags.Field);

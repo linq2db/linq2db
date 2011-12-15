@@ -6,6 +6,7 @@ using System.IO;
 using System.Xml;
 
 using LinqToDB.Data.Sql;
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 
 using Convert = LinqToDB.Common.Convert;
@@ -696,7 +697,7 @@ namespace LinqToDB.Mapping
 		{
 			var type = mi.Type;
 
-			if (TypeHelper.IsSameOrParent(typeof(INullable), type) == false)
+			if (ReflectionExtensions.IsSameOrParent(typeof(INullable), type) == false)
 				return null;
 
 			var d = mi.MapValues != null;
@@ -768,7 +769,7 @@ namespace LinqToDB.Mapping
 			var valueType  = value.GetType();
 			var memberType = mapInfo.Type;
 
-			if (!TypeHelper.IsSameOrParent(memberType, valueType))
+			if (!ReflectionExtensions.IsSameOrParent(memberType, valueType))
 			{
 				if (memberType.IsGenericType)
 				{

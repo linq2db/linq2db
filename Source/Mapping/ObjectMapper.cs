@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
@@ -27,7 +28,7 @@ namespace LinqToDB.Mapping
 
 			if (attr == null)
 			{
-				var attrs = TypeHelper.GetAttributes(mapMemberInfo.Type, typeof(MemberMapperAttribute));
+				var attrs = ReflectionExtensions.GetAttributes(mapMemberInfo.Type, typeof(MemberMapperAttribute));
 
 				foreach (MemberMapperAttribute a in attrs)
 				{
@@ -43,7 +44,7 @@ namespace LinqToDB.Mapping
 
 			if (mm == null)
 			{
-				var attrs = TypeHelper.GetAttributes(
+				var attrs = ReflectionExtensions.GetAttributes(
 					mapMemberInfo.MemberAccessor.MemberInfo.DeclaringType, typeof(MemberMapperAttribute));
 
 				foreach (MemberMapperAttribute a in attrs)
