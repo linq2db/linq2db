@@ -4,10 +4,8 @@ using System.ServiceModel;
 using LinqToDB.Data.Linq;
 using LinqToDB.ServiceModel;
 
-namespace Data.Linq
+namespace Tests.Model
 {
-	using Model;
-
 	public class TestServiceModelDataContext : ServiceModelDataContext, ITestDataContext
 	{
 		public TestServiceModelDataContext(int ip) : base(

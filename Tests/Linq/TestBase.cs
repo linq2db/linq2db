@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -14,12 +13,11 @@ using LinqToDB.Data;
 using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 
-namespace Data.Linq
+namespace Tests
 {
 	using Model;
 

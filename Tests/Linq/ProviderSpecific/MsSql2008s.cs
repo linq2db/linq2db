@@ -2,8 +2,10 @@
 
 using NUnit.Framework;
 
-namespace Data.Linq.ProviderSpecific
+namespace Tests.ProviderSpecific
 {
+	using Model;
+
 	[TestFixture]
 	public class MsSql2008 : TestBase
 	{

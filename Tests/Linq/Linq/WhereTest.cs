@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Data.DataProvider;
+using LinqToDB.Data.Linq;
+
 using NUnit.Framework;
 
-using LinqToDB.Data.DataProvider;
-
-namespace Data.Linq
+namespace Tests.Linq
 {
 	using Model;
-	using LinqToDB.Data.Linq;
 
 	[TestFixture]
 	public class WhereTest : TestBase

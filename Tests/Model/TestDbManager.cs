@@ -6,10 +6,8 @@ using LinqToDB.Data;
 using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql;
 
-namespace Data.Linq
+namespace Tests.Model
 {
-	using Model;
-
 	public class TestDbManager : DbManager, ITestDataContext
 	{
 		public TestDbManager(string configString)

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using NUnit.Framework;
 
 using LinqToDB.Data.Linq;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
 	using Model;
 

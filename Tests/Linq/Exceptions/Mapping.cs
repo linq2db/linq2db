@@ -7,10 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Data.Exceptions
+namespace Tests.Exceptions
 {
-	using Linq;
-
 	[TestFixture]
 	public class Mapping : TestBase
 	{

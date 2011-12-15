@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.Linq;
 
-namespace Data.Exceptions
-{
-	using Linq;
+using NUnit.Framework;
 
+namespace Tests.Exceptions
+{
 	[TestFixture]
 	public class Inheritance : TestBase
 	{

@@ -2,13 +2,12 @@
 using System.Data.Linq.SqlClient;
 using System.Linq;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
-using LinqToDB.DataAccess;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
 	using Model;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class BinaryData
 	{

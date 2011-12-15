@@ -2,7 +2,7 @@
 
 using LinqToDB.Mapping;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public enum TypeValue
 	{

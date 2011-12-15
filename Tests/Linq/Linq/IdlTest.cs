@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql.SqlProvider;
 using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
-using Data.Linq.Model;
+
 using NUnit.Framework;
 
-namespace Data.Linq
+namespace Tests.Linq
 {
+    using Model;
+
     [TestFixture]
     public class IdlTest : TestBase
     {

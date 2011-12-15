@@ -1,11 +1,8 @@
 ﻿using System;
-
 using LinqToDB.Data.Linq;
 
-namespace Data.Linq
+namespace Tests.Model
 {
-	using Model;
-
 	public interface ITestDataContext : IDataContext
 	{
 		Table<Person>                 Person                 { get; }

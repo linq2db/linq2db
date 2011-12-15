@@ -3,7 +3,7 @@
 using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class Patient
 	{

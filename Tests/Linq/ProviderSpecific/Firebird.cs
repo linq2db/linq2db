@@ -5,12 +5,12 @@ using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
-using UnitTests.Linq.Interface.Model;
-
-namespace Data.Linq.ProviderSpecific
+namespace Tests.ProviderSpecific
 {
+	using Model;
+
 	[TestFixture]
-    public class Firebird : TestBase
+	public class Firebird : TestBase
 	{
 		[Test]
 		public void SequenceInsert()

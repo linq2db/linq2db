@@ -1,5 +1,4 @@
-﻿Imports Data.Linq.Model
-Imports Data.Linq
+﻿Imports Tests.Model
 
 Public Module CompilerServices
 

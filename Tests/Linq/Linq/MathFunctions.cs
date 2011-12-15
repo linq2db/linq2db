@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
-using LinqToDB.Data.Linq;
-using NUnit.Framework;
 
+using LinqToDB.Data.Linq;
 using LinqToDB.Data.DataProvider;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class MathFunctions : TestBase

@@ -10,15 +10,14 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Data.Linq;
-using Data.Linq.Model;
-
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
 #endregion
 
-namespace Update
+namespace Tests.Update
 {
+	using Model;
+
 	[TestFixture]
 	public class DmlTest : TestBase
 	{

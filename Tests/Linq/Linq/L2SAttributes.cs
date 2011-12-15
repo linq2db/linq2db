@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Data.Linq.Mapping;
 
-using NUnit.Framework;
-
 using LinqToDB.Common;
 using LinqToDB.Data.Linq;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
+	using Model;
+
 	[Table(Name = "Person")]
 	public class L2SPersons
 	{

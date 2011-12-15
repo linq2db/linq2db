@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Linq;
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Data.Linq;
 
-using Data.Linq;
-using Data.Linq.Model;
+using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
-namespace Update
+namespace Tests.Update
 {
+	using Model;
+
 	[TestFixture]
 	public class BatchTest : TestBase
 	{

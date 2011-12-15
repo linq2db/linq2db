@@ -6,7 +6,7 @@ using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
-namespace Data.Linq
+namespace Tests.Linq
 {
 	using Model;
 
@@ -19,7 +19,7 @@ namespace Data.Linq
 			using (var db = new TestDbManager())
 			{
 				var q =
-					from p in new Model.Functions(db).GetParentByID(1)
+					from p in new Tests.Model.Functions(db).GetParentByID(1)
 					select p;
 
 				q.ToList();
@@ -55,7 +55,7 @@ namespace Data.Linq
 		}
 
 		readonly Func<DbManager,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
-			(DbManager db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
+			(DbManager db, int id) => from p in new Tests.Model.Functions(db).GetParentByID(id) select p);
 
 		[Test]
 		public void CompiledFunc1()
@@ -86,7 +86,7 @@ namespace Data.Linq
 			using (var db = new TestDbManager())
 			{
 				var q =
-					from p in new Model.Functions(db).WithTabLock<Parent>()
+					from p in new Tests.Model.Functions(db).WithTabLock<Parent>()
 					select p;
 
 				q.ToList();

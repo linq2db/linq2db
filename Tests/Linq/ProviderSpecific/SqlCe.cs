@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Transactions;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.DataProvider;
 
-namespace Data.Linq.ProviderSpecific
+namespace Tests.ProviderSpecific
 {
+	using Model;
+
 	//[TestFixture]
 	public class SqlCe : TestBase
 	{

@@ -1,13 +1,11 @@
 ﻿using System;
 
-using LinqToDB.Data.Linq;
-using LinqToDB.Data.DataProvider;
 using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Data.Linq.ProviderSpecific
+namespace Tests.ProviderSpecific
 {
 	[TestFixture]
 	public class PostgreSQL : TestBase

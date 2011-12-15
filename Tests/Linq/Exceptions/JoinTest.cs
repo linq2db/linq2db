@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.Linq;
 
-namespace Data.Exceptions
+using NUnit.Framework;
+
+namespace Tests.Exceptions
 {
-	using Linq;
-	using Linq.Model;
+	using Model;
 
 	[TestFixture]
 	public class JoinTest : TestBase

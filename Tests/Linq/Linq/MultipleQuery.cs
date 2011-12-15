@@ -3,7 +3,7 @@ using System.Linq;
 
 using NUnit.Framework;
 
-namespace Data.Linq
+namespace Tests.Linq
 {
 	[TestFixture]
 	public class MultipleQuery : TestBase

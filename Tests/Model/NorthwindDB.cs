@@ -11,7 +11,7 @@ using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql;
 using LinqToDB.Data.Sql.SqlProvider;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class NorthwindDB : DbManager
 	{

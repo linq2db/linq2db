@@ -1,12 +1,12 @@
 ﻿using System;
+
 using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
-namespace Data.Exceptions
+namespace Tests.Exceptions
 {
-	using Linq;
-	using Linq.Model;
+	using Model;
 
 	[TestFixture]
 	public class DmlTest : TestBase

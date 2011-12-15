@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
 	using Model;
 

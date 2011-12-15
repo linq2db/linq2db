@@ -1,11 +1,13 @@
 ﻿using System;
 
-using NUnit.Framework;
-
 using LinqToDB.Data.DataProvider;
 
-namespace Data.Linq.ProviderSpecific
+using NUnit.Framework;
+
+namespace Tests.ProviderSpecific
 {
+	using Model;
+
 	[TestFixture]
 	public class Access : TestBase
 	{

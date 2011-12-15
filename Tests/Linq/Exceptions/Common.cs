@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using NUnit.Framework;
-
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql;
 
-using Data.Linq;
-using Data.Linq.Model;
+using NUnit.Framework;
 
-namespace Data.Exceptions
+namespace Tests.Exceptions
 {
+	using Model;
+
 	[TestFixture]
 	public class Common : TestBase
 	{

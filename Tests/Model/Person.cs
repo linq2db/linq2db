@@ -4,7 +4,7 @@ using LinqToDB.Data.Sql.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.DataAccess;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class Person
 	{

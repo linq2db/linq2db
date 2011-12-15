@@ -6,11 +6,10 @@ using NUnit.Framework;
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
 
-using Data.Linq;
-using Data.Linq.Model;
-
-namespace Create
+namespace Tests.Create
 {
+	using Model;
+
 	[TestFixture]
 	public class CreateData : TestBase
 	{

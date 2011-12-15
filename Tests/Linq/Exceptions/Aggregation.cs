@@ -3,10 +3,8 @@ using System.Linq;
 
 using NUnit.Framework;
 
-namespace Data.Exceptions
+namespace Tests.Exceptions
 {
-	using Linq;
-
 	[TestFixture]
 	public class Aggregtion : TestBase
 	{

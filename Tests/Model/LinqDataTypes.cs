@@ -3,7 +3,7 @@ using System.Data.Linq;
 
 using LinqToDB.DataAccess;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class LinqDataTypes : IEquatable<LinqDataTypes>, IComparable
 	{

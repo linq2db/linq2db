@@ -2,17 +2,12 @@
 using System.Data.Linq.Mapping;
 using System.Linq;
 
-using LinqToDB.Data;
-using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
-using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using UnitTests.Linq.Interface.Model;
-
-namespace Data.Linq.ProviderSpecific
+namespace Tests.ProviderSpecific
 {
 	using Model;
 

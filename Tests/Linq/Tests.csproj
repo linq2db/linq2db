@@ -168,7 +168,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Linq\BatchTest.cs" />
+    <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
     <Compile Include="Linq\ConvertTest.cs" />
     <Compile Include="Linq\CompileTest.cs" />
@@ -188,7 +188,6 @@
     <Compile Include="Linq\IdlTest.cs" />
     <Compile Include="Linq\L2SAttributes.cs" />
     <Compile Include="Linq\ParserTest.cs" />
-    <Compile Include="Linq\Providers.cs" />
     <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="ProviderSpecific\Firebird.cs" />
     <Compile Include="ProviderSpecific\Oracle.cs" />

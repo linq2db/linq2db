@@ -2,7 +2,7 @@
 using System.Data.Linq;
 using System.Xml.Linq;
 
-namespace Data.Linq.Model
+namespace Tests.Model
 {
 	public class DataTypeTest
 	{

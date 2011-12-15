@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Linq;
-using LinqToDB.Common;
+
 using LinqToDB.Data.Linq;
 using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
 using Convert = System.Convert;
 
 #pragma warning disable 0649
 
-namespace Data.Linq
+namespace Tests.Linq
 {
 	using Model;
 

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
-using Data.Linq;
 
 using NUnit.Framework;
 
-namespace Data.Exceptions
+namespace Tests.Exceptions
 {
 	[TestFixture]
 	public class ElementOperationTest : TestBase

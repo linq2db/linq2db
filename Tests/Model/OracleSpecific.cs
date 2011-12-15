@@ -3,7 +3,7 @@
 using LinqToDB.Data.Sql.SqlProvider;
 using LinqToDB.DataAccess;
 
-namespace UnitTests.Linq.Interface.Model
+namespace Tests.Model
 {
 	public class OracleSpecific
 	{

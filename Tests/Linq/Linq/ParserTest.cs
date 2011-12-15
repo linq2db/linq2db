@@ -7,12 +7,12 @@ using LinqToDB.Data.Linq;
 using LinqToDB.Data.Linq.Builder;
 using LinqToDB.Data.Sql;
 
-using Data.Linq.Model;
-
 using NUnit.Framework;
 
-namespace Data.Linq
+namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class ParserTest : TestBase
 	{

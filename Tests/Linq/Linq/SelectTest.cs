@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
-using NUnit.Framework;
-
 using LinqToDB.Data;
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
@@ -12,7 +10,9 @@ using LinqToDB.DataAccess;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
 
-namespace Data.Linq
+using NUnit.Framework;
+
+namespace Tests.Linq
 {
 	using Model;
 
