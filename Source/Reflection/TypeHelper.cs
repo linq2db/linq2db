@@ -12,8 +12,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Reflection
 {
-	using TypeBuilder;
-
 	/// <summary>
 	/// A wrapper around the <see cref="Type"/> class.
 	/// </summary>
@@ -589,49 +587,6 @@ namespace LinqToDB.Reflection
 		public MethodInfo GetMethod(bool generic, string methodName, BindingFlags flags)
 		{
 			return GetMethod(Type, generic, methodName, flags);
-		}
-
-		/// <summary>
-		/// Searches for the specified instance method (public or non-public),
-		/// using the specified name and argument types.
-		/// </summary>
-		/// <param name="methodName">The String containing the name of the method to get.</param>
-		/// <param name="generic">True to search only for a generic method, or
-		/// False to search only for non-generic method.</param>
-		/// <param name="types">An array of <see cref="System.Type"/> objects representing
-		/// the number, order, and type of the parameters for the method to get.-or-
-		/// An empty array of the type <see cref="System.Type"/> (for example, <see cref="System.Type.EmptyTypes"/>)
-		/// to get a method that takes no parameters.</param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public MethodInfo GetMethod(bool generic, string methodName, params Type[] types)
-		{
-			return Type.GetMethod(methodName,
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				generic ? GenericBinder.Generic : GenericBinder.NonGeneric,
-				types, null);
-		}
-
-		/// <summary>
-		/// Searches for the specified method using the specified name, binding flags and argument types.
-		/// </summary>
-		/// <param name="methodName">The String containing the name of the method to get.</param>
-		/// <param name="generic">True to search only for a generic method, or
-		/// False to search only for non-generic method.</param>
-		/// <param name="types">An array of <see cref="System.Type"/> objects representing
-		/// the number, order, and type of the parameters for the method to get.-or-
-		/// An empty array of the type <see cref="System.Type"/> (for example, <see cref="System.Type.EmptyTypes"/>)
-		/// to get a method that takes no parameters.</param>
-		/// <param name="flags">A bitmask comprised of one or more <see cref="BindingFlags"/> 
-		/// that specify how the search is conducted.</param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public MethodInfo GetMethod(bool generic, string methodName, BindingFlags flags, params Type[] types)
-		{
-			return Type.GetMethod(methodName,
-				flags,
-				generic ? GenericBinder.Generic : GenericBinder.NonGeneric,
-				types, null);
 		}
 
 		#endregion

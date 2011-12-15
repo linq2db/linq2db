@@ -534,7 +534,7 @@ namespace LinqToDB.Data.Linq.Builder
 						var memberExpression = (MemberExpression)expression;
 
 						if (ObjectMapper != null &&
-							ObjectMapper.TypeAccessor.OriginalType == memberExpression.Member.DeclaringType)
+							ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
 							throw new LinqException("Member '{0}.{1}' is not a table column.",
 								memberExpression.Member.Name, memberExpression.Member.Name);
@@ -945,7 +945,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (throwException &&
 								ObjectMapper != null &&
-								ObjectMapper.TypeAccessor.OriginalType == memberExpression.Member.DeclaringType)
+								ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.Name, memberExpression.Member.Name);

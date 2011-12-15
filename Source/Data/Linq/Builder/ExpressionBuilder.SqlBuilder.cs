@@ -522,7 +522,7 @@ namespace LinqToDB.Data.Linq.Builder
 				case ExpressionType.MemberInit :
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type)
+						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo, _ => _.i);
 
@@ -1953,7 +1953,7 @@ namespace LinqToDB.Data.Linq.Builder
 			foreach (var m in mapping)
 			{
 				var field = table.SqlTable.Fields[table.InheritanceDiscriminators[m.i]];
-				var ttype = field.MemberMapper.MemberAccessor.TypeAccessor.OriginalType;
+				var ttype = field.MemberMapper.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
 				if (obj.Type != ttype)
@@ -2315,7 +2315,7 @@ namespace LinqToDB.Data.Linq.Builder
 				case ExpressionType.MemberInit :
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type)
+						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 

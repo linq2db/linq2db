@@ -7,9 +7,8 @@ using System.Reflection.Emit;
 namespace LinqToDB.Reflection
 {
 	using Common;
-	using Emit;
 
-	public abstract class ExprMemberAccessor : MemberAccessor
+	abstract class ExprMemberAccessor : MemberAccessor
 	{
 		protected ExprMemberAccessor(TypeAccessor typeAccessor, MemberInfo memberInfo)
 			: base(typeAccessor, memberInfo)
@@ -141,23 +140,23 @@ namespace LinqToDB.Reflection
 
 				if (HasSetterValue)
 				{
-					var dm   = new DynamicMethod(
+					var dm = new DynamicMethod(
 						"setter_" + mi.Name + "_" + ++_counter,
 						typeof(void),
 						new[] { typeof(object), typeof(T) },
 						typeAccessor.Type);
-					var emit = new EmitHelper(dm.GetILGenerator());
+					var il = dm.GetILGenerator();
 
-					emit
-						.ldarg_0
-						.castType (typeAccessor.Type)
-						.ldarg_1
-						.end();
+					il.Emit(OpCodes.Ldarg_0);
+					il.Emit(typeAccessor.Type.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, typeAccessor.Type);
+					il.Emit(OpCodes.Ldarg_1);
 
-					if (mi is FieldInfo) emit.stfld   ((FieldInfo)mi);
-					else                 emit.callvirt(((PropertyInfo)mi).GetSetMethod(true));
+					if (mi is FieldInfo) 
+						il.Emit(OpCodes.Stfld,    (FieldInfo)mi);
+					else
+						il.Emit(OpCodes.Callvirt, ((PropertyInfo)mi).GetSetMethod(true));
 
-					emit.ret();
+					il.Emit(OpCodes.Ret);
 
 					Setter = (Action<object,T>)dm.CreateDelegate(typeof(Action<object,T>));
 				}

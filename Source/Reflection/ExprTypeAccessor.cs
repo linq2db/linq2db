@@ -5,9 +5,7 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using TypeBuilder;
-
-	class ExprTypeAccessor<T,TOriginal> : TypeAccessor
+	class ExprTypeAccessor<T> : TypeAccessor
 	{
 		static ExprTypeAccessor()
 		{
@@ -22,11 +20,16 @@ namespace LinqToDB.Reflection
 			}
 			else
 			{
-				var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
+				var ctor = type.IsAbstract ?
+					null :
+					type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
 
 				if (ctor == null)
 				{
-					Expression<Func<T>> mi = () => ThrowException();
+					Expression<Func<T>> mi;
+
+					if (type.IsAbstract) mi = () => ThrowAbstractException();
+					else                 mi = () => ThrowException();
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
 
@@ -40,10 +43,10 @@ namespace LinqToDB.Reflection
 
 			// Add fields.
 			//
-			foreach (var fi in typeof(TOriginal).GetFields(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var fi in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public))
 				_members.Add(fi);
 
-			foreach (var pi in typeof(TOriginal).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var pi in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
 				if (pi.GetIndexParameters().Length == 0)
 					_members.Add(pi);
 
@@ -57,7 +60,12 @@ namespace LinqToDB.Reflection
 
 		static T ThrowException()
 		{
-			throw new TypeBuilderException(string.Format("The '{0}' type must have default or init constructor.", typeof(TOriginal).FullName));
+			throw new LinqToDBException(string.Format("The '{0}' type must have default or init constructor.", typeof(T).FullName));
+		}
+
+		static T ThrowAbstractException()
+		{
+			throw new LinqToDBException(string.Format("Cant create an instance of abstract class '{0}'.", typeof(T).FullName));
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
@@ -77,7 +85,6 @@ namespace LinqToDB.Reflection
 			return _createInstance();
 		}
 
-		public override Type Type         { get { return typeof(T);         } }
-		public override Type OriginalType { get { return typeof(TOriginal); } }
+		public override Type Type { get { return typeof(T); } }
 	}
 }

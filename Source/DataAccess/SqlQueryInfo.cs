@@ -24,7 +24,7 @@ namespace LinqToDB.DataAccess
 
 		public Type ObjectType
 		{
-			get { return ObjectMapper.TypeAccessor.OriginalType; }
+			get { return ObjectMapper.TypeAccessor.Type; }
 		}
 
 		//NOTE Changed from private to protected

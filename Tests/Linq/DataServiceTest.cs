@@ -17,8 +17,6 @@ namespace Data.Linq
 		{
 			var ds = new DataService<NorthwindDB>();
 			var mp = ds.GetService(typeof(IDataServiceMetadataProvider));
-
-
 		}
 	}
 }

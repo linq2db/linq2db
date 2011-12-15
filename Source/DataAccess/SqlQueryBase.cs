@@ -46,7 +46,7 @@ namespace LinqToDB.DataAccess
 
 		protected virtual MemberMapper[] GetNonKeyFieldList(ObjectMapper om)
 		{
-			var typeExt = TypeExtension.GetTypeExtension(om.TypeAccessor.OriginalType, Extensions);
+			var typeExt = TypeExtension.GetTypeExtension(om.TypeAccessor.Type, Extensions);
 			var list    = new List<MemberMapper>();
 
 			foreach (MemberMapper mm in om)
@@ -57,7 +57,7 @@ namespace LinqToDB.DataAccess
 				var ma = mm.MapMemberInfo.MemberAccessor;
 
 				bool isSet;
-				MappingSchema.MetadataProvider.GetPrimaryKeyOrder(om.TypeAccessor.OriginalType, typeExt, ma, out isSet);
+				MappingSchema.MetadataProvider.GetPrimaryKeyOrder(om.TypeAccessor.Type, typeExt, ma, out isSet);
 
 				if (!isSet)
 					list.Add(mm);

@@ -134,18 +134,14 @@
     <Compile Include="Model\Gender.cs" />
     <Compile Include="Model\LinqDataTypes.cs" />
     <Compile Include="Model\Northwind.cs" />
-    <Compile Include="Model\NorthwindDB.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Model\NorthwindDB.cs" />
     <Compile Include="Model\OracleSpecific.cs" />
     <Compile Include="Model\ParentChild.cs" />
     <Compile Include="Model\Patient.cs" />
     <Compile Include="Model\Person.cs" />
     <Compile Include="Model\TypeValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestDbManager.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="TestDbManager.cs" />
     <Compile Include="TestServiceModelDataContext.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -269,7 +269,7 @@ namespace LinqToDB.Data.Linq.Builder
 				case ExpressionType.MemberInit :
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type)
+						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 

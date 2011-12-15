@@ -230,11 +230,11 @@ namespace LinqToDB.Mapping
 
 			_typeAccessor  = TypeAccessor.GetAccessor(type);
 			_mappingSchema = mappingSchema;
-			_extension     = TypeExtension.GetTypeExtension(_typeAccessor.OriginalType, mappingSchema.Extensions);
+			_extension     = TypeExtension.GetTypeExtension(_typeAccessor.Type, mappingSchema.Extensions);
 
 			_inheritanceMapping.AddRange(GetInheritanceMapping());
 
-			foreach (MemberAccessor ma in _typeAccessor)
+			foreach (var ma in _typeAccessor.Members)
 			{
 				var a = GetAssociation(ma);
 
@@ -356,7 +356,7 @@ namespace LinqToDB.Mapping
 				{
 					name = name.Substring(0, idx);
 
-					foreach (MemberAccessor ma in TypeAccessor)
+					foreach (var ma in TypeAccessor.Members)
 					{
 						if (ma.Name.Length == name.Length && ma.Name.ToLower() == name)
 						{
@@ -494,7 +494,7 @@ namespace LinqToDB.Mapping
 
 		protected virtual InheritanceMappingAttribute[] GetInheritanceMapping()
 		{
-			return MetadataProvider.GetInheritanceMapping(_typeAccessor.OriginalType, Extension);
+			return MetadataProvider.GetInheritanceMapping(_typeAccessor.Type, Extension);
 		}
 
 		#endregion

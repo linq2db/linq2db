@@ -218,7 +218,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			var mdp  = schema.MetadataProvider;
 			var keys = new List<string>();
 
-			foreach (MemberAccessor sma in ta)
+			foreach (MemberAccessor sma in ta.Members)
 			{
 				bool isSetFlag;
 

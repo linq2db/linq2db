@@ -242,6 +242,7 @@
     <Compile Include="Data\Sql\SqlTableT.cs" />
     <Compile Include="Data\Sql\SqlTableType.cs" />
     <Compile Include="Data\Sql\SqlValue.cs" />
+    <Compile Include="LinqToDBException.cs" />
     <Compile Include="Linq\ExpressionHelper.cs" />
     <Compile Include="Mapping\Association.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />
@@ -282,12 +283,6 @@
     <Compile Include="Properties\JetBrains.Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
     <Compile Include="Properties\Revision.generated.cs" />
-    <Compile Include="Reflection\Emit\AssemblyBuilderHelper.cs" />
-    <Compile Include="Reflection\Emit\ConstructorBuilderHelper.cs" />
-    <Compile Include="Reflection\Emit\EmitHelper.cs" />
-    <Compile Include="Reflection\Emit\MethodBuilderBase.cs" />
-    <Compile Include="Reflection\Emit\MethodBuilderHelper.cs" />
-    <Compile Include="Reflection\Emit\TypeBuilderHelper.cs" />
     <Compile Include="Reflection\ExprMemberAccessor.cs" />
     <Compile Include="Reflection\ExprTypeAccessor.cs" />
     <Compile Include="Reflection\Extension\AttributeExtension.cs" />
@@ -302,7 +297,6 @@
     <Compile Include="Reflection\Extension\TypeExtensionAttribute.cs" />
     <Compile Include="Reflection\Extension\TypeExtensionException.cs" />
     <Compile Include="Reflection\Extension\ValueCollection.cs" />
-    <Compile Include="Reflection\GenericBinder.cs" />
     <Compile Include="Reflection\IObjectFactory.cs" />
     <Compile Include="Reflection\MemberAccessor.cs" />
     <Compile Include="Reflection\MetadataProvider\AttributeMetadataProvider.cs" />
@@ -327,10 +321,6 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
-    <Compile Include="TypeBuilder\Builders\ITypeBuilder.cs" />
-    <Compile Include="TypeBuilder\Builders\TypeAccessorBuilder.cs" />
-    <Compile Include="TypeBuilder\TypeBuilderException.cs" />
-    <Compile Include="TypeBuilder\TypeFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx" />

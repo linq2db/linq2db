@@ -73,7 +73,7 @@ namespace LinqToDB.Reflection
 
 		public object[] GetTypeAttributes(Type attributeType)
 		{
-			return TypeHelper.GetAttributes(TypeAccessor.OriginalType, attributeType);
+			return TypeHelper.GetAttributes(TypeAccessor.Type, attributeType);
 		}
 
 		#endregion

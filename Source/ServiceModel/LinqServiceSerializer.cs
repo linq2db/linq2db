@@ -474,7 +474,7 @@ namespace LinqToDB.ServiceModel
 								GetType(fld.SystemType);
 
 								if (fld.MemberMapper != null)
-									GetType(fld.MemberMapper.MemberAccessor.TypeAccessor.OriginalType);
+									GetType(fld.MemberMapper.MemberAccessor.TypeAccessor.Type);
 							}
 
 							break;
@@ -531,7 +531,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsIdentity);
 							Append(elem.IsUpdatable);
 							Append(elem.IsInsertable);
-							Append(elem.MemberMapper == null ? null : elem.MemberMapper.MemberAccessor.TypeAccessor.OriginalType);
+							Append(elem.MemberMapper == null ? null : elem.MemberMapper.MemberAccessor.TypeAccessor.Type);
 							Append(elem.MemberMapper == null ? null : elem.MemberMapper.Name);
 
 							break;
