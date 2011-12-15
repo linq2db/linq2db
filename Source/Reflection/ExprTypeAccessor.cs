@@ -53,10 +53,10 @@ namespace LinqToDB.Reflection
 
 			// ObjectFactory
 			//
-			var attr = ReflectionExtensions.GetFirstAttribute(type, typeof(ObjectFactoryAttribute));
+			var attr = type.GetFirstAttribute<ObjectFactoryAttribute>();
 
 			if (attr != null)
-				_objectFactory = ((ObjectFactoryAttribute)attr).ObjectFactory;
+				_objectFactory = attr.ObjectFactory;
 		}
 
 		static T ThrowException()

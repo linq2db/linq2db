@@ -72,9 +72,9 @@ namespace LinqToDB.Reflection
 			return attrs.Length > 0? attrs: null;
 		}
 
-		public object[] GetTypeAttributes(Type attributeType)
+		public T[] GetTypeAttributes<T>() where T : Attribute
 		{
-			return ReflectionExtensions.GetAttributes(TypeAccessor.Type, attributeType);
+			return TypeAccessor.Type.GetAttributes<T>();
 		}
 
 		#endregion

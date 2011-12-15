@@ -44,7 +44,7 @@ namespace LinqToDB.Linq
 				case TypeCode.Char    : return true;
 			}
 
-			if (ReflectionExtensions.IsNullableType(type))
+			if (type.IsNullable())
 				return IsConstant(type.GetGenericArguments()[0]);
 
 			return false;

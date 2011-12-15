@@ -35,7 +35,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _mapFieldAttributes ?? (_mapFieldAttributes = ReflectionExtensions.GetAttributes(typeAccessor.Type, typeof (MapFieldAttribute)));
+				return _mapFieldAttributes ?? (_mapFieldAttributes = typeAccessor.Type.GetAttributes<MapFieldAttribute>());
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = ReflectionExtensions.GetAttributes(typeAccessor.Type, typeof(NonUpdatableAttribute)));
+				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		public override bool GetMapIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
-			var attr = member.GetAttribute<MapIgnoreAttribute>() ?? (MapIgnoreAttribute)ReflectionExtensions.GetFirstAttribute(member.Type, typeof(MapIgnoreAttribute));
+			var attr = member.GetAttribute<MapIgnoreAttribute>() ?? member.Type.GetFirstAttribute<MapIgnoreAttribute>();
 
 			if (attr != null)
 			{
@@ -163,7 +163,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			if (member.GetAttribute<MapFieldAttribute>()    != null ||
 				member.GetAttribute<MapImplicitAttribute>() != null ||
-				ReflectionExtensions.GetFirstAttribute(member.Type, typeof(MapImplicitAttribute)) != null)
+				member.Type.GetFirstAttribute<MapImplicitAttribute>() != null)
 			{
 				isSet = true;
 				return false;
@@ -188,8 +188,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 					return attr.IsTrimmable;
 				}
 
-				attr = (TrimmableAttribute)ReflectionExtensions.GetFirstAttribute(
-					member.MemberInfo.DeclaringType, typeof(TrimmableAttribute));
+				attr = member.MemberInfo.DeclaringType.GetFirstAttribute<TrimmableAttribute>();
 
 				if (attr != null)
 				{
@@ -219,7 +218,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 					list.Add(new MapValue(a.OrigValue, a.Values));
 			}
 
-			attrs = member.GetTypeAttributes(typeof(MapValueAttribute));
+			attrs = member.GetTypeAttributes<MapValueAttribute>();
 
 			if (attrs != null && attrs.Length > 0)
 			{
@@ -277,13 +276,13 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			if (ReflectionExtensions.IsNullable(type))
+			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
 
 			if (type.IsEnum)
 				list = GetEnumMapValues(type);
 
-			var attrs = ReflectionExtensions.GetAttributes(type, typeof(MapValueAttribute));
+			var attrs = type.GetAttributes<MapValueAttribute>();
 
 			if (attrs != null && attrs.Length != 0)
 			{
@@ -292,7 +291,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 				for (var i = 0; i < attrs.Length; i++)
 				{
-					var a = (MapValueAttribute)attrs[i];
+					var a = attrs[i];
 					list.Add(new MapValue(a.OrigValue, a.Values));
 				}
 			}
@@ -327,8 +326,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			// Check type [Nullable(true || false)]
 			//
-			attr1 = (NullableAttribute)ReflectionExtensions.GetFirstAttribute(
-				member.MemberInfo.DeclaringType, typeof(NullableAttribute));
+			attr1 = member.MemberInfo.DeclaringType.GetFirstAttribute<NullableAttribute>();
 
 			if (attr1 != null)
 			{
@@ -338,7 +336,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			// Check type [NullValues(typeof(int), 0)]
 			//
-			var attrs = member.GetTypeAttributes(typeof(NullValueAttribute));
+			var attrs = member.GetTypeAttributes<NullValueAttribute>();
 
 			foreach (NullValueAttribute a in attrs)
 				if (a.Type == null && a.Value != null && a.Value.GetType() == member.Type ||
@@ -393,7 +391,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 			// Check type [NullValues(typeof(int), 0)]
 			//
-			var attrs = member.GetTypeAttributes(typeof(NullValueAttribute));
+			var attrs = member.GetTypeAttributes<NullValueAttribute>();
 
 			foreach (NullValueAttribute a in attrs)
 			{
@@ -523,10 +521,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		public override bool GetSqlIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
-			var attr = member.GetAttribute<SqlIgnoreAttribute>();
-
-			if (attr == null)
-				attr = (SqlIgnoreAttribute)ReflectionExtensions.GetFirstAttribute(member.Type, typeof(SqlIgnoreAttribute));
+			var attr = member.GetAttribute<SqlIgnoreAttribute>() ?? member.Type.GetFirstAttribute<SqlIgnoreAttribute>();
 
 			if (attr != null)
 			{

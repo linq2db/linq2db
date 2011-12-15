@@ -107,7 +107,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClass || _methodName == "Sum" || ReflectionExtensions.IsNullableType(_returnType))
+				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}

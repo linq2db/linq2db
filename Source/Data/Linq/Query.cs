@@ -443,7 +443,7 @@ namespace LinqToDB.Data.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
-			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !ReflectionExtensions.IsNullableType(mm.Type))
+			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !mm.Type.IsNullable())
 			{
 				var method = ReflectionHelper.Expressor<int>.MethodExpressor(_ => ConvertNullable(0, 0))
 					.GetGenericMethodDefinition()

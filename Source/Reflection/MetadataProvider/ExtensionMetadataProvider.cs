@@ -191,7 +191,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			if (ReflectionExtensions.IsNullable(type))
+			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
 
 			if (type.IsEnum)

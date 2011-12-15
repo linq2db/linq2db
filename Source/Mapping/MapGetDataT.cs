@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 
 			// Nullable Enums.
 			//
-			if (ReflectionExtensions.IsNullable(t) && Nullable.GetUnderlyingType(t).IsEnum)
+			if (t.IsNullable() && Nullable.GetUnderlyingType(t).IsEnum)
 			{
 				Type enumType = Nullable.GetUnderlyingType(t);
 				t = Enum.GetUnderlyingType(enumType);

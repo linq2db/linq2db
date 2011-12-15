@@ -16,6 +16,11 @@ namespace LinqToDB.Extensions
 	{
 		#region GetAttributes
 
+		static class CacheHelper<T>
+		{
+			public static readonly Dictionary<Type,T[]> TypeAttributes = new Dictionary<Type,T[]>();
+		}
+
 		#region Attributes cache
 
 		static readonly Dictionary<Type, object[]> _typeAttributesTopInternal = new Dictionary<Type, object[]>(10);
@@ -25,7 +30,9 @@ namespace LinqToDB.Extensions
 			object[] attrs;
 
 			if (_typeAttributesTopInternal.TryGetValue(type, out attrs))
+			{
 				list.AddRange(attrs);
+			}
 			else
 			{
 				GetAttributesTreeInternal(list, type);
@@ -90,40 +97,32 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseType);
 		}
 
-		static readonly Dictionary<string, object[]> _typeAttributes = new Dictionary<string, object[]>(10);
-
 		#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
 		/// </summary>
 		/// <param name="type">A type instance.</param>
-		/// <param name="attributeType">The type of attribute to search for.
-		/// Only attributes that are assignable to this type are returned.</param>
+		/// <typeparam name="T">The type of attribute to search for.
+		/// Only attributes that are assignable to this type are returned.</typeparam>
 		/// <returns>An array of custom attributes applied to this type,
 		/// or an array with zero (0) elements if no attributes have been applied.</returns>
-		public static object[] GetAttributes(Type type, Type attributeType)
+		public static T[] GetAttributes<T>([NotNull] this Type type)
+			where T : Attribute
 		{
-			if (type          == null) throw new ArgumentNullException("type");
-			if (attributeType == null) throw new ArgumentNullException("attributeType");
+			if (type == null) throw new ArgumentNullException("type");
 
-			lock (_typeAttributes)
+			lock (CacheHelper<T>.TypeAttributes)
 			{
-				var key   = type.FullName + "#" + attributeType.FullName;
+				T[] attrs;
 
-				object[] attrs;
-
-				if (!_typeAttributes.TryGetValue(key, out attrs))
+				if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out attrs))
 				{
 					var list = new List<object>();
 
 					GetAttributesInternal(list, type);
 
-					for (var i = 0; i < list.Count; i++)
-						if (attributeType.IsInstanceOfType(list[i]) == false)
-							list.RemoveAt(i--);
-
-					_typeAttributes.Add(key, attrs = list.ToArray());
+					CacheHelper<T>.TypeAttributes.Add(type, attrs = list.OfType<T>().ToArray());
 				}
 
 				return attrs;
@@ -134,71 +133,15 @@ namespace LinqToDB.Extensions
 		/// Retrieves a custom attribute applied to a type.
 		/// </summary>
 		/// <param name="type">A type instance.</param>
-		/// <param name="attributeType">The type of attribute to search for.
-		/// Only attributes that are assignable to this type are returned.</param>
-		/// <returns>A reference to the first custom attribute of type <paramref name="attributeType"/>
-		/// that is applied to element, or null if there is no such attribute.</returns>
-		public static Attribute GetFirstAttribute(Type type, Type attributeType)
-		{
-			var attrs = GetAttributes(type, attributeType);
-
-			return attrs.Length > 0? (Attribute)attrs[0]: null;
-		}
-
-		/// <summary>
-		/// Retrieves a custom attribute applied to a type.
-		/// </summary>
-		/// <param name="type">A type instance.</param>
 		/// <typeparam name="T">The type of attribute to search for.
-		/// Only attributes that are assignable to this type are returned.</param>
+		/// Only attributes that are assignable to this type are returned.</typeparam>
 		/// <returns>A reference to the first custom attribute of type attributeType
 		/// that is applied to element, or null if there is no such attribute.</returns>
-		public static T GetFirstAttribute<T>(Type type) where T : Attribute
+		public static T GetFirstAttribute<T>([NotNull] this Type type)
+			where T : Attribute
 		{
-			var attrs = GetAttributes(type, typeof(T));
-
-			return attrs.Length > 0? (T)attrs[0]: null;
-		}
-
-		#endregion
-
-		#region GetConstructor
-
-		/// <summary>
-		/// Searches for an instance constructor (public or non-public) whose
-		/// parameters match the types in the specified array.
-		/// </summary>
-		/// <param name="type">An instance of <see cref="System.Type"/> to search constructor for.</param>
-		/// <param name="types">An array of Type objects representing the number,
-		/// order, and type of the parameters for the constructor to get.</param>
-		/// <returns>A <see cref="ConstructorInfo"/> object representing the constructor
-		///  whose parameters match the types in the parameter type array, if found;
-		/// otherwise, a null reference.</returns>
-		public static ConstructorInfo GetConstructor(Type type, params Type[] types)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			return type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				null,
-				types,
-				null);
-		}
-
-		/// <summary>
-		/// Searches for a default constructor.
-		/// </summary>
-		/// <param name="type">An instance of <see cref="System.Type"/> to search constructor for.</param>
-		/// <returns>A <see cref="ConstructorInfo"/> object representing the constructor.</returns>
-		public static ConstructorInfo GetDefaultConstructor(Type type)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			return type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-				null,
-				Type.EmptyTypes,
-				null);
+			var attrs = GetAttributes<T>(type);
+			return attrs.Length > 0? attrs[0]: null;
 		}
 
 		#endregion
@@ -212,17 +155,9 @@ namespace LinqToDB.Extensions
 		/// <param name="type">A <see cref="System.Type"/> instance. </param>
 		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
 		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
-		public static bool IsNullable(Type type)
+		public static bool IsNullable([NotNull] this Type type)
 		{
-			while (type.IsArray)
-				type = type.GetElementType();
-
-			return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
-		}
-
-		public static bool IsNullableType(Type type)
-		{
-			return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
 		/// <summary>
@@ -236,15 +171,12 @@ namespace LinqToDB.Extensions
 		/// <item>Otherwise, the type itself.</item>
 		/// </list>
 		/// </returns>
-		public static Type GetUnderlyingType(Type type)
+		public static Type GetUnderlyingType([NotNull] this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
-			if (IsNullableType(type))
-				type = type.GetGenericArguments()[0];
-
-			if (type.IsEnum)
-				type = Enum.GetUnderlyingType(type);
+			if (type.IsNullable()) type = type.GetGenericArguments()[0];
+			if (type.IsEnum)       type = Enum.GetUnderlyingType(type);
 
 			return type;
 		}
@@ -732,7 +664,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsFloatType(Type type)
 		{
-			if (IsNullableType(type))
+			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
 
 			switch (Type.GetTypeCode(type))
@@ -747,7 +679,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsIntegerType(Type type)
 		{
-			if (IsNullableType(type))
+			if (type.IsNullable())
 				type = type.GetGenericArguments()[0];
 
 			switch (Type.GetTypeCode(type))

@@ -88,9 +88,10 @@ namespace LinqToDB.Mapping
 
 			// Nullable Enums.
 			//
-			if (ReflectionExtensions.IsNullable(t) && Nullable.GetUnderlyingType(t).IsEnum)
+			if (t.IsNullable() && Nullable.GetUnderlyingType(t).IsEnum)
 			{
-				Type enumType = Nullable.GetUnderlyingType(t);
+				var enumType = Nullable.GetUnderlyingType(t);
+
 				t = Enum.GetUnderlyingType(enumType);
 
 				if (t == typeof(SByte))  return (MB<T>)Activator.CreateInstance(typeof(NEI8<>).MakeGenericType(typeof(T), enumType));

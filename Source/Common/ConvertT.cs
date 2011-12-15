@@ -65,7 +65,7 @@ namespace LinqToDB.Common
 
 			string methodName;
 
-			if (ReflectionExtensions.IsNullable(to))
+			if (to.IsNullable())
 				methodName = "ToNullable" + to.GetGenericArguments()[0].Name;
 			else if (to.IsArray)
 				methodName = "To" + to.GetElementType().Name + "Array";
@@ -78,15 +78,15 @@ namespace LinqToDB.Common
 				BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding,
 				null, new[] { from }, null) ?? FindTypeCastOperator(to) ?? FindTypeCastOperator(from);
 
-			if (mi == null && ReflectionExtensions.IsNullable(to))
+			if (mi == null && to.IsNullable())
 			{
 				// To-nullable conversion.
 				// We have to use reflection to enforce some constraints.
 				//
 				var toType   = to.GetGenericArguments()[0];
-				var fromType = ReflectionExtensions.IsNullable(from)? from.GetGenericArguments()[0]: from;
+				var fromType = from.IsNullable() ? from.GetGenericArguments()[0] : from;
 
-				methodName = ReflectionExtensions.IsNullable(from) ? "FromNullable" : "From";
+				methodName = from.IsNullable() ? "FromNullable" : "From";
 
 				mi = typeof(NullableConvert<,>)
 					.MakeGenericType(toType, fromType)

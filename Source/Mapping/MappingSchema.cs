@@ -107,8 +107,8 @@ namespace LinqToDB.Mapping
 
 		protected virtual ObjectMapper CreateObjectMapper(Type type)
 		{
-			Attribute attr = ReflectionExtensions.GetFirstAttribute(type, typeof(ObjectMapperAttribute));
-			return attr == null? CreateObjectMapperInstance(type): ((ObjectMapperAttribute)attr).ObjectMapper;
+			var attr = type.GetFirstAttribute<ObjectMapperAttribute>();
+			return attr == null ? CreateObjectMapperInstance(type) : attr.ObjectMapper;
 		}
 
 		protected virtual ObjectMapper CreateObjectMapperInstance(Type type)
@@ -746,7 +746,7 @@ namespace LinqToDB.Mapping
 
 		public virtual object ConvertChangeType(object value, Type conversionType)
 		{
-			return ConvertChangeType(value, conversionType, ReflectionExtensions.IsNullable(conversionType));
+			return ConvertChangeType(value, conversionType, conversionType.IsNullable());
 		}
 
 		public virtual object ConvertChangeType(object value, Type conversionType, bool isNullable)
@@ -836,7 +836,7 @@ namespace LinqToDB.Mapping
 
 			if (isNullable)
 			{
-				if (ReflectionExtensions.IsNullable(conversionType))
+				if (conversionType.IsNullable())
 				{
 					// Return a null reference or boxed not null value.
 					//

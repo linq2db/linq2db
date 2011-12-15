@@ -752,13 +752,13 @@ namespace LinqToDB.Data.Linq.Builder
 
 						while (e1.Type != e2.Type)
 						{
-							if (ReflectionExtensions.IsNullableType(e1.Type))
+							if (e1.Type.IsNullable())
 							{
 								e1 = Expression.PropertyOrField(e1, "Value");
 								continue;
 							}
 
-							if (ReflectionExtensions.IsNullableType(e2.Type))
+							if (e2.Type.IsNullable())
 							{
 								e2 = Expression.PropertyOrField(e2, "Value");
 								continue;

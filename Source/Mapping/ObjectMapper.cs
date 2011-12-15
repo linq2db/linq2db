@@ -28,7 +28,7 @@ namespace LinqToDB.Mapping
 
 			if (attr == null)
 			{
-				var attrs = ReflectionExtensions.GetAttributes(mapMemberInfo.Type, typeof(MemberMapperAttribute));
+				var attrs = mapMemberInfo.Type.GetAttributes<MemberMapperAttribute>();
 
 				foreach (MemberMapperAttribute a in attrs)
 				{
@@ -44,8 +44,7 @@ namespace LinqToDB.Mapping
 
 			if (mm == null)
 			{
-				var attrs = ReflectionExtensions.GetAttributes(
-					mapMemberInfo.MemberAccessor.MemberInfo.DeclaringType, typeof(MemberMapperAttribute));
+				var attrs = mapMemberInfo.MemberAccessor.MemberInfo.DeclaringType.GetAttributes<MemberMapperAttribute>();
 
 				foreach (MemberMapperAttribute a in attrs)
 				{
