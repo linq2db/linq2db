@@ -60,7 +60,7 @@ namespace LinqToDB.Common
 			if (to.IsEnum)
 				to = Enum.GetUnderlyingType(to);
 
-			if (ReflectionExtensions.IsSameOrParent(to, from))
+			if (to.IsSameOrParentOf(from))
 				return Assignable;
 
 			string methodName;

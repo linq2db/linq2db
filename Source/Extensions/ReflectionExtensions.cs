@@ -191,7 +191,7 @@ namespace LinqToDB.Extensions
 		/// <remarks>Note that nullable types does not have a parent-child relation to it's underlying type.
 		/// For example, the 'int?' type (nullable int) and the 'int' type
 		/// aren't a parent and it's child.</remarks>
-		public static bool IsSameOrParent([NotNull] Type parent, [NotNull] Type child)
+		public static bool IsSameOrParentOf([NotNull] this Type parent, [NotNull] Type child)
 		{
 			if (parent == null) throw new ArgumentNullException("parent");
 			if (child  == null) throw new ArgumentNullException("child");
@@ -227,7 +227,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		public static Type GetGenericType([NotNull] Type genericType, Type type)
+		public static Type GetGenericType([NotNull] this Type genericType, Type type)
 		{
 			if (genericType == null) throw new ArgumentNullException("genericType");
 
@@ -253,91 +253,12 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		/// <summary>
-		/// Searches for the method defined for a <see cref="System.Type"/>,
-		/// using the specified name and binding flags.
-		/// </summary>
-		/// <param name="methodName">The String containing the name of the method to get.</param>
-		/// <param name="generic">True to search only for a generic method, or
-		/// False to search only for non-generic method.</param>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
-		/// <param name="flags">A bitmask comprised of one or more <see cref="BindingFlags"/> 
-		/// that specify how the search is conducted.</param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public static MethodInfo GetMethod([NotNull] Type type, bool generic, string methodName, BindingFlags flags)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			foreach (var method in type.GetMethods(flags))
-				if (method.IsGenericMethodDefinition == generic && method.Name == methodName)
-					return method;
-
-			return null;
-		}
-
-		/// <summary>
-		/// Searches for the methods defined for a <see cref="System.Type"/>,
-		/// using the specified name and binding flags.
-		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
-		/// <param name="generic">True to return all generic methods, false to return all non-generic.</param>
-		/// <param name="flags">A bitmask comprised of one or more <see cref="BindingFlags"/> 
-		/// that specify how the search is conducted.</param>
-		/// <returns>An array of <see cref="MethodInfo"/> objects representing all methods defined 
-		/// for the current Type that match the specified binding constraints.</returns>
-		public static MethodInfo[] GetMethods(Type type, bool generic, BindingFlags flags)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			return type.GetMethods(flags).Where(method => method.IsGenericMethodDefinition == generic).ToArray();
-		}
-
-		/// <summary>
-		/// Searches for the method defined for a <see cref="System.Type"/>,
-		/// using the specified name and binding flags.
-		/// </summary>
-		/// <param name="type">A <see cref="System.Type"/> instance. </param>
-		/// <param name="methodName">The String containing the name of the method to get.</param>
-		/// <param name="requiredParametersCount">Number of required (non optional)
-		/// parameter types.</param>
-		/// <param name="bindingFlags">A bitmask comprised of one or more <see cref="BindingFlags"/> 
-		/// that specify how the search is conducted.</param>
-		/// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing
-		/// the number, order, and type of the parameters for the method to get.-or-
-		/// An empty array of the type <see cref="System.Type"/> (for example, <see cref="System.Type.EmptyTypes"/>)
-		/// to get a method that takes no parameters.</param>
-		/// <returns>A <see cref="MethodInfo"/> object representing the method
-		/// that matches the specified requirements, if found; otherwise, null.</returns>
-		public static MethodInfo GetMethod(
-			Type          type,
-			string        methodName,
-			BindingFlags  bindingFlags,
-			int           requiredParametersCount,
-			params Type[] parameterTypes)
-		{
-			while (parameterTypes.Length >= requiredParametersCount)
-			{
-				var method = type.GetMethod(methodName, parameterTypes);
-
-				if (null != method)
-					return method;
-
-				if (parameterTypes.Length == 0)
-					break;
-
-				Array.Resize(ref parameterTypes, parameterTypes.Length - 1);
-			}
-
-			return null;
-		}
-
 		///<summary>
 		/// Gets the Type of a list item.
 		///</summary>
 		/// <param name="list">A <see cref="System.Object"/> instance. </param>
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
-		public static Type GetListItemType(object list)
+		public static Type GetListItemType(this IEnumerable list)
 		{
 			var typeOfObject = typeof(object);
 
@@ -348,9 +269,6 @@ namespace LinqToDB.Extensions
 				return list.GetType().GetElementType();
 
 			var type = list.GetType();
-
-			// object[] attrs = type.GetCustomAttributes(typeof(DefaultMemberAttribute), true);
-			// string   itemMemberName = (attrs.Length == 0)? "Item": ((DefaultMemberAttribute)attrs[0]).MemberName;
 
 			if (list is IList
 #if !SILVERLIGHT
@@ -375,23 +293,17 @@ namespace LinqToDB.Extensions
 					return last.PropertyType;
 			}
 
-			try
+			if (list is IList)
 			{
-				if (list is IList)
-				{
-					foreach (var o in (IList)list)
-						if (o != null && o.GetType() != typeOfObject)
-							return o.GetType();
-				}
-				else if (list is IEnumerable)
-				{
-					foreach (var o in (IEnumerable)list)
-						if (o != null && o.GetType() != typeOfObject)
-							return o.GetType();
-				}
+				foreach (var o in (IList)list)
+					if (o != null && o.GetType() != typeOfObject)
+						return o.GetType();
 			}
-			catch
+			else
 			{
+				foreach (var o in list)
+					if (o != null && o.GetType() != typeOfObject)
+						return o.GetType();
 			}
 
 			return typeOfObject;
@@ -402,20 +314,20 @@ namespace LinqToDB.Extensions
 		///</summary>
 		/// <param name="listType">A <see cref="System.Type"/> instance. </param>
 		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
-		public static Type GetListItemType(Type listType)
+		public static Type GetListItemType(this Type listType)
 		{
 			if (listType.IsGenericType)
 			{
-				var elementTypes = GetGenericArguments(listType, typeof(IList));
+				var elementTypes = listType.GetGenericArguments(typeof(IList<>));
 
 				if (elementTypes != null)
 					return elementTypes[0];
 			}
 
-			if (IsSameOrParent(typeof(IList),       listType)
+			if (typeof(IList).IsSameOrParentOf(listType)
 #if !SILVERLIGHT
-				|| IsSameOrParent(typeof(ITypedList),  listType)
-				|| IsSameOrParent(typeof(IListSource), listType)
+				|| typeof(ITypedList). IsSameOrParentOf(listType)
+				|| typeof(IListSource).IsSameOrParentOf(listType)
 #endif
 				)
 			{
@@ -444,7 +356,7 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
-		public static Type GetElementType(Type type)
+		public static Type GetItemType(this Type type)
 		{
 			if (type == null)
 				return null;
@@ -466,14 +378,14 @@ namespace LinqToDB.Extensions
 			{
 				foreach (var iType in interfaces)
 				{
-					var eType = GetElementType(iType);
+					var eType = iType.GetItemType();
 
 					if (eType != null)
 						return eType;
 				}
 			}
 
-			return GetElementType(type.BaseType);
+			return type.BaseType.GetItemType();
 		}
 
 		/// <summary>
@@ -484,11 +396,8 @@ namespace LinqToDB.Extensions
 		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>. 
 		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
 		/// and, therefore, can be treated as scalar types.</remarks>
-		public static bool IsScalar(Type type)
+		public static bool IsScalar(this Type type)
 		{
-			while (type.IsArray)
-				type = type.GetElementType();
-
 			return type.IsValueType
 				|| type == typeof(string)
 				|| type == typeof(Binary)
@@ -508,7 +417,7 @@ namespace LinqToDB.Extensions
 		///<param name="baseType">Non generic base type.</param>
 		///<returns>An array of Type objects that represent the type arguments
 		/// of a generic type. Returns an empty array if the current type is not a generic type.</returns>
-		public static Type[] GetGenericArguments(Type type, Type baseType)
+		public static Type[] GetGenericArguments(this Type type, Type baseType)
 		{
 			var baseTypeName = baseType.Name;
 
@@ -718,9 +627,9 @@ namespace LinqToDB.Extensions
 				if (member1.DeclaringType == member2.DeclaringType)
 					return true;
 
-				var isSubclass = IsSameOrParent(member1.DeclaringType, member2.DeclaringType);
+				var isSubclass = member1.DeclaringType.IsSameOrParentOf(member2.DeclaringType);
 
-				if (!isSubclass && IsSameOrParent(member2.DeclaringType, member1.DeclaringType))
+				if (!isSubclass && member2.DeclaringType.IsSameOrParentOf(member1.DeclaringType))
 				{
 					isSubclass = true;
 

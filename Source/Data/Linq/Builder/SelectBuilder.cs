@@ -302,8 +302,8 @@ namespace LinqToDB.Data.Linq.Builder
 						var call = (MethodCallExpression)expression;
 
 						if (call.IsQueryable())
-							if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), call.Type) ||
-							    ReflectionExtensions.IsSameOrParent(typeof(IQueryable),  call.Type))
+							if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
+							    typeof(IQueryable). IsSameOrParentOf(call.Type))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 
 						break;

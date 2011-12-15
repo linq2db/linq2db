@@ -294,13 +294,13 @@ namespace LinqToDB.Data.Linq.Builder
 								{
 									var mi = EnumerableMethods
 										.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
-										.MakeGenericMethod(ReflectionExtensions.GetElementType(me.Expression.Type));
+										.MakeGenericMethod(me.Expression.Type.GetItemType());
 
 									return Expression.Call(null, mi, me.Expression);
 								}
 							}
 
-							if (CompiledParameters == null && ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type))
+							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
 								var ex = ConvertIQueriable(expr);
 
@@ -357,7 +357,7 @@ namespace LinqToDB.Data.Linq.Builder
 								if (l != null)
 									return OptimizeExpression(ConvertMethod(call, l));
 
-								if (CompiledParameters == null && ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type))
+								if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 								{
 									var attr = GetTableFunctionAttribute(call.Method);
 

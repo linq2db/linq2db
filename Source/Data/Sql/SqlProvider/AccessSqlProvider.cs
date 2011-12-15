@@ -254,9 +254,9 @@ namespace LinqToDB.Data.Sql.SqlProvider
 							new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
 							new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
 
-					case "Convert"   : 
+					case "Convert"   :
 						{
-							switch (Type.GetTypeCode(ReflectionExtensions.GetUnderlyingType(func.SystemType)))
+							switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
 							{
 								case TypeCode.String   : return new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]);
 								case TypeCode.DateTime :

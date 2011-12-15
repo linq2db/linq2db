@@ -109,7 +109,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert"    :
-						if (ReflectionExtensions.GetUnderlyingType(func.SystemType) == typeof(bool))
+						if (func.SystemType.GetUnderlyingType() == typeof(bool))
 						{
 							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)
@@ -157,7 +157,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
 					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
 					case "VarChar"       :
-						if (ReflectionExtensions.GetUnderlyingType(func.Parameters[0].SystemType) == typeof(decimal))
+						if (func.Parameters[0].SystemType.GetUnderlyingType() == typeof(decimal))
 							return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
 						break;
 					case "NChar"         :

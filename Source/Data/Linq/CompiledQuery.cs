@@ -77,12 +77,11 @@ namespace LinqToDB.Data.Linq
 
 							if (expr.IsQueryable())
 							{
-								var qtype  = ReflectionExtensions.GetGenericType(
-									ReflectionExtensions.IsSameOrParent(typeof(IQueryable), expr.Type) ?
+								var type   = typeof(IQueryable).IsSameOrParentOf(expr.Type) ?
 										typeof(IQueryable<>) :
-										typeof(IEnumerable<>),
-									expr.Type);
+										typeof(IEnumerable<>);
 
+								var qtype  = type.GetGenericType(expr.Type);
 								var helper = (ITableHelper)Activator.CreateInstance(
 									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 

@@ -492,7 +492,7 @@ namespace LinqToDB.ServiceModel
 							}
 							else
 							{
-								var elemType = ReflectionExtensions.GetElementType(t);
+								var elemType = t.GetItemType();
 								GetType(GetArrayType(elemType));
 							}
 
@@ -565,7 +565,7 @@ namespace LinqToDB.ServiceModel
 							}
 							else
 							{
-								var elemType = ReflectionExtensions.GetElementType(type);
+								var elemType = type.GetItemType();
 								var value    = ConvertIEnumerableToArray(elem.Value, elemType);
 
 								Append(GetArrayType(elemType), value);

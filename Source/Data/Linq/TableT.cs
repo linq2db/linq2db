@@ -161,7 +161,7 @@ namespace LinqToDB.Data.Linq
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			var elementType = ReflectionExtensions.GetElementType(expression.Type) ?? expression.Type;
+			var elementType = expression.Type.GetItemType() ?? expression.Type;
 
 			try
 			{

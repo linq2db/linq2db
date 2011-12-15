@@ -76,10 +76,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		public virtual bool GetMapIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			isSet = false;
-
-			return
-				ReflectionExtensions.IsScalar(member.Type) == false;// ||
-				//(member.MemberInfo is FieldInfo && ((FieldInfo)member.MemberInfo).IsLiteral);
+			return member.Type.IsScalar() == false;
 		}
 
 		#endregion

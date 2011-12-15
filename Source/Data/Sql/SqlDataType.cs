@@ -333,7 +333,7 @@ namespace LinqToDB.Data.Sql
 		{
 			if (type.IsValueType == false ||
 				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
-				ReflectionExtensions.IsSameOrParent(typeof(INullable), type))
+				typeof(INullable).IsSameOrParentOf(type))
 				return true;
 
 			return false;

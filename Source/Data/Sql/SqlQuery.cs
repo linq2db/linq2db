@@ -12,13 +12,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Sql
 {
-	class ResourceHolder
-	{
-	}
-}
-
-namespace LinqToDB.Data.Sql
-{
 	using Reflection;
 
 	using FJoin = SqlQuery.FromClause.Join;
@@ -32,7 +25,7 @@ namespace LinqToDB.Data.Sql
 
 		static SqlQuery()
 		{
-			using (var stream = typeof(LinqToDB.Data.Sql.ResourceHolder).Assembly.GetManifestResourceStream(typeof(LinqToDB.Data.Sql.ResourceHolder), "ReservedWords.txt"))
+			using (var stream = typeof(SqlQuery).Assembly.GetManifestResourceStream(typeof(SqlQuery), "ReservedWords.txt"))
 			using (var reader = new StreamReader(stream))
 			{
 				/*
@@ -4271,9 +4264,9 @@ namespace LinqToDB.Data.Sql
 
 					if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
 					{
-						var type  = ReflectionExtensions.GetListItemType(pr.Value);
-						var ta    = TypeAccessor.GetAccessor(type);
 						var items = (IEnumerable)pr.Value;
+						var type  = items.GetListItemType();
+						var ta    = TypeAccessor.GetAccessor(type);
 						var names = expr.Expr.Substring(1).Split(',');
 
 						if (expr.Parameters.Length == 1)

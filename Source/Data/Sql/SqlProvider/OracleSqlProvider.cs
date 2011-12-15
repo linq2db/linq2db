@@ -185,7 +185,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 					case "Coalesce"       : return new SqlFunction(func.SystemType, "Nvl", func.Parameters);
 					case "Convert"        :
 						{
-							var ftype = ReflectionExtensions.GetUnderlyingType(func.SystemType);
+							var ftype = func.SystemType.GetUnderlyingType();
 
 							if (ftype == typeof(bool))
 							{
@@ -204,7 +204,7 @@ namespace LinqToDB.Data.Sql.SqlProvider
 									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("HH24:MI:SS"));
 								}
 
-								if (ReflectionExtensions.GetUnderlyingType(func.Parameters[1].SystemType) == typeof(DateTime) &&
+								if (func.Parameters[1].SystemType.GetUnderlyingType() == typeof(DateTime) &&
 									IsDateDataType(func.Parameters[0], "Date"))
 								{
 									return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));

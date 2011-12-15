@@ -697,7 +697,7 @@ namespace LinqToDB.Mapping
 		{
 			var type = mi.Type;
 
-			if (ReflectionExtensions.IsSameOrParent(typeof(INullable), type) == false)
+			if (typeof(INullable).IsSameOrParentOf(type) == false)
 				return null;
 
 			var d = mi.MapValues != null;
@@ -769,7 +769,7 @@ namespace LinqToDB.Mapping
 			var valueType  = value.GetType();
 			var memberType = mapInfo.Type;
 
-			if (!ReflectionExtensions.IsSameOrParent(memberType, valueType))
+			if (!memberType.IsSameOrParentOf(valueType))
 			{
 				if (memberType.IsGenericType)
 				{

@@ -98,7 +98,7 @@ namespace LinqToDB.DataAccess
 
 					var ma = mm.MapMemberInfo.MemberAccessor;
 
-					if (ReflectionExtensions.IsScalar(ma.Type))
+					if (ma.Type.IsScalar())
 					{
 						bool isSet;
 						var order = MappingSchema.MetadataProvider.GetPrimaryKeyOrder(type, typeExt, ma, out isSet);

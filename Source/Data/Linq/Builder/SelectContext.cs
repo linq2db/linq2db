@@ -1007,7 +1007,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			if (!Members.TryGetValue(member, out memberExpression))
 			{
-				if (add && ReflectionExtensions.IsSameOrParent(member.DeclaringType, Body.Type))
+				if (add && member.DeclaringType.IsSameOrParentOf(Body.Type))
 				{
 					memberExpression = Expression.Constant(
 						ReflectionExtensions.GetDefaultValue(type), type);

@@ -39,7 +39,7 @@ namespace LinqToDB.Reflection
 		private Type _underlyingType;
 		public  Type  UnderlyingType
 		{
-			get { return _underlyingType ?? (_underlyingType = ReflectionExtensions.GetUnderlyingType(Type)); }
+			get { return _underlyingType ?? (_underlyingType = Type.GetUnderlyingType()); }
 		}
 
 		#endregion

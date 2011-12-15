@@ -1071,10 +1071,10 @@ namespace LinqToDB.Data.Linq.Builder
 				var type = ReflectionExtensions.GetMemberType(association.MemberAccessor.MemberInfo);
 				var left = association.CanBeNull;
 
-				if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), type))
+				if (typeof(IEnumerable).IsSameOrParentOf(type))
 				{
-					var etypes = ReflectionExtensions.GetGenericArguments(type, typeof(IEnumerable));
-					type       = etypes != null && etypes.Length > 0 ? etypes[0] : ReflectionExtensions.GetListItemType(type);
+					var etypes = type.GetGenericArguments(typeof(IEnumerable<>));
+					type       = etypes != null && etypes.Length > 0 ? etypes[0] : type.GetListItemType();
 					IsList     = true;
 				}
 

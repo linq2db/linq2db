@@ -1160,15 +1160,15 @@ namespace LinqToDB.Data.Linq.Builder
 						else if (e.Method.Name == "Contains")
 						{
 							if (e.Method.DeclaringType == typeof(Enumerable) ||
-							    ReflectionExtensions.IsSameOrParent(typeof(IList), e.Method.DeclaringType) ||
-							    ReflectionExtensions.IsSameOrParent(typeof(ICollection<>), e.Method.DeclaringType))
+							    typeof(IList).        IsSameOrParentOf(e.Method.DeclaringType) ||
+							    typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType))
 							{
 								predicate = ConvertInPredicate(context, e);
 							}
 						}
-						else if (e.Method.Name == "ContainsValue" && ReflectionExtensions.IsSameOrParent(typeof(Dictionary<,>), e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(e.Method.DeclaringType))
 						{
-							var args = ReflectionExtensions.GetGenericArguments(e.Method.DeclaringType, typeof(Dictionary<,>));
+							var args = e.Method.DeclaringType.GetGenericArguments(typeof(Dictionary<,>));
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[1]);
@@ -1180,9 +1180,9 @@ namespace LinqToDB.Data.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-						else if (e.Method.Name == "ContainsKey" && ReflectionExtensions.IsSameOrParent(typeof(IDictionary<,>), e.Method.DeclaringType))
+						else if (e.Method.Name == "ContainsKey" && typeof(IDictionary<,>).IsSameOrParentOf(e.Method.DeclaringType))
 						{
-							var args = ReflectionExtensions.GetGenericArguments(e.Method.DeclaringType, typeof(IDictionary<,>));
+							var args = e.Method.DeclaringType.GetGenericArguments(typeof(IDictionary<,>));
 							var minf = EnumerableMethods
 								.First(m => m.Name == "Contains" && m.GetParameters().Length == 2)
 								.MakeGenericMethod(args[0]);

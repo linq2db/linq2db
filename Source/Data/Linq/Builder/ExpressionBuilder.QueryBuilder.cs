@@ -123,7 +123,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (IsSubQuery(context, ce))
 							{
-								if (ReflectionExtensions.IsSameOrParent(typeof(IEnumerable), pi.Type))
+								if (typeof(IEnumerable).IsSameOrParentOf(pi.Type))
 									return new ExpressionHelper.ConvertInfo(BuildMultipleQuery(context, pi));
 
 								return new ExpressionHelper.ConvertInfo(GetSubQuery(context, ce).BuildExpression(null, 0));

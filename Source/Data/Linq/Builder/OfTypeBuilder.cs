@@ -27,7 +27,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				var objectType = methodCall.Type.GetGenericArguments()[0];
 
-				if (ReflectionExtensions.IsSameOrParent(table.ObjectType, objectType))
+				if (table.ObjectType.IsSameOrParentOf(objectType))
 				{
 					var predicate = builder.MakeIsPredicate(table, objectType);
 
@@ -38,7 +38,7 @@ namespace LinqToDB.Data.Linq.Builder
 			else
 			{
 				var toType   = methodCall.Type.GetGenericArguments()[0];
-				var gargs    = ReflectionExtensions.GetGenericArguments(methodCall.Arguments[0].Type, typeof(IQueryable<>));
+				var gargs    = methodCall.Arguments[0].Type.GetGenericArguments(typeof(IQueryable<>));
 				var fromType = gargs == null ? typeof(object) : gargs[0];
 
 				if (toType.IsSubclassOf(fromType))
