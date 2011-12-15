@@ -153,7 +153,6 @@ namespace Data.Linq
 			public          int    IP;
 		}
 
-		[CLSCompliant(false)]
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
 			new ProviderInfo("Sql2008",               null,                                     "LinqToDB.Data.DataProvider.Sql2008DataProvider"),

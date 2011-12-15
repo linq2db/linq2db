@@ -8,8 +8,8 @@
     <ProjectGuid>{07997A18-86D3-47AC-A514-AB1B03E6AEC8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Data.Linq</RootNamespace>
-    <AssemblyName>UnitTests.Linq</AssemblyName>
+    <RootNamespace>Tests</RootNamespace>
+    <AssemblyName>linq2db.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
@@ -168,68 +168,101 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BatchTest.cs" />
-    <Compile Include="Common.cs" />
-    <Compile Include="ConvertTest.cs" />
-    <Compile Include="CompileTest.cs" />
-    <Compile Include="ComplexTest.cs" />
-    <Compile Include="Association.cs" />
-    <Compile Include="ConvertExpression.cs" />
-    <Compile Include="ConcatUnionTest.cs" />
-    <Compile Include="MultipleQuery.cs" />
-    <Compile Include="CountTest.cs" />
-    <Compile Include="DataContextTest.cs" />
-    <Compile Include="DataServiceTest.cs" />
+    <Compile Include="Linq\BatchTest.cs" />
+    <Compile Include="Linq\Common.cs" />
+    <Compile Include="Linq\ConvertTest.cs" />
+    <Compile Include="Linq\CompileTest.cs" />
+    <Compile Include="Linq\ComplexTest.cs" />
+    <Compile Include="Linq\Association.cs" />
+    <Compile Include="Linq\ConvertExpression.cs" />
+    <Compile Include="Linq\ConcatUnionTest.cs" />
+    <Compile Include="Linq\MultipleQuery.cs" />
+    <Compile Include="Linq\CountTest.cs" />
+    <Compile Include="Linq\DataContextTest.cs" />
+    <Compile Include="Linq\DataServiceTest.cs" />
     <Compile Include="Exceptions\Common.cs" />
     <Compile Include="Exceptions\Aggregation.cs" />
     <Compile Include="Exceptions\DmlTest.cs" />
-    <Compile Include="ExtensionTests.cs" />
-    <Compile Include="GenerateTest.cs" />
-    <Compile Include="IdlTest.cs" />
-    <Compile Include="L2SAttributes.cs" />
-    <Compile Include="ParserTest.cs" />
-    <Compile Include="Providers.cs" />
+    <Compile Include="Linq\ExtensionTests.cs" />
+    <Compile Include="Linq\GenerateTest.cs" />
+    <Compile Include="Linq\IdlTest.cs" />
+    <Compile Include="Linq\L2SAttributes.cs" />
+    <Compile Include="Linq\ParserTest.cs" />
+    <Compile Include="Linq\Providers.cs" />
     <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="ProviderSpecific\Firebird.cs" />
     <Compile Include="ProviderSpecific\Oracle.cs" />
-    <Compile Include="TableFunctionTest.cs" />
-    <Compile Include="VisualBasicTest.cs" />
-    <Compile Include="DmlTest.cs" />
-    <Compile Include="ExpressionsTest.cs" />
-    <Compile Include="MathFunctions.cs" />
+    <Compile Include="Linq\TableFunctionTest.cs" />
+    <Compile Include="Linq\VisualBasicTest.cs" />
+    <Compile Include="Update\DmlTest.cs" />
+    <Compile Include="Linq\ExpressionsTest.cs" />
+    <Compile Include="Linq\MathFunctions.cs" />
     <Compile Include="Exceptions\Inheritance.cs" />
-    <Compile Include="Inheritance.cs" />
+    <Compile Include="Linq\Inheritance.cs" />
     <Compile Include="ProviderSpecific\Access.cs" />
     <Compile Include="ProviderSpecific\MsSql2008s.cs" />
     <Compile Include="ProviderSpecific\SqlCe.cs" />
-    <Compile Include="SetTest.cs" />
-    <Compile Include="SubQuery.cs" />
-    <Compile Include="Types.cs" />
+    <Compile Include="Linq\SetTest.cs" />
+    <Compile Include="Linq\SubQuery.cs" />
+    <Compile Include="Linq\Types.cs" />
     <Compile Include="Exceptions\Mapping.cs" />
-    <Compile Include="Functions.cs" />
-    <Compile Include="Distinct.cs" />
-    <Compile Include="ElementOperationTest.cs" />
+    <Compile Include="Linq\Functions.cs" />
+    <Compile Include="Linq\Distinct.cs" />
+    <Compile Include="Linq\ElementOperationTest.cs" />
     <Compile Include="Exceptions\ElementOperationTest.cs" />
-    <Compile Include="Mapping.cs" />
-    <Compile Include="TakeSkipTest.cs" />
-    <Compile Include="OrderByTest.cs" />
-    <Compile Include="CreateData.cs" />
-    <Compile Include="GroupByTest.cs" />
+    <Compile Include="Linq\Mapping.cs" />
+    <Compile Include="Linq\TakeSkipTest.cs" />
+    <Compile Include="Linq\OrderByTest.cs" />
+    <Compile Include="Create\CreateData.cs" />
+    <Compile Include="Linq\GroupByTest.cs" />
     <Compile Include="Exceptions\JoinTest.cs" />
-    <Compile Include="JoinTest.cs" />
-    <Compile Include="DateTimeFunctions.cs" />
-    <Compile Include="SelectManyTest.cs" />
-    <Compile Include="StringFunctions.cs" />
-    <Compile Include="SelectTest.cs" />
+    <Compile Include="Linq\JoinTest.cs" />
+    <Compile Include="Linq\DateTimeFunctions.cs" />
+    <Compile Include="Linq\SelectManyTest.cs" />
+    <Compile Include="Linq\StringFunctions.cs" />
+    <Compile Include="Linq\SelectTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SelectScalar.cs" />
+    <Compile Include="Linq\SelectScalar.cs" />
     <Compile Include="TestBase.cs" />
-    <Compile Include="WhereTest.cs" />
+    <Compile Include="Linq\WhereTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Data\BLToolkitData.sqlite">
-      <Link>BLToolkitData.sqlite</Link>
+      <Link>Data\BLToolkitData.sqlite</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\Access.sql">
+      <Link>Data\Create Scripts\Access.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\DB2.sql">
+      <Link>Data\Create Scripts\DB2.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\Firebird2.sql">
+      <Link>Data\Create Scripts\Firebird2.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\Informix.sql">
+      <Link>Data\Create Scripts\Informix.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\MsSql.sql">
+      <Link>Data\Create Scripts\MsSql.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\MySql.sql">
+      <Link>Data\Create Scripts\MySql.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\Oracle.sql">
+      <Link>Data\Create Scripts\Oracle.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
+      <Link>Data\Create Scripts\PostgreSQL.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
+      <Link>Data\Create Scripts\SqlCe.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\SQLite.sql">
+      <Link>Data\Create Scripts\SQLite.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\Sybase.sql">
+      <Link>Data\Create Scripts\Sybase.sql</Link>
     </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
@@ -277,13 +310,13 @@
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>linq2db</Name>
     </ProjectReference>
-    <ProjectReference Include="UnitTests.Linq.Interface.csproj">
+    <ProjectReference Include="..\Model\Tests.Model.csproj">
       <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
-      <Name>UnitTests.Linq.Interface</Name>
+      <Name>Tests.Model</Name>
     </ProjectReference>
-    <ProjectReference Include="UnitTests.Linq.VisualBasic.vbproj">
+    <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
       <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>
-      <Name>UnitTests.Linq.VisualBasic</Name>
+      <Name>Tests.VisualBasic</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -308,13 +341,14 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="..\..\Data\BLToolkitData.mdb">
-      <Link>BLToolkitData.mdb</Link>
+      <Link>Data\BLToolkitData.mdb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\BLToolkitData.sdf">
-      <Link>BLToolkitData.sdf</Link>
+      <Link>Data\BLToolkitData.sdf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

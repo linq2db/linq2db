@@ -5,11 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "linq2db", "Source\linq2db.c
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests.Linq", "Tests\Linq\UnitTests.Linq.csproj", "{07997A18-86D3-47AC-A514-AB1B03E6AEC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Linq\Tests.csproj", "{07997A18-86D3-47AC-A514-AB1B03E6AEC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests.Linq.Interface", "Tests\Linq\UnitTests.Linq.Interface.csproj", "{D527524F-EC92-465E-9CAE-86278121675A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.Model", "Tests\Model\Tests.Model.csproj", "{D527524F-EC92-465E-9CAE-86278121675A}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "UnitTests.Linq.VisualBasic", "Tests\Linq\UnitTests.Linq.VisualBasic.vbproj", "{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tests.VisualBasic", "Tests\VisualBasic\Tests.VisualBasic.vbproj", "{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataProviders", "DataProviders", "{17AF81E6-18DD-42AF-BEE3-83EE02DA9126}"
 EndProject
@@ -30,21 +30,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.SQLite.4", "DataProviders\LinqToDB.Data.DataProvider.SQLite.4.csproj", "{3E414663-B673-47A8-AB59-0E08FE43DA86}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.Sybase.4", "DataProviders\LinqToDB.Data.DataProvider.Sybase.4.csproj", "{6CD8CC3D-643D-4D09-8660-A26085C44FBC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Create Scripts", "Create Scripts", "{1A9F1362-3E03-4DAC-A777-54C6DA724E3A}"
-	ProjectSection(SolutionItems) = preProject
-		Data\Create Scripts\Access.sql = Data\Create Scripts\Access.sql
-		Data\Create Scripts\DB2.sql = Data\Create Scripts\DB2.sql
-		Data\Create Scripts\Firebird2.sql = Data\Create Scripts\Firebird2.sql
-		Data\Create Scripts\Informix.sql = Data\Create Scripts\Informix.sql
-		Data\Create Scripts\MsSql.sql = Data\Create Scripts\MsSql.sql
-		Data\Create Scripts\MySql.sql = Data\Create Scripts\MySql.sql
-		Data\Create Scripts\Oracle.sql = Data\Create Scripts\Oracle.sql
-		Data\Create Scripts\PostgreSQL.sql = Data\Create Scripts\PostgreSQL.sql
-		Data\Create Scripts\SqlCe.sql = Data\Create Scripts\SqlCe.sql
-		Data\Create Scripts\SQLite.sql = Data\Create Scripts\SQLite.sql
-		Data\Create Scripts\Sybase.sql = Data\Create Scripts\Sybase.sql
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -193,7 +178,6 @@ Global
 		{07997A18-86D3-47AC-A514-AB1B03E6AEC8} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 		{D527524F-EC92-465E-9CAE-86278121675A} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 		{D11617AB-9F88-4C74-8ABD-F8580DB4B01B} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
-		{1A9F1362-3E03-4DAC-A777-54C6DA724E3A} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 		{86BF4F10-3606-4016-9919-84C3335813B6} = {17AF81E6-18DD-42AF-BEE3-83EE02DA9126}
 		{C1F8C201-BBD9-44F4-884C-CFF8CC960B68} = {17AF81E6-18DD-42AF-BEE3-83EE02DA9126}
 		{B1DEA25C-7667-471B-BBAD-64D017FDD104} = {17AF81E6-18DD-42AF-BEE3-83EE02DA9126}

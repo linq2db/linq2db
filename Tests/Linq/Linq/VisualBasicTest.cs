@@ -3,6 +3,7 @@ using System.Linq;
 using LinqToDB.Data.DataProvider;
 using Data.Linq.Model;
 using NUnit.Framework;
+using Tests.VisualBasic;
 
 namespace Data.Linq
 {
