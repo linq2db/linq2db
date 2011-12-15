@@ -1,8 +1,7 @@
 ﻿using System;
 
+using LinqToDB;
 using LinqToDB.Data.Sql.SqlProvider;
-using LinqToDB.Mapping;
-using LinqToDB.DataAccess;
 
 namespace Tests.Model
 {

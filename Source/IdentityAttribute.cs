@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.DataAccess
+namespace LinqToDB
 {
 	[Serializable]
 	[AttributeUsage(

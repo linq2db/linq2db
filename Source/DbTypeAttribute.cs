@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 
-namespace LinqToDB.DataAccess
+namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false), CLSCompliant(false)]
 	public sealed class DbTypeAttribute : Attribute

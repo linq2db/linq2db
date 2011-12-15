@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.DataAccess
+namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class TableNameAttribute : Attribute

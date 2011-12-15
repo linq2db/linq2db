@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 
-using LinqToDB.DataAccess;
+using LinqToDB;
 
 namespace Tests.Model
 {

@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
-	using DataAccess;
+	using Extensions;
 	using Reflection;
 	using Reflection.Extension;
 	using Reflection.MetadataProvider;

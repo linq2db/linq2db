@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Data.Linq;
-using LinqToDB.DataAccess;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

@@ -60,16 +60,16 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\DbTypeAttribute.cs">
+    <Compile Include="DbTypeAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\IdentityAttribute.cs">
+    <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\NonUpdatableAttribute.cs">
+    <Compile Include="NonUpdatableAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\PrimaryKeyAttribute.cs">
+    <Compile Include="PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DataAccess\SqlIgnoreAttribute.cs">
@@ -87,7 +87,7 @@
     <Compile Include="DataAccess\SqlQueryT.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\TableNameAttribute.cs">
+    <Compile Include="TableNameAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Data\DataException.cs" />
@@ -246,7 +246,7 @@
     <Compile Include="LinqToDBException.cs" />
     <Compile Include="Extensions\LinqExpressionExtensions.cs" />
     <Compile Include="Mapping\Association.cs" />
-    <Compile Include="Mapping\AssociationAttribute.cs" />
+    <Compile Include="AssociationAttribute.cs" />
     <Compile Include="Mapping\DataReaderMapper.cs" />
     <Compile Include="Mapping\DefaultMappingSchema.cs" />
     <Compile Include="Mapping\DefaultMemberMapper.cs" />
@@ -258,9 +258,9 @@
     <Compile Include="Mapping\Map.cs" />
     <Compile Include="Mapping\MapDataSourceBase.cs" />
     <Compile Include="Mapping\MapDataSourceDestinationBase.cs" />
-    <Compile Include="Mapping\MapFieldAttribute.cs" />
+    <Compile Include="MapFieldAttribute.cs" />
     <Compile Include="Mapping\MapGetDataT.cs" />
-    <Compile Include="Mapping\MapIgnoreAttribute.cs" />
+    <Compile Include="MapIgnoreAttribute.cs" />
     <Compile Include="Mapping\MapImplicitAttribute.cs" />
     <Compile Include="Mapping\MapMemberInfo.cs" />
     <Compile Include="Mapping\MappingException.cs" />
@@ -272,7 +272,7 @@
     <Compile Include="Mapping\MemberMapper.generated.cs" />
     <Compile Include="Mapping\MemberMapperAttribute.cs" />
     <Compile Include="Mapping\NotNullAttribute.cs" />
-    <Compile Include="Mapping\NullableAttribute.cs" />
+    <Compile Include="NullableAttribute.cs" />
     <Compile Include="Mapping\NullValueAttribute.cs" />
     <Compile Include="Mapping\ObjectMapper.cs" />
     <Compile Include="Mapping\ObjectMapperAttribute.cs" />

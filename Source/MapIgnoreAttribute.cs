@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 	public sealed class MapIgnoreAttribute : Attribute

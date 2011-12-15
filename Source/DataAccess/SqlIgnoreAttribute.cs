@@ -7,19 +7,14 @@ namespace LinqToDB.DataAccess
 	{
 		public SqlIgnoreAttribute()
 		{
-			_ignore = true;
+			Ignore = true;
 		}
 
 		public SqlIgnoreAttribute(bool ignore)
 		{
-			_ignore = ignore;
+			Ignore = ignore;
 		}
 
-		private bool _ignore;
-		public  bool  Ignore
-		{
-			get { return _ignore;  }
-			set { _ignore = value; }
-		}
+		public bool Ignore { get; set; }
 	}
 }

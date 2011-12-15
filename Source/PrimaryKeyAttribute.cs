@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.DataAccess
+namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public sealed class PrimaryKeyAttribute : Attribute

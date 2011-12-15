@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.DataAccess;
+using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace Tests.Model

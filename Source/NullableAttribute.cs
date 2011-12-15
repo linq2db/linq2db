@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB
 {
 	[AttributeUsage(
 		AttributeTargets.Property | AttributeTargets.Field |

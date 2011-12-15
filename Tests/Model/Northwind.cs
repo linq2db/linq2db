@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 
-using LinqToDB.DataAccess;
+using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace Tests.Model

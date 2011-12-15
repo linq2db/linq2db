@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
 using LinqToDB.Data.Sql.SqlProvider;
-using LinqToDB.DataAccess;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -1143,7 +1142,7 @@ namespace Tests.Update
 		public class  NullableFieldTestObject
 		{
 			public int ParentID;
-			[LinqToDB.Mapping.Nullable] public int Value1;
+			[Nullable] public int Value1;
 		}
 
 		[Test]

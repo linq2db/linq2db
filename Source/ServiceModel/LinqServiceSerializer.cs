@@ -6,14 +6,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.ServiceModel
 {
 	using Data.Sql;
 	using Data.Sql.SqlProvider;
+	using Extensions;
 	using Mapping;
-	using Reflection;
 
 	static class LinqServiceSerializer
 	{
@@ -1048,9 +1047,9 @@ namespace LinqToDB.ServiceModel
 								nullable,
 								primaryKeyOrder,
 								isIdentity
-									? new DataAccess.IdentityAttribute()
+									? new IdentityAttribute()
 									: isInsertable || isUpdatable
-										? new DataAccess.NonUpdatableAttribute(isInsertable, isUpdatable, false)
+										? new NonUpdatableAttribute(isInsertable, isUpdatable, false)
 										: null,
 								memberMapper);
 
