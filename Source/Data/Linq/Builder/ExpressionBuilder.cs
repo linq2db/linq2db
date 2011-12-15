@@ -9,7 +9,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Common;
 	using Data.Sql;
 	using Data.Sql.SqlProvider;
@@ -229,7 +228,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
-			return expression.Convert(expr =>
+			return expression.Transform(expr =>
 			{
 				switch (expr.NodeType)
 				{
@@ -272,7 +271,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		Expression OptimizeExpression(Expression expression)
 		{
-			return expression.Convert(expr =>
+			return expression.Transform(expr =>
 			{
 				switch (expr.NodeType)
 				{
@@ -313,7 +312,7 @@ namespace LinqToDB.Data.Linq.Builder
 							if (l != null)
 							{
 								var body = l.Body.Unwrap();
-								var ex = body.Convert(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
+								var ex = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
 
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);
@@ -447,7 +446,7 @@ namespace LinqToDB.Data.Linq.Builder
 									case "FirstOrDefault"  :
 										{
 											var param    = Expression.Parameter(call.Type, "p");
-											var selector = expr.Convert(e => e == call ? param : e);
+											var selector = expr.Transform(e => e == call ? param : e);
 											var method   = GetQueriableMethodInfo(call, (m,_) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 											var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 												EnumerableMethods
@@ -564,7 +563,7 @@ namespace LinqToDB.Data.Linq.Builder
 					_subQueryExpressions.Add(ex);
 				}
 
-				var newBody = lbody.Convert(ex =>
+				var newBody = lbody.Transform(ex =>
 				{
 					Expression e;
 					return dic.TryGetValue(ex, out e) ? e : ex;
@@ -572,7 +571,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => Expression.PropertyOrField(c, "p"));
 
-				newBody = newBody.Convert(ex => ex == lparam ? nparm : ex);
+				newBody = newBody.Transform(ex => ex == lparam ? nparm : ex);
 
 				predicate = Expression.Lambda(newBody, parm);
 
@@ -789,13 +788,13 @@ namespace LinqToDB.Data.Linq.Builder
 				ParameterExpression resArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Convert(ex =>
+				var expr = body.Transform(ex =>
 				{
 					if (ex == func.Parameters[0])
 						return _sourceExpression;
 
 					if (ex == func.Parameters[1])
-						return _keySelector.Body.Convert(e => e == _keySelector.Parameters[0] ? keyArg : e);
+						return _keySelector.Body.Transform(e => e == _keySelector.Parameters[0] ? keyArg : e);
 
 					if (ex == func.Parameters[2])
 					{
@@ -807,11 +806,11 @@ namespace LinqToDB.Data.Linq.Builder
 						if (_elementSelector == null)
 							return obj;
 
-						return _elementSelector.Body.Convert(e => e == _elementSelector.Parameters[0] ? obj : e);
+						return _elementSelector.Body.Transform(e => e == _elementSelector.Parameters[0] ? obj : e);
 					}
 
 					if (ex == func.Parameters[3])
-						return _resultSelector.Body.Convert(e =>
+						return _resultSelector.Body.Transform(e =>
 						{
 							if (e == _resultSelector.Parameters[0])
 								return Expression.PropertyOrField(resArg, "Key");
@@ -962,13 +961,13 @@ namespace LinqToDB.Data.Linq.Builder
 			Expression Convert(LambdaExpression func, ParameterExpression colArg)
 			{
 				var body = func.Body.Unwrap();
-				var expr = body.Convert(ex =>
+				var expr = body.Transform(ex =>
 				{
 					if (ex == func.Parameters[0])
 						return _sourceExpression;
 
 					if (ex == func.Parameters[1])
-						return _colSelector.Body.Convert(e => e == _colSelector.Parameters[0] ? colArg : e);
+						return _colSelector.Body.Transform(e => e == _colSelector.Parameters[0] ? colArg : e);
 
 					return ex;
 				});
@@ -1102,7 +1101,7 @@ namespace LinqToDB.Data.Linq.Builder
 				GetMethodInfo(method, "Select").MakeGenericMethod(types1[0], types2[1]),
 				((MethodCallExpression)sequence).Arguments[0],
 				Expression.Lambda(
-					lambda.Body.Convert(ex => ex == lambda.Parameters[0] ? sbody : ex),
+					lambda.Body.Transform(ex => ex == lambda.Parameters[0] ? sbody : ex),
 					slambda.Parameters[0]));
 		}
 

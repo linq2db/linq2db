@@ -1,27 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Data.Linq.Builder;
-using LinqToDB.Extensions;
-
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-
-namespace LinqToDB.Linq
+namespace LinqToDB.Extensions
 {
-	using Common;
 	using Data.Linq;
-	using Reflection;
+	using Data.Linq.Builder;
 
-	public static class ExpressionHelper
+	public static class LinqExpressionExtensions
 	{
 		#region IsConstant
 
-		public static bool IsConstant(Type type)
+		public static bool IsConstantable(this Type type)
 		{
 			if (type.IsEnum)
 				return true;
@@ -45,16 +37,16 @@ namespace LinqToDB.Linq
 			}
 
 			if (type.IsNullable())
-				return IsConstant(type.GetGenericArguments()[0]);
+				return type.GetGenericArguments()[0].IsConstantable();
 
 			return false;
 		}
 
 		#endregion
 
-		#region Compare
+		#region EqualsTo
 
-		public static bool Compare(Expression expr1, Expression expr2, Dictionary<Expression,Func<Expression,IQueryable>> queryableAccessorDic)
+		public static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,Func<Expression,IQueryable>> queryableAccessorDic)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -96,9 +88,9 @@ namespace LinqToDB.Linq
 						var e2 = (BinaryExpression)expr2;
 						return
 							e1.Method == e2.Method &&
-							Compare(e1.Conversion, e2.Conversion, queryableAccessorDic) &&
-							Compare(e1.Left,       e2.Left,       queryableAccessorDic) &&
-							Compare(e1.Right,      e2.Right,      queryableAccessorDic);
+							e1.Conversion.EqualsTo(e2.Conversion, queryableAccessorDic) &&
+							e1.Left.      EqualsTo(e2.Left,       queryableAccessorDic) &&
+							e1.Right.     EqualsTo(e2.Right,      queryableAccessorDic);
 					}
 
 				case ExpressionType.ArrayLength:
@@ -113,7 +105,7 @@ namespace LinqToDB.Linq
 					{
 						var e1 = (UnaryExpression)expr1;
 						var e2 = (UnaryExpression)expr2;
-						return e1.Method == e2.Method && Compare(e1.Operand, e2.Operand, queryableAccessorDic);
+						return e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, queryableAccessorDic);
 					}
 
 				case ExpressionType.Call:
@@ -129,14 +121,14 @@ namespace LinqToDB.Linq
 							Func<Expression,IQueryable> func;
 
 							if (queryableAccessorDic.TryGetValue(expr1, out func))
-								return Compare(func(expr1).Expression, func(expr2).Expression, queryableAccessorDic);
+								return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
 						}
 
-						if (!Compare(e1.Object, e2.Object, queryableAccessorDic))
+						if (!e1.Object.EqualsTo(e2.Object, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!Compare(e1.Arguments[i], e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -147,9 +139,9 @@ namespace LinqToDB.Linq
 						var e1 = (ConditionalExpression)expr1;
 						var e2 = (ConditionalExpression)expr2;
 						return
-							Compare(e1.Test,    e2.Test,   queryableAccessorDic) &&
-							Compare(e1.IfTrue,  e2.IfTrue, queryableAccessorDic) &&
-							Compare(e1.IfFalse, e2.IfFalse, queryableAccessorDic);
+							e1.Test.   EqualsTo(e2.Test,   queryableAccessorDic) &&
+							e1.IfTrue. EqualsTo(e2.IfTrue, queryableAccessorDic) &&
+							e1.IfFalse.EqualsTo(e2.IfFalse, queryableAccessorDic);
 					}
 
 				case ExpressionType.Constant:
@@ -157,7 +149,7 @@ namespace LinqToDB.Linq
 						var e1 = (ConstantExpression)expr1;
 						var e2 = (ConstantExpression)expr2;
 
-						return e1.Value == null && e2.Value == null || IsConstant(e1.Type) ? Equals(e1.Value, e2.Value) : true;
+						return e1.Value == null && e2.Value == null || e1.Type.IsConstantable() ? Equals(e1.Value, e2.Value) : true;
 					}
 
 				case ExpressionType.Invoke:
@@ -165,11 +157,11 @@ namespace LinqToDB.Linq
 						var e1 = (InvocationExpression)expr1;
 						var e2 = (InvocationExpression)expr2;
 
-						if (e1.Arguments.Count != e2.Arguments.Count || !Compare(e1.Expression, e2.Expression, queryableAccessorDic))
+						if (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!Compare(e1.Arguments[i], e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -180,11 +172,11 @@ namespace LinqToDB.Linq
 						var e1 = (LambdaExpression)expr1;
 						var e2 = (LambdaExpression)expr2;
 
-						if (e1.Parameters.Count != e2.Parameters.Count || !Compare(e1.Body, e2.Body, queryableAccessorDic))
+						if (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Parameters.Count; i++)
-							if (!Compare(e1.Parameters[i], e2.Parameters[i], queryableAccessorDic))
+							if (!e1.Parameters[i].EqualsTo(e2.Parameters[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -195,7 +187,7 @@ namespace LinqToDB.Linq
 						var e1 = (ListInitExpression)expr1;
 						var e2 = (ListInitExpression)expr2;
 
-						if (e1.Initializers.Count != e2.Initializers.Count || !Compare(e1.NewExpression, e2.NewExpression, queryableAccessorDic))
+						if (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Initializers.Count; i++)
@@ -207,7 +199,7 @@ namespace LinqToDB.Linq
 								return false;
 
 							for (var j = 0; j < i1.Arguments.Count; j++)
-								if (!Compare(i1.Arguments[j], i2.Arguments[j], queryableAccessorDic))
+								if (!i1.Arguments[j].EqualsTo(i2.Arguments[j], queryableAccessorDic))
 									return false;
 						}
 
@@ -228,11 +220,11 @@ namespace LinqToDB.Linq
 									Func<Expression,IQueryable> func;
 
 									if (queryableAccessorDic.TryGetValue(expr1, out func))
-										return Compare(func(expr1).Expression, func(expr2).Expression, queryableAccessorDic);
+										return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
 								}
 							}
 
-							return Compare(e1.Expression, e2.Expression, queryableAccessorDic);
+							return e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
 						}
 
 						return false;
@@ -243,7 +235,7 @@ namespace LinqToDB.Linq
 						var e1 = (MemberInitExpression)expr1;
 						var e2 = (MemberInitExpression)expr2;
 
-						if (e1.Bindings.Count != e2.Bindings.Count || !Compare(e1.NewExpression, e2.NewExpression, queryableAccessorDic))
+						if (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
 							return false;
 
 						Func<MemberBinding,MemberBinding,bool> compareBindings = null; compareBindings = (b1,b2) =>
@@ -257,7 +249,7 @@ namespace LinqToDB.Linq
 							switch (b1.BindingType)
 							{
 								case MemberBindingType.Assignment:
-									return Compare(((MemberAssignment)b1).Expression, ((MemberAssignment)b2).Expression, queryableAccessorDic);
+									return ((MemberAssignment)b1).Expression.EqualsTo(((MemberAssignment)b2).Expression, queryableAccessorDic);
 
 								case MemberBindingType.ListBinding:
 									var ml1 = (MemberListBinding)b1;
@@ -275,7 +267,7 @@ namespace LinqToDB.Linq
 											return false;
 
 										for (var j = 0; j < ei1.Arguments.Count; j++)
-											if (!Compare(ei1.Arguments[j], ei2.Arguments[j], queryableAccessorDic))
+											if (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], queryableAccessorDic))
 												return false;
 									}
 
@@ -338,7 +330,7 @@ namespace LinqToDB.Linq
 						}
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!Compare(e1.Arguments[i], e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -354,7 +346,7 @@ namespace LinqToDB.Linq
 							return false;
 
 						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!Compare(e1.Expressions[i], e2.Expressions[i], queryableAccessorDic))
+							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -371,7 +363,7 @@ namespace LinqToDB.Linq
 					{
 						var e1 = (TypeBinaryExpression)expr1;
 						var e2 = (TypeBinaryExpression)expr2;
-						return e1.TypeOperand == e2.TypeOperand && Compare(e1.Expression, e2.Expression, queryableAccessorDic);
+						return e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
 					}
 
 #if FW4 || SILVERLIGHT
@@ -382,11 +374,11 @@ namespace LinqToDB.Linq
 						var e2 = (BlockExpression)expr2;
 
 						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!Compare(e1.Expressions[i], e2.Expressions[i], queryableAccessorDic))
+							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
 								return false;
 
 						for (var i = 0; i < e1.Variables.Count; i++)
-							if (!Compare(e1.Variables[i], e2.Variables[i], queryableAccessorDic))
+							if (!e1.Variables[i].EqualsTo(e2.Variables[i], queryableAccessorDic))
 								return false;
 
 						return true;
@@ -1171,9 +1163,9 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		#region Convert
+		#region Transform
 
-		static IEnumerable<T> Convert<T>(IEnumerable<T> source, Func<T,T> func)
+		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{
 			var modified = false;
@@ -1189,7 +1181,7 @@ namespace LinqToDB.Linq
 			return modified ? list : source;
 		}
 
-		static IEnumerable<T> Convert<T>(IEnumerable<T> source, Func<Expression,Expression> func)
+		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<Expression,Expression> func)
 			where T : Expression
 		{
 			var modified = false;
@@ -1197,7 +1189,7 @@ namespace LinqToDB.Linq
 
 			foreach (var item in source)
 			{
-				var e = Convert(item, func);
+				var e = Transform(item, func);
 				list.Add((T)e);
 				modified = modified || e != item;
 			}
@@ -1205,7 +1197,7 @@ namespace LinqToDB.Linq
 			return modified? list: source;
 		}
 
-		public static Expression Convert(this Expression expr, Func<Expression,Expression> func)
+		public static Expression Transform(this Expression expr, Func<Expression,Expression> func)
 		{
 			if (expr == null)
 				return null;
@@ -1245,9 +1237,9 @@ namespace LinqToDB.Linq
 							return ex;
 
 						var e = (BinaryExpression)expr;
-						var c = Convert(e.Conversion, func);
-						var l = Convert(e.Left,       func);
-						var r = Convert(e.Right,      func);
+						var c = Transform(e.Conversion, func);
+						var l = Transform(e.Left,       func);
+						var r = Transform(e.Right,      func);
 
 						return c != e.Conversion || l != e.Left || r != e.Right ?
 							Expression.MakeBinary(expr.NodeType, l, r, e.IsLiftedToNull, e.Method, (LambdaExpression)c):
@@ -1268,8 +1260,8 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as UnaryExpression;
-						var o = Convert(e.Operand, func);
+						var e = (UnaryExpression)expr;
+						var o = Transform(e.Operand, func);
 
 						return o != e.Operand ?
 							Expression.MakeUnary(expr.NodeType, o, e.Type, e.Method) :
@@ -1282,9 +1274,9 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as MethodCallExpression;
-						var o = Convert(e.Object,    func);
-						var a = Convert(e.Arguments, func);
+						var e = (MethodCallExpression)expr;
+						var o = Transform(e.Object,    func);
+						var a = Transform(e.Arguments, func);
 
 						return o != e.Object || a != e.Arguments ? 
 							Expression.Call(o, e.Method, a) : 
@@ -1297,10 +1289,10 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as ConditionalExpression;
-						var s = Convert(e.Test,    func);
-						var t = Convert(e.IfTrue,  func);
-						var f = Convert(e.IfFalse, func);
+						var e = (ConditionalExpression)expr;
+						var s = Transform(e.Test,    func);
+						var t = Transform(e.IfTrue,  func);
+						var f = Transform(e.IfFalse, func);
 
 						return s != e.Test || t != e.IfTrue || f != e.IfFalse ?
 							Expression.Condition(s, t, f) :
@@ -1313,9 +1305,9 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as InvocationExpression;
-						var ex = Convert(e.Expression, func);
-						var a  = Convert(e.Arguments,  func);
+						var e  = (InvocationExpression)expr;
+						var ex = Transform(e.Expression, func);
+						var a  = Transform(e.Arguments,  func);
 
 						return ex != e.Expression || a != e.Arguments ? Expression.Invoke(ex, a) : expr;
 					}
@@ -1326,9 +1318,9 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as LambdaExpression;
-						var b = Convert(e.Body,       func);
-						var p = Convert(e.Parameters, func);
+						var e = (LambdaExpression)expr;
+						var b = Transform(e.Body,       func);
+						var p = Transform(e.Parameters, func);
 
 						return b != e.Body || p != e.Parameters ? Expression.Lambda(ex.Type, b, p.ToArray()) : expr;
 					}
@@ -1339,11 +1331,11 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as ListInitExpression;
-						var n = Convert(e.NewExpression, func);
-						var i = Convert(e.Initializers,  p =>
+						var e = (ListInitExpression)expr;
+						var n = Transform(e.NewExpression, func);
+						var i = Transform(e.Initializers,  p =>
 						{
-							var args = Convert(p.Arguments, func);
+							var args = Transform(p.Arguments, func);
 							return args != p.Arguments? Expression.ElementInit(p.AddMethod, args): p;
 						});
 
@@ -1358,8 +1350,8 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as MemberExpression;
-						var ex = Convert(e.Expression, func);
+						var e  = (MemberExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						return ex != e.Expression ? Expression.MakeMemberAccess(ex, e.Member) : expr;
 					}
@@ -1377,7 +1369,7 @@ namespace LinqToDB.Linq
 								case MemberBindingType.Assignment:
 									{
 										var ma = (MemberAssignment)b;
-										var ex = Convert(ma.Expression, func);
+										var ex = Transform(ma.Expression, func);
 
 										if (ex != ma.Expression)
 											ma = Expression.Bind(ma.Member, ex);
@@ -1388,9 +1380,9 @@ namespace LinqToDB.Linq
 								case MemberBindingType.ListBinding:
 									{
 										var ml = (MemberListBinding)b;
-										var i  = Convert(ml.Initializers, p =>
+										var i  = Transform(ml.Initializers, p =>
 										{
-											var args = Convert(p.Arguments, func);
+											var args = Transform(p.Arguments, func);
 											return args != p.Arguments? Expression.ElementInit(p.AddMethod, args): p;
 										});
 
@@ -1403,7 +1395,7 @@ namespace LinqToDB.Linq
 								case MemberBindingType.MemberBinding:
 									{
 										var mm = (MemberMemberBinding)b;
-										var bs = Convert(mm.Bindings, modify);
+										var bs = Transform(mm.Bindings, modify);
 
 										if (bs != mm.Bindings)
 											mm = Expression.MemberBind(mm.Member);
@@ -1415,9 +1407,9 @@ namespace LinqToDB.Linq
 							return b;
 						};
 
-						var e  = expr as MemberInitExpression;
-						var ne = Convert(e.NewExpression, func);
-						var bb = Convert(e.Bindings,      modify);
+						var e  = (MemberInitExpression)expr;
+						var ne = Transform(e.NewExpression, func);
+						var bb = Transform(e.Bindings,      modify);
 
 						return ne != e.NewExpression || bb != e.Bindings ?
 							Expression.MemberInit((NewExpression)ne, bb) :
@@ -1430,8 +1422,8 @@ namespace LinqToDB.Linq
 						if (ex != expr)
 							return ex;
 
-						var e = expr as NewExpression;
-						var a = Convert(e.Arguments, func);
+						var e = (NewExpression)expr;
+						var a = Transform(e.Arguments, func);
 
 						return a != e.Arguments ?
 							e.Members == null ?
@@ -1446,8 +1438,8 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as NewArrayExpression;
-						var ex = Convert(e.Expressions, func);
+						var e  = (NewArrayExpression)expr;
+						var ex = Transform(e.Expressions, func);
 
 						return ex != e.Expressions ? Expression.NewArrayBounds(e.Type, ex) : expr;
 					}
@@ -1458,8 +1450,8 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as NewArrayExpression;
-						var ex = Convert(e.Expressions, func);
+						var e  = (NewArrayExpression)expr;
+						var ex = Transform(e.Expressions, func);
 
 						return ex != e.Expressions ?
 							Expression.NewArrayInit(e.Type.GetElementType(), ex) :
@@ -1472,8 +1464,8 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as TypeBinaryExpression;
-						var ex = Convert(e.Expression, func);
+						var e  = (TypeBinaryExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						return ex != e.Expression ? Expression.TypeIs(ex, e.Type) : expr;
 					}
@@ -1486,9 +1478,9 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as BlockExpression;
-						var ex = Convert(e.Expressions, func);
-						var v  = Convert(e.Variables,   func);
+						var e  = (BlockExpression)expr;
+						var ex = Transform(e.Expressions, func);
+						var v  = Transform(e.Variables,   func);
 
 						return ex != e.Expressions || v != e.Variables ? Expression.Block(e.Type, v, ex) : expr;
 					}
@@ -1504,8 +1496,8 @@ namespace LinqToDB.Linq
 						if (exp != expr)
 							return exp;
 
-						var e  = expr as ChangeTypeExpression;
-						var ex = Convert(e.Expression, func);
+						var e  = (ChangeTypeExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						if (ex == e.Expression)
 							return expr;
@@ -1522,27 +1514,9 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		#region Convert2
+		#region Transform2
 
-		public struct ConvertInfo
-		{
-			public ConvertInfo(Expression expression, bool stop)
-			{
-				Expression = expression;
-				Stop       = stop;
-			}
-
-			public ConvertInfo(Expression expression)
-			{
-				Expression = expression;
-				Stop       = false;
-			}
-
-			public Expression Expression;
-			public bool       Stop;
-		}
-
-		static IEnumerable<T> Convert2<T>(IEnumerable<T> source, Func<T,T> func)
+		static IEnumerable<T> Transform2<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{
 			var modified = false;
@@ -1558,7 +1532,7 @@ namespace LinqToDB.Linq
 			return modified ? list : source;
 		}
 
-		static IEnumerable<T> Convert2<T>(IEnumerable<T> source, Func<Expression,ConvertInfo> func)
+		static IEnumerable<T> Transform2<T>(ICollection<T> source, Func<Expression,TransformInfo> func)
 			where T : Expression
 		{
 			var modified = false;
@@ -1566,7 +1540,7 @@ namespace LinqToDB.Linq
 
 			foreach (var item in source)
 			{
-				var e = Convert2(item, func);
+				var e = Transform(item, func);
 				list.Add((T)e);
 				modified = modified || e != item;
 			}
@@ -1574,7 +1548,7 @@ namespace LinqToDB.Linq
 			return modified ? list : source;
 		}
 
-		public static Expression Convert2(this Expression expr, Func<Expression,ConvertInfo> func)
+		public static Expression Transform(this Expression expr, Func<Expression,TransformInfo> func)
 		{
 			if (expr == null)
 				return null;
@@ -1613,10 +1587,10 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as BinaryExpression;
-						var c = Convert2(e.Conversion, func);
-						var l = Convert2(e.Left,       func);
-						var r = Convert2(e.Right,      func);
+						var e = (BinaryExpression)expr;
+						var c = Transform(e.Conversion, func);
+						var l = Transform(e.Left,       func);
+						var r = Transform(e.Right,      func);
 
 						return c != e.Conversion || l != e.Left || r != e.Right ?
 							Expression.MakeBinary(expr.NodeType, l, r, e.IsLiftedToNull, e.Method, (LambdaExpression)c):
@@ -1637,8 +1611,8 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as UnaryExpression;
-						var o = Convert2(e.Operand, func);
+						var e = (UnaryExpression)expr;
+						var o = Transform(e.Operand, func);
 
 						return o != e.Operand ?
 							Expression.MakeUnary(expr.NodeType, o, e.Type, e.Method) :
@@ -1651,9 +1625,9 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as MethodCallExpression;
-						var o = Convert2(e.Object,    func);
-						var a = Convert2(e.Arguments, func);
+						var e = (MethodCallExpression)expr;
+						var o = Transform(e.Object,    func);
+						var a = Transform2(e.Arguments, func);
 
 						return o != e.Object || a != e.Arguments ? 
 							Expression.Call(o, e.Method, a) : 
@@ -1666,10 +1640,10 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as ConditionalExpression;
-						var s = Convert2(e.Test,    func);
-						var t = Convert2(e.IfTrue,  func);
-						var f = Convert2(e.IfFalse, func);
+						var e = (ConditionalExpression)expr;
+						var s = Transform(e.Test,    func);
+						var t = Transform(e.IfTrue,  func);
+						var f = Transform(e.IfFalse, func);
 
 						return s != e.Test || t != e.IfTrue || f != e.IfFalse ?
 							Expression.Condition(s, t, f) :
@@ -1682,9 +1656,9 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as InvocationExpression;
-						var ex = Convert2(e.Expression, func);
-						var a  = Convert2(e.Arguments,  func);
+						var e  = (InvocationExpression)expr;
+						var ex = Transform(e.Expression, func);
+						var a  = Transform2(e.Arguments,  func);
 
 						return ex != e.Expression || a != e.Arguments ? Expression.Invoke(ex, a) : expr;
 					}
@@ -1695,9 +1669,9 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as LambdaExpression;
-						var b = Convert2(e.Body,       func);
-						var p = Convert2(e.Parameters, func);
+						var e = (LambdaExpression)expr;
+						var b = Transform(e.Body,       func);
+						var p = Transform2(e.Parameters, func);
 
 						return b != e.Body || p != e.Parameters ? Expression.Lambda(ex.Expression.Type, b, p.ToArray()) : expr;
 					}
@@ -1708,11 +1682,11 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as ListInitExpression;
-						var n = Convert2(e.NewExpression, func);
-						var i = Convert2(e.Initializers,  p =>
+						var e = (ListInitExpression)expr;
+						var n = Transform(e.NewExpression, func);
+						var i = Transform2(e.Initializers,  p =>
 						{
-							var args = Convert2(p.Arguments, func);
+							var args = Transform2(p.Arguments, func);
 							return args != p.Arguments? Expression.ElementInit(p.AddMethod, args): p;
 						});
 
@@ -1727,8 +1701,8 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as MemberExpression;
-						var ex = Convert2(e.Expression, func);
+						var e  = (MemberExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						return ex != e.Expression ? Expression.MakeMemberAccess(ex, e.Member) : expr;
 					}
@@ -1746,7 +1720,7 @@ namespace LinqToDB.Linq
 								case MemberBindingType.Assignment:
 									{
 										var ma = (MemberAssignment)b;
-										var ex = Convert2(ma.Expression, func);
+										var ex = Transform(ma.Expression, func);
 
 										if (ex != ma.Expression)
 											ma = Expression.Bind(ma.Member, ex);
@@ -1757,9 +1731,9 @@ namespace LinqToDB.Linq
 								case MemberBindingType.ListBinding:
 									{
 										var ml = (MemberListBinding)b;
-										var i  = Convert(ml.Initializers, p =>
+										var i  = Transform(ml.Initializers, p =>
 										{
-											var args = Convert2(p.Arguments, func);
+											var args = Transform2(p.Arguments, func);
 											return args != p.Arguments? Expression.ElementInit(p.AddMethod, args): p;
 										});
 
@@ -1772,7 +1746,7 @@ namespace LinqToDB.Linq
 								case MemberBindingType.MemberBinding:
 									{
 										var mm = (MemberMemberBinding)b;
-										var bs = Convert(mm.Bindings, modify);
+										var bs = Transform(mm.Bindings, modify);
 
 										if (bs != mm.Bindings)
 											mm = Expression.MemberBind(mm.Member);
@@ -1784,9 +1758,9 @@ namespace LinqToDB.Linq
 							return b;
 						};
 
-						var e  = expr as MemberInitExpression;
-						var ne = Convert2(e.NewExpression, func);
-						var bb = Convert2(e.Bindings,      modify);
+						var e  = (MemberInitExpression)expr;
+						var ne = Transform(e.NewExpression, func);
+						var bb = Transform2(e.Bindings,      modify);
 
 						return ne != e.NewExpression || bb != e.Bindings ?
 							Expression.MemberInit((NewExpression)ne, bb) :
@@ -1799,8 +1773,8 @@ namespace LinqToDB.Linq
 						if (ex.Stop || ex.Expression != expr)
 							return ex.Expression;
 
-						var e = expr as NewExpression;
-						var a = Convert2(e.Arguments, func);
+						var e = (NewExpression)expr;
+						var a = Transform2(e.Arguments, func);
 
 						return a != e.Arguments ?
 							e.Members == null ?
@@ -1815,8 +1789,8 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as NewArrayExpression;
-						var ex = Convert2(e.Expressions, func);
+						var e  = (NewArrayExpression)expr;
+						var ex = Transform2(e.Expressions, func);
 
 						return ex != e.Expressions ? Expression.NewArrayBounds(e.Type, ex) : expr;
 					}
@@ -1827,8 +1801,8 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as NewArrayExpression;
-						var ex = Convert2(e.Expressions, func);
+						var e  = (NewArrayExpression)expr;
+						var ex = Transform2(e.Expressions, func);
 
 						return ex != e.Expressions ?
 							Expression.NewArrayInit(e.Type.GetElementType(), ex) :
@@ -1841,8 +1815,8 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as TypeBinaryExpression;
-						var ex = Convert2(e.Expression, func);
+						var e  = (TypeBinaryExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						return ex != e.Expression ? Expression.TypeIs(ex, e.Type) : expr;
 					}
@@ -1855,9 +1829,9 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as BlockExpression;
-						var ex = Convert2(e.Expressions, func);
-						var v  = Convert2(e.Variables,   func);
+						var e  = (BlockExpression)expr;
+						var ex = Transform2(e.Expressions, func);
+						var v  = Transform2(e.Variables,   func);
 
 						return ex != e.Expressions || v != e.Variables ? Expression.Block(e.Type, v, ex) : expr;
 					}
@@ -1873,8 +1847,8 @@ namespace LinqToDB.Linq
 						if (exp.Stop || exp.Expression != expr)
 							return exp.Expression;
 
-						var e  = expr as ChangeTypeExpression;
-						var ex = Convert2(e.Expression, func);
+						var e  = (ChangeTypeExpression)expr;
+						var ex = Transform(e.Expression, func);
 
 						if (ex == e.Expression)
 							return expr;
@@ -2022,10 +1996,7 @@ namespace LinqToDB.Linq
 					{
 						var e = (MemberExpression)expr;
 
-						if (e.Expression != null)
-							list = GetMembers(e.Expression.Unwrap());
-						else
-							list = new List<Expression>();
+						list = e.Expression != null ? GetMembers(e.Expression.Unwrap()) : new List<Expression>();
 
 						break;
 					}

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
-
 	class CastBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

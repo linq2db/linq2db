@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
-
 	class WhereBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -31,7 +30,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			if (info != null)
 			{
-				info.Expression = methodCall.Convert(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+				info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
 
 				if (param != null)
 				{
@@ -41,8 +40,8 @@ namespace LinqToDB.Data.Linq.Builder
 					if (info.ExpressionsToReplace != null)
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Convert(e => e == info.Parameter ? param : e);
-							path.Expr = path.Expr.Convert(e => e == info.Parameter ? param : e);
+							path.Path = path.Path.Transform(e => e == info.Parameter ? param : e);
+							path.Expr = path.Expr.Transform(e => e == info.Parameter ? param : e);
 						}
 				}
 

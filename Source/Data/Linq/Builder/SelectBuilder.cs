@@ -8,7 +8,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Reflection;
 
 	class SelectBuilder : MethodCallBuilder
@@ -138,7 +137,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			if (info != null)
 			{
-				methodCall = (MethodCallExpression)methodCall.Convert(
+				methodCall = (MethodCallExpression)methodCall.Transform(
 					ex => ConvertMethod(methodCall, 0, info, selector.Parameters[0], ex));
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
@@ -189,7 +188,7 @@ namespace LinqToDB.Data.Linq.Builder
 						var expr = Expression.MakeMemberAccess(param, fields[0]);
 
 						foreach (var t in list)
-							t.Expr = t.Expr.Convert(ex => ex == pold ? expr : ex);
+							t.Expr = t.Expr.Transform(ex => ex == pold ? expr : ex);
 
 						return new SequenceConvertInfo
 						{
@@ -205,8 +204,8 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							foreach (var path in info.ExpressionsToReplace)
 							{
-								path.Path = path.Path.Convert(e => e == info.Parameter ? p.Path : e);
-								path.Expr = path.Expr.Convert(e => e == info.Parameter ? p.Path : e);
+								path.Path = path.Path.Transform(e => e == info.Parameter ? p.Path : e);
+								path.Expr = path.Expr.Transform(e => e == info.Parameter ? p.Path : e);
 								path.Level += p.Level;
 
 								list.Add(path);
@@ -226,7 +225,7 @@ namespace LinqToDB.Data.Linq.Builder
 								.Where (e => e != p)
 								.Select(ei =>
 								{
-									ei.Expr = ei.Expr.Convert(e => e == p.Expr ? p.Path : e);
+									ei.Expr = ei.Expr.Transform(e => e == p.Expr ? p.Path : e);
 									return ei;
 								})
 								.ToList()

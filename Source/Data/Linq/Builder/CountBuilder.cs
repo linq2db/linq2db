@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 
 	class CountBuilder : MethodCallBuilder

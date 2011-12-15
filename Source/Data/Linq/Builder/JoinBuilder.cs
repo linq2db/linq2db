@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 
 	class JoinBuilder : MethodCallBuilder
@@ -243,7 +243,7 @@ namespace LinqToDB.Data.Linq.Builder
 					// Convert outer condition.
 					//
 					var outerParam = Expression.Parameter(context._outerKeyLambda.Body.Type, "o");
-					var outerKey   = context._outerKeyLambda.Body.Convert(
+					var outerKey   = context._outerKeyLambda.Body.Transform(
 						e => e == context._outerKeyLambda.Parameters[0] ? context.Lambda.Parameters[0] : e);
 
 					outerKey = context.Builder.BuildExpression(context, outerKey);
@@ -255,7 +255,7 @@ namespace LinqToDB.Data.Linq.Builder
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
-					var innerKey = context._innerKeyLambda.Body.Convert(e =>
+					var innerKey = context._innerKeyLambda.Body.Transform(e =>
 					{
 						int idx;
 

@@ -5,10 +5,10 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 
 	class GroupByBuilder : MethodCallBuilder
@@ -213,7 +213,7 @@ namespace LinqToDB.Data.Linq.Builder
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
 
-					var groupExpression = context._sequenceExpr.Convert(e =>
+					var groupExpression = context._sequenceExpr.Transform(e =>
 					{
 						int idx;
 

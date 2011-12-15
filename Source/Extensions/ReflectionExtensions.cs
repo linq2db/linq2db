@@ -14,7 +14,7 @@ namespace LinqToDB.Extensions
 {
 	static class ReflectionExtensions
 	{
-		#region GetAttributes
+		#region Type extensions
 
 		static class CacheHelper<T>
 		{
@@ -143,10 +143,6 @@ namespace LinqToDB.Extensions
 			var attrs = GetAttributes<T>(type);
 			return attrs.Length > 0? attrs[0]: null;
 		}
-
-		#endregion
-
-		#region Static Members
 
 		/// <summary>
 		/// Gets a value indicating whether a type (or type's element type)
@@ -456,39 +452,6 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
-		{
-			if (method != null)
-			{
-				var type = method.DeclaringType;
-				var attr = BindingFlags.NonPublic | BindingFlags.Public | (method.IsStatic ? BindingFlags.Static : BindingFlags.Instance);
-
-				foreach (var info in type.GetProperties(attr))
-				{
-					if (info.CanRead && method == info.GetGetMethod(true))
-						return info;
-
-					if (info.CanWrite && method == info.GetSetMethod(true))
-						return info;
-				}
-			}
-
-			return null;
-		}
-
-		public static Type GetMemberType(this MemberInfo memberInfo)
-		{
-			switch (memberInfo.MemberType)
-			{
-				case MemberTypes.Property    : return ((PropertyInfo)   memberInfo).PropertyType;
-				case MemberTypes.Field       : return ((FieldInfo)      memberInfo).FieldType;
-				case MemberTypes.Method      : return ((MethodInfo)     memberInfo).ReturnType;
-				case MemberTypes.Constructor : return ((ConstructorInfo)memberInfo).DeclaringType;
-			}
-
-			throw new InvalidOperationException();
-		}
-
 		public static bool IsFloatType(this Type type)
 		{
 			if (type.IsNullable())
@@ -522,6 +485,68 @@ namespace LinqToDB.Extensions
 			}
 
 			return false;
+		}
+
+		interface IGetDefaultValueHelper
+		{
+			object GetDefaultValue();
+		}
+
+		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
+		{
+			public object GetDefaultValue()
+			{
+				return default(T);
+			}
+		}
+
+		public static object GetDefaultValue(this Type type)
+		{
+			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
+			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
+
+			return helper.GetDefaultValue();
+		}
+
+		#endregion
+
+		#region MethodInfo extensions
+
+		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
+		{
+			if (method != null)
+			{
+				var type = method.DeclaringType;
+				var attr = BindingFlags.NonPublic | BindingFlags.Public | (method.IsStatic ? BindingFlags.Static : BindingFlags.Instance);
+
+				foreach (var info in type.GetProperties(attr))
+				{
+					if (info.CanRead && method == info.GetGetMethod(true))
+						return info;
+
+					if (info.CanWrite && method == info.GetSetMethod(true))
+						return info;
+				}
+			}
+
+			return null;
+		}
+
+		#endregion
+
+		#region MemberInfo extensions
+
+		public static Type GetMemberType(this MemberInfo memberInfo)
+		{
+			switch (memberInfo.MemberType)
+			{
+				case MemberTypes.Property    : return ((PropertyInfo)   memberInfo).PropertyType;
+				case MemberTypes.Field       : return ((FieldInfo)      memberInfo).FieldType;
+				case MemberTypes.Method      : return ((MethodInfo)     memberInfo).ReturnType;
+				case MemberTypes.Constructor : return                   memberInfo. DeclaringType;
+			}
+
+			throw new InvalidOperationException();
 		}
 
 		public static bool IsNullableValueMember(this MemberInfo member)
@@ -563,27 +588,6 @@ namespace LinqToDB.Extensions
 			}
 
 			return false;
-		}
-
-		interface IGetDefaultValueHelper
-		{
-			object GetDefaultValue();
-		}
-
-		class GetDefaultValueHelper<T> : IGetDefaultValueHelper
-		{
-			public object GetDefaultValue()
-			{
-				return default(T);
-			}
-		}
-
-		public static object GetDefaultValue(this Type type)
-		{
-			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
-			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype);
-
-			return helper.GetDefaultValue();
 		}
 
 		#endregion

@@ -6,7 +6,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 	using Reflection;
 	using Reflection.Extension;

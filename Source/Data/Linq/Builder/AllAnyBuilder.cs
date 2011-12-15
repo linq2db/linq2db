@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 
 	class AllAnyBuilder : MethodCallBuilder
@@ -46,7 +46,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Convert(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
 					return info;
@@ -58,7 +58,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Convert(ex => ConvertMethod(methodCall, 0, info, null, ex));
+					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
 					info.Parameter  = param;
 
 					return info;

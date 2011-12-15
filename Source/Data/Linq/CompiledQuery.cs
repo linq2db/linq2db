@@ -6,7 +6,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
-	using LinqToDB.Linq;
 	using Reflection;
 
 	/// <summary>
@@ -57,7 +56,7 @@ namespace LinqToDB.Data.Linq
 		{
 			var ps = Expression.Parameter(typeof(object[]), "ps");
 
-			var info = query.Body.Convert(pi =>
+			var info = query.Body.Transform(pi =>
 			{
 				switch (pi.NodeType)
 				{

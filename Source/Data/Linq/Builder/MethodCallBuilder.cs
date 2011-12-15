@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
-
 	abstract class MethodCallBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
@@ -65,7 +64,7 @@ namespace LinqToDB.Data.Linq.Builder
 						if (l.Parameters.Any(a => a == param))
 						{
 							args[i] = Expression.Lambda(
-								l.Body.Convert(ex => ConvertMethod(methodCall, sourceTypeNumber, info, param, ex)),
+								l.Body.Transform(ex => ConvertMethod(methodCall, sourceTypeNumber, info, param, ex)),
 								info.Parameter);
 
 							return Expression.Call(methodCall.Object, mgen.MakeGenericMethod(types), args);

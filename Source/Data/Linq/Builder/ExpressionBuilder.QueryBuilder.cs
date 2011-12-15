@@ -5,12 +5,10 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
-	using Reflection;
+	using LinqToDB.Extensions;
 
 	partial class ExpressionBuilder
 	{
@@ -20,19 +18,19 @@ namespace LinqToDB.Data.Linq.Builder
 
 		public Expression BuildExpression(IBuildContext context, Expression expression)
 		{
-			var newExpr = expression.Convert2(pi =>
+			var newExpr = expression.Transform(expr =>
 			{
-				if (_skippedExpressions.Contains(pi))
-					return new ExpressionHelper.ConvertInfo(pi, true);
+				if (_skippedExpressions.Contains(expr))
+					return new TransformInfo(expr, true);
 
-				switch (pi.NodeType)
+				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberAccess:
 						{
-							if (IsServerSideOnly(pi) || PreferServerSide(pi))
-								return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+							if (IsServerSideOnly(expr) || PreferServerSide(expr))
+								return new TransformInfo(BuildSql(context, expr));
 
-							var ma = (MemberExpression)pi;
+							var ma = (MemberExpression)expr;
 
 							if (SqlProvider.ConvertMember(ma.Member) != null)
 								break;
@@ -49,10 +47,10 @@ namespace LinqToDB.Data.Linq.Builder
 							}
 							*/
 
-							var ctx = GetContext(context, pi);
+							var ctx = GetContext(context, expr);
 
 							if (ctx != null)
-								return new ExpressionHelper.ConvertInfo(ctx.BuildExpression(pi, 0));
+								return new TransformInfo(ctx.BuildExpression(expr, 0));
 
 							var ex = ma.Expression;
 
@@ -61,8 +59,7 @@ namespace LinqToDB.Data.Linq.Builder
 								// field = localVariable
 								//
 								var c = _expressionAccessors[ex];
-								return new ExpressionHelper.ConvertInfo(
-									Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
+								return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
 							}
 
 							break;
@@ -70,47 +67,47 @@ namespace LinqToDB.Data.Linq.Builder
 
 					case ExpressionType.Parameter:
 						{
-							if (pi == ParametersParam)
+							if (expr == ParametersParam)
 								break;
 
-							var ctx = GetContext(context, pi);
+							var ctx = GetContext(context, expr);
 
 							if (ctx != null)
-								return new ExpressionHelper.ConvertInfo(ctx.BuildExpression(pi, 0));
+								return new TransformInfo(ctx.BuildExpression(expr, 0));
 
 							break;
 						}
 
 					case ExpressionType.Constant:
 						{
-							if (ExpressionHelper.IsConstant(pi.Type))
+							if (expr.Type.IsConstantable())
 								break;
 
-							if (_expressionAccessors.ContainsKey(pi))
-								return new ExpressionHelper.ConvertInfo(Expression.Convert(_expressionAccessors[pi], pi.Type));
+							if (_expressionAccessors.ContainsKey(expr))
+								return new TransformInfo(Expression.Convert(_expressionAccessors[expr], expr.Type));
 
 							break;
 						}
 
 					case ExpressionType.Coalesce:
 
-						if (pi.Type == typeof(string) && MappingSchema.GetDefaultNullValue<string>() != null)
-							return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+						if (expr.Type == typeof(string) && MappingSchema.GetDefaultNullValue<string>() != null)
+							return new TransformInfo(BuildSql(context, expr));
 
-						if (CanBeTranslatedToSql(context, ConvertExpression(pi), true))
-							return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+						if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
+							return new TransformInfo(BuildSql(context, expr));
 
 						break;
 
 					case ExpressionType.Conditional:
 
-						if (CanBeTranslatedToSql(context, ConvertExpression(pi), true))
-							return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+						if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
+							return new TransformInfo(BuildSql(context, expr));
 						break;
 
 					case ExpressionType.Call:
 						{
-							var ce = (MethodCallExpression)pi;
+							var ce = (MethodCallExpression)expr;
 
 							if (IsGroupJoinSource(context, ce))
 							{
@@ -123,14 +120,14 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (IsSubQuery(context, ce))
 							{
-								if (typeof(IEnumerable).IsSameOrParentOf(pi.Type))
-									return new ExpressionHelper.ConvertInfo(BuildMultipleQuery(context, pi));
+								if (typeof(IEnumerable).IsSameOrParentOf(expr.Type))
+									return new TransformInfo(BuildMultipleQuery(context, expr));
 
-								return new ExpressionHelper.ConvertInfo(GetSubQuery(context, ce).BuildExpression(null, 0));
+								return new TransformInfo(GetSubQuery(context, ce).BuildExpression(null, 0));
 							}
 
-							if (IsServerSideOnly(pi) || PreferServerSide(pi))
-								return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+							if (IsServerSideOnly(expr) || PreferServerSide(expr))
+								return new TransformInfo(BuildSql(context, expr));
 						}
 
 						break;
@@ -138,7 +135,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				if (EnforceServerSide(context))
 				{
-					switch (pi.NodeType)
+					switch (expr.NodeType)
 					{
 						case ExpressionType.MemberInit :
 						case ExpressionType.New        :
@@ -146,13 +143,13 @@ namespace LinqToDB.Data.Linq.Builder
 							break;
 
 						default                        :
-							if (CanBeCompiled(pi))
+							if (CanBeCompiled(expr))
 								break;
-							return new ExpressionHelper.ConvertInfo(BuildSql(context, pi));
+							return new TransformInfo(BuildSql(context, expr));
 					}
 				}
 
-				return new ExpressionHelper.ConvertInfo(pi);
+				return new TransformInfo(expr);
 			});
 
 			return newExpr;
@@ -246,7 +243,7 @@ namespace LinqToDB.Data.Linq.Builder
 							var info = l.Body.Unwrap();
 
 							if (l.Parameters.Count == 1 && pi.Expression != null)
-								info = info.Convert(wpi => wpi == l.Parameters[0] ? pi.Expression : wpi);
+								info = info.Transform(wpi => wpi == l.Parameters[0] ? pi.Expression : wpi);
 
 							return info.Find(PreferServerSide) != null;
 						}
@@ -385,7 +382,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			// Convert associations.
 			//
-			expression = expression.Convert(e =>
+			expression = expression.Transform(e =>
 			{
 				switch (e.NodeType)
 				{
@@ -447,7 +444,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			// Convert parameters.
 			//
-			expression = expression.Convert(e =>
+			expression = expression.Transform(e =>
 			{
 				var root = e.GetRootObject();
 

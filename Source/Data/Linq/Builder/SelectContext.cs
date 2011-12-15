@@ -7,7 +7,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 	using Reflection;
 
@@ -140,7 +139,7 @@ namespace LinqToDB.Data.Linq.Builder
 											{
 												var sequence = GetSequence(memberExpression, 0);
 
-												return memberExpression.Convert(e =>
+												return memberExpression.Transform(e =>
 												{
 													if (e != memberExpression)
 													{
@@ -204,7 +203,7 @@ namespace LinqToDB.Data.Linq.Builder
 										}
 								}
 
-								var expr = expression.Convert(ex => ex == levelExpression ? memberExpression : ex);
+								var expr = expression.Transform(ex => ex == levelExpression ? memberExpression : ex);
 
 								return sequence.BuildExpression(expr, 1);
 							}
@@ -938,7 +937,7 @@ namespace LinqToDB.Data.Linq.Builder
 		static Expression GetExpression(Expression expression, Expression levelExpression, Expression memberExpression)
 		{
 			return levelExpression != expression ?
-				expression.Convert(ex => ex == levelExpression ? memberExpression : ex) :
+				expression.Transform(ex => ex == levelExpression ? memberExpression : ex) :
 				memberExpression;
 		}
 

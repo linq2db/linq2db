@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq
 {
-	using LinqToDB.Linq;
 	using Common;
 	using Data.Sql;
 	using Data.Sql.SqlProvider;
+	using LinqToDB.Extensions;
 	using Mapping;
 	using Builder;
-	using Reflection;
 
 	public abstract class Query
 	{
@@ -35,7 +33,7 @@ namespace LinqToDB.Data.Linq
 				ContextID.Length == contextID.Length &&
 				ContextID        == contextID        &&
 				MappingSchema    == mappingSchema    &&
-				ExpressionHelper.Compare(Expression, expr, _queryableAccessorDic);
+				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
 		readonly Dictionary<Expression,Func<Expression,IQueryable>> _queryableAccessorDic  = new Dictionary<Expression,Func<Expression,IQueryable>>();

@@ -7,7 +7,6 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 	using Reflection;
 
@@ -241,7 +240,7 @@ namespace LinqToDB.Data.Linq.Builder
 		{
 			var ext = extract.Body;
 
-			if (!ExpressionHelper.IsConstant(update.Type) && !builder.AsParameters.Contains(update))
+			if (!update.Type.IsConstantable() && !builder.AsParameters.Contains(update))
 				builder.AsParameters.Add(update);
 
 			while (ext.NodeType == ExpressionType.Convert || ext.NodeType == ExpressionType.ConvertChecked)

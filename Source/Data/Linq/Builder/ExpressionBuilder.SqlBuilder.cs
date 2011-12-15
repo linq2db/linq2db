@@ -5,13 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Common;
 	using Data.Sql;
+	using LinqToDB.Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -330,10 +329,10 @@ namespace LinqToDB.Data.Linq.Builder
 
 		Expression ConvertExpression(Expression expression)
 		{
-			return expression.Convert2(e =>
+			return expression.Transform(e =>
 			{
 				if (CanBeConstant(e) || CanBeCompiled(e))
-					return new ExpressionHelper.ConvertInfo(e, true);
+					return new TransformInfo(e, true);
 
 				switch (e.NodeType)
 				{
@@ -341,7 +340,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ex = ConvertNew((NewExpression)e);
 							if (ex != null)
-								return new ExpressionHelper.ConvertInfo(ConvertExpression(ex));
+								return new TransformInfo(ConvertExpression(ex));
 							break;
 						}
 
@@ -349,7 +348,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var cm = ConvertMethod((MethodCallExpression)e);
 							if (cm != null)
-								return new ExpressionHelper.ConvertInfo(ConvertExpression(cm));
+								return new TransformInfo(ConvertExpression(cm));
 							break;
 						}
 
@@ -361,12 +360,12 @@ namespace LinqToDB.Data.Linq.Builder
 							if (l != null)
 							{
 								var body = l.Body.Unwrap();
-								var expr = body.Convert(wpi => wpi.NodeType == ExpressionType.Parameter ? ma.Expression : wpi);
+								var expr = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? ma.Expression : wpi);
 
 								if (expr.Type != e.Type)
 									expr = new ChangeTypeExpression(expr, e.Type);
 
-								return new ExpressionHelper.ConvertInfo(ConvertExpression(expr));
+								return new TransformInfo(ConvertExpression(expr));
 							}
 
 							if (ma.Member.IsNullableValueMember())
@@ -375,7 +374,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var helper = (IConvertHelper)Activator.CreateInstance(ntype);
 								var expr   = helper.ConvertNull(ma);
 
-								return new ExpressionHelper.ConvertInfo(ConvertExpression(expr));
+								return new TransformInfo(ConvertExpression(expr));
 							}
 
 							if (ma.Member.DeclaringType == typeof(TimeSpan))
@@ -394,7 +393,7 @@ namespace LinqToDB.Data.Linq.Builder
 											case "TotalMinutes"      : datePart = Sql.DateParts.Minute;      break;
 											case "TotalHours"        : datePart = Sql.DateParts.Hour;        break;
 											case "TotalDays"         : datePart = Sql.DateParts.Day;         break;
-											default                  : return new ExpressionHelper.ConvertInfo(e);
+											default                  : return new TransformInfo(e);
 										}
 
 										var ex     = (BinaryExpression)ma.Expression;
@@ -411,7 +410,7 @@ namespace LinqToDB.Data.Linq.Builder
 													Expression.Convert(ex.Left,  typeof(DateTime?))),
 												typeof(double));
 
-										return new ExpressionHelper.ConvertInfo(ConvertExpression(call));
+										return new TransformInfo(ConvertExpression(call));
 								}
 							}
 
@@ -419,7 +418,7 @@ namespace LinqToDB.Data.Linq.Builder
 						}
 				}
 
-				return new ExpressionHelper.ConvertInfo(e);
+				return new TransformInfo(e);
 			});
 		}
 
@@ -438,7 +437,7 @@ namespace LinqToDB.Data.Linq.Builder
 			foreach (var p in lambda.Parameters)
 				parms.Add(p.Name, pn++);
 
-			var pie = ef.Convert(wpi =>
+			var pie = ef.Transform(wpi =>
 			{
 				if (wpi.NodeType == ExpressionType.Parameter)
 				{
@@ -469,7 +468,7 @@ namespace LinqToDB.Data.Linq.Builder
 				foreach (var p in lambda.Parameters)
 					parms.Add(p.Name, pn++);
 
-				return ef.Convert(wpi =>
+				return ef.Transform(wpi =>
 				{
 					if (wpi.NodeType == ExpressionType.Parameter)
 					{
@@ -838,7 +837,7 @@ namespace LinqToDB.Data.Linq.Builder
 							for (var i = 0; i < l.Parameters.Count; i++)
 								dic.Add(l.Parameters[i], pi.Arguments[i]);
 
-							var pie = l.Body.Convert(wpi =>
+							var pie = l.Body.Transform(wpi =>
 							{
 								Expression ppi;
 								return dic.TryGetValue(wpi, out ppi) ? ppi : wpi;
@@ -960,7 +959,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var c = (ConstantExpression)ex;
 
-							if (c.Value == null || ExpressionHelper.IsConstant(ex.Type))
+							if (c.Value == null || ex.Type.IsConstantable())
 								return false;
 
 							break;
@@ -970,7 +969,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var ma = (MemberExpression)ex;
 
-							if (ExpressionHelper.IsConstant(ma.Member.DeclaringType) || ma.Member.IsNullableValueMember())
+							if (ma.Member.DeclaringType.IsConstantable() || ma.Member.IsNullableValueMember())
 								return false;
 
 							break;
@@ -980,7 +979,7 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var mc = (MethodCallExpression)ex;
 
-							if (ExpressionHelper.IsConstant(mc.Method.DeclaringType) || mc.Method.DeclaringType == typeof(object))
+							if (mc.Method.DeclaringType.IsConstantable() || mc.Method.DeclaringType == typeof(object))
 								return false;
 
 							var attr = GetFunctionAttribute(mc.Method);
@@ -1096,13 +1095,13 @@ namespace LinqToDB.Data.Linq.Builder
 
 		Expression ReplaceParameter(IDictionary<Expression,Expression> expressionAccessors, Expression expression, Action<string> setName)
 		{
-			return expression.Convert(expr =>
+			return expression.Transform(expr =>
 			{
 				if (expr.NodeType == ExpressionType.Constant)
 				{
 					var c = (ConstantExpression)expr;
 
-					if (!ExpressionHelper.IsConstant(expr.Type) || AsParameters.Contains(c))
+					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
 					{
 						var val = expressionAccessors[expr];
 

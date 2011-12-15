@@ -6,7 +6,6 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using LinqToDB.Linq;
 	using Data.Sql;
 
 	class FirstSingleBuilder : MethodCallBuilder
