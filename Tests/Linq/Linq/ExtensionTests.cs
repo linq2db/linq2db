@@ -21,28 +21,28 @@ namespace Tests.Linq
 		[Test]
 		public void TableName()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
 		[Test]
 		public void DatabaseName()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 				db.GetTable<Parent>().DatabaseName("BLToolkitData").ToList();
 		}
 
 		[Test]
 		public void OwnerName()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 				db.GetTable<Parent>().OwnerName("dbo").ToList();
 		}
 
 		[Test]
 		public void AllNames()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 				db.GetTable<ParenTable>()
 					.DatabaseName("BLToolkitData")
 					.OwnerName("dbo")

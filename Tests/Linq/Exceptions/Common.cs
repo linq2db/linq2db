@@ -17,8 +17,6 @@ namespace Tests.Exceptions
 	{
 		class MyDbManager : TestDbManager
 		{
-			public MyDbManager() : base("Sql2008") {}
-
 			protected override SqlQuery ProcessQuery(SqlQuery sqlQuery)
 			{
 				if (sqlQuery.IsInsert && sqlQuery.Insert.Into.Name == "Parent")

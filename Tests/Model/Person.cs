@@ -23,8 +23,8 @@ namespace Tests.Model
 		}
 
 		[Identity, PrimaryKey]
-		//[SequenceName("PostgreSQL", "Seq")]
-		[SequenceName("Firebird",   "PersonID")]
+		//[SequenceName(ProviderName.PostgreSQL, "Seq")]
+		[SequenceName(ProviderName.Firebird,   "PersonID")]
 		[MapField("PersonID")] public int    ID;
 		                       public string FirstName { get; set; }
 		                       public string LastName;

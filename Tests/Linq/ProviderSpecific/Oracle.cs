@@ -19,7 +19,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsert()
 		{
-			using (var db = new TestDbManager("Oracle"))
+			using (var db = new TestDbManager(ProviderName.Oracle))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
@@ -35,7 +35,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsertWithIdentity()
 		{
-			using (var db = new TestDbManager("Oracle"))
+			using (var db = new TestDbManager(ProviderName.Oracle))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -81,7 +81,7 @@ namespace Tests.ProviderSpecific
 				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
 			};
 
-			using (var db = new TestDbManager("Oracle"))
+			using (var db = new TestDbManager(ProviderName.Oracle))
 			{
 				db.InsertBatch(5, data);
 			}
@@ -90,7 +90,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void InsertBatch2()
 		{
-			using (var db = new TestDbManager("Oracle"))
+			using (var db = new TestDbManager(ProviderName.Oracle))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 

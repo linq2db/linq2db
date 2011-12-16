@@ -12,7 +12,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SqlTest()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 			using (var rd = db.SetCommand(@"
 				SELECT
 					DateAdd(Hour, 1, [t].[DateTimeValue]) - [t].[DateTimeValue]

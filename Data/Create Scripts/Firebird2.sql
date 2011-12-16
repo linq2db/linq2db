@@ -368,7 +368,7 @@ COMMIT;
 Fake input parameters are used to "emulate" input/output parameters.
 Each inout parameter should be defined in RETURNS(...) section
 and allso have a "mirror" in input section, mirror name shoul be:
-FdpDataProvider.InOutInputParameterPrefix + [parameter name]
+FirebirdDataProvider.InOutInputParameterPrefix + [parameter name]
 ex:
 in_inputOutputID is input mirror FOR inout parameter inputOutputID
 */
@@ -442,7 +442,7 @@ COMMIT;
 
 /*
 "Return_Value" is the name for ReturnValue "emulating"
-may be changed: FdpDataProvider.ReturnParameterName
+may be changed: FirebirdDataProvider.ReturnParameterName
 */
 CREATE PROCEDURE Scalar_ReturnParameter
 RETURNS (Return_Value INTEGER)

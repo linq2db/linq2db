@@ -41,7 +41,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsDbGeneratedTest()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 			{
 				db.BeginTransaction();
 

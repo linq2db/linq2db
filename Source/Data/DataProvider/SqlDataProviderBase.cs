@@ -154,7 +154,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(SqlConnection); }
 		}
 
-		public const string NameString = LinqToDB.ProviderName.MsSql;
+		public const string NameString = LinqToDB.ProviderName.MsSql2005;
 
 		/// <summary>
 		/// Returns the data provider name.

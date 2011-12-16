@@ -153,17 +153,17 @@ namespace Tests
 
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
-			new ProviderInfo("Sql2008",               null,                                     "LinqToDB.Data.DataProvider.Sql2008DataProvider"),
+			new ProviderInfo(ProviderName.MsSql2008,  null,                                    "LinqToDB.Data.DataProvider.Sql2008DataProvider"),
 			new ProviderInfo(ProviderName.SqlCe,      "LinqToDB.Data.DataProvider.SqlCe",      "LinqToDB.Data.DataProvider.SqlCeDataProvider"),
 			new ProviderInfo(ProviderName.SQLite,     "LinqToDB.Data.DataProvider.SQLite",     "LinqToDB.Data.DataProvider.SQLiteDataProvider"),
-			new ProviderInfo(ProviderName.Access,     null,                                     "LinqToDB.Data.DataProvider.AccessDataProvider"),
+			new ProviderInfo(ProviderName.Access,     null,                                    "LinqToDB.Data.DataProvider.AccessDataProvider"),
 
 #if !MOBILE
-			new ProviderInfo("Sql2005",               null,                                     "LinqToDB.Data.DataProvider.SqlDataProvider"),
+			new ProviderInfo(ProviderName.MsSql2005,  null,                                    "LinqToDB.Data.DataProvider.SqlDataProvider"),
 			new ProviderInfo(ProviderName.DB2,        "LinqToDB.Data.DataProvider.DB2",        "LinqToDB.Data.DataProvider.DB2DataProvider"),
 			new ProviderInfo(ProviderName.Informix,   "LinqToDB.Data.DataProvider.Informix",   "LinqToDB.Data.DataProvider.InformixDataProvider"),
-			new ProviderInfo(ProviderName.Firebird,   "LinqToDB.Data.DataProvider.Firebird",   "LinqToDB.Data.DataProvider.FdpDataProvider"),
-			new ProviderInfo("Oracle",                "LinqToDB.Data.DataProvider.Oracle",     "LinqToDB.Data.DataProvider.OdpDataProvider"),
+			new ProviderInfo(ProviderName.Firebird,   "LinqToDB.Data.DataProvider.Firebird",   "LinqToDB.Data.DataProvider.FirebirdDataProvider"),
+			new ProviderInfo(ProviderName.Oracle,     "LinqToDB.Data.DataProvider.Oracle",     "LinqToDB.Data.DataProvider.OracleDataProvider"),
 			new ProviderInfo(ProviderName.PostgreSQL, "LinqToDB.Data.DataProvider.PostgreSQL", "LinqToDB.Data.DataProvider.PostgreSQLDataProvider"),
 			new ProviderInfo(ProviderName.MySql,      "LinqToDB.Data.DataProvider.MySql",      "LinqToDB.Data.DataProvider.MySqlDataProvider"),
 			new ProviderInfo(ProviderName.Sybase,     "LinqToDB.Data.DataProvider.Sybase",     "LinqToDB.Data.DataProvider.SybaseDataProvider"),
@@ -323,7 +323,7 @@ namespace Tests
 			get
 			{
 				if (_types == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 						_types = db.Types.ToList();
 
 				foreach (var type in _types)
@@ -337,7 +337,7 @@ namespace Tests
 			get
 			{
 				if (_types2 == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 						_types2 = db.Types2.ToList();
 				return _types2;
 			}
@@ -350,7 +350,7 @@ namespace Tests
 			{
 				if (_person == null)
 				{
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 						_person = db.Person.ToList();
 
 					foreach (var p in _person)
@@ -369,7 +369,7 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 						_patient = db.Patient.ToList();
 
 					foreach (var p in _patient)
@@ -388,7 +388,7 @@ namespace Tests
 			get
 			{
 				if (_parent == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 					{
 						_parent = db.Parent.ToList();
 						db.Close();
@@ -502,7 +502,7 @@ namespace Tests
 			get
 			{
 				if (_child == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 					{
 						_child = db.Child.ToList();
 						db.Clone();
@@ -527,7 +527,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 					{
 						_grandChild = db.GrandChild.ToList();
 						db.Close();
@@ -547,7 +547,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild1 == null)
-					using (var db = new TestDbManager("Sql2008"))
+					using (var db = new TestDbManager())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
 

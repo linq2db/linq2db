@@ -3,6 +3,8 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
 
+using PN = LinqToDB.ProviderName;
+
 namespace LinqToDB
 {
 	using Data.Linq;
@@ -32,11 +34,11 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[SqlFunction  ("Oracle",   "Sys_Guid", ServerSideOnly=true)]
-		[SqlFunction  ("Firebird", "Gen_Uuid", ServerSideOnly=true)]
-		[SqlFunction  ("MySql",    "Uuid",     ServerSideOnly=true)]
-		[SqlExpression("Sybase",   "NewID(1)", ServerSideOnly=true)]
-		[SqlFunction  (            "NewID",    ServerSideOnly=true)]
+		[SqlFunction  (PN.Oracle,   "Sys_Guid", ServerSideOnly=true)]
+		[SqlFunction  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true)]
+		[SqlFunction  (PN.MySql,    "Uuid",     ServerSideOnly=true)]
+		[SqlExpression(PN.Sybase,   "NewID(1)", ServerSideOnly=true)]
+		[SqlFunction  (             "NewID",    ServerSideOnly=true)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -92,140 +94,140 @@ namespace LinqToDB
 			return date == null ? null : (TimeSpan?)new TimeSpan(date.Value.Ticks);
 		}
 
-		[SqlProperty("Informix",   "Boolean",        ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "Boolean",        ServerSideOnly=true)]
-		[SqlProperty("MySql",      "Boolean",        ServerSideOnly=true)]
-		[SqlProperty("SQLite",     "Boolean",        ServerSideOnly=true)]
-		[SqlProperty(              "Bit",            ServerSideOnly=true)] public static Boolean        Bit                               { get { return false; } }
+		[SqlProperty(PN.Informix,   "Boolean",        ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "Boolean",        ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "Boolean",        ServerSideOnly=true)]
+		[SqlProperty(PN.SQLite,     "Boolean",        ServerSideOnly=true)]
+		[SqlProperty(               "Bit",            ServerSideOnly=true)] public static Boolean        Bit                               { get { return false; } }
 
-		[SqlProperty("Oracle",     "Number(19)",     ServerSideOnly=true)]
-		[SqlProperty(              "BigInt",         ServerSideOnly=true)] public static Int64          BigInt                            { get { return 0; } }
+		[SqlProperty(PN.Oracle,     "Number(19)",     ServerSideOnly=true)]
+		[SqlProperty(               "BigInt",         ServerSideOnly=true)] public static Int64          BigInt                            { get { return 0; } }
 
-		[SqlProperty("MySql",      "Signed",         ServerSideOnly=true)]
-		[SqlProperty(              "Int",            ServerSideOnly=true)] public static Int32          Int                               { get { return 0; } }
+		[SqlProperty(PN.MySql,      "Signed",         ServerSideOnly=true)]
+		[SqlProperty(               "Int",            ServerSideOnly=true)] public static Int32          Int                               { get { return 0; } }
 
-		[SqlProperty("MySql",      "Signed",         ServerSideOnly=true)]
-		[SqlProperty(              "SmallInt",       ServerSideOnly=true)] public static Int16          SmallInt                          { get { return 0; } }
+		[SqlProperty(PN.MySql,      "Signed",         ServerSideOnly=true)]
+		[SqlProperty(               "SmallInt",       ServerSideOnly=true)] public static Int16          SmallInt                          { get { return 0; } }
 
-		[SqlProperty("DB2",        "SmallInt",       ServerSideOnly=true)]
-		[SqlProperty("Informix",   "SmallInt",       ServerSideOnly=true)]
-		[SqlProperty("Oracle",     "Number(3)",      ServerSideOnly=true)]
-		[SqlProperty("DB2",        "SmallInt",       ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "SmallInt",       ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "SmallInt",       ServerSideOnly=true)]
-		[SqlProperty("MySql",      "Unsigned",       ServerSideOnly=true)]
-		[SqlProperty(              "TinyInt",        ServerSideOnly=true)] public static Byte           TinyInt                           { get { return 0; } }
+		[SqlProperty(PN.DB2,        "SmallInt",       ServerSideOnly=true)]
+		[SqlProperty(PN.Informix,   "SmallInt",       ServerSideOnly=true)]
+		[SqlProperty(PN.Oracle,     "Number(3)",      ServerSideOnly=true)]
+		[SqlProperty(PN.DB2,        "SmallInt",       ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "SmallInt",       ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "SmallInt",       ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "Unsigned",       ServerSideOnly=true)]
+		[SqlProperty(               "TinyInt",        ServerSideOnly=true)] public static Byte           TinyInt                           { get { return 0; } }
 
-		[SqlProperty(              "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }
-		[SqlFunction(                                ServerSideOnly=true)] public static Decimal        Decimal(int precision)            {       return 0;   }
-		[SqlFunction(                                ServerSideOnly=true)] public static Decimal        Decimal(int precision, int scale) {       return 0;   }
+		[SqlProperty(               "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }
+		[SqlFunction(                                 ServerSideOnly=true)] public static Decimal        Decimal(int precision)            {       return 0;   }
+		[SqlFunction(                                 ServerSideOnly=true)] public static Decimal        Decimal(int precision, int scale) {       return 0;   }
 
-		[SqlProperty("Oracle",     "Number(19,4)",   ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "Decimal(18,4)",  ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "Decimal(19,4)",  ServerSideOnly=true)]
-		[SqlProperty("MySql",      "Decimal(19,4)",  ServerSideOnly=true)]
-		[SqlProperty(              "Money",          ServerSideOnly=true)] public static Decimal        Money                             { get { return 0; } }
+		[SqlProperty(PN.Oracle,     "Number(19,4)",   ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "Decimal(18,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "Decimal(19,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "Decimal(19,4)",  ServerSideOnly=true)]
+		[SqlProperty(               "Money",          ServerSideOnly=true)] public static Decimal        Money                             { get { return 0; } }
 
-		[SqlProperty("Informix",   "Decimal(10,4)",  ServerSideOnly=true)]
-		[SqlProperty("Oracle",     "Number(10,4)",   ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "Decimal(10,4)",  ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "Decimal(10,4)",  ServerSideOnly=true)]
-		[SqlProperty("MySql",      "Decimal(10,4)",  ServerSideOnly=true)]
-		[SqlProperty("SqlCe",      "Decimal(10,4)",  ServerSideOnly=true)]
-		[SqlProperty(              "SmallMoney",     ServerSideOnly=true)] public static Decimal        SmallMoney                        { get { return 0; } }
+		[SqlProperty(PN.Informix,   "Decimal(10,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.Oracle,     "Number(10,4)",   ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "Decimal(10,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "Decimal(10,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "Decimal(10,4)",  ServerSideOnly=true)]
+		[SqlProperty(PN.SqlCe,      "Decimal(10,4)",  ServerSideOnly=true)]
+		[SqlProperty(               "SmallMoney",     ServerSideOnly=true)] public static Decimal        SmallMoney                        { get { return 0; } }
 
-		[SqlProperty("MySql",      "Decimal(29,10)", ServerSideOnly=true)]
-		[SqlProperty(              "Float",          ServerSideOnly=true)] public static Double         Float                             { get { return 0; } }
+		[SqlProperty(PN.MySql,      "Decimal(29,10)", ServerSideOnly=true)]
+		[SqlProperty(               "Float",          ServerSideOnly=true)] public static Double         Float                             { get { return 0; } }
 
-		[SqlProperty("MySql",      "Decimal(29,10)", ServerSideOnly=true)]
-		[SqlProperty(              "Real",           ServerSideOnly=true)] public static Single         Real                              { get { return 0; } }
+		[SqlProperty(PN.MySql,      "Decimal(29,10)", ServerSideOnly=true)]
+		[SqlProperty(               "Real",           ServerSideOnly=true)] public static Single         Real                              { get { return 0; } }
 
-		[SqlProperty("PostgreSQL", "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty(              "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
+		[SqlProperty(PN.PostgreSQL, "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(               "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
 
-		[SqlProperty("MsSql2005",  "DateTime",       ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("MySql",      "DateTime",       ServerSideOnly=true)]
-		[SqlProperty("SqlCe",      "DateTime",       ServerSideOnly=true)]
-		[SqlProperty("Sybase",     "DateTime",       ServerSideOnly=true)]
-		[SqlProperty(              "DateTime2",      ServerSideOnly=true)] public static DateTime       DateTime2                         { get { return DateTime.Now; } }
+		[SqlProperty(PN.MsSql2005,  "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(PN.SqlCe,      "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(PN.Sybase,     "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(               "DateTime2",      ServerSideOnly=true)] public static DateTime       DateTime2                         { get { return DateTime.Now; } }
 
-		[SqlProperty("PostgreSQL", "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("MySql",      "DateTime",       ServerSideOnly=true)]
-		[SqlProperty("SqlCe",      "DateTime",       ServerSideOnly=true)]
-		[SqlProperty(              "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
+		[SqlProperty(PN.PostgreSQL, "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(PN.SqlCe,      "DateTime",       ServerSideOnly=true)]
+		[SqlProperty(               "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
 
-		[SqlProperty("MsSql2005",  "Datetime",       ServerSideOnly=true)]
-		[SqlProperty("SqlCe",      "Datetime",       ServerSideOnly=true)]
-		[SqlProperty(              "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }
+		[SqlProperty(PN.MsSql2005,  "Datetime",       ServerSideOnly=true)]
+		[SqlProperty(PN.SqlCe,      "Datetime",       ServerSideOnly=true)]
+		[SqlProperty(               "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }
 
-		[SqlProperty(              "Time",           ServerSideOnly=true)] public static DateTime       Time                              { get { return DateTime.Now; } }
+		[SqlProperty(               "Time",           ServerSideOnly=true)] public static DateTime       Time                              { get { return DateTime.Now; } }
 
-		[SqlProperty("PostgreSQL", "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "TimeStamp",      ServerSideOnly=true)]
-		[SqlProperty("MsSql2008",  "DateTimeOffset", ServerSideOnly=true)]
-		[SqlProperty(              "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
+		[SqlProperty(PN.PostgreSQL, "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.MsSql2008,  "DateTimeOffset", ServerSideOnly=true)]
+		[SqlProperty(               "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
 
-		[SqlFunction("SqlCe",      "NChar",          ServerSideOnly=true)]
-		[SqlFunction(                                ServerSideOnly=true)] public static String         Char(int length)                  {       return ""; }
+		[SqlFunction(PN.SqlCe,      "NChar",          ServerSideOnly=true)]
+		[SqlFunction(                                 ServerSideOnly=true)] public static String         Char(int length)                  {       return ""; }
 
-		[SqlProperty("SqlCe",      "NChar",          ServerSideOnly=true)]
-		[SqlProperty(              "Char",           ServerSideOnly=true)] public static String  DefaultChar                              { get { return ""; } }
+		[SqlProperty(PN.SqlCe,      "NChar",          ServerSideOnly=true)]
+		[SqlProperty(               "Char",           ServerSideOnly=true)] public static String  DefaultChar                              { get { return ""; } }
 
-		[SqlFunction("MySql",      "Char",           ServerSideOnly=true)]
-		[SqlFunction("SqlCe",      "NVarChar",       ServerSideOnly=true)]
-		[SqlFunction(                                ServerSideOnly=true)] public static String         VarChar(int length)               {       return ""; }
+		[SqlFunction(PN.MySql,      "Char",           ServerSideOnly=true)]
+		[SqlFunction(PN.SqlCe,      "NVarChar",       ServerSideOnly=true)]
+		[SqlFunction(                                 ServerSideOnly=true)] public static String         VarChar(int length)               {       return ""; }
 
-		[SqlProperty("MySql",      "Char",           ServerSideOnly=true)]
-		[SqlProperty("SqlCe",      "NVarChar",       ServerSideOnly=true)]
-		[SqlProperty(              "VarChar",        ServerSideOnly=true)] public static String  DefaultVarChar                           { get { return ""; } }
+		[SqlProperty(PN.MySql,      "Char",           ServerSideOnly=true)]
+		[SqlProperty(PN.SqlCe,      "NVarChar",       ServerSideOnly=true)]
+		[SqlProperty(               "VarChar",        ServerSideOnly=true)] public static String  DefaultVarChar                           { get { return ""; } }
 
-		[SqlFunction("DB2",        "Char",           ServerSideOnly=true)]
-		[SqlFunction(                                ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
+		[SqlFunction(PN.DB2,        "Char",           ServerSideOnly=true)]
+		[SqlFunction(                                 ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
 
-		[SqlProperty("DB2",        "Char",           ServerSideOnly=true)]
-		[SqlProperty(              "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
+		[SqlProperty(PN.DB2,        "Char",           ServerSideOnly=true)]
+		[SqlProperty(               "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
 
-		[SqlFunction("DB2",        "Char",           ServerSideOnly=true)]
-		[SqlFunction("Oracle",     "VarChar2",       ServerSideOnly=true)]
-		[SqlFunction("Firebird",   "VarChar",        ServerSideOnly=true)]
-		[SqlFunction("PostgreSQL", "VarChar",        ServerSideOnly=true)]
-		[SqlFunction("MySql",      "Char",           ServerSideOnly=true)]
-		[SqlFunction(                                ServerSideOnly=true)] public static String         NVarChar(int length)              {       return ""; }
+		[SqlFunction(PN.DB2,        "Char",           ServerSideOnly=true)]
+		[SqlFunction(PN.Oracle,     "VarChar2",       ServerSideOnly=true)]
+		[SqlFunction(PN.Firebird,   "VarChar",        ServerSideOnly=true)]
+		[SqlFunction(PN.PostgreSQL, "VarChar",        ServerSideOnly=true)]
+		[SqlFunction(PN.MySql,      "Char",           ServerSideOnly=true)]
+		[SqlFunction(                                 ServerSideOnly=true)] public static String         NVarChar(int length)              {       return ""; }
 
-		[SqlProperty("DB2",        "Char",           ServerSideOnly=true)]
-		[SqlProperty("Oracle",     "VarChar2",       ServerSideOnly=true)]
-		[SqlProperty("Firebird",   "VarChar",        ServerSideOnly=true)]
-		[SqlProperty("PostgreSQL", "VarChar",        ServerSideOnly=true)]
-		[SqlProperty("MySql",      "Char",           ServerSideOnly=true)]
-		[SqlProperty(              "NVarChar",       ServerSideOnly=true)] public static String  DefaultNVarChar                          { get { return ""; } }
+		[SqlProperty(PN.DB2,        "Char",           ServerSideOnly=true)]
+		[SqlProperty(PN.Oracle,     "VarChar2",       ServerSideOnly=true)]
+		[SqlProperty(PN.Firebird,   "VarChar",        ServerSideOnly=true)]
+		[SqlProperty(PN.PostgreSQL, "VarChar",        ServerSideOnly=true)]
+		[SqlProperty(PN.MySql,      "Char",           ServerSideOnly=true)]
+		[SqlProperty(               "NVarChar",       ServerSideOnly=true)] public static String  DefaultNVarChar                          { get { return ""; } }
 
 		#endregion
 
 		#region String Functions
 
-		[SqlFunction(                            PreferServerSide = true)]
-		[SqlFunction("Access",    "Len",         PreferServerSide = true)]
-		[SqlFunction("Firebird",  "Char_Length", PreferServerSide = true)]
-		[SqlFunction("MsSql2005", "Len",         PreferServerSide = true)]
-		[SqlFunction("MsSql2008", "Len",         PreferServerSide = true)]
-		[SqlFunction("SqlCe",     "Len",         PreferServerSide = true)]
-		[SqlFunction("Sybase",    "Len",         PreferServerSide = true)]
+		[SqlFunction(                             PreferServerSide = true)]
+		[SqlFunction(PN.Access,    "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.Firebird,  "Char_Length", PreferServerSide = true)]
+		[SqlFunction(PN.MsSql2005, "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.MsSql2008, "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.SqlCe,     "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.Sybase,    "Len",         PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;
 		}
 
 		[SqlFunction]
-		[SqlFunction  ("Access",   "Mid")]
-		[SqlFunction  ("DB2",      "Substr")]
-		[SqlFunction  ("Informix", "Substr")]
-		[SqlFunction  ("Oracle",   "Substr")]
-		[SqlFunction  ("SQLite",   "Substr")]
-		[SqlExpression("Firebird", "Substring({0} from {1} for {2})")]
+		[SqlFunction  (PN.Access,   "Mid")]
+		[SqlFunction  (PN.DB2,      "Substr")]
+		[SqlFunction  (PN.Informix, "Substr")]
+		[SqlFunction  (PN.Oracle,   "Substr")]
+		[SqlFunction  (PN.SQLite,   "Substr")]
+		[SqlExpression(PN.Firebird, "Substring({0} from {1} for {2})")]
 		public static string Substring(string str, int? startIndex, int? length)
 		{
 			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
@@ -254,8 +256,8 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("DB2",   "Locate")]
-		[SqlFunction("MySql", "Locate")]
+		[SqlFunction(PN.DB2,   "Locate")]
+		[SqlFunction(PN.MySql, "Locate")]
 		public static int? CharIndex(string value, string str)
 		{
 			if (str == null || value == null)
@@ -265,8 +267,8 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("DB2",   "Locate")]
-		[SqlFunction("MySql", "Locate")]
+		[SqlFunction(ProviderName.DB2,   "Locate")]
+		[SqlFunction(ProviderName.MySql, "Locate")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -276,8 +278,8 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("DB2",   "Locate")]
-		[SqlFunction("MySql", "Locate")]
+		[SqlFunction(PN.DB2,   "Locate")]
+		[SqlFunction(PN.MySql, "Locate")]
 		public static int? CharIndex(char? value, string str)
 		{
 			if (value == null || str == null)
@@ -287,8 +289,8 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("DB2",   "Locate")]
-		[SqlFunction("MySql", "Locate")]
+		[SqlFunction(ProviderName.DB2,   "Locate")]
+		[SqlFunction(ProviderName.MySql, "Locate")]
 		public static int? CharIndex(char? value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -309,14 +311,14 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("SQLite", "LeftStr")]
+		[SqlFunction(PN.SQLite, "LeftStr")]
 		public static string Left(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
 		[SqlFunction]
-		[SqlFunction("SQLite", "RightStr")]
+		[SqlFunction(PN.SQLite, "RightStr")]
 		public static string Right(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length?
@@ -355,7 +357,7 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("Sybase", "Str_Replace")]
+		[SqlFunction(PN.Sybase, "Str_Replace")]
 		public static string Replace(string str, string oldValue, string newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
@@ -364,7 +366,7 @@ namespace LinqToDB
 		}
 
 		[SqlFunction]
-		[SqlFunction("Sybase", "Str_Replace")]
+		[SqlFunction(PN.Sybase, "Str_Replace")]
 		public static string Replace(string str, char? oldValue, char? newValue)
 		{
 			return str == null || oldValue == null || newValue == null ?
@@ -390,36 +392,36 @@ namespace LinqToDB
 			return str == null ? null : str.TrimEnd();
 		}
 
-		[SqlExpression("DB2", "Strip({0}, B, {1})")]
+		[SqlExpression(PN.DB2, "Strip({0}, B, {1})")]
 		[SqlFunction]
 		public static string Trim(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
-		[SqlExpression("DB2", "Strip({0}, L, {1})")]
-		[SqlFunction  (       "LTrim")]
+		[SqlExpression(PN.DB2, "Strip({0}, L, {1})")]
+		[SqlFunction  (                  "LTrim")]
 		public static string TrimLeft(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
-		[SqlExpression("DB2", "Strip({0}, T, {1})")]
-		[SqlFunction  (       "RTrim")]
+		[SqlExpression(PN.DB2, "Strip({0}, T, {1})")]
+		[SqlFunction  (                  "RTrim")]
 		public static string TrimRight(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
 		}
 
 		[SqlFunction]
-		[SqlFunction("Access",   "LCase")]
+		[SqlFunction(PN.Access, "LCase")]
 		public static string Lower(string str)
 		{
 			return str == null ? null : str.ToLower();
 		}
 
 		[SqlFunction]
-		[SqlFunction("Access",   "UCase")]
+		[SqlFunction(PN.Access, "UCase")]
 		public static string Upper(string str)
 		{
 			return str == null ? null : str.ToUpper();
@@ -429,13 +431,13 @@ namespace LinqToDB
 
 		#region Binary Functions
 
-		[SqlFunction(                             PreferServerSide = true)]
-		[SqlFunction("Access",    "Len",          PreferServerSide = true)]
-		[SqlFunction("Firebird",  "Octet_Length", PreferServerSide = true)]
-		[SqlFunction("MsSql2005", "DataLength",   PreferServerSide = true)]
-		[SqlFunction("MsSql2008", "DataLength",   PreferServerSide = true)]
-		[SqlFunction("SqlCe",     "DataLength",   PreferServerSide = true)]
-		[SqlFunction("Sybase",    "DataLength",   PreferServerSide = true)]
+		[SqlFunction(                              PreferServerSide = true)]
+		[SqlFunction(PN.Access,    "Len",          PreferServerSide = true)]
+		[SqlFunction(PN.Firebird,  "Octet_Length", PreferServerSide = true)]
+		[SqlFunction(PN.MsSql2005, "DataLength",   PreferServerSide = true)]
+		[SqlFunction(PN.MsSql2008, "DataLength",   PreferServerSide = true)]
+		[SqlFunction(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
+		[SqlFunction(PN.Sybase,    "DataLength",   PreferServerSide = true)]
 		public static int? Length(Binary value)
 		{
 			return value == null ? null : (int?)value.Length;
@@ -445,29 +447,29 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[SqlProperty("CURRENT_TIMESTAMP")]
-		[SqlProperty("Informix", "CURRENT")]
-		[SqlProperty("Access",   "Now")]
+		[SqlProperty(             "CURRENT_TIMESTAMP")]
+		[SqlProperty(PN.Informix, "CURRENT")]
+		[SqlProperty(PN.Access,   "Now")]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[SqlProperty("CURRENT_TIMESTAMP",   ServerSideOnly = true)]
-		[SqlProperty("Informix", "CURRENT", ServerSideOnly = true)]
-		[SqlProperty("Access",   "Now",     ServerSideOnly = true)]
-		[SqlFunction("SqlCe",    "GetDate", ServerSideOnly = true)]
-		[SqlFunction("Sybase",   "GetDate", ServerSideOnly = true)]
+		[SqlProperty(             "CURRENT_TIMESTAMP", ServerSideOnly = true)]
+		[SqlProperty(PN.Informix, "CURRENT",           ServerSideOnly = true)]
+		[SqlProperty(PN.Access,   "Now",               ServerSideOnly = true)]
+		[SqlFunction(PN.SqlCe,    "GetDate",           ServerSideOnly = true)]
+		[SqlFunction(PN.Sybase,   "GetDate",           ServerSideOnly = true)]
 		public static DateTime CurrentTimestamp
 		{
 			get { throw new LinqException("The 'CurrentTimestamp' is server side only property."); }
 		}
 
-		[SqlProperty("CURRENT_TIMESTAMP")]
-		[SqlProperty("Informix", "CURRENT")]
-		[SqlProperty("Access",   "Now")]
-		[SqlFunction("SqlCe",    "GetDate")]
-		[SqlFunction("Sybase",   "GetDate")]
+		[SqlProperty(             "CURRENT_TIMESTAMP")]
+		[SqlProperty(PN.Informix, "CURRENT")]
+		[SqlProperty(PN.Access,   "Now")]
+		[SqlFunction(PN.SqlCe,    "GetDate")]
+		[SqlFunction(PN.Sybase,   "GetDate")]
 		public static DateTime CurrentTimestamp2
 		{
 			get { return DateTime.Now; }
@@ -559,13 +561,13 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[SqlFunction]
-		[DatePart("Oracle",     "Add{0}",                                                   false, 0, 2, 1)]
-		[DatePart("DB2",        "{{1}} + {0}",                         Precedence.Additive, true,  new[] { "{0} Year",          "({0} * 3) Month",         "{0} Month",           "{0} Day",         "{0} Day",         "({0} * 7) Day",       "{0} Day",         "{0} Hour",          "{0} Minute",            "{0} Second",            "({0} * 1000) Microsecond" }, 0, 1, 2)]
-		[DatePart("Informix",   "{{1}} + Interval({0}",                Precedence.Additive, true,  new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null                       }, 0, 1, 2)]
-		[DatePart("PostgreSQL", "{{1}} + Interval '{{0}} {0}",         Precedence.Additive, true,  new[] { "Year'",             "Month' * 3",              "Month'",              "Day'",            "Day'",            "Day' * 7",            "Day'",            "Hour'",             "Minute'",               "Second'",               "Millisecond'"             }, 0, 1, 2)]
-		[DatePart("MySql",      "Date_Add({{1}}, Interval {{0}} {0})",                      true,  new[] { null,                null,                      null,                  "Day",             null,              null,                  "Day",             null,                null,                    null,                    null                       }, 0, 1, 2)]
-		[DatePart("SQLite",     "DateTime({{1}}, '{{0}} {0}')",                             true,  new[] { null,                null,                      null,                  "Day",             null,              null,                  "Day",             null,                null,                    null,                    null                       }, 0, 1, 2)]
-		[DatePart("Access",     "DateAdd({0}, {{0}}, {{1}})",                               true,  new[] { "'yyyy'",            "'q'",                     "'m'",                 "'y'",             "'d'",             "'ww'",                "'w'",             "'h'",               "'n'",                   "'s'",                   null                       }, 0, 1, 2)]
+		[DatePart(PN.Oracle,     "Add{0}",                                                   false, 0, 2, 1)]
+		[DatePart(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true,  new[] { "{0} Year",          "({0} * 3) Month",         "{0} Month",           "{0} Day",         "{0} Day",         "({0} * 7) Day",       "{0} Day",         "{0} Hour",          "{0} Minute",            "{0} Second",            "({0} * 1000) Microsecond" }, 0, 1, 2)]
+		[DatePart(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true,  new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null                       }, 0, 1, 2)]
+		[DatePart(PN.PostgreSQL, "{{1}} + Interval '{{0}} {0}",         Precedence.Additive, true,  new[] { "Year'",             "Month' * 3",              "Month'",              "Day'",            "Day'",            "Day' * 7",            "Day'",            "Hour'",             "Minute'",               "Second'",               "Millisecond'"             }, 0, 1, 2)]
+		[DatePart(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})",                      true,  new[] { null,                null,                      null,                  "Day",             null,              null,                  "Day",             null,                null,                    null,                    null                       }, 0, 1, 2)]
+		[DatePart(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",                             true,  new[] { null,                null,                      null,                  "Day",             null,              null,                  "Day",             null,                null,                    null,                    null                       }, 0, 1, 2)]
+		[DatePart(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",                               true,  new[] { "'yyyy'",            "'q'",                     "'m'",                 "'y'",             "'d'",             "'ww'",                "'w'",             "'h'",               "'n'",                   "'s'",                   null                       }, 0, 1, 2)]
 		public static DateTime? DateAdd(DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -591,14 +593,14 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[SqlFunction]
-		[DatePart("DB2",        "{0}",                               false, new[] { null,     null,  null,   null,      null,   null,   "DayOfWeek", null,   null,   null,   null   }, 0, 1)]
-		[DatePart("Informix",   "{0}",                                      0, 1)]
-		[DatePart("MySql",      "Extract({0} from {{0}})",           true,  0, 1)]
-		[DatePart("PostgreSQL", "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",       null,   null,   null,   null   }, 0, 1)]
-		[DatePart("Firebird",   "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,        null,   null,   null,   null   }, 0, 1)]
-		[DatePart("Oracle",     "To_Number(To_Char({{0}}, {0}))",    true,  new[] { "'YYYY'", "'Q'", "'MM'", "'DDD'",   "'DD'", "'WW'", "'D'",       "'HH'", "'MI'", "'SS'", "'FF'" }, 0, 1)]
-		[DatePart("SQLite",     "Cast(StrFTime({0}, {{0}}) as int)", true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",      "'%H'", "'%M'", "'%S'", "'%f'" }, 0, 1)]
-		[DatePart("Access",     "DatePart({0}, {{0}})",              true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",       "'h'",  "'n'",  "'s'",  null   }, 0, 1)]
+		[DatePart(PN.DB2,        "{0}",                               false, new[] { null,     null,  null,   null,      null,   null,   "DayOfWeek", null,   null,   null,   null   }, 0, 1)]
+		[DatePart(PN.Informix,   "{0}",                                      0, 1)]
+		[DatePart(PN.MySql,      "Extract({0} from {{0}})",           true,  0, 1)]
+		[DatePart(PN.PostgreSQL, "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",       null,   null,   null,   null   }, 0, 1)]
+		[DatePart(PN.Firebird,   "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,        null,   null,   null,   null   }, 0, 1)]
+		[DatePart(PN.Oracle,     "To_Number(To_Char({{0}}, {0}))",    true,  new[] { "'YYYY'", "'Q'", "'MM'", "'DDD'",   "'DD'", "'WW'", "'D'",       "'HH'", "'MI'", "'SS'", "'FF'" }, 0, 1)]
+		[DatePart(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)", true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",      "'%H'", "'%M'", "'%S'", "'%f'" }, 0, 1)]
+		[DatePart(PN.Access,     "DatePart({0}, {{0}})",              true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",       "'h'",  "'n'",  "'s'",  null   }, 0, 1)]
 		public static int? DatePart(DateParts part, DateTime? date)
 		{
 			if (date == null)
@@ -624,7 +626,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[SqlFunction]
-		[SqlFunction("MySql", "TIMESTAMPDIFF")]
+		[SqlFunction(PN.MySql, "TIMESTAMPDIFF")]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
@@ -680,22 +682,23 @@ namespace LinqToDB
 		[SqlFunction] public static Double?  Acos   (Double?  value) { return value == null ? null : (Double?) Math.Acos   (value.Value); }
 		[SqlFunction] public static Double?  Asin   (Double?  value) { return value == null ? null : (Double?) Math.Asin   (value.Value); }
 
-		[SqlFunction("Access", "Atn")]
+		[SqlFunction(PN.Access, "Atn")]
 		[SqlFunction] public static Double?  Atan   (Double?  value) { return value == null ? null : (Double?) Math.Atan   (value.Value); }
 
 		[CLSCompliant(false)]
-		[SqlFunction( "MsSql2008", "Atn2")]
-		[SqlFunction( "MsSql2005", "Atn2")]
-		[SqlFunction( "DB2",       "Atan2", 1, 0)]
-		[SqlFunction( "SqlCe",     "Atn2")]
-		[SqlFunction( "Sybase",    "Atn2")]
+		[SqlFunction(PN.MsSql2008, "Atn2")]
+		[SqlFunction(PN.MsSql2005, "Atn2")]
+		[SqlFunction(PN.DB2,       "Atan2", 1, 0)]
+		[SqlFunction(PN.SqlCe,     "Atn2")]
+		[SqlFunction(PN.Sybase,    "Atn2")]
 		[SqlFunction] public static Double?  Atan2  (Double? x, Double? y) { return x == null || y == null? null : (Double?)Math.Atan2(x.Value, y.Value); }
 
-		[SqlFunction("Informix", "Ceil")]
-		[SqlFunction("Oracle",   "Ceil")]
+		[SqlFunction(PN.Informix, "Ceil")]
+		[SqlFunction(PN.Oracle,   "Ceil")]
 		[SqlFunction] public static Decimal? Ceiling(Decimal? value) { return value == null ? null : (Decimal?)decimal.Ceiling(value.Value); }
-		[SqlFunction("Informix", "Ceil")]
-		[SqlFunction("Oracle",   "Ceil")]
+
+		[SqlFunction(PN.Informix, "Ceil")]
+		[SqlFunction(PN.Oracle,   "Ceil")]
 		[SqlFunction] public static Double?  Ceiling(Double?  value) { return value == null ? null : (Double?)Math.Ceiling(value.Value); }
 
 		[SqlFunction] public static Double?  Cos    (Double?  value) { return value == null ? null : (Double?)Math.Cos    (value.Value); }
@@ -715,23 +718,23 @@ namespace LinqToDB
 
 		[SqlFunction] public static Double?  Exp    (Double?  value) { return value == null ? null : (Double?)Math.Exp    (value.Value); }
 
-		[SqlFunction("Access", "Int")]
+		[SqlFunction(PN.Access, "Int")]
 		[SqlFunction] public static Decimal? Floor  (Decimal? value) { return value == null ? null : (Decimal?)decimal.Floor(value.Value); }
-		[SqlFunction("Access", "Int")]
+		[SqlFunction(PN.Access, "Int")]
 		[SqlFunction] public static Double?  Floor  (Double?  value) { return value == null ? null : (Double?) Math.   Floor(value.Value); }
 
-		[SqlFunction("Informix",   "LogN")]
-		[SqlFunction("Oracle",     "Ln")]
-		[SqlFunction("Firebird",   "Ln")]
-		[SqlFunction("PostgreSQL", "Ln")]
+		[SqlFunction(PN.Informix,   "LogN")]
+		[SqlFunction(PN.Oracle,     "Ln")]
+		[SqlFunction(PN.Firebird,   "Ln")]
+		[SqlFunction(PN.PostgreSQL, "Ln")]
 		[SqlFunction] public static Decimal? Log    (Decimal? value) { return value == null ? null : (Decimal?)Math.Log     ((Double)value.Value); }
-		[SqlFunction("Informix",   "LogN")]
-		[SqlFunction("Oracle",     "Ln")]
-		[SqlFunction("Firebird",   "Ln")]
-		[SqlFunction("PostgreSQL", "Ln")]
+		[SqlFunction(PN.Informix,   "LogN")]
+		[SqlFunction(PN.Oracle,     "Ln")]
+		[SqlFunction(PN.Firebird,   "Ln")]
+		[SqlFunction(PN.PostgreSQL, "Ln")]
 		[SqlFunction] public static Double?  Log    (Double?  value) { return value == null ? null : (Double?) Math.Log     (value.Value); }
 
-		[SqlFunction("PostgreSQL", "Log")]
+		[SqlFunction(PN.PostgreSQL, "Log")]
 		[SqlFunction] public static Double?  Log10  (Double?  value) { return value == null ? null : (Double?) Math.Log10   (value.Value); }
 
 		[SqlFunction]
@@ -746,7 +749,7 @@ namespace LinqToDB
 			return value == null || newBase == null ? null : (decimal?)Math.Log((double)value.Value, (double)newBase.Value);
 		}
 
-		[SqlExpression("Access", "{0} ^ {1}", Precedence = Precedence.Multiplicative)]
+		[SqlExpression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative)]
 		[SqlFunction]
 		public static Double?  Power(Double? x, Double? y)
 		{
@@ -816,31 +819,31 @@ namespace LinqToDB
 #endif
 		}
 
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Double?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Int16?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Int32?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Int64?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Double?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Int16?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Int32?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Int64?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
 		[CLSCompliant(false)]
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(SByte?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[SqlFunction("Access", "Sgn"), SqlFunction] public static int? Sign(Single?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(SByte?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[SqlFunction(PN.Access, "Sgn"), SqlFunction] public static int? Sign(Single?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
 
 		[SqlFunction] public static Double?  Sin     (Double?  value) { return value == null ? null : (Double?)Math.Sin (value.Value); }
 		[SqlFunction] public static Double?  Sinh    (Double?  value) { return value == null ? null : (Double?)Math.Sinh(value.Value); }
-		[SqlFunction("Access", "Sqr")]
+		[SqlFunction(PN.Access, "Sqr")]
 		[SqlFunction] public static Double?  Sqrt    (Double?  value) { return value == null ? null : (Double?)Math.Sqrt(value.Value); }
 		[SqlFunction] public static Double?  Tan     (Double?  value) { return value == null ? null : (Double?)Math.Tan (value.Value); }
 		[SqlFunction] public static Double?  Tanh    (Double?  value) { return value == null ? null : (Double?)Math.Tanh(value.Value); }
 
-		[SqlExpression("MsSql2008",  "Round({0}, 0, 1)")]
-		[SqlExpression("MsSql2005",  "Round({0}, 0, 1)")]
-		[SqlExpression("DB2",        "Truncate({0}, 0)")]
-		[SqlExpression("Informix",   "Trunc({0}, 0)")]
-		[SqlExpression("Oracle",     "Trunc({0}, 0)")]
-		[SqlExpression("Firebird",   "Trunc({0}, 0)")]
-		[SqlExpression("PostgreSQL", "Trunc({0}, 0)")]
-		[SqlExpression("MySql",      "Truncate({0}, 0)")]
-		[SqlExpression("SqlCe",      "Round({0}, 0, 1)")]
+		[SqlExpression(PN.MsSql2008,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.MsSql2005,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.DB2,        "Truncate({0}, 0)")]
+		[SqlExpression(PN.Informix,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.Oracle,     "Trunc({0}, 0)")]
+		[SqlExpression(PN.Firebird,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.PostgreSQL, "Trunc({0}, 0)")]
+		[SqlExpression(PN.MySql,      "Truncate({0}, 0)")]
+		[SqlExpression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[SqlFunction]
 		public static Decimal? Truncate(Decimal? value)
 		{
@@ -851,15 +854,15 @@ namespace LinqToDB
 #endif
 		}
 
-		[SqlExpression("MsSql2008",  "Round({0}, 0, 1)")]
-		[SqlExpression("MsSql2005",  "Round({0}, 0, 1)")]
-		[SqlExpression("DB2",        "Truncate({0}, 0)")]
-		[SqlExpression("Informix",   "Trunc({0}, 0)")]
-		[SqlExpression("Oracle",     "Trunc({0}, 0)")]
-		[SqlExpression("Firebird",   "Trunc({0}, 0)")]
-		[SqlExpression("PostgreSQL", "Trunc({0}, 0)")]
-		[SqlExpression("MySql",      "Truncate({0}, 0)")]
-		[SqlExpression("SqlCe",      "Round({0}, 0, 1)")]
+		[SqlExpression(PN.MsSql2008,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.MsSql2005,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.DB2,        "Truncate({0}, 0)")]
+		[SqlExpression(PN.Informix,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.Oracle,     "Trunc({0}, 0)")]
+		[SqlExpression(PN.Firebird,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.PostgreSQL, "Trunc({0}, 0)")]
+		[SqlExpression(PN.MySql,      "Truncate({0}, 0)")]
+		[SqlExpression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[SqlFunction]
 		public static Double? Truncate(Double? value)
 		{

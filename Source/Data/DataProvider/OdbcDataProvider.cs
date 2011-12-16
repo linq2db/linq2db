@@ -94,7 +94,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(OdbcConnection); }
 		}
 
-		public const string NameString = LinqToDB.ProviderName.Odbc;
+		public const string NameString = "Odbc";
 
 		/// <summary>
 		/// Returns the data provider name.

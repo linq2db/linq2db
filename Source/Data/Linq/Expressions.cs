@@ -727,7 +727,7 @@ namespace LinqToDB.Data.Linq
 
 			#region MsSql2008
 
-			{ "MsSql2008", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.MsSql2008, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<S,I?,C,S>   ((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<S,I?,C,S>   ((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
 				{ M(() => Sql.Trim    ("")      ),  L<S,S>        ( p0        => Sql.TrimLeft(Sql.TrimRight(p0))) },
@@ -744,7 +744,7 @@ namespace LinqToDB.Data.Linq
 
 			#region MsSql2005
 
-			{ "MsSql2005", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.MsSql2005, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<S,I?,C,S>   ((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<S,I?,C,S>   ((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
 				{ M(() => Sql.Trim    ("")      ),  L<S,S>        ( p0        => Sql.TrimLeft(Sql.TrimRight(p0))) },
@@ -765,7 +765,7 @@ namespace LinqToDB.Data.Linq
 
 			#region SqlCe
 
-			{ "SqlCe", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.SqlCe, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Left    ("",0)    ), L<S,I?,S>   ((p0,p1)    => Sql.Substring(p0, 1, p1)) },
 				{ M(() => Sql.Right   ("",0)    ), L<S,I?,S>   ((p0,p1)    => Sql.Substring(p0, p0.Length - p1 + 1, p1)) },
 				{ M(() => Sql.PadRight("",0,' ')), L<S,I?,C?,S>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
@@ -783,7 +783,7 @@ namespace LinqToDB.Data.Linq
 
 			#region DB2
 
-			{ "DB2", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.DB2, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Space   (0)        ), L<I?,S>       ( p0           => Sql.Convert(Sql.VarChar(1000), Replicate(" ", p0))) },
 				{ M(() => Sql.Stuff   ("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
 				{ M(() => Sql.PadRight("",0,' ') ), L<S,I?,C?,S>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + VarChar(Replicate(p2, p1 - p0.Length), 1000)) },
@@ -805,7 +805,7 @@ namespace LinqToDB.Data.Linq
 
 			#region Informix
 
-			{ "Informix", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.Informix, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Left ("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0,  1, p1))                  },
 				{ M(() => Sql.Right("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0,  p0.Length - p1 + 1, p1)) },
 				{ M(() => Sql.Stuff("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) =>     AltStuff (p0,  p1, p2, p3))             },
@@ -843,7 +843,7 @@ namespace LinqToDB.Data.Linq
 
 			#region Oracle
 
-			{ "Oracle", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.Oracle, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Left ("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0, 1, p1)) },
 				{ M(() => Sql.Right("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0, p0.Length - p1 + 1, p1)) },
 				{ M(() => Sql.Stuff("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
@@ -872,7 +872,7 @@ namespace LinqToDB.Data.Linq
 
 			#region Firebird
 
-			{ "Firebird", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.Firebird, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M<S>(_  => Sql.Space(0         )),   L<I?,S>       ( p0           => Sql.PadRight(" ", p0, ' ')) },
 				{ M<S>(s  => Sql.Stuff(s, 0, 0, s)),   L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
 
@@ -892,7 +892,7 @@ namespace LinqToDB.Data.Linq
 
 			#region MySql
 
-			{ "MySql", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.MySql, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M<S>(s => Sql.Stuff(s, 0, 0, s)), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
 
 				{ M(() => Sql.Cosh(0)), L<F?,F?>(v => (Sql.Exp(v) + Sql.Exp(-v)) / 2) },
@@ -904,7 +904,7 @@ namespace LinqToDB.Data.Linq
 
 			#region PostgreSQL
 
-			{ "PostgreSQL", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Left ("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0, 1, p1)) },
 				{ M(() => Sql.Right("",0)     ), L<S,I?,S>     ((p0,p1)       => Sql.Substring(p0, p0.Length - p1 + 1, p1)) },
 				{ M(() => Sql.Stuff("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
@@ -926,7 +926,7 @@ namespace LinqToDB.Data.Linq
 
 			#region SQLite
 
-			{ "SQLite", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.SQLite, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Stuff   ("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
 				{ M(() => Sql.PadRight("",0,' ') ), L<S,I?,C?,S>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ') ), L<S,I?,C?,S>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
@@ -962,7 +962,7 @@ namespace LinqToDB.Data.Linq
 
 			#region Sybase
 
-			{ "Sybase", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.Sybase, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<S,I?,C?,S>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<S,I?,C?,S>((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
 				{ M(() => Sql.Trim    ("")      ),  L<S,S>      ( p0        => Sql.TrimLeft(Sql.TrimRight(p0))) },
@@ -990,7 +990,7 @@ namespace LinqToDB.Data.Linq
 
 			#region Access
 
-			{ "Access", new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.Access, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.Stuff   ("",0,0,"")), L<S,I?,I?,S,S>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3)) },
 				{ M(() => Sql.PadRight("",0,' ') ), L<S,I?,C?,S>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ') ), L<S,I?,C?,S>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
@@ -1102,9 +1102,9 @@ namespace LinqToDB.Data.Linq
 		//
 		[CLSCompliant(false)]
 		[SqlFunction]
-		[SqlFunction("DB2",        "Repeat")]
-		[SqlFunction("PostgreSQL", "Repeat")]
-		[SqlFunction("Access",     "String", 1, 0)]
+		[SqlFunction(ProviderName.DB2,        "Repeat")]
+		[SqlFunction(ProviderName.PostgreSQL, "Repeat")]
+		[SqlFunction(ProviderName.Access,     "String", 1, 0)]
 		static string Replicate(string str, int? count)
 		{
 			if (str == null || count == null)
@@ -1120,9 +1120,9 @@ namespace LinqToDB.Data.Linq
 
 		[CLSCompliant(false)]
 		[SqlFunction]
-		[SqlFunction("DB2",        "Repeat")]
-		[SqlFunction("PostgreSQL", "Repeat")]
-		[SqlFunction("Access",     "String", 1, 0)]
+		[SqlFunction(ProviderName.DB2,        "Repeat")]
+		[SqlFunction(ProviderName.PostgreSQL, "Repeat")]
+		[SqlFunction(ProviderName.Access,     "String", 1, 0)]
 		static string Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)
@@ -1151,7 +1151,7 @@ namespace LinqToDB.Data.Linq
 
 		// Access
 		//
-		[SqlFunction("Access", "DateSerial")]
+		[SqlFunction(ProviderName.Access, "DateSerial")]
 		static DateTime? MakeDateTime2(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null?

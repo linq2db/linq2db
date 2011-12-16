@@ -17,7 +17,7 @@ namespace Tests.Model
 		}
 
 		public TestDbManager()
-			: base("Sql2008")
+			: base(ProviderName.MsSql2008)
 		{
 		}
 

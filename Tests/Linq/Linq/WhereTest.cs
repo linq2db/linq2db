@@ -29,7 +29,7 @@ namespace Tests.Linq
 		{
 			var n = 1;
 
-			TestOneJohn(new[] { "Fdp" }, db => 
+			TestOneJohn(new[] { ProviderName.Firebird }, db => 
 				from p in db.Person
 				select new { PersonID = p.ID + n, p.FirstName } into p
 				where p.PersonID == 2

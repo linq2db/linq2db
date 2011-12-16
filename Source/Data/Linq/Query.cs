@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Data.Linq
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Builder;
 	using SqlBuilder;

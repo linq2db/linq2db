@@ -136,7 +136,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(OleDbConnection); }
 		}
 
-		public const string NameString = LinqToDB.ProviderName.OleDb;
+		public const string NameString = "OleDb";
 
 		/// <summary>
 		/// Returns the data provider name.

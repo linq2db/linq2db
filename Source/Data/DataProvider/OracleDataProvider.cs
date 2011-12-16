@@ -29,14 +29,14 @@ namespace LinqToDB.Data.DataProvider
 	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 	/// </remarks>
 	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public class OdpDataProvider : DataProviderBase
+	public class OracleDataProvider : DataProviderBase
 	{
-		public OdpDataProvider()
+		public OracleDataProvider()
 		{
-			MappingSchema = new OdpMappingSchema();
+			MappingSchema = new OracleMappingSchema();
 		}
 
-		static OdpDataProvider()
+		static OracleDataProvider()
 		{
 			// Fix Oracle.Net bug #1: Array types are not handled.
 			//
@@ -633,7 +633,7 @@ namespace LinqToDB.Data.DataProvider
 
 		#region Inner types
 
-		public class OdpMappingSchema : MappingSchema
+		public class OracleMappingSchema : MappingSchema
 		{
 			public override DataReaderMapper CreateDataReaderMapper(IDataReader dataReader)
 			{

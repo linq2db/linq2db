@@ -1,6 +1,6 @@
 /***
 
- * FdpDataProvider
+ * FirebirdDataProvider
 needed FirebirdClient http://sourceforge.net/project/showfiles.php?group_id=9028&package_id=62107
 tested with FirebirdClient 2.1.0 Beta 3
 
@@ -17,12 +17,12 @@ Known troubles:
 2) InOut parameters faking: InOut parameters are not suppotred by Fb, but they could be
 	emulated: each InOut parameter should be defined in RETURNS() section, and allso has a mirror 
 	in parameter section with name [prefix][inOutParameterName], see OutRefTest SP. Faking settings:
-	FdpDataProvider.InOutInputParameterPrefix = "in_";
-	FdpDataProvider.IsInOutParameterEmulation = true;
-3) Returned values faking. Each parameter with "magic name" woul be treated as ReturnValue.
+	FirebirdDataProvider.InOutInputParameterPrefix = "in_";
+	FirebirdDataProvider.IsInOutParameterEmulation = true;
+3) Returned values faking. Each parameter with "magic name" would be treated as ReturnValue.
 	see Scalar_ReturnParameter SP. Faking settings:
-	FdpDataProvider.ReturnParameterName = "RETURN_VALUE";
-	FdpDataProvider.IsReturnValueEmulation = true;
+	FirebirdDataProvider.ReturnParameterName = "RETURN_VALUE";
+	FirebirdDataProvider.IsReturnValueEmulation = true;
 
  */
 
@@ -41,7 +41,7 @@ namespace LinqToDB.Data.DataProvider
 	using Reflection;
 	using SqlProvider;
 
-	public class FdpDataProvider : DataProviderBase
+	public class FirebirdDataProvider : DataProviderBase
 	{
 		#region InOut & ReturnValue emulation
 		public static string InOutInputParameterPrefix = "in_";

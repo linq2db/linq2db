@@ -101,7 +101,7 @@
     <None Include="Data\DataProvider\MonoSqliteDataProvider.cs" />
     <None Include="Data\DataProvider\MySqlDataProvider.cs" />
     <Compile Include="Data\DataProvider\OdbcDataProvider.cs" />
-    <None Include="Data\DataProvider\OdpDataProvider.cs" />
+    <None Include="Data\DataProvider\OracleDataProvider.cs" />
     <Compile Include="Data\DataProvider\OleDbDataProvider.cs" />
     <None Include="Data\DataProvider\PostgreSQLDataProvider.cs" />
     <Compile Include="ProviderName.cs" />

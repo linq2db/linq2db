@@ -174,17 +174,19 @@ namespace Tests.Linq
 		[Test]
 		public void GroupBy23()
 		{
-			ForEachProvider(new[] { ProviderName.SqlCe, "Oracle", ProviderName.Sybase, ProviderName.Access }, db => AreEqual(
-				from p in
-					from p in Parent select new { ParentID = p.ParentID + 1, p.Value1 }
-				where p.ParentID + 1 > 1
-				group p by new { p.Value1 } into g
-				select g.Count(p => p.ParentID < 3),
-				from p in
-					from p in db.Parent select new { ParentID = p.ParentID + 1, p.Value1 }
-				where p.ParentID + 1 > 1
-				group p by new { p.Value1 } into g
-				select g.Count(p => p.ParentID < 3)));
+			ForEachProvider(
+				new[] { ProviderName.SqlCe, ProviderName.Oracle, ProviderName.Sybase, ProviderName.Access },
+				db => AreEqual(
+					from p in
+						from p in Parent select new { ParentID = p.ParentID + 1, p.Value1 }
+					where p.ParentID + 1 > 1
+					group p by new { p.Value1 } into g
+					select g.Count(p => p.ParentID < 3),
+					from p in
+						from p in db.Parent select new { ParentID = p.ParentID + 1, p.Value1 }
+					where p.ParentID + 1 > 1
+					group p by new { p.Value1 } into g
+					select g.Count(p => p.ParentID < 3)));
 		}
 
 		[Test]
@@ -469,7 +471,7 @@ namespace Tests.Linq
 		public void SubQuery7()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, "Oracle", ProviderName.Sybase, ProviderName.Access }, ///// Fix It
+				new[] { ProviderName.SqlCe, ProviderName.Oracle, ProviderName.Sybase, ProviderName.Access }, ///// Fix It
 				db => AreEqual(
 					from p in    Parent select    Child.Count(c => c.Parent == p),
 					from p in db.Parent select db.Child.Count(c => c.Parent == p)));

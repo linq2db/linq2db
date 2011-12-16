@@ -451,7 +451,7 @@ VALUES
 	'<root><element strattr="strvalue" intattr="12345"/></root>')
 GO
 
--- SKIP Sql2005 BEGIN
+-- SKIP MsSql2005 BEGIN
 --
 -- Arrays
 --
@@ -478,7 +478,7 @@ BEGIN
 	SELECT Num * 2 FROM @InputIntArray;
 END
 GO
--- SKIP Sql2005 END
+-- SKIP MsSql2005 END
 
 DROP FUNCTION GetParentByID
 GO

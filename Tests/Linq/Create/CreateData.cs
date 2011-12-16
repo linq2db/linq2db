@@ -133,15 +133,15 @@ namespace Tests.Create
 #if !MOBILE
 		[Test] public void DB2       () { RunScript(ProviderName.DB2,              "\nGO\n",  "DB2");        }
 		[Test] public void Informix  () { RunScript(ProviderName.Informix,         "\nGO\n",  "Informix");   }
-		[Test] public void Oracle    () { RunScript("Oracle",                      "\n/\n",   "Oracle");     }
+		[Test] public void Oracle    () { RunScript(ProviderName.Oracle,           "\n/\n",   "Oracle");     }
 		[Test] public void Firebird  () { RunScript(ProviderName.Firebird,         "COMMIT;", "Firebird2");  }
 		[Test] public void PostgreSQL() { RunScript(ProviderName.PostgreSQL,       "\nGO\n",  "PostgreSQL"); }
 		[Test] public void MySql     () { RunScript(ProviderName.MySql,            "\nGO\n",  "MySql");      }
-		[Test] public void Sql2005   () { RunScript("Sql2005",                     "\nGO\n",  "MsSql");      }
+		[Test] public void Sql2005   () { RunScript(ProviderName.MsSql2005,        "\nGO\n",  "MsSql");      }
 		[Test] public void Sybase    () { RunScript(ProviderName.Sybase,           "\nGO\n",  "Sybase");     }
 #endif
 
-		[Test] public void Sql2008   () { RunScript("Sql2008",                     "\nGO\n",  "MsSql");      }
+		[Test] public void Sql2008   () { RunScript(ProviderName.MsSql2008,        "\nGO\n",  "MsSql");      }
 		[Test] public void SqlCe     () { RunScript(ProviderName.SqlCe,            "\nGO\n",  "SqlCe");      }
 		[Test] public void SqlCeData () { RunScript(ProviderName.SqlCe + ".Data",  "\nGO\n",  "SqlCe");      }
 		[Test] public void SQLite    () { RunScript(ProviderName.SQLite,           "\nGO\n",  "SQLite");     }

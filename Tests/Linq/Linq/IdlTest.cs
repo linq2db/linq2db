@@ -42,7 +42,7 @@ namespace Tests.Linq
             }
 
             [Identity, PrimaryKey]
-            [SequenceName("Firebird", "PersonID")]
+            [SequenceName(ProviderName.Firebird, "PersonID")]
             [MapField("PersonID")]
             public int ID { get; set; }
             public string FirstName { get; set; }

@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContext()
 		{
-			var ctx = new DataContext("Sql2008");
+			var ctx = new DataContext(ProviderName.MsSql2008);
 
 			ctx.GetTable<Person>().ToList();
 

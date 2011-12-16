@@ -314,59 +314,63 @@ namespace Tests.Update
 		[Test]
 		public void Update9()
 		{
-			ForEachProvider(new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, "Oracle", ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access }, db =>
-			{
-				try
+			ForEachProvider(
+				new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access },
+				db =>
 				{
-					var id = 1001;
+					try
+					{
+						var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+						db.Child.Delete(c => c.ChildID > 1000);
+						db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
 
-					var q =
-						from c in db.Child
-						join p in db.Parent on c.ParentID equals p.ParentID
-						where c.ChildID == id && c.Parent.Value1 == 1
-						select new { c, p };
+						var q =
+							from c in db.Child
+							join p in db.Parent on c.ParentID equals p.ParentID
+							where c.ChildID == id && c.Parent.Value1 == 1
+							select new { c, p };
 
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-					Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
-			});
+						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
+						Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
+						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
+					}
+					finally
+					{
+						db.Child.Delete(c => c.ChildID > 1000);
+					}
+				});
 		}
 
 		[Test]
 		public void Update10()
 		{
-			ForEachProvider(new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, "Oracle", ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access }, db =>
-			{
-				try
+			ForEachProvider(
+				new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access },
+				db =>
 				{
-					var id = 1001;
+					try
+					{
+						var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
-					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+						db.Child.Delete(c => c.ChildID > 1000);
+						db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
 
-					var q =
-						from p in db.Parent
-						join c in db.Child on p.ParentID equals c.ParentID
-						where c.ChildID == id && c.Parent.Value1 == 1
-						select new { c, p };
+						var q =
+							from p in db.Parent
+							join c in db.Child on p.ParentID equals c.ParentID
+							where c.ChildID == id && c.Parent.Value1 == 1
+							select new { c, p };
 
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-					Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
-					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
-			});
+						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
+						Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
+						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
+					}
+					finally
+					{
+						db.Child.Delete(c => c.ChildID > 1000);
+					}
+				});
 		}
 
 		//[Test]
@@ -1106,7 +1110,7 @@ namespace Tests.Update
 		{
 			ForEachProvider(new[] { ProviderName.PostgreSQL }, db =>
 			{
-				if (db is DbManager && ((DbManager)db).ConfigurationString == "Oracle")
+				if (db is DbManager && ((DbManager)db).ConfigurationString == ProviderName.Oracle)
 				{
 					db.Types2.Delete(_ => _.ID > 1000);
 
@@ -1124,7 +1128,7 @@ namespace Tests.Update
 		[Test]
 		public void InsertBatch2()
 		{
-			using (var db = new TestDbManager("Sql2008"))
+			using (var db = new TestDbManager())
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
@@ -1174,8 +1178,8 @@ namespace Tests.Update
 		public class TestPerson1
 		{
 			[Identity, PrimaryKey]
-			//[SequenceName("PostgreSQL", "Seq")]
-			[SequenceName("Firebird", "PersonID")]
+			//[SequenceName(ProviderName.PostgreSQL, "Seq")]
+			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[MapField("PersonID")]
 			public int ID;
 
@@ -1223,7 +1227,7 @@ namespace Tests.Update
 		public void Insert14()
 		{
 			ForEachProvider(
-				new [] { ProviderName.SqlCe, ProviderName.Access, "Sql2005", ProviderName.Sybase },
+				new [] { ProviderName.SqlCe, ProviderName.Access, ProviderName.MsSql2005, ProviderName.Sybase },
 				db =>
 				{
 					try

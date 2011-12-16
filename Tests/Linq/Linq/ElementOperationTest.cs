@@ -82,7 +82,7 @@ namespace Tests.Linq
 		public void NestedFirstOrDefaultScalar2()
 		{
 			ForEachProvider(
-				new[] { ProviderName.Informix, "Oracle", ProviderName.Sybase }, db =>
+				new[] { ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase }, db =>
 				AreEqual(
 					from p in Parent
 					select new

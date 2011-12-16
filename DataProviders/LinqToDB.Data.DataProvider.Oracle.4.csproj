@@ -99,8 +99,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Source\Data\DataProvider\OdpDataProvider.cs">
-      <Link>OdpDataProvider.cs</Link>
+    <Compile Include="..\Source\Data\DataProvider\OracleDataProvider.cs">
+      <Link>OracleDataProvider.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -208,7 +208,7 @@ namespace Tests.Linq
 		public void SubSub1()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase },
+				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase },
 				db => AreEqual(
 					from p1 in
 						from p2 in Parent
@@ -244,7 +244,7 @@ namespace Tests.Linq
 		public void SubSub2()
 		{
 			ForEachProvider(
-				new[] { ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase, ProviderName.Informix },
+				new[] { ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase, ProviderName.Informix },
 				db => AreEqual(
 					from p1 in
 						from p2 in Parent
@@ -288,7 +288,7 @@ namespace Tests.Linq
 		public void SubSub201()
 		{
 			ForEachProvider(
-				//new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase },
+				//new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase },
 				db => AreEqual(
 					from p1 in
 						from p2 in Parent
@@ -332,7 +332,7 @@ namespace Tests.Linq
 		public void SubSub21()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase, ProviderName.Access },
+				new[] { ProviderName.SqlCe, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase, ProviderName.Access },
 				db => AreEqual(
 				from p1 in
 					from p2 in Parent
@@ -376,7 +376,7 @@ namespace Tests.Linq
 		public void SubSub211()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase },
+				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase },
 				db => AreEqual(
 					from p1 in
 						from p2 in Parent
@@ -422,7 +422,7 @@ namespace Tests.Linq
 		public void SubSub212()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase },
+				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase },
 				db => AreEqual(
 					from p1 in
 						from p2 in Child
@@ -466,7 +466,7 @@ namespace Tests.Linq
 		public void SubSub22()
 		{
 			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, "Oracle", ProviderName.MySql, ProviderName.Sybase },
+				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase },
 				db => AreEqual(
 					from p1 in
 						from p2 in Parent
