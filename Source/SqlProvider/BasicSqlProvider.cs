@@ -13,7 +13,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using Mapping;
 	using Data.Linq;
-	using Sql;
+	using SqlBuilder;
 
 	public abstract class BasicSqlProvider : ISqlProvider
 	{

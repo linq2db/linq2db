@@ -12,7 +12,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using Mapping;
 	using Data.DataProvider;
-	using Sql;
+	using SqlBuilder;
 
 	public class FirebirdSqlProvider : BasicSqlProvider, IMappingSchemaProvider
 	{
@@ -95,15 +95,15 @@ namespace LinqToDB.SqlProvider
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 
 					case "DateAdd" :
-						switch ((Data.Linq.Sql.DateParts)((SqlValue)func.Parameters[0]).Value)
+						switch ((Sql.DateParts)((SqlValue)func.Parameters[0]).Value)
 						{
-							case Data.Linq.Sql.DateParts.Quarter  :
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Data.Linq.Sql.DateParts.Month), Mul(func.Parameters[1], 3), func.Parameters[2]);
-							case Data.Linq.Sql.DateParts.DayOfYear:
-							case Data.Linq.Sql.DateParts.WeekDay:
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Data.Linq.Sql.DateParts.Day),   func.Parameters[1],         func.Parameters[2]);
-							case Data.Linq.Sql.DateParts.Week     :
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Data.Linq.Sql.DateParts.Day),   Mul(func.Parameters[1], 7), func.Parameters[2]);
+							case Sql.DateParts.Quarter  :
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Month), Mul(func.Parameters[1], 3), func.Parameters[2]);
+							case Sql.DateParts.DayOfYear:
+							case Sql.DateParts.WeekDay:
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Day),   func.Parameters[1],         func.Parameters[2]);
+							case Sql.DateParts.Week     :
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Day),   Mul(func.Parameters[1], 7), func.Parameters[2]);
 						}
 
 						break;

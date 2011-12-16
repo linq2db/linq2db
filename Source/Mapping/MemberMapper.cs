@@ -7,7 +7,7 @@ using System.Xml;
 
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 
 using Convert = LinqToDB.Common.Convert;
 

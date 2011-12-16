@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Data.Linq.Builder
 {
 	using LinqToDB.Extensions;
-	using LinqToDB.Sql;
+	using SqlBuilder;
 
 	class AllAnyBuilder : MethodCallBuilder
 	{

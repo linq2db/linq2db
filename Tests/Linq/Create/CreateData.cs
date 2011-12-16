@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-
+using LinqToDB;
 using NUnit.Framework;
 
 using LinqToDB.Data.DataProvider;
-using LinqToDB.Data.Linq;
 
 namespace Tests.Create
 {

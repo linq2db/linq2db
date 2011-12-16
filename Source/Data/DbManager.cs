@@ -17,7 +17,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Mapping;
 	using Properties;
-	using Sql;
+	using SqlBuilder;
 	using SqlProvider;
 
 	/// <summary>

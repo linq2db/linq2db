@@ -2,8 +2,7 @@
 using System.Data.Linq.SqlClient;
 using System.Linq;
 
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Data.Linq;
+using LinqToDB;
 
 using NUnit.Framework;
 

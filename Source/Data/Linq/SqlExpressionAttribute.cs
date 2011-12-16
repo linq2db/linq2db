@@ -2,7 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Extensions;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 
 namespace LinqToDB.Data.Linq
 {
@@ -13,25 +13,25 @@ namespace LinqToDB.Data.Linq
 		public SqlExpressionAttribute(string expression)
 			: base(expression)
 		{
-			Precedence = LinqToDB.Sql.Precedence.Primary;
+			Precedence = LinqToDB.SqlBuilder.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string expression, params int[] argIndices)
 			: base(expression, argIndices)
 		{
-			Precedence = LinqToDB.Sql.Precedence.Primary;
+			Precedence = LinqToDB.SqlBuilder.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string sqlProvider, string expression)
 			: base(sqlProvider, expression)
 		{
-			Precedence = LinqToDB.Sql.Precedence.Primary;
+			Precedence = LinqToDB.SqlBuilder.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string sqlProvider, string expression, params int[] argIndices)
 			: base(sqlProvider, expression, argIndices)
 		{
-			Precedence = LinqToDB.Sql.Precedence.Primary;
+			Precedence = LinqToDB.SqlBuilder.Precedence.Primary;
 		}
 
 		protected new string Name

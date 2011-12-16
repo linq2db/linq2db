@@ -6,14 +6,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-using LinqToDB.Sql;
-
 namespace LinqToDB.Data.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Extensions;
 	using Mapping;
 	using Reflection;
+	using SqlBuilder;
 
 	partial class ExpressionBuilder
 	{

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB.Extensions;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 
 namespace LinqToDB.Data.Linq
 {

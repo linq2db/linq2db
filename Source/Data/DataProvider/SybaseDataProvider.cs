@@ -4,13 +4,13 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-
 using Sybase.Data.AseClient;
 
 namespace LinqToDB.Data.DataProvider
 {
+	using Mapping;
+	using SqlProvider;
+
 	public class SybaseDataProvider : DataProviderBase
 	{
 		public override IDbConnection CreateConnectionObject()
@@ -101,7 +101,7 @@ namespace LinqToDB.Data.DataProvider
 
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.Sybase; }
+			get { return LinqToDB.ProviderName.Sybase; }
 		}
 
 		public override ISqlProvider CreateSqlProvider()

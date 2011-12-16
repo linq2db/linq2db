@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.Linq;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 
 using NUnit.Framework;
 

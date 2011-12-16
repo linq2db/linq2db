@@ -5,14 +5,13 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 
-using LinqToDB.SqlProvider;
-
 using SqlException = System.Data.SqlClient.SqlException;
 using SqlParameter = System.Data.SqlClient.SqlParameter;
 
 namespace LinqToDB.Data.DataProvider
 {
 	using Mapping;
+	using SqlProvider;
 
 	/// <summary>
 	/// Implements access to the Data Provider for SQL Server.
@@ -155,7 +154,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(SqlConnection); }
 		}
 
-		public const string NameString = DataProvider.ProviderName.MsSql;
+		public const string NameString = LinqToDB.ProviderName.MsSql;
 
 		/// <summary>
 		/// Returns the data provider name.

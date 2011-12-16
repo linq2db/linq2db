@@ -6,7 +6,7 @@ using System.Text;
 namespace LinqToDB.SqlProvider
 {
 	using Extensions;
-	using Sql;
+	using SqlBuilder;
 
 	public class MySqlSqlProvider : BasicSqlProvider
 	{

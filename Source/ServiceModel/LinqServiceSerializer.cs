@@ -9,11 +9,10 @@ using System.Text;
 
 namespace LinqToDB.ServiceModel
 {
-	using Sql;
-	using SqlProvider;
-
 	using Extensions;
 	using Mapping;
+	using SqlBuilder;
+	using SqlProvider;
 
 	static class LinqServiceSerializer
 	{

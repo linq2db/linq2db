@@ -5,9 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 using LinqToDB.SqlProvider;
 
 namespace Tests.Model

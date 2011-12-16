@@ -2,10 +2,11 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Data.DataProvider
 {
+	using SqlProvider;
+
 	/// <summary>
 	/// Implements access to the Data Provider for OLE DB.
 	/// </summary>
@@ -135,7 +136,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(OleDbConnection); }
 		}
 
-		public const string NameString = DataProvider.ProviderName.OleDb;
+		public const string NameString = LinqToDB.ProviderName.OleDb;
 
 		/// <summary>
 		/// Returns the data provider name.

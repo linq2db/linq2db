@@ -4,7 +4,7 @@ using System.Data;
 namespace LinqToDB.SqlProvider
 {
 	using Extensions;
-	using Sql;
+	using SqlBuilder;
 
 	public class MsSql2005SqlProvider : MsSqlSqlProvider
 	{

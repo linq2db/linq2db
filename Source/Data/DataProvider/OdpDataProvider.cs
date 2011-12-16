@@ -561,7 +561,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(OracleConnection); }
 		}
 
-		public const string NameString = DataProvider.ProviderName.Oracle;
+		public const string NameString = LinqToDB.ProviderName.Oracle;
 
 		/// <summary>
 		/// Returns the data provider name.

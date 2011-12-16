@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Sql;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using SqlBuilder;
+
 	public abstract class PassThroughContext : IBuildContext
 	{
 		protected PassThroughContext(IBuildContext context)

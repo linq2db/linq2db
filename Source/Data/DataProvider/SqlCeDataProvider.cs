@@ -99,7 +99,7 @@ namespace LinqToDB.Data.DataProvider
 		/// <value>Data provider name.</value>
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.SqlCe; }
+			get { return LinqToDB.ProviderName.SqlCe; }
 		}
 
 		public override int MaxBatchSize

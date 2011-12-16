@@ -105,7 +105,7 @@ namespace LinqToDB.Data.DataProvider
 
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.PostgreSQL; }
+			get { return LinqToDB.ProviderName.PostgreSQL; }
 		}
 
 		public override int MaxBatchSize

@@ -65,7 +65,7 @@ namespace LinqToDB.Data.DataProvider
 
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.Firebird; }
+			get { return LinqToDB.ProviderName.Firebird; }
 		}
 
 		public override int MaxBatchSize

@@ -3,10 +3,10 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
 
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.Data.DataProvider
 {
+	using SqlProvider;
+
 	/// <summary>
 	/// Implements access to the Data Provider for ODBC.
 	/// </summary>
@@ -94,7 +94,7 @@ namespace LinqToDB.Data.DataProvider
 			get { return typeof(OdbcConnection); }
 		}
 
-		public const string NameString = DataProvider.ProviderName.Odbc;
+		public const string NameString = LinqToDB.ProviderName.Odbc;
 
 		/// <summary>
 		/// Returns the data provider name.

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using Sql;
+	using SqlBuilder;
 
 	public class SybaseSqlProvider : BasicSqlProvider
 	{

@@ -1,14 +1,14 @@
 using System;
 
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.Data.DataProvider
 {
+	using SqlProvider;
+
 	public sealed class Sql2008DataProvider : SqlDataProviderBase
 	{
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.MsSql2008; }
+			get { return LinqToDB.ProviderName.MsSql2008; }
 		}
 
 		public override ISqlProvider CreateSqlProvider()

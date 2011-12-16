@@ -2,9 +2,10 @@
 using System.Reflection;
 using System.Text;
 
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
-using LinqToDB.Sql;
+using LinqToDB.SqlBuilder;
 
 namespace Tests.Model
 {

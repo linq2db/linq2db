@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq.Mapping;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data.Linq;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Transactions;
 
-using LinqToDB.Data.DataProvider;
+using LinqToDB;
 
 namespace Tests.ProviderSpecific
 {
@@ -21,21 +21,21 @@ namespace Tests.ProviderSpecific
 						.SetCommand(@"
 
 UPDATE
-    [Parent]
+	[Parent]
 SET
-    [Value1] = 1
+	[Value1] = 1
 WHERE
-    [Parent].[ParentID] = 100;
+	[Parent].[ParentID] = 100;
 
 INSERT INTO [Parent] 
 (
-    [ParentID],
-    [Value1]
+	[ParentID],
+	[Value1]
 )
 VALUES
 (
-    100,
-    NULL
+	100,
+	NULL
 )
 
 

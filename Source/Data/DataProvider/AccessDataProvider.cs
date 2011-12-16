@@ -217,7 +217,7 @@ namespace LinqToDB.Data.DataProvider
 			base.AttachParameter(command, parameter);
 		}
 
-		public new const string NameString = DataProvider.ProviderName.Access;
+		public new const string NameString = LinqToDB.ProviderName.Access;
 
 		public override string Name
 		{

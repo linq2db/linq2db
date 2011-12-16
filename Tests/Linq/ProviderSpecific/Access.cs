@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Data.DataProvider;
+using LinqToDB;
 
 using NUnit.Framework;
 

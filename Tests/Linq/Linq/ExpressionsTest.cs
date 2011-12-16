@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Data.DataProvider;
+using LinqToDB;
 using LinqToDB.Data.Linq;
 
 using NUnit.Framework;

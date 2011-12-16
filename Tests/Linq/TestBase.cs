@@ -7,7 +7,7 @@ using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
-using LinqToDB.Data.DataProvider;
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Sql;
-
 namespace LinqToDB.Data.Linq
 {
+	using SqlBuilder;
+
 	[SerializableAttribute]
 	[AttributeUsageAttribute(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 	public class TableFunctionAttribute : Attribute

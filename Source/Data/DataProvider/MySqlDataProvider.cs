@@ -151,7 +151,7 @@ namespace LinqToDB.Data.DataProvider
 
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.MySql; }
+			get { return LinqToDB.ProviderName.MySql; }
 		}
 
 		public override ISqlProvider CreateSqlProvider()

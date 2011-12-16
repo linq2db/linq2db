@@ -14,8 +14,8 @@ namespace LinqToDB.Data.DataProvider
 		public override DbDataAdapter CreateDataAdapterObject() { return new DB2DataAdapter(); }
 		public override ISqlProvider  CreateSqlProvider      () { return new DB2SqlProvider(); }
 
-		public override Type   ConnectionType { get { return typeof(DB2Connection);         } }
-		public override string Name           { get { return DataProvider.ProviderName.DB2; } }
+		public override Type   ConnectionType { get { return typeof(DB2Connection);     } }
+		public override string Name           { get { return LinqToDB.ProviderName.DB2; } }
 		public override string EndOfSql       { get { return ";"; } }
 
 		public override bool DeriveParameters(IDbCommand command)

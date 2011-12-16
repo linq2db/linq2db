@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Sql;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using SqlBuilder;
+
 	public abstract class SequenceContextBase : IBuildContext
 	{
 		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)

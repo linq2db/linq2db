@@ -5,13 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
-	using Sql;
+	using SqlBuilder;
+	using SqlProvider;
 
 	public partial class DbManager : IDataContext
 	{
@@ -30,7 +29,7 @@ namespace LinqToDB.Data
 		public Table<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
 			where T : class
 		{
-			return Linq.Extensions.GetTable<T>(this, instance, methodInfo, parameters);
+			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
 		class PreparedQuery

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Data.DataProvider;
+using LinqToDB;
 
 using NUnit.Framework;
 

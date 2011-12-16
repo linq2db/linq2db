@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
 
-using LinqToDB.Sql;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using SqlBuilder;
+
 	public class SqlInfo
 	{
 		public ISqlExpression Sql;

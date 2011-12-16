@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Sql;
-
 #if DEBUG
 #pragma warning disable 3010
 #endif
 
 namespace LinqToDB.Data.Linq.Builder
 {
+	using SqlBuilder;
+
 	public interface IBuildContext
 	{
 #if DEBUG

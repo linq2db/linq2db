@@ -47,7 +47,7 @@ namespace LinqToDB.Data.DataProvider
 		/// <value>Data provider name.</value>
 		public override string Name
 		{
-			get { return DataProvider.ProviderName.SQLite; }
+			get { return LinqToDB.ProviderName.SQLite; }
 		}
 
 		/// <summary>
