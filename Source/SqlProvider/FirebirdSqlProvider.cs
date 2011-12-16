@@ -9,9 +9,9 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using DataProvider;
 	using Extensions;
 	using Mapping;
-	using Data.DataProvider;
 	using SqlBuilder;
 
 	public class FirebirdSqlProvider : BasicSqlProvider, IMappingSchemaProvider

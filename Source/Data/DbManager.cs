@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Text;
+using LinqToDB.DataProvider;
 
 #region ReSharper disable
 // ReSharper disable UnusedParameter.Local
@@ -115,7 +116,7 @@ namespace LinqToDB.Data
 
 		private DataProviderBase _dataProvider;
 		/// <summary>
-		/// Gets the <see cref="LinqToDB.Data.DataProvider.DataProviderBase"/> 
+		/// Gets the <see cref="DataProviderBase"/> 
 		/// used by this instance of the <see cref="DbManager"/>.
 		/// </summary>
 		/// <value>

@@ -1,20 +1,21 @@
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.OleDb;
+using System.Data.Odbc;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
+	using Data;
 	using SqlProvider;
 
 	/// <summary>
-	/// Implements access to the Data Provider for OLE DB.
+	/// Implements access to the Data Provider for ODBC.
 	/// </summary>
 	/// <remarks>
 	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 	/// </remarks>
 	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public class OleDbDataProvider : DataProviderBase
+	public class OdbcDataProvider : DataProviderBase
 	{
 		/// <summary>
 		/// Creates the database connection object.
@@ -26,7 +27,7 @@ namespace LinqToDB.Data.DataProvider
 		/// <returns>The database connection object.</returns>
 		public override IDbConnection CreateConnectionObject()
 		{
-			return new OleDbConnection();
+			return new OdbcConnection();
 		}
 
 		/// <summary>
@@ -39,7 +40,7 @@ namespace LinqToDB.Data.DataProvider
 		/// <returns>A data adapter object.</returns>
 		public override DbDataAdapter CreateDataAdapterObject()
 		{
-			return new OleDbDataAdapter();
+			return new OdbcDataAdapter();
 		}
 
 		/// <summary>
@@ -50,12 +51,12 @@ namespace LinqToDB.Data.DataProvider
 		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 		/// </remarks>
 		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <param name="command">The <see cref="IDbCommand"/> referencing the stored procedure for which 
-		/// the parameter information is to be derived. The derived parameters will be 
-		/// populated into the Parameters of this command.</param>
+		/// <param name="command">The <see cref="IDbCommand"/> referencing the stored procedure for which the parameter
+		/// information is to be derived. The derived parameters will be populated into 
+		/// the Parameters of this command.</param>
 		public override bool DeriveParameters(IDbCommand command)
 		{
-			OleDbCommandBuilder.DeriveParameters((OleDbCommand)command);
+			OdbcCommandBuilder.DeriveParameters((OdbcCommand)command);
 			return true;
 		}
 
@@ -63,59 +64,17 @@ namespace LinqToDB.Data.DataProvider
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-				case ConvertType.NameToCommandParameter:
-				case ConvertType.NameToSprocParameter:
-					return "@" + value;
-
-				case ConvertType.NameToQueryField:
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryTableAlias:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-					}
-
-					return "[" + value + "]";
-
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToOwner:
-				case ConvertType.NameToQueryTable:
-					{
-						var name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '[')
-							return value;
-
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
-					}
-
-					return "[" + value + "]";
-
-				case ConvertType.SprocParameterToName:
-					if (value != null)
-					{
-						var str = value.ToString();
-						return str.Length > 0 && str[0] == '@'? str.Substring(1): str;
-					}
-
-					break;
-
 				case ConvertType.ExceptionToErrorNumber:
-					if (value is OleDbException)
+					if (value is OdbcException)
 					{
-						var ex = (OleDbException)value;
+						var ex = (OdbcException)value;
 						if (ex.Errors.Count > 0)
 							return ex.Errors[0].NativeError;
 					}
-
 					break;
 			}
 
-			return value;
+			return base.Convert(value, convertType);
 		}
 
 		public override ISqlProvider CreateSqlProvider()
@@ -133,10 +92,10 @@ namespace LinqToDB.Data.DataProvider
 		/// <value>An instance of the <see cref="Type"/> class.</value>
 		public override Type ConnectionType
 		{
-			get { return typeof(OleDbConnection); }
+			get { return typeof(OdbcConnection); }
 		}
 
-		public const string NameString = "OleDb";
+		public const string NameString = "Odbc";
 
 		/// <summary>
 		/// Returns the data provider name.

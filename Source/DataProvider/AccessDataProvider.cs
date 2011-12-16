@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.Text.RegularExpressions;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Mapping;
 	using SqlProvider;

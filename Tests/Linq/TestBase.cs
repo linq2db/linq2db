@@ -66,7 +66,7 @@ namespace Tests
 					else
 					{
 #if FW4
-						var fileName = info.Assembly + ".4.dll";
+						var fileName = info.Assembly + ".dll";
 #else
 						var fileName = info.Assembly + ".3.dll";
 #endif
@@ -90,9 +90,9 @@ namespace Tests
 			{
 				switch (str)
 				{
-					case "Data.Linq.Model.Gender" : return typeof(Gender);
-					case "Data.Linq.Model.Person" : return typeof(Person);
-					default                       : return null;
+					case "Tests.Model.Gender" : return typeof(Gender);
+					case "Tests.Model.Person" : return typeof(Person);
+					default                   : return null;
 				}
 			};
 		}
@@ -153,20 +153,20 @@ namespace Tests
 
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
-			new ProviderInfo(ProviderName.MsSql2008,  null,                                    "LinqToDB.Data.DataProvider.Sql2008DataProvider"),
-			new ProviderInfo(ProviderName.SqlCe,      "LinqToDB.Data.DataProvider.SqlCe",      "LinqToDB.Data.DataProvider.SqlCeDataProvider"),
-			new ProviderInfo(ProviderName.SQLite,     "LinqToDB.Data.DataProvider.SQLite",     "LinqToDB.Data.DataProvider.SQLiteDataProvider"),
-			new ProviderInfo(ProviderName.Access,     null,                                    "LinqToDB.Data.DataProvider.AccessDataProvider"),
+			new ProviderInfo(ProviderName.MsSql2008,  null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
+			new ProviderInfo(ProviderName.SqlCe,      "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProvider"),
+			new ProviderInfo(ProviderName.SQLite,     "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
+			new ProviderInfo(ProviderName.Access,     null,                 "LinqToDB.DataProvider.AccessDataProvider"),
 
 #if !MOBILE
-			new ProviderInfo(ProviderName.MsSql2005,  null,                                    "LinqToDB.Data.DataProvider.SqlDataProvider"),
-			new ProviderInfo(ProviderName.DB2,        "LinqToDB.Data.DataProvider.DB2",        "LinqToDB.Data.DataProvider.DB2DataProvider"),
-			new ProviderInfo(ProviderName.Informix,   "LinqToDB.Data.DataProvider.Informix",   "LinqToDB.Data.DataProvider.InformixDataProvider"),
-			new ProviderInfo(ProviderName.Firebird,   "LinqToDB.Data.DataProvider.Firebird",   "LinqToDB.Data.DataProvider.FirebirdDataProvider"),
-			new ProviderInfo(ProviderName.Oracle,     "LinqToDB.Data.DataProvider.Oracle",     "LinqToDB.Data.DataProvider.OracleDataProvider"),
-			new ProviderInfo(ProviderName.PostgreSQL, "LinqToDB.Data.DataProvider.PostgreSQL", "LinqToDB.Data.DataProvider.PostgreSQLDataProvider"),
-			new ProviderInfo(ProviderName.MySql,      "LinqToDB.Data.DataProvider.MySql",      "LinqToDB.Data.DataProvider.MySqlDataProvider"),
-			new ProviderInfo(ProviderName.Sybase,     "LinqToDB.Data.DataProvider.Sybase",     "LinqToDB.Data.DataProvider.SybaseDataProvider"),
+			new ProviderInfo(ProviderName.MsSql2005,  null,                 "LinqToDB.DataProvider.SqlDataProvider"),
+			new ProviderInfo(ProviderName.DB2,        "linq2db.DB2",        "LinqToDB.DataProvider.DB2DataProvider"),
+			new ProviderInfo(ProviderName.Informix,   "linq2db.Informix",   "LinqToDB.DataProvider.InformixDataProvider"),
+			new ProviderInfo(ProviderName.Firebird,   "linq2db.Firebird",   "LinqToDB.DataProvider.FirebirdDataProvider"),
+			new ProviderInfo(ProviderName.Oracle,     "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProvider"),
+			new ProviderInfo(ProviderName.PostgreSQL, "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
+			new ProviderInfo(ProviderName.MySql,      "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
+			new ProviderInfo(ProviderName.Sybase,     "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProvider"),
 #endif
 		};
 

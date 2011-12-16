@@ -5,6 +5,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
@@ -546,8 +547,8 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="LinqToDB.Data.DataProvider.DataProviderBase.Name"/>
-		/// <param name="dataProvider">An instance of the <see cref="LinqToDB.Data.DataProvider.DataProviderBase"/> interface.</param>
+		/// <seealso cref="DataProviderBase.Name"/>
+		/// <param name="dataProvider">An instance of the <see cref="DataProviderBase"/> interface.</param>
 		public static void AddDataProvider(DataProviderBase dataProvider)
 		{
 			if (null == dataProvider)
@@ -578,9 +579,9 @@ namespace LinqToDB.Data
 		/// </remarks>
 		/// <include file="Examples1.xml" path='examples/db[@name="AddDataProvider(DataProvider.IDataProvider)"]/*' />
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="LinqToDB.Data.DataProvider.DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBase.Name"/>
 		/// <param name="providerName">The data provider name.</param>
-		/// <param name="dataProvider">An instance of the <see cref="LinqToDB.Data.DataProvider.DataProviderBase"/> interface.</param>
+		/// <param name="dataProvider">An instance of the <see cref="DataProviderBase"/> interface.</param>
 		public static void AddDataProvider(string providerName, DataProviderBase dataProvider)
 		{
 			if (dataProvider == null)
@@ -600,7 +601,7 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="LinqToDB.Data.DataProvider.DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBase.Name"/>
 		/// <param name="dataProviderType">A data provider type.</param>
 		public static void AddDataProvider(Type dataProviderType)
 		{
@@ -614,7 +615,7 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="LinqToDB.Data.DataProvider.DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBase.Name"/>
 		/// <param name="providerName">The data provider name.</param>
 		/// <param name="dataProviderType">A data provider type.</param>
 		public static void AddDataProvider(string providerName, Type dataProviderType)

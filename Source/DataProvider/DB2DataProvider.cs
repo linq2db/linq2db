@@ -4,11 +4,11 @@ using System.Data.Common;
 
 using IBM.Data.DB2;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using SqlProvider;
 
-	class DB2DataProvider :  DataProviderBase
+	class DB2DataProvider : DataProviderBase
 	{
 		public override IDbConnection CreateConnectionObject () { return new DB2Connection (); }
 		public override DbDataAdapter CreateDataAdapterObject() { return new DB2DataAdapter(); }

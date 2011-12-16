@@ -1,20 +1,24 @@
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.Odbc;
 
-namespace LinqToDB.Data.DataProvider
+// System.Data.SqlServerCe.dll must be referenced.
+// http://www.microsoft.com/sql/editions/compact/default.mspx
+//
+using System.Data.SqlServerCe;
+
+namespace LinqToDB.DataProvider
 {
 	using SqlProvider;
 
 	/// <summary>
-	/// Implements access to the Data Provider for ODBC.
+	/// Implements access to the Data Provider for Microsoft SQL Server 2005 Everywhere Edition
 	/// </summary>
 	/// <remarks>
 	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 	/// </remarks>
 	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public class OdbcDataProvider : DataProviderBase
+	public sealed class SqlCeDataProvider: DataProviderBase
 	{
 		/// <summary>
 		/// Creates the database connection object.
@@ -26,7 +30,7 @@ namespace LinqToDB.Data.DataProvider
 		/// <returns>The database connection object.</returns>
 		public override IDbConnection CreateConnectionObject()
 		{
-			return new OdbcConnection();
+			return new SqlCeConnection();
 		}
 
 		/// <summary>
@@ -39,24 +43,24 @@ namespace LinqToDB.Data.DataProvider
 		/// <returns>A data adapter object.</returns>
 		public override DbDataAdapter CreateDataAdapterObject()
 		{
-			return new OdbcDataAdapter();
+			return new SqlCeDataAdapter();
 		}
 
 		/// <summary>
-		/// Populates the specified <see cref="IDbCommand"/> object's Parameters collection with 
-		/// parameter information for the stored procedure specified in the <see cref="IDbCommand"/>.
+		/// Populates the specified IDbCommand object's Parameters collection with 
+		/// parameter information for the stored procedure specified in the IDbCommand.
 		/// </summary>
 		/// <remarks>
 		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 		/// </remarks>
 		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <param name="command">The <see cref="IDbCommand"/> referencing the stored procedure for which the parameter
-		/// information is to be derived. The derived parameters will be populated into 
-		/// the Parameters of this command.</param>
+		/// <param name="command">The IDbCommand referencing the stored procedure for which the parameter information is to be derived. The derived parameters will be populated into the Parameters of this command.</param>
 		public override bool DeriveParameters(IDbCommand command)
 		{
-			OdbcCommandBuilder.DeriveParameters((OdbcCommand)command);
-			return true;
+			// SqlCeCommandBuilder does not implement DeriveParameters.
+			// This is not surprising, since SQL/e has no support for stored procs.
+			//
+			return false;
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -64,21 +68,12 @@ namespace LinqToDB.Data.DataProvider
 			switch (convertType)
 			{
 				case ConvertType.ExceptionToErrorNumber:
-					if (value is OdbcException)
-					{
-						var ex = (OdbcException)value;
-						if (ex.Errors.Count > 0)
-							return ex.Errors[0].NativeError;
-					}
+					if (value is SqlCeException)
+						return ((SqlCeException)value).NativeError;
 					break;
 			}
 
-			return base.Convert(value, convertType);
-		}
-
-		public override ISqlProvider CreateSqlProvider()
-		{
-			throw new NotSupportedException();
+			return SqlProvider.Convert(value, convertType);
 		}
 
 		/// <summary>
@@ -91,10 +86,8 @@ namespace LinqToDB.Data.DataProvider
 		/// <value>An instance of the <see cref="Type"/> class.</value>
 		public override Type ConnectionType
 		{
-			get { return typeof(OdbcConnection); }
+			get { return typeof(SqlCeConnection); }
 		}
-
-		public const string NameString = "Odbc";
 
 		/// <summary>
 		/// Returns the data provider name.
@@ -106,7 +99,17 @@ namespace LinqToDB.Data.DataProvider
 		/// <value>Data provider name.</value>
 		public override string Name
 		{
-			get { return NameString; }
+			get { return LinqToDB.ProviderName.SqlCe; }
+		}
+
+		public override int MaxBatchSize
+		{
+			get { return 0; }
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new SqlCeSqlProvider();
 		}
 	}
 }

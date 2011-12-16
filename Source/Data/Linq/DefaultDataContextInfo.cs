@@ -1,5 +1,5 @@
 ﻿using System;
-
+using LinqToDB.DataProvider;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Data.Linq

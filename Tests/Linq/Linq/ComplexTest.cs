@@ -5,8 +5,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

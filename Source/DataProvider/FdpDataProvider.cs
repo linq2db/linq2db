@@ -35,10 +35,9 @@ using System.Linq;
 
 using FirebirdSql.Data.FirebirdClient;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Mapping;
-	using Reflection;
 	using SqlProvider;
 
 	public class FirebirdDataProvider : DataProviderBase

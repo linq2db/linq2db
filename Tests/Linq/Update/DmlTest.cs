@@ -3,8 +3,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Data.Linq;
 using LinqToDB.SqlProvider;
 
 using NUnit.Framework;

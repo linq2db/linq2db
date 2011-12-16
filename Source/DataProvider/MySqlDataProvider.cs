@@ -8,7 +8,7 @@ using System.Data.Common;
 
 using MySql.Data.MySqlClient;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Common;
 	using SqlProvider;

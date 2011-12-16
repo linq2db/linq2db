@@ -6,7 +6,7 @@ using System.Threading;
 
 using IBM.Data.Informix;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using SqlProvider;
 

@@ -1,10 +1,10 @@
 using System;
 using System.Configuration;
 
-using LinqToDB.Data.DataProvider;
-
 namespace LinqToDB.Configuration
 {
+	using DataProvider;
+
 	internal class DataProviderElement : ElementBase
 	{
 		protected static readonly ConfigurationProperty _propTypeName   = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);

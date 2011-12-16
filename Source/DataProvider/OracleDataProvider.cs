@@ -15,9 +15,10 @@ using System.Xml;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using Reflection;
 	using SqlProvider;

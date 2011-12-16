@@ -10,7 +10,7 @@ using System.Xml;
 // http://sqlite.phxsoftware.com/
 //
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Mapping;
 	using SqlProvider;

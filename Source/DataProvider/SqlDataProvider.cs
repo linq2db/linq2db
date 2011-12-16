@@ -1,6 +1,6 @@
 using System;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	public sealed class SqlDataProvider : SqlDataProviderBase
 	{

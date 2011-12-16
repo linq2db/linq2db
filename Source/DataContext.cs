@@ -5,8 +5,8 @@ using System.Text;
 namespace LinqToDB
 {
 	using Data;
+	using DataProvider;
 	using Data.Linq;
-	using Data.DataProvider;
 	using Mapping;
 	using SqlProvider;
 

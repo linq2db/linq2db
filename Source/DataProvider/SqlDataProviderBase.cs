@@ -8,8 +8,9 @@ using System.Data.SqlClient;
 using SqlException = System.Data.SqlClient.SqlException;
 using SqlParameter = System.Data.SqlClient.SqlParameter;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
+	using Data;
 	using Mapping;
 	using SqlProvider;
 

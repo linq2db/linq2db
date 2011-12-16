@@ -5,8 +5,6 @@ using System.Windows.Forms;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Data.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
 

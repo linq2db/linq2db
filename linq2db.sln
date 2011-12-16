@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "linq2db", "Source\linq2db.csproj", "{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB", "Source\LinqToDB.csproj", "{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}"
 EndProject
@@ -13,23 +13,23 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tests.VisualBasic", "Tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataProviders", "DataProviders", "{17AF81E6-18DD-42AF-BEE3-83EE02DA9126}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.DB2.4", "DataProviders\LinqToDB.Data.DataProvider.DB2.4.csproj", "{86BF4F10-3606-4016-9919-84C3335813B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.DB2", "DataProviders\LinqToDB.DB2.csproj", "{86BF4F10-3606-4016-9919-84C3335813B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.Firebird.4", "DataProviders\LinqToDB.Data.DataProvider.Firebird.4.csproj", "{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Firebird", "DataProviders\LinqToDB.Firebird.csproj", "{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.Informix.4", "DataProviders\LinqToDB.Data.DataProvider.Informix.4.csproj", "{B1DEA25C-7667-471B-BBAD-64D017FDD104}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Informix", "DataProviders\LinqToDB.Informix.csproj", "{B1DEA25C-7667-471B-BBAD-64D017FDD104}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.MySql.4", "DataProviders\LinqToDB.Data.DataProvider.MySql.4.csproj", "{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.MySql", "DataProviders\LinqToDB.MySql.csproj", "{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.Oracle.4", "DataProviders\LinqToDB.Data.DataProvider.Oracle.4.csproj", "{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Oracle", "DataProviders\LinqToDB.Oracle.csproj", "{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.PostgreSQL.4", "DataProviders\LinqToDB.Data.DataProvider.PostgreSQL.4.csproj", "{5A556D57-0D68-433B-AD78-02849583582B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.PostgreSQL", "DataProviders\LinqToDB.PostgreSQL.csproj", "{5A556D57-0D68-433B-AD78-02849583582B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.SqlCe.4", "DataProviders\LinqToDB.Data.DataProvider.SqlCe.4.csproj", "{85E90F57-8DE1-4912-8414-28578F4D71CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SqlCe", "DataProviders\LinqToDB.SqlCe.csproj", "{85E90F57-8DE1-4912-8414-28578F4D71CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.SQLite.4", "DataProviders\LinqToDB.Data.DataProvider.SQLite.4.csproj", "{3E414663-B673-47A8-AB59-0E08FE43DA86}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SQLite", "DataProviders\LinqToDB.SQLite.csproj", "{3E414663-B673-47A8-AB59-0E08FE43DA86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Data.DataProvider.Sybase.4", "DataProviders\LinqToDB.Data.DataProvider.Sybase.4.csproj", "{6CD8CC3D-643D-4D09-8660-A26085C44FBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Sybase", "DataProviders\LinqToDB.Sybase.csproj", "{6CD8CC3D-643D-4D09-8660-A26085C44FBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

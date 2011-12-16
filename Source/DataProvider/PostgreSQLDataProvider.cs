@@ -4,7 +4,7 @@ using System.Data.Common;
 
 using Npgsql;
 
-namespace LinqToDB.Data.DataProvider
+namespace LinqToDB.DataProvider
 {
 	using Mapping;
 	using SqlProvider;
