@@ -4,10 +4,11 @@ using System.Data.Services.Providers;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.ServiceModel
 {
 	using Data.Linq;
-	using Data.Sql;
 	using Mapping;
 
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider

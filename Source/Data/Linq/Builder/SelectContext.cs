@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-	using Reflection;
-
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
 	// But the class means to have a lot of inheritors, and functionality of the inheritors

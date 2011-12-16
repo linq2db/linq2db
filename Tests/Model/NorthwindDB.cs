@@ -6,10 +6,9 @@ using System.Reflection;
 using System.Text;
 
 using LinqToDB.Data;
-using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
-using LinqToDB.Data.Sql;
-using LinqToDB.Data.Sql.SqlProvider;
+using LinqToDB.Sql;
+using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {

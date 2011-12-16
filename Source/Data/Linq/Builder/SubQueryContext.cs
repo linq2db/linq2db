@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-
 	class SubQueryContext : PassThroughContext
 	{
 		public readonly IBuildContext SubQuery;

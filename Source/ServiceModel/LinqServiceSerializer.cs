@@ -9,8 +9,9 @@ using System.Text;
 
 namespace LinqToDB.ServiceModel
 {
-	using Data.Sql;
-	using Data.Sql.SqlProvider;
+	using Sql;
+	using SqlProvider;
+
 	using Extensions;
 	using Mapping;
 

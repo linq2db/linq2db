@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.Data.Linq
 {
-	using Data.Sql;
-
 	public interface IQueryContext
 	{
 		SqlQuery       SqlQuery { get; }

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Data;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-
 	class CountBuilder : MethodCallBuilder
 	{
 		public static string[] MethodNames = new[] { "Count", "LongCount" };

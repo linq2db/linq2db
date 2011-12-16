@@ -4,7 +4,7 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
-using LinqToDB.Data.Sql;
+using LinqToDB.Sql;
 
 namespace Tests.Model
 {

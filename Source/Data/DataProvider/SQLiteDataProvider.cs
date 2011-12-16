@@ -6,14 +6,15 @@ using System.Diagnostics;
 using System.Text;
 using System.Xml;
 
-using LinqToDB.Data.Sql.SqlProvider;
-using LinqToDB.Mapping;
 // System.Data.SQLite.dll must be referenced.
 // http://sqlite.phxsoftware.com/
 //
 
 namespace LinqToDB.Data.DataProvider
 {
+	using Mapping;
+	using SqlProvider;
+
 	/// <summary>
 	/// Implements access to the Data Provider for SQLite.
 	/// </summary>

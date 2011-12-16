@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
-using LinqToDB.Data.Sql;
+using LinqToDB.Sql;
 
 using NUnit.Framework;
 

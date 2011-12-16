@@ -5,11 +5,12 @@ using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.ServiceModel
 {
 	using Data;
 	using Data.Linq;
-	using Data.Sql;
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]

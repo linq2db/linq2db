@@ -8,7 +8,7 @@ using IBM.Data.Informix;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
+	using SqlProvider;
 
 	class InformixDataProvider :  DataProviderBase
 	{

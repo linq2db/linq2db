@@ -5,13 +5,12 @@ using System.Data.Common;
 using System.Text;
 
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
 using Sybase.Data.AseClient;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
-
 	public class SybaseDataProvider : DataProviderBase
 	{
 		public override IDbConnection CreateConnectionObject()

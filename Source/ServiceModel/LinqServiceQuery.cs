@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.ServiceModel
 {
-	using Data.Sql;
-
 	public class LinqServiceQuery
 	{
 		public SqlQuery       Query      { get; set; }

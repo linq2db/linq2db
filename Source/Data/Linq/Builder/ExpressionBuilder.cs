@@ -5,15 +5,15 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
 	using Common;
-	using Data.Sql;
-	using Data.Sql.SqlProvider;
+	using LinqToDB.Extensions;
 	using Mapping;
-	using Reflection;
+	using LinqToDB.Sql;
+	using SqlProvider;
+
 
 	public partial class ExpressionBuilder
 	{

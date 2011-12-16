@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.Data.DataProvider
 {
 	using Mapping;
-	using Sql.SqlProvider;
+	using SqlProvider;
 
 	public class AccessDataProvider : OleDbDataProvider
 	{

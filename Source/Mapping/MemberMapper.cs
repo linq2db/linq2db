@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Xml;
 
-using LinqToDB.Data.Sql;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
+using LinqToDB.Sql;
 
 using Convert = LinqToDB.Common.Convert;
 

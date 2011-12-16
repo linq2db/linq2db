@@ -18,6 +18,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Properties;
 	using Sql;
+	using SqlProvider;
 
 	/// <summary>
 	/// The <b>DbManager</b> is a primary class of the <see cref="LinqToDB.Data"/> namespace

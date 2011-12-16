@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.Serialization;
 
-using LinqToDB.Data.DataProvider;
-
 namespace LinqToDB.Data
 {
+	using SqlProvider;
+
 	/// <summary>
 	/// Defines the base class for the namespace exceptions.
 	/// </summary>

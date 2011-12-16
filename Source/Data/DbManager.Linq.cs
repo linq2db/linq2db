@@ -5,12 +5,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
 	using Sql;
-	using Sql.SqlProvider;
 
 	public partial class DbManager : IDataContext
 	{

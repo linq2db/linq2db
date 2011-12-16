@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using LinqToDB.Data.Sql;
+
+using LinqToDB.SqlProvider;
+
 using SqlException = System.Data.SqlClient.SqlException;
 using SqlParameter = System.Data.SqlClient.SqlParameter;
 
 namespace LinqToDB.Data.DataProvider
 {
 	using Mapping;
-	using Sql.SqlProvider;
 
 	/// <summary>
 	/// Implements access to the Data Provider for SQL Server.

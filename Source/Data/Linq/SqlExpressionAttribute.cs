@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Reflection;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq
 {
-	using Data.Sql;
-	using Reflection;
-
 	[SerializableAttribute]
 	[AttributeUsageAttribute(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 	public class SqlExpressionAttribute : SqlFunctionAttribute
@@ -14,25 +13,25 @@ namespace LinqToDB.Data.Linq
 		public SqlExpressionAttribute(string expression)
 			: base(expression)
 		{
-			Precedence = Data.Sql.Precedence.Primary;
+			Precedence = LinqToDB.Sql.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string expression, params int[] argIndices)
 			: base(expression, argIndices)
 		{
-			Precedence = Data.Sql.Precedence.Primary;
+			Precedence = LinqToDB.Sql.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string sqlProvider, string expression)
 			: base(sqlProvider, expression)
 		{
-			Precedence = Data.Sql.Precedence.Primary;
+			Precedence = LinqToDB.Sql.Precedence.Primary;
 		}
 
 		public SqlExpressionAttribute(string sqlProvider, string expression, params int[] argIndices)
 			: base(sqlProvider, expression, argIndices)
 		{
-			Precedence = Data.Sql.Precedence.Primary;
+			Precedence = LinqToDB.Sql.Precedence.Primary;
 		}
 
 		protected new string Name

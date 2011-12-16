@@ -6,7 +6,7 @@ using IBM.Data.DB2;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
+	using SqlProvider;
 
 	class DB2DataProvider :  DataProviderBase
 	{

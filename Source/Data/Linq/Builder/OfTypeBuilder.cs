@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-	using Reflection;
 	using Reflection.Extension;
 
 	class OfTypeBuilder : MethodCallBuilder

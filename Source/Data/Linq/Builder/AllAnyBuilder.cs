@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
+	using LinqToDB.Extensions;
+	using LinqToDB.Sql;
 
 	class AllAnyBuilder : MethodCallBuilder
 	{

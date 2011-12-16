@@ -7,8 +7,8 @@ using System.Text;
 namespace LinqToDB.ServiceModel
 {
 	using Data.Linq;
-	using Data.Sql.SqlProvider;
 	using Mapping;
+	using SqlProvider;
 
 	public abstract class RemoteDataContextBase : IDataContext
 	{

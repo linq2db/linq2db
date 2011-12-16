@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-	using Reflection;
-
 	class UpdateBuilder : MethodCallBuilder
 	{
 		#region Update

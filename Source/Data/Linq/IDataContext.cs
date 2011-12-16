@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Data;
 
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.Data.Linq
 {
-	using Data.Sql.SqlProvider;
 	using Mapping;
 
 	public interface IDataContext : IMappingSchemaProvider, IDisposable

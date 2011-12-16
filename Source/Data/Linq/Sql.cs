@@ -2,13 +2,12 @@
 using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq
 {
-	using Data.Sql;
-	using Reflection;
-
 	public static class Sql
 	{
 		#region Common Functions
@@ -516,17 +515,17 @@ namespace LinqToDB.Data.Linq
 		class DatePartAttribute : SqlExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, Data.Sql.Precedence.Primary, false, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, LinqToDB.Sql.Precedence.Primary, false, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, Data.Sql.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, LinqToDB.Sql.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, Data.Sql.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
+				: this(sqlProvider, expression, LinqToDB.Sql.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
 			{
 			}
 

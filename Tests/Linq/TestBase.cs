@@ -11,9 +11,9 @@ using LinqToDB.Data.DataProvider;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.Linq;
-using LinqToDB.Data.Sql.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
+using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 

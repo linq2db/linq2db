@@ -6,8 +6,8 @@ using Npgsql;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
-	using LinqToDB.Mapping;
+	using Mapping;
+	using SqlProvider;
 
 	public class PostgreSQLDataProvider : DataProviderBase
 	{

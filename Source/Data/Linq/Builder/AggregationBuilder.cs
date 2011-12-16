@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-	using Reflection;
-
 	class AggregationBuilder : MethodCallBuilder
 	{
 		public static string[] MethodNames = new[] { "Average", "Min", "Max", "Sum" };

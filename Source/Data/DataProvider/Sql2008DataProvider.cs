@@ -1,9 +1,9 @@
 using System;
 
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
-
 	public sealed class Sql2008DataProvider : SqlDataProviderBase
 	{
 		public override string Name

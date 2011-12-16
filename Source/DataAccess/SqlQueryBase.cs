@@ -3,15 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-using LinqToDB.Data;
-using LinqToDB.Data.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-using LinqToDB.Reflection.Extension;
-
 namespace LinqToDB.DataAccess
 {
+	using Data;
+	using Extensions;
+	using Mapping;
+	using Reflection.Extension;
+	using SqlProvider;
+
 	public abstract class SqlQueryBase : DataAccessorBase
 	{
 		#region Constructors

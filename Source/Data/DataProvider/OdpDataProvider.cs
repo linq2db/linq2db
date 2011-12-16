@@ -12,16 +12,15 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
+	using Common;
+	using Mapping;
+	using Reflection;
+	using SqlProvider;
 
 	/// <summary>
 	/// Implements access to the Data Provider for Oracle.

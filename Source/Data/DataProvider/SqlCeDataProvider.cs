@@ -9,7 +9,7 @@ using System.Data.SqlServerCe;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
+	using SqlProvider;
 
 	/// <summary>
 	/// Implements access to the Data Provider for Microsoft SQL Server 2005 Everywhere Edition

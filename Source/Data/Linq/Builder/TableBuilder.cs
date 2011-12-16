@@ -5,13 +5,13 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB.Extensions;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
 	using Mapping;
-	using Reflection;
 	using Reflection.Extension;
 
 	class TableBuilder : ISequenceBuilder

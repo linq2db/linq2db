@@ -2,7 +2,7 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
-using LinqToDB.Data.Sql.SqlProvider;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Data.DataProvider
 {

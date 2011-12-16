@@ -5,7 +5,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.DataProvider;
 using LinqToDB.Data.Linq;
-using LinqToDB.Data.Sql.SqlProvider;
+using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 

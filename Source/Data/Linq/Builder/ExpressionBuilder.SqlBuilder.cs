@@ -6,10 +6,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.Sql;
+
 namespace LinqToDB.Data.Linq.Builder
 {
 	using Common;
-	using Data.Sql;
 	using LinqToDB.Extensions;
 	using Mapping;
 	using Reflection;

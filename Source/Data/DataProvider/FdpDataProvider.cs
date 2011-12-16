@@ -33,14 +33,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 
-using LinqToDB.Data.Sql.SqlProvider;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-
 using FirebirdSql.Data.FirebirdClient;
 
 namespace LinqToDB.Data.DataProvider
 {
+	using Mapping;
+	using Reflection;
+	using SqlProvider;
+
 	public class FdpDataProvider : DataProviderBase
 	{
 		#region InOut & ReturnValue emulation

@@ -10,8 +10,8 @@ using MySql.Data.MySqlClient;
 
 namespace LinqToDB.Data.DataProvider
 {
-	using Sql.SqlProvider;
 	using Common;
+	using SqlProvider;
 
 	public class MySqlDataProvider :  DataProviderBase
 	{

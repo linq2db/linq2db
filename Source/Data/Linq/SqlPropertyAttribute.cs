@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Reflection;
+
 using LinqToDB.Extensions;
-using LinqToDB.Reflection;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq
 {
-	using Data.Sql;
-
 	[SerializableAttribute]
 	[AttributeUsageAttribute(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 	public class SqlPropertyAttribute : SqlFunctionAttribute

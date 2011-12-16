@@ -4,11 +4,12 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Sql;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.Data.Linq
 {
 	using Common;
-	using Data.Sql;
-	using Data.Sql.SqlProvider;
 	using LinqToDB.Extensions;
 	using Mapping;
 	using Builder;

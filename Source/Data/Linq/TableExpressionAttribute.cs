@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Data.Sql;
+using LinqToDB.Sql;
 
 namespace LinqToDB.Data.Linq
 {

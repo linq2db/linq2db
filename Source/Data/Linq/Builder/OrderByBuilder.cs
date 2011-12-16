@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
 {
-	using Data.Sql;
-
 	class OrderByBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
