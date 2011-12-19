@@ -1099,7 +1099,8 @@ namespace LinqToDB.SqlProvider
 			{
 				ICollection values = p.Values;
 
-				if (p.Values.Count == 1 && p.Values[0] is SqlParameter)
+				if (p.Values.Count == 1 && p.Values[0] is SqlParameter &&
+					!(p.Expr1.SystemType == typeof(string) && ((SqlParameter)p.Values[0]).Value is string))
 				{
 					var pr = (SqlParameter)p.Values[0];
 

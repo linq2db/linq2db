@@ -187,6 +187,62 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ContainsString11()
+		{
+			var arr = new List<string> { "John" };
+
+			ForEachProvider(db => AreEqual(
+				from p in    Person where arr.Contains(p.FirstName) select p,
+				from p in db.Person where arr.Contains(p.FirstName) select p));
+		}
+
+		[Test]
+		public void ContainsString12()
+		{
+			var nm = "John";
+
+			ForEachProvider(db => AreEqual(
+				from p in    Person where new List<string> { nm }.Contains(p.FirstName) select p,
+				from p in db.Person where new List<string> { nm }.Contains(p.FirstName) select p));
+		}
+
+		[Test]
+		public void ContainsString13()
+		{
+			ForEachProvider(db => AreEqual(
+				from p in    Person where new List<string> { "John" }.Contains(p.FirstName) select p,
+				from p in db.Person where new List<string> { "John" }.Contains(p.FirstName) select p));
+		}
+
+		[Test]
+		public void ContainsString21()
+		{
+			var arr = new[] { "John" };
+
+			ForEachProvider(db => AreEqual(
+				from p in    Person where arr.Contains(p.FirstName) select p,
+				from p in db.Person where arr.Contains(p.FirstName) select p));
+		}
+
+		[Test]
+		public void ContainsString22()
+		{
+			var nm = "John";
+
+			ForEachProvider(db => AreEqual(
+				from p in    Person where new[] { nm }.Contains(p.FirstName) select p,
+				from p in db.Person where new[] { nm }.Contains(p.FirstName) select p));
+		}
+
+		[Test]
+		public void ContainsString23()
+		{
+			ForEachProvider(db => AreEqual(
+				from p in    Person where new[] { "John" }.Contains(p.FirstName) select p,
+				from p in db.Person where new[] { "John" }.Contains(p.FirstName) select p));
+		}
+
+		[Test]
 		public void Equals1()
 		{
 			ForEachProvider(db => AreEqual(

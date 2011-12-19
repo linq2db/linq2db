@@ -368,6 +368,28 @@ namespace Tests.Linq
                 Assert.That(sql1, Is.EqualTo(sql2));
             });
         }
+
+        [Test]
+        public void ListvsArrayTest()
+        {
+            ForMySqlProvider(
+                db =>
+                {
+                    var st = "John";
+
+                    //SQL - x.FirstName IN ('John')
+                    var queryList = from x in db.Person
+                                    where new List<string> { st }.Contains(x.FirstName)
+                                    select x.ID;
+
+                    //SQL - x.FirstName IN ('J', 'o', 'h', 'n')
+                    var queryArray = from x in db.Person
+                                     where new[] { st }.Contains(x.FirstName)
+                                     select x.ID;
+
+                    Assert.That(queryList.ToList(), Is.EqualTo(queryArray.ToList()));
+                });
+        }
     }
 
     #region TestConvertFunction classes
