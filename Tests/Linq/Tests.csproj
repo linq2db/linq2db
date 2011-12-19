@@ -188,7 +188,6 @@
     <Compile Include="Linq\IdlTest.cs" />
     <Compile Include="Linq\L2SAttributes.cs" />
     <Compile Include="Linq\ParserTest.cs" />
-    <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="ProviderSpecific\Firebird.cs" />
     <Compile Include="ProviderSpecific\Oracle.cs" />
     <Compile Include="Linq\TableFunctionTest.cs" />
