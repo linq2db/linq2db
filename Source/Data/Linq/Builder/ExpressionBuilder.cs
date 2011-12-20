@@ -570,7 +570,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => Expression.PropertyOrField(c, "p"));
 
-				newBody = newBody.Transform(ex => ex == lparam ? nparm : ex);
+				newBody = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
 
 				predicate = Expression.Lambda(newBody, parm);
 
@@ -580,7 +580,7 @@ namespace LinqToDB.Data.Linq.Builder
 				sequence   = Expression.Call(methodInfo, sequence, Expression.Lambda(expr, lparam));
 			}
 
-			if (sequence != method.Arguments[0] || predicate != method.Arguments[1])
+			if (!ReferenceEquals(sequence, method.Arguments[0]) || !ReferenceEquals(predicate, method.Arguments[1]))
 			{
 				var methodInfo  = method.Method.GetGenericMethodDefinition();
 				var genericType = sequence.Type.GetGenericArguments()[0];
@@ -1100,7 +1100,7 @@ namespace LinqToDB.Data.Linq.Builder
 				GetMethodInfo(method, "Select").MakeGenericMethod(types1[0], types2[1]),
 				((MethodCallExpression)sequence).Arguments[0],
 				Expression.Lambda(
-					lambda.Body.Transform(ex => ex == lambda.Parameters[0] ? sbody : ex),
+					lambda.Body.Transform(ex => ReferenceEquals(ex, lambda.Parameters[0]) ? sbody : ex),
 					slambda.Parameters[0]));
 		}
 

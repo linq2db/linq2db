@@ -70,7 +70,7 @@ namespace LinqToDB.Data.Linq.Builder
 		{
 			switch (requestFlag)
 			{
-				case RequestFor.Root        : return new IsExpressionResult(Lambda.Parameters.Count > 0 && expression == Lambda.Parameters[0]);
+				case RequestFor.Root        : return new IsExpressionResult(Lambda.Parameters.Count > 0 && ReferenceEquals(expression, Lambda.Parameters[0]));
 
 				case RequestFor.Table       :
 				case RequestFor.Association :
@@ -81,7 +81,7 @@ namespace LinqToDB.Data.Linq.Builder
 					{
 						var levelExpression = expression.GetLevelExpression(level);
 
-						return levelExpression == expression ?
+						return ReferenceEquals(levelExpression, expression) ?
 							Sequence.IsExpression(null,       0,         requestFlag) :
 							Sequence.IsExpression(expression, level + 1, requestFlag);
 					}
@@ -92,7 +92,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 		{
-			if (expression == Lambda.Parameters[0])
+			if (ReferenceEquals(expression, Lambda.Parameters[0]))
 				return Sequence.GetContext(null, 0, buildInfo);
 
 			switch (expression.NodeType)

@@ -150,7 +150,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 					sql.Select.Take(parm);
 
-					var ep = (from pm in CurrentSqlParameters where pm.SqlParameter == skip select pm).First();
+					var ep = (from pm in CurrentSqlParameters where ReferenceEquals(pm.SqlParameter, skip) select pm).First();
 
 					ep = new ParameterAccessor
 					{
@@ -212,7 +212,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				var fromGroupBy = sequence.SqlQuery.Properties
 					.OfType<System.Tuple<string,SqlQuery>>()
-					.Where(p => p.Item1 == "from_group_by" && p.Item2 == context.SqlQuery)
+					.Where(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SqlQuery))
 					.Any();
 
 				if (fromGroupBy)
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Data.Linq.Builder
 				switch (ex.NodeType)
 				{
 					case ExpressionType.Parameter    :
-						return ex != ParametersParam;
+						return !ReferenceEquals(ex, ParametersParam);
 
 					case ExpressionType.MemberAccess :
 						{
@@ -1669,7 +1669,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 							return
 								e.Operand.NodeType == ExpressionType.ArrayIndex &&
-								((BinaryExpression)e.Operand).Left == ParametersParam;
+								ReferenceEquals(((BinaryExpression)e.Operand).Left, ParametersParam);
 						}
 
 					case ExpressionType.MemberAccess :
@@ -1716,7 +1716,7 @@ namespace LinqToDB.Data.Linq.Builder
 					expr = sql[0].Sql;
 				else
 					expr = new SqlExpression(
-						'\x1' + string.Join(",", sql.Select(s => s.Member.Name).ToArray()),
+						"\x1" + string.Join(",", sql.Select(s => s.Member.Name).ToArray()),
 						sql.Select(s => s.Sql).ToArray());
 			}
 

@@ -9,7 +9,7 @@ namespace LinqToDB.Data.Linq.Builder
 {
 	class FirstSingleBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override bool CanBuildMethodCall(ExpressionBuilder _builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return 
 				methodCall.IsQueryable("First", "FirstOrDefault", "Single", "SingleOrDefault") &&

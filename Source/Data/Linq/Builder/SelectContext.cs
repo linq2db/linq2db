@@ -92,7 +92,7 @@ namespace LinqToDB.Data.Linq.Builder
 			if (IsScalar)
 			{
 				if (Body.NodeType != ExpressionType.Parameter && level == 0)
-					if (levelExpression == expression)
+					if (ReferenceEquals(levelExpression, expression))
 						if (IsSubQuery() && IsExpression(null, 0, RequestFor.Expression).Result)
 						{
 							var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
@@ -113,7 +113,7 @@ namespace LinqToDB.Data.Linq.Builder
 				{
 					var sequence = GetSequence(expression, level);
 
-					return levelExpression == expression ?
+					return ReferenceEquals(levelExpression, expression) ?
 						sequence.BuildExpression(null,       0) :
 						sequence.BuildExpression(expression, level + 1);
 				}
@@ -124,10 +124,10 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							var memberExpression = GetMemberExpression(
 								((MemberExpression)levelExpression).Member,
-								levelExpression == expression,
+								ReferenceEquals(levelExpression, expression),
 								levelExpression.Type);
 
-							if (levelExpression == expression)
+							if (ReferenceEquals(levelExpression, expression))
 							{
 								if (IsSubQuery())
 								{
@@ -140,7 +140,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 												return memberExpression.Transform(e =>
 												{
-													if (e != memberExpression)
+													if (!ReferenceEquals(e, memberExpression))
 													{
 														switch (e.NodeType)
 														{
@@ -187,7 +187,7 @@ namespace LinqToDB.Data.Linq.Builder
 										{
 											var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 										
-											if (memberExpression == parameter)
+											if (ReferenceEquals(memberExpression, parameter))
 												return sequence.BuildExpression(expression, level + 1);
 
 											break;
@@ -202,7 +202,7 @@ namespace LinqToDB.Data.Linq.Builder
 										}
 								}
 
-								var expr = expression.Transform(ex => ex == levelExpression ? memberExpression : ex);
+								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
 
 								return sequence.BuildExpression(expr, 1);
 							}
@@ -766,7 +766,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			if (!ReferenceEquals(context.SqlQuery, SqlQuery))
+			if (!ReferenceEquals(context.SqlQuery, this.SqlQuery))
 				index = SqlQuery.Select.Add(context.SqlQuery.Select.Columns[index]);
 
 			return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
