@@ -54,11 +54,11 @@ namespace LinqToDB.Common
 		/// <summary>Converts the value from <c>Stream</c> to an equivalent <c>Byte[]</c> value.</summary>
 		public static Byte[] ToByteArray(Stream p)
 		{
-			if (p == null || p == Stream.Null) return null;
+			if (p == null || object.ReferenceEquals(p, Stream.Null)) return null;
 			if (p is MemoryStream)             return ((MemoryStream)p).ToArray();
 
 			var position = p.Seek(0, SeekOrigin.Begin);
-			var bytes    = new Byte[p.Length];
+			var bytes    = new Byte[(int)p.Length];
 
 			p.Read(bytes, 0, bytes.Length);
 			p.Position = position;
@@ -359,7 +359,7 @@ namespace LinqToDB.Common
 			if (p is MemoryStream) return ((MemoryStream)p).ToArray();
 
 			var position = p.Seek(0, SeekOrigin.Begin);
-			var bytes = new Byte[p.Length];
+			var bytes = new Byte[(int)p.Length];
 			p.Read(bytes, 0, bytes.Length);
 			p.Position = position;
 

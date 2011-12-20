@@ -1444,7 +1444,7 @@ namespace LinqToDB.Common
 		// Simple Types
 		//
 		/// <summary>Converts the value from <c>Boolean</c> to an equivalent <c>Int32</c> value.</summary>
-		public static Int32 ToInt32(Boolean    p) { return p ? (Int32)1 : (Int32)0;                                                                                }
+		public static Int32 ToInt32(Boolean    p) { return p ? 1 : 0;                                                                                }
 		/// <summary>Converts the value from <c>Byte</c> to an equivalent <c>Int32</c> value.</summary>
 		public static Int32 ToInt32(Byte       p) { return p;                                                                                                      }
 		/// <summary>Converts the value from <c>Char</c> to an equivalent <c>Int32</c> value.</summary>
@@ -3401,7 +3401,7 @@ namespace LinqToDB.Common
 		// Simple Types
 		//
 		/// <summary>Converts the value from <c>Boolean</c> to an equivalent <c>Byte?</c> value.</summary>
-		public static Byte? ToNullableByte(Boolean    p) { return p ? (Byte?)1 : (Byte?)0;                                   }
+		public static Byte? ToNullableByte(Boolean p) { return p ? (Byte?)(Byte)1 : (Byte?)(Byte)0; }
 		/// <summary>Converts the value from <c>Byte</c> to an equivalent <c>Byte?</c> value.</summary>
 		public static Byte? ToNullableByte(Byte       p) { return p;                                                         }
 		/// <summary>Converts the value from <c>Char</c> to an equivalent <c>Byte?</c> value.</summary>
