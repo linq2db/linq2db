@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Linq.Mapping;
 using System.Linq;
-using LinqToDB.DataAccess;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {

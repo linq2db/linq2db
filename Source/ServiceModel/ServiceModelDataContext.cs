@@ -6,8 +6,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
-	using Data.Linq;
-
 	public class ServiceModelDataContext : RemoteDataContextBase
 	{
 		#region Init

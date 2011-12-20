@@ -518,17 +518,17 @@ namespace LinqToDB
 		class DatePartAttribute : SqlExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, LinqToDB.SqlBuilder.Precedence.Primary, false, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, false, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, LinqToDB.SqlBuilder.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, LinqToDB.SqlBuilder.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
 			{
 			}
 
