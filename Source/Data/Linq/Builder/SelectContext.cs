@@ -20,7 +20,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 #if DEBUG
 		[CLSCompliant(false)]
-		public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
+		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
 
 		public MethodCallExpression MethodCall;
 #endif

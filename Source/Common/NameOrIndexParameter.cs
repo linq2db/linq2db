@@ -130,7 +130,7 @@ namespace LinqToDB.Common
 		
 		public override string ToString()
 		{
-			return _name ?? "#" + _index;
+			return _name ?? "#" + _index.ToString();
 		}
 
 		#endregion
