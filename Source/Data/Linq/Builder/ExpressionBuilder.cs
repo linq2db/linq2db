@@ -789,13 +789,13 @@ namespace LinqToDB.Data.Linq.Builder
 				var body = func.Body.Unwrap();
 				var expr = body.Transform(ex =>
 				{
-					if (ex == func.Parameters[0])
+					if (ReferenceEquals(ex, func.Parameters[0]))
 						return _sourceExpression;
 
-					if (ex == func.Parameters[1])
-						return _keySelector.Body.Transform(e => e == _keySelector.Parameters[0] ? keyArg : e);
+					if (ReferenceEquals(ex, func.Parameters[1]))
+						return _keySelector.Body.Transform(e => ReferenceEquals(e, _keySelector.Parameters[0]) ? keyArg : e);
 
-					if (ex == func.Parameters[2])
+					if (ReferenceEquals(ex, func.Parameters[2]))
 					{
 						Expression obj = elemArg;
 
@@ -805,16 +805,16 @@ namespace LinqToDB.Data.Linq.Builder
 						if (_elementSelector == null)
 							return obj;
 
-						return _elementSelector.Body.Transform(e => e == _elementSelector.Parameters[0] ? obj : e);
+						return _elementSelector.Body.Transform(e => ReferenceEquals(e, _elementSelector.Parameters[0]) ? obj : e);
 					}
 
-					if (ex == func.Parameters[3])
+					if (ReferenceEquals(ex, func.Parameters[3]))
 						return _resultSelector.Body.Transform(e =>
 						{
-							if (e == _resultSelector.Parameters[0])
+							if (ReferenceEquals(e, _resultSelector.Parameters[0]))
 								return Expression.PropertyOrField(resArg, "Key");
 
-							if (e == _resultSelector.Parameters[1])
+							if (ReferenceEquals(e, _resultSelector.Parameters[1]))
 								return resArg;
 
 							return e;

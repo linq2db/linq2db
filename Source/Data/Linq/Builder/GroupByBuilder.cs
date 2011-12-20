@@ -332,7 +332,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return levelExpression == expression ?
+							return ReferenceEquals(levelExpression, expression) ?
 								_key.BuildExpression(null,       0) :
 								_key.BuildExpression(expression, level + 1);
 						}
@@ -464,7 +464,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 										if (e.Member == _keyProperty)
 										{
-											if (levelExpression == expression)
+											if (ReferenceEquals(levelExpression, expression))
 												return _key.ConvertToSql(null, 0, flags);
 
 											return _key.ConvertToSql(expression, level + 1, flags);
@@ -516,7 +516,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return levelExpression == expression ?
+							return ReferenceEquals(levelExpression, expression) ?
 								_key.IsExpression(null,       0,         requestFlag) :
 								_key.IsExpression(expression, level + 1, requestFlag);
 						}
@@ -526,11 +526,11 @@ namespace LinqToDB.Data.Linq.Builder
 				return IsExpressionResult.False;
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
+			public override int ConvertToParentIndex(int index, IBuildContext _context)
 			{
 				var expr = SqlQuery.Select.Columns[index].Expression;
 
-				if (!SqlQuery.GroupBy.Items.Exists(_ => _ == expr || (expr is SqlQuery.Column && _ == ((SqlQuery.Column)expr).Expression)))
+				if (!SqlQuery.GroupBy.Items.Exists(_ => ReferenceEquals(_, expr) || (expr is SqlQuery.Column && ReferenceEquals(_, ((SqlQuery.Column)expr).Expression))))
 					SqlQuery.GroupBy.Items.Add(expr);
 
 				return base.ConvertToParentIndex(index, this);
@@ -585,7 +585,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", SqlQuery));
+						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", this.SqlQuery));
 
 						return ctx;
 					}
@@ -603,7 +603,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
-							return levelExpression == expression ?
+							return ReferenceEquals(levelExpression, expression) ?
 								_key.GetContext(null,       0,         buildInfo) :
 								_key.GetContext(expression, level + 1, buildInfo);
 						}

@@ -316,7 +316,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				if (expression == Lambda.Parameters[1])
+				if (ReferenceEquals(expression, Lambda.Parameters[1]))
 				{
 					if (_groupExpression == null)
 					{
@@ -363,7 +363,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
 			{
-				if (expression != null && expression == _counterExpression)
+				if (expression != null && ReferenceEquals(expression, _counterExpression))
 					return _counterInfo ?? (_counterInfo = new[]
 					{
 						new SqlInfo

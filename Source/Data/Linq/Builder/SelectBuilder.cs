@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Data.Linq.Builder
@@ -142,7 +143,7 @@ namespace LinqToDB.Data.Linq.Builder
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
 
-			if (param != builder.SequenceParameter)
+			if (!ReferenceEquals(param, builder.SequenceParameter))
 			{
 				var list =
 					(
@@ -153,7 +154,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 				if (list.Count > 0)
 				{
-					var plist = list.Where(e => e.Expr == selector.Parameters[0]).ToList();
+					var plist = list.Where(e => ReferenceEquals(e.Expr, selector.Parameters[0])).ToList();
 
 					if (plist.Count > 1)
 						list = list.Except(plist.Skip(1)).ToList();
@@ -188,7 +189,7 @@ namespace LinqToDB.Data.Linq.Builder
 						var expr = Expression.MakeMemberAccess(param, fields[0]);
 
 						foreach (var t in list)
-							t.Expr = t.Expr.Transform(ex => ex == pold ? expr : ex);
+							t.Expr = t.Expr.Transform(ex => ReferenceEquals(ex, pold) ? expr : ex);
 
 						return new SequenceConvertInfo
 						{
@@ -204,8 +205,8 @@ namespace LinqToDB.Data.Linq.Builder
 						{
 							foreach (var path in info.ExpressionsToReplace)
 							{
-								path.Path = path.Path.Transform(e => e == info.Parameter ? p.Path : e);
-								path.Expr = path.Expr.Transform(e => e == info.Parameter ? p.Path : e);
+								path.Path = path.Path.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
+								path.Expr = path.Expr.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
 								path.Level += p.Level;
 
 								list.Add(path);
@@ -222,10 +223,10 @@ namespace LinqToDB.Data.Linq.Builder
 							Parameter            = param,
 							Expression           = methodCall,
 							ExpressionsToReplace = list
-								.Where (e => e != p)
+								.Where (e => !ReferenceEquals(e, p))
 								.Select(ei =>
 								{
-									ei.Expr = ei.Expr.Transform(e => e == p.Expr ? p.Path : e);
+									ei.Expr = ei.Expr.Transform(e => ReferenceEquals(e, p.Expr) ? p.Path : e);
 									return ei;
 								})
 								.ToList()
@@ -234,7 +235,7 @@ namespace LinqToDB.Data.Linq.Builder
 				}
 			}
 
-			if (methodCall != originalMethodCall)
+			if (!ReferenceEquals(methodCall, originalMethodCall))
 				return new SequenceConvertInfo
 				{
 					Parameter  = param,
@@ -286,7 +287,7 @@ namespace LinqToDB.Data.Linq.Builder
 				// parameter
 				//
 				case ExpressionType.Parameter  :
-					if (expression == param)
+					if (ReferenceEquals(expression, param))
 						yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 

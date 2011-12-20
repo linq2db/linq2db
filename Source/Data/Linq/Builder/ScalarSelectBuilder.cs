@@ -47,7 +47,7 @@ namespace LinqToDB.Data.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
+			public string _sqlQueryText { get { return this.SqlQuery == null ? "" : this.SqlQuery.SqlText; } }
 #endif
 
 			public ExpressionBuilder Builder    { get; set; }

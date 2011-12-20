@@ -593,8 +593,8 @@ namespace LinqToDB.Data.Linq.Builder
 				case RequestFor.SubQuery : return IsExpressionResult.False;
 				case RequestFor.Root     :
 					return new IsExpressionResult(Sequence.Length == 1 ?
-						expression == Lambda.Parameters[0] :
-						Lambda.Parameters.Any(p => p == expression));
+						ReferenceEquals(expression, Lambda.Parameters[0]) :
+						Lambda.Parameters.Any(p => ReferenceEquals(p, expression)));
 			}
 
 			if (IsScalar)
@@ -604,7 +604,6 @@ namespace LinqToDB.Data.Linq.Builder
 
 				switch (requestFlag)
 				{
-					default                     : return IsExpressionResult.False;
 					case RequestFor.Table       :
 					case RequestFor.Association :
 					case RequestFor.Field       :
@@ -616,6 +615,7 @@ namespace LinqToDB.Data.Linq.Builder
 							level,
 							(ctx, ex, l) => ctx.IsExpression(ex, l, requestFlag),
 							() => new IsExpressionResult(requestFlag == RequestFor.Expression));
+					default                     : return IsExpressionResult.False;
 				}
 			}
 			else
@@ -646,7 +646,7 @@ namespace LinqToDB.Data.Linq.Builder
 									{
 										var memberExpression = Members[((MemberExpression)levelExpression).Member];
 
-										if (levelExpression == expression)
+										if (ReferenceEquals(levelExpression, expression))
 										{
 											switch (memberExpression.NodeType)
 											{
@@ -670,9 +670,9 @@ namespace LinqToDB.Data.Linq.Builder
 										var sequence  = GetSequence(expression, level);
 										var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 
-										if (levelExpression == expression)
+										if (ReferenceEquals(levelExpression, expression))
 										{
-											if (levelExpression == parameter)
+											if (ReferenceEquals(levelExpression, parameter))
 												return sequence.IsExpression(null, 0, requestFlag);
 										}
 										else if (level == 0)
@@ -738,9 +738,9 @@ namespace LinqToDB.Data.Linq.Builder
 							var sequence  = GetSequence(expression, level);
 							var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 
-							if (levelExpression == expression)
+							if (ReferenceEquals(levelExpression, expression))
 							{
-								if (levelExpression == parameter)
+								if (ReferenceEquals(levelExpression, parameter))
 									return sequence.GetContext(null, 0, buildInfo);
 							}
 							else if (level == 0)
@@ -766,7 +766,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			if (context.SqlQuery != SqlQuery)
+			if (!ReferenceEquals(context.SqlQuery, SqlQuery))
 				index = SqlQuery.Select.Add(context.SqlQuery.Select.Columns[index]);
 
 			return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
@@ -801,14 +801,14 @@ namespace LinqToDB.Data.Linq.Builder
 				{
 					var sequence = GetSequence(Body, 0);
 
-					return expression == Body ?
+					return ReferenceEquals(expression, Body) ?
 						action(sequence, null,       0) :
 						action(sequence, expression, 1);
 				}
 
 				var levelExpression = expression.GetLevelExpression(level);
 
-				if (levelExpression != expression)
+				if (!ReferenceEquals(levelExpression, expression))
 					return action(GetSequence(expression, level), expression, level + 1);
 
 				if (expression.NodeType == ExpressionType.Parameter)
@@ -816,7 +816,7 @@ namespace LinqToDB.Data.Linq.Builder
 					var sequence  = GetSequence(expression, level);
 					var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 
-					if (levelExpression == parameter)
+					if (ReferenceEquals(levelExpression, parameter))
 						return action(sequence, null, 0);
 				}
 
@@ -853,7 +853,7 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
 
-				if (memberExpression == parameter && levelExpression == expression)
+				if (ReferenceEquals(memberExpression, parameter) && ReferenceEquals(levelExpression, expression))
 					return action(1, sequence, null, 0, memberExpression);
 			}
 
@@ -911,7 +911,7 @@ namespace LinqToDB.Data.Linq.Builder
 								return null;
 
 							for (var i = 0; i < Lambda.Parameters.Count; i++)
-								if (root == Lambda.Parameters[i])
+								if (ReferenceEquals(root, Lambda.Parameters[i]))
 									return Sequence[i];
 
 							break;
@@ -927,7 +927,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			if (root != null)
 				for (var i = 0; i < Lambda.Parameters.Count; i++)
-					if (root == Lambda.Parameters[i])
+					if (ReferenceEquals(root, Lambda.Parameters[i]))
 						return Sequence[i];
 
 			throw new NotImplementedException();
@@ -935,8 +935,8 @@ namespace LinqToDB.Data.Linq.Builder
 
 		static Expression GetExpression(Expression expression, Expression levelExpression, Expression memberExpression)
 		{
-			return levelExpression != expression ?
-				expression.Transform(ex => ex == levelExpression ? memberExpression : ex) :
+			return !ReferenceEquals(levelExpression, expression) ?
+				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
 				memberExpression;
 		}
 
@@ -973,7 +973,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 						for (var i = 0; i < expr.Members.Count; i++)
 							if (me.Member == expr.Members[i])
-								return levelExpresion == expression ?
+								return ReferenceEquals(levelExpresion, expression) ?
 									expr.Arguments[i].Unwrap() :
 									GetMemberExpression(expr.Arguments[i].Unwrap(), expression, level + 1);
 
@@ -987,7 +987,7 @@ namespace LinqToDB.Data.Linq.Builder
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
 						{
 							if (me.Member == binding.Member)
-								return levelExpresion == expression ?
+								return ReferenceEquals(levelExpresion, expression) ?
 									binding.Expression.Unwrap() :
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
 						}
