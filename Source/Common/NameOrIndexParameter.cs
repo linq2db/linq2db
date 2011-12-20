@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+
 using LinqToDB.Properties;
 
 namespace LinqToDB.Common
@@ -130,10 +131,9 @@ namespace LinqToDB.Common
 		
 		public override string ToString()
 		{
-			return _name ?? "#" + _index;
+			return _name ?? "#" + _index.ToString();
 		}
 
 		#endregion
-
 	}
 }

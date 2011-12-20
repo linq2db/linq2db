@@ -347,8 +347,25 @@
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
   </ItemGroup>
-    <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
-
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="DataAccess\" />
+    <Folder Include="DataProvider\" />
+    <Folder Include="Data\" />
+    <Folder Include="Data\Linq\" />
+    <Folder Include="Data\Linq\Builder\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Mapping\" />
+    <Folder Include="Properties\" />
+    <Folder Include="Reflection\" />
+    <Folder Include="Reflection\Extension\" />
+    <Folder Include="Reflection\MetadataProvider\" />
+    <Folder Include="ServiceModel\" />
+    <Folder Include="SqlBuilder\" />
+    <Folder Include="SqlProvider\" />
+  </ItemGroup>
+  <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

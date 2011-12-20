@@ -3,7 +3,7 @@ using System;
 using LinqToDB.Common;
 
 //using KeyValue = System.Collections.Generic.KeyValuePair<System.Type, System.Type>;
-using Table    = System.Collections.Generic.Dictionary<System.Collections.Generic.KeyValuePair<System.Type, System.Type>, LinqToDB.Mapping.IValueMapper>;
+using Table    = System.Collections.Generic.Dictionary<System.Collections.Generic.KeyValuePair<System.Type,System.Type>,LinqToDB.Mapping.IValueMapper>;
 
 namespace LinqToDB.Mapping
 {
@@ -55,7 +55,7 @@ namespace LinqToDB.Mapping
 			if (t1.IsEnum) t1 = Enum.GetUnderlyingType(t1);
 			if (t2.IsEnum) t2 = Enum.GetUnderlyingType(t2);
 
-			var key = new KeyValue(t1, t2);
+			var key = new System.Collections.Generic.KeyValuePair<Type,Type>(t1, t2);
 
 			lock (_sync)
 			{
