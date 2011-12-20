@@ -8,7 +8,7 @@ namespace LinqToDB.ServiceModel
 {
 	using Data.Linq;
 
-	using NotNullAttribute = NotNullAttribute;
+	//using NotNullAttribute = NotNullAttribute;
 
 	public class SoapDataContext : RemoteDataContextBase
 	{

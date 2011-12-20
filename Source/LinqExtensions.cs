@@ -672,7 +672,7 @@ namespace LinqToDB
 
 		#region Stub helpers
 
-		static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
+		public static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)
 		{
 			throw new InvalidOperationException();
 		}

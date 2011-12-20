@@ -8,8 +8,6 @@ namespace LinqToDB.ServiceModel
 {
 	using Data.Linq;
 
-	using NotNullAttribute = NotNullAttribute;
-
 	public class ServiceModelDataContext : RemoteDataContextBase
 	{
 		#region Init

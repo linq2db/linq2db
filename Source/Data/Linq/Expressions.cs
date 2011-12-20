@@ -15,15 +15,15 @@ using System.Text;
 
 namespace LinqToDB.Data.Linq
 {
-	using B = Boolean;
-	using C = Char;
-	using S = String;
-	using I = Int32;
-	using O = Object;
-	using D = DateTime;
-	using T = TimeSpan;
-	using F = Double;
-	using M = Decimal;
+	using B = System.Boolean; // FIXME: using B = Boolean;
+	using C = System.Char;
+	using S = System.String;
+	using I = System.Int32;
+	using O = System.Object;
+	using D = System.DateTime;
+	using T = System.TimeSpan;
+	using F = System.Double;
+	using M = System.Decimal;
 
 	public static class Expressions
 	{

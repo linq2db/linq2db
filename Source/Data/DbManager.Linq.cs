@@ -8,7 +8,6 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
-	using DataProvider;
 	using Linq;
 	using SqlBuilder;
 	using SqlProvider;

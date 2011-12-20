@@ -15,7 +15,6 @@ using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
-	using DataProvider;
 	using Mapping;
 	using Properties;
 	using SqlBuilder;
