@@ -209,7 +209,6 @@ namespace LinqToDB.Data
 		/// <seealso cref="AddConnectionString(string)"/>
 		public string ConfigurationString
 		{
-			[DebuggerStepThrough]
 			get { return _configurationString; }
 		}
 
@@ -302,7 +301,7 @@ namespace LinqToDB.Data
 			var dp = _dataProviderTypeList[connection.GetType()];
 
 			if (dp == null)
-				throw new DataException(string.Format(
+				throw new LinqToDB.Data.DataException(string.Format(
 					Resources.DbManager_UnknownConnectionType, connection.GetType().FullName));
 
 			return dp;
@@ -371,7 +370,7 @@ namespace LinqToDB.Data
 				}
 
 				if (dp == null)
-					throw new DataException(string.Format(
+					throw new LinqToDB.Data.DataException(string.Format(
 						Resources.DbManager_UnknownDataProvider, configurationString));
 
 				_configurationList[configurationString] = dp;
@@ -494,7 +493,7 @@ namespace LinqToDB.Data
 
 					if (string.IsNullOrEmpty(str))
 					{
-						throw new DataException(string.Format(
+						throw new LinqToDB.Data.DataException(string.Format(
 							Resources.DbManager_UnknownConfiguration, key));
 					}
 
@@ -679,7 +678,7 @@ namespace LinqToDB.Data
 		public const string ProviderNameDivider = ".";
 		public const string AnyProvider = "*" + ProviderNameDivider;
 
-		private static readonly string _defaultDataProviderName;
+		private static /*readonly fix me*/ string _defaultDataProviderName;
 		private static          string _defaultConfiguration;
 
 		/// <summary>

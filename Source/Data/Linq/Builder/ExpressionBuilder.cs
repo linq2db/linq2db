@@ -302,7 +302,7 @@ namespace LinqToDB.Data.Linq.Builder
 							{
 								var ex = ConvertIQueriable(expr);
 
-								if (ex != expr)
+								if (!ReferenceEquals(ex, expr))
 									return ConvertExpressionTree(ex);
 							}
 
@@ -363,7 +363,7 @@ namespace LinqToDB.Data.Linq.Builder
 									{
 										var ex = ConvertIQueriable(expr);
 
-										if (ex != expr)
+										if (!ReferenceEquals(ex, expr))
 											return ConvertExpressionTree(ex);
 									}
 								}

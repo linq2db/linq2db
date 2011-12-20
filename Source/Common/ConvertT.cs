@@ -1,12 +1,11 @@
 using System;
 using System.Reflection;
 using System.Threading;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Common
 {
-	using Reflection;
-
 	/// <summary>
 	/// Converts a base data type to another base data type.
 	/// </summary>
@@ -52,7 +51,10 @@ namespace LinqToDB.Common
 			// Convert to the same type.
 			//
 			if (to == from)
-				return (ConvertMethod)(object)(Convert<P,P>.ConvertMethod)SameType;
+			{
+				var m = (ConvertMethod)(object)(new LinqToDB.Common.Convert<P,P>.ConvertMethod(SameType));
+				return m;
+			}
 
 			if (from.IsEnum)
 				from = Enum.GetUnderlyingType(from);
@@ -74,7 +76,7 @@ namespace LinqToDB.Common
 			else
 				methodName = "To" + to.Name;
 
-			var mi = typeof(Convert).GetMethod(methodName,
+			var mi = typeof(LinqToDB.Common.Convert).GetMethod(methodName,
 				BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding,
 				null, new[] { from }, null) ?? FindTypeCastOperator(to) ?? FindTypeCastOperator(from);
 
@@ -131,7 +133,7 @@ namespace LinqToDB.Common
 		/// <param name="p">A value to convert to the target type.</param>
 		public static T From<P>(P p)
 		{
-			return Convert<T,P>.From(p);
+			return LinqToDB.Common.Convert<T,P>.From(p);
 		}
 	}
 

@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider
 			command.Parameters.Add(parameter);
 		}
 
-		public virtual void SetUserDefinedType(IDbDataParameter parameter, string typeName)
+		public virtual void SetUserDefinedType(IDbDataParameter _parameter, string typeName)
 		{
 			throw new NotSupportedException(Name + " data provider does not support UDT.");
 		}
@@ -311,8 +311,8 @@ namespace LinqToDB.DataProvider
 
 			public int FieldCount { get { return DataReader.FieldCount; } }
 
-			object IDataRecord.this[int i]       { get { return DataReader[i];    } }
-			object IDataRecord.this[string name] { get { return DataReader[name]; } }
+			object IDataRecord.this[int i]       { get { return ((IDataRecord)DataReader)[i];    } }
+			object IDataRecord.this[string name] { get { return ((IDataRecord)DataReader)[name]; } }
 
 			public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 			{

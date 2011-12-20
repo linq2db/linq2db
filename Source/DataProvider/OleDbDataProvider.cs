@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:
-					return "@" + value;
+					return "@" + (value ?? "").ToString();
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider
 							return value;
 					}
 
-					return "[" + value + "]";
+					return "[" + (value ?? "").ToString() + "]";
 
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToOwner:
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider
 							value = string.Join("].[", name.Split('.'));
 					}
 
-					return "[" + value + "]";
+					return "[" + (value ?? "").ToString() + "]";
 
 				case ConvertType.SprocParameterToName:
 					if (value != null)

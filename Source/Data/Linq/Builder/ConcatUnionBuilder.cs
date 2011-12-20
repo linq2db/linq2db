@@ -290,7 +290,7 @@ namespace LinqToDB.Data.Linq.Builder
 					{
 						var levelExpression = expression.GetLevelExpression(1);
 
-						if (expression == levelExpression)
+						if (ReferenceEquals(expression, levelExpression))
 						{
 							var idx = ConvertToIndex(expression, level, ConvertFlags.Field);
 							var n   = idx[0].Index;
@@ -310,7 +310,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
 			{
-				if (testFlag == RequestFor.Root && expression == _unionParameter)
+				if (testFlag == RequestFor.Root && ReferenceEquals(expression, _unionParameter))
 					return IsExpressionResult.True;
 
 				return base.IsExpression(expression, level, testFlag);

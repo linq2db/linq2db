@@ -405,7 +405,7 @@ namespace LinqToDB.Data.Linq.Builder
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
 										var tbl    = Activator.CreateInstance(ttype);
 										var method = typeof(LinqExtensions)
-											.GetMethod("Where", BindingFlags.NonPublic | BindingFlags.Static)
+											.GetMethod("Where", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
 											.MakeGenericMethod(e.Type, table.ObjectType, ttype);
 
 										var me = (MemberExpression)e;

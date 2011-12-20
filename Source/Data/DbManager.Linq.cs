@@ -67,11 +67,10 @@ namespace LinqToDB.Data
 				 };
 			}
 
-			var sql = query.SqlQuery.ProcessParameters();
-
+			var sql    = query.SqlQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
-			if (sql != newSql)
+			if (!object.ReferenceEquals(sql, newSql))
 			{
 				sql = newSql;
 				sql.ParameterDependent = true;
@@ -118,8 +117,9 @@ namespace LinqToDB.Data
 
 			var x = DataProvider.Convert("x", ConvertType.NameToQueryParameter).ToString();
 			var y = DataProvider.Convert("y", ConvertType.NameToQueryParameter).ToString();
+			var c = x == y ? pq.SqlParameters.Count : parameters.Length;
 
-			var parms = new List<IDbDataParameter>(x == y ? pq.SqlParameters.Count : parameters.Length);
+			var parms = new List<IDbDataParameter>(c);
 
 			if (x == y)
 			{

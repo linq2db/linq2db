@@ -123,7 +123,7 @@ namespace LinqToDB.Mapping
 		private MetadataProviderBase _metadataProvider;
 		public  MetadataProviderBase  MetadataProvider
 		{
-			[DebuggerStepThrough]
+			//[DebuggerStepThrough] fix me
 			get { return _metadataProvider ?? (_metadataProvider = CreateMetadataProvider()); }
 			set { _metadataProvider = value; }
 		}
@@ -182,7 +182,7 @@ namespace LinqToDB.Mapping
 			return
 				value is SByte ? (SByte)value :
 				value == null ? DefaultSByteNullValue :
-					Convert.ToSByte(value);
+					LinqToDB.Common.Convert.ToSByte(value);
 		}
 
 		public short DefaultInt16NullValue { get; set; }
@@ -192,7 +192,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Int16? (Int16)value:
 				value == null || value is DBNull? DefaultInt16NullValue:
-					Convert.ToInt16(value);
+					LinqToDB.Common.Convert.ToInt16(value);
 		}
 
 		public int DefaultInt32NullValue { get; set; }
@@ -202,7 +202,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Int32? (Int32)value:
 				value == null || value is DBNull? DefaultInt32NullValue:
-					Convert.ToInt32(value);
+					LinqToDB.Common.Convert.ToInt32(value);
 		}
 
 		public long DefaultInt64NullValue { get; set; }
@@ -212,7 +212,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Int64? (Int64)value:
 				value == null || value is DBNull? DefaultInt64NullValue:
-					Convert.ToInt64(value);
+					LinqToDB.Common.Convert.ToInt64(value);
 		}
 
 		public byte DefaultByteNullValue { get; set; }
@@ -222,7 +222,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Byte? (Byte)value:
 				value == null || value is DBNull? DefaultByteNullValue:
-					Convert.ToByte(value);
+					LinqToDB.Common.Convert.ToByte(value);
 		}
 
 		[CLSCompliant(false)]
@@ -234,7 +234,7 @@ namespace LinqToDB.Mapping
 			return
 				value is UInt16? (UInt16)value:
 				value == null || value is DBNull? DefaultUInt16NullValue:
-					Convert.ToUInt16(value);
+					LinqToDB.Common.Convert.ToUInt16(value);
 		}
 
 		[CLSCompliant(false)]
@@ -246,7 +246,7 @@ namespace LinqToDB.Mapping
 			return
 				value is UInt32? (UInt32)value:
 				value == null || value is DBNull? DefaultUInt32NullValue:
-					Convert.ToUInt32(value);
+					LinqToDB.Common.Convert.ToUInt32(value);
 		}
 
 		[CLSCompliant(false)]
@@ -258,7 +258,7 @@ namespace LinqToDB.Mapping
 			return
 				value is UInt64? (UInt64)value:
 				value == null || value is DBNull? DefaultUInt64NullValue:
-					Convert.ToUInt64(value);
+					LinqToDB.Common.Convert.ToUInt64(value);
 		}
 
 		public char DefaultCharNullValue { get; set; }
@@ -268,7 +268,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Char? (Char)value:
 				value == null || value is DBNull? DefaultCharNullValue:
-					Convert.ToChar(value);
+					LinqToDB.Common.Convert.ToChar(value);
 		}
 
 		public float DefaultSingleNullValue { get; set; }
@@ -278,7 +278,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Single? (Single)value:
 				value == null || value is DBNull? DefaultSingleNullValue:
-					Convert.ToSingle(value);
+					LinqToDB.Common.Convert.ToSingle(value);
 		}
 
 		public double DefaultDoubleNullValue { get; set; }
@@ -288,7 +288,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Double? (Double)value:
 				value == null || value is DBNull? DefaultDoubleNullValue:
-					Convert.ToDouble(value);
+					LinqToDB.Common.Convert.ToDouble(value);
 		}
 
 		public bool DefaultBooleanNullValue { get; set; }
@@ -298,7 +298,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Boolean? (Boolean)value:
 				value == null || value is DBNull? DefaultBooleanNullValue:
-					Convert.ToBoolean(value);
+					LinqToDB.Common.Convert.ToBoolean(value);
 		}
 
 		#endregion
@@ -312,7 +312,7 @@ namespace LinqToDB.Mapping
 			return
 				value is String? (String)value :
 				value == null || value is DBNull? DefaultStringNullValue:
-					Convert.ToString(value);
+					LinqToDB.Common.Convert.ToString(value);
 		}
 
 		public DateTime DefaultDateTimeNullValue { get; set; }
@@ -322,7 +322,7 @@ namespace LinqToDB.Mapping
 			return
 				value is DateTime? (DateTime)value:
 				value == null || value is DBNull? DefaultDateTimeNullValue:
-					Convert.ToDateTime(value);
+					LinqToDB.Common.Convert.ToDateTime(value);
 		}
 
 		public virtual TimeSpan ConvertToTimeSpan(object value)
@@ -337,7 +337,7 @@ namespace LinqToDB.Mapping
 			return
 				value is DateTimeOffset? (DateTimeOffset)value:
 				value == null || value is DBNull? DefaultDateTimeOffsetNullValue:
-					Convert.ToDateTimeOffset(value);
+					LinqToDB.Common.Convert.ToDateTimeOffset(value);
 		}
 
 		public Binary DefaultLinqBinaryNullValue { get; set; }
@@ -348,7 +348,7 @@ namespace LinqToDB.Mapping
 				value is Binary ? (Binary)value:
 				value is byte[] ? new Binary((byte[])value) : 
 				value == null || value is DBNull? DefaultLinqBinaryNullValue:
-					Convert.ToLinqBinary(value);
+					LinqToDB.Common.Convert.ToLinqBinary(value);
 		}
 
 		public decimal DefaultDecimalNullValue { get; set; }
@@ -358,7 +358,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Decimal? (Decimal)value:
 				value == null || value is DBNull? DefaultDecimalNullValue:
-					Convert.ToDecimal(value);
+					LinqToDB.Common.Convert.ToDecimal(value);
 		}
 
 		public Guid DefaultGuidNullValue { get; set; }
@@ -368,7 +368,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Guid? (Guid)value:
 				value == null || value is DBNull? DefaultGuidNullValue:
-					Convert.ToGuid(value);
+					LinqToDB.Common.Convert.ToGuid(value);
 		}
 
 		public Stream DefaultStreamNullValue { get; set; }
@@ -378,7 +378,7 @@ namespace LinqToDB.Mapping
 			return
 				value is Stream? (Stream)value:
 				value == null || value is DBNull? DefaultStreamNullValue:
-					 Convert.ToStream(value);
+					 LinqToDB.Common.Convert.ToStream(value);
 		}
 
 #if !SILVERLIGHT
@@ -390,7 +390,7 @@ namespace LinqToDB.Mapping
 			return
 				value is XmlReader? (XmlReader)value:
 				value == null || value is DBNull? DefaultXmlReaderNullValue:
-					Convert.ToXmlReader(value);
+					LinqToDB.Common.Convert.ToXmlReader(value);
 		}
 
 		public XmlDocument DefaultXmlDocumentNullValue { get; set; }
@@ -400,7 +400,7 @@ namespace LinqToDB.Mapping
 			return
 				value is XmlDocument? (XmlDocument)value:
 				value == null || value is DBNull? DefaultXmlDocumentNullValue:
-					Convert.ToXmlDocument(value);
+					LinqToDB.Common.Convert.ToXmlDocument(value);
 		}
 
 #endif
@@ -410,7 +410,7 @@ namespace LinqToDB.Mapping
 			return
 				value is byte[]? (byte[])value:
 				value == null || value is DBNull? null:
-					Convert.ToByteArray(value);
+					LinqToDB.Common.Convert.ToByteArray(value);
 		}
 
 		public virtual char[] ConvertToCharArray(object value)
@@ -418,7 +418,7 @@ namespace LinqToDB.Mapping
 			return
 				value is char[]? (char[])value:
 				value == null || value is DBNull? null:
-					Convert.ToCharArray(value);
+					LinqToDB.Common.Convert.ToCharArray(value);
 		}
 
 		#endregion
@@ -741,7 +741,7 @@ namespace LinqToDB.Mapping
 		{
 			return Equals(value, default(TP))?
 				GetDefaultNullValue<T>():
-				Convert<T,TP>.From(value);
+				LinqToDB.Common.Convert<T,TP>.From(value);
 		}
 
 		public virtual object ConvertChangeType(object value, Type conversionType)
