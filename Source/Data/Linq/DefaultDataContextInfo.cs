@@ -4,7 +4,6 @@ using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Data.Linq
 {
-	using DataProvider;
 	using Mapping;
 
 	class DefaultDataContextInfo : IDataContextInfo

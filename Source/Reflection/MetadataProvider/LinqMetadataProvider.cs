@@ -220,7 +220,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetInheritanceMapping
 
-		public override InheritanceMappingAttribute[] GetInheritanceMapping(Type type,TypeExtension typeExtension)
+		public override LinqToDB.Mapping.InheritanceMappingAttribute[] GetInheritanceMapping(Type type, TypeExtension typeExtension)
 		{
 			if (IsLinqObject(type))
 			{

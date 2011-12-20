@@ -10,7 +10,6 @@ using LinqToDB.DataProvider;
 namespace LinqToDB.Data
 {
 	using Configuration;
-	using DataProvider;
 	using Properties;
 
 	public partial class DbManager

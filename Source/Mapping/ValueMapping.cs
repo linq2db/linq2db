@@ -2,7 +2,7 @@ using System;
 
 using LinqToDB.Common;
 
-using KeyValue = System.Collections.Generic.KeyValuePair<System.Type, System.Type>;
+//using KeyValue = System.Collections.Generic.KeyValuePair<System.Type, System.Type>;
 using Table    = System.Collections.Generic.Dictionary<System.Collections.Generic.KeyValuePair<System.Type, System.Type>, LinqToDB.Mapping.IValueMapper>;
 
 namespace LinqToDB.Mapping
