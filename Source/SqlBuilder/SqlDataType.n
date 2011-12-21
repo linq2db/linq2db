@@ -1,0 +1,46 @@
+﻿using System;
+using System.Linq;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB.SqlBuilder
+{
+	public variant SqlDataType
+	{
+		| Char           { Length : int }
+		| VarChar        { Length : int }
+		| Text           { Length : int }
+		| NChar          { Length : int }
+		| NVarChar       { Length : int }
+		| NText          { Length : int }
+		| Binary         { Length : int }
+		| VarBinary      { Length : int }
+		| Image
+		| Boolean
+		| Guid
+		| SByte
+		| Int16
+		| Int32
+		| Int64
+		| Byte
+		| UInt16
+		| UInt32
+		| UInt64
+		| Single
+		| Double
+		| Decimal        { Precision : int; Scale : int }
+		| Money          { Precision : int; Scale : int }
+		| SmallMoney     { Precision : int; Scale : int }
+		| Date
+		| Time
+		| DateTime
+		| DateTime2
+		| SmallDateTime
+		| DateTimeOffset
+		| Timestamp
+		| Xml
+		| Variant
+		| VarNumeric
+	}
+}

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using LinqToDB.Data;
-using LinqToDB.SqlProvider;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
+	using Data;
+	using Mapping;
+	using SqlProvider;
+
 	/// <summary>
 	/// The <b>DataProviderBase</b> is a class that provides specific data provider information
 	/// for the <see cref="DbManager"/> class. 

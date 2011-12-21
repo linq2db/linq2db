@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Specialized;
+using System.Data;
+
+using Nemerle;
+
+namespace LinqToDB
+{
+	public interface IDataProvider
+	{
+		Name         : string { get; }
+		ProviderName : string { get; }
+
+		Configure(attributes : NameValueCollection) : void
+;
+		CreateConnection(connectionString : string) : IDbConnection;
+	}
+}

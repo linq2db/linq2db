@@ -1,0 +1,19 @@
+﻿using System;
+using System.Data;
+using System.Data.OleDb;
+
+using Nemerle;
+
+namespace LinqToDB.DataProvider
+{
+	public class AccessDataProvider : DataProviderBase
+	{
+		public override Name         : string { get{ ProviderName.Access               } }
+		public override ProviderName : string { get{ typeof(OleDbConnection).Namespace } }
+		
+		public override CreateConnection(connectionString : string) : IDbConnection
+		{
+			OleDbConnection(connectionString)
+		}
+	}
+}

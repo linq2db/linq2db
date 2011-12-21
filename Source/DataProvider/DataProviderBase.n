@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Specialized;
+using System.Data;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB.DataProvider
+{
+	public abstract class DataProviderBase : IDataProvider
+	{
+		public abstract Name         : string { get; }
+		public abstract ProviderName : string { get; }
+
+		public abstract CreateConnection(connectionString : string) : IDbConnection;
+
+		public virtual Configure(_attributes : NameValueCollection) : void
+		{
+		}
+	}
+}

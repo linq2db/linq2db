@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Diagnostics;
@@ -30,7 +29,6 @@ namespace LinqToDB.Data
 	/// <see cref="Dispose"/>. Also, you can use the C# <b>using</b> statement.
 	/// </remarks>
 	/// <include file="Examples.xml" path='examples/db[@name="DbManager"]/*' />
-	[DesignerCategory(@"Code")]
 	public partial class DbManager
 	{
 		#region Init

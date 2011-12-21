@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Threading;
 using System.Xml;
 
-using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Properties;
 using LinqToDB.Reflection;

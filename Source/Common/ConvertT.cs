@@ -2,10 +2,10 @@ using System;
 using System.Reflection;
 using System.Threading;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.Common
 {
+	using Extensions;
+
 	/// <summary>
 	/// Converts a base data type to another base data type.
 	/// </summary>

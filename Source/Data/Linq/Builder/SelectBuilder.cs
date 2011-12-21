@@ -5,10 +5,9 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using Extensions;
 	using Reflection;
 
 	class SelectBuilder : MethodCallBuilder

@@ -1,0 +1,41 @@
+﻿using System;
+using System.Collections.Specialized;
+using System.Data;
+using System.Data.SqlClient;
+
+using Nemerle;
+
+namespace LinqToDB.DataProvider
+{
+	public class SqlServerDataProvider : DataProviderBase
+	{
+		public this()
+		{
+			Version = SqlServerVersion.v2008;
+		}
+
+		public this(version : SqlServerVersion)
+		{
+			Version = version;
+		}
+
+		public override Name         : string           { get { ProviderName.SqlServer          } }
+		public override ProviderName : string           { get { typeof(SqlConnection).Namespace } }
+		public          Version      : SqlServerVersion { get; set; }
+
+		public override CreateConnection(connectionString : string) : IDbConnection
+		{
+			SqlConnection(connectionString);
+		}
+		
+		public override Configure(attributes : NameValueCollection) : void
+		{
+			match (attributes["version"])
+			{
+			| "2005" => Version = SqlServerVersion.v2005
+			| "2008" => Version = SqlServerVersion.v2008
+			|  _     => ()
+			}
+		}
+	}
+}

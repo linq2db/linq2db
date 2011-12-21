@@ -6,11 +6,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlBuilder;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using Extensions;
+	using SqlBuilder;
+
 	class GroupByBuilder : MethodCallBuilder
 	{
 		#region Builder Methods

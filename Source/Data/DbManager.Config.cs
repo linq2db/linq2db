@@ -5,10 +5,10 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
+	using DataProvider;
 	using Configuration;
 	using Properties;
 
@@ -110,51 +110,6 @@ namespace LinqToDB.Data
 			: this(GetDataProvider(transaction.Connection), transaction)
 		{
 		}
-
-		/*
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DbManager"/> class 
-		/// and opens a database connection for the provided configuration and database connection.
-		/// </summary>
-		/// <remarks>
-		/// <para>
-		/// This constructor opens the connection only if the connection state equals 
-		/// <see cref="System.Data.ConnectionState">ConnectionState.Closed</see>. 
-		/// Otherwise, it neither opens nor closes the connection.
-		/// </para>
-		/// <para>
-		/// See the <see cref="ConfigurationString"/> property 
-		/// for an explanation and use of the configuration string.
-		/// </para>
-		/// </remarks>
-		/// <include file="Examples.xml" path='examples/db[@name="ctor(IDbConnection,string)"]/*' />
-		/// <param name="connection">An instance of the <see cref="IDbConnection"/>.</param>
-		/// <param name="configurationString">The configuration string.</param>
-		/// <returns>An instance of the <see cref="DbManager"/> class.</returns>
-		[DebuggerStepThrough]
-		public DbManager(
-			IDbConnection connection,
-			string        configurationString)
-		{
-			if (connection == null)
-			{
-				Init(configurationString);
-
-				if (configurationString != null)
-					OpenConnection(configurationString);
-			}
-			else
-			{
-				Init(connection);
-
-				_configurationString = configurationString;
-				_connection.ConnectionString = GetConnectionString(configurationString);
-
-				if (_connection.State == ConnectionState.Closed)
-					OpenConnection();
-			}
-		}
-		*/
 
 		#endregion
 

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlBuilder;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using Extensions;
+	using SqlBuilder;
+
 	class JoinBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -294,7 +294,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 					return Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodExpressor(_ => GetGrouping(null, null, default(TKey), null)),
+						ReflectionHelper.Expressor<object>.MethodExpressor(_p => GetGrouping(null, null, default(TKey), null)),
 						new[]
 						{
 							ExpressionBuilder.ContextParam,

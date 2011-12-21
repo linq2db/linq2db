@@ -1,0 +1,16 @@
+﻿using System;
+using System.Configuration;
+
+using Nemerle;
+
+namespace LinqToDB.Configuration
+{
+	[ConfigurationCollection(typeof(DataProviderElement))]
+	class DataProviderElementCollection : ElementCollectionBase[DataProviderElement]
+	{
+		protected override GetElementKey(element : DataProviderElement) : object
+		{
+			$"$(element.Name)/$(element.TypeName)"
+		}
+	}
+}

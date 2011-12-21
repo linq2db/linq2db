@@ -1,0 +1,329 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Diagnostics;
+using System.Linq;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB.Data
+{
+	using Configuration;
+	using DataProvider;
+
+	public class DataConnection : ICloneable[DataConnection], ICloneable, IDisposable
+	{
+		#region .ctor
+
+		public this([NotNull] dataProvider : IDataProvider, [NotNull] connectionString : string)
+		{
+			DataProvider     = dataProvider;
+			ConnectionString = connectionString;
+		}
+
+		public this([NotNull] dataProvider : IDataProvider, [NotNull] connection : IDbConnection)
+		{
+			DataProvider = dataProvider;
+			_connection  = connection;
+		}
+
+		public this([NotNull] dataProvider : IDataProvider, [NotNull] transaction : IDbTransaction)
+		{
+			DataProvider      = dataProvider;
+			_connection       = transaction.Connection;
+			Transaction       = transaction;
+			_closeTransaction = false;
+		}
+
+		#endregion
+
+		#region Public Properties
+
+		public ConfigurationString : string        { get; }
+		public DataProvider        : IDataProvider { get; }
+		public ConnectionString    : string        { get; }
+
+		public static mutable WriteTraceLine : Action[string,string] = (message, displayName) => Debug.WriteLine(message, displayName);
+
+		public static DefaultConfiguration : string { get; set; }
+		public static DefaultDataProvider  : string { get; set; }
+
+		#endregion
+
+		#region Configuration
+
+		static this()
+		{
+			AddDataProvider(                                   SqlServerDataProvider(SqlServerVersion.v2008));
+			AddDataProvider($"$(ProviderName.SqlServer).2008", SqlServerDataProvider(SqlServerVersion.v2008));
+			AddDataProvider($"$(ProviderName.SqlServer).2005", SqlServerDataProvider(SqlServerVersion.v2005));
+			AddDataProvider(                                   AccessDataProvider());
+
+			def section = LinqToDBSection.Instance;
+
+			when (section != null)
+			{
+				DefaultConfiguration = section.DefaultConfiguration;
+				DefaultDataProvider  = section.DefaultDataProvider;
+
+				foreach (provider in section.DataProviders.OfType.[DataProviderElement]())
+				{
+					def dataProviderType = Type.GetType(provider.TypeName, true);
+					def providerInstance = Activator.CreateInstance(dataProviderType) :> IDataProvider;
+					def providerName     = if (string.IsNullOrEmpty(provider.Name)) providerInstance.Name else provider.Name;
+
+					providerInstance.Configure(provider.Attributes);
+
+					AddDataProvider(providerName, providerInstance);
+				}
+			}
+
+			when (string.IsNullOrEmpty(DefaultDataProvider))
+				DefaultDataProvider = ProviderName.SqlServer;
+
+			foreach (css in ConfigurationManager.ConnectionStrings.OfType.[ConnectionStringSettings]())
+			{
+				def configuration    = css.Name;
+				def connectionString = css.ConnectionString;
+				def providerName     = css.ProviderName;
+				def dataProvider     =
+					if (string.IsNullOrEmpty(providerName))
+						_dataProviders[DefaultDataProvider]
+					else if (_dataProviders.ContainsKey(providerName))
+						_dataProviders[providerName]
+					else
+					{
+						def providers = _dataProviders.Where(dp => dp.Value.ProviderName == providerName).ToList();
+
+						match (providers.Count)
+						{
+							| 0 => _dataProviders[DefaultDataProvider]
+							| 1 => providers[0].Value
+							| _ =>
+								match (providers.Where(dp => configuration.StartsWith(dp.Key)).Select(dp => dp.Value).FirstOrDefault())
+								{
+									| null =>
+										match (providers.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault())
+										{
+											| null => providers[0].Value
+											| p    => p
+										}
+									| p    => p
+								}
+						}
+					}
+
+				AddConfiguration(configuration, connectionString, dataProvider);
+					
+				when (DefaultConfiguration == null &&
+					css.ElementInformation.Source != null &&
+					!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+				{
+					DefaultConfiguration = css.Name;
+				}
+			}
+		}
+
+		static _dataProviders : Dictionary[string,IDataProvider] = Dictionary.[string,IDataProvider](4);
+
+		public static AddDataProvider([NotNull] providerName : string, [NotNull] dataProvider : IDataProvider) : void
+			requires !string.IsNullOrEmpty(dataProvider.Name)
+			otherwise throw ArgumentException(Resources.DbManager_InvalidDataProviderName, "dataProvider")
+		{
+			if (_dataProviders.ContainsKey(providerName))
+				_dataProviders[providerName] = dataProvider;
+			else
+				_dataProviders.Add(providerName, dataProvider);
+		}
+
+		public static AddDataProvider([NotNull] dataProvider : IDataProvider) : void
+		{
+			AddDataProvider(dataProvider.Name, dataProvider);
+		}
+
+		private static _configurations : Dictionary[string,string*IDataProvider] = Dictionary.[string,string*IDataProvider](4);
+
+		public static AddConfiguration([NotNull] configuration : string, [NotNull] connectionString : string, dataProvider : IDataProvider = null) : void
+		{
+			def connection =
+				if (dataProvider == null)
+				(
+					connectionString,
+					match (_dataProviders.Where(dp => configuration.StartsWith(dp.Key)).Select(dp => dp.Value).FirstOrDefault())
+					{
+						| null =>
+							match (_dataProviders.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault())
+							{
+								| null => _dataProviders[DefaultDataProvider]
+								| p    => p
+							}
+						| p    => p
+					}
+				)
+				else
+					(connectionString, dataProvider);
+
+			if (_configurations.ContainsKey(configuration))
+				_configurations[configuration] = connection;
+			else
+				_configurations.Add(configuration, connection);
+			
+		}
+
+		#endregion
+
+		#region Connection
+
+		mutable _closeConnection  : bool;
+		mutable _closeTransaction : bool;
+		mutable _connection       : IDbConnection;
+		mutable _command          : IDbCommand;
+
+		public Connection : IDbConnection
+		{
+			get
+			{
+				when (_connection == null)
+					_connection = DataProvider.CreateConnection(ConnectionString);
+
+				when (_connection.State == ConnectionState.Closed)
+				{
+					_connection.Open();
+					_closeConnection = true;
+				}
+
+				_connection;
+			}
+		}
+
+		public event OnClosing : EventHandler;
+		public event OnClosed  : EventHandler;
+
+		public virtual Close() : void
+		{
+			when (OnClosing != null)
+				OnClosing(this, EventArgs.Empty);
+
+			when (_command != null)
+			{
+				_command.Dispose();
+				_command = null;
+			}
+
+			when (Transaction != null && _closeTransaction)
+			{
+				Transaction.Dispose();
+				Transaction = null;
+			}
+
+			when (_connection != null && _closeConnection)
+			{
+				_connection.Dispose();
+				_connection = null;
+			}
+
+			when (OnClosed != null)
+				OnClosed(this, EventArgs.Empty);
+		}
+
+		#endregion
+
+		#region Transaction
+
+		public Transaction : IDbTransaction { get; private set; }
+		
+		public virtual BeginTransaction() : void
+		{
+			BeginTransaction(Connection.BeginTransaction);
+		}
+
+		public virtual BeginTransaction(isolationLevel : IsolationLevel) : void
+		{
+			BeginTransaction(() => Connection.BeginTransaction(isolationLevel));
+		}
+
+		BeginTransaction(func : void -> IDbTransaction) : void
+		{
+			// If transaction is open, we dispose it, it will rollback all changes.
+			//
+			when (Transaction != null)
+				Transaction.Dispose();
+
+			// Create new transaction object.
+			//
+			Transaction = func();
+
+			_closeTransaction = true;
+
+			// If the active command exists.
+			//
+			when (_command != null)
+				_command.Transaction = Transaction;
+		}
+
+		public virtual CommitTransaction() : void
+		{
+			when (Transaction != null)
+			{
+				Transaction.Commit();
+
+				when (_closeTransaction)
+				{
+					Transaction.Dispose();
+					Transaction = null;
+				}
+			}
+		}
+
+		public virtual RollbackTransaction() : void
+		{
+			when (Transaction != null)
+			{
+				Transaction.Rollback();
+
+				when (_closeTransaction)
+				{
+					Transaction.Dispose();
+					Transaction = null;
+				}
+			}
+		}
+
+		#endregion
+
+		#region Nemerle.ICloneable[DataConnection]  Members
+
+		this(configurationString : string, dataProvider : IDataProvider, connectionString : string, connection : IDbConnection)
+		{
+			ConfigurationString = configurationString;
+			DataProvider        = dataProvider;
+			ConnectionString    = connectionString;
+			_connection         = connection;
+		}
+
+		public Clone() : DataConnection
+		{
+			def connection = match (_connection)
+			{
+				| null            => null
+				| c is ICloneable => c.Clone() :> IDbConnection
+				| _               => DataProvider.CreateConnection(ConnectionString)
+			}
+
+			DataConnection(ConfigurationString, DataProvider, ConnectionString, connection)
+		}
+		
+		#endregion
+
+		#region System.IDisposable Members
+
+		public Dispose() : void
+		{
+			Close();
+		}
+
+		#endregion
+	}
+}

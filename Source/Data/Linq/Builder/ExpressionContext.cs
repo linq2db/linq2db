@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlBuilder;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using Extensions;
+	using SqlBuilder;
+
 	public class ExpressionContext : SequenceContextBase
 	{
 		public ExpressionContext(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)

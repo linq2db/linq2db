@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{848bf0eb-da01-44cf-b4da-4ddbf4f314d8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LinqToDB</RootNamespace>
+    <AssemblyName>LinqToDB.Temp</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <NoStdLib>true</NoStdLib>
+    <NemerleVersion>Net-4.0</NemerleVersion>
+    <NemerleBinPathRoot Condition=" '$(NemerleBinPathRoot)' == '' ">$(ProgramFiles)\Nemerle</NemerleBinPathRoot>
+    <Nemerle Condition=" '$(Nemerle)' == '' ">$(NemerleBinPathRoot)\$(NemerleVersion)</Nemerle>
+    <Name>LinqToDB</Name>
+    <StartupObject />
+    <ApplicationIcon />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>$(OutputPath)\$(MSBuildProjectName).xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Name>System.Configuration</Name>
+      <AssemblyName>System.configuration.dll</AssemblyName>
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <Name>System.Data.Linq</Name>
+      <AssemblyName>System.Data.Linq.dll</AssemblyName>
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Nemerle">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(Nemerle)\Nemerle.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <MacroReference Include="Nemerle.Linq">
+      <HintPath>$(Nemerle)\Nemerle.Linq.dll</HintPath>
+    </MacroReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Configuration\DataProviderElement.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Configuration\DataProviderElementCollection.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Configuration\ElementBase.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Configuration\ElementCollectionBase.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Configuration\LinqToDBSection.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataProvider\AccessDataProvider.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataProvider\DataProviderBase.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataProvider\IDataProvider.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataProvider\SqlServerDataProvider.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataProvider\SqlServerVersion.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataType.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataTypeExtensions.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Data\DataConnection.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.n" />
+    <Compile Include="ProviderName.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SqlBuilder\Sql.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SqlBuilder\SqlDataType.n">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Configuration\" />
+    <Folder Include="DataProvider\" />
+    <Folder Include="Data\" />
+    <Folder Include="Properties\" />
+    <Folder Include="SqlBuilder\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="app.config">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Properties\Settings.settings">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
+  <!--
+		To modify your build process, add your task inside one of the targets below and uncomment it. 
+		Other similar extension points exist, see Microsoft.Common.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

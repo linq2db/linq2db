@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlBuilder;
-
 namespace LinqToDB.Data.Linq.Builder
 {
+	using Extensions;
+	using SqlBuilder;
+
 	class FirstSingleBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder _builder, MethodCallExpression methodCall, BuildInfo buildInfo)
