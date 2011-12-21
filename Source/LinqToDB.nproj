@@ -133,6 +133,13 @@
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="MacroInternal\LinqToDB.MacroInternal.nproj">
+      <Name>LinqToDB.MacroInternal</Name>
+      <Project>{4695fb81-2075-4a16-88a4-688b7d9795ab}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--
 		To modify your build process, add your task inside one of the targets below and uncomment it. 

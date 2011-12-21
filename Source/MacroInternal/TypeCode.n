@@ -1,0 +1,86 @@
+﻿using System;
+
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Compiler;
+using Nemerle.Compiler.Parsetree;
+using Nemerle.Compiler.Typedtree;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+namespace LinqToDB.MacroInternal
+{
+	[MacroUsage(MacroPhase.BeforeTypedMembers, MacroTargets.Assembly)]
+	macro TypeCodeDef(params types : list[PExpr])
+	{
+		TypeCodeImpl.DoTransform(Macros.ImplicitCTX(), types)
+	}
+
+	module TypeCodeImpl
+	{
+		public DoTransform(typer : Typer, types : list[PExpr]) : void
+		{
+			Macros.DefineCTX(typer);
+			
+			//assert2(false);
+
+			def names = types.Map(fun(t)
+			{
+				def fx = typer.BindFixedType(t);
+				def nm = fx.TypeInfo.Name;
+				(t,nm)
+			});
+			
+			def elems = names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
+			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB.TypeCode.$(name : usesite)) ]> });
+
+			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB"]);
+
+			_ = env.Define(
+				<[ decl:
+					enum TypeCode
+					{
+						..$elems
+					}
+				]>);
+
+			_ = env.Define(
+				<[ decl:
+					partial module TypeExtensions
+					{
+						_typeCodes : System.Collections.Generic.Dictionary[System.Type,LinqToDB.TypeCode] =
+							System.Collections.Generic.Dictionary.[System.Type,LinqToDB.TypeCode]();
+
+						static this()
+						{
+							{ ..$exprs }
+						}
+						
+						public ToCode (this type : System.Type, getUnderlyingType : bool) : LinqToDB.TypeCode
+						{
+							def type =
+								if (getUnderlyingType)
+								{
+									def type =
+										if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable.[]))
+											type.GetGenericArguments()[0];
+										else
+											type;
+
+									def type =
+										if (type.IsEnum)
+											Enum.GetUnderlyingType(type);
+										else
+											type;
+								}
+								else
+									type;
+
+							_typeCodes[type];
+						}
+					}
+				]>
+			);
+		}
+	}
+}

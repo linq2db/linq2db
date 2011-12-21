@@ -2,29 +2,17 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-class MyClass
-{
-}
-
-
-[assembly:LinqToDB.MacroInternal.TypeCodeDef(
-	System.Int32,
-	System.String,
-	MyClass,
-	int?
-)]
-
 [assembly: Nemerle.Macro.Resource(@"Properties\Resources.resx")]
-//[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
+[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LinqToDB")]
+[assembly: AssemblyTitle("LinqToDB.MacroInternal")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LinqToDB")]
+[assembly: AssemblyProduct("LinqToDB.MacroInternal")]
 [assembly: AssemblyCopyright("Copyright ©  2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -35,7 +23,7 @@ class MyClass
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("51d0dfcf-591d-404d-b4bf-cfb813d823ed")]
+[assembly: Guid("c6445dae-71b5-4f03-80fd-3d35a51a172e")]
 
 // Version information for an assembly consists of the following four values:
 //
