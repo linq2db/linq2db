@@ -8,7 +8,7 @@ class MyClass
 
 
 [assembly:LinqToDB.MacroInternal.TypeCodeDef(
-	System.Int32,
+	int,
 	System.String,
 	MyClass,
 	int?

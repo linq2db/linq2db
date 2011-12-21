@@ -42,7 +42,7 @@ namespace LinqToDB.MacroInternal
 					{
 						..$elems
 					}
-				]>);
+				]>).Compile();
 
 			_ = env.Define(
 				<[ decl:
@@ -55,7 +55,12 @@ namespace LinqToDB.MacroInternal
 						{
 							{ ..$exprs }
 						}
-						
+
+						public ToCode (this type : System.Type) : LinqToDB.TypeCode
+						{
+							_typeCodes[type];
+						}
+
 						public ToCode (this type : System.Type, getUnderlyingType : bool) : LinqToDB.TypeCode
 						{
 							def type =
@@ -67,11 +72,10 @@ namespace LinqToDB.MacroInternal
 										else
 											type;
 
-									def type =
-										if (type.IsEnum)
-											Enum.GetUnderlyingType(type);
-										else
-											type;
+									if (type.IsEnum)
+										Enum.GetUnderlyingType(type);
+									else
+										type;
 								}
 								else
 									type;
@@ -80,7 +84,7 @@ namespace LinqToDB.MacroInternal
 						}
 					}
 				]>
-			);
+			).Compile();
 		}
 	}
 }
