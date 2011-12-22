@@ -101,7 +101,7 @@ namespace LinqToDB.SqlProvider
 							var par0 = func.Parameters[0];
 							var par1 = func.Parameters[1];
 
-							switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
+							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
 								case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
 								case TypeCode.Boolean  :
@@ -137,7 +137,7 @@ namespace LinqToDB.SqlProvider
 									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
 
 								default:
-									if (func.SystemType.GetUnderlyingType() == typeof(DateTimeOffset))
+									if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
 										goto case TypeCode.DateTime;
 									break;
 							}

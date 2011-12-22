@@ -1,0 +1,41 @@
+﻿using System;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB.SqlBuilder
+{
+	using MacroInternal;
+	
+	[Record]
+	public variant SqlExpression
+	{
+		| BinaryExpression { Type : SqlDataType; Expr1 : SqlExpression; Operation : string; Expr2 : SqlExpression; }
+		
+		| Expression       { Type : SqlDataType; Expr : string; Parameters : list[SqlExpression] }
+		
+		[ReplaceCtorParameter(precedence, Precedence.Primary)]
+		| DataType         { Type : SqlDataType; }
+
+		[ReplaceCtorParameter(precedence, Precedence.Primary)]
+		| Parameter        { Type : SqlDataType; Name : string; new Value : object; }
+		
+		[ReplaceCtorParameter(precedence, Precedence.Primary)]
+		| Value
+		{
+			    Type  : SqlDataType;
+			new Value : object;
+		}
+
+		public Precedence : int { get; }
+	}
+	
+	public module MyModule
+	{
+		public Test() : object
+		{
+			SqlExpression.Value(null, 0);
+			SqlExpression.Expression(0, SqlDataType.Byte(), "{0}", [SqlExpression.Value(null, 1)]);
+		}
+	}
+}

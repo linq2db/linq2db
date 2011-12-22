@@ -62,6 +62,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReplaceCtorParameter.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
     <Compile Include="TypeCode.n">
       <SubType>Code</SubType>

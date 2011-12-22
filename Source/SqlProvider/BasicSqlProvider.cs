@@ -2785,14 +2785,14 @@ namespace LinqToDB.SqlProvider
 							case "Convert":
 								{
 									var from  = func.Parameters[1] as SqlFunction;
-									var typef = func.SystemType.GetUnderlyingType();
+									var typef = func.SystemType.ToUnderlying();
 
-									if (from != null && from.Name == "Convert" && from.Parameters[1].SystemType.GetUnderlyingType() == typef)
+									if (from != null && from.Name == "Convert" && from.Parameters[1].SystemType.ToUnderlying() == typef)
 										return from.Parameters[1];
 
 									var fe = func.Parameters[1] as SqlExpression;
 
-									if (fe != null && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.GetUnderlyingType() == typef)
+									if (fe != null && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType.ToUnderlying() == typef)
 										return fe.Parameters[0];
 								}
 

@@ -67,7 +67,7 @@ namespace LinqToDB.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert" :
-						switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
+						switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 						{
 							case TypeCode.UInt64 :
 								if (func.Parameters[1].SystemType.IsFloatType())
@@ -81,7 +81,7 @@ namespace LinqToDB.SqlProvider
 								break;
 
 							case TypeCode.DateTime :
-								var type1 = func.Parameters[1].SystemType.GetUnderlyingType();
+								var type1 = func.Parameters[1].SystemType.ToUnderlying();
 
 								if (IsTimeDataType(func.Parameters[0]))
 								{

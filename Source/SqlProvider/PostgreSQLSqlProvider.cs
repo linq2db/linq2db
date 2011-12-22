@@ -62,7 +62,7 @@ namespace LinqToDB.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert"   :
-						if (func.SystemType.GetUnderlyingType() == typeof(bool))
+						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
 							var ex = AlternativeConvertToBoolean(func, 1);
 							if (ex != null)

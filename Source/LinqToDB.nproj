@@ -107,11 +107,20 @@
     <Compile Include="Data\DataConnection.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\ReflectionExtensions.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MacroDefinitions.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
     <Compile Include="ProviderName.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SqlBuilder\Sql.n">
+    <Compile Include="SqlBuilder\Precedence.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SqlBuilder\SqlExpressions.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SqlBuilder\SqlDataType.n">
@@ -122,6 +131,7 @@
     <Folder Include="Configuration\" />
     <Folder Include="DataProvider\" />
     <Folder Include="Data\" />
+    <Folder Include="Extensions\" />
     <Folder Include="Properties\" />
     <Folder Include="SqlBuilder\" />
   </ItemGroup>

@@ -83,7 +83,7 @@ namespace LinqToDB.SqlProvider
 				switch (func.Name)
 				{
 					case "Convert" :
-						var ftype = func.SystemType.GetUnderlyingType();
+						var ftype = func.SystemType.ToUnderlying();
 
 						if (ftype == typeof(bool))
 						{
@@ -92,7 +92,7 @@ namespace LinqToDB.SqlProvider
 								return ex;
 						}
 
-						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType.GetUnderlyingType() == typeof(decimal))
+						if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType.ToUnderlying() == typeof(decimal))
 							return func.Parameters[1];
 
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);

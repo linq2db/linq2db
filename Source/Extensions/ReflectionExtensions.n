@@ -1,0 +1,47 @@
+using System;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB.Extensions
+{
+	module ReflectionExtensions
+	{
+		/// <summary>
+		/// Gets a value indicating whether a type (or type's element type)
+		/// instance can be null in the underlying data store.
+		/// </summary>
+		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
+		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
+		public IsNullable([NotNull] this type : Type) : bool
+		{
+			type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable[_])
+		}
+
+		/// <summary>
+		/// Returns the underlying type argument of the specified type.
+		/// </summary>
+		/// <param name="type">A <see cref="System.Type"/> instance. </param>
+		/// <returns><list>
+		/// <item>The type argument of the type parameter,
+		/// if the type parameter is a closed generic nullable type.</item>
+		/// <item>The underlying Type if the type parameter is an enum type.</item>
+		/// <item>Otherwise, the type itself.</item>
+		/// </list>
+		/// </returns>
+		public ToUnderlying([NotNull] this type : Type) : Type
+		{
+			def type =
+				if (type.IsNullable())
+					type.GetGenericArguments()[0];
+				else
+					type;
+
+			if (type.IsEnum)
+				Enum.GetUnderlyingType(type);
+			else
+				type;
+		}
+	}
+}

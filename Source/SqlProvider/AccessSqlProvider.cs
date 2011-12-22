@@ -255,7 +255,7 @@ namespace LinqToDB.SqlProvider
 
 					case "Convert"   :
 						{
-							switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
+							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
 								case TypeCode.String   : return new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]);
 								case TypeCode.DateTime :

@@ -126,7 +126,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static _dataProviders : Dictionary[string,IDataProvider] = Dictionary.[string,IDataProvider](4);
+		static _dataProviders : Dictionary[string,IDataProvider] = Dictionary(4);
 
 		public static AddDataProvider([NotNull] providerName : string, [NotNull] dataProvider : IDataProvider) : void
 			requires !string.IsNullOrEmpty(dataProvider.Name)
@@ -143,7 +143,7 @@ namespace LinqToDB.Data
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
 
-		private static _configurations : Dictionary[string,string*IDataProvider] = Dictionary.[string,string*IDataProvider](4);
+		private static _configurations : Dictionary[string,string*IDataProvider] = Dictionary(4);
 
 		public static AddConfiguration([NotNull] configuration : string, [NotNull] connectionString : string, dataProvider : IDataProvider = null) : void
 		{

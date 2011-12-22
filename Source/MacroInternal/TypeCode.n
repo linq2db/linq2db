@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Nemerle;
 using Nemerle.Collections;
@@ -11,7 +12,7 @@ using Nemerle.Utility;
 namespace LinqToDB.MacroInternal
 {
 	[MacroUsage(MacroPhase.BeforeTypedMembers, MacroTargets.Assembly)]
-	macro TypeCodeDef(params types : list[PExpr])
+	macro TypeCode(params types : list[PExpr])
 	{
 		TypeCodeImpl.DoTransform(Macros.ImplicitCTX(), types)
 	}
@@ -24,13 +25,20 @@ namespace LinqToDB.MacroInternal
 			
 			//assert2(false);
 
-			def names = types.Map(fun(t)
+			def mapToName(t : PExpr)
 			{
 				def fx = typer.BindFixedType(t);
-				def nm = fx.TypeInfo.Name;
+				def nm = 
+					match (fx.FixedValue)
+					{
+						| Array(t,_) => $"ArrayOf$(t.TypeInfo.Name)"
+						| _          => fx.TypeInfo.Name
+					}
+					
 				(t,nm)
-			});
+			}
 			
+			def names = types.Map(mapToName);
 			def elems = names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
 			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB.TypeCode.$(name : usesite)) ]> });
 
@@ -46,40 +54,17 @@ namespace LinqToDB.MacroInternal
 
 			_ = env.Define(
 				<[ decl:
-					partial module TypeExtensions
+					module TypeExtensions
 					{
-						_typeCodes : System.Collections.Generic.Dictionary[System.Type,LinqToDB.TypeCode] =
-							System.Collections.Generic.Dictionary.[System.Type,LinqToDB.TypeCode]();
+						_typeCodes : Dictionary[Type,LinqToDB.TypeCode] = Dictionary();
 
 						static this()
 						{
 							{ ..$exprs }
 						}
 
-						public ToCode (this type : System.Type) : LinqToDB.TypeCode
+						public ToCode(this type : Type) : LinqToDB.TypeCode
 						{
-							_typeCodes[type];
-						}
-
-						public ToCode (this type : System.Type, getUnderlyingType : bool) : LinqToDB.TypeCode
-						{
-							def type =
-								if (getUnderlyingType)
-								{
-									def type =
-										if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Nullable.[]))
-											type.GetGenericArguments()[0];
-										else
-											type;
-
-									if (type.IsEnum)
-										Enum.GetUnderlyingType(type);
-									else
-										type;
-								}
-								else
-									type;
-
 							_typeCodes[type];
 						}
 					}

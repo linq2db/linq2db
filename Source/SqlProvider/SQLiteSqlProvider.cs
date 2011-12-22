@@ -56,7 +56,7 @@ namespace LinqToDB.SqlProvider
 					case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(" "), func.Parameters[0]);
 					case "Convert" :
 						{
-							var ftype = func.SystemType.GetUnderlyingType();
+							var ftype = func.SystemType.ToUnderlying();
 
 							if (ftype == typeof(bool))
 							{

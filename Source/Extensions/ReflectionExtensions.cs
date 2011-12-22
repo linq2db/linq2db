@@ -167,7 +167,7 @@ namespace LinqToDB.Extensions
 		/// <item>Otherwise, the type itself.</item>
 		/// </list>
 		/// </returns>
-		public static Type GetUnderlyingType([NotNull] this Type type)
+		public static Type ToUnderlying([NotNull] this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 

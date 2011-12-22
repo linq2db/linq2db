@@ -5,16 +5,16 @@ namespace LinqToDB
 {
 	public module ProviderName
 	{
-		public Access     : string = "Access";
-		public DB2        : string = "DB2";
-		public Firebird   : string = "Firebird";
-		public Informix   : string = "Informix";
-		public SqlServer  : string = "SqlServer";
-		public MySql      : string = "MySql";
-		public Oracle     : string = "Oracle";
-		public PostgreSQL : string = "PostgreSQL";
-		public SqlCe      : string = "SqlCe";
-		public SQLite     : string = "SQLite";
-		public Sybase     : string = "Sybase";
+		public Access     = "Access";
+		public DB2        = "DB2";
+		public Firebird   = "Firebird";
+		public Informix   = "Informix";
+		public SqlServer  = "SqlServer";
+		public MySql      = "MySql";
+		public Oracle     = "Oracle";
+		public PostgreSQL = "PostgreSQL";
+		public SqlCe      = "SqlCe";
+		public SQLite     = "SQLite";
+		public Sybase     = "Sybase";
 	}
 }

@@ -1,0 +1,25 @@
+﻿
+[assembly:LinqToDB.MacroInternal.TypeCode(
+	System.String,
+	System.Boolean,
+	System.SByte,
+	System.Int16,
+	System.Int32,
+	System.Int64,
+	System.Byte,
+	System.UInt16,
+	System.UInt32,
+	System.UInt64,
+	System.Single,
+	System.Double,
+	System.Decimal,
+	System.DateTime,
+	System.Object,
+	System.Guid,
+	array[byte],
+	System.Data.Linq.Binary,
+	System.TimeSpan,
+	System.DateTimeOffset,
+	System.Xml.XmlReader
+)]
+

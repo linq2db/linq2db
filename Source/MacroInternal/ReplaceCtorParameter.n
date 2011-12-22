@@ -1,0 +1,52 @@
+﻿using System;
+
+using Nemerle;
+using Nemerle.Compiler;
+using Nemerle.Compiler.Parsetree;
+
+namespace LinqToDB.MacroInternal
+{
+	[MacroUsage(MacroPhase.WithTypedMembers, MacroTargets.Class, AllowMultiple = false)]
+	macro ReplaceCtorParameter(typeBuilder : TypeBuilder, parameter : PExpr, expr : PExpr)
+	{
+		ReplaceCtorParameterImpl.DoTransform(Macros.ImplicitCTX(), typeBuilder, parameter, expr)
+	}
+
+	module ReplaceCtorParameterImpl
+	{
+		public DoTransform(typer : Typer, typeBuilder : TypeBuilder, parameter : PExpr, expr : PExpr) : void
+		{
+			Macros.DefineCTX(typer);
+
+			def pname =
+				match (parameter)
+				{
+					| <[ $(name : name) ]> => name
+					| _ => Message.FatalError(parameter.Location, "Expected simple name")
+				};
+
+			def ctors = typeBuilder.LookupMember(".ctor")
+				.Map(m => m :> MethodBuilder)
+				.Filter(m => m.Attributes %&& NemerleModifiers.Public && m.Header.Parameters.Find(p => p.Name == pname.Id).IsSome);
+
+			when (ctors.IsEmpty)
+				Message.Error(parameter.Location, $"Parameter '$parameter' not found.");
+
+			foreach (ctor in ctors)
+			{
+				ctor.Attributes = (ctor.Attributes & ~NemerleModifiers.Public) | NemerleModifiers.Private;
+
+				def nparams = ctor.Header.Parameters.Filter(p => p.Name != pname.Id).Map(_.AsParsed());
+				def exprs   = ctor.Header.Parameters.Map   (p => if (p.Name == pname.Id) expr else p.ReferencingExpr);
+
+				typeBuilder.Define(
+				<[ decl:
+					public this(..$nparams)
+					{
+						this(..$exprs)
+					}
+				]>);
+			}
+		}
+	}
+}

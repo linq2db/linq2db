@@ -55,7 +55,7 @@ namespace LinqToDB.SqlProvider
 						{
 							case "%":
 								{
-									var type1 = be.Expr1.SystemType.GetUnderlyingType();
+									var type1 = be.Expr1.SystemType.ToUnderlying();
 
 									if (type1 == typeof(double) || type1 == typeof(float))
 									{
@@ -81,7 +81,7 @@ namespace LinqToDB.SqlProvider
 						{
 							case "Convert" :
 								{
-									if (func.SystemType.GetUnderlyingType() == typeof(ulong) &&
+									if (func.SystemType.ToUnderlying() == typeof(ulong) &&
 										func.Parameters[1].SystemType.IsFloatType())
 										return new SqlFunction(
 											func.SystemType,

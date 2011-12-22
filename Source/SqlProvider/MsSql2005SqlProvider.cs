@@ -16,13 +16,13 @@ namespace LinqToDB.SqlProvider
 			{
 				var func = (SqlFunction)expr;
 
-				switch (Type.GetTypeCode(func.SystemType.GetUnderlyingType()))
+				switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 				{
 					case TypeCode.DateTime :
 
 						if (func.Name == "Convert")
 						{
-							var type1 = func.Parameters[1].SystemType.GetUnderlyingType();
+							var type1 = func.Parameters[1].SystemType.ToUnderlying();
 
 							if (IsTimeDataType(func.Parameters[0]))
 							{

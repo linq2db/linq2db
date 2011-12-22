@@ -7,6 +7,8 @@ using Nemerle;
 
 namespace LinqToDB
 {
+	using Extensions;
+
 	public module DataTypeExtensions
 	{
 		public ToSystemType(this type : DataType) : Type
@@ -55,42 +57,30 @@ namespace LinqToDB
 
 		public ToDataType(this type : Type) : DataType
 		{
-			def type =
-				if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable.[]))
-					type.GetGenericArguments()[0];
-				else
-					type;
-
-			def type =
-				if (type.IsEnum)
-					Enum.GetUnderlyingType(type);
-				else
-					type;
-
-			match (Type.GetTypeCode(type))
+			match (type.ToUnderlying().ToCode())
 			{
-				| String                                => DataType.NVarChar
-				| Boolean                               => DataType.Boolean
-				| SByte                                 => DataType.SByte
-				| Int16                                 => DataType.Int16
-				| Int32                                 => DataType.Int32
-				| Int64                                 => DataType.Int64
-				| Byte                                  => DataType.Byte
-				| UInt16                                => DataType.UInt16
-				| UInt32                                => DataType.UInt32
-				| UInt64                                => DataType.UInt64
-				| Single                                => DataType.Single
-				| Double                                => DataType.Double
-				| Decimal                               => DataType.Decimal
-				| DateTime                              => DataType.DateTime
-				| Object                                => DataType.Variant
-				| _ when type == typeof(Guid)           => DataType.Guid
-				| _ when type == typeof(array[byte])    => DataType.VarBinary
-				| _ when type == typeof(Binary)         => DataType.VarBinary
-				| _ when type == typeof(TimeSpan)       => DataType.Time
-				| _ when type == typeof(DateTimeOffset) => DataType.DateTimeOffset
-				| _ when type == typeof(XmlReader)      => DataType.Xml
-				| _                                     => throw InvalidOperationException()
+				| String         => DataType.NVarChar
+				| Boolean        => DataType.Boolean
+				| SByte          => DataType.SByte
+				| Int16          => DataType.Int16
+				| Int32          => DataType.Int32
+				| Int64          => DataType.Int64
+				| Byte           => DataType.Byte
+				| UInt16         => DataType.UInt16
+				| UInt32         => DataType.UInt32
+				| UInt64         => DataType.UInt64
+				| Single         => DataType.Single
+				| Double         => DataType.Double
+				| Decimal        => DataType.Decimal
+				| DateTime       => DataType.DateTime
+				| Object         => DataType.Variant
+				| Guid           => DataType.Guid
+				| ArrayOfByte    
+				| Binary         => DataType.VarBinary
+				| TimeSpan       => DataType.Time
+				| DateTimeOffset => DataType.DateTimeOffset
+				| XmlReader      => DataType.Xml
+				| _              => throw InvalidOperationException()
 			}
 		}
 

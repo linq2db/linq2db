@@ -2,18 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-class MyClass
-{
-}
-
-
-[assembly:LinqToDB.MacroInternal.TypeCodeDef(
-	int,
-	System.String,
-	MyClass,
-	int?
-)]
-
 [assembly: Nemerle.Macro.Resource(@"Properties\Resources.resx")]
 //[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
 
