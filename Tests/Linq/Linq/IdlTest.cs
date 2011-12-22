@@ -390,6 +390,30 @@ namespace Tests.Linq
                     Assert.That(queryList.ToList(), Is.EqualTo(queryArray.ToList()));
                 });
         }
+
+        [Test]
+        public void ConcatJoinOrderByTest()
+        {
+            ForMySqlProvider(
+                db =>
+                {
+
+                    var query = from y in
+                                    ((from pat in db.Patient
+                                      where pat.Diagnosis == "a"
+                                      select pat)
+                                    .Concat
+                                    (from pat in db.Patient
+                                     where pat.Diagnosis == "b"
+                                     select pat))
+                                join person in db.Person on y.PersonID equals person.ID
+                                orderby person.ID
+                                select new { Id = person.ID, Id2 = y.PersonID };
+
+                    Assert.That(query.ToList(), Is.Not.Null);
+
+                });
+        }
     }
 
     #region TestConvertFunction classes

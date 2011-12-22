@@ -301,7 +301,7 @@ namespace LinqToDB.Data.Linq.Builder
 						}
 					}
 
-					throw new InvalidOperationException();
+					//throw new InvalidOperationException();
 				}
 
 				return base.BuildExpression(expression, level);

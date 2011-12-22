@@ -139,9 +139,6 @@
     <Content Include="app.config">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Properties\Settings.settings">
-      <SubType>Content</SubType>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="MacroInternal\LinqToDB.MacroInternal.nproj">
