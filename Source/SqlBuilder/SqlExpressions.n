@@ -3,7 +3,7 @@
 using Nemerle;
 using Nemerle.Assertions;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB_Temp.SqlBuilder
 {
 	using MacroInternal;
 	

@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 [assembly: Nemerle.Macro.Resource(@"Properties\Resources.resx")]
 //[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
 
+[assembly: InternalsVisibleTo("linq2db.Tests")]
+
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.

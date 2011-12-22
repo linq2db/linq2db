@@ -3,7 +3,7 @@ using System;
 using Nemerle;
 using Nemerle.Assertions;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB_Temp.Extensions
 {
 	module ReflectionExtensions
 	{

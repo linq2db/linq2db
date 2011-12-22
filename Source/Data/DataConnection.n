@@ -8,7 +8,7 @@ using System.Linq;
 using Nemerle;
 using Nemerle.Assertions;
 
-namespace LinqToDB.Data
+namespace LinqToDB_Temp.Data
 {
 	using Configuration;
 	using DataProvider;

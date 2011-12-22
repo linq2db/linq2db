@@ -4,7 +4,7 @@ using Nemerle;
 using Nemerle.Compiler;
 using Nemerle.Compiler.Parsetree;
 
-namespace LinqToDB.MacroInternal
+namespace LinqToDB_Temp.MacroInternal
 {
 	[MacroUsage(MacroPhase.WithTypedMembers, MacroTargets.Class, AllowMultiple = false)]
 	macro ReplaceCtorParameter(typeBuilder : TypeBuilder, parameter : PExpr, expr : PExpr)

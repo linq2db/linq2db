@@ -3,7 +3,7 @@ using System.Configuration;
 
 using Nemerle;
 
-namespace LinqToDB
+namespace LinqToDB_Temp.Configuration
 {
 	abstract class ElementCollectionBase[T] : ConfigurationElementCollection
 		where T : ConfigurationElement, new()

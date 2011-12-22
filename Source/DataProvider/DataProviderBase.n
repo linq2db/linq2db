@@ -5,7 +5,7 @@ using System.Data;
 using Nemerle;
 using Nemerle.Assertions;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB_Temp.DataProvider
 {
 	public abstract class DataProviderBase : IDataProvider
 	{

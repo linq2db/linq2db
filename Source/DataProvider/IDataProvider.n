@@ -4,7 +4,7 @@ using System.Data;
 
 using Nemerle;
 
-namespace LinqToDB
+namespace LinqToDB_Temp.DataProvider
 {
 	public interface IDataProvider
 	{

@@ -40,9 +40,9 @@ namespace LinqToDB.MacroInternal
 			
 			def names = types.Map(mapToName);
 			def elems = names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
-			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB.TypeCode.$(name : usesite)) ]> });
+			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB_Temp.TypeCode.$(name : usesite)) ]> });
 
-			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB"]);
+			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB_Temp"]);
 
 			_ = env.Define(
 				<[ decl:
@@ -56,16 +56,21 @@ namespace LinqToDB.MacroInternal
 				<[ decl:
 					module TypeExtensions
 					{
-						_typeCodes : Dictionary[Type,LinqToDB.TypeCode] = Dictionary();
+						_typeCodes : Dictionary[Type,LinqToDB_Temp.TypeCode] = Dictionary();
 
 						static this()
 						{
 							{ ..$exprs }
 						}
 
-						public ToCode(this type : Type) : LinqToDB.TypeCode
+						public ToCode(this type : Type) : LinqToDB_Temp.TypeCode
 						{
-							_typeCodes[type];
+							mutable code;
+							
+							if (_typeCodes.TryGetValue(type, out code))
+								code
+							else
+								throw LinqToDB_Temp.LinqToDBException(string.Format("There is no corresponding TypeCode for '{0}'.", type.FullName))
 						}
 					}
 				]>

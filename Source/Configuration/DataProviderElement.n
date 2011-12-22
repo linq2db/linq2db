@@ -5,7 +5,7 @@ using Nemerle;
 
 #pragma warning disable 10003
 
-namespace LinqToDB.Configuration
+namespace LinqToDB_Temp.Configuration
 {
 	class DataProviderElement : ElementBase
 	{

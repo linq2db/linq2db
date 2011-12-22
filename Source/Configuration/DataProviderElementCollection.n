@@ -3,7 +3,7 @@ using System.Configuration;
 
 using Nemerle;
 
-namespace LinqToDB.Configuration
+namespace LinqToDB_Temp.Configuration
 {
 	[ConfigurationCollection(typeof(DataProviderElement))]
 	class DataProviderElementCollection : ElementCollectionBase[DataProviderElement]

@@ -4,7 +4,7 @@ using System.Data.OleDb;
 
 using Nemerle;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB_Temp.DataProvider
 {
 	public class AccessDataProvider : DataProviderBase
 	{

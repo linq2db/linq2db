@@ -4,8 +4,9 @@ using System.Data.Linq;
 using System.Xml;
 
 using Nemerle;
+using Nemerle.Collections;
 
-namespace LinqToDB
+namespace LinqToDB_Temp
 {
 	using Extensions;
 

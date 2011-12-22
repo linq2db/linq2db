@@ -113,6 +113,9 @@
     <Compile Include="MacroDefinitions.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Metadata\TypeExtension.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
     <Compile Include="ProviderName.n">
       <SubType>Code</SubType>
@@ -132,6 +135,7 @@
     <Folder Include="DataProvider\" />
     <Folder Include="Data\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Metadata" />
     <Folder Include="Properties\" />
     <Folder Include="SqlBuilder\" />
   </ItemGroup>
@@ -139,6 +143,9 @@
     <Content Include="app.config">
       <SubType>Content</SubType>
     </Content>
+    <Compile Include="LinqToDBException.n">
+      <SubType>Content</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="MacroInternal\LinqToDB.MacroInternal.nproj">

@@ -1,7 +1,7 @@
 ﻿using System;
 using Nemerle;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB_Temp.SqlBuilder
 {
 	public module Precedence
 	{

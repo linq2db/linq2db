@@ -1,7 +1,7 @@
 ﻿using System;
 using Nemerle;
 
-namespace LinqToDB
+namespace LinqToDB_Temp
 {
 	public module ProviderName
 	{
