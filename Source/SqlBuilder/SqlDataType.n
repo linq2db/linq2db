@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 using Nemerle;
 using Nemerle.Assertions;
@@ -47,6 +48,63 @@ namespace LinqToDB_Temp.SqlBuilder
 		| VarNumeric     
 
 		public SystemType : Type { get; }
+
+		public ToSql(sb : StringBuilder) : StringBuilder
+		{
+			_ = sb.Append(match (this)
+				{
+					| Char           => "Char          "
+					| VarChar        => "VarChar       "
+					| Text           => "Text          "
+					| NChar          => "NChar         "
+					| NVarChar       => "NVarChar      "
+					| NText          => "NText         "
+					| Binary         => "Binary        "
+					| VarBinary      => "VarBinary     "
+					| Image          => "Image         "
+					| Boolean        => "Boolean       "
+					| Guid           => "Guid          "
+					| SByte          => "SByte         "
+					| Int16          => "Int16         "
+					| Int32          => "Int32         "
+					| Int64          => "Int64         "
+					| Byte           => "Byte          "
+					| UInt16         => "UInt16        "
+					| UInt32         => "UInt32        "
+					| UInt64         => "UInt64        "
+					| Single         => "Single        "
+					| Double         => "Double        "
+					| Decimal        => "Decimal       "
+					| Money          => "Money         "
+					| SmallMoney     => "SmallMoney    "
+					| Date           => "Date          "
+					| Time           => "Time          "
+					| DateTime       => "DateTime      "
+					| DateTime2      => "DateTime2     "
+					| SmallDateTime  => "SmallDateTime "
+					| DateTimeOffset => "DateTimeOffset"
+					| Timestamp      => "Timestamp     "
+					| Xml            => "Xml           "
+					| Variant        => "Variant       "
+					| VarNumeric     => "VarNumeric    "
+				});
+
+			match (this)
+			{
+				| Char      (l)
+				| VarChar   (l)
+				| Text      (l)
+				| NChar     (l)
+				| NVarChar  (l)
+				| NText     (l)
+				| Binary    (l)
+				| VarBinary (l)   => if (l > 0) sb.Append('(').Append(l).Append(')') else sb
+				| Decimal   (p,s)
+				| Money     (p,s)
+				| SmallMoney(p,s) => if (p > 0) sb.Append('(').Append(p).Append(',').Append(s).Append(')') else sb
+				| _               => sb
+			}
+		}
 
 		static _decimalLen = decimal.MaxValue.ToString().Length;
 

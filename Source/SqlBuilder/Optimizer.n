@@ -1,0 +1,154 @@
+﻿using System;
+using Nemerle;
+
+namespace LinqToDB_Temp.SqlBuilder
+{
+	public module Optimizer
+	{
+		public Optimize(expr : SqlExpr) : SqlExpr
+		{
+			#region "1" + val      -> "1val"
+			| Binary(Value(String(v1))      , "+", Value(v2)              ) =>
+				def vv2 = v2.GetValue();
+				if (v1 == null && vv2 == null) null : string else $"$v1$vv2"
+			#endregion
+			#region val + "1"      -> "val1"
+			| Binary(Value(v1)              , "+", Value(String(v2))      ) =>
+				def vv1 = v1.GetValue();
+				if (vv1 == null && v2 == null) null : string else $"$vv1$v2"
+			#endregion
+			#region "" + ex        -> "ex"
+			| Binary(Value(String(""))      , "+", e                      ) when e.Type.SystemType == typeof(string)
+			| Binary(Value(String(null))    , "+", e                      ) when e.Type.SystemType == typeof(string)
+			#endregion
+			#region ex + ""        -> "ex"
+			| Binary(e                      , "+", Value(String(""))      ) when e.Type.SystemType == typeof(string)
+			| Binary(e                      , "+", Value(String(null))    ) when e.Type.SystemType == typeof(string)
+			#endregion
+			#region 0  + ex        -> ex
+			| Binary(Value(SByte  (0))      , "+", e                      )
+			| Binary(Value(Int16  (0))      , "+", e                      )
+			| Binary(Value(Int32  (0))      , "+", e                      )
+			| Binary(Value(Int64  (0))      , "+", e                      )
+			| Binary(Value(Byte   (0))      , "+", e                      )
+			| Binary(Value(UInt16 (0))      , "+", e                      )
+			| Binary(Value(UInt32 (0))      , "+", e                      )
+			| Binary(Value(UInt64 (0))      , "+", e                      )
+			| Binary(Value(Single (0f))     , "+", e                      )
+			| Binary(Value(Double (0d))     , "+", e                      )
+			| Binary(Value(Decimal(0m))     , "+", e                      )
+			#endregion
+			#region ex + ""        -> ex
+			| Binary(e                      , "+", Value(String(""))      )
+			| Binary(e                      , "+", Value(String(null))    )
+			#endregion
+			#region ex + 0         -> ex
+			| Binary(e                      , "+", Value(SByte  (0))      )
+			| Binary(e                      , "+", Value(Int16  (0))      )
+			| Binary(e                      , "+", Value(Int32  (0))      )
+			| Binary(e                      , "+", Value(Int64  (0))      )
+			| Binary(e                      , "+", Value(Byte   (0))      )
+			| Binary(e                      , "+", Value(UInt16 (0))      )
+			| Binary(e                      , "+", Value(UInt32 (0))      )
+			| Binary(e                      , "+", Value(UInt64 (0))      )
+			| Binary(e                      , "+", Value(Single (0f))     )
+			| Binary(e                      , "+", Value(Double (0d))     )
+			| Binary(e                      , "+", Value(Decimal(0m))     )
+			#endregion
+			#region 0  * ex        -> 0
+			| Binary(Value(SByte  (0))  as e, "*", _                      )
+			| Binary(Value(Int16  (0))  as e, "*", _                      )
+			| Binary(Value(Int32  (0))  as e, "*", _                      )
+			| Binary(Value(Int64  (0))  as e, "*", _                      )
+			| Binary(Value(Byte   (0))  as e, "*", _                      )
+			| Binary(Value(UInt16 (0))  as e, "*", _                      )
+			| Binary(Value(UInt32 (0))  as e, "*", _                      )
+			| Binary(Value(UInt64 (0))  as e, "*", _                      )
+			| Binary(Value(Single (0f)) as e, "*", _                      )
+			| Binary(Value(Double (0d)) as e, "*", _                      )
+			| Binary(Value(Decimal(0m)) as e, "*", _                      )
+			#endregion
+			#region ex * 0         -> 0
+			| Binary(_                      , "*", Value(SByte  (0))  as e)
+			| Binary(_                      , "*", Value(Int16  (0))  as e)
+			| Binary(_                      , "*", Value(Int32  (0))  as e)
+			| Binary(_                      , "*", Value(Int64  (0))  as e)
+			| Binary(_                      , "*", Value(Byte   (0))  as e)
+			| Binary(_                      , "*", Value(UInt16 (0))  as e)
+			| Binary(_                      , "*", Value(UInt32 (0))  as e)
+			| Binary(_                      , "*", Value(UInt64 (0))  as e)
+			| Binary(_                      , "*", Value(Single (0f)) as e)
+			| Binary(_                      , "*", Value(Double (0d)) as e)
+			| Binary(_                      , "*", Value(Decimal(0m)) as e)
+			#endregion
+			#region 1  * ex        -> ex
+			| Binary(Value(SByte  (1))      , "*", e                      )
+			| Binary(Value(Int16  (1))      , "*", e                      )
+			| Binary(Value(Int32  (1))      , "*", e                      )
+			| Binary(Value(Int64  (1))      , "*", e                      )
+			| Binary(Value(Byte   (1))      , "*", e                      )
+			| Binary(Value(UInt16 (1))      , "*", e                      )
+			| Binary(Value(UInt32 (1))      , "*", e                      )
+			| Binary(Value(UInt64 (1))      , "*", e                      )
+			| Binary(Value(Single (1f))     , "*", e                      )
+			| Binary(Value(Double (1d))     , "*", e                      )
+			| Binary(Value(Decimal(1m))     , "*", e                      )
+			#endregion
+			#region ex * 1         -> ex
+			| Binary(e                      , "*", Value(SByte  (1))      )
+			| Binary(e                      , "*", Value(Int16  (1))      )
+			| Binary(e                      , "*", Value(Int32  (1))      )
+			| Binary(e                      , "*", Value(Int64  (1))      )
+			| Binary(e                      , "*", Value(Byte   (1))      )
+			| Binary(e                      , "*", Value(UInt16 (1))      )
+			| Binary(e                      , "*", Value(UInt32 (1))      )
+			| Binary(e                      , "*", Value(UInt64 (1))      )
+			| Binary(e                      , "*", Value(Single (1f))     )
+			| Binary(e                      , "*", Value(Double (1d))     ) => Optimize(e)
+			| Binary(e                      , "*", Value(Decimal(1m))     ) => Optimize(e)
+			#endregion
+			#region ex + "1" + "2" -> ex + "12"
+			| Binary(Binary(e, "+", Value(String(v1))), "+", Value(String(v2))) =>
+				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, "+", $"$v1$v2"))
+			#endregion
+			#region ex + 2 + 3     -> ex + 5
+			| Binary(Binary(e, "+", Value(Int32(v1))), "+", Value(Int32(v2))) =>
+				def v = v1 + v2;
+				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) "+" else "-", if (v >= 0) v else -v))
+			#endregion
+			#region ex - 2 + 3     -> ex + 1
+			| Binary(Binary(e, "-", Value(Int32(v1))), "+", Value(Int32(v2))) =>
+				def v = v1 - v2;
+				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) "-" else "+", if (v >= 0) v else -v))
+			#endregion
+			#region 2 + 3          -> 5
+			| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2
+			| Binary(Value(Int16  (v1))     , "+", Value(Int16  (v2))     ) => v1 + v2
+			| Binary(Value(Int32  (v1))     , "+", Value(Int32  (v2))     ) => v1 + v2
+			| Binary(Value(Int64  (v1))     , "+", Value(Int64  (v2))     ) => v1 + v2
+			| Binary(Value(Byte   (v1))     , "+", Value(Byte   (v2))     ) => v1 + v2
+			| Binary(Value(UInt16 (v1))     , "+", Value(UInt16 (v2))     ) => v1 + v2
+			| Binary(Value(UInt32 (v1))     , "+", Value(UInt32 (v2))     ) => v1 + v2
+			| Binary(Value(UInt64 (v1))     , "+", Value(UInt64 (v2))     ) => v1 + v2
+			| Binary(Value(Single (v1))     , "+", Value(Single (v2))     ) => v1 + v2
+			| Binary(Value(Double (v1))     , "+", Value(Double (v2))     ) => v1 + v2
+			| Binary(Value(Decimal(v1))     , "+", Value(Decimal(v2))     ) => v1 + v2
+			#endregion
+			#region 2 - 3          -> -1
+			| Binary(Value(SByte  (v1))     , "-", Value(SByte  (v2))     ) => v1 - v2
+			| Binary(Value(Int16  (v1))     , "-", Value(Int16  (v2))     ) => v1 - v2
+			| Binary(Value(Int32  (v1))     , "-", Value(Int32  (v2))     ) => v1 - v2
+			| Binary(Value(Int64  (v1))     , "-", Value(Int64  (v2))     ) => v1 - v2
+			| Binary(Value(Byte   (v1))     , "-", Value(Byte   (v2))     ) => v1 - v2
+			| Binary(Value(UInt16 (v1))     , "-", Value(UInt16 (v2))     ) => v1 - v2
+			| Binary(Value(UInt32 (v1))     , "-", Value(UInt32 (v2))     ) => v1 - v2
+			| Binary(Value(UInt64 (v1))     , "-", Value(UInt64 (v2))     ) => v1 - v2
+			| Binary(Value(Single (v1))     , "-", Value(Single (v2))     ) => v1 - v2
+			| Binary(Value(Double (v1))     , "-", Value(Double (v2))     ) => v1 - v2
+			| Binary(Value(Decimal(v1))     , "-", Value(Decimal(v2))     ) => v1 - v2
+			#endregion
+
+			| e => e
+		}
+	}
+}

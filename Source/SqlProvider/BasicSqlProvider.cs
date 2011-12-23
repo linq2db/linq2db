@@ -2472,7 +2472,7 @@ namespace LinqToDB.SqlProvider
 
 										if (be.Expr1 is SqlBinaryExpression)
 										{
-											var be1 = (SqlBinaryExpression) be.Expr1;
+											var be1 = (SqlBinaryExpression)be.Expr1;
 
 											if (be1.Expr2 is SqlValue)
 											{

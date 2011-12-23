@@ -120,6 +120,9 @@
     <Compile Include="ProviderName.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SqlBuilder\Optimizer.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SqlBuilder\Precedence.n">
       <SubType>Code</SubType>
     </Compile>

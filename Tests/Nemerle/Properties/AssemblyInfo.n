@@ -3,19 +3,16 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: Nemerle.Macro.Resource(@"Properties\Resources.resx")]
-//[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
-
-[assembly: InternalsVisibleTo("linq2db.Tests")]
-//[assembly: InternalsVisibleTo("linq2db.Tests.Nemerle")]
+[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LinqToDB")]
+[assembly: AssemblyTitle("Tests.Nemerle")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LinqToDB")]
+[assembly: AssemblyProduct("Tests.Nemerle")]
 [assembly: AssemblyCopyright("Copyright ©  2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -26,7 +23,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("51d0dfcf-591d-404d-b4bf-cfb813d823ed")]
+[assembly: Guid("a7da9b3e-d5a9-45bf-8446-8e9f6e056acf")]
 
 // Version information for an assembly consists of the following four values:
 //

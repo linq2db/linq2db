@@ -170,6 +170,7 @@
   <ItemGroup>
     <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
+    <Compile Include="SqlBuilder\OptimizerTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
     <Compile Include="Linq\ConvertTest.cs" />
@@ -317,6 +318,10 @@
     <ProjectReference Include="..\Model\Tests.Model.csproj">
       <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
       <Name>Tests.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Nemerle\Tests.Nemerle.nproj">
+      <Project>{688761B7-E1EE-48CD-8643-99768D424B3E}</Project>
+      <Name>Tests.Nemerle</Name>
     </ProjectReference>
     <ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj">
       <Project>{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}</Project>

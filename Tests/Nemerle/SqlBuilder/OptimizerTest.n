@@ -1,0 +1,52 @@
+﻿using System;
+using Nemerle;
+
+using NUnit.Framework;
+
+using LinqToDB_Temp.SqlBuilder;
+using LinqToDB_Temp.SqlBuilder.Optimizer;
+
+namespace Tests.Nemerle
+{
+	public module OptimizerTest
+	{
+		Binary(e1 : SqlExpr, op : string, e2 : SqlExpr) : SqlExpr.Binary
+		{
+			SqlExpr.Binary(e1.Type, Precedence.Unknown, e1, op, e2)
+		}
+
+		Throw(o : object) : void
+		{
+			throw AssertionException($"Was: $o")
+		}
+		
+		public ConvertString() : void
+		{
+			def snull = null : string;
+			
+			match (Optimize(Binary("1"  , "+", 2u   ))) { | Value(String("12")) => () | e => Throw(e) }
+			match (Optimize(Binary(1s   , "+", "2"  ))) { | Value(String("12")) => () | e => Throw(e) }
+			match (Optimize(Binary(""   , "+", 1    ))) { | Value(String("1" )) => () | e => Throw(e) }
+			match (Optimize(Binary(snull, "+", "1"  ))) { | Value(String("1" )) => () | e => Throw(e) }
+			match (Optimize(Binary(2l   , "+", ""   ))) { | Value(String("2" )) => () | e => Throw(e) }
+			match (Optimize(Binary("2"  , "+", snull))) { | Value(String("2" )) => () | e => Throw(e) }
+		}
+
+		public ConvertNumber() : void
+		{
+			def fi = SqlExpr.Function(typeof(int),     "f", []);
+			def fu = SqlExpr.Function(typeof(uint),    "f", []);
+			def fm = SqlExpr.Function(typeof(decimal), "f", []);
+			
+			match (Optimize(Binary(0 , "+", fi))) { | Function           => () | e => Throw(e) }
+			match (Optimize(Binary(2u, "+", 0u))) { | Value(UInt32 (2 )) => () | e => Throw(e) }
+			match (Optimize(Binary(2s, "+", 2s))) { | Value(Int16  (4 )) => () | e => Throw(e) }
+			match (Optimize(Binary(3l, "*", 0l))) { | Value(Int64  (0 )) => () | e => Throw(e) }
+			match (Optimize(Binary(3d, "*", 1d))) { | Value(Double (3d)) => () | e => Throw(e) }
+			match (Optimize(Binary(fu, "*", 1u))) { | Function           => () | e => Throw(e) }
+			match (Optimize(Binary(0b, "*", 4b))) { | Value(Byte   (0b)) => () | e => Throw(e) }
+			match (Optimize(Binary(1m, "*", 5m))) { | Value(Decimal(5m)) => () | e => Throw(e) }
+			match (Optimize(Binary(1m, "*", fm))) { | Function           => () | e => Throw(e) }
+		}
+	}
+}

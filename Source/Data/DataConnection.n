@@ -27,13 +27,18 @@ namespace LinqToDB_Temp.Data
 		{
 			ConfigurationString = configurationString;
 
-			match (_configurations.Get(configurationString))
+			match (_configurations.TryGetValue(configurationString))
 			{
-				| Some((s,p)) => this(p, s)
-				| None        => throw LinqToDBException("Configuration '$configurationString' is not defined.");
+				| ((s,p), true) => this(p, s)
+				| _             => this(LinqToDBException("Configuration '$configurationString' is not defined."));
 			}
 		}
 
+		this(ex : Exception)
+		{
+			throw ex;
+		}
+		
 		public this([NotNull] dataProvider : IDataProvider, [NotNull] connectionString : string)
 		{
 			DataProvider     = dataProvider;
