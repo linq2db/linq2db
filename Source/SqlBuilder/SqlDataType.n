@@ -6,6 +6,7 @@ using Nemerle.Assertions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
+	[Record]
 	public variant SqlDataType
 	{
 		| Char           { Length : int }
@@ -16,31 +17,33 @@ namespace LinqToDB_Temp.SqlBuilder
 		| NText          { Length : int }
 		| Binary         { Length : int }
 		| VarBinary      { Length : int }
-		| Image
-		| Boolean
-		| Guid
-		| SByte
-		| Int16
-		| Int32
-		| Int64
-		| Byte
-		| UInt16
-		| UInt32
-		| UInt64
-		| Single
-		| Double
+		| Image          
+		| Boolean        
+		| Guid           
+		| SByte          
+		| Int16          
+		| Int32          
+		| Int64          
+		| Byte           
+		| UInt16         
+		| UInt32         
+		| UInt64         
+		| Single         
+		| Double         
 		| Decimal        { Precision : int; Scale : int }
 		| Money          { Precision : int; Scale : int }
 		| SmallMoney     { Precision : int; Scale : int }
-		| Date
-		| Time
-		| DateTime
-		| DateTime2
-		| SmallDateTime
-		| DateTimeOffset
-		| Timestamp
-		| Xml
-		| Variant
-		| VarNumeric
+		| Date           
+		| Time           
+		| DateTime       
+		| DateTime2      
+		| SmallDateTime  
+		| DateTimeOffset 
+		| Timestamp      
+		| Xml            
+		| Variant        
+		| VarNumeric     
+
+		public SystemType : Type { get; }
 	}
 }

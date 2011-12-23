@@ -39,7 +39,7 @@ namespace LinqToDB.MacroInternal
 			}
 			
 			def names = types.Map(mapToName);
-			def elems = names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
+			def elems = <[ decl: | Unknown ]> :: names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
 			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB_Temp.TypeCode.$(name : usesite)) ]> });
 
 			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB_Temp"]);
@@ -63,7 +63,18 @@ namespace LinqToDB.MacroInternal
 							{ ..$exprs }
 						}
 
+
 						public ToCode(this type : Type) : LinqToDB_Temp.TypeCode
+						{
+							mutable code;
+							
+							if (_typeCodes.TryGetValue(type, out code))
+								code
+							else
+								LinqToDB_Temp.TypeCode.Unknown
+						}
+
+						public ToCodeWithCheck(this type : Type) : LinqToDB_Temp.TypeCode
 						{
 							mutable code;
 							

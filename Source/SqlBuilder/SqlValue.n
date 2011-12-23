@@ -1,0 +1,56 @@
+﻿using System;
+using Nemerle;
+
+namespace LinqToDB_Temp.SqlBuilder
+{
+	public variant SqlValue
+	{
+		| Object  { Value : System.Object  }
+		| String  { Value : System.String  }
+		| Boolean { Value : System.Boolean }
+		| SByte   { Value : System.SByte   }
+		| Int16   { Value : System.Int16   }
+		| Int32   { Value : System.Int32   }
+		| Int64   { Value : System.Int64   }
+		| Byte    { Value : System.Byte    }
+		| UInt16  { Value : System.UInt16  }
+		| UInt32  { Value : System.UInt32  }
+		| UInt64  { Value : System.UInt64  }
+		| Single  { Value : System.Single  }
+		| Double  { Value : System.Double  }
+
+		public GetValue() : object
+		{
+			match (this)
+			{
+				| Object (v) => v
+				| String (v) => v
+				| Boolean(v) => v
+				| SByte  (v) => v
+				| Int16  (v) => v
+				| Int32  (v) => v
+				| Int64  (v) => v
+				| Byte   (v) => v
+				| UInt16 (v) => v
+				| UInt32 (v) => v
+				| UInt64 (v) => v
+				| Single (v) => v
+				| Double (v) => v
+			}
+		}
+
+		public static @: (v : System.Object ) : SqlValue { SqlValue.Object (v) }
+		public static @: (v : System.String ) : SqlValue { SqlValue.String (v) }
+		public static @: (v : System.Boolean) : SqlValue { SqlValue.Boolean(v) }
+		public static @: (v : System.SByte  ) : SqlValue { SqlValue.SByte  (v) }
+		public static @: (v : System.Int16  ) : SqlValue { SqlValue.Int16  (v) }
+		public static @: (v : System.Int32  ) : SqlValue { SqlValue.Int32  (v) }
+		public static @: (v : System.Int64  ) : SqlValue { SqlValue.Int64  (v) }
+		public static @: (v : System.Byte   ) : SqlValue { SqlValue.Byte   (v) }
+		public static @: (v : System.UInt16 ) : SqlValue { SqlValue.UInt16 (v) }
+		public static @: (v : System.UInt32 ) : SqlValue { SqlValue.UInt32 (v) }
+		public static @: (v : System.UInt64 ) : SqlValue { SqlValue.UInt64 (v) }
+		public static @: (v : System.Single ) : SqlValue { SqlValue.Single (v) }
+		public static @: (v : System.Double ) : SqlValue { SqlValue.Double (v) }
+	}
+}

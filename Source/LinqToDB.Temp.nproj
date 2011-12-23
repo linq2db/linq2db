@@ -123,10 +123,13 @@
     <Compile Include="SqlBuilder\Precedence.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SqlBuilder\SqlExpressions.n">
+    <Compile Include="SqlBuilder\SqlExpr.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SqlBuilder\SqlDataType.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SqlBuilder\SqlValue.n">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

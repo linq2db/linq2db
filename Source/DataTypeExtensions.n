@@ -58,7 +58,7 @@ namespace LinqToDB_Temp
 
 		public ToDataType(this type : Type) : DataType
 		{
-			match (type.ToUnderlying().ToCode())
+			match (type.ToUnderlying().ToCodeWithCheck())
 			{
 				| String         => DataType.NVarChar
 				| Boolean        => DataType.Boolean
@@ -81,7 +81,7 @@ namespace LinqToDB_Temp
 				| TimeSpan       => DataType.Time
 				| DateTimeOffset => DataType.DateTimeOffset
 				| XmlReader      => DataType.Xml
-				| _              => throw InvalidOperationException()
+				| Unknown        => throw InvalidOperationException()
 			}
 		}
 

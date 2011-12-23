@@ -168,6 +168,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
@@ -227,41 +228,41 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Data\BLToolkitData.sqlite">
-      <Link>Data\BLToolkitData.sqlite</Link>
+      <Link>Database\BLToolkitData.sqlite</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Access.sql">
-      <Link>Data\Create Scripts\Access.sql</Link>
+      <Link>Database\Create Scripts\Access.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\DB2.sql">
-      <Link>Data\Create Scripts\DB2.sql</Link>
+      <Link>Database\Create Scripts\DB2.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Firebird2.sql">
-      <Link>Data\Create Scripts\Firebird2.sql</Link>
+      <Link>Database\Create Scripts\Firebird2.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Informix.sql">
-      <Link>Data\Create Scripts\Informix.sql</Link>
+      <Link>Database\Create Scripts\Informix.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\MsSql.sql">
-      <Link>Data\Create Scripts\MsSql.sql</Link>
+      <Link>Database\Create Scripts\MsSql.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\MySql.sql">
-      <Link>Data\Create Scripts\MySql.sql</Link>
+      <Link>Database\Create Scripts\MySql.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Oracle.sql">
-      <Link>Data\Create Scripts\Oracle.sql</Link>
+      <Link>Database\Create Scripts\Oracle.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
-      <Link>Data\Create Scripts\PostgreSQL.sql</Link>
+      <Link>Database\Create Scripts\PostgreSQL.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
-      <Link>Data\Create Scripts\SqlCe.sql</Link>
+      <Link>Database\Create Scripts\SqlCe.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SQLite.sql">
-      <Link>Data\Create Scripts\SQLite.sql</Link>
+      <Link>Database\Create Scripts\SQLite.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
-      <Link>Data\Create Scripts\Sybase.sql</Link>
+      <Link>Database\Create Scripts\Sybase.sql</Link>
     </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
@@ -347,11 +348,11 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="..\..\Data\BLToolkitData.mdb">
-      <Link>Data\BLToolkitData.mdb</Link>
+      <Link>Database\BLToolkitData.mdb</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\BLToolkitData.sdf">
-      <Link>Data\BLToolkitData.sdf</Link>
+      <Link>Database\BLToolkitData.sdf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

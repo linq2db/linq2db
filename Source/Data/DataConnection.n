@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using Nemerle;
+using Nemerle.Collections;
 using Nemerle.Assertions;
 
 namespace LinqToDB_Temp.Data
@@ -13,9 +14,25 @@ namespace LinqToDB_Temp.Data
 	using Configuration;
 	using DataProvider;
 
-	public class DataConnection : ICloneable[DataConnection], ICloneable, IDisposable
+	public class DataConnection : ICloneable, IDisposable
 	{
 		#region .ctor
+
+		public this()
+		{
+			this(DefaultConfiguration)
+		}
+
+		public this([NotNull] configurationString : string)
+		{
+			ConfigurationString = configurationString;
+
+			match (_configurations.Get(configurationString))
+			{
+				| Some((s,p)) => this(p, s)
+				| None        => throw LinqToDBException("Configuration '$configurationString' is not defined.")
+			}
+		}
 
 		public this([NotNull] dataProvider : IDataProvider, [NotNull] connectionString : string)
 		{
@@ -68,7 +85,7 @@ namespace LinqToDB_Temp.Data
 				DefaultConfiguration = section.DefaultConfiguration;
 				DefaultDataProvider  = section.DefaultDataProvider;
 
-				foreach (provider in section.DataProviders.OfType.[DataProviderElement]())
+				foreach (provider is DataProviderElement in section.DataProviders)
 				{
 					def dataProviderType = Type.GetType(provider.TypeName, true);
 					def providerInstance = Activator.CreateInstance(dataProviderType) :> IDataProvider;
@@ -83,14 +100,29 @@ namespace LinqToDB_Temp.Data
 			when (string.IsNullOrEmpty(DefaultDataProvider))
 				DefaultDataProvider = ProviderName.SqlServer;
 
-			foreach (css in ConfigurationManager.ConnectionStrings.OfType.[ConnectionStringSettings]())
+			foreach (css is ConnectionStringSettings in ConfigurationManager.ConnectionStrings)
 			{
 				def configuration    = css.Name;
 				def connectionString = css.ConnectionString;
 				def providerName     = css.ProviderName;
-				def dataProvider     =
+
+				def findProvider(ps, defp)
+				{
+					match (ps.Where(dp => configuration.StartsWith(dp.Key)).Select(dp => dp.Value).FirstOrDefault())
+					{
+						| null =>
+							match (ps.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault())
+							{
+								| null => defp
+								| p    => p
+							}
+						| p    => p
+					}
+				}
+
+				def dataProvider =
 					if (string.IsNullOrEmpty(providerName))
-						_dataProviders[DefaultDataProvider]
+						findProvider(_dataProviders.AsEnumerable(), _dataProviders[DefaultDataProvider])
 					else if (_dataProviders.ContainsKey(providerName))
 						_dataProviders[providerName]
 					else
@@ -101,17 +133,7 @@ namespace LinqToDB_Temp.Data
 						{
 							| 0 => _dataProviders[DefaultDataProvider]
 							| 1 => providers[0].Value
-							| _ =>
-								match (providers.Where(dp => configuration.StartsWith(dp.Key)).Select(dp => dp.Value).FirstOrDefault())
-								{
-									| null =>
-										match (providers.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault())
-										{
-											| null => providers[0].Value
-											| p    => p
-										}
-									| p    => p
-								}
+							| _ => findProvider(providers, providers[0].Value)
 						}
 					}
 
@@ -126,16 +148,13 @@ namespace LinqToDB_Temp.Data
 			}
 		}
 
-		static _dataProviders : Dictionary[string,IDataProvider] = Dictionary(4);
+		static _dataProviders : Hashtable[string,IDataProvider] = Hashtable(4);
 
 		public static AddDataProvider([NotNull] providerName : string, [NotNull] dataProvider : IDataProvider) : void
 			requires !string.IsNullOrEmpty(dataProvider.Name)
-			otherwise throw ArgumentException(Resources.DbManager_InvalidDataProviderName, "dataProvider")
+			otherwise throw ArgumentException("dataProvider.Name cant be empty.", "dataProvider")
 		{
-			if (_dataProviders.ContainsKey(providerName))
-				_dataProviders[providerName] = dataProvider;
-			else
-				_dataProviders.Add(providerName, dataProvider);
+			_dataProviders[providerName] = dataProvider;
 		}
 
 		public static AddDataProvider([NotNull] dataProvider : IDataProvider) : void
@@ -143,17 +162,17 @@ namespace LinqToDB_Temp.Data
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
 
-		private static _configurations : Dictionary[string,string*IDataProvider] = Dictionary(4);
+		private static _configurations : Hashtable[string,string*IDataProvider] = Hashtable(4);
 
 		public static AddConfiguration([NotNull] configuration : string, [NotNull] connectionString : string, dataProvider : IDataProvider = null) : void
 		{
-			def connection =
+			_configurations[configuration] =
 				if (dataProvider == null)
 				(
 					connectionString,
 					match (_dataProviders.Where(dp => configuration.StartsWith(dp.Key)).Select(dp => dp.Value).FirstOrDefault())
 					{
-						| null =>
+						| null => 
 							match (_dataProviders.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault())
 							{
 								| null => _dataProviders[DefaultDataProvider]
@@ -164,12 +183,6 @@ namespace LinqToDB_Temp.Data
 				)
 				else
 					(connectionString, dataProvider);
-
-			if (_configurations.ContainsKey(configuration))
-				_configurations[configuration] = connection;
-			else
-				_configurations.Add(configuration, connection);
-			
 		}
 
 		#endregion
@@ -293,7 +306,7 @@ namespace LinqToDB_Temp.Data
 
 		#endregion
 
-		#region Nemerle.ICloneable[DataConnection]  Members
+		#region ICloneable Members
 
 		this(configurationString : string, dataProvider : IDataProvider, connectionString : string, connection : IDbConnection)
 		{
