@@ -10,18 +10,19 @@ namespace LinqToDB_Temp.SqlBuilder
 	[Record]
 	public variant SqlExpr
 	{
-		| Binary     { Expr1 : SqlExpr; Operation : string; Expr2 : SqlExpr; }
-		
-		| Expression { Expr : string; Parameters : list[SqlExpr] }
-		
-		[ReplaceCtorParameter(precedence, Precedence.Primary)]
-		| DataType   
+		[ReplaceCtorParameter(precedence, Precedence.Unknown)] | Query      { new Query : SqlQuery                                              }
 
-		[ReplaceCtorParameter(precedence, Precedence.Primary)]
-		| Parameter  { Name : string; new Value : SqlValue; }
-		
-		[ReplaceCtorParameter(precedence, Precedence.Primary)]
-		| Value      { new Value : SqlValue; }
+		[ReplaceCtorParameter(type,       field.Type)]
+		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Field      { new Field : SqlField;                                             }
+
+		                                                       | Binary     { Expr1     : SqlExpr;  Operation  : string;       Expr2 : SqlExpr; }
+		                                                       | Expression { Expr      : string;   Parameters : list[SqlExpr]                  }
+		                                                       | Function   { Name      : string;   Parameters : list[SqlExpr]                  }
+
+		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Parameter  { Name      : string;   new Value  : SqlValue;                      }
+		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Value      { new Value : SqlValue;                                             }
+
+		[ReplaceCtorParameter(precedence, Precedence.Primary)] | DataType
 
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
@@ -31,12 +32,14 @@ namespace LinqToDB_Temp.SqlBuilder
 	{
 		public Test() : object
 		{
+			_ = SqlExpr.Field(SqlField(typeof(int), "", ""));
 			_ = SqlExpr.Value(null, 0);
 			_ = SqlExpr.Value(null, DateTime.Now : object);
-			def ex = SqlExpr.Expression(SqlDataType.Byte(typeof(byte)), 0, "{0}", [SqlExpr.Value(null, 1)]);
+			def ex = SqlExpr.Expression(typeof(byte), 0, "{0}", [SqlExpr.Value(null, 1)]);
 
 			match (ex : SqlExpr)
 			{
+				| Field      => ex
 				| Expression("{0}", [e])
 				| Binary    (_,                     "*", Value(Int32(0)) as e)
 				| Binary    (Value(Int32 (0)) as e, "*", _                   )

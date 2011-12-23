@@ -14,9 +14,9 @@ namespace LinqToDB_Temp.MacroInternal
 
 	module ReplaceCtorParameterImpl
 	{
-		public DoTransform(typer : Typer, typeBuilder : TypeBuilder, parameter : PExpr, expr : PExpr) : void
+		public DoTransform(_typer : Typer, typeBuilder : TypeBuilder, parameter : PExpr, expr : PExpr) : void
 		{
-			Macros.DefineCTX(typer);
+			//Macros.DefineCTX(typer);
 
 			def pname =
 				match (parameter)
@@ -26,7 +26,7 @@ namespace LinqToDB_Temp.MacroInternal
 				};
 
 			def ctors = typeBuilder.LookupMember(".ctor")
-				.Map(m => m :> MethodBuilder)
+				.Map   (m => m :> MethodBuilder)
 				.Filter(m => m.Attributes %&& NemerleModifiers.Public && m.Header.Parameters.Find(p => p.Name == pname.Id).IsSome);
 
 			when (ctors.IsEmpty)

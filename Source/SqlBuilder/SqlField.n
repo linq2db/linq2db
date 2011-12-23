@@ -1,0 +1,13 @@
+﻿using System;
+using Nemerle;
+
+namespace LinqToDB_Temp.SqlBuilder
+{
+	[Record]
+	public class SqlField
+	{
+		public Type   : SqlDataType { get; }
+		public Name   : string      { get; }
+		public DbName : string      { get; }
+	}
+}

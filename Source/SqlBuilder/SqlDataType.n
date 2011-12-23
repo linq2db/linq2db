@@ -6,6 +6,8 @@ using Nemerle.Assertions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
+	using Extensions;
+
 	[Record]
 	public variant SqlDataType
 	{
@@ -45,5 +47,36 @@ namespace LinqToDB_Temp.SqlBuilder
 		| VarNumeric     
 
 		public SystemType : Type { get; }
+
+		static _decimalLen = decimal.MaxValue.ToString().Length;
+
+		public static @: (type : Type) : SqlDataType
+		{
+			match (type.ToUnderlying().ToCodeWithCheck())
+			{
+				| String         => SqlDataType.NVarChar      (type, 4000)
+				| Boolean        => SqlDataType.Boolean       (type)
+				| SByte          => SqlDataType.SByte         (type)
+				| Int16          => SqlDataType.Int16         (type)
+				| Int32          => SqlDataType.Int32         (type)
+				| Int64          => SqlDataType.Int64         (type)
+				| Byte           => SqlDataType.Byte          (type)
+				| UInt16         => SqlDataType.UInt16        (type)
+				| UInt32         => SqlDataType.UInt32        (type)
+				| UInt64         => SqlDataType.UInt64        (type)
+				| Single         => SqlDataType.Single        (type)
+				| Double         => SqlDataType.Double        (type)
+				| Decimal        => SqlDataType.Decimal       (type, _decimalLen, _decimalLen)
+				| DateTime       => SqlDataType.DateTime      (type)
+				| Object         => SqlDataType.Variant       (type)
+				| Guid           => SqlDataType.Guid          (type)
+				| ArrayOfByte    
+				| Binary         => SqlDataType.VarBinary     (type, 8000)
+				| TimeSpan       => SqlDataType.Time          (type)
+				| DateTimeOffset => SqlDataType.DateTimeOffset(type)
+				| XmlReader      => SqlDataType.Xml           (type)
+				| Unknown        => throw InvalidOperationException()
+			}
+		}
 	}
 }
