@@ -11,8 +11,7 @@ namespace LinqToDB_Temp.DataProvider
 		Name         : string { get; }
 		ProviderName : string { get; }
 
-		Configure(attributes : NameValueCollection) : void
-;
+		Configure(attributes : NameValueCollection) : void;
 		CreateConnection(connectionString : string) : IDbConnection;
 	}
 }

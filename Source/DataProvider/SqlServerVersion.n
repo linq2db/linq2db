@@ -5,7 +5,7 @@ namespace LinqToDB_Temp.DataProvider
 {
 	public enum SqlServerVersion
 	{
-	| v2005
-	| v2008
+	  | v2005
+	  | v2008
 	}
 }

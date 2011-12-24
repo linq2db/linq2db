@@ -25,26 +25,26 @@ namespace LinqToDB.MacroInternal
 			
 			//assert2(false);
 
-			def mapToName(t : PExpr)
+			def mapToName(type : PExpr) : PExpr * PExpr.Ref
 			{
-				def fx = typer.BindFixedType(t);
-				def nm = 
-					match (fx.FixedValue)
+				def fixedType = typer.BindFixedType(type);
+				def name = 
+					match (fixedType.FixedValue)
 					{
-						| Array(t,_) => $"ArrayOf$(t.TypeInfo.Name)"
-						| _          => fx.TypeInfo.Name
+						| Array(t,_) => <[ $($"ArrayOf$(t.TypeInfo.Name)" : usesite) ]>
+						| _          => <[ $(fixedType.TypeInfo.Name : usesite) ]>
 					}
 					
-				(t,nm)
+				(type, name)
 			}
 			
 			def names = types.Map(mapToName);
-			def elems = <[ decl: | Unknown ]> :: names.Map(fun((_,name)) { <[ decl: | $(name : usesite) ]> });
-			def exprs = names.Map(fun((t,name)) { <[ _typeCodes.Add(typeof($t), LinqToDB_Temp.TypeCode.$(name : usesite)) ]> });
+			def elems = <[ decl: | Unknown ]> :: names.Map((_, name) => <[ decl: | $(name.name : name) ]>);
+			def exprs = names.Map((t, name) => <[ _typeCodes.Add(typeof($t), LinqToDB_Temp.TypeCode.$name) ]>);
 
 			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB_Temp"]);
 
-			_ = env.Define(
+			env.Define(
 				<[ decl:
 					enum TypeCode
 					{
@@ -52,7 +52,7 @@ namespace LinqToDB.MacroInternal
 					}
 				]>).Compile();
 
-			_ = env.Define(
+			env.Define(
 				<[ decl:
 					module TypeExtensions
 					{
@@ -81,7 +81,7 @@ namespace LinqToDB.MacroInternal
 							if (_typeCodes.TryGetValue(type, out code))
 								code
 							else
-								throw LinqToDB_Temp.LinqToDBException(string.Format("There is no corresponding TypeCode for '{0}'.", type.FullName))
+								throw LinqToDB_Temp.LinqToDBException("There is no corresponding TypeCode for '"  + type.FullName + "'.")
 						}
 					}
 				]>
