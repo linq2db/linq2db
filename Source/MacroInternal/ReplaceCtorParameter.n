@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Linq;
 
 using Nemerle;
 using Nemerle.Compiler;
 using Nemerle.Compiler.Parsetree;
+
+using Nemerle.Compiler.NemerleModifiers;
 
 namespace LinqToDB_Temp.MacroInternal
 {
@@ -26,18 +29,16 @@ namespace LinqToDB_Temp.MacroInternal
 				};
 
 			def ctors = typeBuilder.LookupMember(".ctor")
-				.Map   (m => m :> MethodBuilder)
-				.Filter(m => m.Attributes %&& NemerleModifiers.Public && m.Header.Parameters.Find(p => p.Name == pname.Id).IsSome);
-
-			when (ctors.IsEmpty)
-				Message.Error(parameter.Location, $"Parameter '$parameter' not found.");
+				.OfType.[MethodBuilder]()
+				.Where(m => m.Attributes %&& Public && m.Header.Parameters.Exists(p => p.Name == pname.Id));
 
 			foreach (ctor in ctors)
 			{
-				ctor.Attributes = (ctor.Attributes & ~NemerleModifiers.Public) | NemerleModifiers.Private;
+				ctor.Attributes = (ctor.Attributes & ~Public) | Private;
 
-				def nparams = ctor.Header.Parameters.Filter(p => p.Name != pname.Id).Map(_.AsParsed());
-				def exprs   = ctor.Header.Parameters.Map   (p => if (p.Name == pname.Id) expr else p.ReferencingExpr);
+				def parameters = ctor.Header.Parameters;
+				def nparams    = parameters.MapFiltered(p => p.Name != pname.Id, _.AsParsed());
+				def exprs      = parameters.Map(p => if (p.Name == pname.Id) expr else p.ReferencingExpr);
 
 				typeBuilder.Define(
 				<[ decl:
@@ -47,6 +48,8 @@ namespace LinqToDB_Temp.MacroInternal
 					}
 				]>);
 			}
+			otherwise
+			  Message.Error(parameter.Location, $"Parameter '$parameter' not found.");
 		}
 	}
 }
