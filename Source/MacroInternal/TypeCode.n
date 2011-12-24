@@ -29,10 +29,13 @@ namespace LinqToDB.MacroInternal
 			{
 				def fixedType = typer.BindFixedType(type);
 				def name = 
-					match (fixedType.FixedValue)
+					match (fixedType) // .FixedValue для FixedType вернет самого себя. В этом нет смысла.
 					{
-						| Array(t,_) => <[ $($"ArrayOf$(t.TypeInfo.Name)" : usesite) ]>
-						| _          => <[ $(fixedType.TypeInfo.Name : usesite) ]>
+					  // Вот это была пожалуй первая серьезная ошибка. Свойство TypeInfo возвращает значение только для FixedType.Class.
+					  // Для других типов (например, кортежей) оно вернет null. Соотвественно будет NRE в макросе. Надо так:
+						| Array(FixedType.Class(ti, []),_) => <[ $($"ArrayOf$(ti.Name)" : usesite) ]>
+						| Class(ti, [])                    => <[ $(ti.Name : usesite) ]>
+						| _          => Message.FatalError(type.Location, "Expected user defined type without type parameters or array.")
 					}
 					
 				(type, name)
