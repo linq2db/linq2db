@@ -51,54 +51,55 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public ToSql(sb : StringBuilder) : StringBuilder
 		{
-			_ = sb.Append(match (this)
-				{
-					| Char           => "Char          "
-					| VarChar        => "VarChar       "
-					| Text           => "Text          "
-					| NChar          => "NChar         "
-					| NVarChar       => "NVarChar      "
-					| NText          => "NText         "
-					| Binary         => "Binary        "
-					| VarBinary      => "VarBinary     "
-					| Image          => "Image         "
-					| Boolean        => "Boolean       "
-					| Guid           => "Guid          "
-					| SByte          => "SByte         "
-					| Int16          => "Int16         "
-					| Int32          => "Int32         "
-					| Int64          => "Int64         "
-					| Byte           => "Byte          "
-					| UInt16         => "UInt16        "
-					| UInt32         => "UInt32        "
-					| UInt64         => "UInt64        "
-					| Single         => "Single        "
-					| Double         => "Double        "
-					| Decimal        => "Decimal       "
-					| Money          => "Money         "
-					| SmallMoney     => "SmallMoney    "
-					| Date           => "Date          "
-					| Time           => "Time          "
-					| DateTime       => "DateTime      "
-					| DateTime2      => "DateTime2     "
-					| SmallDateTime  => "SmallDateTime "
-					| DateTimeOffset => "DateTimeOffset"
-					| Timestamp      => "Timestamp     "
-					| Xml            => "Xml           "
-					| Variant        => "Variant       "
-					| VarNumeric     => "VarNumeric    "
-				});
+			_ = sb.Append(
+			  match (this)
+				  {
+					  | Char           => "Char          "
+					  | VarChar        => "VarChar       "
+					  | Text           => "Text          "
+					  | NChar          => "NChar         "
+					  | NVarChar       => "NVarChar      "
+					  | NText          => "NText         "
+					  | Binary         => "Binary        "
+					  | VarBinary      => "VarBinary     "
+					  | Image          => "Image         "
+					  | Boolean        => "Boolean       "
+					  | Guid           => "Guid          "
+					  | SByte          => "SByte         "
+					  | Int16          => "Int16         "
+					  | Int32          => "Int32         "
+					  | Int64          => "Int64         "
+					  | Byte           => "Byte          "
+					  | UInt16         => "UInt16        "
+					  | UInt32         => "UInt32        "
+					  | UInt64         => "UInt64        "
+					  | Single         => "Single        "
+					  | Double         => "Double        "
+					  | Decimal        => "Decimal       "
+					  | Money          => "Money         "
+					  | SmallMoney     => "SmallMoney    "
+					  | Date           => "Date          "
+					  | Time           => "Time          "
+					  | DateTime       => "DateTime      "
+					  | DateTime2      => "DateTime2     "
+					  | SmallDateTime  => "SmallDateTime "
+					  | DateTimeOffset => "DateTimeOffset"
+					  | Timestamp      => "Timestamp     "
+					  | Xml            => "Xml           "
+					  | Variant        => "Variant       "
+					  | VarNumeric     => "VarNumeric    "
+				  });
 
 			match (this)
 			{
-				| Char      (l)
-				| VarChar   (l)
-				| Text      (l)
-				| NChar     (l)
-				| NVarChar  (l)
-				| NText     (l)
-				| Binary    (l)
-				| VarBinary (l)   => if (l > 0) sb.Append('(').Append(l).Append(')') else sb
+				| Char      (len)
+				| VarChar   (len)
+				| Text      (len)
+				| NChar     (len)
+				| NVarChar  (len)
+				| NText     (len)
+				| Binary    (len)
+				| VarBinary (len) => if (len > 0) sb.Append('(').Append(len).Append(')') else sb
 				| Decimal   (p,s)
 				| Money     (p,s)
 				| SmallMoney(p,s) => if (p > 0) sb.Append('(').Append(p).Append(',').Append(s).Append(')') else sb
@@ -108,7 +109,7 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		static _decimalLen = decimal.MaxValue.ToString().Length;
 
-		public static @: (type : Type) : SqlDataType
+		public static @:(type : Type) : SqlDataType
 		{
 			match (type.ToUnderlying().ToCodeWithCheck())
 			{

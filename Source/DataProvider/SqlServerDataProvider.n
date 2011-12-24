@@ -32,9 +32,9 @@ namespace LinqToDB_Temp.DataProvider
 		{
 			match (attributes["version"])
 			{
-			| "2005" => Version = SqlServerVersion.v2005
-			| "2008" => Version = SqlServerVersion.v2008
-			|  _     => ()
+			  | "2005" => Version = SqlServerVersion.v2005
+			  | "2008" => Version = SqlServerVersion.v2008
+			  |  _     => ()
 			}
 		}
 	}

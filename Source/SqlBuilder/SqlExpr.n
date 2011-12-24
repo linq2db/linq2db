@@ -8,28 +8,29 @@ using Nemerle.Assertions;
 namespace LinqToDB_Temp.SqlBuilder
 {
 	using MacroInternal;
+	using Precedence;
 
 	[Record]
 	public variant SqlExpr
 	{
-		[ReplaceCtorParameter(precedence, Precedence.Unknown)] | Query      { new Query : SqlQuery                                              }
+		[ReplaceCtorParameter(precedence, Unknown)] | Query      { new Query : SqlQuery                                              }
 
 		[ReplaceCtorParameter(type,       field.Type)]
-		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Field      { new Field : SqlField;                                             }
+		[ReplaceCtorParameter(precedence, Primary)] | Field      { new Field : SqlField;                                             }
 
-		                                                       | Binary     { Expr1     : SqlExpr;  Operation  : string;       Expr2 : SqlExpr; }
-		                                                       | Expression { Expr      : string;   Parameters : list[SqlExpr]                  }
-		                                                       | Function   { Name      : string;   Parameters : list[SqlExpr];
-		                                                                      this(type : SqlDataType, name : string, parameters : list[SqlExpr])
-		                                                                      {
-		                                                                          this(type, Precedence.Primary, name, parameters)
-		                                                                      }
-		                                                                    }
+		                                            | Binary     { Expr1     : SqlExpr;  Operation  : string;       Expr2 : SqlExpr; }
+		                                            | Expression { Expr      : string;   Parameters : list[SqlExpr]                  }
+		                                            | Function   { Name      : string;   Parameters : list[SqlExpr];
+		                                                          this(type : SqlDataType, name : string, parameters : list[SqlExpr])
+		                                                          {
+		                                                              this(type, Primary, name, parameters)
+		                                                          }
+		                                                        }
 
-		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Parameter  { Name      : string;   new Value  : SqlValue;                      }
-		[ReplaceCtorParameter(precedence, Precedence.Primary)] | Value      { new Value : SqlValue;                                             }
+		[ReplaceCtorParameter(precedence, Primary)] | Parameter  { Name      : string;   new Value  : SqlValue;                      }
+		[ReplaceCtorParameter(precedence, Primary)] | Value      { new Value : SqlValue;                                             }
 
-		[ReplaceCtorParameter(precedence, Precedence.Primary)] | DataType
+		[ReplaceCtorParameter(precedence, Primary)] | DataType
 
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
@@ -44,6 +45,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Parameter (nm,v)       => v.ToSql(sb.Append('@').Append(nm ?? "parameter").Append('[')).Append(']')
 				| Value     (v)          => v.ToSql(sb)
 				| DataType               => Type.ToSql(sb)
+				| Field | Query          => throw NotImplementedException(this.GetType().Name)
 			}
 		}
 
@@ -52,19 +54,19 @@ namespace LinqToDB_Temp.SqlBuilder
 			ToSql(StringBuilder()).ToString()
 		}
 
-		public static @: (v : System.String ) : SqlExpr { SqlExpr.Value(typeof(String ), SqlValue.String (v)) }
-		public static @: (v : System.Boolean) : SqlExpr { SqlExpr.Value(typeof(Boolean), SqlValue.Boolean(v)) }
-		public static @: (v : System.SByte  ) : SqlExpr { SqlExpr.Value(typeof(SByte  ), SqlValue.SByte  (v)) }
-		public static @: (v : System.Int16  ) : SqlExpr { SqlExpr.Value(typeof(Int16  ), SqlValue.Int16  (v)) }
-		public static @: (v : System.Int32  ) : SqlExpr { SqlExpr.Value(typeof(Int32  ), SqlValue.Int32  (v)) }
-		public static @: (v : System.Int64  ) : SqlExpr { SqlExpr.Value(typeof(Int64  ), SqlValue.Int64  (v)) }
-		public static @: (v : System.Byte   ) : SqlExpr { SqlExpr.Value(typeof(Byte   ), SqlValue.Byte   (v)) }
-		public static @: (v : System.UInt16 ) : SqlExpr { SqlExpr.Value(typeof(UInt16 ), SqlValue.UInt16 (v)) }
-		public static @: (v : System.UInt32 ) : SqlExpr { SqlExpr.Value(typeof(UInt32 ), SqlValue.UInt32 (v)) }
-		public static @: (v : System.UInt64 ) : SqlExpr { SqlExpr.Value(typeof(UInt64 ), SqlValue.UInt64 (v)) }
-		public static @: (v : System.Single ) : SqlExpr { SqlExpr.Value(typeof(Single ), SqlValue.Single (v)) }
-		public static @: (v : System.Double ) : SqlExpr { SqlExpr.Value(typeof(Double ), SqlValue.Double (v)) }
-		public static @: (v : System.Decimal) : SqlExpr { SqlExpr.Value(typeof(Decimal), SqlValue.Decimal(v)) }
+		public static @:(v : System.String ) : SqlExpr { SqlExpr.Value(typeof(String ), SqlValue.String (v)) }
+		public static @:(v : System.Boolean) : SqlExpr { SqlExpr.Value(typeof(Boolean), SqlValue.Boolean(v)) }
+		public static @:(v : System.SByte  ) : SqlExpr { SqlExpr.Value(typeof(SByte  ), SqlValue.SByte  (v)) }
+		public static @:(v : System.Int16  ) : SqlExpr { SqlExpr.Value(typeof(Int16  ), SqlValue.Int16  (v)) }
+		public static @:(v : System.Int32  ) : SqlExpr { SqlExpr.Value(typeof(Int32  ), SqlValue.Int32  (v)) }
+		public static @:(v : System.Int64  ) : SqlExpr { SqlExpr.Value(typeof(Int64  ), SqlValue.Int64  (v)) }
+		public static @:(v : System.Byte   ) : SqlExpr { SqlExpr.Value(typeof(Byte   ), SqlValue.Byte   (v)) }
+		public static @:(v : System.UInt16 ) : SqlExpr { SqlExpr.Value(typeof(UInt16 ), SqlValue.UInt16 (v)) }
+		public static @:(v : System.UInt32 ) : SqlExpr { SqlExpr.Value(typeof(UInt32 ), SqlValue.UInt32 (v)) }
+		public static @:(v : System.UInt64 ) : SqlExpr { SqlExpr.Value(typeof(UInt64 ), SqlValue.UInt64 (v)) }
+		public static @:(v : System.Single ) : SqlExpr { SqlExpr.Value(typeof(Single ), SqlValue.Single (v)) }
+		public static @:(v : System.Double ) : SqlExpr { SqlExpr.Value(typeof(Double ), SqlValue.Double (v)) }
+		public static @:(v : System.Decimal) : SqlExpr { SqlExpr.Value(typeof(Decimal), SqlValue.Decimal(v)) }
 	}
 	
 	public module MyModule

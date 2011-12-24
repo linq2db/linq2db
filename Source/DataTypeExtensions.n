@@ -20,15 +20,12 @@ namespace LinqToDB_Temp
 			| NVarChar       
 			| Text           
 			| NText          => typeof(string)
-
 			| Binary         
 			| VarBinary      
 			| Timestamp      
 			| Image          => typeof(array[byte])
-
 			| Boolean        => typeof(bool)
 			| Guid           => typeof(Guid)
-
 			| SByte          => typeof(sbyte)
 			| Int16          => typeof(short)
 			| Int32          => typeof(int)
@@ -37,21 +34,18 @@ namespace LinqToDB_Temp
 			| UInt16         => typeof(ushort)
 			| UInt32         => typeof(uint)
 			| UInt64         => typeof(ulong)
-
 			| Single         => typeof(float)
 			| Double         => typeof(double)
 			| Decimal        
 			| Money          
 			| VarNumeric     
 			| SmallMoney     => typeof(decimal)
-
 			| Date           
 			| DateTime       
 			| DateTime2      
 			| SmallDateTime  => typeof(DateTime)
 			| Time           => typeof(TimeSpan)
 			| DateTimeOffset => typeof(DateTimeOffset)
-
 			| Xml            => typeof(string)
 			| Variant        => typeof(object)
 		}
@@ -87,43 +81,37 @@ namespace LinqToDB_Temp
 
 		public ToSqlDbType(this type : DataType) : SqlDbType
 		{
-			| Char           => SqlDbType.Char
+			| Char           => SqlDbType.Char      // text
 			| VarChar        => SqlDbType.VarChar
 			| NChar          => SqlDbType.NChar
 			| NVarChar       => SqlDbType.NVarChar
 			| Text           => SqlDbType.Text
 			| NText          => SqlDbType.NText
-
-			| Binary         => SqlDbType.Binary
+			| Binary         => SqlDbType.Binary    // Binaries
 			| VarBinary      => SqlDbType.VarBinary
 			| Image          => SqlDbType.Image
 			| Timestamp      => SqlDbType.Timestamp
-
-			| Boolean        => SqlDbType.Bit
-			| Guid           => SqlDbType.UniqueIdentifier
-
-			| SByte          => SqlDbType.SmallInt
+			| SByte          => SqlDbType.SmallInt  // Integers
 			| Int16          => SqlDbType.SmallInt
 			| Int32          => SqlDbType.Int
 			| Int64          => SqlDbType.BigInt
 			| Byte           => SqlDbType.TinyInt
 			| UInt16         => SqlDbType.Int
 			| UInt32         => SqlDbType.BigInt
-			| UInt64         => SqlDbType.Decimal
-
-			| Single         => SqlDbType.Real
+			| UInt64         => SqlDbType.Decimal 
+			| Single         => SqlDbType.Real      // floats
 			| Double         => SqlDbType.Float
 			| Decimal        => SqlDbType.Decimal
 			| Money          => SqlDbType.Money
 			| SmallMoney     => SqlDbType.SmallMoney
-
-			| Date           => SqlDbType.Date
+			| Date           => SqlDbType.Date      // Date/time
 			| Time           => SqlDbType.Time
 			| DateTime       => SqlDbType.DateTime
 			| DateTime2      => SqlDbType.DateTime2
 			| SmallDateTime  => SqlDbType.SmallDateTime
 			| DateTimeOffset => SqlDbType.DateTimeOffset
-
+			| Boolean        => SqlDbType.Bit       // Other
+			| Guid           => SqlDbType.UniqueIdentifier
 			| Xml            => SqlDbType.Xml
 			| Variant        => SqlDbType.Variant
 			| VarNumeric     => SqlDbType.Decimal
