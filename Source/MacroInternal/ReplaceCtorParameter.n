@@ -49,7 +49,7 @@ namespace LinqToDB_Temp.MacroInternal
 				]>);
 			}
 			otherwise
-			  Message.Error(parameter.Location, $"Parameter '$parameter' not found.");
+				Message.Error(parameter.Location, $"Parameter '$parameter' not found.");
 		}
 	}
 }

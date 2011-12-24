@@ -28,14 +28,14 @@ namespace LinqToDB.MacroInternal
 			def mapToName(type : PExpr) : PExpr * PExpr.Ref
 			{
 				def fixedType = typer.BindFixedType(type);
-				def name = 
+				def name =
 					match (fixedType) // .FixedValue для FixedType вернет самого себя. В этом нет смысла.
 					{
-					  // Вот это была пожалуй первая серьезная ошибка. Свойство TypeInfo возвращает значение только для FixedType.Class.
-					  // Для других типов (например, кортежей) оно вернет null. Соотвественно будет NRE в макросе. Надо так:
+						// Вот это была пожалуй первая серьезная ошибка. Свойство TypeInfo возвращает значение только для FixedType.Class.
+						// Для других типов (например, кортежей) оно вернет null. Соотвественно будет NRE в макросе. Надо так:
 						| Array(FixedType.Class(ti, []),_) => <[ $($"ArrayOf$(ti.Name)" : usesite) ]>
 						| Class(ti, [])                    => <[ $(ti.Name : usesite) ]>
-						| _          => Message.FatalError(type.Location, "Expected user defined type without type parameters or array.")
+						| _ => Message.FatalError(type.Location, "Expected user defined type without type parameters or array.")
 					}
 					
 				(type, name)
@@ -44,8 +44,7 @@ namespace LinqToDB.MacroInternal
 			def names = types.Map(mapToName);
 			def elems = <[ decl: | Unknown ]> :: names.Map((_, name) => <[ decl: | $(name.name : name) ]>);
 			def exprs = names.Map((t, name) => <[ _typeCodes.Add(typeof($t), LinqToDB_Temp.TypeCode.$name) ]>);
-
-			def env = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB_Temp"]);
+			def env   = typer.Manager.CoreEnv.EnterIntoNamespace(["LinqToDB_Temp"]);
 
 			env.Define(
 				<[ decl:

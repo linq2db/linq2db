@@ -9,6 +9,7 @@ namespace LinqToDB_Temp.SqlBuilder
 	{
 		| Object  { Value : System.Object  }
 		| String  { Value : System.String  }
+		| Char    { Value : System.Char    }
 		| Boolean { Value : System.Boolean }
 		| SByte   { Value : System.SByte   }
 		| Int16   { Value : System.Int16   }
@@ -26,19 +27,20 @@ namespace LinqToDB_Temp.SqlBuilder
 		{
 			match (this)
 			{
-				| Object (v) | String (v) | Boolean(v) | SByte  (v) | Int16  (v) | Int32  (v) | Int64  (v)
-				| Byte   (v) | UInt16 (v) | UInt32 (v) | UInt64 (v) | Single (v) | Double (v) | Decimal(v) => v
+				| Object(v) | String(v) | Char  (v) | Boolean(v) | SByte  (v)
+				| Int16 (v) | Int32 (v) | Int64 (v) | Byte   (v) | UInt16 (v)
+				| UInt32(v) | UInt64(v) | Single(v) | Double (v) | Decimal(v) => v
 			}
 		}
 
-		public ToSql(sb : StringBuilder) : StringBuilder
+		public override ToString() : string
 		{
 			match (this)
 			{
 				| Object(null)
-				| String(null) => sb.Append("NULL")
-				| String(v)    => sb.Append('\'').Append(v.ToString().Replace("\'", "''")).Append('\'')
-				| v            => sb.Append(v.GetValue())
+				| String(null) => "NULL"
+				| String(v)    => "\'" + v.ToString().Replace("\'", "''") + "\'"
+				| v            => v.GetValue().ToString()
 			}
 		}
 

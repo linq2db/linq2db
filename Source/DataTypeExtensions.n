@@ -125,36 +125,29 @@ namespace LinqToDB_Temp
 			| NVarChar         => DataType.NVarChar
 			| Text             => DataType.Text
 			| NText            => DataType.NText
-
 			| Binary           => DataType.Binary
 			| VarBinary        => DataType.VarBinary
 			| Image            => DataType.Image
 			| Timestamp        => DataType.Timestamp
-
 			| Bit              => DataType.Boolean
 			| UniqueIdentifier => DataType.Guid
-
 			| TinyInt          => DataType.Byte
 			| SmallInt         => DataType.Int16
 			| Int              => DataType.Int32
 			| BigInt           => DataType.Int64
-
 			| Real             => DataType.Single
 			| Float            => DataType.Double
 			| Decimal          => DataType.Decimal
 			| Money            => DataType.Money
 			| SmallMoney       => DataType.SmallMoney
-
 			| Date             => DataType.Date
 			| Time             => DataType.Time
 			| DateTime         => DataType.DateTime
 			| DateTime2        => DataType.DateTime2
 			| SmallDateTime    => DataType.SmallDateTime
 			| DateTimeOffset   => DataType.DateTimeOffset
-
 			| Xml              => DataType.Xml
 			| Variant          => DataType.Variant
-
 			| Udt              
 			| Structured       => throw NotImplementedException()
 		}
@@ -167,15 +160,12 @@ namespace LinqToDB_Temp
 			| NChar          => DbType.StringFixedLength
 			| NVarChar       
 			| NText          => DbType.String
-
 			| Binary         
 			| VarBinary      
 			| Image          
 			| Timestamp      => DbType.Binary;
-
 			| Boolean        => DbType.Boolean
 			| Guid           => DbType.Guid
-
 			| SByte          => DbType.SByte
 			| Int16          => DbType.Int16
 			| Int32          => DbType.Int32
@@ -184,20 +174,17 @@ namespace LinqToDB_Temp
 			| UInt16         => DbType.UInt16
 			| UInt32         => DbType.UInt32
 			| UInt64         => DbType.UInt64
-
 			| Single         => DbType.Single
 			| Double         => DbType.Double
 			| Decimal        => DbType.Decimal
 			| Money          
 			| SmallMoney     => DbType.Currency
-
 			| Date           => DbType.Date
 			| Time           => DbType.Time
 			| DateTime       => DbType.DateTime
 			| DateTime2      => DbType.DateTime2
 			| SmallDateTime  => DbType.DateTime
 			| DateTimeOffset => DbType.DateTimeOffset
-
 			| Xml            => DbType.Xml
 			| Variant        => DbType.Object
 			| VarNumeric     => DbType.Decimal
@@ -209,12 +196,9 @@ namespace LinqToDB_Temp
 			| AnsiString            => DataType.VarChar
 			| StringFixedLength     => DataType.NChar
 			| String                => DataType.NVarChar
-
 			| Binary                => DataType.VarBinary
-
 			| Boolean               => DataType.Boolean
 			| Guid                  => DataType.Guid
-
 			| SByte                 => DataType.SByte
 			| Int16                 => DataType.Int16
 			| Int32                 => DataType.Int32
@@ -223,18 +207,15 @@ namespace LinqToDB_Temp
 			| UInt16                => DataType.UInt16
 			| UInt32                => DataType.UInt32
 			| UInt64                => DataType.UInt64
-
 			| Single                => DataType.Single
 			| Double                => DataType.Double
 			| Decimal               => DataType.Decimal
 			| Currency              => DataType.Money
-
 			| Date                  => DataType.Date
 			| Time                  => DataType.Time
 			| DateTime              => DataType.DateTime
 			| DateTime2             => DataType.DateTime2
 			| DateTimeOffset        => DataType.DateTimeOffset
-
 			| Xml                   => DataType.Xml
 			| Object                => DataType.Variant
 			| VarNumeric            => DataType.VarNumeric
