@@ -5,7 +5,7 @@ namespace LinqToDB_Temp.SqlBuilder
 {
 	public module Optimizer
 	{
-		public Optimize(expr : SqlExpr) : SqlExpr
+		public Optimize(this expr : SqlExpr) : SqlExpr
 		{
 			def isSystemString(e)
 			{
@@ -23,7 +23,7 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) op1 else op2, if (v >= 0) v else -v))
 			}
-			def getSqlDataType(e)
+			def getSqlDataType(_e)
 			{
 				SqlDataType.VarChar(typeof(string), 100)
 			}
@@ -118,8 +118,6 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(e                      , "*", Value(Decimal(1m))     )                         => Optimize(e)
 				| Binary(e                      , "+", Value(String) as v     ) when !isSystemString(e) => toString (e, v)  // ex + "..."     -> ex
 				| Binary(Value(String) as v     , "+", e                      ) when !isSystemString(e) => toString2(v, e)  // ex + "..."     -> ex
-				| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2                                  // 2 + 3          -> 5
-				| Binary(Value(Int16  (v1))     , "+", Value(Int16  (v2))     ) => v1 + v2
 				| Binary(Value(Int32  (v1))     , "+", Value(Int32  (v2))     ) => v1 + v2
 				| Binary(Value(Int64  (v1))     , "+", Value(Int64  (v2))     ) => v1 + v2
 				| Binary(Value(Byte   (v1))     , "+", Value(Byte   (v2))     ) => v1 + v2
@@ -140,6 +138,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (v1))     , "-", Value(Single (v2))     ) => v1 - v2
 				| Binary(Value(Double (v1))     , "-", Value(Double (v2))     ) => v1 - v2
 				| Binary(Value(Decimal(v1))     , "-", Value(Decimal(v2))     ) => v1 - v2
+				| Expression("{0}", [e])
 				| e => e
 			}
 		}
