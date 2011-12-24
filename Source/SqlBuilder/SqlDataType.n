@@ -49,71 +49,124 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public SystemType : Type { get; }
 
-		public ToSql(sb : StringBuilder) : StringBuilder
+		static _decimalMaxDisplaySize : int = decimal.MaxValue.ToString().Length + 1;
+		static _sbyteMaxDisplaySize   : int = SByte.  MaxValue.ToString().Length + 1;
+		static _int16MaxDisplaySize   : int = Int16.  MaxValue.ToString().Length + 1;
+		static _int32MaxDisplaySize   : int = Int32.  MaxValue.ToString().Length + 1;
+		static _int64MaxDisplaySize   : int = Int64.  MaxValue.ToString().Length + 1;
+		static _byteMaxDisplaySize    : int = Byte.   MaxValue.ToString().Length + 1;
+		static _uint16MaxDisplaySize  : int = UInt16. MaxValue.ToString().Length + 1;
+		static _uint32MaxDisplaySize  : int = UInt32. MaxValue.ToString().Length + 1;
+		static _uint64MaxDisplaySize  : int = UInt64. MaxValue.ToString().Length + 1;
+
+		public MaxDisplaySize : int
 		{
-			_ = sb.Append(
+			get
+			{
 				match (this)
 				{
-					| Char           => "Char"
-					| VarChar        => "VarChar"
-					| Text           => "Text"
-					| NChar          => "NChar"
-					| NVarChar       => "NVarChar"
-					| NText          => "NText"
-					| Binary         => "Binary"
-					| VarBinary      => "VarBinary"
-					| Image          => "Image"
-					| Boolean        => "Boolean"
-					| Guid           => "Guid"
-					| SByte          => "SByte"
-					| Int16          => "Int16"
-					| Int32          => "Int32"
-					| Int64          => "Int64"
-					| Byte           => "Byte"
-					| UInt16         => "UInt16"
-					| UInt32         => "UInt32"
-					| UInt64         => "UInt64"
-					| Single         => "Single"
-					| Double         => "Double"
-					| Decimal        => "Decimal"
-					| Money          => "Money"
-					| SmallMoney     => "SmallMoney"
-					| Date           => "Date"
-					| Time           => "Time"
-					| DateTime       => "DateTime"
-					| DateTime2      => "DateTime2"
-					| SmallDateTime  => "SmallDateTime"
-					| DateTimeOffset => "DateTimeOffset"
-					| Timestamp      => "Timestamp"
-					| Xml            => "Xml"
-					| Variant        => "Variant"
-					| VarNumeric     => "VarNumeric"
-				});
-
-			match (this)
-			{
-				| Char      (len)
-				| VarChar   (len)
-				| Text      (len)
-				| NChar     (len)
-				| NVarChar  (len)
-				| NText     (len)
-				| Binary    (len)
-				| VarBinary (len) => if (len > 0) sb.Append('(').Append(len).Append(')') else sb
-				| Decimal   (p,s)
-				| Money     (p,s)
-				| SmallMoney(p,s) => if (p > 0) sb.Append('(').Append(p).Append(',').Append(s).Append(')') else sb
-				| _               => sb
+					| Char           =>                   8000
+					| VarChar        =>                   8000
+					| Text           =>           int.MaxValue
+					| NChar          =>                   4000
+					| NVarChar       =>                   4000
+					| NText          =>           int.MaxValue
+					| Binary         =>                   8000
+					| VarBinary      =>                   8000
+					| Image          =>           int.MaxValue
+					| Boolean        =>                      1
+					| Guid           =>                     36
+					| SByte          =>   _sbyteMaxDisplaySize
+					| Int16          =>   _int16MaxDisplaySize
+					| Int32          =>   _int32MaxDisplaySize
+					| Int64          =>   _int64MaxDisplaySize
+					| Byte           =>    _byteMaxDisplaySize
+					| UInt16         =>  _uint16MaxDisplaySize
+					| UInt32         =>  _uint32MaxDisplaySize
+					| UInt64         =>  _uint64MaxDisplaySize
+					| Single         =>              7 + 2 + 4
+					| Double         =>             15 + 2 + 5
+					| Decimal        => _decimalMaxDisplaySize
+					| Money          =>               19 + 2-1
+					| SmallMoney     =>                 10 + 2
+					| Date           => 10
+					| Time           => 16
+					| DateTime       => 23
+					| DateTime2      => 27
+					| SmallDateTime  => 19
+					| DateTimeOffset => 34
+					| Timestamp      => -1
+					| Xml            => -1
+					| Variant        => -1
+					| VarNumeric     => -1
+				}
 			}
 		}
 
-		static _decimalLen = decimal.MaxValue.ToString().Length;
+		public IsString : bool
+		{
+			get
+			{
+				match (this)
+				{
+					| Char    
+					| VarChar 
+					| Text    
+					| NChar   
+					| NVarChar
+					| NText    => SystemType != typeof(char)
+					| _        => false
+				}
+			}
+		}
+		
+		public override ToString() : string
+		{
+			match (this)
+			{
+				| Image                      => "Image"
+				| Boolean                    => "Boolean"
+				| Guid                       => "Guid"
+				| SByte                      => "SByte"
+				| Int16                      => "Int16"
+				| Int32                      => "Int32"
+				| Int64                      => "Int64"
+				| Byte                       => "Byte"
+				| UInt16                     => "UInt16"
+				| UInt32                     => "UInt32"
+				| UInt64                     => "UInt64"
+				| Single                     => "Single"
+				| Double                     => "Double"
+				| Date                       => "Date"
+				| Time                       => "Time"
+				| DateTime                   => "DateTime"
+				| DateTime2                  => "DateTime2"
+				| SmallDateTime              => "SmallDateTime"
+				| DateTimeOffset             => "DateTimeOffset"
+				| Timestamp                  => "Timestamp"
+				| Xml                        => "Xml"
+				| Variant                    => "Variant"
+				| VarNumeric                 => "VarNumeric"
+				| Char       (len) with name =  "Char"
+				| VarChar    (len) with name =  "VarChar"
+				| Text       (len) with name =  "Text"
+				| NChar      (len) with name =  "NChar"
+				| NVarChar   (len) with name =  "NVarChar"
+				| NText      (len) with name =  "NText"
+				| Binary     (len) with name =  "Binary"
+				| VarBinary  (len) with name =  "VarBinary"  => if (len > 0) $"$name($len)" else name
+				| Decimal    (p,s) with name =  "Decimal"
+				| Money      (p,s) with name =  "Money"
+				| SmallMoney (p,s) with name =  "SmallMoney" => if (p > 0) $"$name($p,$s)" else name
+			}
+		}
 
 		public static @:(type : Type) : SqlDataType
 		{
 			match (type.ToUnderlying().ToCodeWithCheck())
 			{
 				| String         => SqlDataType.NVarChar      (type, 4000)
+				| Char           => SqlDataType.NChar         (type, 1)
 				| Boolean        => SqlDataType.Boolean       (type)
 				| SByte          => SqlDataType.SByte         (type)
 				| Int16          => SqlDataType.Int16         (type)
@@ -125,7 +178,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| UInt64         => SqlDataType.UInt64        (type)
 				| Single         => SqlDataType.Single        (type)
 				| Double         => SqlDataType.Double        (type)
-				| Decimal        => SqlDataType.Decimal       (type, _decimalLen, _decimalLen)
+				| Decimal        => SqlDataType.Decimal       (type, _decimalMaxDisplaySize - 1, _decimalMaxDisplaySize - 1)
 				| DateTime       => SqlDataType.DateTime      (type)
 				| Object         => SqlDataType.Variant       (type)
 				| Guid           => SqlDataType.Guid          (type)

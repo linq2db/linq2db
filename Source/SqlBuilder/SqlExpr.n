@@ -13,24 +13,58 @@ namespace LinqToDB_Temp.SqlBuilder
 	[Record]
 	public variant SqlExpr
 	{
-		[ReplaceCtorParameter(precedence, Unknown)] | Query      { new Query : SqlQuery                                              }
+		[ReplaceCtorParameter(precedence, Unknown)]
+		| Query
+		{
+			new Query : SqlQuery
+		}
 
 		[ReplaceCtorParameter(type,       field.Type)]
-		[ReplaceCtorParameter(precedence, Primary)] | Field      { new Field : SqlField;                                             }
+		[ReplaceCtorParameter(precedence, Primary)]
+		| Field
+		{
+			new Field : SqlField;
+		}
 
-		                                            | Binary     { Expr1     : SqlExpr;  Operation  : string;       Expr2 : SqlExpr; }
-		                                            | Expression { Expr      : string;   Parameters : list[SqlExpr]                  }
-		                                            | Function   { Name      : string;   Parameters : list[SqlExpr];
-		                                                           this(type : SqlDataType, name : string, parameters : list[SqlExpr])
-		                                                           {
-		                                                               this(type, Primary, name, parameters)
-		                                                           }
-		                                                         }
+		| Binary
+		{
+			Expr1     : SqlExpr;
+			Operation : string;
+			Expr2     : SqlExpr;
+		}
 
-		[ReplaceCtorParameter(precedence, Primary)] | Parameter  { Name      : string;   new Value  : SqlValue;                      }
-		[ReplaceCtorParameter(precedence, Primary)] | Value      { new Value : SqlValue;                                             }
+		| Expression
+		{
+			Expr       : string;
+			Parameters : list[SqlExpr]
+		}
 
-		[ReplaceCtorParameter(precedence, Primary)] | DataType
+		| Function
+		{
+			Name       : string;
+			Parameters : list[SqlExpr];
+
+			this(type : SqlDataType, name : string, parameters : list[SqlExpr])
+			{
+				this(type, Primary, name, parameters)
+			}
+		}
+
+		[ReplaceCtorParameter(precedence, Primary)]
+		| Parameter
+		{
+			Name      : string;
+			new Value : SqlValue;
+		}
+
+		[ReplaceCtorParameter(precedence, Primary)]
+		| Value
+		{
+			new Value : SqlValue;
+		}
+
+		[ReplaceCtorParameter(precedence, Primary)]
+		| DataType
 
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
@@ -42,15 +76,16 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary    (e1, op, e2) => $"$e1 $op $e2"
 				| Expression(ex, ps)     => string.Format(ex, ps.ToArray)
 				| Function  (nm, ps)     => $"$nm(..$ps)"
-				| Parameter (nm,v)       => def n = nm ?? "parameter"; $"@$n[$v]"
+				| Parameter (nm, v)      => def n = nm ?? "parameter"; $"@$n[$v]"
 				| Value     (v)          => v.ToString()
 				| DataType               => Type.ToString()
 				| Field
-				| Query                  => throw NotImplementedException(this.GetType().Name)
+				| Query                  => throw NotImplementedException(GetType().Name)
 			}
 		}
 
 		public static @: (v : System.String ) : SqlExpr { SqlExpr.Value(typeof(String ), SqlValue.String (v)) }
+		public static @: (v : System.Char   ) : SqlExpr { SqlExpr.Value(typeof(Char   ), SqlValue.Char   (v)) }
 		public static @: (v : System.Boolean) : SqlExpr { SqlExpr.Value(typeof(Boolean), SqlValue.Boolean(v)) }
 		public static @: (v : System.SByte  ) : SqlExpr { SqlExpr.Value(typeof(SByte  ), SqlValue.SByte  (v)) }
 		public static @: (v : System.Int16  ) : SqlExpr { SqlExpr.Value(typeof(Int16  ), SqlValue.Int16  (v)) }

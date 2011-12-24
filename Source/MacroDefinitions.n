@@ -1,6 +1,7 @@
 ﻿
 [assembly:LinqToDB.MacroInternal.TypeCode(
 	System.String,
+	System.Char,
 	System.Boolean,
 	System.SByte,
 	System.Int16,

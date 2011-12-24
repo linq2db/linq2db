@@ -40,12 +40,14 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Object(null)
 				| String(null) => "NULL"
 				| String(v)    => "\'" + v.ToString().Replace("\'", "''") + "\'"
+				| Char  (v)    => "\'" + v.ToString().Replace("\'", "''") + "\'"
 				| v            => v.GetValue().ToString()
 			}
 		}
 
 		public static @:(v : System.Object ) : SqlValue { SqlValue.Object (v) }
 		public static @:(v : System.String ) : SqlValue { SqlValue.String (v) }
+		public static @:(v : System.Char   ) : SqlValue { SqlValue.Char   (v) }
 		public static @:(v : System.Boolean) : SqlValue { SqlValue.Boolean(v) }
 		public static @:(v : System.SByte  ) : SqlValue { SqlValue.SByte  (v) }
 		public static @:(v : System.Int16  ) : SqlValue { SqlValue.Int16  (v) }

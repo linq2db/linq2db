@@ -7,10 +7,6 @@ namespace LinqToDB_Temp.SqlBuilder
 	{
 		public Optimize(this expr : SqlExpr) : SqlExpr
 		{
-			def isSystemString(e)
-			{
-				e.Type.SystemType == typeof(string)
-			}
 			def concatStringAndValue(v1, v2)
 			{
 				if (v1 == null && v2 == null) null : string else $"$v1$v2"
@@ -23,9 +19,22 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) op1 else op2, if (v >= 0) v else -v))
 			}
-			def getSqlDataType(_e)
+			def getSqlDataType(e)
 			{
-				SqlDataType.VarChar(typeof(string), 100)
+				def size = match (e.Type : SqlDataType)
+				{
+					| Char      (len)
+					| VarChar   (len)
+					| Text      (len)
+					| NChar     (len)
+					| NVarChar  (len)
+					| NText     (len) => len
+					| Binary    (len)
+					| VarBinary (len) => len * 2
+					| type            => type.MaxDisplaySize
+				};
+				
+				SqlDataType.VarChar(typeof(string), if (size > 0) size else 100)
 			}
 			def toString(e, v)
 			{
@@ -46,10 +55,10 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Binary(e, "-", Value(Int32(v1))),  "+", Value(Int32 (v2))) => addNumber(e, v1 - v2, "-", "+")      // ex - 2 + 3     -> ex + 1
 				| Binary(Value(String(v1))      , "+", Value(v2)              ) => concatStringAndValue(v1, v2.GetValue())  // "1" + val      -> "1val"
 				| Binary(Value(v1)              , "+", Value(String(v2))      ) => concatStringAndValue(v1.GetValue(), v2)  // val + "1"      -> "val1"
-				| Binary(Value(String(""))      , "+", e                      ) when isSystemString(e)                      // "" + ex        -> "ex"
-				| Binary(Value(String(null))    , "+", e                      ) when isSystemString(e)
-				| Binary(e                      , "+", Value(String(""))      ) when isSystemString(e)                      // ex + ""        -> "ex"
-				| Binary(e                      , "+", Value(String(null))    ) when isSystemString(e)
+				| Binary(Value(String(""))      , "+", e                      ) when e.Type.IsString                        // "" + ex        -> "ex"
+				| Binary(Value(String(null))    , "+", e                      ) when e.Type.IsString
+				| Binary(e                      , "+", Value(String(""))      ) when e.Type.IsString                        // ex + ""        -> "ex"
+				| Binary(e                      , "+", Value(String(null))    ) when e.Type.IsString
 				| Binary(Value(SByte  (0))      , "+", e                      )                                             // 0  + ex        -> ex
 				| Binary(Value(Int16  (0))      , "+", e                      )
 				| Binary(Value(Int32  (0))      , "+", e                      )
@@ -115,9 +124,11 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(e                      , "*", Value(UInt64 (1))      )
 				| Binary(e                      , "*", Value(Single (1f))     )
 				| Binary(e                      , "*", Value(Double (1d))     )
-				| Binary(e                      , "*", Value(Decimal(1m))     )                         => Optimize(e)
-				| Binary(e                      , "+", Value(String) as v     ) when !isSystemString(e) => toString (e, v)  // ex + "..."     -> ex
-				| Binary(Value(String) as v     , "+", e                      ) when !isSystemString(e) => toString2(v, e)  // ex + "..."     -> ex
+				| Binary(e                      , "*", Value(Decimal(1m))     )                       => Optimize(e)
+				| Binary(e                      , "+", Value(String) as v     ) when !e.Type.IsString => toString (e, v)    // ex + "..."     -> ex
+				| Binary(Value(String) as v     , "+", e                      ) when !e.Type.IsString => toString2(v, e)    // ex + "..."     -> ex
+				| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2                                  // 2 + 3          -> 5
+				| Binary(Value(Int16  (v1))     , "+", Value(Int16  (v2))     ) => v1 + v2
 				| Binary(Value(Int32  (v1))     , "+", Value(Int32  (v2))     ) => v1 + v2
 				| Binary(Value(Int64  (v1))     , "+", Value(Int64  (v2))     ) => v1 + v2
 				| Binary(Value(Byte   (v1))     , "+", Value(Byte   (v2))     ) => v1 + v2

@@ -55,6 +55,7 @@ namespace LinqToDB_Temp
 			match (type.ToUnderlying().ToCodeWithCheck())
 			{
 				| String         => DataType.NVarChar
+				| Char           => DataType.NChar
 				| Boolean        => DataType.Boolean
 				| SByte          => DataType.SByte
 				| Int16          => DataType.Int16
