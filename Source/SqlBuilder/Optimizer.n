@@ -11,29 +11,46 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				e.Type.SystemType == typeof(string)
 			}
-			
+			def concatStringAndValue(v1, v2)
+			{
+				if (v1 == null && v2 == null) null : string else $"$v1$v2"
+			}
+			def addString(e, v1, v2)
+			{
+				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, "+", $"$v1$v2"))
+			}
+			def addNumber(e, v, op1, op2)
+			{
+				Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) op1 else op2, if (v >= 0) v else -v))
+			}
+			def getSqlDataType(e)
+			{
+				SqlDataType.VarChar(typeof(string), 100)
+			}
+			def toString(e, v)
+			{
+				def type = getSqlDataType(e);
+				SqlExpr.Binary(expr.Type, expr.Precedence, SqlExpr.Function(type, "Convert", [SqlExpr.DataType(type), e]), "+", v)
+			}
+			def toString2(v, e)
+			{
+				def type = getSqlDataType(e);
+				SqlExpr.Binary(expr.Type, expr.Precedence, v, "+", SqlExpr.Function(type, "Convert", [SqlExpr.DataType(type), e]))
+			}
+
 			match (expr)
 			{
-				#region "1" + val      -> "1val"
-				| Binary(Value(String(v1))      , "+", Value(v2)              ) =>
-					def vv2 = v2.GetValue();
-					if (v1 == null && vv2 == null) null : string else $"$v1$vv2"
-				#endregion
-				#region val + "1"      -> "val1"
-				| Binary(Value(v1)              , "+", Value(String(v2))      ) =>
-					def vv1 = v1.GetValue();
-					if (vv1 == null && v2 == null) null : string else $"$vv1$v2"
-				#endregion
-				#region "" + ex        -> "ex"
-				| Binary(Value(String(""))      , "+", e                      ) when isSystemString(e)
+				| Binary(Binary(e, "+", Value(String(v1))), "+", Value(String(v2))) => addString(e, v1, v2)                 // ex + "1" + "2" -> ex + "12"
+				| Binary(Binary(e, "+", Value(Int32(v1))),  "+", Value(Int32 (v2))) => addNumber(e, v1 + v2, "+", "-")      // ex + 2 + 3     -> ex + 5
+				| Binary(Binary(e, "+", Value(Int32(v1))),  "-", Value(Int32 (v2))) => addNumber(e, v1 - v2, "+", "-")      // ex + 2 - 3     -> ex + 1
+				| Binary(Binary(e, "-", Value(Int32(v1))),  "+", Value(Int32 (v2))) => addNumber(e, v1 - v2, "-", "+")      // ex - 2 + 3     -> ex + 1
+				| Binary(Value(String(v1))      , "+", Value(v2)              ) => concatStringAndValue(v1, v2.GetValue())  // "1" + val      -> "1val"
+				| Binary(Value(v1)              , "+", Value(String(v2))      ) => concatStringAndValue(v1.GetValue(), v2)  // val + "1"      -> "val1"
+				| Binary(Value(String(""))      , "+", e                      ) when isSystemString(e)                      // "" + ex        -> "ex"
 				| Binary(Value(String(null))    , "+", e                      ) when isSystemString(e)
-				#endregion
-				#region ex + ""        -> "ex"
-				| Binary(e                      , "+", Value(String(""))      ) when isSystemString(e)
+				| Binary(e                      , "+", Value(String(""))      ) when isSystemString(e)                      // ex + ""        -> "ex"
 				| Binary(e                      , "+", Value(String(null))    ) when isSystemString(e)
-				#endregion
-				#region 0  + ex        -> ex
-				| Binary(Value(SByte  (0))      , "+", e                      )
+				| Binary(Value(SByte  (0))      , "+", e                      )                                             // 0  + ex        -> ex
 				| Binary(Value(Int16  (0))      , "+", e                      )
 				| Binary(Value(Int32  (0))      , "+", e                      )
 				| Binary(Value(Int64  (0))      , "+", e                      )
@@ -44,9 +61,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (0f))     , "+", e                      )
 				| Binary(Value(Double (0d))     , "+", e                      )
 				| Binary(Value(Decimal(0m))     , "+", e                      )
-				#endregion
-				#region ex + 0         -> ex
-				| Binary(e                      , "+", Value(SByte  (0))      )
+				| Binary(e                      , "+", Value(SByte  (0))      )                                             // ex + 0         -> ex
 				| Binary(e                      , "+", Value(Int16  (0))      )
 				| Binary(e                      , "+", Value(Int32  (0))      )
 				| Binary(e                      , "+", Value(Int64  (0))      )
@@ -57,9 +72,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(e                      , "+", Value(Single (0f))     )
 				| Binary(e                      , "+", Value(Double (0d))     )
 				| Binary(e                      , "+", Value(Decimal(0m))     )
-				#endregion
-				#region 0  * ex        -> 0
-				| Binary(Value(SByte  (0))  as e, "*", _                      )
+				| Binary(Value(SByte  (0))  as e, "*", _                      )                                             // 0  * ex        -> 0
 				| Binary(Value(Int16  (0))  as e, "*", _                      )
 				| Binary(Value(Int32  (0))  as e, "*", _                      )
 				| Binary(Value(Int64  (0))  as e, "*", _                      )
@@ -70,9 +83,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (0f)) as e, "*", _                      )
 				| Binary(Value(Double (0d)) as e, "*", _                      )
 				| Binary(Value(Decimal(0m)) as e, "*", _                      )
-				#endregion
-				#region ex * 0         -> 0
-				| Binary(_                      , "*", Value(SByte  (0))  as e)
+				| Binary(_                      , "*", Value(SByte  (0))  as e)                                             // ex * 0         -> 0
 				| Binary(_                      , "*", Value(Int16  (0))  as e)
 				| Binary(_                      , "*", Value(Int32  (0))  as e)
 				| Binary(_                      , "*", Value(Int64  (0))  as e)
@@ -83,9 +94,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(_                      , "*", Value(Single (0f)) as e)
 				| Binary(_                      , "*", Value(Double (0d)) as e)
 				| Binary(_                      , "*", Value(Decimal(0m)) as e)
-				#endregion
-				#region 1  * ex        -> ex
-				| Binary(Value(SByte  (1))      , "*", e                      )
+				| Binary(Value(SByte  (1))      , "*", e                      )                                             // 1  * ex        -> ex
 				| Binary(Value(Int16  (1))      , "*", e                      )
 				| Binary(Value(Int32  (1))      , "*", e                      )
 				| Binary(Value(Int64  (1))      , "*", e                      )
@@ -96,9 +105,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (1f))     , "*", e                      )
 				| Binary(Value(Double (1d))     , "*", e                      )
 				| Binary(Value(Decimal(1m))     , "*", e                      )
-				#endregion
-				#region ex * 1         -> ex
-				| Binary(e                      , "*", Value(SByte  (1))      )
+				| Binary(e                      , "*", Value(SByte  (1))      )                                             // ex * 1         -> ex
 				| Binary(e                      , "*", Value(Int16  (1))      )
 				| Binary(e                      , "*", Value(Int32  (1))      )
 				| Binary(e                      , "*", Value(Int64  (1))      )
@@ -108,33 +115,10 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(e                      , "*", Value(UInt64 (1))      )
 				| Binary(e                      , "*", Value(Single (1f))     )
 				| Binary(e                      , "*", Value(Double (1d))     )
-				| Binary(e                      , "*", Value(Decimal(1m))     ) => Optimize(e)
-				#endregion
-				#region ex + "..."     -> ex
-				| Binary(e                      , "+", Value(String) as v2    ) when !isSystemString(e) =>
-					SqlExpr.Binary(expr.Type, expr.Precedence, SqlExpr.Function(typeof(string), "Convert", []), "+", v2)
-				#endregion
-				#region ex + "1" + "2" -> ex + "12"
-				| Binary(Binary(e, "+", Value(String(v1))), "+", Value(String(v2))) =>
-					Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, "+", $"$v1$v2"))
-				#endregion
-				#region ex + 2 + 3     -> ex + 5
-				| Binary(Binary(e, "+", Value(Int32(v1))), "+", Value(Int32(v2))) =>
-					def v = v1 + v2;
-					Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) "+" else "-", if (v >= 0) v else -v))
-				#endregion
-				#region ex + 2 - 3     -> ex + 1
-				| Binary(Binary(e, "+", Value(Int32(v1))), "-", Value(Int32(v2))) =>
-					def v = v1 - v2;
-					Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) "+" else "-", if (v >= 0) v else -v))
-				#endregion
-				#region ex - 2 + 3     -> ex + 1
-				| Binary(Binary(e, "-", Value(Int32(v1))), "+", Value(Int32(v2))) =>
-					def v = v1 - v2;
-					Optimize(SqlExpr.Binary(expr.Type, expr.Precedence, e, if (v >= 0) "-" else "+", if (v >= 0) v else -v))
-				#endregion
-				#region 2 + 3          -> 5
-				| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2
+				| Binary(e                      , "*", Value(Decimal(1m))     )                         => Optimize(e)
+				| Binary(e                      , "+", Value(String) as v     ) when !isSystemString(e) => toString (e, v)  // ex + "..."     -> ex
+				| Binary(Value(String) as v     , "+", e                      ) when !isSystemString(e) => toString2(v, e)  // ex + "..."     -> ex
+				| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2                                  // 2 + 3          -> 5
 				| Binary(Value(Int16  (v1))     , "+", Value(Int16  (v2))     ) => v1 + v2
 				| Binary(Value(Int32  (v1))     , "+", Value(Int32  (v2))     ) => v1 + v2
 				| Binary(Value(Int64  (v1))     , "+", Value(Int64  (v2))     ) => v1 + v2
@@ -145,9 +129,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (v1))     , "+", Value(Single (v2))     ) => v1 + v2
 				| Binary(Value(Double (v1))     , "+", Value(Double (v2))     ) => v1 + v2
 				| Binary(Value(Decimal(v1))     , "+", Value(Decimal(v2))     ) => v1 + v2
-				#endregion
-				#region 2 - 3          -> -1
-				| Binary(Value(SByte  (v1))     , "-", Value(SByte  (v2))     ) => v1 - v2
+				| Binary(Value(SByte  (v1))     , "-", Value(SByte  (v2))     ) => v1 - v2                                  // 2 - 3          -> -1
 				| Binary(Value(Int16  (v1))     , "-", Value(Int16  (v2))     ) => v1 - v2
 				| Binary(Value(Int32  (v1))     , "-", Value(Int32  (v2))     ) => v1 - v2
 				| Binary(Value(Int64  (v1))     , "-", Value(Int64  (v2))     ) => v1 - v2
@@ -158,8 +140,6 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (v1))     , "-", Value(Single (v2))     ) => v1 - v2
 				| Binary(Value(Double (v1))     , "-", Value(Double (v2))     ) => v1 - v2
 				| Binary(Value(Decimal(v1))     , "-", Value(Decimal(v2))     ) => v1 - v2
-				#endregion
-
 				| e => e
 			}
 		}
