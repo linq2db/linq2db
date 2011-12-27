@@ -49,15 +49,15 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public SystemType : Type { get; }
 
-		static _decimalMaxDisplaySize : int = decimal.MaxValue.ToString().Length + 1;
-		static _sbyteMaxDisplaySize   : int = SByte.  MaxValue.ToString().Length + 1;
-		static _int16MaxDisplaySize   : int = Int16.  MaxValue.ToString().Length + 1;
-		static _int32MaxDisplaySize   : int = Int32.  MaxValue.ToString().Length + 1;
-		static _int64MaxDisplaySize   : int = Int64.  MaxValue.ToString().Length + 1;
-		static _byteMaxDisplaySize    : int = Byte.   MaxValue.ToString().Length + 1;
-		static _uint16MaxDisplaySize  : int = UInt16. MaxValue.ToString().Length + 1;
-		static _uint32MaxDisplaySize  : int = UInt32. MaxValue.ToString().Length + 1;
-		static _uint64MaxDisplaySize  : int = UInt64. MaxValue.ToString().Length + 1;
+		static _decimalMaxDisplaySize : int = decimal.MaxValue.ToString().Length;
+		static _sbyteMaxDisplaySize   : int = SByte.  MaxValue.ToString().Length;
+		static _int16MaxDisplaySize   : int = Int16.  MaxValue.ToString().Length;
+		static _int32MaxDisplaySize   : int = Int32.  MaxValue.ToString().Length;
+		static _int64MaxDisplaySize   : int = Int64.  MaxValue.ToString().Length;
+		static _byteMaxDisplaySize    : int = Byte.   MaxValue.ToString().Length;
+		static _uint16MaxDisplaySize  : int = UInt16. MaxValue.ToString().Length;
+		static _uint32MaxDisplaySize  : int = UInt32. MaxValue.ToString().Length;
+		static _uint64MaxDisplaySize  : int = UInt64. MaxValue.ToString().Length;
 
 		public MaxDisplaySize : int
 		{
@@ -65,40 +65,40 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				match (this)
 				{
-					| Char           =>                   8000
-					| VarChar        =>                   8000
-					| Text           =>           int.MaxValue
-					| NChar          =>                   4000
-					| NVarChar       =>                   4000
-					| NText          =>           int.MaxValue
-					| Binary         =>                   8000
-					| VarBinary      =>                   8000
-					| Image          =>           int.MaxValue
-					| Boolean        =>                      1
-					| Guid           =>                     36
-					| SByte          =>   _sbyteMaxDisplaySize
-					| Int16          =>   _int16MaxDisplaySize
-					| Int32          =>   _int32MaxDisplaySize
-					| Int64          =>   _int64MaxDisplaySize
-					| Byte           =>    _byteMaxDisplaySize
-					| UInt16         =>  _uint16MaxDisplaySize
-					| UInt32         =>  _uint32MaxDisplaySize
-					| UInt64         =>  _uint64MaxDisplaySize
-					| Single         =>              7 + 2 + 4
-					| Double         =>             15 + 2 + 5
-					| Decimal        => _decimalMaxDisplaySize
-					| Money          =>               19 + 2-1
-					| SmallMoney     =>                 10 + 2
-					| Date           => 10
-					| Time           => 16
-					| DateTime       => 23
-					| DateTime2      => 27
-					| SmallDateTime  => 19
-					| DateTimeOffset => 34
-					| Timestamp      => -1
-					| Xml            => -1
-					| Variant        => -1
-					| VarNumeric     => -1
+					| Char           =>                       8000
+					| VarChar        =>                       8000
+					| Text           =>               int.MaxValue
+					| NChar          =>                       4000
+					| NVarChar       =>                       4000
+					| NText          =>               int.MaxValue
+					| Binary         =>                       8000
+					| VarBinary      =>                       8000
+					| Image          =>               int.MaxValue
+					| Boolean        =>                          1
+					| Guid           =>                         36
+					| SByte          =>   _sbyteMaxDisplaySize + 1
+					| Int16          =>   _int16MaxDisplaySize + 1
+					| Int32          =>   _int32MaxDisplaySize + 1
+					| Int64          =>   _int64MaxDisplaySize + 1
+					| Byte           =>    _byteMaxDisplaySize + 1
+					| UInt16         =>  _uint16MaxDisplaySize + 1
+					| UInt32         =>  _uint32MaxDisplaySize + 1
+					| UInt64         =>  _uint64MaxDisplaySize + 1
+					| Single         =>                  7 + 2 + 4
+					| Double         =>                 15 + 2 + 5
+					| Decimal        => _decimalMaxDisplaySize + 1
+					| Money          =>                   19 + 2-1
+					| SmallMoney     =>                     10 + 2
+					| Date           =>                         10
+					| Time           =>                         16
+					| DateTime       =>                         23
+					| DateTime2      =>                         27
+					| SmallDateTime  =>                         19
+					| DateTimeOffset =>                         34
+					| Timestamp      =>                         -1
+					| Xml            =>                         -1
+					| Variant        =>                         -1
+					| VarNumeric     =>                         -1
 				}
 			}
 		}
@@ -178,7 +178,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| UInt64         => SqlDataType.UInt64        (type)
 				| Single         => SqlDataType.Single        (type)
 				| Double         => SqlDataType.Double        (type)
-				| Decimal        => SqlDataType.Decimal       (type, _decimalMaxDisplaySize - 1, _decimalMaxDisplaySize - 1)
+				| Decimal        => SqlDataType.Decimal       (type, _decimalMaxDisplaySize, _decimalMaxDisplaySize)
 				| DateTime       => SqlDataType.DateTime      (type)
 				| Object         => SqlDataType.Variant       (type)
 				| Guid           => SqlDataType.Guid          (type)

@@ -22,7 +22,7 @@ namespace Tests.Nemerle
 		
 		public ConvertString() : void
 		{
-			def fi    = SqlExpr.Function(typeof(int),     "f", []);
+			def fi    = SqlExpr.Function(typeof(int), "f", []);
 			def snull = null : string;
 			
 			match (Binary("1"  , "+", 2u   ).Optimize()) { | Value(String("12")) => () | e => Throw(e) }
@@ -32,7 +32,11 @@ namespace Tests.Nemerle
 			match (Binary(2l   , "+", ""   ).Optimize()) { | Value(String("2" )) => () | e => Throw(e) }
 			match (Binary("2"  , "+", snull).Optimize()) { | Value(String("2" )) => () | e => Throw(e) }
 
-			match (Binary(Binary(fi, "+", "2"), "+", "3").Optimize()) { | Binary(Function, "+", Value(String("23"))) => () | e => Throw(e) }
+			match (Binary(Binary(fi, "+", "2"), "+", "3").Optimize())
+			{
+				| Binary(Function("Convert", [Function]), "+", Value(String("23"))) => ()
+				| e => Throw(e)
+			}
 		}
 
 		public ConvertNumber() : void
@@ -51,6 +55,7 @@ namespace Tests.Nemerle
 			match (Binary(0b, "*", 4b).Optimize()) { | Value(Byte   (0b)) => () | e => Throw(e) }
 			match (Binary(1m, "*", 5m).Optimize()) { | Value(Decimal(5m)) => () | e => Throw(e) }
 			match (Binary(1m, "*", fm).Optimize()) { | Function           => () | e => Throw(e) }
+			match (Binary(2d, "*",  3).Optimize()) { | Value(Double (6d)) => () | e => Throw(e) }
 
 			match (Binary(Binary(fi, "+", 1), "+", 2).Optimize()) { | Binary(Function, "+", Value(Int32(3))) => () | e => Throw(e) }
 			match (Binary(Binary(fi, "+", 5), "-", 2).Optimize()) { | Binary(Function, "+", Value(Int32(3))) => () | e => Throw(e) }

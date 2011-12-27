@@ -149,6 +149,28 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Single (v1))     , "-", Value(Single (v2))     ) => v1 - v2
 				| Binary(Value(Double (v1))     , "-", Value(Double (v2))     ) => v1 - v2
 				| Binary(Value(Decimal(v1))     , "-", Value(Decimal(v2))     ) => v1 - v2
+				| Binary(Value(SByte  (v1))     , "*", Value(SByte  (v2))     ) => v1 * v2                                  // 2 * 3          -> 6
+				| Binary(Value(Int16  (v1))     , "*", Value(Int16  (v2))     ) => v1 * v2
+				| Binary(Value(Int32  (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
+				| Binary(Value(Int64  (v1))     , "*", Value(Int64  (v2))     ) => v1 * v2
+				| Binary(Value(Byte   (v1))     , "*", Value(Byte   (v2))     ) => v1 * v2
+				| Binary(Value(UInt16 (v1))     , "*", Value(UInt16 (v2))     ) => v1 * v2
+				| Binary(Value(UInt32 (v1))     , "*", Value(UInt32 (v2))     ) => v1 * v2
+				| Binary(Value(UInt64 (v1))     , "*", Value(UInt64 (v2))     ) => v1 * v2
+				| Binary(Value(Single (v1))     , "*", Value(Single (v2))     ) => v1 * v2
+				| Binary(Value(Double (v1))     , "*", Value(Double (v2))     ) => v1 * v2
+				| Binary(Value(Decimal(v1))     , "*", Value(Decimal(v2))     ) => v1 * v2
+				| Binary(Value(Int32  (v1))     , "*", Value(Double (v2))     ) => v1 * v2
+				| Binary(Value(Double (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
+				/*
+				| Function("ConvertToCaseCompareTo", [p1, p2]) =>
+								return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
+									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
+									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
+									new SqlValue(-1)));
+				*/
+				| Function("$Convert$", [DataType(Int32), DataType(Int16), e]) => e
+				| Function("$Convert$", [to,              _,               e]) => SqlExpr.Function(expr.Type, "Convert", [to, e])
 				| Expression("{0}", [e])
 				| e => e
 			}

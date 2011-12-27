@@ -64,7 +64,11 @@ namespace LinqToDB_Temp.SqlBuilder
 		}
 
 		[ReplaceCtorParameter(precedence, Primary)]
+		[ReplaceCtorParameter(type,       sqlType)]
 		| DataType
+		{
+			SqlType : SqlDataType
+		}
 
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
