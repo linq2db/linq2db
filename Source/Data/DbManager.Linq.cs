@@ -119,7 +119,7 @@ namespace LinqToDB.Data
 			var y = DataProvider.Convert("y", ConvertType.NameToQueryParameter).ToString();
 			var c = x == y ? pq.SqlParameters.Count : parameters.Length;
 
-			var parms = new List<IDbDataParameter>(c);
+            List<IDbDataParameter> parms = new List<IDbDataParameter>(c);
 
 			if (x == y)
 			{
@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 
 					if (sqlp.IsQueryParameter)
 					{
-						var parm = parameters.Length > i && parameters[i] == sqlp ? parameters[i] : parameters.First(p => p == sqlp);
+						var parm = parameters.Length > i && object.ReferenceEquals(parameters[i], sqlp) ? parameters[i] : parameters.First(p => object.ReferenceEquals(p, sqlp));
 						AddParameter(parms, x, parm);
 					}
 				}
