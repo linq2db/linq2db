@@ -118,7 +118,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 					SqlQuery.Condition cond;
 
-					if (Sequence.SqlQuery != SqlQuery &&
+					if (Sequence.SqlQuery != this.SqlQuery &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{
