@@ -126,6 +126,9 @@
     <Compile Include="SqlBuilder\Precedence.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SqlBuilder\SqlPredicate.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SqlBuilder\SqlExpr.n">
       <SubType>Code</SubType>
     </Compile>
@@ -133,6 +136,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SqlBuilder\SqlField.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SqlBuilder\SqlOperator.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SqlBuilder\SqlQuery.n">
@@ -152,9 +158,6 @@
     <Folder Include="SqlBuilder\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="app.config">
-      <SubType>Content</SubType>
-    </Content>
     <Compile Include="LinqToDBException.n">
       <SubType>Content</SubType>
     </Compile>

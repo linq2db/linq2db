@@ -1,0 +1,74 @@
+﻿using System;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB_Temp.SqlBuilder
+{
+	public variant SqlPredicate
+	{
+		| Not        { Predicate : SqlPredicate }
+		| And        {     Expr1 : SqlExpr;                         Expr2  : SqlExpr; }
+		| Or         {     Expr1 : SqlExpr;                         Expr2  : SqlExpr; }
+		| Compare    {     Expr1 : SqlExpr; Operator : SqlOperator; Expr2  : SqlExpr; } // { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
+		| Like       {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Escape : SqlExpr; } // string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]
+		| Between    {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Expr3  : SqlExpr; } // expression [ NOT ] BETWEEN expression AND expression
+		| IsNull     {     Expr  : SqlExpr;                                           } // expression IS [ NOT ] NULL
+		| InQuery    {     Expr  : SqlExpr; Query    : SqlQuery;                      } // expression [ NOT ] IN ( subquery )
+		| InList     {     Expr  : SqlExpr; Values   : list[SqlExpr];                 } // expression [ NOT ] IN ( subquery | expression [ ,...n ] )
+		| Expression {     Expr  : SqlExpr; new Precedence : int;
+			public this([NotNull] expr : SqlExpr)
+			{
+				this(expr, expr.Precedence)
+			}
+		}
+
+		public Precedence : int
+		{
+			get
+			{
+				match (this)
+				{
+					| And                    => Precedence.LogicalConjunction
+					| Or                     => Precedence.LogicalDisjunction
+					| Not       (And)
+					| Not       (Or)
+					| Not       (Expression) => Precedence.LogicalNegation
+					| Expression(_, p)       => p
+					| _                      => Precedence.Comparison
+				}
+			}
+		}
+
+		public override ToString() : string
+		{
+			match (this)
+			{
+				| Not(Like      (e1, e2, null))                         => $"$e1 NOT LIKE $e2"
+				| Not(Like      (e1, e2, e))                            => $"$e1 NOT LIKE $e2 ESCAPE $e"
+				| Not(Between   (e1, e2, e3))                           => $"$e1 NOT BETWEEN $e2 AND $e3"
+				| Not(IsNull    (e))                                    => $"$e IS NOT NULL"
+				| Not(InQuery   (e, q))                                 => $"$e NOT IN ($q)"
+				| Not(InList    (e, vs))                                => $"$e NOT IN (..$vs)"
+				| Not(p)                                                => $"NOT ($p)"
+				|     And       (e1, e2)                                => $"($e1) AND ($e2)"
+				|     Or        (e1, e2)                                => $"($e1) OR ($e2)"
+				|     Expression(e, _)                                  => e.ToString()
+				|     Compare   (e1, Equal,          e2) with op = "="
+				|     Compare   (e1, NotEqual,       e2) with op = "<>"
+				|     Compare   (e1, Greater,        e2) with op = ">"
+				|     Compare   (e1, GreaterOrEqual, e2) with op = ">="
+				|     Compare   (e1, NotGreater,     e2) with op = "!>"
+				|     Compare   (e1, Less,           e2) with op = "<"
+				|     Compare   (e1, LessOrEqual,    e2) with op = "<="
+				|     Compare   (e1, NotLess,        e2) with op = "!<" => $"$e1 $op $e2"
+				|     Like      (e1, e2, null)                          => $"$e1 LIKE $e2"
+				|     Like      (e1, e2, e)                             => $"$e1 LIKE $e2 ESCAPE $e"
+				|     Between   (e1, e2, e3)                            => $"$e1 BETWEEN $e2 AND $e3"
+				|     IsNull    (e)                                     => $"$e IS NULL"
+				|     InQuery   (e, q)                                  => $"$e IN ($q)"
+				|     InList    (e, vs)                                 => $"$e IN (..$vs)"
+			}
+		}
+	}
+}

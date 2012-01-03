@@ -65,7 +65,6 @@ namespace LinqToDB.MacroInternal
 							{ ..$exprs }
 						}
 
-
 						public ToCode(this type : Type) : LinqToDB_Temp.TypeCode
 						{
 							mutable code;

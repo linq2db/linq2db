@@ -46,6 +46,16 @@ namespace LinqToDB_Temp.SqlBuilder
 				def type = getSqlDataType(e);
 				SqlExpr.Binary(expr.Type, expr.Precedence, v, "+", SqlExpr.Function(type, "Convert", [SqlExpr.DataType(type), e]))
 			}
+			def getPrecision(e)
+			{
+				match (e.Type : SqlDataType)
+				{
+					| Decimal   (p, _)
+					| Money     (p, _)
+					| SmallMoney(p, _) => p
+					| _                => -1
+				}
+			}
 
 			match (expr)
 			{
@@ -170,6 +180,8 @@ namespace LinqToDB_Temp.SqlBuilder
 									new SqlValue(-1)));
 				*/
 				| Function("$Convert$", [DataType(Int32), DataType(Int16), e]) => e
+				| Function("$Convert$", [to,              _,               e]) when getPrecision(to) > 0 => e
+				| Function("$Convert$", [to,              _,               e]) when to.Type.SystemType == typeof(object) => e
 				| Function("$Convert$", [to,              _,               e]) => SqlExpr.Function(expr.Type, "Convert", [to, e])
 				| Expression("{0}", [e])
 				| e => e

@@ -2268,7 +2268,7 @@ namespace LinqToDB.Data.Linq.Builder
 				{
 					var notExpr = new SqlQuery.SearchCondition
 					{
-						Conditions = { new SqlQuery.Condition(true, new SqlQuery.Predicate.Expr(sqlExpression, sqlExpression.Precedence)) }
+						Conditions = { new SqlQuery.Condition(true, new SqlQuery.Predicate.Expr(sqlExpression)) }
 					};
 
 					return Convert(context, new SqlFunction(sqlExpression.SystemType, "CASE", sqlExpression, new SqlValue(1), notExpr, new SqlValue(0), new SqlValue(null)));
