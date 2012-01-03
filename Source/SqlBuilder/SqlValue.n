@@ -23,6 +23,20 @@ namespace LinqToDB_Temp.SqlBuilder
 		| Double  { Value : System.Double  }
 		| Decimal { Value : System.Decimal }
 
+		public Type : SqlDataType
+		{
+			get
+			{
+				match (this)
+				{
+					| String(null) => typeof(string)
+					| String(v)    => SqlDataType.NVarChar(typeof(string), v.Length)
+					| Object(null) => typeof(object)
+					| _            => GetValue().GetType()
+				}
+			}
+		}
+
 		public GetValue() : object
 		{
 			match (this)

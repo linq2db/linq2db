@@ -56,6 +56,36 @@ namespace LinqToDB_Temp.SqlBuilder
 					| _                => -1
 				}
 			}
+			def toCase1(e1, e2)
+			{
+				Optimize(SqlExpr.Function(expr.Type, "CASE",
+					[
+						SqlExpr.Condition(SqlPredicate.Compare(e1, SqlOperator.Greater, e2)),  1 : SqlExpr,
+						SqlExpr.Condition(SqlPredicate.Compare(e1, SqlOperator.Equal,   e2)),  0 : SqlExpr,
+						                                                                      -1 : SqlExpr]
+					))
+			}
+			def toCase2(name, e)
+			{
+				SqlExpr.Function(typeof(int), name, [Optimize(SqlExpr.Function(expr.Type, "CASE", [e, 1 : SqlExpr, 0 : SqlExpr]))])
+			}
+			def convertCase(cps : list[SqlExpr]) : SqlExpr
+			{
+				def loop(ps : list[SqlExpr])
+				{
+					| Value(Boolean(true))  :: p  :: _ => [p]
+					| Value(Boolean(false)) :: _  :: t => loop(t)
+					| p1                    :: p2 :: t => p1 :: p2 :: loop(t)
+					| _                                => ps
+				}
+
+				match (loop(cps))
+				{
+					| [p]                              => p
+					| ps when ReferenceEquals(ps, cps) => expr
+					| ps                               => SqlExpr.Function(expr.Type, "CASE", ps)
+				}
+			}
 
 			match (expr)
 			{
@@ -172,17 +202,17 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Decimal(v1))     , "*", Value(Decimal(v2))     ) => v1 * v2
 				| Binary(Value(Int32  (v1))     , "*", Value(Double (v2))     ) => v1 * v2
 				| Binary(Value(Double (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
-				/*
-				| Function("ConvertToCaseCompareTo", [p1, p2]) =>
-								return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
-									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
-									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
-									new SqlValue(-1)));
-				*/
-				| Function("$Convert$", [DataType(Int32), DataType(Int16), e]) => e
-				| Function("$Convert$", [to,              _,               e]) when getPrecision(to) > 0 => e
+				| Function("ConvertToCaseCompareTo", [e1, e2])                  => toCase1(e1, e2)
+				| Function("Convert",   [_, Function("Convert", _) as f])      when expr.Type.Equals(f.Type)             => f
+				| Function("$Convert$", [DataType(Int32), DataType(Int16), e])  => e
+				| Function("$Convert$", [to,              _,               e]) when getPrecision(to) > 0                 => e
 				| Function("$Convert$", [to,              _,               e]) when to.Type.SystemType == typeof(object) => e
-				| Function("$Convert$", [to,              _,               e]) => SqlExpr.Function(expr.Type, "Convert", [to, e])
+				| Function("$Convert$", [to,              _,               e])  => Optimize(SqlExpr.Function(expr.Type, "Convert", [to, e]))
+				| Function("Average", ps)                                       => SqlExpr.Function(expr.Type, "Avg", ps)
+				| Function("Max", [p]) when expr.Type is SqlDataType.Boolean    => toCase2("Max", p)
+				| Function("Min", [p]) when expr.Type is SqlDataType.Boolean    => toCase2("Min", p)
+				| Function("CASE", ps)                                          => convertCase(ps)
+				| Expression("{0}", [null])                                     => expr
 				| Expression("{0}", [e])
 				| e => e
 			}

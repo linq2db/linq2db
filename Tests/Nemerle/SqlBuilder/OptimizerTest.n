@@ -34,7 +34,7 @@ namespace Tests.Nemerle
 
 			match (Binary(Binary(fi, "+", "2"), "+", "3").Optimize())
 			{
-				| Binary(Function("Convert", [Function]), "+", Value(String("23"))) => ()
+				| Binary(Function("Convert", [DataType(VarChar(11)), Function("f", [])]), "+", Value(String("23"))) => ()
 				| e => Throw(e)
 			}
 		}
@@ -60,6 +60,28 @@ namespace Tests.Nemerle
 			match (Binary(Binary(fi, "+", 1), "+", 2).Optimize()) { | Binary(Function, "+", Value(Int32(3))) => () | e => Throw(e) }
 			match (Binary(Binary(fi, "+", 5), "-", 2).Optimize()) { | Binary(Function, "+", Value(Int32(3))) => () | e => Throw(e) }
 			match (Binary(Binary(fi, "-", 5), "+", 2).Optimize()) { | Binary(Function, "-", Value(Int32(3))) => () | e => Throw(e) }
+		}
+
+		Case(parameters : list[SqlExpr]) : SqlExpr.Function
+		{
+			SqlExpr.Function(typeof(bool), "CASE", parameters)
+		}
+
+		public ConvertCase() : void
+		{
+			def t  = true  : SqlExpr;
+			def f  = false : SqlExpr;
+			def v0 = 0     : SqlExpr;
+			def v1 = 1     : SqlExpr;
+			def v2 = 2     : SqlExpr;
+			
+			match (Case([f,  v1, v0]).        Optimize()) { | Value(Int32(0))                                                  => () | e => Throw(e) }
+			match (Case([f,  v1, f,  v0, v2]).Optimize()) { | Value(Int32(2))                                                  => () | e => Throw(e) }
+			match (Case([f,  v1, v1, v0, v2]).Optimize()) { | Function(_, [Value(Int32(1)), Value(Int32(0)), Value(Int32(2))]) => () | e => Throw(e) }
+
+			match (Case([t,  v1, v0]).        Optimize()) { | Value(Int32(1))                                                  => () | e => Throw(e) }
+			match (Case([f,  v1, t,  v0, v2]).Optimize()) { | Value(Int32(0))                                                  => () | e => Throw(e) }
+			match (Case([v0, v1, t,  v0, v2]).Optimize()) { | Function(_, [Value(Int32(0)), Value(Int32(1)), Value(Int32(0))]) => () | e => Throw(e) }
 		}
 	}
 }

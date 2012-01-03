@@ -58,6 +58,7 @@ namespace LinqToDB_Temp.SqlBuilder
 		}
 
 		[ReplaceCtorParameter(precedence, Primary)]
+		[ReplaceCtorParameter(type,       value.Type)]
 		| Value
 		{
 			new Value : SqlValue;
@@ -70,8 +71,23 @@ namespace LinqToDB_Temp.SqlBuilder
 			SqlType : SqlDataType
 		}
 
+		[ReplaceCtorParameter(precedence, predicate.Precedence)]
+		[ReplaceCtorParameter(type,       if (predicate.IsNullable) typeof(bool?) else typeof(bool))]
+		| Condition
+		{
+			Predicate : SqlPredicate;
+		}
+
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
+
+		public IsNullable : bool
+		{
+			get
+			{
+				true
+			}
+		}
 
 		public override ToString() : string
 		{
@@ -83,24 +99,25 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Parameter (nm, v)      => def n = nm ?? "parameter"; $"@$n[$v]"
 				| Value     (v)          => v.ToString()
 				| DataType               => Type.ToString()
+				| Condition (p)          => p.ToString()
 				| Field
 				| Query                  => throw NotImplementedException(GetType().Name)
 			}
 		}
 
-		public static @: (v : System.String ) : SqlExpr { SqlExpr.Value(typeof(String ), SqlValue.String (v)) }
-		public static @: (v : System.Char   ) : SqlExpr { SqlExpr.Value(typeof(Char   ), SqlValue.Char   (v)) }
-		public static @: (v : System.Boolean) : SqlExpr { SqlExpr.Value(typeof(Boolean), SqlValue.Boolean(v)) }
-		public static @: (v : System.SByte  ) : SqlExpr { SqlExpr.Value(typeof(SByte  ), SqlValue.SByte  (v)) }
-		public static @: (v : System.Int16  ) : SqlExpr { SqlExpr.Value(typeof(Int16  ), SqlValue.Int16  (v)) }
-		public static @: (v : System.Int32  ) : SqlExpr { SqlExpr.Value(typeof(Int32  ), SqlValue.Int32  (v)) }
-		public static @: (v : System.Int64  ) : SqlExpr { SqlExpr.Value(typeof(Int64  ), SqlValue.Int64  (v)) }
-		public static @: (v : System.Byte   ) : SqlExpr { SqlExpr.Value(typeof(Byte   ), SqlValue.Byte   (v)) }
-		public static @: (v : System.UInt16 ) : SqlExpr { SqlExpr.Value(typeof(UInt16 ), SqlValue.UInt16 (v)) }
-		public static @: (v : System.UInt32 ) : SqlExpr { SqlExpr.Value(typeof(UInt32 ), SqlValue.UInt32 (v)) }
-		public static @: (v : System.UInt64 ) : SqlExpr { SqlExpr.Value(typeof(UInt64 ), SqlValue.UInt64 (v)) }
-		public static @: (v : System.Single ) : SqlExpr { SqlExpr.Value(typeof(Single ), SqlValue.Single (v)) }
-		public static @: (v : System.Double ) : SqlExpr { SqlExpr.Value(typeof(Double ), SqlValue.Double (v)) }
-		public static @: (v : System.Decimal) : SqlExpr { SqlExpr.Value(typeof(Decimal), SqlValue.Decimal(v)) }
+		public static @: (v : System.String ) : SqlExpr { SqlExpr.Value(SqlValue.String (v)) }
+		public static @: (v : System.Char   ) : SqlExpr { SqlExpr.Value(SqlValue.Char   (v)) }
+		public static @: (v : System.Boolean) : SqlExpr { SqlExpr.Value(SqlValue.Boolean(v)) }
+		public static @: (v : System.SByte  ) : SqlExpr { SqlExpr.Value(SqlValue.SByte  (v)) }
+		public static @: (v : System.Int16  ) : SqlExpr { SqlExpr.Value(SqlValue.Int16  (v)) }
+		public static @: (v : System.Int32  ) : SqlExpr { SqlExpr.Value(SqlValue.Int32  (v)) }
+		public static @: (v : System.Int64  ) : SqlExpr { SqlExpr.Value(SqlValue.Int64  (v)) }
+		public static @: (v : System.Byte   ) : SqlExpr { SqlExpr.Value(SqlValue.Byte   (v)) }
+		public static @: (v : System.UInt16 ) : SqlExpr { SqlExpr.Value(SqlValue.UInt16 (v)) }
+		public static @: (v : System.UInt32 ) : SqlExpr { SqlExpr.Value(SqlValue.UInt32 (v)) }
+		public static @: (v : System.UInt64 ) : SqlExpr { SqlExpr.Value(SqlValue.UInt64 (v)) }
+		public static @: (v : System.Single ) : SqlExpr { SqlExpr.Value(SqlValue.Single (v)) }
+		public static @: (v : System.Double ) : SqlExpr { SqlExpr.Value(SqlValue.Double (v)) }
+		public static @: (v : System.Decimal) : SqlExpr { SqlExpr.Value(SqlValue.Decimal(v)) }
 	}
 }

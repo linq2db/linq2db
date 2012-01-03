@@ -11,5 +11,10 @@ namespace LinqToDB_Temp.SqlBuilder
 		| Update
 		| Insert
 		| InsertOrUpdate
+
+		public IsNullable : bool
+		{
+			get { true }
+		}
 	}
 }
