@@ -12,6 +12,11 @@ namespace LinqToDB_Temp.SqlBuilder
 		| Insert
 		| InsertOrUpdate
 
+		public Where : SqlPredicate
+		{
+			get; set;
+		}
+
 		public IsNullable : bool
 		{
 			get { true }

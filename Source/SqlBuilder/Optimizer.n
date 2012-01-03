@@ -69,7 +69,7 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				SqlExpr.Function(typeof(int), name, [Optimize(SqlExpr.Function(expr.Type, "CASE", [e, 1 : SqlExpr, 0 : SqlExpr]))])
 			}
-			def convertCase(cps : list[SqlExpr]) : SqlExpr
+			def convertCase(cps)
 			{
 				def loop(ps : list[SqlExpr])
 				{
@@ -85,6 +85,11 @@ namespace LinqToDB_Temp.SqlBuilder
 					| ps when ReferenceEquals(ps, cps) => expr
 					| ps                               => SqlExpr.Function(expr.Type, "CASE", ps)
 				}
+			}
+			def optimizeCondition(c)
+			{
+				def p = Optimize(c.Predicate);
+				if (ReferenceEquals(p, c.Predicate)) c else SqlExpr.Condition(p)
 			}
 
 			match (expr)
@@ -203,7 +208,8 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary(Value(Int32  (v1))     , "*", Value(Double (v2))     ) => v1 * v2
 				| Binary(Value(Double (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
 				| Function("ConvertToCaseCompareTo", [e1, e2])                  => toCase1(e1, e2)
-				| Function("Convert",   [_, Function("Convert", _) as f])      when expr.Type.Equals(f.Type)             => f
+				| Function("Convert",   [_, Function  ("Convert",          [_, p])]) when expr.Type.EqualsUnderlying(p.Type) => p
+				| Function("Convert",   [_, Expression("Cast({0} as {1})", [p, _])]) when expr.Type.EqualsUnderlying(p.Type) => p
 				| Function("$Convert$", [DataType(Int32), DataType(Int16), e])  => e
 				| Function("$Convert$", [to,              _,               e]) when getPrecision(to) > 0                 => e
 				| Function("$Convert$", [to,              _,               e]) when to.Type.SystemType == typeof(object) => e
@@ -212,10 +218,34 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Function("Max", [p]) when expr.Type is SqlDataType.Boolean    => toCase2("Max", p)
 				| Function("Min", [p]) when expr.Type is SqlDataType.Boolean    => toCase2("Min", p)
 				| Function("CASE", ps)                                          => convertCase(ps)
+				| Condition as c                                                => optimizeCondition(c)
 				| Expression("{0}", [null])                                     => expr
 				| Expression("{0}", [e])
 				| e => e
 			}
+		}
+
+		public Optimize(this predicate : SqlPredicate) : SqlPredicate
+		{
+			| Not(Compare(e1, Equal,            e2))            => SqlPredicate.Compare(e1, SqlOperator.NotEqual,       e2) // NOT (a =  b)    -> a <> b
+			| Not(Compare(e1, NotEqual,         e2))            => SqlPredicate.Compare(e1, SqlOperator.Equal,          e2) // NOT (a <> b)    -> a =  b
+			| Not(Compare(e1, Greater,          e2))            => SqlPredicate.Compare(e1, SqlOperator.LessOrEqual,    e2) // NOT (a >  b)    -> a <= b
+			| Not(Compare(e1, NotLess,          e2))
+			| Not(Compare(e1, GreaterOrEqual,   e2))            => SqlPredicate.Compare(e1, SqlOperator.Less,           e2) // NOT (a >= b)    -> a <  b
+			| Not(Compare(e1, Less,             e2))            => SqlPredicate.Compare(e1, SqlOperator.GreaterOrEqual, e2) // NOT (a <  b)    -> a <= b
+			| Not(Compare(e1, NotGreater,       e2))
+			| Not(Compare(e1, LessOrEqual,      e2))            => SqlPredicate.Compare(e1, SqlOperator.Greater,        e2) // NOT (a <= b)    -> a >  b
+			| Not(Expression(Value(Boolean(v)),  _))            => SqlPredicate.Expression(!v : SqlExpr)                    // NOT (true)      -> false
+			| Not(Not(e))                                                                                                   // NOT (NOT ( e )) -> e
+			| And(Expression(Value(Boolean(true)),  _), e)                                                                  // true  AND e     -> e
+			| Or (Expression(Value(Boolean(false)), _), e)                                                                  // false OR  e     -> e
+			| And(e, Expression(Value(Boolean(true)),  _))                                                                  // e     AND true  -> e
+			| Or (e, Expression(Value(Boolean(false)), _))      => Optimize(e)                                              // e     OR  false -> e
+			| And(Expression(Value(Boolean(false)), _) as e, _)                                                             // false AND a     -> false
+			| Or (Expression(Value(Boolean(true)),  _) as e, _)                                                             // true  OR  a     -> true
+			| And(_, Expression(Value(Boolean(false)), _) as e)                                                             // a     AND false -> false
+			| Or (_, Expression(Value(Boolean(true)),  _) as e) => e                                                        // a     OR  true  -> true
+			| p => p
 		}
 	}
 }

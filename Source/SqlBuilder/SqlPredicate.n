@@ -8,14 +8,14 @@ namespace LinqToDB_Temp.SqlBuilder
 	public variant SqlPredicate
 	{
 		| Not        { Predicate : SqlPredicate }
-		| And        {     Expr1 : SqlExpr;                         Expr2  : SqlExpr; }
-		| Or         {     Expr1 : SqlExpr;                         Expr2  : SqlExpr; }
-		| Compare    {     Expr1 : SqlExpr; Operator : SqlOperator; Expr2  : SqlExpr; } // { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
-		| Like       {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Escape : SqlExpr; } // string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]
-		| Between    {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Expr3  : SqlExpr; } // expression [ NOT ] BETWEEN expression AND expression
-		| IsNull     { new Expr  : SqlExpr;                                           } // expression IS [ NOT ] NULL
-		| InQuery    { new Expr  : SqlExpr; Query    : SqlQuery;                      } // expression [ NOT ] IN ( subquery )
-		| InList     { new Expr  : SqlExpr; Values   : list[SqlExpr];                 } // expression [ NOT ] IN ( subquery | expression [ ,...n ] )
+		| And        {     Expr1 : SqlPredicate;                    Expr2  : SqlPredicate; }
+		| Or         {     Expr1 : SqlPredicate;                    Expr2  : SqlPredicate; }
+		| Compare    {     Expr1 : SqlExpr; Operator : SqlOperator; Expr2  : SqlExpr;      } // { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
+		| Like       {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Escape : SqlExpr;      } // string_expression [ NOT ] LIKE string_expression [ ESCAPE 'escape_character' ]
+		| Between    {     Expr1 : SqlExpr; Expr2    : SqlExpr;     Expr3  : SqlExpr;      } // expression [ NOT ] BETWEEN expression AND expression
+		| IsNull     { new Expr  : SqlExpr;                                                } // expression IS [ NOT ] NULL
+		| InQuery    { new Expr  : SqlExpr; Query    : SqlQuery;                           } // expression [ NOT ] IN ( subquery )
+		| InList     { new Expr  : SqlExpr; Values   : list[SqlExpr];                      } // expression [ NOT ] IN ( subquery | expression [ ,...n ] )
 		| Expression { new Expr  : SqlExpr; new Precedence : int;
 			public this([NotNull] expr : SqlExpr)
 			{
@@ -48,7 +48,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				{
 					| Not       (p)             => p.IsNullable
 					| And       (e1,    e2)
-					| Or        (e1,    e2)
+					| Or        (e1,    e2)     => e1.IsNullable || e2.IsNullable
 					| Compare   (e1, _, e2)
 					| Like      (e1,    e2,  _) => e1.IsNullable || e2.IsNullable
 					| Between   (e1,    e2, e3) => e1.IsNullable || e2.IsNullable || e3.IsNullable

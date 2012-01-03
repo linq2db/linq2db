@@ -190,5 +190,10 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Unknown        => throw InvalidOperationException()
 			}
 		}
+
+		public EqualsUnderlying(type : SqlDataType) : bool
+		{
+			SystemType.ToUnderlying() == type.SystemType.ToUnderlying()
+		}
 	}
 }
