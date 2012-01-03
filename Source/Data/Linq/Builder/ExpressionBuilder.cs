@@ -429,7 +429,6 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				switch (ex.NodeType)
 				{
-					default                          : return expr;
 					case ExpressionType.MemberAccess : ex = ((MemberExpression)ex).Expression; break;
 					case ExpressionType.Call         :
 						{
@@ -437,34 +436,15 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (call.Object == null)
 							{
-								if (call.IsQueryable()) switch (call.Method.Name)
-								{
-									case "Single"          :
-									case "SingleOrDefault" :
-									case "First"           :
-									case "FirstOrDefault"  :
-										{
-											var param    = Expression.Parameter(call.Type, "p");
-											var selector = expr.Transform(e => e == call ? param : e);
-											var method   = GetQueriableMethodInfo(call, (m,_) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
-											var select   = call.Method.DeclaringType == typeof(Enumerable) ?
-												EnumerableMethods
-													.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-													.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
-												QueryableMethods
-													.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-													.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
-
-											call   = (MethodCallExpression)OptimizeExpression(call);
-											select = select.MakeGenericMethod(call.Type, expr.Type);
-											method = method.MakeGenericMethod(expr.Type);
-
-											return Expression.Call(null, method,
-												Expression.Call(null, select,
-													call.Arguments[0],
-													Expression.Lambda(selector, param)));
-										}
-								}
+								if (call.IsQueryable())
+									switch (call.Method.Name)
+									{
+										case "Single"          :
+										case "SingleOrDefault" :
+										case "First"           :
+										case "FirstOrDefault"  :
+												return ConvertSingleOrFirst(expr, call);
+									}
 
 								return expr;
 							}
@@ -473,10 +453,34 @@ namespace LinqToDB.Data.Linq.Builder
 
 							break;
 						}
+					default: return expr;
 				}
 			}
 
 			return expr;
+		}
+
+		private System.Linq.Expressions.Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
+		{
+			var param = Expression.Parameter(call.Type, "p");
+			var selector = expr.Transform(e => e == call ? param : e);
+			var method = GetQueriableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
+			var select = call.Method.DeclaringType == typeof(Enumerable) ?
+				EnumerableMethods
+					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+				QueryableMethods
+					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+
+			call = (MethodCallExpression)OptimizeExpression(call);
+			select = select.MakeGenericMethod(call.Type, expr.Type);
+			method = method.MakeGenericMethod(expr.Type);
+
+			return Expression.Call(null, method,
+				Expression.Call(null, select,
+					call.Arguments[0],
+					Expression.Lambda(selector, param)));
 		}
 
 		#endregion
