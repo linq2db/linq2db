@@ -94,119 +94,119 @@ namespace LinqToDB_Temp.SqlBuilder
 
 			match (expr)
 			{
-				| Binary(Binary(e, "+", Value(String(v1))), "+", Value(String(v2))) => addString(e, v1, v2)                 // ex + "1" + "2" -> ex + "12"
-				| Binary(Binary(e, "+", Value(Int32(v1))),  "+", Value(Int32 (v2))) => addNumber(e, v1 + v2, "+", "-")      // ex + 2 + 3     -> ex + 5
-				| Binary(Binary(e, "+", Value(Int32(v1))),  "-", Value(Int32 (v2))) => addNumber(e, v1 - v2, "+", "-")      // ex + 2 - 3     -> ex + 1
-				| Binary(Binary(e, "-", Value(Int32(v1))),  "+", Value(Int32 (v2))) => addNumber(e, v1 - v2, "-", "+")      // ex - 2 + 3     -> ex + 1
-				| Binary(Value(String(v1))      , "+", Value(v2)              ) => concatStringAndValue(v1, v2.GetValue())  // "1" + val      -> "1val"
-				| Binary(Value(v1)              , "+", Value(String(v2))      ) => concatStringAndValue(v1.GetValue(), v2)  // val + "1"      -> "val1"
-				| Binary(Value(String(""))      , "+", e                      ) when e.Type.IsString                        // "" + ex        -> "ex"
-				| Binary(Value(String(null))    , "+", e                      ) when e.Type.IsString
-				| Binary(e                      , "+", Value(String(""))      ) when e.Type.IsString                        // ex + ""        -> "ex"
-				| Binary(e                      , "+", Value(String(null))    ) when e.Type.IsString
-				| Binary(Value(SByte  (0))      , "+", e                      )                                             // 0  + ex        -> ex
-				| Binary(Value(Int16  (0))      , "+", e                      )
-				| Binary(Value(Int32  (0))      , "+", e                      )
-				| Binary(Value(Int64  (0))      , "+", e                      )
-				| Binary(Value(Byte   (0))      , "+", e                      )
-				| Binary(Value(UInt16 (0))      , "+", e                      )
-				| Binary(Value(UInt32 (0))      , "+", e                      )
-				| Binary(Value(UInt64 (0))      , "+", e                      )
-				| Binary(Value(Single (0f))     , "+", e                      )
-				| Binary(Value(Double (0d))     , "+", e                      )
-				| Binary(Value(Decimal(0m))     , "+", e                      )
-				| Binary(e                      , "+", Value(SByte  (0))      )                                             // ex + 0         -> ex
-				| Binary(e                      , "+", Value(Int16  (0))      )
-				| Binary(e                      , "+", Value(Int32  (0))      )
-				| Binary(e                      , "+", Value(Int64  (0))      )
-				| Binary(e                      , "+", Value(Byte   (0))      )
-				| Binary(e                      , "+", Value(UInt16 (0))      )
-				| Binary(e                      , "+", Value(UInt32 (0))      )
-				| Binary(e                      , "+", Value(UInt64 (0))      )
-				| Binary(e                      , "+", Value(Single (0f))     )
-				| Binary(e                      , "+", Value(Double (0d))     )
-				| Binary(e                      , "+", Value(Decimal(0m))     )
-				| Binary(Value(SByte  (0))  as e, "*", _                      )                                             // 0  * ex        -> 0
-				| Binary(Value(Int16  (0))  as e, "*", _                      )
-				| Binary(Value(Int32  (0))  as e, "*", _                      )
-				| Binary(Value(Int64  (0))  as e, "*", _                      )
-				| Binary(Value(Byte   (0))  as e, "*", _                      )
-				| Binary(Value(UInt16 (0))  as e, "*", _                      )
-				| Binary(Value(UInt32 (0))  as e, "*", _                      )
-				| Binary(Value(UInt64 (0))  as e, "*", _                      )
-				| Binary(Value(Single (0f)) as e, "*", _                      )
-				| Binary(Value(Double (0d)) as e, "*", _                      )
-				| Binary(Value(Decimal(0m)) as e, "*", _                      )
-				| Binary(_                      , "*", Value(SByte  (0))  as e)                                             // ex * 0         -> 0
-				| Binary(_                      , "*", Value(Int16  (0))  as e)
-				| Binary(_                      , "*", Value(Int32  (0))  as e)
-				| Binary(_                      , "*", Value(Int64  (0))  as e)
-				| Binary(_                      , "*", Value(Byte   (0))  as e)
-				| Binary(_                      , "*", Value(UInt16 (0))  as e)
-				| Binary(_                      , "*", Value(UInt32 (0))  as e)
-				| Binary(_                      , "*", Value(UInt64 (0))  as e)
-				| Binary(_                      , "*", Value(Single (0f)) as e)
-				| Binary(_                      , "*", Value(Double (0d)) as e)
-				| Binary(_                      , "*", Value(Decimal(0m)) as e)
-				| Binary(Value(SByte  (1))      , "*", e                      )                                             // 1  * ex        -> ex
-				| Binary(Value(Int16  (1))      , "*", e                      )
-				| Binary(Value(Int32  (1))      , "*", e                      )
-				| Binary(Value(Int64  (1))      , "*", e                      )
-				| Binary(Value(Byte   (1))      , "*", e                      )
-				| Binary(Value(UInt16 (1))      , "*", e                      )
-				| Binary(Value(UInt32 (1))      , "*", e                      )
-				| Binary(Value(UInt64 (1))      , "*", e                      )
-				| Binary(Value(Single (1f))     , "*", e                      )
-				| Binary(Value(Double (1d))     , "*", e                      )
-				| Binary(Value(Decimal(1m))     , "*", e                      )
-				| Binary(e                      , "*", Value(SByte  (1))      )                                             // ex * 1         -> ex
-				| Binary(e                      , "*", Value(Int16  (1))      )
-				| Binary(e                      , "*", Value(Int32  (1))      )
-				| Binary(e                      , "*", Value(Int64  (1))      )
-				| Binary(e                      , "*", Value(Byte   (1))      )
-				| Binary(e                      , "*", Value(UInt16 (1))      )
-				| Binary(e                      , "*", Value(UInt32 (1))      )
-				| Binary(e                      , "*", Value(UInt64 (1))      )
-				| Binary(e                      , "*", Value(Single (1f))     )
-				| Binary(e                      , "*", Value(Double (1d))     )
-				| Binary(e                      , "*", Value(Decimal(1m))     )                       => Optimize(e)
-				| Binary(e                      , "+", Value(String) as v     ) when !e.Type.IsString => toString (e, v)    // ex + "..."     -> ex
-				| Binary(Value(String) as v     , "+", e                      ) when !e.Type.IsString => toString2(v, e)    // ex + "..."     -> ex
-				| Binary(Value(SByte  (v1))     , "+", Value(SByte  (v2))     ) => v1 + v2                                  // 2 + 3          -> 5
-				| Binary(Value(Int16  (v1))     , "+", Value(Int16  (v2))     ) => v1 + v2
-				| Binary(Value(Int32  (v1))     , "+", Value(Int32  (v2))     ) => v1 + v2
-				| Binary(Value(Int64  (v1))     , "+", Value(Int64  (v2))     ) => v1 + v2
-				| Binary(Value(Byte   (v1))     , "+", Value(Byte   (v2))     ) => v1 + v2
-				| Binary(Value(UInt16 (v1))     , "+", Value(UInt16 (v2))     ) => v1 + v2
-				| Binary(Value(UInt32 (v1))     , "+", Value(UInt32 (v2))     ) => v1 + v2
-				| Binary(Value(UInt64 (v1))     , "+", Value(UInt64 (v2))     ) => v1 + v2
-				| Binary(Value(Single (v1))     , "+", Value(Single (v2))     ) => v1 + v2
-				| Binary(Value(Double (v1))     , "+", Value(Double (v2))     ) => v1 + v2
-				| Binary(Value(Decimal(v1))     , "+", Value(Decimal(v2))     ) => v1 + v2
-				| Binary(Value(SByte  (v1))     , "-", Value(SByte  (v2))     ) => v1 - v2                                  // 2 - 3          -> -1
-				| Binary(Value(Int16  (v1))     , "-", Value(Int16  (v2))     ) => v1 - v2
-				| Binary(Value(Int32  (v1))     , "-", Value(Int32  (v2))     ) => v1 - v2
-				| Binary(Value(Int64  (v1))     , "-", Value(Int64  (v2))     ) => v1 - v2
-				| Binary(Value(Byte   (v1))     , "-", Value(Byte   (v2))     ) => v1 - v2
-				| Binary(Value(UInt16 (v1))     , "-", Value(UInt16 (v2))     ) => v1 - v2
-				| Binary(Value(UInt32 (v1))     , "-", Value(UInt32 (v2))     ) => v1 - v2
-				| Binary(Value(UInt64 (v1))     , "-", Value(UInt64 (v2))     ) => v1 - v2
-				| Binary(Value(Single (v1))     , "-", Value(Single (v2))     ) => v1 - v2
-				| Binary(Value(Double (v1))     , "-", Value(Double (v2))     ) => v1 - v2
-				| Binary(Value(Decimal(v1))     , "-", Value(Decimal(v2))     ) => v1 - v2
-				| Binary(Value(SByte  (v1))     , "*", Value(SByte  (v2))     ) => v1 * v2                                  // 2 * 3          -> 6
-				| Binary(Value(Int16  (v1))     , "*", Value(Int16  (v2))     ) => v1 * v2
-				| Binary(Value(Int32  (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
-				| Binary(Value(Int64  (v1))     , "*", Value(Int64  (v2))     ) => v1 * v2
-				| Binary(Value(Byte   (v1))     , "*", Value(Byte   (v2))     ) => v1 * v2
-				| Binary(Value(UInt16 (v1))     , "*", Value(UInt16 (v2))     ) => v1 * v2
-				| Binary(Value(UInt32 (v1))     , "*", Value(UInt32 (v2))     ) => v1 * v2
-				| Binary(Value(UInt64 (v1))     , "*", Value(UInt64 (v2))     ) => v1 * v2
-				| Binary(Value(Single (v1))     , "*", Value(Single (v2))     ) => v1 * v2
-				| Binary(Value(Double (v1))     , "*", Value(Double (v2))     ) => v1 * v2
-				| Binary(Value(Decimal(v1))     , "*", Value(Decimal(v2))     ) => v1 * v2
-				| Binary(Value(Int32  (v1))     , "*", Value(Double (v2))     ) => v1 * v2
-				| Binary(Value(Double (v1))     , "*", Value(Int32  (v2))     ) => v1 * v2
+				| (e <+> Value(String(v1))) <+> Value(String(v2))               => addString(e, v1, v2)                    // ex + "1" + "2" -> ex + "12"
+				| (e <+> Value(Int32(v1)))  <+> Value(Int32 (v2))               => addNumber(e, v1 + v2, "+", "-")         // ex + 2 + 3     -> ex + 5
+				| (e <+> Value(Int32(v1)))  <-> Value(Int32 (v2))               => addNumber(e, v1 - v2, "+", "-")         // ex + 2 - 3     -> ex + 1
+				| (e <-> Value(Int32(v1)))  <+> Value(Int32 (v2))               => addNumber(e, v1 - v2, "-", "+")         // ex - 2 + 3     -> ex + 1
+				| Value(String(v1))         <+> Value(v2)                       => concatStringAndValue(v1, v2.GetValue()) // "1" + val      -> "1val"
+				| Value(v1)                 <+> Value(String(v2))               => concatStringAndValue(v1.GetValue(), v2) // val + "1"      -> "val1"
+				| Value(String(""))         <+> e                    when e.Type.IsString                                  // "" + ex        -> "ex"
+				| Value(String(null))       <+> e                    when e.Type.IsString
+				| e                         <+> Value(String(""))    when e.Type.IsString                                  // ex + ""        -> "ex"
+				| e                         <+> Value(String(null))  when e.Type.IsString
+				| Value(SByte  (0))         <+> e                                                                          // 0  + ex        -> ex
+				| Value(Int16  (0))         <+> e
+				| Value(Int32  (0))         <+> e
+				| Value(Int64  (0))         <+> e
+				| Value(Byte   (0))         <+> e
+				| Value(UInt16 (0))         <+> e
+				| Value(UInt32 (0))         <+> e
+				| Value(UInt64 (0))         <+> e
+				| Value(Single (0f))        <+> e
+				| Value(Double (0d))        <+> e
+				| Value(Decimal(0m))        <+> e
+				| e                         <+> Value(SByte  (0))                                                          // ex + 0         -> ex
+				| e                         <+> Value(Int16  (0))
+				| e                         <+> Value(Int32  (0))
+				| e                         <+> Value(Int64  (0))
+				| e                         <+> Value(Byte   (0))
+				| e                         <+> Value(UInt16 (0))
+				| e                         <+> Value(UInt32 (0))
+				| e                         <+> Value(UInt64 (0))
+				| e                         <+> Value(Single (0f))
+				| e                         <+> Value(Double (0d))
+				| e                         <+> Value(Decimal(0m))
+				| Value(SByte  (0))  as e   <*> _                                                                          // 0  * ex        -> 0
+				| Value(Int16  (0))  as e   <*> _
+				| Value(Int32  (0))  as e   <*> _
+				| Value(Int64  (0))  as e   <*> _
+				| Value(Byte   (0))  as e   <*> _
+				| Value(UInt16 (0))  as e   <*> _
+				| Value(UInt32 (0))  as e   <*> _
+				| Value(UInt64 (0))  as e   <*> _
+				| Value(Single (0f)) as e   <*> _
+				| Value(Double (0d)) as e   <*> _
+				| Value(Decimal(0m)) as e   <*> _
+				| _                         <*> Value(SByte  (0))  as e                                                    // ex * 0         -> 0
+				| _                         <*> Value(Int16  (0))  as e
+				| _                         <*> Value(Int32  (0))  as e
+				| _                         <*> Value(Int64  (0))  as e
+				| _                         <*> Value(Byte   (0))  as e
+				| _                         <*> Value(UInt16 (0))  as e
+				| _                         <*> Value(UInt32 (0))  as e
+				| _                         <*> Value(UInt64 (0))  as e
+				| _                         <*> Value(Single (0f)) as e
+				| _                         <*> Value(Double (0d)) as e
+				| _                         <*> Value(Decimal(0m)) as e
+				| Value(SByte  (1))         <*> e                                                                          // 1  * ex        -> ex
+				| Value(Int16  (1))         <*> e
+				| Value(Int32  (1))         <*> e
+				| Value(Int64  (1))         <*> e
+				| Value(Byte   (1))         <*> e
+				| Value(UInt16 (1))         <*> e
+				| Value(UInt32 (1))         <*> e
+				| Value(UInt64 (1))         <*> e
+				| Value(Single (1f))        <*> e
+				| Value(Double (1d))        <*> e
+				| Value(Decimal(1m))        <*> e
+				| e                         <*> Value(SByte  (1))                                                          // ex * 1         -> ex
+				| e                         <*> Value(Int16  (1))
+				| e                         <*> Value(Int32  (1))
+				| e                         <*> Value(Int64  (1))
+				| e                         <*> Value(Byte   (1))
+				| e                         <*> Value(UInt16 (1))
+				| e                         <*> Value(UInt32 (1))
+				| e                         <*> Value(UInt64 (1))
+				| e                         <*> Value(Single (1f))
+				| e                         <*> Value(Double (1d))
+				| e                         <*> Value(Decimal(1m))                            => Optimize(e)
+				| e                         <+> Value(String) as v when !e.Type.IsString => toString (e, v)                // ex + "..."     -> ex
+				| Value(String) as v        <+> e                  when !e.Type.IsString => toString2(v, e)                // ex + "..."     -> ex
+				| Value(SByte  (v1))        <+> Value(SByte  (v2))              => v1 + v2                                 // 2 + 3          -> 5
+				| Value(Int16  (v1))        <+> Value(Int16  (v2))              => v1 + v2
+				| Value(Int32  (v1))        <+> Value(Int32  (v2))              => v1 + v2
+				| Value(Int64  (v1))        <+> Value(Int64  (v2))              => v1 + v2
+				| Value(Byte   (v1))        <+> Value(Byte   (v2))              => v1 + v2
+				| Value(UInt16 (v1))        <+> Value(UInt16 (v2))              => v1 + v2
+				| Value(UInt32 (v1))        <+> Value(UInt32 (v2))              => v1 + v2
+				| Value(UInt64 (v1))        <+> Value(UInt64 (v2))              => v1 + v2
+				| Value(Single (v1))        <+> Value(Single (v2))              => v1 + v2
+				| Value(Double (v1))        <+> Value(Double (v2))              => v1 + v2
+				| Value(Decimal(v1))        <+> Value(Decimal(v2))              => v1 + v2
+				| Value(SByte  (v1))        <-> Value(SByte  (v2))              => v1 - v2                                 // 2 - 3          -> -1
+				| Value(Int16  (v1))        <-> Value(Int16  (v2))              => v1 - v2
+				| Value(Int32  (v1))        <-> Value(Int32  (v2))              => v1 - v2
+				| Value(Int64  (v1))        <-> Value(Int64  (v2))              => v1 - v2
+				| Value(Byte   (v1))        <-> Value(Byte   (v2))              => v1 - v2
+				| Value(UInt16 (v1))        <-> Value(UInt16 (v2))              => v1 - v2
+				| Value(UInt32 (v1))        <-> Value(UInt32 (v2))              => v1 - v2
+				| Value(UInt64 (v1))        <-> Value(UInt64 (v2))              => v1 - v2
+				| Value(Single (v1))        <-> Value(Single (v2))              => v1 - v2
+				| Value(Double (v1))        <-> Value(Double (v2))              => v1 - v2
+				| Value(Decimal(v1))        <-> Value(Decimal(v2))              => v1 - v2
+				| Value(SByte  (v1))        <*> Value(SByte  (v2))              => v1 * v2                                 // 2 * 3          -> 6
+				| Value(Int16  (v1))        <*> Value(Int16  (v2))              => v1 * v2
+				| Value(Int32  (v1))        <*> Value(Int32  (v2))              => v1 * v2
+				| Value(Int64  (v1))        <*> Value(Int64  (v2))              => v1 * v2
+				| Value(Byte   (v1))        <*> Value(Byte   (v2))              => v1 * v2
+				| Value(UInt16 (v1))        <*> Value(UInt16 (v2))              => v1 * v2
+				| Value(UInt32 (v1))        <*> Value(UInt32 (v2))              => v1 * v2
+				| Value(UInt64 (v1))        <*> Value(UInt64 (v2))              => v1 * v2
+				| Value(Single (v1))        <*> Value(Single (v2))              => v1 * v2
+				| Value(Double (v1))        <*> Value(Double (v2))              => v1 * v2
+				| Value(Decimal(v1))        <*> Value(Decimal(v2))              => v1 * v2
+				| Value(Int32  (v1))        <*> Value(Double (v2))              => v1 * v2
+				| Value(Double (v1))        <*> Value(Int32  (v2))              => v1 * v2
 				| Function("ConvertToCaseCompareTo", [e1, e2])                  => toCase1(e1, e2)
 				| Function("Convert",   [_, Function  ("Convert",          [_, p])]) when expr.Type.EqualsUnderlying(p.Type) => p
 				| Function("Convert",   [_, Expression("Cast({0} as {1})", [p, _])]) when expr.Type.EqualsUnderlying(p.Type) => p
@@ -227,25 +227,45 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public Optimize(this predicate : SqlPredicate) : SqlPredicate
 		{
-			| Not(Compare(e1, Equal,            e2))            => SqlPredicate.Compare(e1, SqlOperator.NotEqual,       e2) // NOT (a =  b)    -> a <> b
-			| Not(Compare(e1, NotEqual,         e2))            => SqlPredicate.Compare(e1, SqlOperator.Equal,          e2) // NOT (a <> b)    -> a =  b
-			| Not(Compare(e1, Greater,          e2))            => SqlPredicate.Compare(e1, SqlOperator.LessOrEqual,    e2) // NOT (a >  b)    -> a <= b
-			| Not(Compare(e1, NotLess,          e2))
-			| Not(Compare(e1, GreaterOrEqual,   e2))            => SqlPredicate.Compare(e1, SqlOperator.Less,           e2) // NOT (a >= b)    -> a <  b
-			| Not(Compare(e1, Less,             e2))            => SqlPredicate.Compare(e1, SqlOperator.GreaterOrEqual, e2) // NOT (a <  b)    -> a <= b
-			| Not(Compare(e1, NotGreater,       e2))
-			| Not(Compare(e1, LessOrEqual,      e2))            => SqlPredicate.Compare(e1, SqlOperator.Greater,        e2) // NOT (a <= b)    -> a >  b
-			| Not(Expression(Value(Boolean(v)),  _))            => SqlPredicate.Expression(!v : SqlExpr)                    // NOT (true)      -> false
-			| Not(Not(e))                                                                                                   // NOT (NOT ( e )) -> e
-			| And(Expression(Value(Boolean(true)),  _), e)                                                                  // true  AND e     -> e
-			| Or (Expression(Value(Boolean(false)), _), e)                                                                  // false OR  e     -> e
-			| And(e, Expression(Value(Boolean(true)),  _))                                                                  // e     AND true  -> e
-			| Or (e, Expression(Value(Boolean(false)), _))      => Optimize(e)                                              // e     OR  false -> e
-			| And(Expression(Value(Boolean(false)), _) as e, _)                                                             // false AND a     -> false
-			| Or (Expression(Value(Boolean(true)),  _) as e, _)                                                             // true  OR  a     -> true
-			| And(_, Expression(Value(Boolean(false)), _) as e)                                                             // a     AND false -> false
-			| Or (_, Expression(Value(Boolean(true)),  _) as e) => e                                                        // a     OR  true  -> true
+			| Not(e1 <=>  e2)        => e1 != e2                                                                    // NOT (a =  b)    -> a <> b
+			| Not(e1 <<>> e2)        => e1 == e2                                                                    // NOT (a <> b)    -> a =  b
+			| Not(e1 <>>  e2)        => e1 <= e2                                                                    // NOT (a >  b)    -> a <= b
+			| Not(e1 <!<> e2)
+			| Not(e1 <>=> e2)        => e1 <  e2                                                                    // NOT (a >= b)    -> a <  b
+			| Not(e1 <<>  e2)        => e1 <= e2                                                                    // NOT (a <  b)    -> a <= b
+			| Not(e1 <!>> e2)
+			| Not(e1 <<=> e2)        => e1 >  e2                                                                    // NOT (a <= b)    -> a >  b
+			| Not(Value(Boolean(v))) => !v                                                                          // NOT (true)      -> false
+			| Not(Not(e))                                                                                           // NOT (NOT ( e )) -> e
+			| Value(Boolean(true))       <&&> e                                                                     // true  AND e     -> e
+			| Value(Boolean(false))      <||> e                                                                     // false OR  e     -> e
+			| e                          <&&> Value(Boolean(true))                                                  // e     AND true  -> e
+			| e                          <||> Value(Boolean(false))      => Optimize(e)                             // e     OR  false -> e
+			| Value(Boolean(false)) as e <&&> _                                                                     // false AND a     -> false
+			| Value(Boolean(true))  as e <||> _                                                                     // true  OR  a     -> true
+			| _                          <&&> Value(Boolean(false)) as e                                            // a     AND false -> false
+			| _                          <||> Value(Boolean(true))  as e => e                                       // a     OR  true  -> true
+			| Value(v1) <==> Value(v2) =>  Equals(v1.GetValue(), v2.GetValue())                                     // 25 == 48 -> false
+			| Value(v1) <!=> Value(v2) => !Equals(v1.GetValue(), v2.GetValue())                                     // 25 != 48 -> true
+			| Function("CASE", [Condition(c),           Value(v1), _])      <=> Value(v2) when Equals(v1.GetValue(), v2.GetValue()) => c
+			| Function("CASE", [Condition(e1  <?> e2),  Value(Boolean), _]) <=> Value(Boolean) => SqlPredicate.Compare(e1, RevertOperator(op), e2)
+			| Function("CASE", [Condition(e11 <>> e12), Value(Int32( 1)), Condition(e21 <=> e22), Value(Int32( 0)), Value(Int32(-1))])
+				<?>
+				Value(Int32(0)) when e11.Equals(e21) && e12.Equals(e22)
+				=> SqlPredicate.Compare(e11, op, e12)
 			| p => p
+		}
+
+		RevertOperator(op : SqlOperator) : SqlOperator
+		{
+			| Equal          => SqlOperator.NotEqual
+			| NotEqual       => SqlOperator.Equal
+			| Greater        => SqlOperator.LessOrEqual
+			| NotLess
+			| GreaterOrEqual => SqlOperator.Less
+			| Less           => SqlOperator.GreaterOrEqual
+			| NotGreater
+			| LessOrEqual    => SqlOperator.Greater
 		}
 	}
 }

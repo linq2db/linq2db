@@ -90,5 +90,20 @@ namespace LinqToDB_Temp.SqlBuilder
 				|     InList    (e, vs)                                 => $"$e IN (..$vs)"
 			}
 		}
+
+		public static @: (v : System.String ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.String (v))) }
+		public static @: (v : System.Char   ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Char   (v))) }
+		public static @: (v : System.Boolean) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Boolean(v))) }
+		public static @: (v : System.SByte  ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.SByte  (v))) }
+		public static @: (v : System.Int16  ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Int16  (v))) }
+		public static @: (v : System.Int32  ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Int32  (v))) }
+		public static @: (v : System.Int64  ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Int64  (v))) }
+		public static @: (v : System.Byte   ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Byte   (v))) }
+		public static @: (v : System.UInt16 ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.UInt16 (v))) }
+		public static @: (v : System.UInt32 ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.UInt32 (v))) }
+		public static @: (v : System.UInt64 ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.UInt64 (v))) }
+		public static @: (v : System.Single ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Single (v))) }
+		public static @: (v : System.Double ) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Double (v))) }
+		public static @: (v : System.Decimal) : SqlPredicate { SqlPredicate.Expression(SqlExpr.Value(SqlValue.Decimal(v))) }
 	}
 }

@@ -1,4 +1,10 @@
-﻿
+﻿using System;
+using System.Linq.Expressions;
+
+using Nemerle.Utility;
+
+using LinqToDB_Temp.SqlBuilder;
+
 [assembly:LinqToDB.MacroInternal.TypeCode(
 	System.String,
 	System.Char,
@@ -24,3 +30,26 @@
 	System.Xml.XmlReader
 )]
 
+//[assembly: ExtensionPattern(Expression, Lambda(delegateType, name, body, tailCall, parameters)
+//	= LambdaExpression where(Type=delegateType, Name=name, Body=body, TailCall=tailCall, Parameters=parameters))]
+
+[assembly: ExtensionPattern(SqlPredicate, Expr  (expr)   = SqlPredicate.Expression(expr,         _))]
+[assembly: ExtensionPattern(SqlPredicate, Value (value)  = SqlPredicate.Expression(Value(value), _))]
+[assembly: ExtensionPattern(SqlPredicate, @<&&> (p1, p2) = SqlPredicate.And(p1, p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<||> (p1, p2) = SqlPredicate.Or (p1, p2))]
+
+[assembly: ExtensionPattern(SqlPredicate, @<=>  (p1, p2) = SqlPredicate.Compare(p1, Equal,          p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<==> (p1, p2) = SqlPredicate.Compare(p1, Equal,          p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<<>> (p1, p2) = SqlPredicate.Compare(p1, NotEqual,       p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<!=> (p1, p2) = SqlPredicate.Compare(p1, NotEqual,       p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<>>  (p1, p2) = SqlPredicate.Compare(p1, Greater,        p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<>=> (p1, p2) = SqlPredicate.Compare(p1, GreaterOrEqual, p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<!>> (p1, p2) = SqlPredicate.Compare(p1, NotGreater,     p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<<>  (p1, p2) = SqlPredicate.Compare(p1, Less,           p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<<=> (p1, p2) = SqlPredicate.Compare(p1, LessOrEqual,    p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<!<> (p1, p2) = SqlPredicate.Compare(p1, NotLess,        p2))]
+[assembly: ExtensionPattern(SqlPredicate, @<?>  (p1, p2) = SqlPredicate.Compare(p1, op,             p2))]
+
+[assembly: ExtensionPattern(SqlExpr,      @<+>  (expr1, expr2) = SqlExpr.Binary(expr1, "+", expr2))]
+[assembly: ExtensionPattern(SqlExpr,      @<->  (expr1, expr2) = SqlExpr.Binary(expr1, "-", expr2))]
+[assembly: ExtensionPattern(SqlExpr,      @<*>  (expr1, expr2) = SqlExpr.Binary(expr1, "*", expr2))]
