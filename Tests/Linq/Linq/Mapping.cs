@@ -22,7 +22,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in Person where new[] { Gender.Male }.Contains(p.Gender) select p,
+					from p in    Person where new[] { Gender.Male }.Contains(p.Gender) select p,
 					from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p);
 		}
 
@@ -53,7 +53,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in Person where p.Gender != fm select p,
+					from p in    Person where p.Gender != fm select p,
 					from p in db.Person where p.Gender != fm select p);
 		}
 
@@ -80,8 +80,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in Parent4
-					join c in Child on p.ParentID equals c.ParentID
+					from p in    Parent4
+					join c in    Child on p.ParentID equals c.ParentID
 					where p.Value1 == TypeValue.Value1 select p,
 					from p in db.Parent4
 					join c in db.Child on p.ParentID equals c.ParentID
@@ -97,6 +97,10 @@ namespace Tests.Linq
 			{
 				db.BeginTransaction();
 				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
+
+
+				if (context == ProviderName.PostgreSQL + ".LinqService")
+					new Create.CreateData().PostgreSQL();
 			}
 		}
 
@@ -310,7 +314,15 @@ namespace Tests.Linq
 			using (var db = new TestDbManager { MappingSchema = _myMappingSchema })
 			{
 				db.BeginTransaction();
-				db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
+
+				try
+				{
+					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
+				}
+				finally
+				{
+					db.Parent.Delete(p => p.ParentID >= 1000);
+				}
 			}
 		}
 	}

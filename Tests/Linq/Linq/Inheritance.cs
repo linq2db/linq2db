@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 
@@ -17,116 +16,128 @@ namespace Tests.Linq
 	public class Inheritance : TestBase
 	{
 		[Test]
-		public void Test1()
+		public void Test1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(ParentInheritance, db.ParentInheritance));
+			using (var db = GetDataContext(context))
+				AreEqual(ParentInheritance, db.ParentInheritance);
 		}
 
 		[Test]
-		public void Test2()
+		public void Test2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(ParentInheritance, db.ParentInheritance.Select(p => p)));
+			using (var db = GetDataContext(context))
+				AreEqual(ParentInheritance, db.ParentInheritance.Select(p => p));
 		}
 
 		[Test]
-		public void Test3()
+		public void Test3([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    ParentInheritance where p is ParentInheritance1 select p,
-				from p in db.ParentInheritance where p is ParentInheritance1 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance where p is ParentInheritance1 select p,
+					from p in db.ParentInheritance where p is ParentInheritance1 select p);
 		}
 
 		[Test]
-		public void Test4()
+		public void Test4([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    ParentInheritance where !(p is ParentInheritanceNull) select p,
-				from p in db.ParentInheritance where !(p is ParentInheritanceNull) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance where !(p is ParentInheritanceNull) select p,
+					from p in db.ParentInheritance where !(p is ParentInheritanceNull) select p);
 		}
 
 		[Test]
-		public void Test5()
+		public void Test5([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    ParentInheritance where p is ParentInheritanceValue select p,
-				from p in db.ParentInheritance where p is ParentInheritanceValue select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance where p is ParentInheritanceValue select p,
+					from p in db.ParentInheritance where p is ParentInheritanceValue select p);
 		}
 
 		[Test]
-		public void Test6()
+		public void Test6([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance2 where p is ParentInheritance12 select p;
 				q.ToList();
-			});
+			}
 		}
 
 		[Test]
-		public void Test7()
+		public void Test7([DataContexts] string context)
 		{
 #pragma warning disable 183
-			var expected = from p in ParentInheritance where p is ParentInheritanceBase select p;
-			ForEachProvider(db => AreEqual(expected, from p in db.ParentInheritance where p is ParentInheritanceBase select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance where p is ParentInheritanceBase select p,
+					from p in db.ParentInheritance where p is ParentInheritanceBase select p);
 #pragma warning restore 183
 		}
 
 		[Test]
-		public void Test8()
+		public void Test8([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   ParentInheritance.OfType<ParentInheritance1>(),
-				db.ParentInheritance.OfType<ParentInheritance1>()));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   ParentInheritance.OfType<ParentInheritance1>(),
+					db.ParentInheritance.OfType<ParentInheritance1>());
 		}
 
 		[Test]
-		public void Test9()
+		public void Test9([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 				AreEqual(
 					   ParentInheritance
 						.Where(p => p.ParentID == 1 || p.ParentID == 2 || p.ParentID == 4)
 						.OfType<ParentInheritanceNull>(),
 					db.ParentInheritance
 						.Where(p => p.ParentID == 1 || p.ParentID == 2 || p.ParentID == 4)
-						.OfType<ParentInheritanceNull>()));
+						.OfType<ParentInheritanceNull>());
 		}
 
 		[Test]
-		public void Test10()
+		public void Test10([DataContexts] string context)
 		{
-			var expected = ParentInheritance.OfType<ParentInheritanceValue>();
-			ForEachProvider(db => AreEqual(expected, db.ParentInheritance.OfType<ParentInheritanceValue>()));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   ParentInheritance.OfType<ParentInheritanceValue>(),
+					db.ParentInheritance.OfType<ParentInheritanceValue>());
 		}
 
 		[Test]
-		public void Test11()
+		public void Test11([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance3 where p is ParentInheritance13 select p;
 				q.ToList();
-			});
+			}
 		}
 
 		[Test]
-		public void Test12()
+		public void Test12([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    ParentInheritance1 where p.ParentID == 1 select p,
-				from p in db.ParentInheritance1 where p.ParentID == 1 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance1 where p.ParentID == 1 select p,
+					from p in db.ParentInheritance1 where p.ParentID == 1 select p);
 		}
 
 		//[Test]
-		public void Test13()
+		public void Test13([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    ParentInheritance4
-				join c in    Child on p.ParentID equals c.ParentID
-				select p,
-				from p in db.ParentInheritance4
-				join c in db.Child on p.ParentID equals c.ParentID
-				select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    ParentInheritance4
+					join c in    Child on p.ParentID equals c.ParentID
+					select p,
+					from p in db.ParentInheritance4
+					join c in db.Child on p.ParentID equals c.ParentID
+					select p);
 		}
 
 		[Test]
@@ -178,11 +189,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Cast1()
+		public void Cast1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
-				db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>()));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
+					db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>());
 		}
 
 		class ParentEx : Parent
@@ -190,18 +202,19 @@ namespace Tests.Linq
 			[MapIgnore]
 			protected bool Field1;
 
-			public static void Test(Inheritance inheritance)
+			public static void Test(Inheritance inheritance, string context)
 			{
-				inheritance.ForEachProvider(db => inheritance.AreEqual(
-					inheritance.Parent.Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
-							 db.Parent.Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>()));
+				using (var db = inheritance.GetDataContext(context))
+					inheritance.AreEqual(
+						inheritance.Parent.Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>(),
+								 db.Parent.Select(p => new ParentEx { Field1 = true, ParentID = p.ParentID, Value1 = p.Value1 }).Cast<Parent>());
 			}
 		}
 
 		[Test]
-		public void Cast2()
+		public void Cast2([DataContexts] string context)
 		{
-			ParentEx.Test(this);
+			ParentEx.Test(this, context);
 		}
 
 		[TableName("Person")]
@@ -345,13 +358,13 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void Test14()
+		public void Test14([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var q = db.GetTable<ChildTest14>().Select(c => new ChildTest14() { ChildID = c.ChildID });
+				var q = db.GetTable<ChildTest14>().Select(c => new ChildTest14 { ChildID = c.ChildID });
 				FindById(q, 10);
-			});
+			}
 		}
 
 		[Test]
@@ -444,13 +457,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void QuerySyntaxSimpleTest()
+		public void QuerySyntaxSimpleTest([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				// db.GetTable<Parent111>().OfType<Parent222>().ToList(); - it's work!!!
 				(from p in db.GetTable<Parent111>().OfType<Parent222>() select p).ToList();
-			});
+			}
 		}
 
 		[TableName("Person")]
@@ -473,9 +486,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test17()
+		public void Test17([DataContexts] string data)
 		{
-			ForEachProvider(context =>
+			using (var context = GetDataContext(data))
 			{
 				if (context is TestDbManager)
 				{
@@ -483,7 +496,7 @@ namespace Tests.Linq
 					db.GetTable<Test17Person>().OfType<Test17John>().ToList();
 					Assert.False(db.LastQuery.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
 				}
-			});
+			}
 		}
 
 		[TableName("Person")]
@@ -509,9 +522,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test18()
+		public void Test18([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var ids = Enumerable.Range(0, 10).ToList();
 				var q   =
@@ -521,13 +534,13 @@ namespace Tests.Linq
 					select p1;
 
 				var list = q.Distinct().OfType<Test18Female>().ToList();
-			});
+			}
 		}
 
 		[Test]
-		public void Test19()
+		public void Test19([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var ids = Enumerable.Range(0, 10).ToList();
 				var q   =
@@ -538,7 +551,7 @@ namespace Tests.Linq
 
 				IQueryable iq   = q.Distinct();
 				var        list = iq.OfType<Test18Female>().ToList();
-			});
+			}
 		}
 	}
 }

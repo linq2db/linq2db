@@ -346,7 +346,8 @@ namespace Tests.Linq
 
         private void ForMySqlProvider(Action<ITestDataContext> func)
         {
-            ForEachProvider(Providers.Select(p => p.Name).Except(new[] { ProviderName.MySql }).ToArray(), func);
+           using (var db = GetDataContext(ProviderName.MySql))
+               func(db);
         }
 
         [Test]

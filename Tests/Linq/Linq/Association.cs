@@ -14,175 +14,187 @@ namespace Tests.Linq
 	public class Association : TestBase
 	{
 		[Test]
-		public void Test1()
+		public void Test1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from ch in    Child where ch.ParentID == 1 select new { ch, ch.Parent },
-				from ch in db.Child where ch.ParentID == 1 select new { ch, ch.Parent }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in    Child where ch.ParentID == 1 select new { ch, ch.Parent },
+					from ch in db.Child where ch.ParentID == 1 select new { ch, ch.Parent });
 		}
 
 		[Test]
-		public void Test2()
+		public void Test2([DataContexts] string context)
 		{
-			var expected =
-				from p  in Parent
-				from ch in p.Children
-				where ch.ParentID < 4 || ch.ParentID >= 4
-				select new { p.ParentID, ch.ChildID };
-
-			ForEachProvider(db => AreEqual(expected,
-				from p  in db.Parent
-				from ch in p.Children
-				where ch.ParentID < 4 || ch.ParentID >= 4
-				select new { p.ParentID, ch.ChildID }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p  in Parent
+					from ch in p.Children
+					where ch.ParentID < 4 || ch.ParentID >= 4
+					select new { p.ParentID, ch.ChildID }
+					,
+					from p  in db.Parent
+					from ch in p.Children
+					where ch.ParentID < 4 || ch.ParentID >= 4
+					select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
-		public void Test3()
+		public void Test3([DataContexts] string context)
 		{
-			var expected =
-				from p  in Parent
-				from ch in p.Children
-				where p.ParentID < 4 || p.ParentID >= 4
-				select new { p.ParentID };
-
-			ForEachProvider(db => AreEqual(expected,
-				from p  in db.Parent
-				from ch in p.Children
-				where p.ParentID < 4 || p.ParentID >= 4
-				select new { p.ParentID }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p  in Parent
+					from ch in p.Children
+					where p.ParentID < 4 || p.ParentID >= 4
+					select new { p.ParentID }
+					,
+					from p  in db.Parent
+					from ch in p.Children
+					where p.ParentID < 4 || p.ParentID >= 4
+					select new { p.ParentID });
 		}
 
 		[Test]
-		public void Test4()
+		public void Test4([DataContexts] string context)
 		{
-			var expected =
-				from p  in Parent
-				from ch in p.Children
-				where p.ParentID < 4 || p.ParentID >= 4
-				select new { p.ParentID, ch.ChildID };
-
-			ForEachProvider(db => AreEqual(expected,
-				from p  in db.Parent
-				from ch in p.Children
-				where p.ParentID < 4 || p.ParentID >= 4
-				select new { p.ParentID, ch.ChildID }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p  in Parent
+					from ch in p.Children
+					where p.ParentID < 4 || p.ParentID >= 4
+					select new { p.ParentID, ch.ChildID }
+					,
+					from p  in db.Parent
+					from ch in p.Children
+					where p.ParentID < 4 || p.ParentID >= 4
+					select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
-		public void Test5()
+		public void Test5([DataContexts] string context)
 		{
-			var expected =
-				from p  in Parent
-				from ch in p.Children2
-				where ch.ParentID < 4 || ch.ParentID >= 4
-				select new { p.ParentID, ch.ChildID };
-
-			ForEachProvider(db => AreEqual(expected,
-				from p  in db.Parent
-				from ch in p.Children2
-				where ch.ParentID < 4 || ch.ParentID >= 4
-				select new { p.ParentID, ch.ChildID }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p  in Parent
+					from ch in p.Children2
+					where ch.ParentID < 4 || ch.ParentID >= 4
+					select new { p.ParentID, ch.ChildID }
+					,
+					from p  in db.Parent
+					from ch in p.Children2
+					where ch.ParentID < 4 || ch.ParentID >= 4
+					select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
-		public void SelectMany1()
+		public void SelectMany1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   Parent.SelectMany(p => p.Children.Select(ch => p)),
-				db.Parent.SelectMany(p => p.Children.Select(ch => p))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.Select(ch => p)),
+					db.Parent.SelectMany(p => p.Children.Select(ch => p)));
 		}
 
 		[Test]
-		public void SelectMany2()
+		public void SelectMany2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   Parent.SelectMany(p =>    Child.Select(ch => p)),
-				db.Parent.SelectMany(p => db.Child.Select(ch => p))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.SelectMany(p =>    Child.Select(ch => p)),
+					db.Parent.SelectMany(p => db.Child.Select(ch => p)));
 		}
 
 		[Test]
-		public void SelectMany3()
+		public void SelectMany3([DataContexts(ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Access }, db => AreEqual(
-				Child
-					.GroupBy(ch => ch.Parent)
-					.Where(g => g.Count() > 2)
-					.SelectMany(g => g.Select(ch => ch.Parent)),
-				db.Child
-					.GroupBy(ch => ch.Parent)
-					.Where(g => g.Count() > 2)
-					.SelectMany(g => g.Select(ch => ch.Parent))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					Child
+						.GroupBy(ch => ch.Parent)
+						.Where(g => g.Count() > 2)
+						.SelectMany(g => g.Select(ch => ch.Parent)),
+					db.Child
+						.GroupBy(ch => ch.Parent)
+						.Where(g => g.Count() > 2)
+						.SelectMany(g => g.Select(ch => ch.Parent)));
 		}
 
 		[Test]
-		public void SelectMany4()
+		public void SelectMany4([DataContexts(ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Access }, db => AreEqual(
-				Child
-					.GroupBy(ch => ch.Parent)
-					.Where(g => g.Count() > 2)
-					.SelectMany(g => g.Select(ch => ch.Parent.ParentID)),
-				db.Child
-					.GroupBy(ch => ch.Parent)
-					.Where(g => g.Count() > 2)
-					.SelectMany(g => g.Select(ch => ch.Parent.ParentID))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					Child
+						.GroupBy(ch => ch.Parent)
+						.Where(g => g.Count() > 2)
+						.SelectMany(g => g.Select(ch => ch.Parent.ParentID)),
+					db.Child
+						.GroupBy(ch => ch.Parent)
+						.Where(g => g.Count() > 2)
+						.SelectMany(g => g.Select(ch => ch.Parent.ParentID)));
 		}
 
 		[Test]
-		public void SelectMany5()
+		public void SelectMany5([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)),
-				db.Parent.SelectMany(p => p.Children.Select(ch => p.ParentID))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)),
+					db.Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)));
 		}
 
 		[Test]
-		public void LeftJoin1()
+		public void LeftJoin1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c },
-				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c },
+					from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c });
 		}
 
 		[Test]
-		public void LeftJoin2()
+		public void LeftJoin2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p },
-				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p },
+					from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
 		[Test]
-		public void GroupBy1()
+		public void GroupBy1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from ch in    Child group ch by ch.Parent into g select g.Key,
-				from ch in db.Child group ch by ch.Parent into g select g.Key));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in    Child group ch by ch.Parent into g select g.Key,
+					from ch in db.Child group ch by ch.Parent into g select g.Key);
 		}
 
 		[Test]
-		public void GroupBy2()
+		public void GroupBy2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
-				(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
+					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
 		[Test]
-		public void GroupBy3()
+		public void GroupBy3([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent group p by p.Types.DateTimeValue.Year into g select g.Key,
-				from p in db.Parent group p by p.Types.DateTimeValue.Year into g select g.Key));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent group p by p.Types.DateTimeValue.Year into g select g.Key,
+					from p in db.Parent group p by p.Types.DateTimeValue.Year into g select g.Key);
 		}
 
 		[Test]
-		public void GroupBy4()
+		public void GroupBy4([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Types group p by p.DateTimeValue.Year into g select g.Key,
-				from p in db.Types group p by p.DateTimeValue.Year into g select g.Key));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Types group p by p.DateTimeValue.Year into g select g.Key,
+					from p in db.Types group p by p.DateTimeValue.Year into g select g.Key);
 		}
 
 		[Test]
@@ -222,56 +234,60 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow2()
+		public void StackOverflow2([DataContexts(ProviderName.SqlCe)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.SqlCe }, db => AreEqual(
-				from p in    Parent5 where p.Children.Count != 0 select p,
-				from p in db.Parent5 where p.Children.Count != 0 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent5 where p.Children.Count != 0 select p,
+					from p in db.Parent5 where p.Children.Count != 0 select p);
 		}
 
 		[Test]
-		public void StackOverflow3()
+		public void StackOverflow3([DataContexts(ProviderName.SqlCe)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.SqlCe },
-				db => AreEqual(
+			using (var db = GetDataContext(context))
+				AreEqual(
 					from p in    Parent5 where p.Children.Count() != 0 select p,
-					from p in db.Parent5 where p.Children.Count() != 0 select p));
+					from p in db.Parent5 where p.Children.Count() != 0 select p);
 		}
 
 		[Test]
-		public void StackOverflow4()
+		public void StackOverflow4([DataContexts(ProviderName.SqlCe)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.SqlCe }, db => AreEqual(
-				from p in    Parent5 select new { p.Children.Count },
-				from p in db.Parent5 select new { p.Children.Count }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent5 select new { p.Children.Count },
+					from p in db.Parent5 select new { p.Children.Count });
 		}
 
 		[Test]
-		public void DoulbeJoin()
+		public void DoulbeJoin([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from g in    GrandChild where g.Child.Parent.Value1 == 1 select g,
-				from g in db.GrandChild where g.Child.Parent.Value1 == 1 select g));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from g in    GrandChild where g.Child.Parent.Value1 == 1 select g,
+					from g in db.GrandChild where g.Child.Parent.Value1 == 1 select g);
 		}
 
 		[Test]
-		public void Projection1()
+		public void Projection1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from c in
-					from c in Child
-					where c.Parent.ParentID == 2
-					select c
-				join g in GrandChild on c.ParentID equals g.ParentID
-				where g.ChildID == 22
-				select new { c.Parent, c },
-				from c in
-					from c in db.Child
-					where c.Parent.ParentID == 2
-					select c
-				join g in db.GrandChild on c.ParentID equals g.ParentID
-				where g.ChildID == 22
-				select new { c.Parent, c }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from c in
+						from c in Child
+						where c.Parent.ParentID == 2
+						select c
+					join g in GrandChild on c.ParentID equals g.ParentID
+					where g.ChildID == 22
+					select new { c.Parent, c },
+					from c in
+						from c in db.Child
+						where c.Parent.ParentID == 2
+						select c
+					join g in db.GrandChild on c.ParentID equals g.ParentID
+					where g.ChildID == 22
+					select new { c.Parent, c });
 		}
 
 		[TableName("Parent")]
@@ -306,55 +322,51 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestTernary1()
+		public void TestTernary1([DataContexts(ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
-			ForEachProvider(
-				new[] { ProviderName.SQLite, ProviderName.Access },
-				db =>
-				{
-					var q =
-						from t in db.GetTable<Top>()
-						where ids.Contains(t.ParentID)
-						orderby t.ParentID
-						select t.Middle == null ? null : t.Middle.Bottom;
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select t.Middle == null ? null : t.Middle.Bottom;
 
-					var list = q.ToList();
+				var list = q.ToList();
 
-					Assert.NotNull(list[0]);
-					Assert.Null   (list[1]);
-				});
+				Assert.NotNull(list[0]);
+				Assert.Null   (list[1]);
+			}
 		}
 
 		[Test]
-		public void TestTernary2()
+		public void TestTernary2([DataContexts(ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
-			ForEachProvider(
-				new[] { ProviderName.SQLite, ProviderName.Access },
-				db =>
-				{
-					var q =
-						from t in db.GetTable<Top>()
-						where ids.Contains(t.ParentID)
-						orderby t.ParentID
-						select t.Middle.Bottom;
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.GetTable<Top>()
+					where ids.Contains(t.ParentID)
+					orderby t.ParentID
+					select t.Middle.Bottom;
 
-					var list = q.ToList();
+				var list = q.ToList();
 
-					Assert.NotNull(list[0]);
-					Assert.Null   (list[1]);
-				});
+				Assert.NotNull(list[0]);
+				Assert.Null   (list[1]);
+			}
 		}
 
 		[Test]
-		public void TestTernary3()
+		public void TestTernary3([DataContexts] string context)
 		{
 			var ids = new[] { 1, 5 };
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from t in db.GetTable<Top>()
@@ -366,7 +378,7 @@ namespace Tests.Linq
 
 				Assert.NotNull(list[0]);
 				Assert.Null   (list[1]);
-			});
+			}
 		}
 
 		[TableName("Child")]
@@ -385,15 +397,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationInHeirarhy()
+		public void AssociationInHeirarhy([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<ChildBaseForHeirarhy>()
 					.OfType<ChildForHeirarhy>()
 					.Select(ch => new ChildForHeirarhy { Parent = ch.Parent })
 					.ToList();
-			});
+			}
 		}
 	}
 }

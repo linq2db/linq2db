@@ -49,9 +49,11 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from p in    Parent select p.Children.Select(c => c.ChildID),
 					from p in db.Parent select p.Children.Select(c => c.ChildID));
+			}
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}

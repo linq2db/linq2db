@@ -13,13 +13,13 @@ namespace Tests.Linq
 	public class TakeSkipTest : TestBase
 	{
 		[Test]
-		public void Take1()
+		public void Take1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				for (var i = 2; i <= 3; i++)
 					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
-			});
+			}
 		}
 
 		static void TakeParam(ITestDataContext db, int n)
@@ -28,254 +28,274 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Take2()
+		public void Take2([DataContexts] string context)
 		{
-			ForEachProvider(db => TakeParam(db, 1));
+			using (var db = GetDataContext(context))
+				TakeParam(db, 1);
 		}
 
 		[Test]
-		public void Take3()
+		public void Take3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
-				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Take(3).ToList().Count));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Take(3).ToList().Count);
 		}
 
 		[Test]
-		public void Take4()
+		public void Take4([DataContexts] string context)
 		{
-			ForEachProvider(db =>
-				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Take(3).ToList().Count));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Take(3).ToList().Count);
 		}
 
 		[Test]
-		public void Take5()
+		public void Take5([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(3, db.Child.Take(3).ToList().Count));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, db.Child.Take(3).ToList().Count);
 		}
 
 		[Test]
-		public void Take6()
+		public void Take6([DataContexts] string context)
 		{
-			var expected = Child.OrderBy(c => c.ChildID).Take(3);
-
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderBy(c => c.ChildID).Take(3);
+				var expected =    Child.OrderBy(c => c.ChildID).Take(3);
+				var result   = db.Child.OrderBy(c => c.ChildID).Take(3);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void Take7()
+		public void Take7([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, db.Child.Take(() => 3).ToList().Count);
 		}
 
 		[Test]
-		public void Take8()
+		public void Take8([DataContexts] string context)
 		{
 			var n = 3;
-			ForEachProvider(db => Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, db.Child.Take(() => n).ToList().Count);
 		}
 
 		[Test]
-		public void TakeCount()
+		public void TakeCount([DataContexts(ProviderName.Sybase)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Sybase }, db => Assert.AreEqual(
-				   Child.Take(5).Count(),
-				db.Child.Take(5).Count()));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Child.Take(5).Count(),
+					db.Child.Take(5).Count());
 		}
 
 		[Test]
-		public void Skip1()
+		public void Skip1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(Child.Skip(3), db.Child.Skip(3)));
+			using (var db = GetDataContext(context))
+				AreEqual(Child.Skip(3), db.Child.Skip(3));
 		}
 
 		[Test]
-		public void Skip2()
+		public void Skip2([DataContexts] string context)
 		{
-			var expected = (from ch in Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3);
-			ForEachProvider(db => AreEqual(expected, (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from ch in    Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3),
+					(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Skip(3));
 		}
 
 		[Test]
-		public void Skip3()
+		public void Skip3([DataContexts] string context)
 		{
-			var expected = (from ch in Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3);
-			ForEachProvider(db => AreEqual(expected, (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from ch in    Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3),
+					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Skip(3));
 		}
 
 		[Test]
-		public void Skip4()
+		public void Skip4([DataContexts] string context)
 		{
-			var expected = Child.OrderByDescending(c => c.ChildID).Skip(3);
-
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderByDescending(c => c.ChildID).Skip(3);
+				var expected = Child.OrderByDescending(c => c.ChildID).Skip(3);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(3);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void Skip5()
+		public void Skip5([DataContexts] string context)
 		{
-			var expected = Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3);
-			ForEachProvider(db => AreEqual(expected, db.Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3),
+					db.Child.OrderByDescending(c => c.ChildID).ThenBy(c => c.ParentID + 1).Skip(3));
 		}
 
 		[Test]
-		public void Skip6()
+		public void Skip6([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(Child.Skip(3), db.Child.Skip(() => 3)));
+			using (var db = GetDataContext(context))
+				AreEqual(Child.Skip(3), db.Child.Skip(() => 3));
 		}
 
 		[Test]
-		public void Skip7()
+		public void Skip7([DataContexts] string context)
 		{
 			var n = 3;
-			ForEachProvider(db => AreEqual(Child.Skip(n), db.Child.Skip(() => n)));
+			using (var db = GetDataContext(context))
+				AreEqual(Child.Skip(n), db.Child.Skip(() => n));
 		}
 
 		[Test]
-		public void SkipCount()
+		public void SkipCount([DataContexts(ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access }, db => Assert.AreEqual(
-				   Child.Skip(2).Count(),
-				db.Child.Skip(2).Count()));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Child.Skip(2).Count(),
+					db.Child.Skip(2).Count());
 		}
 
 		[Test]
-		public void SkipTake1()
+		public void SkipTake1([DataContexts] string context)
 		{
-			var expected = Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(2).Take(5);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void SkipTake2()
+		public void SkipTake2([DataContexts] string context)
 		{
-			var expected = Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
+				var expected =    Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Take(7).Skip(2);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void SkipTake3()
+		public void SkipTake3([DataContexts] string context)
 		{
-			var expected = Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
+				var expected = Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
+				var result   = db.Child.OrderBy(c => c.ChildID).Skip(1).Take(7).Skip(2);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void SkipTake4()
+		public void SkipTake4([DataContexts(ProviderName.SQLite, ProviderName.Sybase, ProviderName.Access)] string context)
 		{
-			var expected = Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
-			ForEachProvider(new[] { ProviderName.SQLite, ProviderName.Sybase, ProviderName.Access }, db =>
+			using (var db = GetDataContext(context))
 			{
-				var result = db.Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
+				var expected =    Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
+				var result   = db.Child.OrderByDescending(c => c.ChildID).Skip(1).Take(7).OrderBy(c => c.ChildID).Skip(2);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
-			});
+			}
 		}
 
 		[Test]
-		public void SkipTake5()
+		public void SkipTake5([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var list = db.Child.Skip(2).Take(5).ToList();
 				Assert.AreEqual(5, list.Count);
-			});
+			}
 		}
 
 		[Test]
-		public void SkipTakeCount()
+		public void SkipTakeCount([DataContexts(ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access }, db => Assert.AreEqual(
-				   Child.Skip(2).Take(5).Count(),
-				db.Child.Skip(2).Take(5).Count()));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Child.Skip(2).Take(5).Count(),
+					db.Child.Skip(2).Take(5).Count());
 		}
 
 		[Test]
-		public void SkipFirst()
+		public void SkipFirst([DataContexts] string context)
 		{
-			var expected = (from p in Parent where p.ParentID > 1 select p).Skip(1).First();
-
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				var expected = (from p in Parent where p.ParentID > 1 select p).Skip(1).First();
 				var result = from p in db.GetTable<Parent>() select p;
 				result = from p in result where p.ParentID > 1 select p;
 				var b = result.Skip(1).First();
 
 				Assert.AreEqual(expected, b);
-			});
+			}
 		}
 
 		[Test]
-		public void ElementAt1()
+		public void ElementAt1([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(
-				(from p in    Parent where p.ParentID > 1 select p).ElementAt(3),
-				(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3)));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					(from p in    Parent where p.ParentID > 1 select p).ElementAt(3),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(3));
 		}
 
 		[Test]
-		public void ElementAt2()
-		{
-			var n = 3;
-			ForEachProvider(db => Assert.AreEqual(
-				(from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
-				(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n)));
-		}
-
-		[Test]
-		public void ElementAtDefault1()
-		{
-			ForEachProvider(db => Assert.AreEqual(
-				(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(3),
-				(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(3)));
-		}
-
-		[Test]
-		public void ElementAtDefault2()
-		{
-			ForEachProvider(db => Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000)));
-		}
-
-		[Test]
-		public void ElementAtDefault3()
+		public void ElementAt2([DataContexts] string context)
 		{
 			var n = 3;
-			ForEachProvider(db => Assert.AreEqual(
-				(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
-				(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n)));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					(from p in    Parent where p.ParentID > 1 select p).ElementAt(n),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAt(() => n));
 		}
 
 		[Test]
-		public void ElementAtDefault4()
+		public void ElementAtDefault1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(3),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(3));
+		}
+
+		[Test]
+		public void ElementAtDefault2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(300000));
+		}
+
+		[Test]
+		public void ElementAtDefault3([DataContexts] string context)
+		{
+			var n = 3;
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					(from p in    Parent where p.ParentID > 1 select p).ElementAtOrDefault(n),
+					(from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
+		}
+
+		[Test]
+		public void ElementAtDefault4([DataContexts] string context)
 		{
 			var n = 300000;
-			ForEachProvider(db => Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n)));
+			using (var db = GetDataContext(context))
+				Assert.IsNull((from p in db.Parent where p.ParentID > 1 select p).ElementAtOrDefault(() => n));
 		}
 
 		[Test]
-		public void ElementAtDefault5()
+		public void ElementAtDefault5([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(
-				   Person.ElementAtOrDefault(3),
-				db.Person.ElementAtOrDefault(3)));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Person.ElementAtOrDefault(3),
+					db.Person.ElementAtOrDefault(3));
 		}
 	}
 }

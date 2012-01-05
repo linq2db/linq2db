@@ -11,7 +11,6 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
 using LinqToDB.SqlProvider;
@@ -171,31 +170,6 @@ namespace Tests
 #endif
 		};
 
-		static IEnumerable<ITestDataContext> GetProviders(IEnumerable<string> exceptList)
-		{
-			foreach (var info in Providers)
-			{
-				if (exceptList.Contains(info.Name))
-					continue;
-
-				Debug.WriteLine(info.Name, "Provider ");
-
-				if (!info.Loaded)
-					continue;
-
-				yield return new TestDbManager(info.Name);
-
-				//*
-				var ip = GetIP(info.Name);
-				var dx = new TestServiceModelDataContext(ip);
-
-				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-				yield return dx;
-				//*/
-			}
-		}
-
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
 		public class DataContextsAttribute : ValuesAttribute
 		{
@@ -255,112 +229,6 @@ namespace Tests
 			return new TestDbManager(configuration);
 		}
 
-		protected void ForEachProvider(Type expectedException, string[] exceptList, Action<ITestDataContext> func)
-		{
-			Exception ex = null;
-
-			var executedForAtLeastOneProvider = false;
-
-			foreach (var db in GetProviders(exceptList))
-			{
-				try
-				{
-					if (db is DbManager)
-						((DbManager)db).BeginTransaction();
-
-					func(db);
-					executedForAtLeastOneProvider = true;
-				}
-				catch (Exception e)
-				{
-					if (expectedException == null || e.GetType() != expectedException)
-						throw;
-
-					ex = e;
-				}
-				finally
-				{
-					db.Dispose();
-				}
-			}
-
-			if (ex != null)
-				throw ex;
-			
-			if(!executedForAtLeastOneProvider)
-				throw new ApplicationException("Delegate function has not been executed.");
-		}
-
-		[Obsolete]
-		protected void ForEachProvider(string[] exceptList, Action<ITestDataContext> func)
-		{
-			ForEachProvider(null, exceptList, func);
-		}
-
-		[Obsolete]
-		protected void ForEachProvider(Action<ITestDataContext> func)
-		{
-			ForEachProvider(Array<string>.Empty, func);
-		}
-
-		[Obsolete]
-		protected void Not0ForEachProvider(Func<ITestDataContext, int> func)
-		{
-			ForEachProvider(db => Assert.Less(0, func(db)));
-		}
-
-		[Obsolete]
-		protected void TestPerson(int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			ForEachProvider(db =>
-			{
-				var person = func(db).ToList().Where(p => p.ID == id).First();
-
-				Assert.AreEqual(id,        person.ID);
-				Assert.AreEqual(firstName, person.FirstName);
-			});
-		}
-
-		[Obsolete]
-		protected void TestJohn(Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			TestPerson(1, "John", func);
-		}
-
-		[Obsolete]
-		protected void TestOnePerson(string[] exceptList, int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			ForEachProvider(exceptList, db =>
-			{
-				var list = func(db).ToList();
-
-				Assert.AreEqual(1, list.Count);
-
-				var person = list[0];
-
-				Assert.AreEqual(id,        person.ID);
-				Assert.AreEqual(firstName, person.FirstName);
-			});
-		}
-
-		[Obsolete]
-		protected void TestOnePerson(int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			TestOnePerson(Array<string>.Empty, id, firstName, func);
-		}
-
-		[Obsolete]
-		protected void TestOneJohn(string[] exceptList, Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			TestOnePerson(exceptList, 1, "John", func);
-		}
-
-		[Obsolete]
-		protected void TestOneJohn(Func<ITestDataContext, IQueryable<Person>> func)
-		{
-			TestOnePerson(Array<string>.Empty, 1, "John", func);
-		}
-
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
 		{
 			var list = persons.ToList();
@@ -380,7 +248,7 @@ namespace Tests
 
 		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
 		{
-			var person = Person.ToList().Where(p => p.ID == id).First();
+			var person = persons.ToList().Where(p => p.ID == id).First();
 
 			Assert.AreEqual(id, person.ID);
 			Assert.AreEqual(firstName, person.FirstName);
