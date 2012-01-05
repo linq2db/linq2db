@@ -169,7 +169,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| e                         <*> Value(UInt64 (1))
 				| e                         <*> Value(Single (1f))
 				| e                         <*> Value(Double (1d))
-				| e                         <*> Value(Decimal(1m))                            => Optimize(e)
+				| e                         <*> Value(Decimal(1m))              => Optimize(e)
 				| e                         <+> Value(String) as v when !e.Type.IsString => toString (e, v)                // ex + "..."     -> ex
 				| Value(String) as v        <+> e                  when !e.Type.IsString => toString2(v, e)                // ex + "..."     -> ex
 				| Value(SByte  (v1))        <+> Value(SByte  (v2))              => v1 + v2                                 // 2 + 3          -> 5
@@ -227,26 +227,26 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public Optimize(this predicate : SqlPredicate) : SqlPredicate
 		{
-			| Not(e1 <=>  e2)        => e1 != e2                                                                    // NOT (a =  b)    -> a <> b
-			| Not(e1 <<>> e2)        => e1 == e2                                                                    // NOT (a <> b)    -> a =  b
-			| Not(e1 <>>  e2)        => e1 <= e2                                                                    // NOT (a >  b)    -> a <= b
+			| Not(e1 <==> e2)        => e1 != e2                                    // NOT (a =  b)    -> a <> b
+			| Not(e1 <!=> e2)        => e1 == e2                                    // NOT (a <> b)    -> a =  b
+			| Not(e1 <>>  e2)        => e1 <= e2                                    // NOT (a >  b)    -> a <= b
 			| Not(e1 <!<> e2)
-			| Not(e1 <>=> e2)        => e1 <  e2                                                                    // NOT (a >= b)    -> a <  b
-			| Not(e1 <<>  e2)        => e1 <= e2                                                                    // NOT (a <  b)    -> a <= b
+			| Not(e1 <>=> e2)        => e1 <  e2                                    // NOT (a >= b)    -> a <  b
+			| Not(e1 <<>  e2)        => e1 <= e2                                    // NOT (a <  b)    -> a <= b
 			| Not(e1 <!>> e2)
-			| Not(e1 <<=> e2)        => e1 >  e2                                                                    // NOT (a <= b)    -> a >  b
-			| Not(Value(Boolean(v))) => !v                                                                          // NOT (true)      -> false
-			| Not(Not(e))                                                                                           // NOT (NOT ( e )) -> e
-			| Value(Boolean(true))       <&&> e                                                                     // true  AND e     -> e
-			| Value(Boolean(false))      <||> e                                                                     // false OR  e     -> e
-			| e                          <&&> Value(Boolean(true))                                                  // e     AND true  -> e
-			| e                          <||> Value(Boolean(false))      => Optimize(e)                             // e     OR  false -> e
-			| Value(Boolean(false)) as e <&&> _                                                                     // false AND a     -> false
-			| Value(Boolean(true))  as e <||> _                                                                     // true  OR  a     -> true
-			| _                          <&&> Value(Boolean(false)) as e                                            // a     AND false -> false
-			| _                          <||> Value(Boolean(true))  as e => e                                       // a     OR  true  -> true
-			| Value(v1) <==> Value(v2) =>  Equals(v1.GetValue(), v2.GetValue())                                     // 25 == 48 -> false
-			| Value(v1) <!=> Value(v2) => !Equals(v1.GetValue(), v2.GetValue())                                     // 25 != 48 -> true
+			| Not(e1 <<=> e2)        => e1 >  e2                                    // NOT (a <= b)    -> a >  b
+			| Not(Value(Boolean(v))) => !v                                          // NOT (true)      -> false
+			| Not(Not(e))                                                           // NOT (NOT ( e )) -> e
+			| Value(Boolean(true))       <&&> e                                     // true  AND e     -> e
+			| Value(Boolean(false))      <||> e                                     // false OR  e     -> e
+			| e                          <&&> Value(Boolean(true))                  // e     AND true  -> e
+			| e                          <||> Value(Boolean(false)) => Optimize(e)  // e     OR  false -> e
+			| Value(Boolean(false)) as e <&&> _                                     // false AND a     -> false
+			| Value(Boolean(true))  as e <||> _                                     // true  OR  a     -> true
+			| _                          <&&> Value(Boolean(false)) as e            // a     AND false -> false
+			| _                          <||> Value(Boolean(true))  as e => e       // a     OR  true  -> true
+			| Value(v1) <==> Value(v2) =>  Equals(v1.GetValue(), v2.GetValue())     // 25 == 48 -> false
+			| Value(v1) <!=> Value(v2) => !Equals(v1.GetValue(), v2.GetValue())     // 25 != 48 -> true
 			| Function("CASE", [Condition(c),           Value(v1), _])      <=> Value(v2) when Equals(v1.GetValue(), v2.GetValue()) => c
 			| Function("CASE", [Condition(e1  <?> e2),  Value(Boolean), _]) <=> Value(Boolean) => SqlPredicate.Compare(e1, RevertOperator(op), e2)
 			| Function("CASE", [Condition(e11 <>> e12), Value(Int32( 1)), Condition(e21 <=> e22), Value(Int32( 0)), Value(Int32(-1))])

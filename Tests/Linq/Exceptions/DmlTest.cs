@@ -13,25 +13,32 @@ namespace Tests.Exceptions
 	public class DmlTest : TestBase
 	{
 		[Test, ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Doctor' table to have a primary key.")]
-		public void InsertOrUpdate1()
+		public void InsertOrUpdate1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
 				db.Doctor.InsertOrUpdate(
 					() => new Doctor
 					{
-						PersonID  = 10,
+						PersonID = 10,
 						Taxonomy = "....",
 					},
 					p => new Doctor
 					{
 						Taxonomy = "...",
-					}));
+					});
+			}
 		}
 
 		[Test, ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter.")]
-		public void InsertOrUpdate2()
+		public void InsertOrUpdate2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
 				db.Patient.InsertOrUpdate(
 					() => new Patient
 					{
@@ -40,7 +47,8 @@ namespace Tests.Exceptions
 					p => new Patient
 					{
 						Diagnosis = "...",
-					}));
+					});
+			}
 		}
 	}
 }

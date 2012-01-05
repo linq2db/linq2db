@@ -75,14 +75,16 @@ namespace LinqToDB.MacroInternal
 								LinqToDB_Temp.TypeCode.Unknown
 						}
 
-						public ToCodeWithCheck(this type : Type) : LinqToDB_Temp.TypeCode
+						public ToCode(this type : Type, throwException : bool) : LinqToDB_Temp.TypeCode
 						{
 							mutable code;
 							
 							if (_typeCodes.TryGetValue(type, out code))
 								code
-							else
+							else if (throwException)
 								throw LinqToDB_Temp.LinqToDBException("There is no corresponding TypeCode for '"  + type.FullName + "'.")
+							else
+								LinqToDB_Temp.TypeCode.Unknown
 						}
 					}
 				]>

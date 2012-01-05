@@ -953,11 +953,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GrooupByAssociation1024()
+		public void GrooupByAssociation1024([DataContexts(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix)] /* Can be fixed. */ string context)
 		{
-			ForEachProvider(
-				new[] { ProviderName.SqlCe, ProviderName.Access, ProviderName.Informix }, // Can be fixed.
-				db => AreEqual(
+			using (var db = GetDataContext(context))
+				AreEqual(
 					from ch in GrandChild1
 					group ch by ch.Parent into g
 					where
@@ -974,7 +974,7 @@ namespace Tests.Linq
 						g.Where(_ => _.ChildID >= 19).Sum(p => p.ParentID) > 0 &&
 						g.Where(_ => _.ChildID >= 19).Max(p => p.ParentID) > 0 &&
 						g.Where(_ => _.ChildID >= 18).Max(p => p.ParentID) > 0
-					select g.Key.Value1));
+					select g.Key.Value1);
 		}
 
 		[Test]

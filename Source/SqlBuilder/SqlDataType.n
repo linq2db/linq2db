@@ -163,7 +163,7 @@ namespace LinqToDB_Temp.SqlBuilder
 
 		public static @:(type : Type) : SqlDataType
 		{
-			match (type.ToUnderlying().ToCodeWithCheck())
+			match (type.ToUnderlying().ToCode(true))
 			{
 				| String         => SqlDataType.NVarChar      (type, 4000)
 				| Char           => SqlDataType.NChar         (type, 1)

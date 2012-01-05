@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -19,73 +18,86 @@ namespace Tests.Linq
 	public class Mapping : TestBase
 	{
 		[Test]
-		public void Enum1()
+		public void Enum1([DataContexts] string context)
 		{
-			var expected = from p in Person where new[] { Gender.Male }.Contains(p.Gender) select p;
-			ForEachProvider(db => AreEqual(expected, from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Person where new[] { Gender.Male }.Contains(p.Gender) select p,
+					from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p);
 		}
 
 		[Test]
-		public void Enum2()
+		public void Enum2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person where p.Gender == Gender.Male select p,
-				from p in db.Person where p.Gender == Gender.Male select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where p.Gender == Gender.Male select p,
+					from p in db.Person where p.Gender == Gender.Male select p);
 		}
 
 		[Test]
-		public void Enum21()
+		public void Enum21([DataContexts] string context)
 		{
 			var gender = Gender.Male;
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where p.Gender == gender select p,
-				from p in db.Person where p.Gender == gender select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where p.Gender == gender select p,
+					from p in db.Person where p.Gender == gender select p);
 		}
 
 		[Test]
-		public void Enum3()
+		public void Enum3([DataContexts] string context)
 		{
 			var fm = Gender.Female;
 
-			var expected = from p in Person where p.Gender != fm select p;
-			ForEachProvider(db => AreEqual(expected, from p in db.Person where p.Gender != fm select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Person where p.Gender != fm select p,
+					from p in db.Person where p.Gender != fm select p);
 		}
 
 		[Test]
-		public void Enum4()
+		public void Enum4([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent4 where p.Value1 == TypeValue.Value1 select p,
-				from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent4 where p.Value1 == TypeValue.Value1 select p,
+					from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
 		}
 
 		[Test]
-		public void Enum5()
+		public void Enum5([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent4 where p.Value1 == TypeValue.Value3 select p,
-				from p in db.Parent4 where p.Value1 == TypeValue.Value3 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent4 where p.Value1 == TypeValue.Value3 select p,
+					from p in db.Parent4 where p.Value1 == TypeValue.Value3 select p);
 		}
 
 		[Test]
-		public void Enum6()
+		public void Enum6([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in Parent4
-				join c in Child on p.ParentID equals c.ParentID
-				where p.Value1 == TypeValue.Value1 select p,
-				from p in db.Parent4
-				join c in db.Child on p.ParentID equals c.ParentID
-				where p.Value1 == TypeValue.Value1 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent4
+					join c in Child on p.ParentID equals c.ParentID
+					where p.Value1 == TypeValue.Value1 select p,
+					from p in db.Parent4
+					join c in db.Child on p.ParentID equals c.ParentID
+					where p.Value1 == TypeValue.Value1 select p);
 		}
 
 		[Test]
-		public void Enum7()
+		public void Enum7([DataContexts] string context)
 		{
 			var v1 = TypeValue.Value1;
 
-			ForEachProvider(db => db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 }));
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
+			}
 		}
 
 		enum TestValue
@@ -101,16 +113,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Enum81()
+		public void Enum81([DataContexts] string context)
 		{
-			ForEachProvider(db => db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList());
+			using (var db = GetDataContext(context))
+				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
 		}
 
 		[Test]
-		public void Enum82()
+		public void Enum82([DataContexts] string context)
 		{
 			var testValue = TestValue.Value1;
-			ForEachProvider(db => db.GetTable<TestParent>().Where(p => p.Value1 == testValue).ToList());
+			using (var db = GetDataContext(context))
+				db.GetTable<TestParent>().Where(p => p.Value1 == testValue).ToList();
 		}
 
 		public enum Gender9
@@ -132,10 +146,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Enum9()
+		public void Enum9([DataContexts] string context)
 		{
-			ForEachProvider(db =>
-				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList());
+			using (var db = GetDataContext(context))
+				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
 		}
 
 		[TableName("Parent")]
@@ -152,25 +166,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Inner1()
+		public void Inner1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
 				Assert.AreEqual(1, e.ParentID);
 				Assert.AreEqual(1, e.Value.Value1);
-			});
+			}
 		}
 
 		[Test]
-		public void Inner2()
+		public void Inner2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
 				Assert.AreEqual(1, e.ParentID);
 				Assert.AreEqual(1, e.Value.Value1);
-			});
+			}
 		}
 
 		[TableName("Child")]
@@ -184,13 +198,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Inner3()
+		public void Inner3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ChildObject>().First(c => c.Parent.Value.Value1 == 1);
 				Assert.AreEqual(1, e.ParentID);
-			});
+			}
 		}
 
 		[TableName("Parent")]
@@ -210,9 +224,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MemberMapperTest1()
+		public void MemberMapperTest1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ParentObject2>()
@@ -220,13 +234,13 @@ namespace Tests.Linq
 					select p;
 
 				Assert.AreEqual(new DateTime(2010, 1, 1), q.First().Value1);
-			});
+			}
 		}
 
 		//[Test]
-		public void MemberMapperTest2()
+		public void MemberMapperTest2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.GetTable<ParentObject2>()
@@ -234,7 +248,7 @@ namespace Tests.Linq
 					select p.Value1;
 
 				Assert.AreEqual(new DateTime(2010, 1, 1), q.First());
-			});
+			}
 		}
 
 		struct MyInt

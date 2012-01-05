@@ -11,13 +11,13 @@ namespace Tests.Exceptions
 	public class Inheritance : TestBase
 	{
 		[Test, ExpectedException(typeof(LinqException))]
-		public void Test1()
+		public void Test1([DataContexts] string context)
 		{
-			ForEachProvider(typeof(LinqException), db =>
+			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance2 select p;
 				q.ToList();
-			});
+			}
 		}
 	}
 }

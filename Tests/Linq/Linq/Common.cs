@@ -16,69 +16,77 @@ namespace Tests.Linq
 	public class Common : TestBase
 	{
 		[Test]
-		public void AsQueryable()
+		public void AsQueryable([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent from ch in    Child               select p,
-				from p in db.Parent from ch in db.Child.AsQueryable() select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent from ch in Child select p,
+					from p in db.Parent from ch in db.Child.AsQueryable() select p);
 		}
 
 		[Test]
-		public void Convert()
+		public void Convert([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent from ch in                         Child                select p,
-				from p in db.Parent from ch in ((IEnumerable<Child>)db.Child).AsQueryable() select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent from ch in                         Child                select p,
+					from p in db.Parent from ch in ((IEnumerable<Child>)db.Child).AsQueryable() select p);
 		}
 
 		[Test]
-		public void NewCondition()
+		public void NewCondition([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select new { Value = p.Value1 != null ? p.Value1 : 100 },
-				from p in db.Parent select new { Value = p.Value1 != null ? p.Value1 : 100 }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select new { Value = p.Value1 != null ? p.Value1 : 100 },
+					from p in db.Parent select new { Value = p.Value1 != null ? p.Value1 : 100 });
 		}
 
 		[Test]
-		public void NewCoalesce()
+		public void NewCoalesce([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select new { Value = p.Value1 ?? 100 },
-				from p in db.Parent select new { Value = p.Value1 ?? 100 }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select new { Value = p.Value1 ?? 100 },
+					from p in db.Parent select new { Value = p.Value1 ?? 100 });
 		}
 
 		[Test]
-		public void CoalesceNew()
+		public void CoalesceNew([DataContexts] string context)
 		{
 			Child ch = null;
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select ch ?? new Child { ParentID = p.ParentID },
-				from p in db.Parent select ch ?? new Child { ParentID = p.ParentID }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select ch ?? new Child { ParentID = p.ParentID },
+					from p in db.Parent select ch ?? new Child { ParentID = p.ParentID });
 		}
 
 		[Test]
-		public void ScalarCondition()
+		public void ScalarCondition([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select p.Value1 != null ? p.Value1 : 100,
-				from p in db.Parent select p.Value1 != null ? p.Value1 : 100));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select p.Value1 != null ? p.Value1 : 100,
+					from p in db.Parent select p.Value1 != null ? p.Value1 : 100);
 		}
 
 		[Test]
-		public void ScalarCoalesce()
+		public void ScalarCoalesce([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select p.Value1 ?? 100,
-				from p in db.Parent select p.Value1 ?? 100));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select p.Value1 ?? 100,
+					from p in db.Parent select p.Value1 ?? 100);
 		}
 
 		[Test]
-		public void ExprCoalesce()
+		public void ExprCoalesce([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select (p.Value1 ?? 100) + 50,
-				from p in db.Parent select (p.Value1 ?? 100) + 50));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select (p.Value1 ?? 100) + 50,
+					from p in db.Parent select (p.Value1 ?? 100) + 50);
 		}
 
 		static int GetDefault1()
@@ -87,11 +95,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ClientCoalesce1()
+		public void ClientCoalesce1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select p.Value1 ?? GetDefault1(),
-				from p in db.Parent select p.Value1 ?? GetDefault1()));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select p.Value1 ?? GetDefault1(),
+					from p in db.Parent select p.Value1 ?? GetDefault1());
 		}
 
 		static int GetDefault2(int n)
@@ -100,27 +109,30 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ClientCoalesce2()
+		public void ClientCoalesce2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent select p.Value1 ?? GetDefault2(p.ParentID),
-				from p in db.Parent select p.Value1 ?? GetDefault2(p.ParentID)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent select p.Value1 ?? GetDefault2(p.ParentID),
+					from p in db.Parent select p.Value1 ?? GetDefault2(p.ParentID));
 		}
 
 		[Test]
-		public void PreferServerFunc1()
+		public void PreferServerFunc1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person select p.FirstName.Length,
-				from p in db.Person select p.FirstName.Length));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person select p.FirstName.Length,
+					from p in db.Person select p.FirstName.Length);
 		}
 
 		[Test]
-		public void PreferServerFunc2()
+		public void PreferServerFunc2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person select p.FirstName.Length + "".Length,
-				from p in db.Person select p.FirstName.Length + "".Length));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person select p.FirstName.Length + "".Length,
+					from p in db.Person select p.FirstName.Length + "".Length);
 		}
 
 		class Test
@@ -137,11 +149,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ClosureTest()
+		public void ClosureTest([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreNotEqual(
-				new Test().TestClosure(db),
-				new Test().TestClosure(db)));
+			using (var db = GetDataContext(context))
+				Assert.AreNotEqual(
+					new Test().TestClosure(db),
+					new Test().TestClosure(db));
 		}
 
 		[Test]
@@ -175,39 +188,41 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewObjectTest1()
+		public void NewObjectTest1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in Parent
-				select new { ID = new MyClass { ID = p.ParentID } } into p1
-				where p1.ID.ID == 1
-				select p1,
-				from p in db.Parent
-				select new { ID = new MyClass { ID = p.ParentID } } into p1
-				where p1.ID.ID == 1
-				select p1));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					select new { ID = new MyClass { ID = p.ParentID } } into p1
+					where p1.ID.ID == 1
+					select p1,
+					from p in db.Parent
+					select new { ID = new MyClass { ID = p.ParentID } } into p1
+					where p1.ID.ID == 1
+					select p1);
 		}
 
 		[Test]
-		public void NewObjectTest2()
+		public void NewObjectTest2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in Parent
-				select new { ID = new MyClass { ID = p.ParentID } } into p
-				join j in
-					from c in Child
-					select new { ID = new MyClass { ID = c.ParentID } }
-				on p.ID.ID equals j.ID.ID
-				where p.ID.ID == 1
-				select p,
-				from p in db.Parent
-				select new { ID = new MyClass { ID = p.ParentID } } into p
-				join j in
-					from c in db.Child
-					select new { ID = new MyClass { ID = c.ParentID } }
-				on p.ID.ID equals j.ID.ID
-				where p.ID.ID == 1
-				select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					select new { ID = new MyClass { ID = p.ParentID } } into p
+					join j in
+						from c in Child
+						select new { ID = new MyClass { ID = c.ParentID } }
+					on p.ID.ID equals j.ID.ID
+					where p.ID.ID == 1
+					select p,
+					from p in db.Parent
+					select new { ID = new MyClass { ID = p.ParentID } } into p
+					join j in
+						from c in db.Child
+						select new { ID = new MyClass { ID = c.ParentID } }
+					on p.ID.ID equals j.ID.ID
+					where p.ID.ID == 1
+					select p);
 		}
 
 		public Table<Person> People2(DbManager db)
@@ -251,19 +266,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Condition1()
+		public void Condition1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person select new { Name = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : !string.IsNullOrEmpty(p.MiddleName) ? p.MiddleName : p.LastName },
-				from p in db.Person select new { Name = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : !string.IsNullOrEmpty(p.MiddleName) ? p.MiddleName : p.LastName }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person select new { Name = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : !string.IsNullOrEmpty(p.MiddleName) ? p.MiddleName : p.LastName },
+					from p in db.Person select new { Name = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : !string.IsNullOrEmpty(p.MiddleName) ? p.MiddleName : p.LastName });
 		}
 
 		[Test]
-		public void Condition2()
+		public void Condition2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person select new { Name = !p.FirstName.IsNullOrEmpty() ? p.FirstName : !p.MiddleName.IsNullOrEmpty() ? p.MiddleName : p.LastName },
-				from p in db.Person select new { Name = !p.FirstName.IsNullOrEmpty() ? p.FirstName : !p.MiddleName.IsNullOrEmpty() ? p.MiddleName : p.LastName }));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person select new { Name = !p.FirstName.IsNullOrEmpty() ? p.FirstName : !p.MiddleName.IsNullOrEmpty() ? p.MiddleName : p.LastName },
+					from p in db.Person select new { Name = !p.FirstName.IsNullOrEmpty() ? p.FirstName : !p.MiddleName.IsNullOrEmpty() ? p.MiddleName : p.LastName });
 		}
 
 		enum PersonID
@@ -273,59 +290,61 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertEnum1()
+		public void ConvertEnum1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person where p.ID == (int)PersonID.Person1 select p,
-				from p in db.Person where p.ID == (int)PersonID.Person1 select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where p.ID == (int)PersonID.Person1 select p,
+					from p in db.Person where p.ID == (int)PersonID.Person1 select p);
 		}
 
 		[Test]
-		public void ConvertEnum2()
+		public void ConvertEnum2([DataContexts] string context)
 		{
 			var id = PersonID.Person1;
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where p.ID == (int)id select p,
-				from p in db.Person where p.ID == (int)id select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where p.ID == (int)id select p,
+					from p in db.Person where p.ID == (int)id select p);
 		}
 
 		[Test]
-		public void GroupByUnion1()
+		public void GroupByUnion1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from t in (
-					from c in Child
-					where c.ParentID < 4
-					select new { c.ParentID, ID = c.ChildID })
-				.Concat(
-					from g in GrandChild
-					where g.ParentID >= 4
-					select new { ParentID = g.ParentID ?? 0, ID = g.GrandChildID ?? 0 })
-				group t by t.ParentID into gr
-				select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ID) } into tt
-				where tt.Sum != 0
-				select tt
-				,
-				from t in (
-					from c in db.Child
-					where c.ParentID < 4
-					select new { c.ParentID, ID = c.ChildID })
-				.Concat(
-					from g in db.GrandChild
-					where g.ParentID >= 4
-					select new { ParentID = g.ParentID ?? 0, ID = g.GrandChildID ?? 0 })
-				group t by t.ParentID into gr
-				select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ID) } into tt
-				where tt.Sum != 0
-				select tt
-			));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in (
+						from c in Child
+						where c.ParentID < 4
+						select new { c.ParentID, ID = c.ChildID })
+					.Concat(
+						from g in GrandChild
+						where g.ParentID >= 4
+						select new { ParentID = g.ParentID ?? 0, ID = g.GrandChildID ?? 0 })
+					group t by t.ParentID into gr
+					select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ID) } into tt
+					where tt.Sum != 0
+					select tt
+					,
+					from t in (
+						from c in db.Child
+						where c.ParentID < 4
+						select new { c.ParentID, ID = c.ChildID })
+					.Concat(
+						from g in db.GrandChild
+						where g.ParentID >= 4
+						select new { ParentID = g.ParentID ?? 0, ID = g.GrandChildID ?? 0 })
+					group t by t.ParentID into gr
+					select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ID) } into tt
+					where tt.Sum != 0
+					select tt);
 		}
 
 		[Test]
-		public void GroupByUnion2()
+		public void GroupByUnion2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var qe1 =
 					from t in (
@@ -368,33 +387,34 @@ namespace Tests.Linq
 					select new { p.ParentID };
 
 				AreEqual(qe2, qr2);
-			});
+			}
 		}
 
 		[Test]
-		public void GroupByLeftJoin1()
+		public void GroupByLeftJoin1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in Parent
-					join tt in
-						from t in Child
-						group t by t.ParentID into gr
-						select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ChildID) } into tt
-						where tt.Sum != 0
-						select tt
-					on p.ParentID equals tt.ParentID into gr
-					from tt in gr.DefaultIfEmpty()
-				select p.ParentID,
-				from p in db.Parent
-					join tt in
-						from t in db.Child
-						group t by t.ParentID into gr
-						select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ChildID) } into tt
-						where tt.Sum != 0
-						select tt
-					on p.ParentID equals tt.ParentID into gr
-					from tt in gr.DefaultIfEmpty()
-				select p.ParentID));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+						join tt in
+							from t in Child
+							group t by t.ParentID into gr
+							select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ChildID) } into tt
+							where tt.Sum != 0
+							select tt
+						on p.ParentID equals tt.ParentID into gr
+						from tt in gr.DefaultIfEmpty()
+					select p.ParentID,
+					from p in db.Parent
+						join tt in
+							from t in db.Child
+							group t by t.ParentID into gr
+							select new { ParentID = gr.Key, Sum = gr.Sum(i => i.ChildID) } into tt
+							where tt.Sum != 0
+							select tt
+						on p.ParentID equals tt.ParentID into gr
+						from tt in gr.DefaultIfEmpty()
+					select p.ParentID);
 		}
 	}
 

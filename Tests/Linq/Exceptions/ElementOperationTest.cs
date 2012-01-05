@@ -9,15 +9,17 @@ namespace Tests.Exceptions
 	public class ElementOperationTest : TestBase
 	{
 		[Test, ExpectedException(typeof(InvalidOperationException))]
-		public void First()
+		public void First([DataContexts] string context)
 		{
-			ForEachProvider(typeof(InvalidOperationException), db => db.Parent.First(p => p.ParentID == 100));
+			using (var db = GetDataContext(context))
+				db.Parent.First(p => p.ParentID == 100);
 		}
 
 		[Test, ExpectedException(typeof(InvalidOperationException))]
-		public void Single()
+		public void Single([DataContexts] string context)
 		{
-			ForEachProvider(typeof(InvalidOperationException), db => db.Parent.Single());
+			using (var db = GetDataContext(context))
+				db.Parent.Single();
 		}
 	}
 }

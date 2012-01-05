@@ -2,7 +2,7 @@
 
 using Nemerle;
 
-namespace LinqToDB
+namespace LinqToDB_Temp.Metadata
 {
 	public class TypeExtension
 	{

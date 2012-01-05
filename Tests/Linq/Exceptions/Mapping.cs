@@ -13,13 +13,13 @@ namespace Tests.Exceptions
 	public class Mapping : TestBase
 	{
 		[Test, ExpectedException(typeof(LinqException))]
-		public void MapIgnore1()
+		public void MapIgnore1([DataContexts] string context)
 		{
-			ForEachProvider(typeof(LinqException), db =>
+			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.Name == "123" select p;
 				q.ToList();
-			});
+			}
 		}
 
 		[TableName("Person")]
@@ -30,13 +30,13 @@ namespace Tests.Exceptions
 		}
 
 		[Test, ExpectedException(typeof(LinqException))]
-		public void MapIgnore2()
+		public void MapIgnore2([DataContexts] string context)
 		{
-			ForEachProvider(typeof(LinqException), db =>
+			using (var db = GetDataContext(context))
 				db.GetTable<TestPerson1>()
 					.Where (_ => _.PersonID == 1)
 					.Select(_ => _.FirstName)
-					.FirstOrDefault());
+					.FirstOrDefault();
 		}
 	}
 }

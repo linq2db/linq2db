@@ -75,6 +75,8 @@ namespace Tests.Exceptions
 		{
 			using (var db = new MyDbManager())
 			{
+				db.BeginTransaction();
+
 				var n = 555;
 
 				db.Parent.Insert(() => new Parent

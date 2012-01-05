@@ -16,57 +16,59 @@ namespace Tests.Linq
 	public class Functions : TestBase
 	{
 		[Test]
-		public void Contains1()
+		public void Contains1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where new[] { 1, 2 }.Contains(p.ParentID) select p,
-				from p in db.Parent where new[] { 1, 2 }.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where new[] { 1, 2 }.Contains(p.ParentID) select p,
+					from p in db.Parent where new[] { 1, 2 }.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void Contains2()
+		public void Contains2([DataContexts] string context)
 		{
 			var arr = new[] { 1, 2 };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void Contains3()
+		public void Contains3([DataContexts] string context)
 		{
 			var n = 2;
 
-			var expected =
-				from p in Parent
-				where new[] { 1, n }.Contains(p.ParentID)
-				select p;
-
-			ForEachProvider(data => AreEqual(expected, CompiledQuery.Compile<ITestDataContext,IQueryable<Parent>>(db =>
-				from p in db.Parent
-				where new[] { 1, n }.Contains(p.ParentID)
-				select p)(data)));
+			using (var data = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					where new[] { 1, n }.Contains(p.ParentID)
+					select p,
+					CompiledQuery.Compile<ITestDataContext, IQueryable<Parent>>(db =>
+						from p in db.Parent
+						where new[] { 1, n }.Contains(p.ParentID)
+						select p)(data));
 		}
 
 		[Test]
-		public void Contains4()
+		public void Contains4([DataContexts] string context)
 		{
 			var arr = new[] { 1, 2 };
 
-			var expected =
-				from p in Parent
-				where arr.Contains(p.ParentID)
-				select p;
-
-			ForEachProvider(data => AreEqual(expected, CompiledQuery.Compile<ITestDataContext,IQueryable<Parent>>(db =>
-				from p in db.Parent
-				where arr.Contains(p.ParentID)
-				select p)(data)));
+			using (var data = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					where arr.Contains(p.ParentID)
+					select p,
+					CompiledQuery.Compile<ITestDataContext,IQueryable<Parent>>(db =>
+						from p in db.Parent
+						where arr.Contains(p.ParentID)
+						select p)(data));
 		}
 
 		[Test]
-		public void Contains5()
+		public void Contains5([DataContexts] string context)
 		{
 			var arr1 = new[] { 1, 2 };
 			var arr2 = new[] { 1, 2, 4 };
@@ -74,7 +76,7 @@ namespace Tests.Linq
 			var expected1 = from p in Parent where arr1.Contains(p.ParentID) select p;
 			var expected2 = from p in Parent where arr2.Contains(p.ParentID) select p;
 
-			ForEachProvider(data =>
+			using (var data = GetDataContext(context))
 			{
 				var cq = CompiledQuery.Compile<ITestDataContext,int[],IQueryable<Parent>>((db,a) =>
 					from p in db.Parent
@@ -83,31 +85,33 @@ namespace Tests.Linq
 
 				AreEqual(expected1, cq(data, arr1));
 				AreEqual(expected2, cq(data, arr2));
-			});
+			}
 		}
 
 		[Test]
-		public void Contains6()
+		public void Contains6([DataContexts] string context)
 		{
 			var arr = new List<int> { 1, 2 };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void Contains7()
+		public void Contains7([DataContexts] string context)
 		{
 			IEnumerable<int> arr = new[] { 1, 2 };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void ContainsKey1()
+		public void ContainsKey1([DataContexts] string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -115,13 +119,14 @@ namespace Tests.Linq
 				{ 2, 2 },
 			};
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Keys.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void ContainsKey2()
+		public void ContainsKey2([DataContexts] string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -129,13 +134,14 @@ namespace Tests.Linq
 				{ 2, 2 },
 			};
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.ContainsKey(p.ParentID) select p,
-				from p in db.Parent where arr.ContainsKey(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.ContainsKey(p.ParentID) select p,
+					from p in db.Parent where arr.ContainsKey(p.ParentID) select p);
 		}
 
 		[Test]
-		public void ContainsValue1()
+		public void ContainsValue1([DataContexts] string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -143,13 +149,14 @@ namespace Tests.Linq
 				{ 2, 2 },
 			};
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Values.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Values.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Values.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void ContainsValue2()
+		public void ContainsValue2([DataContexts] string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -157,118 +164,129 @@ namespace Tests.Linq
 				{ 2, 2 },
 			};
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.ContainsValue(p.ParentID) select p,
-				from p in db.Parent where arr.ContainsValue(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.ContainsValue(p.ParentID) select p,
+					from p in db.Parent where arr.ContainsValue(p.ParentID) select p);
 		}
 
 		[Test]
-		public void ContainsHashSet1()
+		public void ContainsHashSet1([DataContexts] string context)
 		{
 			var arr = new HashSet<int> { 1, 2 };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where arr.Contains(p.ParentID) select p,
-				from p in db.Parent where arr.Contains(p.ParentID) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
 		[Test]
-		public void EmptyContains1()
+		public void EmptyContains1([DataContexts] string context)
 		{
-			var expected =
-				from p in Parent
-				where new int[0].Contains(p.ParentID) || p.ParentID == 2
-				select p;
-
-			ForEachProvider(db => AreEqual(expected,
-				from p in db.Parent
-				where new int[0].Contains(p.ParentID) || p.ParentID == 2
-				select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					select p,
+					from p in db.Parent
+					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					select p);
 		}
 
 		[Test]
-		public void ContainsString11()
+		public void ContainsString11([DataContexts] string context)
 		{
 			var arr = new List<string> { "John" };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where arr.Contains(p.FirstName) select p,
-				from p in db.Person where arr.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where arr.Contains(p.FirstName) select p,
+					from p in db.Person where arr.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void ContainsString12()
+		public void ContainsString12([DataContexts] string context)
 		{
 			var nm = "John";
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where new List<string> { nm }.Contains(p.FirstName) select p,
-				from p in db.Person where new List<string> { nm }.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where new List<string> { nm }.Contains(p.FirstName) select p,
+					from p in db.Person where new List<string> { nm }.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void ContainsString13()
+		public void ContainsString13([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person where new List<string> { "John" }.Contains(p.FirstName) select p,
-				from p in db.Person where new List<string> { "John" }.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where new List<string> { "John" }.Contains(p.FirstName) select p,
+					from p in db.Person where new List<string> { "John" }.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void ContainsString21()
+		public void ContainsString21([DataContexts] string context)
 		{
 			var arr = new[] { "John" };
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where arr.Contains(p.FirstName) select p,
-				from p in db.Person where arr.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where arr.Contains(p.FirstName) select p,
+					from p in db.Person where arr.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void ContainsString22()
+		public void ContainsString22([DataContexts] string context)
 		{
 			var nm = "John";
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where new[] { nm }.Contains(p.FirstName) select p,
-				from p in db.Person where new[] { nm }.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where new[] { nm }.Contains(p.FirstName) select p,
+					from p in db.Person where new[] { nm }.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void ContainsString23()
+		public void ContainsString23([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Person where new[] { "John" }.Contains(p.FirstName) select p,
-				from p in db.Person where new[] { "John" }.Contains(p.FirstName) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where new[] { "John" }.Contains(p.FirstName) select p,
+					from p in db.Person where new[] { "John" }.Contains(p.FirstName) select p);
 		}
 
 		[Test]
-		public void Equals1()
+		public void Equals1([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where p.ParentID.Equals(2) select p,
-				from p in db.Parent where p.ParentID.Equals(2) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where p.ParentID.Equals(2) select p,
+					from p in db.Parent where p.ParentID.Equals(2) select p);
 		}
 
 		[Test]
-		public void Equals2()
+		public void Equals2([DataContexts] string context)
 		{
-			var child    = (from ch in Child where ch.ParentID == 2 select ch).First();
-			var expected = from ch in Child where !ch.Equals(child) select ch;
+			var child = (from ch in Child where ch.ParentID == 2 select ch).First();
 
-			ForEachProvider(db => AreEqual(expected, from ch in db.Child where !ch.Equals(child) select ch));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in    Child where !ch.Equals(child) select ch,
+					from ch in db.Child where !ch.Equals(child) select ch);
 		}
 
 		[Test]
-		public void Equals3()
+		public void Equals3([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in    Parent where p.Value1.Equals(null) select p,
-				from p in db.Parent where p.Value1.Equals(null) select p));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where p.Value1.Equals(null) select p,
+					from p in db.Parent where p.Value1.Equals(null) select p);
 		}
 
 		[Test]
-		public void Equals4()
+		public void Equals4([DataContexts] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -277,44 +295,49 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewGuid1()
+		public void NewGuid1([DataContexts(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access }, db => AreEqual(
-				from p in    Types where p.GuidValue != Sql.NewGuid() select p.GuidValue,
-				from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Types where p.GuidValue != Sql.NewGuid() select p.GuidValue,
+					from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue);
 		}
 
 		[Test]
-		public void NewGuid2()
+		public void NewGuid2([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access }, db =>
-				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First()));
+			using (var db = GetDataContext(context))
+				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First());
 		}
 
 		[Test]
-		public void CustomFunc()
+		public void CustomFunc([DataContexts] string context)
 		{
 			Expressions.MapMember<Person>(p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));
 
-			ForEachProvider(db => AreEqual(
-				from p in    Person where p.FullName() == "Pupkin, John" select p.FullName(),
-				from p in db.Person where p.FullName() == "Pupkin, John" select p.FullName()));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person where p.FullName() == "Pupkin, John" select p.FullName(),
+					from p in db.Person where p.FullName() == "Pupkin, John" select p.FullName());
 		}
 
 		[Test]
-		public void Count1()
+		public void Count1([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(
-				   Child.Count(c => c.ParentID == 1),
-				db.Child.Count(c => c.ParentID == 1)));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Child.Count(c => c.ParentID == 1),
+					db.Child.Count(c => c.ParentID == 1));
 		}
 
 		[Test]
-		public void Sum1()
+		public void Sum1([DataContexts] string context)
 		{
-			ForEachProvider(db => Assert.AreEqual(
-				   Child.Sum(c => c.ParentID),
-				db.Child.Sum(c => c.ParentID)));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(
+					   Child.Sum(c => c.ParentID),
+					db.Child.Sum(c => c.ParentID));
 		}
 
 		[MethodExpression("ChildCountExpression")]
@@ -331,11 +354,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2()
+		public void Sum2([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   Parent.Select(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID)),
-				db.Parent.Select(p => ChildCount(p))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Select(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID)),
+					db.Parent.Select(p => ChildCount(p)));
 		}
 	}
 

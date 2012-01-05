@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -184,14 +185,53 @@ namespace Tests
 
 				yield return new TestDbManager(info.Name);
 
-				/*
+				//*
 				var ip = GetIP(info.Name);
 				var dx = new TestServiceModelDataContext(ip);
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				yield return dx;
-				*/
+				//*/
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+		public class DataContextsAttribute : ValuesAttribute
+		{
+			public DataContextsAttribute(params string[] except)
+			{
+				Except = except;
+			}
+
+			const bool IncludeLinqService = true;
+
+			public string[] Except             { get; set; }
+			public bool     ExcludeLinqService { get; set; }
+
+			public override IEnumerable GetData(ParameterInfo parameter)
+			{
+				var providers = new List<string>();
+
+				foreach (var info in Providers)
+				{
+					if (Except != null && Except.Contains(info.Name))
+						continue;
+
+					if (!info.Loaded)
+						continue;
+
+					providers.Add(info.Name);
+
+					if (IncludeLinqService && !ExcludeLinqService)
+					{
+						providers.Add(info.Name + ".LinqService");
+					}
+				}
+
+				data = providers.ToArray();
+
+				return base.GetData(parameter);
 			}
 		}
 
@@ -251,27 +291,26 @@ namespace Tests
 				throw new ApplicationException("Delegate function has not been executed.");
 		}
 
+		[Obsolete]
 		protected void ForEachProvider(string[] exceptList, Action<ITestDataContext> func)
 		{
 			ForEachProvider(null, exceptList, func);
 		}
 
+		[Obsolete]
 		protected void ForEachProvider(Action<ITestDataContext> func)
 		{
 			ForEachProvider(Array<string>.Empty, func);
 		}
 
-		protected void ForEachProvider(Type expectedException, Action<ITestDataContext> func)
-		{
-			ForEachProvider(expectedException, Array<string>.Empty, func);
-		}
-
+		[Obsolete]
 		protected void Not0ForEachProvider(Func<ITestDataContext, int> func)
 		{
 			ForEachProvider(db => Assert.Less(0, func(db)));
 		}
 
-		protected void TestPerson(int id, string firstName, Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestPerson(int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			ForEachProvider(db =>
 			{
@@ -282,12 +321,14 @@ namespace Tests
 			});
 		}
 
-		protected void TestJohn(Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestJohn(Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			TestPerson(1, "John", func);
 		}
 
-		protected void TestOnePerson(string[] exceptList, int id, string firstName, Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestOnePerson(string[] exceptList, int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			ForEachProvider(exceptList, db =>
 			{
@@ -302,17 +343,20 @@ namespace Tests
 			});
 		}
 
-		protected void TestOnePerson(int id, string firstName, Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestOnePerson(int id, string firstName, Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			TestOnePerson(Array<string>.Empty, id, firstName, func);
 		}
 
-		protected void TestOneJohn(string[] exceptList, Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestOneJohn(string[] exceptList, Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			TestOnePerson(exceptList, 1, "John", func);
 		}
 
-		protected void TestOneJohn(Func<ITestDataContext,IQueryable<Person>> func)
+		[Obsolete]
+		protected void TestOneJohn(Func<ITestDataContext, IQueryable<Person>> func)
 		{
 			TestOnePerson(Array<string>.Empty, 1, "John", func);
 		}

@@ -14,41 +14,42 @@ namespace Tests.Linq
 	public class VisualBasicTest : TestBase
 	{
 		[Test]
-		public void CompareString()
+		public void CompareString([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in db.Person where p.FirstName == "John" select p,
-				CompilerServices.CompareString(db)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in db.Person where p.FirstName == "John" select p,
+					CompilerServices.CompareString(db));
 		}
 
 		[Test]
-		public void CompareString1()
+		public void CompareString1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var str = CompilerServices.CompareString(db).ToString();
 				Assert.That(str.IndexOf("CASE"), Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
-		public void ParameterName()
+		public void ParameterName([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				from p in Parent where p.ParentID == 1 select p,
-				VisualBasicCommon.ParamenterName(db)));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent where p.ParentID == 1 select p,
+					VisualBasicCommon.ParamenterName(db));
 		}
 
 		[Test]
-		public void SearchCondition1()
+		public void SearchCondition1([DataContexts(ProviderName.Access)] string context)
 		{
-			ForEachProvider(
-				new[] { ProviderName.Access },
-				db => AreEqual(
+			using (var db = GetDataContext(context))
+				AreEqual(
 					from t in Types
 					where !t.BoolValue && (t.SmallIntValue == 5 || t.SmallIntValue == 7 || (t.SmallIntValue | 2) == 10)
 					select t,
-					VisualBasicCommon.SearchCondition1(db)));
+					VisualBasicCommon.SearchCondition1(db));
 		}
 
 		[Test]

@@ -8,19 +8,18 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class Aggregtion : TestBase
 	{
-		[Test, ExpectedException(typeof(InvalidOperationException))]
-		public void NonNullableMax1()
+		[Test]
+		[ExpectedException(typeof(InvalidOperationException))]
+		public void NonNullableMax1([DataContexts] string context)
 		{
-			ForEachProvider(typeof(InvalidOperationException), db =>
-			{
-				var value = db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID);
-			});
+			using (var db = GetDataContext(context))
+				db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID);
 		}
 
 		[Test]
-		public void NonNullableMax2()
+		public void NonNullableMax2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.Parent
@@ -30,16 +29,15 @@ namespace Tests.Exceptions
 					};
 
 				Assert.Catch<InvalidOperationException>(() => q.ToList());
-			});
+			}
 		}
 
-		[Test, ExpectedException(typeof(InvalidOperationException))]
-		public void NonNullableAverage()
+		[Test]
+		[ExpectedException(typeof(InvalidOperationException))]
+		public void NonNullableAverage([DataContexts] string context)
 		{
-			ForEachProvider(typeof(InvalidOperationException), db =>
-			{
-				var value = db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID);
-			});
+			using (var db = GetDataContext(context))
+				db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID);
 		}
 	}
 }

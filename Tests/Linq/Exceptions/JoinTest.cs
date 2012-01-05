@@ -13,9 +13,9 @@ namespace Tests.Exceptions
 	public class JoinTest : TestBase
 	{
 		[Test, ExpectedException(typeof(LinqException))]
-		public void InnerJoin()
+		public void InnerJoin([DataContexts] string context)
 		{
-			ForEachProvider(typeof(NotSupportedException), db =>
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p1 in db.Person
@@ -23,7 +23,7 @@ namespace Tests.Exceptions
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
 				q.ToList();
-			});
+			}
 		}
 	}
 }

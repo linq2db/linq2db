@@ -52,7 +52,7 @@ namespace LinqToDB_Temp
 
 		public ToDataType(this type : Type) : DataType
 		{
-			match (type.ToUnderlying().ToCodeWithCheck())
+			match (type.ToUnderlying().ToCode(true))
 			{
 				| String         => DataType.NVarChar
 				| Char           => DataType.NChar
