@@ -15,83 +15,85 @@ namespace Tests.Linq
 	public class CompileTest : TestBase
 	{
 		[Test]
-		public void CompiledTest1()
+		public void CompiledTest1([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, string n1, int n2) =>
 				n1 + n2);
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual("11", query(db, "1", 1));
 				Assert.AreEqual("22", query(db, "2", 2));
-			});
+			}
 		}
 
 		[Test]
-		public void CompiledTest2()
+		public void CompiledTest2([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).Take(n));
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(1, query(db, 1).ToList().Count());
 				Assert.AreEqual(2, query(db, 2).ToList().Count());
-			});
+			}
 		}
 
 		[Test]
-		public void CompiledTest3()
+		public void CompiledTest3([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Child>().Where(c => c.ParentID == n).Take(n));
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(1, query(db, 1).ToList().Count());
 				Assert.AreEqual(2, query(db, 2).ToList().Count());
-			});
+			}
 		}
 
 		[Test]
-		public void CompiledTest4()
+		public void CompiledTest4([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int[] n) =>
 				db.GetTable<Child>().Where(c => n.Contains(c.ParentID)));
 
-			ForEachProvider(db =>
-				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count()));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count());
 		}
 
 		[Test]
-		public void CompiledTest5()
+		public void CompiledTest5([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, object[] ps) => 
 				db.Parent.Where(p => p.ParentID == (int)ps[0] && p.Value1 == (int?)ps[1]));
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(1, query(db, new object[] { 1, 1    }).ToList().Count());
 				Assert.AreEqual(1, query(db, new object[] { 2, null }).ToList().Count());
-			});
+			}
 		}
 
 		[Test]
-		public void CompiledTable1()
+		public void CompiledTable1([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db) =>
 				db.Child);
 
-			ForEachProvider(db => query(db).ToList().Count());
+			using (var db = GetDataContext(context))
+				query(db).ToList().Count();
 		}
 
 		[Test]
-		public void CompiledTable2()
+		public void CompiledTable2([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db) =>
 				db.GetTable<Child>());
 
-			ForEachProvider(db => query(db).ToList().Count());
+			using (var db = GetDataContext(context))
+				query(db).ToList().Count();
 		}
 
 		[Test]
@@ -162,7 +164,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParamTest1()
+		public void ParamTest1([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Child>>((db, id) =>
 				from c in db.Child
@@ -173,20 +175,21 @@ namespace Tests.Linq
 					ChildID  = c.ChildID
 				});
 
-			ForEachProvider(db => Assert.AreEqual(2, query(db, 2).ToList().Count()));
+			using (var db = GetDataContext(context))
+				Assert.AreEqual(2, query(db, 2).ToList().Count());
 		}
 
 		[Test]
-		public void ElementTest1()
+		public void ElementTest1([DataContexts] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).First());
 
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				Assert.AreEqual(1, query(db, 1).ParentID);
 				Assert.AreEqual(2, query(db, 2).ParentID);
-			});
+			}
 		}
 	}
 }

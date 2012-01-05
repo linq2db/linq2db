@@ -19,10 +19,12 @@ namespace Tests.Update
 	public class DmlTest : TestBase
 	{
 		[Test]
-		public void Delete1()
+		public void Delete1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
 
 				db.Delete(parent);
@@ -31,14 +33,16 @@ namespace Tests.Update
 				Assert.AreEqual(1, db.Parent.Count (p => p.ParentID == parent.ParentID));
 				Assert.AreEqual(1, db.Parent.Delete(p => p.ParentID == parent.ParentID));
 				Assert.AreEqual(0, db.Parent.Count (p => p.ParentID == parent.ParentID));
-			});
+			}
 		}
 
 		[Test]
-		public void Delete2()
+		public void Delete2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
 
 				db.Delete(parent);
@@ -47,14 +51,16 @@ namespace Tests.Update
 				Assert.AreEqual(1, db.Parent.Count(p => p.ParentID == parent.ParentID));
 				Assert.AreEqual(1, db.Parent.Where(p => p.ParentID == parent.ParentID).Delete());
 				Assert.AreEqual(0, db.Parent.Count(p => p.ParentID == parent.ParentID));
-			});
+			}
 		}
 
 		[Test]
-		public void Delete3()
+		public void Delete3([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				db.Child.Delete(c => new[] { 1001, 1002 }.Contains(c.ChildID));
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1001 });
@@ -63,14 +69,16 @@ namespace Tests.Update
 				Assert.AreEqual(3, db.Child.Count(c => c.ParentID == 1));
 				Assert.AreEqual(2, db.Child.Where(c => c.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete());
 				Assert.AreEqual(1, db.Child.Count(c => c.ParentID == 1));
-			});
+			};
 		}
 
 		[Test]
-		public void Delete4()
+		public void Delete4([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				db.GrandChild1.Delete(gc => new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value));
 
 				db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
@@ -79,14 +87,16 @@ namespace Tests.Update
 				Assert.AreEqual(3, db.GrandChild1.Count(gc => gc.ParentID == 1));
 				Assert.AreEqual(2, db.GrandChild1.Where(gc => gc.Parent.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID.Value)).Delete());
 				Assert.AreEqual(1, db.GrandChild1.Count(gc => gc.ParentID == 1));
-			});
+			}
 		}
 
 		[Test]
-		public void Delete5()
+		public void Delete5([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var values = new[] { 1001, 1002 };
 
 				db.Parent.Delete(_ => _.ParentID > 1000);
@@ -97,14 +107,16 @@ namespace Tests.Update
 				Assert.AreEqual(2, db.Parent.Count(_ => _.ParentID > 1000));
 				Assert.AreEqual(2, db.Parent.Delete(_ => values.Contains(_.ParentID)));
 				Assert.AreEqual(0, db.Parent.Count(_ => _.ParentID > 1000));
-			});
+			}
 		}
 
 		[Test]
-		public void Update1()
+		public void Update1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -120,14 +132,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update2()
+		public void Update2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -143,14 +157,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update3()
+		public void Update3([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -166,14 +182,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update4()
+		public void Update4([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -193,14 +211,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update5()
+		public void Update5([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -220,14 +240,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update6()
+		public void Update6([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -247,14 +269,16 @@ namespace Tests.Update
 				{
 					db.Parent4.Delete(p => p.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update7()
+		public void Update7([DataContexts(ProviderName.Informix)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.Informix }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -281,14 +305,16 @@ namespace Tests.Update
 				{
 					db.Parent4.Delete(p => p.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update8()
+		public void Update8([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -306,89 +332,99 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Update9()
+		public void Update9([DataContexts(
+			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
+			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			string context)
 		{
-			ForEachProvider(
-				new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access },
-				db =>
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
 				{
-					try
-					{
-						var id = 1001;
+					var id = 1001;
 
-						db.Child.Delete(c => c.ChildID > 1000);
-						db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
 
-						var q =
-							from c in db.Child
-							join p in db.Parent on c.ParentID equals p.ParentID
-							where c.ChildID == id && c.Parent.Value1 == 1
-							select new { c, p };
+					var q =
+						from c in db.Child
+						join p in db.Parent on c.ParentID equals p.ParentID
+						where c.ChildID == id && c.Parent.Value1 == 1
+						select new { c, p };
 
-						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-						Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
-						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
-					}
-					finally
-					{
-						db.Child.Delete(c => c.ChildID > 1000);
-					}
-				});
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
+					Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
 		}
 
 		[Test]
-		public void Update10()
+		public void Update10([DataContexts(
+			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
+			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			string context)
 		{
-			ForEachProvider(
-				new[] { ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access },
-				db =>
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
 				{
-					try
-					{
-						var id = 1001;
+					var id = 1001;
 
-						db.Child.Delete(c => c.ChildID > 1000);
-						db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
+					db.Child.Delete(c => c.ChildID > 1000);
+					db.Child.Insert(() => new Child { ParentID = 1, ChildID = id});
 
-						var q =
-							from p in db.Parent
-							join c in db.Child on p.ParentID equals c.ParentID
-							where c.ChildID == id && c.Parent.Value1 == 1
-							select new { c, p };
+					var q =
+						from p in db.Parent
+						join c in db.Child on p.ParentID equals c.ParentID
+						where c.ChildID == id && c.Parent.Value1 == 1
+						select new { c, p };
 
-						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
-						Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
-						Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
-					}
-					finally
-					{
-						db.Child.Delete(c => c.ChildID > 1000);
-					}
-				});
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
+					Assert.AreEqual(1, q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }));
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id + 1));
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
 		}
 
 		//[Test]
-		public void Update11()
+		public void Update11([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var q = db.GetTable<LinqDataTypes2>().Union(db.GetTable<LinqDataTypes2>());
 
 				//db.GetTable<LinqDataTypes2>().Update(_ => q.Contains(_), _ => new LinqDataTypes2 { GuidValue = _.GuidValue });
 
 				q.Update(_ => new LinqDataTypes2 { GuidValue = _.GuidValue });
-			});
+			}
 		}
 
 		[Test]
-		public void DistinctInsert()
+		public void DistinctInsert([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
-			ForEachProvider(new[] { ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access }, db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Types.Delete(c => c.ID > 1000);
@@ -410,14 +446,16 @@ namespace Tests.Update
 				{
 					db.Types.Delete(c => c.ID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert1()
+		public void Insert1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -438,14 +476,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert2()
+		public void Insert2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -464,14 +504,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert3()
+		public void Insert3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -492,14 +534,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert4()
+		public void Insert4([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -519,14 +563,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert5()
+		public void Insert5([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -546,14 +592,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert6()
+		public void Insert6([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Parent.Delete(p => p.Value1 == 11);
@@ -571,14 +619,16 @@ namespace Tests.Update
 				{
 					db.Parent.Delete(p => p.Value1 == 11);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert7()
+		public void Insert7([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -597,14 +647,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert8()
+		public void Insert8([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -623,14 +675,16 @@ namespace Tests.Update
 				{
 					db.Child.Delete(c => c.ChildID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void Insert9()
+		public void Insert9([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -655,48 +709,51 @@ namespace Tests.Update
 					db.Child. Delete(c => c.ParentID > 1000);
 					db.Parent.Delete(p => p.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertUnion1()
+		public void InsertUnion1([DataContexts] string context)
 		{
 			Child.Count();
 
-			ForEachProvider(
-				db =>
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
 				{
-					try
+					db.Parent.Delete(p => p.ParentID > 1000);
+
+					var q =
+						db.Child.     Select(c => new Parent { ParentID = c.ParentID,      Value1 = (int) Math.Floor(c.ChildID / 10.0) }).Union(
+						db.GrandChild.Select(c => new Parent { ParentID = c.ParentID ?? 0, Value1 = (int?)Math.Floor((c.GrandChildID ?? 0) / 100.0) }));
+
+					q.Insert(db.Parent, p => new Parent
 					{
-						db.Parent.Delete(p => p.ParentID > 1000);
+						ParentID = p.ParentID + 1000,
+						Value1   = p.Value1
+					});
 
-						var q =
-							db.Child.     Select(c => new Parent { ParentID = c.ParentID,      Value1 = (int) Math.Floor(c.ChildID / 10.0) }).Union(
-							db.GrandChild.Select(c => new Parent { ParentID = c.ParentID ?? 0, Value1 = (int?)Math.Floor((c.GrandChildID ?? 0) / 100.0) }));
-
-						q.Insert(db.Parent, p => new Parent
-						{
-							ParentID = p.ParentID + 1000,
-							Value1   = p.Value1
-						});
-
-						Assert.AreEqual(
-							Child.     Select(c => new { ParentID = c.ParentID      }).Union(
-							GrandChild.Select(c => new { ParentID = c.ParentID ?? 0 })).Count(),
-							db.Parent.Count(c => c.ParentID > 1000));
-					}
-					finally
-					{
-						db.Parent.Delete(p => p.ParentID > 1000);
-					}
-				});
+					Assert.AreEqual(
+						Child.     Select(c => new { ParentID = c.ParentID      }).Union(
+						GrandChild.Select(c => new { ParentID = c.ParentID ?? 0 })).Count(),
+						db.Parent.Count(c => c.ParentID > 1000));
+				}
+				finally
+				{
+					db.Parent.Delete(p => p.ParentID > 1000);
+				}
+			}
 		}
 
 		[Test]
-		public void InsertEnum1()
+		public void InsertEnum1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -723,14 +780,16 @@ namespace Tests.Update
 				{
 					db.Parent4.Delete(_ => _.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertEnum2()
+		public void InsertEnum2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -749,14 +808,16 @@ namespace Tests.Update
 				{
 					db.Parent4.Delete(_ => _.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertEnum3()
+		public void InsertEnum3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					var id = 1001;
@@ -775,14 +836,16 @@ namespace Tests.Update
 				{
 					db.Parent4.Delete(_ => _.ParentID > 1000);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertNull()
+		public void InsertNull([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Parent.Delete(p => p.ParentID == 1001);
@@ -799,14 +862,16 @@ namespace Tests.Update
 				{
 					db.Parent.Delete(p => p.Value1 == 1001);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertWithIdentity1()
+		public void InsertWithIdentity1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -831,14 +896,16 @@ namespace Tests.Update
 				{
 					db.Person.Delete(p => p.ID > 2);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertWithIdentity2()
+		public void InsertWithIdentity2([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -861,14 +928,16 @@ namespace Tests.Update
 				{
 					db.Person.Delete(p => p.ID > 2);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertWithIdentity3()
+		public void InsertWithIdentity3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -891,14 +960,16 @@ namespace Tests.Update
 				{
 					db.Person.Delete(p => p.ID > 2);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertWithIdentity4()
+		public void InsertWithIdentity4([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					for (var i = 0; i < 2; i++)
@@ -925,14 +996,16 @@ namespace Tests.Update
 				{
 					db.Person.Delete(p => p.ID > 2);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertWithIdentity5()
+		public void InsertWithIdentity5([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				try
 				{
 					for (var i = 0; i < 2; i++)
@@ -960,14 +1033,16 @@ namespace Tests.Update
 				{
 					db.Person.Delete(p => p.ID > 2);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertOrUpdate1()
+		public void InsertOrUpdate1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var id = 0;
 
 				try
@@ -1000,14 +1075,16 @@ namespace Tests.Update
 					db.Patient.Delete(p => p.PersonID == id);
 					db.Person. Delete(p => p.ID       == id);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertOrReplace1()
+		public void InsertOrReplace1([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var id = 0;
 
 				try
@@ -1035,14 +1112,16 @@ namespace Tests.Update
 					db.Patient.Delete(p => p.PersonID == id);
 					db.Person. Delete(p => p.ID       == id);
 				}
-			});
+			}
 		}
 
 		[Test]
-		public void InsertOrUpdate3()
+		public void InsertOrUpdate3([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var id = 0;
 
 				try
@@ -1084,7 +1163,7 @@ namespace Tests.Update
 					db.Patient.Delete(p => p.PersonID == id);
 					db.Person. Delete(p => p.ID       == id);
 				}
-			});
+			}
 		}
 
 		static readonly Func<TestDbManager,int,string,int> _updateQuery =
@@ -1106,21 +1185,20 @@ namespace Tests.Update
 		[Test]
 		public void InsertBatch1()
 		{
-			ForEachProvider(new[] { ProviderName.PostgreSQL }, db =>
+			using (var db = GetDataContext(ProviderName.Oracle))
 			{
-				if (db is DbManager && ((DbManager)db).ConfigurationString == ProviderName.Oracle)
+				db.BeginTransaction();
+
+				db.Types2.Delete(_ => _.ID > 1000);
+
+				((DbManager)db).InsertBatch(1, new[]
 				{
-					db.Types2.Delete(_ => _.ID > 1000);
+					new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null },
+					new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 },
+				});
 
-					((DbManager)db).InsertBatch(1, new[]
-					{
-						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null },
-						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 },
-					});
-
-					db.Types2.Delete(_ => _.ID > 1000);
-				}
-			});
+				db.Types2.Delete(_ => _.ID > 1000);
+			}
 		}
 
 		[Test]
@@ -1148,9 +1226,9 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void NullableFieldTest()
+		public void NullableFieldTest([DataContexts] string context)
 		{
-			ForEachProvider(db =>
+			using (var db = GetDataContext(context))
 			{
 				db.Parent.Delete(p => p.ParentID == 1100);
 
@@ -1159,7 +1237,7 @@ namespace Tests.Update
 				var parent = db.Parent.Single(p => p.ParentID == 1100);
 
 				Assert.IsNull(parent.Value1);
-			});
+			}
 		}
 
 		public class FullName
@@ -1187,67 +1265,79 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void Insert11()
+		public void Insert11([DataContexts] string context)
 		{
 			var p = new TestPerson1 { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = "M" };
 
-			ForEachProvider(db => db.Insert(p));
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+				db.Insert(p);
+			}
 		}
 
 		[Test]
-		public void Insert12()
+		public void Insert12([DataContexts] string context)
 		{
-			ForEachProvider(db => db
-				.Into(db.GetTable<TestPerson1>())
-					.Value(_ => _.Name.FirstName, "FirstName")
-					.Value(_ => _.Name.LastName, () => "LastName")
-					.Value(_ => _.Gender,         "F")
-				.Insert());
-
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+				db
+					.Into(db.GetTable<TestPerson1>())
+						.Value(_ => _.Name.FirstName, "FirstName")
+						.Value(_ => _.Name.LastName, () => "LastName")
+						.Value(_ => _.Gender,         "F")
+					.Insert();
+			}
 		}
 
 		[Test]
-		public void Insert13()
+		public void Insert13([DataContexts] string context)
 		{
-			ForEachProvider(db => db.GetTable<TestPerson1>()
-				.Insert(() => new TestPerson1
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+				db
+					.GetTable<TestPerson1>()
+					.Insert(() => new TestPerson1
+					{
+						Name = new FullName
+						{
+							FirstName = "FirstName",
+							LastName = "LastName"
+						},
+						Gender = "M",
+					});
+			}
+		}
+
+		[Test]
+		public void Insert14([DataContexts(ProviderName.SqlCe, ProviderName.Access, ProviderName.MsSql2005, ProviderName.Sybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
 				{
-					Name = new FullName
-					{
-						FirstName = "FirstName",
-						LastName  = "LastName"
-					},
-					Gender = "M",
-				}));
-		}
+					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
 
-		[Test]
-		public void Insert14()
-		{
-			ForEachProvider(
-				new [] { ProviderName.SqlCe, ProviderName.Access, ProviderName.MsSql2005, ProviderName.Sybase },
-				db =>
+					Assert.AreEqual(1,
+						db.Person
+						.Insert(() => new Person
+						{
+							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).FirstOrDefault(),
+							LastName  = "Shepard",
+							Gender = Gender.Male
+						}));
+
+					Assert.AreEqual(1, db.Person.Count(p => p.FirstName.StartsWith("Insert14")));
+				}
+				finally
 				{
-					try
-					{
-						db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
-
-						Assert.AreEqual(1,
-							db.Person
-							.Insert(() => new Person
-							{
-								FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).FirstOrDefault(),
-								LastName  = "Shepard",
-								Gender = Gender.Male
-							}));
-
-						Assert.AreEqual(1, db.Person.Count(p => p.FirstName.StartsWith("Insert14")));
-					}
-					finally
-					{
-						db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
-					}
-				});
+					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+				}
+			}
 		}
 	}
 }

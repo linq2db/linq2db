@@ -17,33 +17,36 @@ namespace Tests.Linq
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
-		public void MapMember1()
+		public void MapMember1([DataContexts] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
-			ForEachProvider(db => AreEqual(Parent.Select(p => Count1(p)), db.Parent.Select(p => Count1(p))));
+			using (var db = GetDataContext(context))
+				AreEqual(Parent.Select(p => Count1(p)), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
-		public void MapMember2()
+		public void MapMember2([DataContexts] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
-			ForEachProvider(db => AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1))));
+			using (var db = GetDataContext(context))
+				AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
 		}
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
-		public void MapMember3()
+		public void MapMember3([DataContexts(ProviderName.SqlCe)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
 			var n = 2;
 
-			ForEachProvider(new[] { ProviderName.SqlCe }, db => AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n))));
+			using (var db = GetDataContext(context))
+				AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
 		[MethodExpression("Count4Expression")]
@@ -60,13 +63,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression4()
+		public void MethodExpression4([DataContexts] string context)
 		{
 			var n = 3;
 
-			ForEachProvider(db => AreEqual(
-				   Parent.Select(p => Count4(p, n, 4)),
-				db.Parent.Select(p => Count4(p, n, 4))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Select(p => Count4(p, n, 4)),
+					db.Parent.Select(p => Count4(p, n, 4)));
 		}
 
 		[MethodExpression("Count5Expression")]
@@ -83,13 +87,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5()
+		public void MethodExpression5([DataContexts(ProviderName.SqlCe, ProviderName.Firebird)] string context)
 		{
 			var n = 2;
 
-			ForEachProvider(new[] { ProviderName.SqlCe, ProviderName.Firebird }, db => AreEqual(
-				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
-				db.Parent.Select(p => Count5(db, p, n))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
+					db.Parent.Select(p => Count5(db, p, n)));
 		}
 
 		[MethodExpression("Count6Expression")]
@@ -106,11 +111,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression6()
+		public void MethodExpression6([DataContexts] string context)
 		{
-			ForEachProvider(db => AreEqual(
-				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count()),
-				db.Parent.Select(p => Count6(db.Child, p))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count()),
+					db.Parent.Select(p => Count6(db.Child, p)));
 		}
 
 		[MethodExpression("Count7Expression")]
@@ -127,13 +133,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7()
+		public void MethodExpression7([DataContexts(ProviderName.SqlCe, ProviderName.Firebird)] string context)
 		{
 			var n = 2;
 
-			ForEachProvider(new[] { ProviderName.SqlCe, ProviderName.Firebird }, db => AreEqual(
-				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
-				db.Parent.Select(p => Count7(db.Child, p, n))));
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
+					db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
 	}
 }

@@ -361,7 +361,37 @@ namespace Tests
 			TestOnePerson(Array<string>.Empty, 1, "John", func);
 		}
 
-		private   List<LinqDataTypes> _types;
+		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
+		{
+			var list = persons.ToList();
+
+			Assert.AreEqual(1, list.Count);
+
+			var person = list[0];
+
+			Assert.AreEqual(id, person.ID);
+			Assert.AreEqual(firstName, person.FirstName);
+		}
+
+		protected void TestOneJohn(IQueryable<Person> persons)
+		{
+			TestOnePerson(1, "John", persons);
+		}
+
+		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
+		{
+			var person = Person.ToList().Where(p => p.ID == id).First();
+
+			Assert.AreEqual(id, person.ID);
+			Assert.AreEqual(firstName, person.FirstName);
+		}
+
+		protected void TestJohn(IQueryable<Person> persons)
+		{
+			TestPerson(1, "John", persons);
+		}
+
+		private List<LinqDataTypes> _types;
 		protected IEnumerable<LinqDataTypes>  Types
 		{
 			get
