@@ -12,8 +12,6 @@ namespace Tests.Common
 		[Test]
 		public void BaseTypes()
 		{
-			//LinqToDB_Temp.SqlBuilder.SqlDataType
-
 			Assert.AreEqual(default(int),            DefaultValue<int>.           Value);
 			Assert.AreEqual(default(uint),           DefaultValue<uint>.          Value);
 			Assert.AreEqual(default(byte),           DefaultValue<byte>.          Value);

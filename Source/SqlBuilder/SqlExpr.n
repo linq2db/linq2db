@@ -11,7 +11,7 @@ namespace LinqToDB_Temp.SqlBuilder
 	using MacroInternal;
 	using Precedence;
 
-	[Record/*, StructuralEquality*/]
+	[Record, StructuralEquality]
 	public variant SqlExpr
 	{
 		[ReplaceCtorParameter(precedence, Unknown)]
@@ -121,13 +121,13 @@ namespace LinqToDB_Temp.SqlBuilder
 		public static @: (v : System.Double ) : SqlExpr { SqlExpr.Value(SqlValue.Double (v)) }
 		public static @: (v : System.Decimal) : SqlExpr { SqlExpr.Value(SqlValue.Decimal(v)) }
 
-		public static @==(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Equal         , e2) }
-		public static @!=(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotEqual      , e2) }
-		public static @> (e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Greater       , e2) }
-		public static @>=(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.GreaterOrEqual, e2) }
-		public static @!>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotGreater    , e2) }
-		public static @< (e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Less          , e2) }
-		public static @<=(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.LessOrEqual   , e2) }
-		public static @!<(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotLess       , e2) }
+		public static @<==>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Equal         , e2) }
+		public static @<!=>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotEqual      , e2) }
+		public static @<>> (e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Greater       , e2) }
+		public static @<>=>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.GreaterOrEqual, e2) }
+		public static @<!>>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotGreater    , e2) }
+		public static @<<> (e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.Less          , e2) }
+		public static @<<=>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.LessOrEqual   , e2) }
+		public static @<!<>(e1 : SqlExpr, e2 : SqlExpr) : SqlPredicate { SqlPredicate.Compare(e1, SqlOperator.NotLess       , e2) }
 	}
 }
