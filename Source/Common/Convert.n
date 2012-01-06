@@ -1,0 +1,47 @@
+﻿using System;
+using System.Linq.Expressions;
+
+using Nemerle;
+
+namespace LinqToDB_Temp
+{
+	public module Convert[TFrom,TTo]
+	{
+		this()
+		{
+		}
+
+		mutable _expression : Expression[Func[TFrom,TTo]];
+		public   Expression : Expression[Func[TFrom,TTo]]
+		{
+			get { _expression }
+			set
+			{
+				_expression = if (value == null) GetDefaultConverter() else value;
+				_lambda     = _expression.Compile();
+			}
+		}
+
+		mutable _lambda : Func[TFrom,TTo];
+		public   Lambda : Func[TFrom,TTo]
+		{
+			get { _lambda }
+			set
+			{
+				if (value == null)
+				{
+					Expression = null;
+				}
+				else
+				{
+					_lambda = value;
+				}
+			}
+		}
+
+		GetDefaultConverter() : Expression[Func[TFrom,TTo]]
+		{
+			null
+		}
+	}
+}

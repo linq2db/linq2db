@@ -4,13 +4,14 @@ using System.Text;
 
 using Nemerle;
 using Nemerle.Assertions;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
 	using MacroInternal;
 	using Precedence;
 
-	[Record]
+	[Record/*, StructuralEquality*/]
 	public variant SqlExpr
 	{
 		[ReplaceCtorParameter(precedence, Unknown)]

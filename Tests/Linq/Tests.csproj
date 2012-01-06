@@ -168,7 +168,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\DefaultNullValueTest.cs" />
+    <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
     <Compile Include="SqlBuilder\OptimizerTest.cs" />

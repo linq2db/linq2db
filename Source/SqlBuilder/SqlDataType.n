@@ -4,12 +4,13 @@ using System.Text;
 
 using Nemerle;
 using Nemerle.Assertions;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
 	using Extensions;
 
-	[Record]
+	[Record, StructuralEquality]
 	public variant SqlDataType
 	{
 		| Char           { Length : int }
