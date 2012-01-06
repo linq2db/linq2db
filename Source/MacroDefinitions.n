@@ -30,8 +30,8 @@ using LinqToDB_Temp.SqlBuilder;
 	System.Xml.XmlReader
 )]
 
-//[assembly: ExtensionPattern(Expression, Lambda(delegateType, name, body, tailCall, parameters)
-//	= LambdaExpression where(Type=delegateType, Name=name, Body=body, TailCall=tailCall, Parameters=parameters))]
+[assembly: ExtensionPattern(Expression, Lambda(body,   parameters) = LambdaExpression     where(Body   = body,   Parameters = parameters))]
+[assembly: ExtensionPattern(Expression, Call  (method, args)       = MethodCallExpression where(Method = method, Arguments  = args))]
 
 [assembly: ExtensionPattern(SqlPredicate, Expr  (expr)   = SqlPredicate.Expression(expr,         _))]
 [assembly: ExtensionPattern(SqlPredicate, Value (value)  = SqlPredicate.Expression(Value(value), _))]

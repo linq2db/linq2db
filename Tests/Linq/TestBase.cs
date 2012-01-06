@@ -9,7 +9,6 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;

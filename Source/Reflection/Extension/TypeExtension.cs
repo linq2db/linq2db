@@ -43,6 +43,7 @@ namespace LinqToDB.Reflection.Extension
 		public TypeExtension()
 			: this(new MemberExtensionCollection(), new AttributeNameCollection())
 		{
+			//System.Linq.Expressions.Expression.Convert()
 		}
 
 		private TypeExtension(
