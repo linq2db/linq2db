@@ -6,7 +6,7 @@ using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
-	//[StructuralEquality]
+	[StructuralEquality]
 	public variant SqlValue
 	{
 		| Object  { Value : System.Object  }
