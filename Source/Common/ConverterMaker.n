@@ -18,9 +18,9 @@ namespace LinqToDB_Temp.Common
 			if (ctor != null) Expression.New(ctor, array[p]) else null
 		}
 
-		GetConverter(from : Type, to : Type, p : Expression) : Expression
+		_GetConverter(_from : Type, _to : Type, _p : Expression) : Expression
 		{
-			to.GetMethod()
+			null//to.GetMethod()
 		}
 
 		public GetConverter[TFrom,TTo](defaultValueGetter : Type -> object) : Expression[Func[TFrom,TTo]]

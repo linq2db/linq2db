@@ -30,7 +30,7 @@ namespace LinqToDB_Temp.Common
 			get { _expression }
 			set
 			{
-				_expression = if (value == null) GetDefaultConverter() else value;
+				_expression = value ?? GetDefaultConverter();
 				_lambda     = _expression.Compile();
 			}
 		}
