@@ -2,13 +2,26 @@
 using System.Linq.Expressions;
 
 using Nemerle;
+using Nemerle.Linq;
 
-namespace LinqToDB_Temp
+using LinqExpression = System.Linq.Expressions.Expression;
+
+namespace LinqToDB_Temp.Common
 {
+	public module ConvertTo[TTo]
+	{
+		public static From[TFrom](o : TFrom) : TTo
+		{
+			LinqToDB_Temp.Common.Convert.Lambda(o);
+		}
+	}
+
 	public module Convert[TFrom,TTo]
 	{
 		this()
 		{
+			_expression = GetDefaultConverter();
+			_lambda     = _expression.Compile();
 		}
 
 		mutable _expression : Expression[Func[TFrom,TTo]];
@@ -34,14 +47,25 @@ namespace LinqToDB_Temp
 				}
 				else
 				{
-					_lambda = value;
+					_lambda     = value;
+
+					def p = LinqExpression.Parameter(typeof(TFrom), "p");
+					
+					_expression = LinqExpression.Lambda.[Func[TFrom,TTo]](
+						LinqExpression.Invoke(System.Linq.Expressions.Expression.Constant(value), p),
+						p);
 				}
 			}
 		}
 
+		public From : Func[TFrom,TTo]
+		{
+			get { _lambda }
+		}
+
 		GetDefaultConverter() : Expression[Func[TFrom,TTo]]
 		{
-			null
+			ConverterMaker().GetConverter(DefaultValue.GetValue)
 		}
 	}
 }

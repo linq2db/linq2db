@@ -2,9 +2,11 @@
 
 using Nemerle;
 using Nemerle.Assertions;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
+	[StructuralEquality]
 	public variant SqlPredicate
 	{
 		| Not        { Predicate : SqlPredicate }

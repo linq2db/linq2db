@@ -6,7 +6,7 @@ using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
-	//[StructuralEquality]
+	[StructuralEquality]
 	public variant SqlValue
 	{
 		| Object  { Value : System.Object  }
@@ -61,6 +61,7 @@ namespace LinqToDB_Temp.SqlBuilder
 			}
 		}
 
+		/*
 		public static @:(v : System.Object ) : SqlValue { SqlValue.Object (v) }
 		public static @:(v : System.String ) : SqlValue { SqlValue.String (v) }
 		public static @:(v : System.Char   ) : SqlValue { SqlValue.Char   (v) }
@@ -76,5 +77,6 @@ namespace LinqToDB_Temp.SqlBuilder
 		public static @:(v : System.Single ) : SqlValue { SqlValue.Single (v) }
 		public static @:(v : System.Double ) : SqlValue { SqlValue.Double (v) }
 		public static @:(v : System.Decimal) : SqlValue { SqlValue.Decimal(v) }
+		*/
 	}
 }

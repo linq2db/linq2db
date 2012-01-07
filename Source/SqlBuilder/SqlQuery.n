@@ -1,9 +1,11 @@
 ﻿using System;
 
 using Nemerle;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
+	[StructuralEquality]
 	public variant SqlQuery
 	{
 		| Select

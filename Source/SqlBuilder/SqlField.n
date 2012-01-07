@@ -1,9 +1,11 @@
 ﻿using System;
+
 using Nemerle;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
-	[Record]
+	[Record, StructuralEquality]
 	public class SqlField
 	{
 		public Type   : SqlDataType { get; }

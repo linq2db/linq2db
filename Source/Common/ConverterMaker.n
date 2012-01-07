@@ -1,0 +1,70 @@
+﻿using System;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Threading;
+
+using Nemerle;
+using Nemerle.Linq;
+
+namespace LinqToDB_Temp.Common
+{
+	using Extensions;
+
+	class ConverterMaker
+	{
+		GetCtor(from : Type, to : Type, p : Expression) : Expression
+		{
+			def ctor = to.GetConstructor(array[from]);
+			if (ctor != null) Expression.New(ctor, array[p]) else null
+		}
+
+		GetConverter(from : Type, to : Type, p : Expression) : Expression
+		{
+			to.GetMethod()
+		}
+
+		public GetConverter[TFrom,TTo](defaultValueGetter : Type -> object) : Expression[Func[TFrom,TTo]]
+		{
+			def from = typeof(TFrom);
+			def to   = typeof(TTo);
+
+			if (from == to)
+				(ToExpression((o : TFrom) => o) : object) :> Expression[Func[TFrom,TTo]]
+			else if (to == typeof(object))
+				(ToExpression((o : TFrom) => o : object) : object) :> Expression[Func[TFrom,TTo]]
+			else
+			{
+				def uto   = to.  ToUnderlying();
+				def ufrom = from.ToUnderlying();
+				def p     = Expression.Parameter(from, "p");
+
+				def expr  =
+					if (uto == ufrom)
+						if (from.IsNullable())
+						{
+							def val  = Expression.Convert(p, uto);
+
+							Expression.Lambda.[Func[TFrom,TTo]](
+								Expression.Condition(
+									Expression.PropertyOrField(p, "HasValue"),
+									if (to == uto) val else Expression.Convert(val, to),
+									Expression.Constant(defaultValueGetter(to), to)),
+								p);
+						}
+						else
+							((ToExpression((o : TFrom) => o :> TTo)) : object) :> Expression[Func[TFrom,TTo]]
+					else
+					{
+						def ctor = GetCtor(from, to, p);
+
+						if (ctor != null)
+							Expression.Lambda.[Func[TFrom,TTo]](ctor, p);
+						else
+							ToExpression((o : TFrom) => System.Convert.ChangeType(o : object, typeof(TTo), CultureInfo.InvariantCulture) :> TTo)
+					}
+
+				(expr : object) :> Expression[Func[TFrom,TTo]]
+			}
+		}
+	}
+}
