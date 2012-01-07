@@ -20,23 +20,15 @@ namespace LinqToDB_Temp.Configuration
 			_properties.Add(_propDefaultDataProvider);
 		}
 		
-		mutable static _instance : LinqToDBSection;
 		public  static  Instance : LinqToDBSection
 		{
+		  mutable static _instance : LinqToDBSection;
+
 			get
 			{
 				when (_instance == null)
-				{
-					_instance =
-						try
-						{
-							ConfigurationManager.GetSection("linq2db") :> LinqToDBSection
-						}
-						catch
-						{
-							| _ is SecurityException => null
-						}
-				}
+					_instance = try ConfigurationManager.GetSection("linq2db") :> LinqToDBSection // если в try только одно выражение, то фигурные скобки можно опустить
+						          catch { | _ is SecurityException => null };
 
 				_instance
 			}

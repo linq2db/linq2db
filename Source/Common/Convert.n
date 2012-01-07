@@ -5,26 +5,28 @@ using Nemerle;
 
 namespace LinqToDB_Temp
 {
-	public module Convert[TFrom,TTo]
+	public module Convert[TFrom, TTo]
 	{
 		this()
 		{
 		}
 
-		mutable _expression : Expression[Func[TFrom,TTo]];
-		public   Expression : Expression[Func[TFrom,TTo]]
+		public   Expression : Expression[Func[TFrom, TTo]]
 		{
+		  mutable _expression : Expression[Func[TFrom, TTo]]; // если поле нужно только внутри свойства, то его можно там и объявлять.
+		  
 			get { _expression }
 			set
 			{
-				_expression = if (value == null) GetDefaultConverter() else value;
-				_lambda     = _expression.Compile();
+				_expression = value ?? GetDefaultConverter();
+				Lambda      = _expression.Compile();
 			}
 		}
 
-		mutable _lambda : Func[TFrom,TTo];
-		public   Lambda : Func[TFrom,TTo]
+		public   Lambda : Func[TFrom, TTo]
 		{
+		  mutable _lambda : Func[TFrom, TTo];
+		  
 			get { _lambda }
 			set
 			{

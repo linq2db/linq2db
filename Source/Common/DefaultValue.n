@@ -14,9 +14,9 @@ namespace LinqToDB_Temp
 
 	public module DefaultValue
 	{
-		_values : Dictionary[Type,object] = Dictionary.[Type,object]() <-
+		_values : Dictionary[Type, object] = Dictionary() <- // вместо Dictionary лучше использовать Hashtable[K, V]
 		[
-			typeof(int)            = default(int),
+			typeof(int)            = default(int) : object, // при инициализации списков и массиво достаточно подсказать тип элемента
 			typeof(uint)           = default(uint),
 			typeof(byte)           = default(byte),
 			typeof(char)           = default(char),
@@ -41,34 +41,29 @@ namespace LinqToDB_Temp
 			mutable value;
 
 			if (_values.TryGetValue(type, out value))
-			{
 				value
-			}
+			else if (type.IsClass)
+				null
 			else
 			{
-				if (type.IsClass)
-					null
-				else
-				{
-					value =
-						if (type.IsNullable())
-							null
-						else
-							match (ToExpression(() => GetValue.[int]()))
-							{
-								| Lambda(Call(mi, _),_) =>
-									Expression.Lambda.[Func[object]](
-										Expression.Convert(
-											Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
-											typeof(object)))
-										.Compile()()
-								| _ => throw InvalidOperationException()
-							}
+				value =
+					if (type.IsNullable())
+						null
+					else
+						match (ToExpression(() => GetValue.[int]()))
+						{
+							| Lambda(Call(mi, _),_) =>
+								Expression.Lambda.[Func[object]](
+									Expression.Convert(
+										Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
+										typeof(object)))
+									.Compile()()
+							| _ => throw InvalidOperationException()
+						}; // лучше ставить ; в конце стейтмента (void-выражения). В Н2 это будет обязтельно. Это проще читать.
 
-					_values[type] = value;
+				_values[type] = value;
 
-					value
-				}
+				value
 			}
 		}
 
