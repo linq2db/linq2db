@@ -68,5 +68,21 @@ namespace Tests.Common
 		{
 			Assert.AreEqual(10m, Convert<int,decimal>.From(10));
 		}
+
+		class TestData
+		{
+			public int Value;
+
+			public static implicit operator TestData(int i)
+			{
+				return new TestData { Value = i };
+			}
+		}
+
+		[Test]
+		public void Converter()
+		{
+			Assert.AreEqual(10, ConvertTo<TestData>.From(10).Value);
+		}
 	}
 }

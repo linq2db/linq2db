@@ -12,7 +12,7 @@ namespace LinqToDB_Temp.Common
 	{
 		public static From[TFrom](o : TFrom) : TTo
 		{
-			LinqToDB_Temp.Common.Convert.Lambda(o);
+			Common.Convert.From(o);
 		}
 	}
 
@@ -47,7 +47,7 @@ namespace LinqToDB_Temp.Common
 				}
 				else
 				{
-					_lambda     = value;
+					_lambda = value;
 
 					def p = LinqExpression.Parameter(typeof(TFrom), "p");
 					

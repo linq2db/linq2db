@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
 using Nemerle;
@@ -12,15 +13,27 @@ namespace LinqToDB_Temp.Common
 
 	class ConverterMaker
 	{
-		GetCtor(from : Type, to : Type, p : Expression) : Expression
+		GetCtor(from : Type, to : Type, p : Expression) : option[Expression]
 		{
 			def ctor = to.GetConstructor(array[from]);
-			if (ctor != null) Expression.New(ctor, array[p]) else null
+			if (ctor != null) Some(Expression.New(ctor, array[p])) else None()
 		}
 
-		_GetConverter(_from : Type, _to : Type, _p : Expression) : Expression
+		GetOperator(from : Type, to : Type, p : Expression) : option[Expression]
 		{
-			null//to.GetMethod()
+			def op =
+				to.GetMethod("op_Implicit", BindingFlags.Static | BindingFlags.Public, null, array[from], null) ??
+				to.GetMethod("op_Explicit", BindingFlags.Static | BindingFlags.Public, null, array[from], null);
+
+			if (op != null) Some(Expression.Convert(p, to, op)) else None()
+		}
+
+		GetConverter(from : Type, to : Type, p : Expression) : option[Expression]
+		{
+			if (from == to)
+				Some(p)
+			else
+				GetCtor(from, to, p) ?? GetOperator(from, to, p)
 		}
 
 		public GetConverter[TFrom,TTo](defaultValueGetter : Type -> object) : Expression[Func[TFrom,TTo]]
@@ -32,38 +45,61 @@ namespace LinqToDB_Temp.Common
 				(ToExpression((o : TFrom) => o) : object) :> Expression[Func[TFrom,TTo]]
 			else if (to == typeof(object))
 				(ToExpression((o : TFrom) => o : object) : object) :> Expression[Func[TFrom,TTo]]
+				//(ToExpression(fun(o : TFrom) : object { o }) : object) :> Expression[Func[TFrom,TTo]]
 			else
 			{
-				def uto   = to.  ToUnderlying();
-				def ufrom = from.ToUnderlying();
-				def p     = Expression.Parameter(from, "p");
-
-				def expr  =
-					if (uto == ufrom)
-						if (from.IsNullable())
-						{
-							def val  = Expression.Convert(p, uto);
-
-							Expression.Lambda.[Func[TFrom,TTo]](
-								Expression.Condition(
-									Expression.PropertyOrField(p, "HasValue"),
-									if (to == uto) val else Expression.Convert(val, to),
-									Expression.Constant(defaultValueGetter(to), to)),
-								p);
-						}
-						else
-							((ToExpression((o : TFrom) => o :> TTo)) : object) :> Expression[Func[TFrom,TTo]]
-					else
+				def p = Expression.Parameter(from, "p");
+				def e =
+					match (GetConverter(from, to, p))
 					{
-						def ctor = GetCtor(from, to, p);
+						| None =>
+							def uto   = to.  ToUnderlying();
+							def ufrom = from.ToUnderlying();
+							def ex    =
+								if (from != ufrom)
+								{
+									def p = Expression.Convert(p, ufrom);
 
-						if (ctor != null)
-							Expression.Lambda.[Func[TFrom,TTo]](ctor, p);
-						else
-							ToExpression((o : TFrom) => System.Convert.ChangeType(o : object, typeof(TTo), CultureInfo.InvariantCulture) :> TTo)
+									match (GetConverter(ufrom, to, p))
+									{
+										| None when to != uto =>
+											match (GetConverter(ufrom, uto, p))
+											{
+												| Some(ex)    => Some(Expression.Convert(ex, to));
+												| ex          => ex
+											}
+										| ex                  => ex
+									}
+								}
+								else
+									None();
+
+							match (ex)
+							{
+								| None when to != uto =>
+									match (GetConverter(from, uto, p))
+									{
+										| Some(ex)    => Some(Expression.Convert(ex, to));
+										| ex          => ex
+									}
+								| ex                  => ex
+							}
+						| ex => ex
+					};
+
+				def e =
+					match (e)
+					{
+						| Some(ex) when from.IsNullable() =>
+							Some(Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex, Expression.Constant(defaultValueGetter(to), to)));
+						| ex => ex
 					}
 
-				(expr : object) :> Expression[Func[TFrom,TTo]]
+				match (e)
+				{
+					| Some(ex) => (Expression.Lambda.[Func[TFrom,TTo]](ex, p) : object) :> Expression[Func[TFrom,TTo]]
+					| None     => ToExpression((o : TFrom) => System.Convert.ChangeType(o : object, typeof(TTo), CultureInfo.InvariantCulture) :> TTo)
+				}
 			}
 		}
 	}
