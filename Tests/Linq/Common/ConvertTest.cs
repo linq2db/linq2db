@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlTypes;
+
 using LinqToDB_Temp.Common;
 
 using NUnit.Framework;
@@ -99,8 +100,10 @@ namespace Tests.Common
 		[Test]
 		public void Conversion()
 		{
-			Assert.AreEqual(10,  ConvertTo<int>. From(10.0));
-			Assert.AreEqual(100, ConvertTo<byte>.From(100));
+			Assert.AreEqual(10,     ConvertTo<int>. From(10.0));
+			Assert.AreEqual(100,    ConvertTo<byte>.From(100));
+			Assert.AreEqual('\x10', ConvertTo<char>.From(0x10));
+			Assert.AreEqual(0x10,   ConvertTo<int>. From('\x10'));
 		}
 
 		[Test]
