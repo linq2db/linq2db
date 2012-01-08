@@ -19,6 +19,21 @@ namespace LinqToDB_Temp.Common
 			if (ctor != null) Some(Expression.New(ctor, array[p])) else None()
 		}
 
+		GetValue(from : Type, to : Type, p : Expression) : option[Expression]
+		{
+			match (from.GetProperty("Value"))
+			{
+				| null =>
+					match (from.GetField("Value"))
+					{
+						| fi when fi != null && fi.FieldType == to => Some(Expression.Field(p, fi))
+						| _ => None()
+					}
+				| pi when pi.PropertyType == to => Some(Expression.Property(p, pi))
+				| _    => None()
+			}
+		}
+
 		GetOperator(from : Type, to : Type, p : Expression) : option[Expression]
 		{
 			def op =
@@ -28,12 +43,67 @@ namespace LinqToDB_Temp.Common
 			if (op != null) Some(Expression.Convert(p, to, op)) else None()
 		}
 
+		IsConvertible(type : Type) : bool
+		{
+			match (Type.GetTypeCode(type))
+			{
+				| Boolean
+				| Byte
+				| SByte
+				| Int16
+				| Int32
+				| Int64
+				| UInt16
+				| UInt32
+				| UInt64
+				| Single
+				| Double
+				| Char   => true
+				| _      => false
+			}
+		}
+
+		GetConvertion(from : Type, to : Type, p : Expression) : option[Expression]
+		{
+			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) || from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
+				Some(Expression.ConvertChecked(p, to))
+			else
+				None()
+		}
+
+		GetParse(from : Type, to : Type, p : Expression) : option[Expression]
+		{
+			if (from == typeof(string))
+			{
+				def mi = to.GetMethod("Parse", BindingFlags.Static | BindingFlags.Public, null, array[from], null);
+				if (mi != null) Some(Expression.Convert(p, to, mi)) else None()
+			}
+			else
+				None()
+		}
+
+		GetToString(from : Type, to : Type, p : Expression) : option[Expression]
+		{
+			if (to == typeof(string))
+			{
+				def mi = from.GetMethod("ToString", BindingFlags.Instance | BindingFlags.Public, null, array[], null);
+				if (mi != null) Some(Expression.Call(p, mi)) else None()
+			}
+			else
+				None()
+		}
+
 		GetConverter(from : Type, to : Type, p : Expression) : option[Expression]
 		{
 			if (from == to)
 				Some(p)
 			else
-				GetCtor(from, to, p) ?? GetOperator(from, to, p)
+				GetCtor      (from, to, p) ??
+				GetValue     (from, to, p) ??
+				GetOperator  (from, to, p) ??
+				GetConvertion(from, to, p) ??
+				GetParse     (from, to, p) ??
+				GetToString  (from, to, p)
 		}
 
 		public GetConverter[TFrom,TTo](defaultValueGetter : Type -> object) : Expression[Func[TFrom,TTo]]
@@ -84,14 +154,15 @@ namespace LinqToDB_Temp.Common
 									}
 								| ex                  => ex
 							}
-						| ex => ex
+						| ex   => ex
 					};
 
 				def e =
 					match (e)
 					{
-						| Some(ex) when from.IsNullable() =>
-							Some(Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex, Expression.Constant(defaultValueGetter(to), to)));
+						| Some(ex) when from.IsNullable() with test = Expression.PropertyOrField(p, "HasValue")
+						| Some(ex) when from.IsClass      with test = Expression.NotEqual(p, Expression.Constant(null, from)) =>
+							Some(Expression.Condition(test, ex, Expression.Constant(defaultValueGetter(to), to)));
 						| ex => ex
 					}
 

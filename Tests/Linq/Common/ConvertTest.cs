@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Data.SqlTypes;
 using LinqToDB_Temp.Common;
 
 using NUnit.Framework;
@@ -69,20 +69,57 @@ namespace Tests.Common
 			Assert.AreEqual(10m, Convert<int,decimal>.From(10));
 		}
 
-		class TestData
+		class TestData1
 		{
 			public int Value;
 
-			public static implicit operator TestData(int i)
+			public static implicit operator TestData1(int i)
 			{
-				return new TestData { Value = i };
+				return new TestData1 { Value = i };
+			}
+		}
+
+		class TestData2
+		{
+			public int Value;
+
+			public static explicit operator TestData2(int i)
+			{
+				return new TestData2 { Value = i };
 			}
 		}
 
 		[Test]
 		public void Converter()
 		{
-			Assert.AreEqual(10, ConvertTo<TestData>.From(10).Value);
+			Assert.AreEqual(10, ConvertTo<TestData1>.From(10).Value);
+			Assert.AreEqual(10, ConvertTo<TestData2>.From(10).Value);
+		}
+
+		[Test]
+		public void Conversion()
+		{
+			Assert.AreEqual(10,  ConvertTo<int>. From(10.0));
+			Assert.AreEqual(100, ConvertTo<byte>.From(100));
+		}
+
+		[Test]
+		public void Parse()
+		{
+			Assert.AreEqual(10,                       ConvertTo<int>.     From("10"));
+			Assert.AreEqual(new DateTime(2012, 1, 1), ConvertTo<DateTime>.From("2012-1-1"));
+		}
+
+		[Test]
+		public void TestToString()
+		{
+			Assert.AreEqual("10", ConvertTo<string>.From(10));
+		}
+
+		[Test]
+		public void FromValue()
+		{
+			Assert.AreEqual(10, ConvertTo<int>.From(new SqlInt32(10)));
 		}
 	}
 }
