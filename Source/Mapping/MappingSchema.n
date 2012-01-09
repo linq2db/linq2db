@@ -1,0 +1,85 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Linq.Expressions.Expression;
+
+using Nemerle;
+using Nemerle.Assertions;
+using Nemerle.Collections;
+
+namespace LinqToDB_Temp.Mapping
+{
+	using Common;
+
+	public class MappingSchema
+	{
+		public BaseSchema : MappingSchema;
+
+		public this(baseSchema : MappingSchema = null)
+		{
+			BaseSchema  = baseSchema;
+			_converters = Converters(GetDefaultValue);
+		}
+
+		_converters : Converters;
+		_defaultValue = Hashtable();
+
+		public GetDefaultValue(type : Type) : object
+		{
+			match (_defaultValue.Get(type))
+			{
+				| Some(v) => v
+				| _       => DefaultValue.GetValue(type)
+			}
+		}
+
+		public SetDefaultValue[T](value : T) : void
+		{
+			_defaultValue[typeof(T)] = value
+		}
+
+		public GetConvertExpression[TFrom,TTo]() : Expression[Func[TFrom,TTo]]
+		{
+			match (_converters.Get(typeof(TFrom), typeof(TTo), _defaultValue.Count != 0))
+			{
+				| Some((ex,_))                 => ex :> Expression[Func[TFrom,TTo]]
+				| None when BaseSchema != null => BaseSchema.GetConvertExpression()
+				| None                         => Convert.Expression
+			}
+		}
+
+		public GetConvertExpression(from : Type, to : Type) : LambdaExpression
+		{
+			match (_converters.Get(from, to, _defaultValue.Count != 0))
+			{ 
+				| Some((ex,_))                 => ex
+				| None when BaseSchema != null => BaseSchema.GetConvertExpression()
+				| None                         =>
+					def (ex,_) = Converters.Default.Get(from, to).Value;
+					ex
+			}
+		}
+
+		public GetConverter[TFrom,TTo]() : Func[TFrom,TTo]
+		{
+			match (_converters.Get(typeof(TFrom), typeof(TTo), _defaultValue.Count != 0))
+			{
+				| Some((_,l))                  => l :> Func[TFrom,TTo]
+				| None when BaseSchema != null => BaseSchema.GetConverter()
+				| None                         => Convert.Lambda
+			}
+		}
+
+		public SetConvertExpression[TFrom,TTo]([NotNull] expr : Expression[Func[TFrom,TTo]]) : void
+		{
+			_converters.Set(typeof(TFrom), typeof(TTo), (expr, expr.Compile()))
+		}
+
+		public SetConverter[TFrom,TTo]([NotNull] func : Func[TFrom,TTo]) : void
+		{
+			def p  = Parameter(typeof(TFrom), "p");
+			def ex = Lambda.[Func[TFrom,TTo]](Invoke(Constant(func), p), p);
+			_converters.Set(typeof(TFrom), typeof(TTo), (ex, func));
+		}
+	}
+}

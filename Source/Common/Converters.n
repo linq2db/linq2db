@@ -1,0 +1,51 @@
+﻿using System;
+using System.Linq.Expressions;
+
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Extensions;
+
+namespace LinqToDB_Temp.Common
+{
+	class Converters
+	{
+		public static Default : Converters = Converters(DefaultValue.GetValue);
+
+		public this(defaultValueGetter : Type -> object)
+		{
+			_defaultValueGetter = defaultValueGetter;
+		}
+
+		_defaultValueGetter : Type -> object;
+		_expressions        : Hashtable[Type,Hashtable[Type,LambdaExpression * Delegate]] = Hashtable();
+
+		public Set(from : Type, to : Type, expr : LambdaExpression * Delegate) : void
+		{
+			match (_expressions.Get(from))
+			{
+				| Some(t) => t[to] = expr
+				| None    => _expressions[from] = Hashtable() <- [ to = expr ]
+			}
+		}
+
+		public Get(from : Type, to : Type, create = true) : option[LambdaExpression * Delegate]
+		{
+			def ex =
+				match (_expressions.Get(from))
+				{
+					| Some(t) => t.Get(to)
+					| None    => None()
+				}
+
+			match (ex)
+			{
+				| None when create =>
+					def ex = ConverterMaker().GetConverter(from, to, _defaultValueGetter);
+					def lm = ex.Compile();
+					Set(from, to , (ex, lm));
+					Some(ex, lm)
+				| _ => ex
+			}
+		}
+	}
+}

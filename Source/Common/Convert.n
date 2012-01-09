@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Linq.Expressions.Expression;
 
 using Nemerle;
-using Nemerle.Linq;
-
-using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace LinqToDB_Temp.Common
 {
@@ -12,7 +10,7 @@ namespace LinqToDB_Temp.Common
 	{
 		public static From[TFrom](o : TFrom) : TTo
 		{
-			Common.Convert.From(o);
+			Convert.From(o);
 		}
 	}
 
@@ -20,8 +18,7 @@ namespace LinqToDB_Temp.Common
 	{
 		this()
 		{
-			_expression = GetDefaultConverter();
-			_lambda     = _expression.Compile();
+			Expression = null;
 		}
 
 		mutable _expression : Expression[Func[TFrom,TTo]];
@@ -30,8 +27,20 @@ namespace LinqToDB_Temp.Common
 			get { _expression }
 			set
 			{
-				_expression = value ?? GetDefaultConverter();
-				_lambda     = _expression.Compile();
+				if (value == null)
+				{
+					def expr = ConverterMaker().GetConverter(typeof(TFrom), typeof(TTo), DefaultValue.GetValue);
+
+					_expression = expr :> Expression[Func[TFrom,TTo]];
+					_lambda     = expr.Compile() :> Func[TFrom,TTo];
+				}
+				else
+				{
+					_expression = value;
+					_lambda     = _expression.Compile();
+
+					Converters.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
+				}
 			}
 		}
 
@@ -47,13 +56,12 @@ namespace LinqToDB_Temp.Common
 				}
 				else
 				{
-					_lambda = value;
+					def p = Parameter(typeof(TFrom), "p");
 
-					def p = LinqExpression.Parameter(typeof(TFrom), "p");
-					
-					_expression = LinqExpression.Lambda.[Func[TFrom,TTo]](
-						LinqExpression.Invoke(System.Linq.Expressions.Expression.Constant(value), p),
-						p);
+					_expression = Lambda.[Func[TFrom,TTo]](Invoke(Constant(value), p), p);
+					_lambda     = value;
+
+					Converters.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
 				}
 			}
 		}
@@ -61,11 +69,6 @@ namespace LinqToDB_Temp.Common
 		public From : Func[TFrom,TTo]
 		{
 			get { _lambda }
-		}
-
-		GetDefaultConverter() : Expression[Func[TFrom,TTo]]
-		{
-			ConverterMaker().GetConverter(DefaultValue.GetValue)
 		}
 	}
 }

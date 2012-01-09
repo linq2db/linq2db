@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
+using System.Text;
 
 using LinqToDB_Temp.Common;
 
@@ -114,15 +117,27 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void TestToString()
+		public void ToStringTest()
 		{
-			Assert.AreEqual("10", ConvertTo<string>.From(10));
+			Convert<DateTime,string>.Expression = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
+
+			Assert.AreEqual("10",                  ConvertTo<string>.From(10));
+			Assert.AreEqual("01/20/2012 16:20:30", ConvertTo<string>.From(new DateTime(2012, 1, 20, 16, 20, 30, 40, DateTimeKind.Utc)));
+
+			Convert<DateTime,string>.Expression = null;
 		}
 
 		[Test]
 		public void FromValue()
 		{
 			Assert.AreEqual(10, ConvertTo<int>.From(new SqlInt32(10)));
+		}
+
+		[Test]
+		public void ToBinary()
+		{
+			const string data = "za\u0306\u01FD\u03B2\uD8FF\uDCFF";
+			Assert.AreEqual(Encoding.UTF8.GetBytes(data), ConvertTo<Binary>.From(data).ToArray());
 		}
 	}
 }

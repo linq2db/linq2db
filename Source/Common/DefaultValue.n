@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Linq.Expressions.Expression;
 using System.Reflection;
 
 using Nemerle;
@@ -53,9 +54,9 @@ namespace LinqToDB_Temp
 						match (ToExpression(() => GetValue.[int]()))
 						{
 							| Lambda(Call(mi, _),_) =>
-								Expression.Lambda.[Func[object]](
-									Expression.Convert(
-										Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
+								Lambda.[Func[object]](
+									Convert(
+										Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
 										typeof(object)))
 									.Compile()()
 							| _ => throw InvalidOperationException()

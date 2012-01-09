@@ -172,6 +172,7 @@
     <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
+    <Compile Include="Mapping\MappingSchemaTest.cs" />
     <Compile Include="SqlBuilder\OptimizerTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />

@@ -74,6 +74,9 @@
     <Compile Include="Common\ConverterMaker.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Common\Converters.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Common\DefaultValue.n">
       <SubType>Code</SubType>
     </Compile>
@@ -122,6 +125,9 @@
     <Compile Include="MacroDefinitions.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Mapping\MappingSchema.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Metadata\TypeExtension.n">
       <SubType>Code</SubType>
     </Compile>
@@ -163,6 +169,7 @@
     <Folder Include="DataProvider\" />
     <Folder Include="Data\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Mapping\" />
     <Folder Include="Metadata" />
     <Folder Include="Properties\" />
     <Folder Include="SqlBuilder\" />
