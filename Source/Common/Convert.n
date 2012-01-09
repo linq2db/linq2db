@@ -39,7 +39,7 @@ namespace LinqToDB_Temp.Common
 					_expression = value;
 					_lambda     = _expression.Compile();
 
-					Converters.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
+					ConvertInfo.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
 				}
 			}
 		}
@@ -61,7 +61,7 @@ namespace LinqToDB_Temp.Common
 					_expression = Lambda.[Func[TFrom,TTo]](Invoke(Constant(value), p), p);
 					_lambda     = value;
 
-					Converters.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
+					ConvertInfo.Default.Set(typeof(TFrom), typeof(TTo), (_expression, _lambda))
 				}
 			}
 		}

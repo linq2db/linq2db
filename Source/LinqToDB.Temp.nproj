@@ -74,7 +74,7 @@
     <Compile Include="Common\ConverterMaker.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Common\Converters.n">
+    <Compile Include="Common\ConvertInfo.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Common\DefaultValue.n">

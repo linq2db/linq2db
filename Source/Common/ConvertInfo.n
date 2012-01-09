@@ -1,0 +1,167 @@
+﻿using System;
+using System.Globalization;
+using System.Linq.Expressions;
+
+using Nemerle;
+using Nemerle.Assertions;
+using Nemerle.Collections;
+using Nemerle.Extensions;
+using Nemerle.Linq;
+
+namespace LinqToDB_Temp.Common
+{
+	public class ConvertInfo
+	{
+		public static Default : ConvertInfo = ConvertInfo();
+
+		public this()
+		{
+			_defaultValueGetter = DefaultValue.GetValue;
+		}
+
+		public this([NotNull] defaultValueGetter : Type -> object)
+		{
+			_defaultValueGetter = defaultValueGetter;
+		}
+
+		_defaultValueGetter : Type -> object;
+		_expressions        : Hashtable[Type,Hashtable[Type,LambdaExpression * Delegate]] = Hashtable();
+
+		public Set(from : Type, to : Type, expr : LambdaExpression * Delegate) : void
+		{
+			match (_expressions.Get(from))
+			{
+				| Some(t) => t[to] = expr
+				| None    => _expressions[from] = Hashtable() <- [ to = expr ]
+			}
+		}
+
+		public Set[TFrom,TTo](expr : Expression[Func[TFrom,TTo]]) : void
+		{
+			Set(typeof(TFrom), typeof(TTo), (expr, expr.Compile()))
+		}
+
+		public Get(from : Type, to : Type, create = true) : option[LambdaExpression * Delegate]
+		{
+			def ex =
+				match (_expressions.Get(from))
+				{
+					| Some(t) => t.Get(to)
+					| None    => None()
+				}
+
+			match (ex)
+			{
+				| None when create =>
+					def ex = ConverterMaker().GetConverter(from, to, _defaultValueGetter);
+					def lm = ex.Compile();
+					Set(from, to , (ex, lm));
+					Some(ex, lm)
+				| _ => ex
+			}
+		}
+
+		public SetCultureInfo(info : CultureInfo) : void
+		{
+			def nString = _defaultValueGetter(typeof(string)) :> string;
+			
+			Set(ToExpression(fun(v : SByte)     : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Int16)     : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Int32)     : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Int64)     : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Byte)      : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : UInt16)    : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : UInt32)    : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : UInt64)    : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Single)    : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Double)    : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : Decimal)   : string { v.ToString(info.NumberFormat)   }));
+			Set(ToExpression(fun(v : DateTime)  : string { v.ToString(info.DateTimeFormat) }));
+
+			Set(ToExpression(fun(v : SByte?)    : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Int16?)    : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Int32?)    : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Int64?)    : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Byte?)     : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : UInt16?)   : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : UInt32?)   : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : UInt64?)   : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Single?)   : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Double?)   : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : Decimal?)  : string { if (v.HasValue) v.Value.ToString(info.NumberFormat)   else nString }));
+			Set(ToExpression(fun(v : DateTime?) : string { if (v.HasValue) v.Value.ToString(info.DateTimeFormat) else nString }));
+
+			def nSByte  = _defaultValueGetter(typeof(SByte))  :> SByte;
+			def nSByteN = _defaultValueGetter(typeof(SByte?)) :> SByte?;
+
+			Set(ToExpression(fun(s : string) : SByte  { if (s != null) SByte.Parse(s, info.NumberFormat)          else nSByte  }));
+			Set(ToExpression(fun(s : string) : SByte? { if (s != null) SByte.Parse(s, info.NumberFormat) : SByte? else nSByteN }));
+
+			def nInt16  = _defaultValueGetter(typeof(Int16))  :> Int16;
+			def nInt16N = _defaultValueGetter(typeof(Int16?)) :> Int16?;
+
+			Set(ToExpression(fun(s : string) : Int16  { if (s != null) Int16.Parse(s, info.NumberFormat)          else nInt16  }));
+			Set(ToExpression(fun(s : string) : Int16? { if (s != null) Int16.Parse(s, info.NumberFormat) : Int16? else nInt16N }));
+
+			def nInt32  = _defaultValueGetter(typeof(Int32))  :> Int32;
+			def nInt32N = _defaultValueGetter(typeof(Int32?)) :> Int32?;
+
+			Set(ToExpression(fun(s : string) : Int32  { if (s != null) Int32.Parse(s, info.NumberFormat)          else nInt32  }));
+			Set(ToExpression(fun(s : string) : Int32? { if (s != null) Int32.Parse(s, info.NumberFormat) : Int32? else nInt32N }));
+
+			def nInt64  = _defaultValueGetter(typeof(Int64))  :> Int64;
+			def nInt64N = _defaultValueGetter(typeof(Int64?)) :> Int64?;
+
+			Set(ToExpression(fun(s : string) : Int64  { if (s != null) Int64.Parse(s, info.NumberFormat)          else nInt64  }));
+			Set(ToExpression(fun(s : string) : Int64? { if (s != null) Int64.Parse(s, info.NumberFormat) : Int64? else nInt64N }));
+
+			def nByte  = _defaultValueGetter(typeof(Byte))  :> Byte;
+			def nByteN = _defaultValueGetter(typeof(Byte?)) :> Byte?;
+
+			Set(ToExpression(fun(s : string) : Byte  { if (s != null) Byte.Parse(s, info.NumberFormat)         else nByte  }));
+			Set(ToExpression(fun(s : string) : Byte? { if (s != null) Byte.Parse(s, info.NumberFormat) : Byte? else nByteN }));
+
+			def nUInt16  = _defaultValueGetter(typeof(UInt16))  :> UInt16;
+			def nUInt16N = _defaultValueGetter(typeof(UInt16?)) :> UInt16?;
+
+			Set(ToExpression(fun(s : string) : UInt16  { if (s != null) UInt16.Parse(s, info.NumberFormat)           else nUInt16  }));
+			Set(ToExpression(fun(s : string) : UInt16? { if (s != null) UInt16.Parse(s, info.NumberFormat) : UInt16? else nUInt16N }));
+
+			def nUInt32  = _defaultValueGetter(typeof(UInt32))  :> UInt32;
+			def nUInt32N = _defaultValueGetter(typeof(UInt32?)) :> UInt32?;
+
+			Set(ToExpression(fun(s : string) : UInt32  { if (s != null) UInt32.Parse(s, info.NumberFormat)           else nUInt32  }));
+			Set(ToExpression(fun(s : string) : UInt32? { if (s != null) UInt32.Parse(s, info.NumberFormat) : UInt32? else nUInt32N }));
+
+			def nUInt64  = _defaultValueGetter(typeof(UInt64))  :> UInt64;
+			def nUInt64N = _defaultValueGetter(typeof(UInt64?)) :> UInt64?;
+
+			Set(ToExpression(fun(s : string) : UInt64  { if (s != null) UInt64.Parse(s, info.NumberFormat)           else nUInt64  }));
+			Set(ToExpression(fun(s : string) : UInt64? { if (s != null) UInt64.Parse(s, info.NumberFormat) : UInt64? else nUInt64N }));
+
+			def nSingle  = _defaultValueGetter(typeof(Single))  :> Single;
+			def nSingleN = _defaultValueGetter(typeof(Single?)) :> Single?;
+
+			Set(ToExpression(fun(s : string) : Single  { if (s != null) Single.Parse(s, info.NumberFormat)           else nSingle  }));
+			Set(ToExpression(fun(s : string) : Single? { if (s != null) Single.Parse(s, info.NumberFormat) : Single? else nSingleN }));
+
+			def nDouble  = _defaultValueGetter(typeof(Double))  :> Double;
+			def nDoubleN = _defaultValueGetter(typeof(Double?)) :> Double?;
+
+			Set(ToExpression(fun(s : string) : Double  { if (s != null) Double.Parse(s, info.NumberFormat)           else nDouble  }));
+			Set(ToExpression(fun(s : string) : Double? { if (s != null) Double.Parse(s, info.NumberFormat) : Double? else nDoubleN }));
+
+			def nDecimal  = _defaultValueGetter(typeof(Decimal))  :> Decimal;
+			def nDecimalN = _defaultValueGetter(typeof(Decimal?)) :> Decimal?;
+
+			Set(ToExpression(fun(s : string) : Decimal  { if (s != null) Decimal.Parse(s, info.NumberFormat)            else nDecimal  }));
+			Set(ToExpression(fun(s : string) : Decimal? { if (s != null) Decimal.Parse(s, info.NumberFormat) : Decimal? else nDecimalN }));
+
+			def nDateTime  = _defaultValueGetter(typeof(DateTime))  :> DateTime;
+			def nDateTimeN = _defaultValueGetter(typeof(DateTime?)) :> DateTime?;
+
+			Set(ToExpression(fun(s : string) : DateTime  { if (s != null) DateTime.Parse(s, info.DateTimeFormat)             else nDateTime  }));
+			Set(ToExpression(fun(s : string) : DateTime? { if (s != null) DateTime.Parse(s, info.DateTimeFormat) : DateTime? else nDateTimeN }));
+		}
+	}
+}

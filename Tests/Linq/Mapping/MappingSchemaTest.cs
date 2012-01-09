@@ -59,7 +59,7 @@ namespace Tests.Mapping
 			}
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
-			ms1.SetConvertExpression<string, DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
+			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
 			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
 
 			{
@@ -71,6 +71,22 @@ namespace Tests.Mapping
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c1("1/20/2012 4:30:40 PM"));
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c2("20.01.2012 16:30:40"));
 			}
+		}
+
+		[Test]
+		public void CultureInfo()
+		{
+			var ms = new MappingSchema();
+
+			ms.ConvertInfo.SetCultureInfo(new CultureInfo("ru-RU", false));
+
+			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()(new DateTime(2012, 1, 20, 16, 30, 40)));
+			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()("20.01.2012 16:30:40"));
+			Assert.AreEqual("100000,999",                          ms.GetConverter<decimal,string> ()(100000.999m));
+			Assert.AreEqual(100000.999m,                           ms.GetConverter<string,decimal> ()("100000,999"));
+			Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999"));
+			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()(100000.999));
+			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()("100000,999"));
 		}
 	}
 }
