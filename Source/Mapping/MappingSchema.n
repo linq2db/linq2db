@@ -30,8 +30,9 @@ namespace LinqToDB_Temp.Mapping
 		{
 			match (_defaultValue.Get(type))
 			{
-				| Some(v) => v
-				| _       => DefaultValue.GetValue(type)
+				| Some(v)                   => v
+				| _ when BaseSchema != null => BaseSchema.GetDefaultValue(type)
+				| _                         => DefaultValue.GetValue(type)
 			}
 		}
 
@@ -44,9 +45,9 @@ namespace LinqToDB_Temp.Mapping
 		{
 			match (ConvertInfo.Get(typeof(TFrom), typeof(TTo), _defaultValue.Count != 0))
 			{
-				| Some((ex,_))                 => ex :> Expression[Func[TFrom,TTo]]
-				| None when BaseSchema != null => BaseSchema.GetConvertExpression()
-				| None                         => Convert.Expression
+				| Some((ex,_))              => ex :> Expression[Func[TFrom,TTo]]
+				| _ when BaseSchema != null => BaseSchema.GetConvertExpression()
+				| _                         => Convert.Expression
 			}
 		}
 

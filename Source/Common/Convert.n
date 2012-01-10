@@ -18,7 +18,15 @@ namespace LinqToDB_Temp.Common
 	{
 		this()
 		{
-			Expression = null;
+			Init()
+		}
+
+		Init() : void
+		{
+			def expr = ConverterMaker().GetConverter(typeof(TFrom), typeof(TTo), DefaultValue.GetValue);
+
+			_expression = expr :> Expression[Func[TFrom,TTo]];
+			_lambda     = expr.Compile() :> Func[TFrom,TTo];
 		}
 
 		mutable _expression : Expression[Func[TFrom,TTo]];
@@ -29,10 +37,7 @@ namespace LinqToDB_Temp.Common
 			{
 				if (value == null)
 				{
-					def expr = ConverterMaker().GetConverter(typeof(TFrom), typeof(TTo), DefaultValue.GetValue);
-
-					_expression = expr :> Expression[Func[TFrom,TTo]];
-					_lambda     = expr.Compile() :> Func[TFrom,TTo];
+					Init()
 				}
 				else
 				{
@@ -52,7 +57,7 @@ namespace LinqToDB_Temp.Common
 			{
 				if (value == null)
 				{
-					Expression = null;
+					Init()
 				}
 				else
 				{

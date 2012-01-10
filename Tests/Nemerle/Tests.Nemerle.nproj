@@ -66,12 +66,16 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Macros\InfoOfTest.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
     <Compile Include="SqlBuilder\OptimizerTest.n">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Macros" />
     <Folder Include="SqlBuilder" />
     <Folder Include="Properties\" />
   </ItemGroup>
@@ -79,6 +83,11 @@
     <ProjectReference Include="..\..\Source\LinqToDB.Temp.nproj">
       <Name>LinqToDB.Temp</Name>
       <Project>{848bf0eb-da01-44cf-b4da-4ddbf4f314d8}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Source\MacroInternal\LinqToDB.MacroInternal.nproj">
+      <Name>LinqToDB.MacroInternal</Name>
+      <Project>{4695fb81-2075-4a16-88a4-688b7d9795ab}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

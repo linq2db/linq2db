@@ -1,0 +1,126 @@
+﻿using System;
+using System.Reflection;
+
+using Nemerle;
+
+using NUnit.Framework;
+
+using LinqToDB_Temp.MacroInternal;
+
+namespace Tests.Nemerle
+{
+	public module InfoOfTest
+	{
+		public Field1 : string;
+
+		public FieldOf() : void
+		{
+			Check(fieldof(InfoOfTest.Field1));
+			Check(fieldof(Field1));
+
+			Check(fieldof(Generic[int]._Field1));
+
+			Check(fieldof(Instance._Field1));
+			Instance().TestFieldOf();
+			Generic.[byte]().TestFieldOf();
+
+			Check(fieldof(Instance()._Field1));
+
+			def _i = Instance();
+
+			Check(fieldof(_i._Field1));
+		}
+
+		class Generic[T]
+		{
+			public _Field1    : char;
+
+			public TestFieldOf() : void
+			{
+				Check(fieldof(_Field1));
+				Check(fieldof(Generic[T]._Field1));
+			}
+
+			public _Property1 : char { get; set; }
+			
+			public TestPropertyOf() : void
+			{
+				Check(propertyof(_Property1));
+				Check(propertyof(Generic[T]._Property1));
+			}
+		}
+
+		class Instance
+		{
+			public  _Field1 : int;
+			private _field2 : int = 1;
+
+			public TestFieldOf() : void
+			{
+				Check(fieldof(Instance._field2));
+				Check(fieldof(_field2));
+			}
+
+			public  _Property1 : int { get; set; }
+			private _property2 : int { get; set; }
+
+			public TestPropertyOf() : void
+			{
+				Check(propertyof(Instance._property2));
+				Check(propertyof(_property2));
+			}
+
+			public _TestMethodOf(_ : int, _ : string) : int
+			{
+				0
+			}
+		}
+
+		public Property1 : string { get; set; }
+
+		public PropertyOf() : void
+		{
+			Check(propertyof(InfoOfTest.Property1));
+			Check(propertyof(Property1));
+
+			Check(propertyof(Generic[int]._Property1));
+
+			Check(propertyof(Instance._Property1));
+			Instance().TestPropertyOf();
+			Generic.[byte]().TestPropertyOf();
+
+			Check(propertyof(Instance()._Property1));
+
+			def _i = Instance();
+
+			Check(propertyof(_i._Property1));
+		}
+
+		public TestMethodOf() : void
+		{
+			Check(methodof(TestMethodOf()));
+			//Check(methodof(MemberOf));
+
+			Check(methodof(Generic[int].TestPropertyOf()));
+			Check(methodof(Instance._TestMethodOf(int,string)));
+			Check(methodof(default(Instance)._TestMethodOf(0,null)));
+			Check(methodof(Instance._TestMethodOf(0,null)));
+		}
+
+		Check(mi : MemberInfo) : void
+		{
+			def getName(mi)
+			{
+				match (mi)
+				{
+					| fi is FieldInfo  => fi.Name
+					| mi is MethodInfo => mi.Name
+					| _ => throw InvalidOperationException()
+				}
+			}
+
+			Assert.IsNotNull(mi);
+			Console.WriteLine($"$(mi.MemberType): $(mi.DeclaringType).$(getName(mi))");
+		}
+	}
+}

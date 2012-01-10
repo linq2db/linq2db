@@ -88,5 +88,10 @@ namespace Tests.Mapping
 			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()(100000.999));
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()("100000,999"));
 		}
+
+		private object OnDefaultValueGetter(Type t)
+		{
+			return t;
+		}
 	}
 }

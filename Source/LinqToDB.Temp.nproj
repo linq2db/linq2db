@@ -119,7 +119,13 @@
     <Compile Include="Data\DataConnection.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\LinqExpressionExtensions.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Extensions\ReflectionExtensions.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Extensions\ReflectionHelper.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MacroDefinitions.n">

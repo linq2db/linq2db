@@ -24,6 +24,11 @@ namespace LinqToDB_Temp.Common
 			_defaultValueGetter = defaultValueGetter;
 		}
 
+		public this([NotNull] defaultValueGetter : Func[Type,object])
+		{
+			_defaultValueGetter = defaultValueGetter.Invoke;
+		}
+
 		_defaultValueGetter : Type -> object;
 		_expressions        : Hashtable[Type,Hashtable[Type,LambdaExpression * Delegate]] = Hashtable();
 

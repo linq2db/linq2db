@@ -108,7 +108,7 @@ namespace LinqToDB_Temp.Common
 				GetToString  (from, to, p)
 		}
 
-		public GetConverter(from : Type, to : Type, defaultValueGetter : Type -> object) : LambdaExpression
+		public GetConverter(from : Type, to : Type, defaultValueGetter : Func[Type,object]) : LambdaExpression
 		{
 			def p = Parameter(from, "p");
 
