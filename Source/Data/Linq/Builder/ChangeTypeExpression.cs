@@ -5,6 +5,8 @@ namespace LinqToDB.Data.Linq.Builder
 {
 	class ChangeTypeExpression : Expression
 	{
+		/////// Check Expression Visitor
+
 		public const int ChangeTypeType = 1000;
 
 #if FW4 || SILVERLIGHT

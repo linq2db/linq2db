@@ -53,7 +53,7 @@ namespace LinqToDB_Temp
 					else
 						match (ToExpression(() => GetValue.[int]()))
 						{
-							| Lambda(Call(mi, _),_) =>
+							| Lambda(Call(_, mi, _),_) =>
 								Lambda.[Func[object]](
 									Convert(
 										Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),

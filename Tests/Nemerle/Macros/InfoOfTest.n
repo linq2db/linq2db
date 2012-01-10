@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Reflection;
 
 using Nemerle;
@@ -105,6 +106,10 @@ namespace Tests.Nemerle
 			Check(methodof(Instance._TestMethodOf(int,string)));
 			Check(methodof(default(Instance)._TestMethodOf(0,null)));
 			Check(methodof(Instance._TestMethodOf(0,null)));
+
+			def _rc : ReadOnlyCollection[int] = null;
+			
+			Check(infoof(_rc[0]));
 		}
 
 		Check(mi : MemberInfo) : void

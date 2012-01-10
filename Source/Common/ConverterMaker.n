@@ -177,7 +177,7 @@ namespace LinqToDB_Temp.Common
 							| _ =>
 								match (ToExpression((p : object) => Convert.ChangeType(p, to)))
 								{
-									| Lambda(Call(mi, _), _) => Lambda(Call(mi, [Convert(p, typeof(object)), Constant(to)]), p)
+									| Lambda(Call(_, mi, _), _) => Lambda(Call(mi, [Convert(p, typeof(object)), Constant(to)]), p)
 									| _ => throw InvalidOperationException()
 								}
 						}

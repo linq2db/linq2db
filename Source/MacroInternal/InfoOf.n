@@ -18,7 +18,10 @@ namespace LinqToDB_Temp.MacroInternal
 	{
 		match (InfoOfImpl.DoTransform(Macros.ImplicitCTX(), expr))
 		{
-			| Some((mi,_)) => <[ $mi : MemberInfo ]>
+			| Some((mi, Field))       => <[ $mi : FieldInfo       ]>
+			| Some((mi, Property))    => <[ $mi : MethodInfo      ]>
+			| Some((mi, Method))      => <[ $mi : MethodInfo      ]>
+			| Some((mi, Constructor)) => <[ $mi : ConstructorInfo ]>
 			| _ =>
 				Message.Error(expr.Location, "member expression expected.");
 				expr
@@ -83,18 +86,20 @@ namespace LinqToDB_Temp.MacroInternal
 
 			def getField(ex : PExpr) : option[PExpr * MemberTypes]
 			{
-				def tex = typer.TypeExpr(ex);
-
-				match (tex)
+				def check(tex : TExpr)
 				{
-					| FieldMember      (to, mi is IField) with ty = to.Type
-					| StaticRef        (ty, mi is IField, [])         => Some((<[ $(TExpr.FieldOf (ty, mi)                 : typed) ]>, MemberTypes.Field))
-					| PropertyMember   (to, mi)     with ty = to.Type
-					| StaticPropertyRef(ty, mi)                       => Some((<[ $(TExpr.MethodOf(ty, mi.GetGetter(), []) : typed) ]>, MemberTypes.Property))
-					| Call(MethodRef   (to, mi, ps, _), _, _) with ty = to.Type
-					| Call(StaticRef   (ty, mi is IMethod, ps), _, _) => Some((<[ $(TExpr.MethodOf (ty, mi, ps)            : typed) ]>, MemberTypes.Method))
+					| FieldMember        (to, mi is IField) with ty = to.Type
+					| StaticRef          (ty, mi is IField, [])         => Some((<[ $(TExpr.FieldOf (ty, mi)                 : typed) ]>, MemberTypes.Field))
+					| Call(PropertyMember(to, mi), _, _)    with ty = to.Type
+					| PropertyMember     (to, mi)           with ty = to.Type
+					| StaticPropertyRef  (ty, mi)                       => Some((<[ $(TExpr.MethodOf(ty, mi.GetGetter(), []) : typed) ]>, MemberTypes.Property))
+					| Call(MethodRef     (to, mi, ps, _), _, _) with ty = to.Type
+					| Call(StaticRef     (ty, mi is IMethod, ps), _, _) => Some((<[ $(TExpr.MethodOf (ty, mi, ps)            : typed) ]>, MemberTypes.Method))
+					| Delayed(susp) when susp.IsResolved                => check(susp.ResolutionResult)
 					| _ => None()
 				}
+
+				check(typer.TypeExpr(ex))
 			}
 
 			match (expr)
