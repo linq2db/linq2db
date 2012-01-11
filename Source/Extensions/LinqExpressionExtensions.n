@@ -11,6 +11,7 @@ using Nemerle.Imperative;
 
 namespace LinqToDB_Temp.Extensions
 {
+	using Common;
 	using MacroInternal;
 	using MacroInternal.Extensions;
 
@@ -337,6 +338,13 @@ namespace LinqToDB_Temp.Extensions
 
 					true;
 
+				| ExpressionType.Extension when expr1 is DefaultValueExpression =>
+
+					def e1 = expr1 :> DefaultValueExpression;
+					def e2 = expr2 :> DefaultValueExpression;
+
+					e1.Type == e2.Type
+
 				| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
 				| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
 				| ExpressionType.Loop          | ExpressionType.Switch
@@ -404,8 +412,8 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.TypeEqual
 					| ExpressionType.TypeIs          => path TypeBinaryExpression  members (Expression)
 					| ExpressionType.Block           => path BlockExpression       members (Variables,  Expressions)
-					| ExpressionType.Constant        => ConvertTo(pathExpr, typeof(ConstantExpression));
-					| ExpressionType.Parameter       => ConvertTo(pathExpr, typeof(ParameterExpression));
+					| ExpressionType.Constant        => ConvertTo(pathExpr, typeof(ConstantExpression))
+					| ExpressionType.Parameter       => ConvertTo(pathExpr, typeof(ParameterExpression))
 					| ExpressionType.ListInit        =>
 
 						path ListInitExpression members (
@@ -445,6 +453,7 @@ namespace LinqToDB_Temp.Extensions
 							Path(e.NewExpression, p, infoof(MemberInitExpression.NewExpression), func),
 							Path(e.Bindings,      p, infoof(MemberInitExpression.Bindings),      modify));
 
+					| ExpressionType.Extension when expr is DefaultValueExpression => ConvertTo(pathExpr, typeof(DefaultValueExpression))
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
 					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
 					| ExpressionType.Loop          | ExpressionType.Switch
@@ -525,11 +534,12 @@ namespace LinqToDB_Temp.Extensions
 					// !!!!!!!!!!!!!!!!| x when x == (ChangeTypeExpression.ChangeTypeType : ExpressionType) =>
 					//	Visit(((ChangeTypeExpression)expr).Expression,  func); break;
 
+					| ExpressionType.Extension
 					| ExpressionType.Constant
 					| ExpressionType.Parameter       => ()
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
-					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
-					| ExpressionType.Loop          | ExpressionType.Switch
+					| ExpressionType.Goto          | ExpressionType.Index           | ExpressionType.Label           | ExpressionType.Loop
+					| ExpressionType.Switch
 					| ExpressionType.Try
 					| ExpressionType.Throw           => throw InvalidOperationException()
 				}
@@ -605,11 +615,12 @@ namespace LinqToDB_Temp.Extensions
 					//case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
 					//	Visit(((ChangeTypeExpression)expr).Expression,  func);
 					//	break;
+					| ExpressionType.Extension
 					| ExpressionType.Constant
 					| ExpressionType.Parameter       => ()
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
-					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
-					| ExpressionType.Loop          | ExpressionType.Switch
+					| ExpressionType.Goto          | ExpressionType.Index           | ExpressionType.Label           | ExpressionType.Loop
+					| ExpressionType.Switch
 					| ExpressionType.Try
 					| ExpressionType.Throw           => throw InvalidOperationException()
 				}
@@ -701,11 +712,12 @@ namespace LinqToDB_Temp.Extensions
 					////////////case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
 					//	return Find(((ChangeTypeExpression)expr).Expression, func);
 
+					| ExpressionType.Extension
 					| ExpressionType.Constant
 					| ExpressionType.Parameter
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
-					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
-					| ExpressionType.Loop          | ExpressionType.Switch
+					| ExpressionType.Goto          | ExpressionType.Index           | ExpressionType.Label           | ExpressionType.Loop
+					| ExpressionType.Switch
 					| ExpressionType.Try
 					| ExpressionType.Throw           => null
 				}
@@ -783,7 +795,8 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.TypeEqual
 					| ExpressionType.TypeIs          => transform TypeBinaryExpression  members (Expression)
 					| ExpressionType.Block           => transform BlockExpression       members (Variables, Expressions)
-					| ExpressionType.Constant        => func(expr)
+					| ExpressionType.Extension
+					| ExpressionType.Constant
 					| ExpressionType.Parameter       => func(expr)
 					| ExpressionType.Lambda          =>
 
@@ -875,8 +888,8 @@ namespace LinqToDB_Temp.Extensions
 					*/
 
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
-					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
-					| ExpressionType.Loop          | ExpressionType.Switch
+					| ExpressionType.Goto          | ExpressionType.Index           | ExpressionType.Label           | ExpressionType.Loop
+					| ExpressionType.Switch
 					| ExpressionType.Try
 					| ExpressionType.Throw           => throw InvalidOperationException()
 				}
@@ -943,7 +956,8 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.TypeEqual
 					| ExpressionType.TypeIs          => transform2 TypeBinaryExpression  members (Expression)
 					| ExpressionType.Block           => transform2 BlockExpression       members (Variables, Expressions)
- 					| ExpressionType.Constant        => func(expr).Expression
+ 					| ExpressionType.Extension
+					| ExpressionType.Constant
 					| ExpressionType.Parameter       => func(expr).Expression
 					| ExpressionType.Lambda          =>
 
@@ -1038,8 +1052,8 @@ namespace LinqToDB_Temp.Extensions
 						}
 					*/
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
-					| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
-					| ExpressionType.Loop          | ExpressionType.Switch
+					| ExpressionType.Goto          | ExpressionType.Index           | ExpressionType.Label           | ExpressionType.Loop
+					| ExpressionType.Switch
 					| ExpressionType.Try
 					| ExpressionType.Throw           => throw InvalidOperationException()
 				}
