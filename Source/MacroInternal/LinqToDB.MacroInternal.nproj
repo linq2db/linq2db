@@ -62,6 +62,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\Automation.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="InfoOf.n">
       <SubType>Code</SubType>
     </Compile>
@@ -74,6 +77,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Extensions" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />

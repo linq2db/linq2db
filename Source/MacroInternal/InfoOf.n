@@ -22,9 +22,7 @@ namespace LinqToDB_Temp.MacroInternal
 			| Some((mi, Property))    => <[ $mi : MethodInfo      ]>
 			| Some((mi, Method))      => <[ $mi : MethodInfo      ]>
 			| Some((mi, Constructor)) => <[ $mi : ConstructorInfo ]>
-			| _ =>
-				Message.Error(expr.Location, "member expression expected.");
-				expr
+			| _ => Message.FatalError(expr.Location, "member expression expected.");
 		}
 	}
 
@@ -34,9 +32,7 @@ namespace LinqToDB_Temp.MacroInternal
 		match (InfoOfImpl.DoTransform(Macros.ImplicitCTX(), expr))
 		{
 			| Some((mi, Field)) => <[ $mi : FieldInfo ]>
-			| _ =>
-				Message.Error(expr.Location, "field expression expected.");
-				expr
+			| _ => Message.FatalError(expr.Location, "field expression expected.");
 		}
 	}
 
@@ -46,9 +42,7 @@ namespace LinqToDB_Temp.MacroInternal
 		match (InfoOfImpl.DoTransform(Macros.ImplicitCTX(), expr))
 		{
 			| Some((mi, Property)) => <[ $mi : MethodInfo ]>
-			| _ =>
-				Message.Error(expr.Location, "property expression expected.");
-				expr
+			| _ => Message.FatalError(expr.Location, "property expression expected.");
 		}
 	}
 
@@ -58,9 +52,7 @@ namespace LinqToDB_Temp.MacroInternal
 		match (InfoOfImpl.DoTransform(Macros.ImplicitCTX(), expr))
 		{
 			| Some((mi, Method)) => <[ $mi : MethodInfo ]>
-			| _ =>
-				Message.Error(expr.Location, "method expression expected.");
-				expr
+			| _ => Message.FatalError(expr.Location, "method expression expected.");
 		}
 	}
 
@@ -70,9 +62,7 @@ namespace LinqToDB_Temp.MacroInternal
 		match (InfoOfImpl.DoTransform(Macros.ImplicitCTX(), expr))
 		{
 			| Some((mi, Constructor)) => <[ $mi : ConstructorInfo ]>
-			| _ =>
-				Message.Error(expr.Location, "constructor expression expected.");
-				expr
+			| _ => Message.FatalError(expr.Location, "constructor expression expected.");
 		}
 	}
 
