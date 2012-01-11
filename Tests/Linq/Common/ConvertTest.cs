@@ -59,10 +59,10 @@ namespace Tests.Common
 		[Test]
 		public void Nullable()
 		{
+			Assert.AreEqual(null,         Convert<int?,  Enum1?>.From(null));
 			Assert.AreEqual(0,            Convert<int?,  int>.   From(null));
 			Assert.AreEqual(10,           Convert<int,   int?>.  From(10));
 			Assert.AreEqual(Enum1.Value1, Convert<int?,  Enum1>. From(null));
-			Assert.AreEqual(null,         Convert<int?,  Enum1?>.From(null));
 			Assert.AreEqual(1,            Convert<Enum1, int?>.  From(Enum1.Value2));
 			Assert.AreEqual(null,         Convert<Enum1?,int?>.  From(null));
 		}

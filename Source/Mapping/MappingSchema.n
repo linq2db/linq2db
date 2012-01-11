@@ -10,6 +10,7 @@ using Nemerle.Collections;
 namespace LinqToDB_Temp.Mapping
 {
 	using Common;
+	using Extensions;
 
 	public class MappingSchema
 	{
@@ -18,7 +19,7 @@ namespace LinqToDB_Temp.Mapping
 		public this(baseSchema : MappingSchema = null)
 		{
 			BaseSchema  = baseSchema;
-			ConvertInfo = ConvertInfo(GetDefaultValue);
+			ConvertInfo = ConvertInfo();
 		}
 
 		public BaseSchema  : MappingSchema { get; }
@@ -26,7 +27,7 @@ namespace LinqToDB_Temp.Mapping
 
 		_defaultValue = Hashtable();
 
-		public GetDefaultValue(type : Type) : object
+		public virtual GetDefaultValue(type : Type) : object
 		{
 			match (_defaultValue.Get(type))
 			{
@@ -41,41 +42,54 @@ namespace LinqToDB_Temp.Mapping
 			_defaultValue[typeof(T)] = value
 		}
 
-		public GetConvertExpression[TFrom,TTo]() : Expression[Func[TFrom,TTo]]
+		public GetConvertExpression[TFrom,TTo](reduceDefaultValue : bool = true) : Expression[Func[TFrom,TTo]]
 		{
-			match (ConvertInfo.Get(typeof(TFrom), typeof(TTo), _defaultValue.Count != 0))
+			def expr = match (ConvertInfo.Get(typeof(TFrom), typeof(TTo), false))
 			{
 				| Some((ex,_))              => ex :> Expression[Func[TFrom,TTo]]
-				| _ when BaseSchema != null => BaseSchema.GetConvertExpression()
-				| _                         => Convert.Expression
+				| _ when BaseSchema != null => BaseSchema.GetConvertExpression(false)
+				| _                         => Convert[TFrom,TTo].Expression
 			}
+
+			if (reduceDefaultValue)
+				ReduceDefaultValue(expr) :> Expression[Func[TFrom,TTo]]
+			else
+				expr
 		}
 
-		public GetConvertExpression(from : Type, to : Type) : LambdaExpression
+		public GetConvertExpression(from : Type, to : Type, reduceDefaultValue : bool = true) : LambdaExpression
 		{
-			match (ConvertInfo.Get(from, to, _defaultValue.Count != 0))
-			{ 
+			def expr = match (ConvertInfo.Get(from, to, false))
+			{
 				| Some((ex,_))                 => ex
-				| None when BaseSchema != null => BaseSchema.GetConvertExpression()
+				| None when BaseSchema != null => BaseSchema.GetConvertExpression(false)
 				| None                         =>
 					def (ex,_) = ConvertInfo.Default.Get(from, to).Value;
 					ex
 			}
+
+			if (reduceDefaultValue)
+				ReduceDefaultValue(expr) :> LambdaExpression
+			else
+				expr
 		}
 
 		public GetConverter[TFrom,TTo]() : Func[TFrom,TTo]
 		{
-			match (ConvertInfo.Get(typeof(TFrom), typeof(TTo), _defaultValue.Count != 0))
+			match (ConvertInfo.Get(typeof(TFrom), typeof(TTo), false))
 			{
-				| Some((_,l))                  => l :> Func[TFrom,TTo]
-				| None when BaseSchema != null => BaseSchema.GetConverter()
-				| None                         => Convert.Lambda
+				| Some((_,l)) => l :> Func[TFrom,TTo]
+				| _ when BaseSchema != null with ex = BaseSchema.GetConvertExpression(false)
+				| _                         with ex = Convert[TFrom,TTo].Expression =>   //// wrong type inference
+					SetConvertExpression(ex);
+					GetConverter()
 			}
 		}
 
-		public SetConvertExpression[TFrom,TTo]([NotNull] expr : Expression[Func[TFrom,TTo]]) : void
+		public SetConvertExpression	[TFrom,TTo]([NotNull] expr : Expression[Func[TFrom,TTo]]) : void
 		{
-			ConvertInfo.Set(typeof(TFrom), typeof(TTo), (expr, expr.Compile()))
+			def rexpr = ReduceDefaultValue(expr) :> Expression[Func[TFrom,TTo]];
+			ConvertInfo.Set(typeof(TFrom), typeof(TTo), (expr, rexpr.Compile()))
 		}
 
 		public SetConverter[TFrom,TTo]([NotNull] func : Func[TFrom,TTo]) : void
@@ -83,6 +97,20 @@ namespace LinqToDB_Temp.Mapping
 			def p  = Parameter(typeof(TFrom), "p");
 			def ex = Lambda.[Func[TFrom,TTo]](Invoke(Constant(func), p), p);
 			ConvertInfo.Set(typeof(TFrom), typeof(TTo), (ex, func));
+		}
+
+		ReduceDefaultValue(expr : Expression) : Expression
+		{
+			expr.Transform(fun(e : Expression)
+			{
+				| Member(null, member) when
+					member.DeclaringType.IsGenericType &&
+					member.Name == "Value" &&
+					member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue[_])
+				| _ is DefaultValueExpression => 
+					Expression.Constant(GetDefaultValue(e.Type), e.Type)
+				| _ => e
+			});
 		}
 	}
 }

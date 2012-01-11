@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Compiler;
+using Nemerle.Compiler.Parsetree;
+using Nemerle.Compiler.Typedtree;
+using Nemerle.Linq;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+namespace LinqToDB_Temp.MacroInternal.Common
+{
+	macro SetCultureExpr(type : PExpr, formatter : PExpr = null)
+	{
+		AutomationImpl.DoSetCultureExpr(type, formatter)
+	}
+
+	module AutomationImpl
+	{
+		public DoSetCultureExpr(type : PExpr, formatter : PExpr) : PExpr
+		{
+			def info = <[ $("info" : usesite) ]>;
+			def f    = if (formatter == null) Name("NumberFormat") else formatter.ToName();
+
+			<[
+				Set(ToExpression(fun(v : $type)  : string { v.ToString($info.$(f : name)) }));
+				Set(ToExpression(fun(v : $type?) : string { if (v.HasValue) v.Value.ToString($info.$(f : name))          else DefaultValue[string].Value }));
+				Set(ToExpression(fun(s : string) : $type  { if (s != null)  $type.  Parse(s, $info.$(f : name))          else DefaultValue[$type ].Value }));
+				Set(ToExpression(fun(s : string) : $type? { if (s != null)  $type.  Parse(s, $info.$(f : name)) : $type? else DefaultValue[$type?].Value }));
+			]>
+		}
+	}
+}

@@ -147,11 +147,5 @@ namespace LinqToDB_Temp.MacroInternal.Extensions
 				$call
 			]>
 		}
-
-		public _ToName(this expr : PExpr) : Name
-		{
-			| <[ $(name : name) ]> => name
-			| _ => Message.FatalError(expr.Location, "Expected simple name.");
-		}
 	}
 }

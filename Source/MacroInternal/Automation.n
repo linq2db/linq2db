@@ -1,0 +1,30 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Compiler;
+using Nemerle.Compiler.Parsetree;
+using Nemerle.Compiler.Typedtree;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+
+namespace LinqToDB.MacroInternal
+{
+  macro Automation(type : PExpr, formatter : PExpr = NumberFormatter)
+  {
+    AutomationImpl.DoTransform(Macros.ImplicitCTX(), type, formatter)
+  }
+  
+  module AutomationImpl
+  {
+    public DoTransform(typer : Typer, type : PExpr, formatter : PExpr = NumberFormatter) : PExpr
+    {
+      Macros.DefineCTX(typer);
+      // TODO: Add implementation here.
+      _ = type; _ = formatter;
+    }
+  }
+}

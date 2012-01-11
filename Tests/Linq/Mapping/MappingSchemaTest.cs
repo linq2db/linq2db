@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
+using LinqToDB_Temp;
 using LinqToDB_Temp.Common;
 using LinqToDB_Temp.Mapping;
 
@@ -11,7 +12,7 @@ namespace Tests.Mapping
 	public class MappingSchemaTest : TestBase
 	{
 		[Test]
-		public void DefaultValue()
+		public void DefaultValue1()
 		{
 			var ms = new MappingSchema();
 
@@ -20,6 +21,24 @@ namespace Tests.Mapping
 			var c = ms.GetConverter<int?,int>();
 
 			Assert.AreEqual(-1, c(null));
+		}
+
+		[Test]
+		public void DefaultValue2()
+		{
+			var ms1 = new MappingSchema();
+			var ms2 = new MappingSchema(ms1);
+
+			ms1.SetConvertExpression<int?,int>(i => i.HasValue ? i.Value * 2 : DefaultValue<int>.Value);
+			ms2.SetDefaultValue(-1);
+
+			var c1 = ms1.GetConverter<int?,int>();
+			var c2 = ms2.GetConverter<int?,int>();
+
+			Assert.AreEqual( 4, c1(2));
+			Assert.AreEqual( 0, c1(null));
+			Assert.AreEqual( 4, c2(2));
+			Assert.AreEqual(-1, c2(null));
 		}
 
 		[Test]
