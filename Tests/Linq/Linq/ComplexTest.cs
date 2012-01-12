@@ -150,7 +150,7 @@ namespace Tests.Linq
 				var result =
 					from ch in db.Child
 						join p  in db.Parent on ch.ParentID equals p.ParentID
-						join gc in q2     on p.ParentID  equals gc.ParentID into g
+						join gc in q2        on p.ParentID  equals gc.ParentID into g
 						from gc in g.DefaultIfEmpty()
 					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID.Value)
 					select new { p.ParentID, gc };

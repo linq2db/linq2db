@@ -69,10 +69,13 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\Convert.n">
+    <Compile Include="Common\Converter.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Common\ConverterMaker.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Common\ConvertT.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Common\ConvertInfo.n">

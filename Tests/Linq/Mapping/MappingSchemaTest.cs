@@ -29,7 +29,7 @@ namespace Tests.Mapping
 			var ms1 = new MappingSchema();
 			var ms2 = new MappingSchema(ms1);
 
-			ms1.SetConvertExpression<int?,int>(i => i.HasValue ? i.Value * 2 : DefaultValue<int>.Value);
+			ms1.SetConvertExpression<int?,int>(i => i.HasValue ? i.Value * 2 : DefaultValue<int>.Value, false);
 			ms2.SetDefaultValue(-1);
 
 			var c1 = ms1.GetConverter<int?,int>();
@@ -38,6 +38,24 @@ namespace Tests.Mapping
 			Assert.AreEqual( 4, c1(2));
 			Assert.AreEqual( 0, c1(null));
 			Assert.AreEqual( 4, c2(2));
+			Assert.AreEqual(-1, c2(null));
+		}
+
+		[Test]
+		public void DefaultValue3()
+		{
+			var ms1 = new MappingSchema();
+			var ms2 = new MappingSchema(ms1);
+
+			ms1.SetConvertExpression<int?,int>(i => i.Value * 2);
+			ms2.SetDefaultValue(-1);
+
+			var c1 = ms1.GetConverter<int?,int>();
+			var c2 = ms2.GetConverter<int?,int>();
+
+			Assert.AreEqual(4, c1(2));
+			Assert.AreEqual(0, c1(null));
+			Assert.AreEqual(4, c2(2));
 			Assert.AreEqual(-1, c2(null));
 		}
 
@@ -97,7 +115,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.ConvertInfo.SetCultureInfo(new CultureInfo("ru-RU", false));
+			ms.SetCultureInfo(new CultureInfo("ru-RU", false));
 
 			Assert.AreEqual("20.01.2012 16:30:40",                 ms.GetConverter<DateTime,string>()(new DateTime(2012, 1, 20, 16, 30, 40)));
 			Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), ms.GetConverter<string,DateTime>()("20.01.2012 16:30:40"));

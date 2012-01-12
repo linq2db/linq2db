@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Linq.Expressions.Expression;
 
 using Nemerle;
+using Nemerle.Collections;
 
 namespace LinqToDB_Temp.Common
 {

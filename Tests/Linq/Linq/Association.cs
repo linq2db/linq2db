@@ -280,7 +280,8 @@ namespace Tests.Linq
 						select c
 					join g in GrandChild on c.ParentID equals g.ParentID
 					where g.ChildID == 22
-					select new { c.Parent, c },
+					select new { c.Parent, c }
+					,
 					from c in
 						from c in db.Child
 						where c.Parent.ParentID == 2

@@ -62,13 +62,13 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\Automation.n">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Extensions\Automation.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="InfoOf.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Mapping\Automation.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ReplaceCtorParameter.n">
@@ -84,7 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Extensions" />
-    <Folder Include="Common" />
+    <Folder Include="Mapping" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />

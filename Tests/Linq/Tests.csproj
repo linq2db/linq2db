@@ -169,6 +169,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="Data\DataConnectionTest.cs" />

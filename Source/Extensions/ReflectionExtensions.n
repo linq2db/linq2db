@@ -43,5 +43,13 @@ namespace LinqToDB_Temp.Extensions
 			else
 				type;
 		}
+
+		public ToNullableUnderlying([NotNull] this type : Type) : Type
+		{
+			if (type.IsNullable())
+				type.GetGenericArguments()[0];
+			else
+				type;
+		}
 	}
 }
