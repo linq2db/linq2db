@@ -70,11 +70,7 @@ namespace LinqToDB_Temp.MacroInternal
 	{
 		public DoTransform(typer : Typer, expr : PExpr) : option[PExpr * MemberTypes]
 		{
-			//Macros.DefineCTX(typer);
-
-			//assert2(false);
-
-			def getField(ex : PExpr) : option[PExpr * MemberTypes]
+			def getInfo(ex : PExpr) : option[PExpr * MemberTypes]
 			{
 				def check(tex : TExpr)
 				{
@@ -96,13 +92,13 @@ namespace LinqToDB_Temp.MacroInternal
 			{
 				| <[ $inst . $meth ( ..$args ) ]> =>
 
-					getField(
-						if (typer.JustTry(fun() { getField(expr).IsSome })) expr
+					getInfo(
+						if (typer.JustTry(fun() { getInfo(expr).IsSome })) expr
 						else
 						{
 							def ex = <[ default($inst) . $meth ( ..$args ) ]>;
 
-							if (typer.JustTry(fun() { getField(ex).IsSome })) ex
+							if (typer.JustTry(fun() { getInfo(ex).IsSome })) ex
 							else
 							{
 								def args = args.Map(fun(a) { <[ default($a)]>});
@@ -112,11 +108,11 @@ namespace LinqToDB_Temp.MacroInternal
 
 				| <[ $inst . $mem ]> =>
 
-					getField(
-						if (typer.JustTry(fun() { getField(expr).IsSome })) expr
+					getInfo(
+						if (typer.JustTry(fun() { getInfo(expr).IsSome })) expr
 						else <[ default($inst).$mem ]>)
 
-				| _ => getField(expr)
+				| _ => getInfo(expr)
 			}
 		}
 	}

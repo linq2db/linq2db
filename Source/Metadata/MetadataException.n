@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace LinqToDB_Temp
+namespace LinqToDB_Temp.Metadata
 {
 	/// <summary>
 	/// Defines the base class for the namespace exceptions.
@@ -11,10 +11,10 @@ namespace LinqToDB_Temp
 	/// execution of the namespace members.
 	/// </remarks>
 	[Serializable] 
-	public class LinqToDBException : Exception
+	public class MetadataException : Exception
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class.
+		/// Initializes a new instance of the <see cref="MetadataException"/> class.
 		/// </summary>
 		/// <remarks>
 		/// This constructor initializes the <see cref="Exception.Message"/>
@@ -22,11 +22,11 @@ namespace LinqToDB_Temp
 		/// </remarks>
 		public this()
 		{
-			base("A LinqToDB exception has occurred.")
+			base("A Metadata exception has occurred.")
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class 
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -38,7 +38,7 @@ namespace LinqToDB_Temp
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class 
 		/// with the specified error message and InnerException property.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -53,7 +53,7 @@ namespace LinqToDB_Temp
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class 
 		/// with the specified InnerException property.
 		/// </summary>
 		/// <param name="innerException">The InnerException, if any, that threw
@@ -64,8 +64,10 @@ namespace LinqToDB_Temp
 			base(innerException.Message, innerException)
 		}
 
+#if !SILVERLIGHT
+
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
+		/// Initializes a new instance of the <see cref="MetadataException"/> class
 		/// with serialized data.
 		/// </summary>
 		/// <param name="info">The object that holds the serialized object data.</param>
@@ -77,5 +79,7 @@ namespace LinqToDB_Temp
 		{
 			base(info, context)
 		}
+
+#endif
 	}
 }

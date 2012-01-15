@@ -1,0 +1,27 @@
+﻿using System;
+
+using Nemerle;
+using Nemerle.Collections;
+
+namespace LinqToDB_Temp.Metadata
+{
+	[Record]
+	public class TypeInfo
+	{
+		public Name       : string;
+		public Members    : Hashtable[string,MemberInfo];
+		public Attributes : Hashtable[string,AttributeInfo];
+
+		public GetAttribute (type : Type) : option[AttributeInfo]
+		{
+			Attributes.Get(type.FullName) ??
+			Attributes.Get(type.Name)     ??
+			if (type.Name.EndsWith("Attribute"))
+			{
+				def name = type.Name.Substring(0, type.Name.Length - "Attribute".Length);
+				Attributes.Get(name)
+			}
+			else None()
+		}
+	}
+}

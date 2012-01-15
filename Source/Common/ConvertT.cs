@@ -55,50 +55,52 @@ namespace LinqToDB.Common
 				var m = (ConvertMethod)(object)(new LinqToDB.Common.Convert<P,P>.ConvertMethod(SameType));
 				return m;
 			}
-
-			if (from.IsEnum)
-				from = Enum.GetUnderlyingType(from);
-
-			if (to.IsEnum)
-				to = Enum.GetUnderlyingType(to);
-
-			if (to.IsSameOrParentOf(from))
-				return Assignable;
-
-			string methodName;
-
-			if (to.IsNullable())
-				methodName = "ToNullable" + to.GetGenericArguments()[0].Name;
-			else if (to.IsArray)
-				methodName = "To" + to.GetElementType().Name + "Array";
-			else if (to.Name == "Binary")
-				methodName = "ToLinq" + to.Name;
 			else
-				methodName = "To" + to.Name;
-
-			var mi = typeof(LinqToDB.Common.Convert).GetMethod(methodName,
-				BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding,
-				null, new[] { from }, null) ?? FindTypeCastOperator(to) ?? FindTypeCastOperator(from);
-
-			if (mi == null && to.IsNullable())
 			{
-				// To-nullable conversion.
-				// We have to use reflection to enforce some constraints.
-				//
-				var toType   = to.GetGenericArguments()[0];
-				var fromType = from.IsNullable() ? from.GetGenericArguments()[0] : from;
+				if (from.IsEnum)
+					from = Enum.GetUnderlyingType(from);
 
-				methodName = from.IsNullable() ? "FromNullable" : "From";
+				if (to.IsEnum)
+					to = Enum.GetUnderlyingType(to);
 
-				mi = typeof(NullableConvert<,>)
-					.MakeGenericType(toType, fromType)
-					.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
+				if (to.IsSameOrParentOf(from))
+					return Assignable;
+
+				string methodName;
+
+				if (to.IsNullable())
+					methodName = "ToNullable" + to.GetGenericArguments()[0].Name;
+				else if (to.IsArray)
+					methodName = "To" + to.GetElementType().Name + "Array";
+				else if (to.Name == "Binary")
+					methodName = "ToLinq" + to.Name;
+				else
+					methodName = "To" + to.Name;
+
+				var mi = typeof(LinqToDB.Common.Convert).GetMethod(methodName,
+					BindingFlags.Public | BindingFlags.Static | BindingFlags.ExactBinding,
+					null, new[] { from }, null) ?? FindTypeCastOperator(to) ?? FindTypeCastOperator(from);
+
+				if (mi == null && to.IsNullable())
+				{
+					// To-nullable conversion.
+					// We have to use reflection to enforce some constraints.
+					//
+					var toType   = to.GetGenericArguments()[0];
+					var fromType = from.IsNullable() ? from.GetGenericArguments()[0] : from;
+
+					methodName = from.IsNullable() ? "FromNullable" : "From";
+
+					mi = typeof(NullableConvert<,>)
+						.MakeGenericType(toType, fromType)
+						.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static);
+				}
+
+				if (mi != null)
+					return (ConvertMethod)Delegate.CreateDelegate(typeof(ConvertMethod), mi);
+				else
+					return Default;
 			}
-
-			if (mi != null)
-				return (ConvertMethod)Delegate.CreateDelegate(typeof(ConvertMethod), mi);
-
-			return Default;
 		}
 
 		private static MethodInfo FindTypeCastOperator(Type t)

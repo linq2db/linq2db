@@ -10,9 +10,9 @@ namespace LinqToDB_Temp
 {
 	using Extensions;
 
-	public module DataTypeExtensions
+	module DataTypeExtensions
 	{
-		public ToSystemType(this type : DataType) : Type
+		public _ToSystemType(this type : DataType) : Type
 		{
 			| Char           
 			| VarChar        
@@ -50,7 +50,7 @@ namespace LinqToDB_Temp
 			| Variant        => typeof(object)
 		}
 
-		public ToDataType(this type : Type) : DataType
+		public _ToDataType(this type : Type) : DataType
 		{
 			match (type.ToUnderlying().ToCode(true))
 			{
@@ -80,7 +80,7 @@ namespace LinqToDB_Temp
 			}
 		}
 
-		public ToSqlDbType(this type : DataType) : SqlDbType
+		public _ToSqlDbType(this type : DataType) : SqlDbType
 		{
 			| Char           => SqlDbType.Char      // text
 			| VarChar        => SqlDbType.VarChar
@@ -118,7 +118,7 @@ namespace LinqToDB_Temp
 			| VarNumeric     => SqlDbType.Decimal
 		}
 
-		public ToDataType(this type : SqlDbType) : DataType
+		public _ToDataType(this type : SqlDbType) : DataType
 		{
 			| Char             => DataType.Char
 			| VarChar          => DataType.VarChar
@@ -153,7 +153,7 @@ namespace LinqToDB_Temp
 			| Structured       => throw NotImplementedException()
 		}
 
-		public ToDbType(this type : DataType) : DbType
+		public _ToDbType(this type : DataType) : DbType
 		{
 			| Char           => DbType.AnsiStringFixedLength
 			| VarChar        
@@ -191,7 +191,7 @@ namespace LinqToDB_Temp
 			| VarNumeric     => DbType.Decimal
 		}
 
-		public ToDataType(this type : DbType) : DataType
+		public _ToDataType(this type : DbType) : DataType
 		{
 			| AnsiStringFixedLength => DataType.Char
 			| AnsiString            => DataType.VarChar

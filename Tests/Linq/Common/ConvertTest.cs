@@ -94,7 +94,7 @@ namespace Tests.Common
 		}
 
 		[Test]
-		public void Converter()
+		public void ConvertTo()
 		{
 			Assert.AreEqual(10, ConvertTo<TestData1>.From(10).Value);
 			Assert.AreEqual(10, ConvertTo<TestData2>.From(10).Value);

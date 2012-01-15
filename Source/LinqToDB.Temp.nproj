@@ -129,6 +129,9 @@
     <Compile Include="Extensions\LinqExpressionExtensions.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\LinqExtensions.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Extensions\ReflectionExtensions.n">
       <SubType>Code</SubType>
     </Compile>
@@ -144,7 +147,22 @@
     <Compile Include="Mapping\MappingSchema.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Metadata\TypeExtension.n">
+    <Compile Include="Metadata\AttributeInfo.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata\IMetadataReader.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata\MemberInfo.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata\MetadataException.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata\TypeInfo.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata\XmlMetadataReader.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />

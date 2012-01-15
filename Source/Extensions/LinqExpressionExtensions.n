@@ -338,12 +338,9 @@ namespace LinqToDB_Temp.Extensions
 
 					true;
 
-				| ExpressionType.Extension when expr1 is DefaultValueExpression =>
+				| ExpressionType.Extension when expr1.CanReduce && expr2.CanReduce =>
 
-					def e1 = expr1 :> DefaultValueExpression;
-					def e2 = expr2 :> DefaultValueExpression;
-
-					e1.Type == e2.Type
+					expr1.Reduce().EqualsTo(expr2.Reduce(), queryableAccessorDic)
 
 				| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
 				| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
@@ -1122,12 +1119,12 @@ namespace LinqToDB_Temp.Extensions
 			else
 				match (expr)
 				{
-					| Member(null, _)       => expr
+					| Member(null, _, _)    => expr
 					| Call  (null, _, null) => expr
 					| Call  (null, _, args) as e when args.Count > 0 && e.IsQueryable() => GetRootObject(args[0])
 					| Call  (null, _, _   ) => expr
 					| Call  (obj,  _, _   ) => GetRootObject(obj)
-					| Member(ex,   _)       => GetRootObject(ex.Unwrap())
+					| Member(ex,   _, _)    => GetRootObject(ex.Unwrap())
 					| _                     => expr
 				}
 		}
@@ -1139,12 +1136,12 @@ namespace LinqToDB_Temp.Extensions
 			else
 				(match (expr)
 				{
-					| Member(null, _)       => List()
+					| Member(null, _, _)    => List()
 					| Call  (null, _, null) => List()
 					| Call  (null, _, args) as e when args.Count > 0 && e.IsQueryable() => GetMembers(args[0])
 					| Call  (null, _, _   ) => List()
 					| Call  (obj,  _, _   ) => GetMembers(obj)
-					| Member(expr, _)       => GetMembers(expr.Unwrap())
+					| Member(expr, _, _)    => GetMembers(expr.Unwrap())
 					| _                     => List()
 				}) <- [ expr ]
 		}
@@ -1181,12 +1178,12 @@ namespace LinqToDB_Temp.Extensions
 
 				match (ex)
 				{
-					| Member(null, _)       => (ex, current)
+					| Member(null, _, _)    => (ex, current)
 					| Call  (null, _, null) => (ex, current)
 					| Call  (null, _, args) as c when args.Count > 0 && c.IsQueryable() => next(args[0])
 					| Call  (null, _, _)    => (ex, current)
-					| Call  (obj, _, _)     => next(obj)
-					| Member(e, _)          => next(e.Unwrap())
+					| Call  (obj,  _, _)    => next(obj)
+					| Member(e,    _, _)    => next(e.Unwrap())
 					| _                     => (ex, current)
 				}
 			}

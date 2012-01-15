@@ -95,12 +95,8 @@ namespace LinqToDB_Temp.Common
 
 		internal IsDefaultValuePlaceHolder(expr : Expression) : bool
 		{
-			| Member(null, member) when
-				member.DeclaringType.IsGenericType &&
-				member.Name == "Value" &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue[_])
-			| _ is DefaultValueExpression => true
-			| _ => false
+			| Member(null, "Value", (IsGenericType = true) as dt) => dt.GetGenericTypeDefinition() == typeof(DefaultValue[_])
+			| x => x is DefaultValueExpression
 		}
 	}
 }

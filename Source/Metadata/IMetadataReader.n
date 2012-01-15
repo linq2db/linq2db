@@ -1,0 +1,12 @@
+﻿using System;
+
+using Nemerle;
+
+namespace LinqToDB_Temp.Metadata
+{
+	public interface IMetadataReader
+	{
+		GetAttribute[TAttribute](type : Type)                      : TAttribute;
+		GetAttribute[TAttribute](type : Type, memberName : string) : TAttribute;
+	}
+}

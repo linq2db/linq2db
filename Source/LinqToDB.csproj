@@ -324,7 +324,9 @@
     <Compile Include="ServiceModel\SoapDataContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Reflection\Extension\TypeExtension.xsd">
