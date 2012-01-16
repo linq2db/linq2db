@@ -1,0 +1,27 @@
+﻿using System;
+using System.Data.Linq;
+
+using Nemerle;
+using Nemerle.Assertions;
+
+namespace LinqToDB_Temp.Metadata
+{
+	public class SystemDataLinqAttributeReader : IMetadataReader
+	{
+		public GetAttributes[TAttribute](_type : Type) : array[TAttribute]
+			where TAttribute : class, Attribute
+			ensures value == null || value.Length != 0
+		{
+			null
+		}
+
+		public GetAttributes[TAttribute](_type : Type, _memberName : string) : array[TAttribute]
+			where TAttribute : class, Attribute
+			ensures value == null || value.Length != 0
+		{
+			null
+		}
+
+		_reader : AttributeReader = AttributeReader();
+	}
+}

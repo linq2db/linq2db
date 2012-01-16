@@ -16,7 +16,7 @@ namespace LinqToDB_Temp.Metadata
 	using Common;
 	using Extensions;
 
-	public class XmlMetadataReader : IMetadataReader
+	public class XmlAttributeReader : IMetadataReader
 	{
 		_types : Hashtable[string,TypeInfo];
 
@@ -49,9 +49,6 @@ namespace LinqToDB_Temp.Metadata
 					if (embedded && stream == null)
 					{
 						def names   = assembly.GetManifestResourceNames();
-
-						// Prepeare file anme with a dot to avoid partial name matching.
-						//
 						def xmlFile = "." + xmlFile;
 						def name    = names.FirstOrDefault(_.EndsWith(xmlFile));
 
@@ -80,7 +77,7 @@ namespace LinqToDB_Temp.Metadata
 
 		LoadStream (xmlDocStream : Stream, fileName : string) : Hashtable[string,TypeInfo]
 		{
-			def getAttrs(el : XElement, exclude : string, typeName, memberName) : Hashtable[string,AttributeInfo]
+			def getAttrs(el : XElement, exclude : string, typeName, memberName) : List[AttributeInfo]
 			{
 				def attrs = el.Elements().Where(e => e.Name.LocalName != exclude).Select(a =>
 				{
@@ -111,7 +108,7 @@ namespace LinqToDB_Temp.Metadata
 					AttributeInfo(aname, values.ToHashtable((n,_) => n, (_,v) => v))
 				});
 
-				attrs.ToHashtable(a => a.Name);
+				attrs.ToList()
 			}
 
 			def doc = XDocument.Load(StreamReader(xmlDocStream));
@@ -138,24 +135,22 @@ namespace LinqToDB_Temp.Metadata
 			.ToHashtable(t => t.Name);
 		}
 
-		public GetAttribute[TAttribute](type : Type) : TAttribute
+		public GetAttributes[TAttribute](type : Type) : array[TAttribute]
 			where TAttribute : Attribute
+			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
 			{
 				| Some(t) =>
 					def atype = typeof(TAttribute);
-					match (t.GetAttribute(atype))
-					{
-						| Some(a) => a.MakeAttribute(atype) :> TAttribute
-						| _ => null
-					}
+					t.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> TAttribute)
 				| _ => null
 			}
 		}
 
-		public GetAttribute[TAttribute](type : Type, memberName : string) : TAttribute
+		public GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute]
 			where TAttribute : Attribute
+			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
 			{
@@ -164,11 +159,7 @@ namespace LinqToDB_Temp.Metadata
 					{
 						| Some(m) =>
 							def atype = typeof(TAttribute);
-							match (m.GetAttribute(atype))
-							{
-								| Some(a) => a.MakeAttribute(atype) :> TAttribute
-								| _ => null
-							}
+							m.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> TAttribute)
 						| _ => null
 					}
 				| _ => null

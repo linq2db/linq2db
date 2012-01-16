@@ -1,26 +1,36 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Nemerle;
-using Nemerle.Collections;
 
 namespace LinqToDB_Temp.Metadata
 {
 	[Record]
-	public class MemberInfo
+	class MemberInfo
 	{
 		public Name       : string;
-		public Attributes : Hashtable[string,AttributeInfo];
+		public Attributes : List[AttributeInfo];
 
-		public GetAttribute (type : Type) : option[AttributeInfo]
+		public GetAttribute (type : Type) : array[AttributeInfo]
 		{
-			Attributes.Get(type.FullName) ??
-			Attributes.Get(type.Name)     ??
-			if (type.Name.EndsWith("Attribute"))
+			def getAttrs(name)
 			{
-				def name = type.Name.Substring(0, type.Name.Length - "Attribute".Length);
-				Attributes.Get(name)
+				def attrs = Attributes.Where(a => a.Name == name).ToArray();
+				if (attrs.Length == 0) null else attrs
 			}
-			else None()
+
+			getAttrs(type.FullName) ??
+			getAttrs(type.Name)     ??
+			{
+				if (type.Name.EndsWith("Attribute"))
+				{
+					def name = type.Name.Substring(0, type.Name.Length - "Attribute".Length);
+					getAttrs(name)
+				}
+				else
+					null
+			}
 		}
 	}
 }

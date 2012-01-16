@@ -13,6 +13,7 @@ namespace LinqToDB_Temp.Mapping
 	using Common;
 	using Extensions;
 	using MacroInternal.Mapping;
+	using Metadata;
 
 	public class MappingSchema
 	{
@@ -23,14 +24,15 @@ namespace LinqToDB_Temp.Mapping
 			BaseSchema  = baseSchema;
 		}
 
-		public BaseSchema  : MappingSchema { get; }
+		public BaseSchema : MappingSchema { get; }
 
-		_convertInfo  : ConvertInfo = ConvertInfo();
-		_defaultValue = Hashtable();
+		#region Default Values
+
+		_defaultValues = Hashtable();
 
 		public virtual GetDefaultValue(type : Type) : object
 		{
-			match (_defaultValue.Get(type))
+			match (_defaultValues.Get(type))
 			{
 				| Some(v)                   => v
 				| _ when BaseSchema != null => BaseSchema.GetDefaultValue(type)
@@ -40,8 +42,14 @@ namespace LinqToDB_Temp.Mapping
 
 		public SetDefaultValue[T](value : T) : void
 		{
-			_defaultValue[typeof(T)] = value
+			_defaultValues[typeof(T)] = value
 		}
+
+		#endregion
+
+		#region Convert
+
+		_convertInfo  : ConvertInfo = ConvertInfo();
 
 		public GetConvertExpression[TFrom,TTo]() : Expression[Func[TFrom,TTo]]
 		{
@@ -199,5 +207,59 @@ namespace LinqToDB_Temp.Mapping
 			SetCultureExpr(DateTime,       DateTimeFormat);
 			SetCultureExpr(DateTimeOffset, DateTimeFormat);
 		}
+
+		#endregion
+
+		#region MetadataReader
+
+		mutable _metadataReader : IMetadataReader;
+		public   MetadataReader : IMetadataReader
+		{
+			get
+			{
+				when (_metadataReader == null)
+					_metadataReader = MetadataReader();
+				_metadataReader
+			}
+			set
+			{
+				_metadataReader = value
+			}
+		}
+
+		public GetAttributes[TAttribute](type : Type) : array[TAttribute]
+			where TAttribute : class, Attribute
+		{
+			//_metadataReader      ?.GetAttributes.[TAttribute](type) ??
+			(if (_metadataReader != null) _metadataReader.GetAttributes.[TAttribute](type) else null) ??
+			(if (BaseSchema      != null) BaseSchema.     GetAttributes.[TAttribute](type) else null) ??
+			MappingSchema. Default.GetAttributes.[TAttribute](type) ??
+			MetadataReader.Default.GetAttributes.[TAttribute](type)
+		}
+		
+		public GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute]
+			where TAttribute : class, Attribute
+		{
+			(if (_metadataReader != null) _metadataReader.GetAttributes.[TAttribute](type, memberName) else null) ??
+			(if (BaseSchema      != null) BaseSchema.     GetAttributes.[TAttribute](type, memberName) else null) ??
+			MappingSchema. Default.GetAttributes.[TAttribute](type, memberName) ??
+			MetadataReader.Default.GetAttributes.[TAttribute](type, memberName)
+		}
+
+		public GetAttribute[TAttribute](type : Type) : TAttribute
+			where TAttribute : class, Attribute
+		{
+			def attrs = GetAttributes.[TAttribute](type);
+			if (attrs == null) null else attrs[0]
+		}
+		
+		public GetAttribute[TAttribute](type : Type, memberName : string) : TAttribute
+			where TAttribute : class, Attribute
+		{
+			def attrs = GetAttributes.[TAttribute](type, memberName);
+			if (attrs == null) null else attrs[0]
+		}
+
+		#endregion
 	}
 }

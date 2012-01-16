@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Text;
@@ -48,17 +47,18 @@ namespace Tests.Metadata
 		[Test]
 		public void Parse()
 		{
-			new XmlMetadataReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+			new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
 		}
 
 		[Test]
 		public void TypeAttribute()
 		{
-			var rd   = new XmlMetadataReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attr = rd.GetAttribute<TableAttribute>(typeof(XmlReaderTest));
+			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+			var attrs = rd.GetAttributes<TableAttribute>(typeof(XmlReaderTest));
 
-			Assert.NotNull (attr);
-			Assert.AreEqual("TestName", attr.Name);
+			Assert.NotNull (attrs);
+			Assert.AreEqual(1, attrs.Length);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 
 		public int Field1;
@@ -66,11 +66,12 @@ namespace Tests.Metadata
 		[Test]
 		public void FieldAttribute()
 		{
-			var rd = new XmlMetadataReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attr = rd.GetAttribute<ColumnAttribute>(typeof(XmlReaderTest), "Field1");
+			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTest), "Field1");
 
-			Assert.NotNull(attr);
-			Assert.AreEqual("TestName", attr.Name);
+			Assert.NotNull (attrs);
+			Assert.AreEqual(1, attrs.Length);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 
 		public int Property1 { get; set; }
@@ -78,11 +79,12 @@ namespace Tests.Metadata
 		[Test]
 		public void PropertyAttribute()
 		{
-			var rd = new XmlMetadataReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
-			var attr = rd.GetAttribute<ColumnAttribute>(typeof(XmlReaderTest), "Field1");
+			var rd    = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(XmlReaderTest), "Property1");
 
-			Assert.NotNull(attr);
-			Assert.AreEqual("TestName", attr.Name);
+			Assert.NotNull (attrs);
+			Assert.AreEqual(1, attrs.Length);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 	}
 }

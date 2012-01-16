@@ -13,7 +13,7 @@ namespace LinqToDB_Temp.Metadata
 	using Extensions;
 
 	[Record]
-	public class AttributeInfo
+	class AttributeInfo
 	{
 		public Name   : string;
 		public Values : Hashtable[string,object];

@@ -176,6 +176,8 @@
     <Compile Include="Exceptions\MetadataTest.cs" />
     <Compile Include="Macros\InfoOfTest.cs" />
     <Compile Include="Mapping\MappingSchemaTest.cs" />
+    <Compile Include="Metadata\AttributeReaderTest.cs" />
+    <Compile Include="Mapping\MetadataReaderTest.cs" />
     <Compile Include="Metadata\XmlReaderTest.cs" />
     <Compile Include="SqlBuilder\OptimizerTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
