@@ -181,6 +181,7 @@
     <Compile Include="Metadata\XmlReaderTest.cs" />
     <Compile Include="SqlBuilder\OptimizerTest.cs" />
     <Compile Include="SqlBuilder\SqlDataTypeTest.cs" />
+    <Compile Include="SqlBuilder\SqlTableTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
     <Compile Include="Linq\ConvertTest.cs" />

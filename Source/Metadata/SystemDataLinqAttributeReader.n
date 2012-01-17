@@ -2,6 +2,7 @@
 
 using Nemerle;
 using Nemerle.Assertions;
+using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.Metadata
 {
@@ -43,6 +44,22 @@ namespace LinqToDB_Temp.Metadata
 
 					when (da != null)
 						attr.Database = da[0].Name;
+
+					array[attr :> T]
+				}
+			}
+			else if (typeof(T) == typeof(ColumnAttribute))
+			{
+				def ca = _reader.GetAttributes.[System.Data.Linq.Mapping.ColumnAttribute](type);
+
+				if (ca == null) null
+				else
+				{
+					def attr = ColumnAttribute() <-
+					{
+						Name   = ca[0].Name;
+						DbType = ca[0].DbType;
+					};
 
 					array[attr :> T]
 				}

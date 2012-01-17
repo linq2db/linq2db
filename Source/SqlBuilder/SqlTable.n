@@ -32,8 +32,13 @@ namespace LinqToDB_Temp.SqlBuilder
 			Fields = members
 				.Select(((m,t)) => (m, t, mappingSchema.GetAttribute.[ColumnAttribute](systemType, m.Name)))
 				.Where ((_,_,c) => !reqColumn || c != null)
-				.Select((m,t,c) => SqlField(t : Type, m.Name, c?.Name ?? m.Name))
+				.Select((m,t,c) => SqlField(
+					if (string.IsNullOrEmpty(c.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t),
+					m.Name,
+					c?.Name ?? m.Name))
 				.NToList();
+
+			_fieldTable = Fields.ToHashtable(f => f.Name);
 		}
 
 		public SystemType : Type;
@@ -41,5 +46,12 @@ namespace LinqToDB_Temp.SqlBuilder
 		public Schema     : string;
 		public Database   : string;
 		public Fields     : list[SqlField];
+
+		_fieldTable : Hashtable[string,SqlField];
+
+		public Item[fieldName : string] : SqlField
+		{
+			get { _fieldTable.GetValueOrDefault(fieldName) }
+		}
 	}
 }
