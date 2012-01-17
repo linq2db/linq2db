@@ -12,6 +12,7 @@ using Nemerle.Linq;
 namespace LinqToDB_Temp.Common
 {
 	using Extensions;
+	using MacroInternal;
 
 	class ConverterMaker
 	{
@@ -107,8 +108,7 @@ namespace LinqToDB_Temp.Common
 			match (lambda)
 			{
 				| null             => None()
-				| Lambda(body, ps) => Some(body.Transform(e =>
-				if (ReferenceEquals(e, ps[0])) p else e))
+				| Lambda(body, ps) => Some(body.Transform(e => if (e === ps[0]) p else e))
 			}
 		}
 

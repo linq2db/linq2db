@@ -135,21 +135,21 @@ namespace LinqToDB_Temp.Metadata
 			.ToHashtable(t => t.Name);
 		}
 
-		public GetAttributes[TAttribute](type : Type) : array[TAttribute]
-			where TAttribute : Attribute
+		public GetAttributes[T](type : Type) : array[T]
+			where T : Attribute
 			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
 			{
 				| Some(t) =>
-					def atype = typeof(TAttribute);
-					t.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> TAttribute)
+					def atype = typeof(T);
+					t.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> T)
 				| _ => null
 			}
 		}
 
-		public GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute]
-			where TAttribute : Attribute
+		public GetAttributes[T](type : Type, memberName : string) : array[T]
+			where T : Attribute
 			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
@@ -158,8 +158,8 @@ namespace LinqToDB_Temp.Metadata
 					match (t.Members.Get(memberName))
 					{
 						| Some(m) =>
-							def atype = typeof(TAttribute);
-							m.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> TAttribute)
+							def atype = typeof(T);
+							m.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> T)
 						| _ => null
 					}
 				| _ => null

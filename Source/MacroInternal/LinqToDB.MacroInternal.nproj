@@ -71,6 +71,9 @@
     <Compile Include="Mapping\Automation.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Operators.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ReplaceCtorParameter.n">
       <SubType>Code</SubType>
     </Compile>

@@ -1,0 +1,45 @@
+﻿using System;
+using System.Linq;
+using System.Reflection;
+
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Assertions;
+
+namespace LinqToDB_Temp.SqlBuilder
+{
+	using Extensions;
+	using Mapping;
+
+	public class SqlTable
+	{
+		public this([NotNull] mappingSchema : MappingSchema, [NotNull] systemType : Type)
+		{
+			SystemType = systemType;
+
+			def ta = mappingSchema.GetAttribute.[TableAttribute](systemType);
+
+			Name     = ta?.Name ?? systemType.Name;
+			Schema   = ta?.Schema;
+			Database = ta?.Database;
+
+			def reqColumn = ta?.IsColumnAttributeRequired;
+			def flags     = BindingFlags.Instance | BindingFlags.Public | (if (reqColumn) BindingFlags.NonPublic else BindingFlags.Default);
+			def members   =
+				systemType.GetFields    (flags).Select(f => (f, f.FieldType   )).Concat(
+				systemType.GetProperties(flags).Select(p => (p, p.PropertyType)));
+
+			Fields = members
+				.Select(((m,t)) => (m, t, mappingSchema.GetAttribute.[ColumnAttribute](systemType, m.Name)))
+				.Where ((_,_,c) => !reqColumn || c != null)
+				.Select((m,t,c) => SqlField(t : Type, m.Name, c?.Name ?? m.Name))
+				.NToList();
+		}
+
+		public SystemType : Type;
+		public Name       : string;
+		public Schema     : string;
+		public Database   : string;
+		public Fields     : list[SqlField];
+	}
+}

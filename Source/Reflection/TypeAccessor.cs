@@ -20,18 +20,14 @@ namespace LinqToDB.Reflection
 
 		protected MemberInfo GetMember(int memberType, string memberName)
 		{
-			const BindingFlags allInstaceMembers =
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-			MemberInfo mi;
+			const BindingFlags allInstaceMembers = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
 			switch (memberType)
 			{
-				case 1 : mi = Type.GetField   (memberName, allInstaceMembers); break;
-				case 2 : mi = Type.GetProperty(memberName, allInstaceMembers); break;
+				case 1 : return Type.GetField   (memberName, allInstaceMembers);
+				case 2 : return Type.GetProperty(memberName, allInstaceMembers);
 				default: throw new InvalidOperationException();
 			}
-
-			return mi;
 		}
 
 		protected void AddMember(MemberAccessor member)

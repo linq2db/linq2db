@@ -187,6 +187,9 @@ namespace LinqToDB_Temp
 		/// </summary>
 		| VarNumeric
 
+		| Geography
+		| Geometry
+
 		/*
 		Udt	A SQL Server 2005 user-defined type (UDT).
 		Structured	A special data type for specifying structured data contained in table-valued parameters.

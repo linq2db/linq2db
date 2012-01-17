@@ -7,23 +7,23 @@ namespace LinqToDB_Temp.Metadata
 {
 	public class AttributeReader : IMetadataReader
 	{
-		public GetAttributes[TAttribute](type : Type) : array[TAttribute]
-			where TAttribute : class, Attribute
+		public GetAttributes[T](type : Type) : array[T]
+			where T : class, Attribute
 			ensures value == null || value.Length != 0
 		{
-			def attrs = type.GetCustomAttributes(typeof(TAttribute), true) :> array[TAttribute];
+			def attrs = type.GetCustomAttributes(typeof(T), true) :> array[T];
 			if (attrs.Length == 0) null else attrs
 		}
 
-		public GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute]
-			where TAttribute : class, Attribute
+		public GetAttributes[T](type : Type, memberName : string) : array[T]
+			where T : class, Attribute
 			ensures value == null || value.Length != 0
 		{
 			def member = type.GetMember(memberName);
 
 			if (member.Length == 1)
 			{
-				def attrs = member[0].GetCustomAttributes(typeof(TAttribute), true) :> array[TAttribute];
+				def attrs = member[0].GetCustomAttributes(typeof(T), true) :> array[T];
 				if (attrs.Length == 0) null else attrs
 			}
 			else

@@ -1,0 +1,20 @@
+﻿using System;
+
+using Nemerle;
+
+namespace LinqToDB_Temp
+{
+	[AttributeUsageAttribute(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+	public class TableAttribute : Attribute
+	{
+		public this()
+		{
+			IsColumnAttributeRequired = true;
+		}
+
+		public Name                      : string { get; set; }
+		public Schema                    : string { get; set; }
+		public Database                  : string { get; set; }
+		public IsColumnAttributeRequired : bool   { get; set; }
+	}
+}

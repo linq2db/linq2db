@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq;
 
 using Nemerle;
 using Nemerle.Assertions;
@@ -8,15 +7,52 @@ namespace LinqToDB_Temp.Metadata
 {
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		public GetAttributes[TAttribute](_type : Type) : array[TAttribute]
-			where TAttribute : class, Attribute
+		public GetAttributes[T](type : Type) : array[T]
+			where T : class, Attribute
 			ensures value == null || value.Length != 0
 		{
-			null
+			if (typeof(T) == typeof(TableAttribute))
+			{
+				def ta = _reader.GetAttributes.[System.Data.Linq.Mapping.TableAttribute](type);
+				def da = _reader.GetAttributes.[System.Data.Linq.Mapping.DatabaseAttribute](type);
+
+				if (ta == null && da == null) null
+				else
+				{
+					def attr = TableAttribute();
+
+					when (ta != null)
+					{
+						def name = ta[0].Name;
+
+						when (name != null)
+						{
+							def names = name.Replace("[", "").Replace("]", "").Split('.');
+
+							match (names.Length)
+							{
+								| 0 => ()
+								| 1 => attr.Name = names[0]
+								| 2 =>
+									attr.Name   = names[0];
+									attr.Schema = names[1]
+								| _ => throw MetadataException($"Invalid table name '$name' of type '$(type.FullName)'")
+							}
+						}
+					}
+
+					when (da != null)
+						attr.Database = da[0].Name;
+
+					array[attr :> T]
+				}
+			}
+			else
+				null
 		}
 
-		public GetAttributes[TAttribute](_type : Type, _memberName : string) : array[TAttribute]
-			where TAttribute : class, Attribute
+		public GetAttributes[T](_type : Type, _memberName : string) : array[T]
+			where T : class, Attribute
 			ensures value == null || value.Length != 0
 		{
 			null

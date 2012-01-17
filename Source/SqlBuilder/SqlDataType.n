@@ -15,28 +15,28 @@ namespace LinqToDB_Temp.SqlBuilder
 	{
 		| Char           { Length : int }
 		| VarChar        { Length : int }
-		| Text           { Length : int }
 		| NChar          { Length : int }
 		| NVarChar       { Length : int }
-		| NText          { Length : int }
+		| Text           
+		| NText          
 		| Binary         { Length : int }
 		| VarBinary      { Length : int }
 		| Image          
 		| Boolean        
 		| Guid           
 		| SByte          
-		| Int16          
-		| Int32          
-		| Int64          
-		| Byte           
+		| Int16                                            // smallint   -2^15 (                   -32,768) to 2^15-1 (                   32,767)   2 Bytes
+		| Int32                                            // int        -2^31 (            -2,147,483,648) to 2^31-1 (            2,147,483,647)   4 Bytes
+		| Int64                                            // bigint     -2^63 (-9,223,372,036,854,775,808) to 2^63-1 (9,223,372,036,854,775,807)   8 Bytes
+		| Byte                                             // tinyint        0                              to    255                               1 Byte
 		| UInt16         
 		| UInt32         
 		| UInt64         
-		| Single         
-		| Double         
+		| Single                                           // real        - 3.40E+38  to -1.18E-38,  0 and 1.18E-38  to 3.40E+38                    4 Bytes    float(24)
+		| Double                                           // float       - 1.79E+308 to -2.23E-308, 0 and 2.23E-308 to 1.79E+308                   8 Bytes
 		| Decimal        { Precision : int; Scale : int }
-		| Money          { Precision : int; Scale : int }
-		| SmallMoney     { Precision : int; Scale : int }
+		| Money                                            // money       -922,337,203,685,477.5808 to 922,337,203,685,477.5807                     8 bytes
+		| SmallMoney                                       // smallmoney              -214,748.3648 to             214,748.3647                     4 bytes
 		| Date           
 		| Time           
 		| DateTime       
@@ -44,9 +44,11 @@ namespace LinqToDB_Temp.SqlBuilder
 		| SmallDateTime  
 		| DateTimeOffset 
 		| Timestamp      
-		| Xml            
+		| Xml            { Type : string; Schema : string }
 		| Variant        
 		| VarNumeric     
+		| Geography      
+		| Geometry       
 
 		public SystemType : Type { get; }
 
@@ -96,10 +98,12 @@ namespace LinqToDB_Temp.SqlBuilder
 					| DateTime2      =>                         27
 					| SmallDateTime  =>                         19
 					| DateTimeOffset =>                         34
-					| Timestamp      =>                         -1
-					| Xml            =>                         -1
-					| Variant        =>                         -1
-					| VarNumeric     =>                         -1
+					| Timestamp      
+					| Xml            
+					| Variant        
+					| VarNumeric     
+					| Geography      
+					| Geometry       =>                         -1
 				}
 			}
 		}
@@ -148,17 +152,19 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Xml                        => "Xml"
 				| Variant                    => "Variant"
 				| VarNumeric                 => "VarNumeric"
+				| Money                      =>  "Money"
+				| SmallMoney                 =>  "SmallMoney"
+				| Text                       => "Text"
+				| NText                      => "NText"
+				| Geography                  => "Geography"
+				| Geometry                   => "Geometry"
 				| Char       (len) with name =  "Char"
 				| VarChar    (len) with name =  "VarChar"
-				| Text       (len) with name =  "Text"
 				| NChar      (len) with name =  "NChar"
 				| NVarChar   (len) with name =  "NVarChar"
-				| NText      (len) with name =  "NText"
 				| Binary     (len) with name =  "Binary"
-				| VarBinary  (len) with name =  "VarBinary"  => if (len > 0) $"$name($len)" else name
-				| Decimal    (p,s) with name =  "Decimal"
-				| Money      (p,s) with name =  "Money"
-				| SmallMoney (p,s) with name =  "SmallMoney" => if (p > 0) $"$name($p,$s)" else name
+				| VarBinary  (len) with name =  "VarBinary" => if (len > 0) $"$name($len)" else name
+				| Decimal    (p,s)           => if (p > 0) $"Decimal($p,$s)" else "Decimal"
 			}
 		}
 
@@ -187,7 +193,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary         => SqlDataType.VarBinary     (type, 8000)
 				| TimeSpan       => SqlDataType.Time          (type)
 				| DateTimeOffset => SqlDataType.DateTimeOffset(type)
-				| XmlReader      => SqlDataType.Xml           (type)
+				| XmlReader      => SqlDataType.Xml           (type, "CONTENT", "")
 				| Unknown        => throw InvalidOperationException()
 			}
 		}
@@ -195,6 +201,141 @@ namespace LinqToDB_Temp.SqlBuilder
 		public EqualsUnderlying(type : SqlDataType) : bool
 		{
 			SystemType.ToUnderlying() == type.SystemType.ToUnderlying()
+		}
+
+		static MaxValue1 : int = 1_073_741_823; // 2^30 - 1
+		static MaxValue2 : int = 2_147_483_647; // 2^31 - 1
+
+		public static FromString([NotNull] value : string, systemType : Type = null) : SqlDataType
+		{
+			def exception()
+			{
+				LinqToDBException($"String '$value' can not be converted to SqlDataType.")
+			}
+			
+			def idx1 = value.IndexOf('(');
+
+			def (name, p1, p2, s1, s2) =
+				if (idx1 <= 0)
+					(value.Trim().ToLower(), None(), None(), null, null)
+				else
+				{
+					def idx2 = value.IndexOf(')');
+					when (idx2 < idx1) throw exception();
+
+					def idx3 = value.IndexOf(',');
+					if (idx3 < 0)
+					{
+						def s1 = value.Substring(0, idx1).Trim().ToLower();
+						def s2 = value.Substring(idx1 + 1, idx2 - idx1 - 1).Trim();
+						mutable n;
+
+						if (s1 == "xml")
+						{
+							def (t,s) =
+								if (s2.ToUpper().StartsWith("CONTENT "))
+									("CONTENT", s2.Substring("CONTENT".Length).Trim())
+								else if (s2.ToUpper().StartsWith("DOCUMENT "))
+									("DOCUMENT", s2.Substring("DOCUMENT".Length).Trim())
+								else
+									("CONTENT", s2.Trim());
+
+							(s1, None(), None(), t, s)
+						}
+						else if (s1 == "max")
+							(s1, Some(MaxValue2), None(), null, null)
+						else if (int.TryParse(s2.Trim(), out n))
+							(s1, Some(n), None(), null, null)
+						else
+							throw exception();
+					}
+					else
+					{
+						when (idx3 < idx1 || idx3 > idx2)
+							throw exception();
+
+						def s1 = value.Substring(0, idx1).              Trim().ToLower();
+						def s2 = value.Substring(idx1 + 1, idx3 - idx1 - 1).Trim().ToLower();
+						def s3 = value.Substring(idx3 + 1, idx2 - idx3 - 1).Trim();
+						mutable n1, n2;
+
+						if (int.TryParse(s2, out n1) && int.TryParse(s3, out n2))
+							(s1, Some(n1), Some(n2), null, null)
+						else
+							throw exception();
+					}
+				}
+
+			def normName(n)
+			{
+				def n2 = n.Replace("  ", " ");
+				if (n == n2) n else normName(n2)
+			}
+
+			def name = match (normName(name))
+			{
+				| "binary varying"             => "varbinary"
+				| "char varying"               => "varchar"
+				| "character"                  => "char"
+				| "character varying"          => "varchar"
+				| "dec"                        => "decimal"
+				| "double precision"           => "float"
+				| "integer"                    => "int"
+				| "national character"         => "nchar"
+				| "national char"              => "nchar"
+				| "national character varying" => "nvarchar"
+				| "national char varying(n)"   => "nvarchar"
+				| "national text"              => "ntext"
+				| "timestamp"                  => "rowversion"
+				| n                            => n
+			}
+
+			match (name, p1, p2)
+			{
+				| ("bit",              None,    None   )                          => SqlDataType.Boolean       (systemType ?? typeof(Boolean))
+				| ("tinyint",          None,    None   )                          => SqlDataType.Byte          (systemType ?? typeof(Byte))
+				| ("smallint",         None,    None   )                          => SqlDataType.Int16         (systemType ?? typeof(Int16))
+				| ("int",              None,    None   )                          => SqlDataType.Int32         (systemType ?? typeof(Int32))
+				| ("bigint",           None,    None   )                          => SqlDataType.Int64         (systemType ?? typeof(Int64))
+				| ("real",             None,    None   )                          => SqlDataType.Single        (systemType ?? typeof(Single))
+				| ("float",            None,    None   )                          => SqlDataType.Double        (systemType ?? typeof(Double))
+				| ("float",            Some(n), None   ) when n >= 1  && n <= 24  => SqlDataType.Single        (systemType ?? typeof(Single))
+				| ("float",            Some(n), None   ) when n >= 25 && n <= 53  => SqlDataType.Double        (systemType ?? typeof(Double))
+				| ("decimal",          Some(p), Some(s)) when p >= 1 && p <= 38 && s >= 0 && s < p
+				| ("numeric",          Some(p), Some(s)) when p >= 1 && p <= 38 && s >= 0 && s < p
+				| ("decimal",          Some(p), None   ) when p >= 1 && p <= 38 with s = 0
+				| ("numeric",          Some(p), None   ) when p >= 1 && p <= 38 with s = 0
+				| ("decimal",          None,    None   ) with (p = 18, s = 0)
+				| ("numeric",          None,    None   ) with (p = 18, s = 0)     => SqlDataType.Decimal       (systemType ?? typeof(Decimal), p, s)
+				| ("char",             Some(n), None   ) when n >= 1 && n <= 8000
+				| ("char",             None,    None   ) with n = 1               => SqlDataType.Char          (systemType ?? typeof(String), n)
+				| ("varchar",          Some(n), None   ) when n >= 1 && n <= 8000 || n == MaxValue2
+				| ("varchar",          None,    None   ) with n = 1               => SqlDataType.VarChar       (systemType ?? typeof(String), n)
+				| ("nchar",            Some(n), None   ) when n >= 1 && n <= 4000
+				| ("nchar",            None,    None   ) with n = 1               => SqlDataType.Char          (systemType ?? typeof(String), n)
+				| ("nvarchar",         Some(n), None   ) when n >= 1 && n <= 4000 || n == MaxValue2
+				| ("nvarchar",         None,    None   ) with n = 1               => SqlDataType.VarChar       (systemType ?? typeof(String), n)
+				| ("text",             None,    None   )                          => SqlDataType.Text          (systemType ?? typeof(String))
+				| ("ntext",            None,    None   )                          => SqlDataType.NText         (systemType ?? typeof(String))
+				| ("image",            None,    None   )                          => SqlDataType.Image         (systemType ?? typeof(array[byte]))
+				| ("binary",           Some(n), None   ) when n >= 1 && n <= 8000
+				| ("binary",           None,    None   ) with n = 1               => SqlDataType.Binary        (systemType ?? typeof(String), n)
+				| ("varbinary",        Some(n), None   ) when n >= 1 && n <= 8000 || n == MaxValue2
+				| ("varbinary",        None,    None   ) with n = 1               => SqlDataType.VarBinary     (systemType ?? typeof(String), n)
+				| ("xml",              None,    None   ) when s1 != null          => SqlDataType.Xml           (systemType ?? typeof(String), s1, s2)
+				| ("date",             None,    None   )                          => SqlDataType.Date          (systemType ?? typeof(DateTime))
+				| ("time",             None,    None   )                          => SqlDataType.Time          (systemType ?? typeof(DateTime))
+				| ("datetime",         None,    None   )                          => SqlDataType.DateTime      (systemType ?? typeof(DateTime))
+				| ("datetime2",        None,    None   )                          => SqlDataType.DateTime2     (systemType ?? typeof(DateTime))
+				| ("smalldatetime",    None,    None   )                          => SqlDataType.SmallDateTime (systemType ?? typeof(DateTime))
+				| ("datetimeoffset",   None,    None   )                          => SqlDataType.DateTimeOffset(systemType ?? typeof(DateTimeOffset))
+				| ("rowversion",       None,    None   )                          => SqlDataType.Timestamp     (systemType ?? typeof(array[byte]))
+				| ("uniqueidentifier", None,    None   )                          => SqlDataType.Guid          (systemType ?? typeof(Guid))
+				| ("sql_variant",      None,    None   )                          => SqlDataType.Variant       (systemType ?? typeof(object))
+				| ("geography",        None,    None   )                          => SqlDataType.Geography     (systemType ?? typeof(object))
+				| ("geometry",         None,    None   )                          => SqlDataType.Geometry      (systemType ?? typeof(object))
+				| _ => throw exception()
+			}
 		}
 	}
 }

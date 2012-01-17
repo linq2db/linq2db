@@ -47,7 +47,9 @@ namespace LinqToDB_Temp
 			| Time           => typeof(TimeSpan)
 			| DateTimeOffset => typeof(DateTimeOffset)
 			| Xml            => typeof(string)
-			| Variant        => typeof(object)
+			| Variant        
+			| Geography      
+			| Geometry       => typeof(object)
 		}
 
 		public _ToDataType(this type : Type) : DataType
@@ -116,6 +118,8 @@ namespace LinqToDB_Temp
 			| Xml            => SqlDbType.Xml
 			| Variant        => SqlDbType.Variant
 			| VarNumeric     => SqlDbType.Decimal
+			| Geography      
+			| Geometry       => throw NotImplementedException()
 		}
 
 		public _ToDataType(this type : SqlDbType) : DataType
@@ -189,6 +193,8 @@ namespace LinqToDB_Temp
 			| Xml            => DbType.Xml
 			| Variant        => DbType.Object
 			| VarNumeric     => DbType.Decimal
+			| Geography      
+			| Geometry       => throw NotImplementedException()
 		}
 
 		public _ToDataType(this type : DbType) : DataType

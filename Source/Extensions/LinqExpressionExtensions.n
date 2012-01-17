@@ -38,7 +38,7 @@ namespace LinqToDB_Temp.Extensions
 
 		public EqualsTo(this expr1 : Expression, expr2 : Expression, queryableAccessorDic : Dictionary[Expression,Func[Expression,IQueryable]]) : bool
 		{
-			if (ReferenceEquals(expr1, expr2))
+			if (expr1 === expr2)
 				true
 			else if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
 				false
@@ -177,7 +177,7 @@ namespace LinqToDB_Temp.Extensions
 
 					if (e1.Member == e2.Member)
 					{
-						when (ReferenceEquals(e1.Expression, e2.Expression))
+						when (e1.Expression === e2.Expression)
 						{
 							when (queryableAccessorDic.Count > 0)
 							{
@@ -203,7 +203,7 @@ namespace LinqToDB_Temp.Extensions
 
 					def compareBindings (b1 : MemberBinding, b2 : MemberBinding) : bool
 					{
-						when (ReferenceEquals(b1, b2))
+						when (b1 === b2)
 							return true;
 
 						when (b1 == null || b2 == null || b1.BindingType != b2.BindingType || b1.Member != b2.Member)
@@ -734,7 +734,7 @@ namespace LinqToDB_Temp.Extensions
 			{
 				def e = func(item);
 				@list.Add(e);
-				modified = modified || !ReferenceEquals(e, item);
+				modified = modified || e !== item;
 			}
 
 			if (modified) @list else source
@@ -750,7 +750,7 @@ namespace LinqToDB_Temp.Extensions
 			{
 				def e = Transform(item, func);
 				@list.Add(e :> T);
-				modified = modified || !ReferenceEquals(e, item);
+				modified = modified || e !== item;
 			}
 
 			if (modified) @list else source
@@ -799,13 +799,13 @@ namespace LinqToDB_Temp.Extensions
 
 						def ex = func(expr);
 
-						if (ReferenceEquals(ex, expr))
+						if (ex === expr)
 						{
 							def e = expr :> LambdaExpression;
 							def b = Transform(e.Body,       func);
 							def p = Transform(e.Parameters, func);
 
-							if (!ReferenceEquals(b, e.Body) || !ReferenceEquals(p, e.Parameters))
+							if (b !== e.Body || p !== e.Parameters)
 								Expression.Lambda(ex.Type, b, p.ToArray())
 							else
 								expr
@@ -820,13 +820,13 @@ namespace LinqToDB_Temp.Extensions
 							TransformT(e.Initializers,  p =>
 							{
 								def args = Transform(p.Arguments, func);
-								if (!ReferenceEquals(args, p.Arguments)) Expression.ElementInit(p.AddMethod, args) else p
+								if (args !== p.Arguments) Expression.ElementInit(p.AddMethod, args) else p
 							}))
 
 					| ExpressionType.MemberInit      =>
 
 						def exp = func(expr);
-						when (!ReferenceEquals(exp, expr))
+						when (exp !== expr)
 							return exp;
 
 						def modify(b : MemberBinding) : MemberBinding
@@ -837,7 +837,7 @@ namespace LinqToDB_Temp.Extensions
 
 									def ma = b :> MemberAssignment;
 									def ex = Transform(ma.Expression, func);
-									if (!ReferenceEquals(ex, ma.Expression)) Expression.Bind(ma.Member, ex) else ma
+									if (ex !== ma.Expression) Expression.Bind(ma.Member, ex) else ma
 
 								| MemberBindingType.ListBinding   =>
 
@@ -845,16 +845,16 @@ namespace LinqToDB_Temp.Extensions
 									def i  = TransformT(ml.Initializers, p =>
 									{
 										def args = Transform(p.Arguments, func);
-										if (!ReferenceEquals(args, p.Arguments)) Expression.ElementInit(p.AddMethod, args) else p;
+										if (args !== p.Arguments) Expression.ElementInit(p.AddMethod, args) else p;
 									});
 
-									if (!ReferenceEquals(i, ml.Initializers)) Expression.ListBind(ml.Member, i) else ml
+									if (i !== ml.Initializers) Expression.ListBind(ml.Member, i) else ml
 
 								| MemberBindingType.MemberBinding =>
 
 									def mm = b :> MemberMemberBinding;
 									def bs = TransformT(mm.Bindings, modify);
-									if (!ReferenceEquals(bs, mm.Bindings)) Expression.MemberBind(mm.Member) else mm
+									if (bs !== mm.Bindings) Expression.MemberBind(mm.Member) else mm
 
 								| _ => b
 							}
@@ -906,7 +906,7 @@ namespace LinqToDB_Temp.Extensions
 			{
 				def e = Transform(item, func);
 				@list.Add(e :> T);
-				modified = modified || !ReferenceEquals(e, item)
+				modified = modified || e !== item
 			}
 
 			if (modified) @list else source
@@ -959,14 +959,14 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.Lambda          =>
 
 						def ex = func(expr);
-						when (ex.Stop || !ReferenceEquals(ex.Expression, expr))
+						when (ex.Stop || ex.Expression !== expr)
 							return ex.Expression;
 
 						def e = expr :> LambdaExpression;
 						def b = Transform(e.Body,       func);
 						def p = Transform(e.Parameters, func);
 
-						if (!ReferenceEquals(b, e.Body) || !ReferenceEquals(p, e.Parameters))
+						if (b !== e.Body || p !== e.Parameters)
 							Expression.Lambda(ex.Expression.Type, b, p.ToArray())
 						else
 							expr
@@ -978,7 +978,7 @@ namespace LinqToDB_Temp.Extensions
 							TransformT(e.Initializers,  p =>
 							{
 								def args = Transform(p.Arguments, func);
-								if (!ReferenceEquals(args, p.Arguments)) Expression.ElementInit(p.AddMethod, args) else p
+								if (args !== p.Arguments) Expression.ElementInit(p.AddMethod, args) else p
 							}))
 
 					| ExpressionType.MemberInit      =>
@@ -992,10 +992,7 @@ namespace LinqToDB_Temp.Extensions
 									def ma = b :> MemberAssignment;
 									def ex = Transform(ma.Expression, func);
 
-									if (!ReferenceEquals(ex, ma.Expression))
-										Expression.Bind(ma.Member, ex)
-									else
-										ma
+									if (ex !== ma.Expression) Expression.Bind(ma.Member, ex) else ma
 
 								| MemberBindingType.ListBinding   =>
 
@@ -1003,23 +1000,17 @@ namespace LinqToDB_Temp.Extensions
 									def i  = TransformT(ml.Initializers, p =>
 									{
 										def args = Transform(p.Arguments, func);
-										if (!ReferenceEquals(args, p.Arguments)) Expression.ElementInit(p.AddMethod, args) else p
+										if (args !== p.Arguments) Expression.ElementInit(p.AddMethod, args) else p
 									});
 
-									if (!ReferenceEquals(i, ml.Initializers))
-										Expression.ListBind(ml.Member, i)
-									else
-										ml
+									if (i !== ml.Initializers) Expression.ListBind(ml.Member, i) else ml
 
 								| MemberBindingType.MemberBinding =>
 
 									def mm = b :> MemberMemberBinding;
 									def bs = TransformT(mm.Bindings, modify);
 
-									if (!ReferenceEquals(bs, mm.Bindings))
-										Expression.MemberBind(mm.Member)
-									else
-										mm
+									if (bs !== mm.Bindings) Expression.MemberBind(mm.Member) else mm
 
 								| _ => b
 							}

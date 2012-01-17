@@ -8,6 +8,7 @@ using Nemerle.Collections;
 namespace LinqToDB_Temp.Common
 {
 	using Extensions;
+	using MacroInternal;
 
 	public module Converter
 	{
@@ -34,7 +35,7 @@ namespace LinqToDB_Temp.Common
 							def p = Parameter(typeof(object), "p");
 							def e = Lambda.[Func[object,object]](
 								Convert(b.Transform(e =>
-									if      (ReferenceEquals(e, ps[0]))    Convert (p, e.Type)
+									if      (e === ps[0])                  Convert (p, e.Type)
 									else if (IsDefaultValuePlaceHolder(e)) Constant(DefaultValue.GetValue(e.Type))
 									else e
 								), typeof(object)),
@@ -77,7 +78,7 @@ namespace LinqToDB_Temp.Common
 							def p = Parameter(typeof(object), "p");
 							def e = Lambda.[Func[object,T]](
 								b.Transform(e =>
-									if      (ReferenceEquals(e, ps[0]))    Convert (p, e.Type)
+									if      (e === ps[0])                  Convert (p, e.Type)
 									else if (IsDefaultValuePlaceHolder(e)) Constant(DefaultValue.GetValue(e.Type))
 									else e),
 								p);

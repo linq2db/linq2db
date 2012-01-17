@@ -69,6 +69,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColumnAttribute.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Common\Converter.n">
       <SubType>Code</SubType>
     </Compile>
@@ -202,7 +205,13 @@
     <Compile Include="SqlBuilder\SqlQuery.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SqlBuilder\SqlTable.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SqlBuilder\SqlValue.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TableAttribute.n">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

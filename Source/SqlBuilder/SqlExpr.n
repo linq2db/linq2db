@@ -73,7 +73,7 @@ namespace LinqToDB_Temp.SqlBuilder
 		}
 
 		[ReplaceCtorParameter(precedence, predicate.Precedence)]
-		[ReplaceCtorParameter(type,       if (predicate.IsNullable) typeof(bool?) else typeof(bool))]
+		[ReplaceCtorParameter(type,       if (predicate.CanBeNull) typeof(bool?) else typeof(bool))]
 		| Condition
 		{
 			Predicate : SqlPredicate;
@@ -82,7 +82,7 @@ namespace LinqToDB_Temp.SqlBuilder
 		public Type       : SqlDataType { get; }
 		public Precedence : int         { get; }
 
-		public IsNullable : bool
+		public CanBeNull : bool
 		{
 			get
 			{

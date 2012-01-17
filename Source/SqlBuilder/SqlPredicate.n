@@ -42,22 +42,22 @@ namespace LinqToDB_Temp.SqlBuilder
 			}
 		}
 
-		public IsNullable : bool
+		public CanBeNull : bool
 		{
 			get
 			{
 				match (this)
 				{
-					| Not       (p)             => p.IsNullable
+					| Not       (p)             => p.CanBeNull
 					| And       (e1,    e2)
-					| Or        (e1,    e2)     => e1.IsNullable || e2.IsNullable
+					| Or        (e1,    e2)     => e1.CanBeNull || e2.CanBeNull
 					| Compare   (e1, _, e2)
-					| Like      (e1,    e2,  _) => e1.IsNullable || e2.IsNullable
-					| Between   (e1,    e2, e3) => e1.IsNullable || e2.IsNullable || e3.IsNullable
-					| IsNull    (e)             => e.IsNullable
-					| InQuery   (e, q)          => e.IsNullable  || q.IsNullable
-					| InList    (e, vs)         => e.IsNullable  || vs.Find(_.IsNullable).IsSome
-					| Expression(e, _)          => e.IsNullable
+					| Like      (e1,    e2,  _) => e1.CanBeNull || e2.CanBeNull
+					| Between   (e1,    e2, e3) => e1.CanBeNull || e2.CanBeNull || e3.CanBeNull
+					| IsNull    (e)             => e.CanBeNull
+					| InQuery   (e, q)          => e.CanBeNull  || q.CanBeNull
+					| InList    (e, vs)         => e.CanBeNull  || vs.Find(_.CanBeNull).IsSome
+					| Expression(e, _)          => e.CanBeNull
 				}
 			}
 		}

@@ -3,6 +3,8 @@ using Nemerle;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
+	using MacroInternal;
+
 	public module Optimizer
 	{
 		public Optimize(this expr : SqlExpr) : SqlExpr
@@ -25,12 +27,12 @@ namespace LinqToDB_Temp.SqlBuilder
 				{
 					| Char      (len)
 					| VarChar   (len)
-					| Text      (len)
 					| NChar     (len)
-					| NVarChar  (len)
-					| NText     (len) => len
+					| NVarChar  (len) => len
 					| Binary    (len)
 					| VarBinary (len) => len * 2
+					| Text      
+					| NText           => 0
 					| type            => type.MaxDisplaySize
 				};
 				
@@ -50,9 +52,7 @@ namespace LinqToDB_Temp.SqlBuilder
 			{
 				match (e.Type : SqlDataType)
 				{
-					| Decimal   (p, _)
-					| Money     (p, _)
-					| SmallMoney(p, _) => p
+					| Decimal   (p, _) => p
 					| _                => -1
 				}
 			}
@@ -81,15 +81,15 @@ namespace LinqToDB_Temp.SqlBuilder
 
 				match (loop(cps))
 				{
-					| [p]                              => p
-					| ps when ReferenceEquals(ps, cps) => expr
-					| ps                               => SqlExpr.Function(expr.Type, "CASE", ps)
+					| [p]                => p
+					| ps when ps === cps => expr
+					| ps                 => SqlExpr.Function(expr.Type, "CASE", ps)
 				}
 			}
 			def optimizeCondition(c)
 			{
 				def p = Optimize(c.Predicate);
-				if (ReferenceEquals(p, c.Predicate)) c else SqlExpr.Condition(p)
+				if (p === c.Predicate) c else SqlExpr.Condition(p)
 			}
 
 			match (expr)

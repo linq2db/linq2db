@@ -19,7 +19,7 @@ namespace LinqToDB_Temp.SqlBuilder
 			get; set;
 		}
 
-		public IsNullable : bool
+		public CanBeNull : bool
 		{
 			get { true }
 		}
