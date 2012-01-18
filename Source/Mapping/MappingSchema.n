@@ -18,27 +18,53 @@ namespace LinqToDB_Temp.Mapping
 
 	public class MappingSchema
 	{
-		public static Default : MappingSchema = MappingSchema();
+		public static Default : MappingSchema = MappingSchema("", []);
 
-		public this(baseSchema : MappingSchema = null)
+		public this(params baseSchemas : array[MappingSchema])
 		{
-			BaseSchema  = baseSchema;
+			this(null, if (baseSchemas == null || baseSchemas.Length == 0) null else  baseSchemas.NToList())
 		}
 
-		public BaseSchema : MappingSchema { get; }
+		public this(configuration : string, params baseSchemas : array[MappingSchema])
+		{
+			this(configuration, if (baseSchemas == null || baseSchemas.Length == 0) null else  baseSchemas.NToList())
+		}
+
+		public this(configuration : string = null, baseSchemas : list[MappingSchema] = null)
+		{
+			Configuration = configuration;
+			BaseSchemas    = baseSchemas ?? [ MappingSchema.Default ];
+		}
+
+		public BaseSchemas : list[MappingSchema] { get; }
 
 		#region Default Values
 
 		_defaultValues = Hashtable();
 
-		public virtual GetDefaultValue(type : Type) : object
+		public GetDefaultValue(type : Type) : object
 		{
-			match (_defaultValues.Get(type))
+			def getValue(schemas)
 			{
-				| Some(v)                   => v
-				| _ when BaseSchema != null => BaseSchema.GetDefaultValue(type)
-				| _                         => DefaultValue.GetValue(type)
+				| []     => DefaultValue.GetValue(type)
+				| h :: t =>
+					match (h.GetDefaultValueOption(type))
+					{
+						| Some(v) => v
+						| _       => getValue(t)
+					}
 			}
+
+			match (GetDefaultValueOption(type))
+			{
+				| Some(v) => v
+				| _       => getValue(BaseSchemas)
+			}
+		}
+
+		protected virtual GetDefaultValueOption(type : Type) : option[object]
+		{
+			_defaultValues.Get(type)
 		}
 
 		public SetDefaultValue[T](value : T) : void
@@ -108,12 +134,21 @@ namespace LinqToDB_Temp.Mapping
 		{
 			def expr = match (_convertInfo.Get(from, to, false))
 			{
-				| None when BaseSchema != null =>
-					match (BaseSchema.GetConverter(from, to, false))
+				| None as ex when BaseSchemas.Length != 0 =>
+
+					def getConverter(schemas)
 					{
-						| Some((ex,_)) => Some((ex, null))
-						| ex           => ex
+						| []     => ex
+						| h :: t =>
+							match (h.GetConverter(from, to, false))
+							{
+								| Some((ex,_)) => Some(ex, null)
+								| _            => getConverter(t)
+							}
 					}
+
+					getConverter(BaseSchemas)
+
 				| ex => ex
 			}
 
@@ -228,36 +263,129 @@ namespace LinqToDB_Temp.Mapping
 			}
 		}
 
-		public GetAttributes[T](type : Type) : array[T]
+		public GetAttributes[T](type : Type) : list[T]
 			where T : class, Attribute
 		{
-			_metadataReader?.GetAttributes(type) : array[T] ??
-			BaseSchema     ?.GetAttributes(type)            ??
-			(if (MappingSchema.Default !== this) MappingSchema. Default.GetAttributes(type) else null) ??
-			                                                    MetadataReader.Default.GetAttributes(type)
+			(_metadataReader?.GetAttributes(type) ?? [])
+			+
+			$[ a | s in BaseSchemas, a in s.GetAttributes(type) ]
+			+
+			MetadataReader.Default.GetAttributes(type)
 		}
-		
-		public GetAttributes[T](type : Type, memberName : string) : array[T]
+
+		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : class, Attribute
 		{
-			_metadataReader?.GetAttributes(type, memberName) : array[T] ??
-			BaseSchema     ?.GetAttributes(type, memberName)            ??
-			(if (MappingSchema.Default !== this) MappingSchema. Default.GetAttributes(type, memberName) else null) ??
-			                                     MetadataReader.Default.GetAttributes(type, memberName)
+			(_metadataReader?.GetAttributes(type, memberName) ?? [])
+			+
+			$[ a | s in BaseSchemas, a in s.GetAttributes(type, memberName) ]
+			+
+			MetadataReader.Default.GetAttributes(type, memberName)
 		}
 
 		public GetAttribute[T](type : Type) : T
 			where T : class, Attribute
 		{
-			def attrs = GetAttributes.[T](type);
-			if (attrs == null) null else attrs[0]
+			match (GetAttributes(type))
+			{
+				| []     => null
+				| h :: _ => h
+			}
 		}
 		
 		public GetAttribute[T](type : Type, memberName : string) : T
 			where T : class, Attribute
 		{
-			def attrs = GetAttributes.[T](type, memberName);
-			if (attrs == null) null else attrs[0]
+			match (GetAttributes(type, memberName))
+			{
+				| []     => null
+				| h :: _ => h
+			}
+		}
+
+		public GetAttributes[T](type : Type, configGetter : T -> string) : list[T]
+			where T : class, Attribute
+		{
+			$[ a | c in ConfigurationList, a in GetAttributes(type), (configGetter(a) ?? "") == c ]
+		}
+
+		public GetAttributes[T](type : Type, memberName : string, configGetter : T -> string) : list[T]
+			where T : class, Attribute
+		{
+			$[ a | c in ConfigurationList, a in GetAttributes(type, memberName), (configGetter(a) ?? "") == c ]
+		}
+
+		public GetAttribute[T](type : Type, configGetter : T -> string) : T
+			where T : class, Attribute
+		{
+			match (GetAttributes(type, configGetter))
+			{
+				| []     => null
+				| h :: _ => h
+			}
+		}
+		
+		public GetAttribute[T](type : Type, memberName : string, configGetter : T -> string) : T
+			where T : class, Attribute
+		{
+			match (GetAttributes(type, memberName, configGetter))
+			{
+				| []     => null
+				| h :: _ => h
+			}
+		}
+
+		public GetAttributes[T](type : Type, configGetter : Func[T,string]) : list[T]
+			where T : class, Attribute
+		{
+			GetAttributes(type, configGetter.Invoke)
+		}
+
+		public GetAttributes[T](type : Type, memberName : string, configGetter : Func[T,string]) : list[T]
+			where T : class, Attribute
+		{
+			GetAttributes(type, memberName, configGetter.Invoke)
+		}
+
+		public GetAttribute[T](type : Type, configGetter : Func[T,string]) : T
+			where T : class, Attribute
+		{
+			GetAttribute(type, configGetter.Invoke)
+		}
+		
+		public GetAttribute[T](type : Type, memberName : string, configGetter : Func[T,string]) : T
+			where T : class, Attribute
+		{
+			GetAttribute(type, memberName, configGetter.Invoke)
+		}
+
+		#endregion
+
+		#region Configuration
+
+		public Configuration : string { get; }
+
+		mutable _configurationList : list[string];
+
+		public ConfigurationList : list[string]
+		{
+			get
+			{
+				when (_configurationList == null)
+				{
+					def getConfig(schemas : list[MappingSchema])
+					{
+						| []     => []
+						| h :: t => h.ConfigurationList + getConfig(t)
+					}
+
+					def l = getConfig(BaseSchemas);
+
+					_configurationList = if (Configuration != null) Configuration :: l else l
+				}
+
+				_configurationList
+			}
 		}
 
 		#endregion

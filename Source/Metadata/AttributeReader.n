@@ -1,33 +1,27 @@
 ﻿using System;
 
 using Nemerle;
-using Nemerle.Assertions;
+using Nemerle.Collections;
 
 namespace LinqToDB_Temp.Metadata
 {
 	public class AttributeReader : IMetadataReader
 	{
-		public GetAttributes[T](type : Type) : array[T]
+		public GetAttributes[T](type : Type) : list[T]
 			where T : class, Attribute
-			ensures value == null || value.Length != 0
 		{
-			def attrs = type.GetCustomAttributes(typeof(T), true) :> array[T];
-			if (attrs.Length == 0) null else attrs
+			(type.GetCustomAttributes(typeof(T), true) :> array[T]).NToList()
 		}
 
-		public GetAttributes[T](type : Type, memberName : string) : array[T]
+		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : class, Attribute
-			ensures value == null || value.Length != 0
 		{
 			def member = type.GetMember(memberName);
 
 			if (member.Length == 1)
-			{
-				def attrs = member[0].GetCustomAttributes(typeof(T), true) :> array[T];
-				if (attrs.Length == 0) null else attrs
-			}
+				(member[0].GetCustomAttributes(typeof(T), true) :> array[T]).NToList();
 			else
-				null
+				[]
 		}
 	}
 }

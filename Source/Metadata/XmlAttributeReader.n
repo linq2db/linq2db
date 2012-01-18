@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -77,12 +76,11 @@ namespace LinqToDB_Temp.Metadata
 
 		LoadStream (xmlDocStream : Stream, fileName : string) : Hashtable[string,TypeInfo]
 		{
-			def getAttrs(el : XElement, exclude : string, typeName, memberName) : List[AttributeInfo]
+			def getAttrs(el : XElement, exclude : string, typeName, memberName) : list[AttributeInfo]
 			{
 				def attrs = el.Elements().Where(e => e.Name.LocalName != exclude).Select(a =>
 				{
-					def aname = a.Name.LocalName;
-
+					def aname  = a.Name.LocalName;
 					def values = a.Elements().Select(fun(e : XElement)
 					{
 						def name  = e.Name.LocalName;
@@ -108,7 +106,7 @@ namespace LinqToDB_Temp.Metadata
 					AttributeInfo(aname, values.ToHashtable((n,_) => n, (_,v) => v))
 				});
 
-				attrs.ToList()
+				attrs.NToList()
 			}
 
 			def doc = XDocument.Load(StreamReader(xmlDocStream));
@@ -135,34 +133,28 @@ namespace LinqToDB_Temp.Metadata
 			.ToHashtable(t => t.Name);
 		}
 
-		public GetAttributes[T](type : Type) : array[T]
+		public GetAttributes[T](type : Type) : list[T]
 			where T : Attribute
-			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
 			{
-				| Some(t) =>
-					def atype = typeof(T);
-					t.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> T)
-				| _ => null
+				| Some(t) => t.GetAttribute(typeof(T)).Map(a => a.MakeAttribute(typeof(T)) :> T)
+				| _       => []
 			}
 		}
 
-		public GetAttributes[T](type : Type, memberName : string) : array[T]
+		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : Attribute
-			ensures value == null || value.Length != 0
 		{
 			match (_types.Get(type.FullName) ?? _types.Get(type.Name))
 			{
 				| Some(t) =>
 					match (t.Members.Get(memberName))
 					{
-						| Some(m) =>
-							def atype = typeof(T);
-							m.GetAttribute(atype).Map(a => a.MakeAttribute(atype) :> T)
-						| _ => null
+						| Some(m) => m.GetAttribute(typeof(T)).Map(a => a.MakeAttribute(typeof(T)) :> T)
+						| _       => []
 					}
-				| _ => null
+				| _ => []
 			}
 		}
 	}

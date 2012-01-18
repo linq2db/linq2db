@@ -58,7 +58,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.AreEqual("TestName", attrs.Head.Name);
 		}
 
 		public int Field1;
@@ -71,7 +71,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.AreEqual("TestName", attrs.Head.Name);
 		}
 
 		public int Property1 { get; set; }
@@ -84,7 +84,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.AreEqual("TestName", attrs.Head.Name);
 		}
 	}
 }

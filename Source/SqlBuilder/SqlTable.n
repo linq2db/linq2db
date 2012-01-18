@@ -13,7 +13,12 @@ namespace LinqToDB_Temp.SqlBuilder
 
 	public class SqlTable
 	{
-		public this([NotNull] mappingSchema : MappingSchema, [NotNull] systemType : Type)
+		public this([NotNull] systemType : Type)
+		{
+			this(systemType, MappingSchema.Default)
+		}
+		
+		public this([NotNull] systemType : Type, [NotNull] mappingSchema : MappingSchema)
 		{
 			SystemType = systemType;
 
@@ -33,7 +38,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				.Select(((m,t)) => (m, t, mappingSchema.GetAttribute.[ColumnAttribute](systemType, m.Name)))
 				.Where ((_,_,c) => !reqColumn || c != null)
 				.Select((m,t,c) => SqlField(
-					if (string.IsNullOrEmpty(c.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t),
+					if (string.IsNullOrEmpty(c?.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t),
 					m.Name,
 					c?.Name ?? m.Name))
 				.NToList();

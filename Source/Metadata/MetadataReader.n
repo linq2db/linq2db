@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 using Nemerle;
+using Nemerle.Assertions;
+using Nemerle.Collections;
 
 namespace LinqToDB_Temp.Metadata
 {
@@ -10,43 +10,28 @@ namespace LinqToDB_Temp.Metadata
 	{
 		public static Default : MetadataReader = MetadataReader(AttributeReader(), SystemDataLinqAttributeReader());
 
-		public this(params readers : array[IMetadataReader])
+		public this([NotNull] readers : list[IMetadataReader])
 		{
-			Readers = readers.ToList();
+			_readers = readers;
 		}
 
-		public Readers : List[IMetadataReader] { get; }
-
-		public GetAttributes[TAttribute](type : Type) : array[TAttribute]
-			where TAttribute : class, Attribute
+		public this([NotNull] params readers : array[IMetadataReader])
 		{
-			ret :
-			{
-				foreach (reader in Readers)
-				{
-					def attrs = reader.GetAttributes.[TAttribute](type);
-					when (attrs != null)
-						ret(attrs);
-				}
-
-				null
-			}
+			_readers = readers.NToList();
 		}
 
-		public GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute]
-			where TAttribute : class, Attribute
-		{
-			ret :
-			{
-				foreach (reader in Readers)
-				{
-					def attrs = reader.GetAttributes.[TAttribute](type, memberName);
-					when (attrs != null)
-						ret(attrs);
-				}
+		_readers : list[IMetadataReader];
 
-				null
-			}
+		public GetAttributes[T](type : Type) : list[T]
+			where T : class, Attribute
+		{
+			$[ a | r in _readers, a in r.GetAttributes(type) ];
+		}
+
+		public GetAttributes[T](type : Type, memberName : string) : list[T]
+			where T : class, Attribute
+		{
+			$[ a | r in _readers, a in r.GetAttributes(type, memberName) ];
 		}
 	}
 }

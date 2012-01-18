@@ -4,7 +4,7 @@ using Nemerle;
 
 namespace LinqToDB_Temp
 {
-	[AttributeUsageAttribute(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+	[AttributeUsageAttribute(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
 	public class TableAttribute : Attribute
 	{
 		public this()
@@ -12,6 +12,7 @@ namespace LinqToDB_Temp
 			IsColumnAttributeRequired = true;
 		}
 
+		public Config                    : string { get; set; }
 		public Name                      : string { get; set; }
 		public Schema                    : string { get; set; }
 		public Database                  : string { get; set; }

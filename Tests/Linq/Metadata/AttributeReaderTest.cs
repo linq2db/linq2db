@@ -18,7 +18,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual(null, attrs[0].Description);
+			Assert.AreEqual(null, attrs.Head.Description);
 		}
 
 		public int Field1;
@@ -29,7 +29,7 @@ namespace Tests.Metadata
 			var rd    = new AttributeReader();
 			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTest), "Field1");
 
-			Assert.IsNull(attrs);
+			Assert.AreEqual(0, attrs.Length);
 		}
 
 		[Column(Name = "TestName")]
@@ -43,7 +43,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs[0].Name);
+			Assert.AreEqual("TestName", attrs.Head.Name);
 		}
 	}
 }

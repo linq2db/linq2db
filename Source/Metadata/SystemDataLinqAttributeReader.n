@@ -1,80 +1,84 @@
 ﻿using System;
 
 using Nemerle;
-using Nemerle.Assertions;
 using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.Metadata
 {
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		public GetAttributes[T](type : Type) : array[T]
+		_reader : AttributeReader = AttributeReader();
+
+		public GetAttributes[T](type : Type) : list[T]
 			where T : class, Attribute
-			ensures value == null || value.Length != 0
 		{
 			if (typeof(T) == typeof(TableAttribute))
 			{
-				def ta = _reader.GetAttributes.[System.Data.Linq.Mapping.TableAttribute](type);
+				def ta = _reader.GetAttributes.[System.Data.Linq.Mapping.TableAttribute]  (type);
 				def da = _reader.GetAttributes.[System.Data.Linq.Mapping.DatabaseAttribute](type);
 
-				if (ta == null && da == null) null
-				else
+				match (ta, da)
 				{
-					def attr = TableAttribute();
+					| ([t], [] ) with d = null
+					| ([],  [d]) with t = null
+					| ([t], [d]) =>
 
-					when (ta != null)
-					{
-						def name = ta[0].Name;
+						def attr = TableAttribute();
 
-						when (name != null)
+						when (t != null)
 						{
-							def names = name.Replace("[", "").Replace("]", "").Split('.');
+							def name = t.Name;
 
-							match (names.Length)
+							when (name != null)
 							{
-								| 0 => ()
-								| 1 => attr.Name = names[0]
-								| 2 =>
-									attr.Name   = names[0];
-									attr.Schema = names[1]
-								| _ => throw MetadataException($"Invalid table name '$name' of type '$(type.FullName)'")
+								def names = name.Replace("[", "").Replace("]", "").Split('.');
+
+								match (names.Length)
+								{
+									| 0 => ()
+									| 1 => attr.Name = names[0]
+									| 2 =>
+										attr.Name   = names[0];
+										attr.Schema = names[1]
+									| _ => throw MetadataException($"Invalid table name '$name' of type '$(type.FullName)'")
+								}
 							}
 						}
-					}
 
-					when (da != null)
-						attr.Database = da[0].Name;
+						when (d != null)
+							attr.Database = d.Name;
 
-					array[attr :> T]
-				}
-			}
-			else if (typeof(T) == typeof(ColumnAttribute))
-			{
-				def ca = _reader.GetAttributes.[System.Data.Linq.Mapping.ColumnAttribute](type);
+						[attr :> T]
 
-				if (ca == null) null
-				else
-				{
-					def attr = ColumnAttribute() <-
-					{
-						Name   = ca[0].Name;
-						DbType = ca[0].DbType;
-					};
-
-					array[attr :> T]
+					| _ => []
 				}
 			}
 			else
-				null
+				[]
 		}
 
-		public GetAttributes[T](_type : Type, _memberName : string) : array[T]
+		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : class, Attribute
-			ensures value == null || value.Length != 0
 		{
-			null
-		}
+			if (typeof(T) == typeof(ColumnAttribute))
+			{
+				match (_reader.GetAttributes.[System.Data.Linq.Mapping.ColumnAttribute](type, memberName))
+				{
+					| [c] =>
 
-		_reader : AttributeReader = AttributeReader();
+						def attr = ColumnAttribute() <-
+						{
+							Name   = c.Name;
+							DbType = c.DbType;
+						};
+
+						[attr :> T]
+						
+					| _  => []
+				}
+			}
+			else
+				[]
+		}
 	}
 }

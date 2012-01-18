@@ -6,7 +6,7 @@ namespace LinqToDB_Temp.Metadata
 {
 	public interface IMetadataReader
 	{
-		GetAttributes[TAttribute](type : Type)                      : array[TAttribute] where TAttribute : class, Attribute;
-		GetAttributes[TAttribute](type : Type, memberName : string) : array[TAttribute] where TAttribute : class, Attribute;
+		GetAttributes[T](type : Type)                      : list[T] where T : class, Attribute;
+		GetAttributes[T](type : Type, memberName : string) : list[T] where T : class, Attribute;
 	}
 }
