@@ -18,25 +18,50 @@ namespace LinqToDB_Temp.Mapping
 
 	public class MappingSchema
 	{
-		public static Default : MappingSchema = MappingSchema("", []);
+		#region Init
 
-		public this(params baseSchemas : array[MappingSchema])
+		public this(params schemas : array[MappingSchema])
 		{
-			this(null, if (baseSchemas == null || baseSchemas.Length == 0) null else  baseSchemas.NToList())
+			this(null, schemas)
 		}
 
-		public this(configuration : string, params baseSchemas : array[MappingSchema])
+		public this(configuration : string, params schemas : array[MappingSchema])
 		{
-			this(configuration, if (baseSchemas == null || baseSchemas.Length == 0) null else  baseSchemas.NToList())
+			this(configuration, if (schemas == null || schemas.Length == 0) null else  schemas.NToList());
 		}
 
-		public this(configuration : string = null, baseSchemas : list[MappingSchema] = null)
+		public this(configuration : string = null, schemas : list[MappingSchema] = null)
 		{
 			Configuration = configuration;
-			BaseSchemas    = baseSchemas ?? [ MappingSchema.Default ];
+
+			Schemas =
+				this ::
+				match (schemas)
+				{
+					| null => [ MappingSchema.Default ]
+					| [ ]  => []
+					| [s]  => s.Schemas
+					| ss   =>
+						def map = HashSet();
+
+						def compact(l : list[MappingSchema]) : list[MappingSchema]
+						{
+							match (l)
+							{
+								| []     => []
+								| h :: t =>
+									def tl = compact(t);
+									if (map.Add(h)) h :: tl else tl
+							}
+						}
+
+						compact($[ s | s in ss, s in s.Schemas ])
+				}
 		}
 
-		public BaseSchemas : list[MappingSchema] { get; }
+		public Schemas : list[MappingSchema] { get; }
+
+		#endregion
 
 		#region Default Values
 
@@ -48,23 +73,14 @@ namespace LinqToDB_Temp.Mapping
 			{
 				| []     => DefaultValue.GetValue(type)
 				| h :: t =>
-					match (h.GetDefaultValueOption(type))
+					match (h._defaultValues.Get(type))
 					{
 						| Some(v) => v
 						| _       => getValue(t)
 					}
 			}
 
-			match (GetDefaultValueOption(type))
-			{
-				| Some(v) => v
-				| _       => getValue(BaseSchemas)
-			}
-		}
-
-		protected virtual GetDefaultValueOption(type : Type) : option[object]
-		{
-			_defaultValues.Get(type)
+			getValue(Schemas)
 		}
 
 		public SetDefaultValue[T](value : T) : void
@@ -132,27 +148,18 @@ namespace LinqToDB_Temp.Mapping
 
 		protected GetConverter(from : Type, to : Type, create : bool) : option[LambdaExpression * Delegate]
 		{
-			def expr = match (_convertInfo.Get(from, to, false))
+			def getConverter(schemas)
 			{
-				| None as ex when BaseSchemas.Length != 0 =>
-
-					def getConverter(schemas)
+				| []     => None()
+				| h :: t =>
+					match (h._convertInfo.Get(from, to, false))
 					{
-						| []     => ex
-						| h :: t =>
-							match (h.GetConverter(from, to, false))
-							{
-								| Some((ex,_)) => Some(ex, null)
-								| _            => getConverter(t)
-							}
+						| Some((ex,_)) => Some(ex, null)
+						| _            => getConverter(t)
 					}
-
-					getConverter(BaseSchemas)
-
-				| ex => ex
 			}
 
-			match (expr)
+			match (getConverter(Schemas))
 			{
 				| None when create =>
 
@@ -248,8 +255,8 @@ namespace LinqToDB_Temp.Mapping
 
 		#region MetadataReader
 
-		mutable _metadataReader : IMetadataReader;
-		public   MetadataReader : IMetadataReader
+		protected mutable _metadataReader : IMetadataReader;
+		public             MetadataReader : IMetadataReader
 		{
 			get
 			{
@@ -266,21 +273,13 @@ namespace LinqToDB_Temp.Mapping
 		public GetAttributes[T](type : Type) : list[T]
 			where T : class, Attribute
 		{
-			(_metadataReader?.GetAttributes(type) ?? [])
-			+
-			$[ a | s in BaseSchemas, a in s.GetAttributes(type) ]
-			+
-			MetadataReader.Default.GetAttributes(type)
+			$[ a | s in Schemas, a in s._metadataReader?.GetAttributes(type) ?? [] ]
 		}
 
 		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : class, Attribute
 		{
-			(_metadataReader?.GetAttributes(type, memberName) ?? [])
-			+
-			$[ a | s in BaseSchemas, a in s.GetAttributes(type, memberName) ]
-			+
-			MetadataReader.Default.GetAttributes(type, memberName)
+			$[ a | s in Schemas, a in s._metadataReader?.GetAttributes(type, memberName) ?? [] ]
 		}
 
 		public GetAttribute[T](type : Type) : T
@@ -365,26 +364,47 @@ namespace LinqToDB_Temp.Mapping
 
 		public Configuration : string { get; }
 
-		mutable _configurationList : list[string];
-
-		public ConfigurationList : list[string]
+		private ConfigurationList : list[string]
 		{
+			mutable _configurationList : list[string];
+
 			get
 			{
 				when (_configurationList == null)
 				{
+					def hash = HashSet();
+
 					def getConfig(schemas : list[MappingSchema])
 					{
 						| []     => []
-						| h :: t => h.ConfigurationList + getConfig(t)
+						| h :: t =>
+							if (h.Configuration != null && hash.Add(h.Configuration))
+								h.Configuration :: getConfig(t)
+							else
+								getConfig(t)
 					}
 
-					def l = getConfig(BaseSchemas);
+					def l = getConfig(Schemas);
 
 					_configurationList = if (Configuration != null) Configuration :: l else l
 				}
 
 				_configurationList
+			}
+		}
+
+		#endregion
+
+		#region DefaultMappingSchema
+
+		public static Default : MappingSchema = DefaultMappingSchema();
+
+		class DefaultMappingSchema : MappingSchema
+		{
+			public this()
+			{
+				base("", []);
+				_metadataReader = MetadataReader.Default;
 			}
 		}
 

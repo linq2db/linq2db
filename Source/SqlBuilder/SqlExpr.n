@@ -20,6 +20,14 @@ namespace LinqToDB_Temp.SqlBuilder
 			new Query : SqlQuery
 		}
 
+		[ReplaceCtorParameter(type,       expr.Type)]
+		[ReplaceCtorParameter(precedence, Primary)]
+		| Column
+		{
+			Expr  : SqlExpr;
+			Alias : string;
+		}
+
 		[ReplaceCtorParameter(type,       field.Type)]
 		[ReplaceCtorParameter(precedence, Primary)]
 		| Field

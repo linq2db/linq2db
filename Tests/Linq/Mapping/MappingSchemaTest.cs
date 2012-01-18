@@ -111,6 +111,26 @@ namespace Tests.Mapping
 		}
 
 		[Test]
+		public void BaseSchema3()
+		{
+			var ms1 = new MappingSchema();
+			var ms2 = new MappingSchema(ms1);
+			var ms3 = new MappingSchema(ms2, ms1);
+			var ms4 = new MappingSchema(ms3, ms2, ms1);
+			var ms5 = new MappingSchema(ms3, ms4, ms2);
+
+			var ms = ms5.Schemas.ToArray();
+
+			Assert.AreEqual(6,   ms.Length);
+			Assert.AreSame (ms5, ms[0]);
+			Assert.AreSame (ms4, ms[1]);
+			Assert.AreSame (ms3, ms[2]);
+			Assert.AreSame (ms2, ms[3]);
+			Assert.AreSame (ms1, ms[4]);
+			Assert.AreSame (MappingSchema.Default, ms[5]);
+		}
+
+		[Test]
 		public void CultureInfo()
 		{
 			var ms = new MappingSchema();
@@ -124,11 +144,6 @@ namespace Tests.Mapping
 			Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999"));
 			Assert.AreEqual("100000,999",                          ms.GetConverter<double,string>  ()(100000.999));
 			Assert.AreEqual(100000.999,                            ms.GetConverter<string,double>  ()("100000,999"));
-		}
-
-		private object OnDefaultValueGetter(Type t)
-		{
-			return t;
 		}
 	}
 }
