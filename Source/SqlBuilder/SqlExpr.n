@@ -94,7 +94,21 @@ namespace LinqToDB_Temp.SqlBuilder
 		{
 			get
 			{
-				true
+				match (this)
+				{
+					| Function
+					| Query                 => true
+					| Column    (e , _    ) => e.CanBeNull
+					| Field     (f        ) => f.CanBeNull
+					| Binary    (e1, _, e2) => e1.CanBeNull || e2.CanBeNull
+					| Expression(_ , ps   ) => ps.Find(p => p.CanBeNull).IsSome
+					| Parameter             => Type.CanBeNull
+					| Value     (String(v)) => v == null
+					| Value     (Object(v)) => v == null
+					| Value                 => false
+					| DataType  (t        ) => t.CanBeNull
+					| Condition (p        ) => p.CanBeNull
+				}
 			}
 		}
 
@@ -109,8 +123,9 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Value     (v)          => v.ToString()
 				| DataType               => Type.ToString()
 				| Condition (p)          => p.ToString()
+				| Column
 				| Field
-				| Query                  => throw NotImplementedException(GetType().Name)
+				| Query                  => GetType().Name
 			}
 		}
 

@@ -68,8 +68,9 @@ namespace LinqToDB_Temp.Metadata
 
 						def attr = ColumnAttribute() <-
 						{
-							Name   = c.Name;
-							DbType = c.DbType;
+							Name      = c.Name;
+							DbType    = c.DbType;
+							CanBeNull = c.CanBeNull;
 						};
 
 						[attr :> T]

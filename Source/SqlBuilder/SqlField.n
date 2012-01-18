@@ -5,11 +5,12 @@ using Nemerle.Extensions;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
-	[Record, StructuralEquality]
+	[Record]
 	public class SqlField
 	{
-		public Type   : SqlDataType { get; }
-		public Name   : string      { get; }
-		public DbName : string      { get; }
+		public Type      : SqlDataType { get; }
+		public Name      : string      { get; }
+		public DbName    : string      { get; }
+		public CanBeNull : bool        { get; }
 	}
 }

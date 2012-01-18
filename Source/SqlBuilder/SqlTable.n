@@ -40,7 +40,8 @@ namespace LinqToDB_Temp.SqlBuilder
 				.Select((m,t,c) => SqlField(
 					if (string.IsNullOrEmpty(c?.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t),
 					m.Name,
-					c?.Name ?? m.Name))
+					c?.Name ?? m.Name,
+					c.CanBeNull))
 				.NToList();
 
 			_fieldTable = Fields.ToHashtable(f => f.Name);
