@@ -1075,7 +1075,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			string name = null;
 
-			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
+			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => { name = nm; return; });
 			var mapper  = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(newExpr, typeof(object)),
 				new [] { ExpressionParam, ParametersParam });
@@ -2065,7 +2065,7 @@ namespace LinqToDB.Data.Linq.Builder
 		{
 			List<Expression> ignoredMembers = null;
 
-			return null == expr.Find(pi =>
+			return null == expr.Find((Expression pi) =>
 			{
 				if (ignoredMembers != null)
 				{
