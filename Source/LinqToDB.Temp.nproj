@@ -69,6 +69,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssociationAttribute.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ColumnAttribute.n">
       <SubType>Code</SubType>
     </Compile>
@@ -150,6 +153,9 @@
     <Compile Include="Mapping\MappingSchema.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Mapping\MappingSchemaInfo.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Metadata\AttributeInfo.n">
       <SubType>Code</SubType>
     </Compile>
@@ -175,6 +181,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Metadata\XmlAttributeReader.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NonColumnAttribute.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />

@@ -32,19 +32,17 @@ namespace LinqToDB_Temp.Mapping
 
 		public this(configuration : string = null, schemas : list[MappingSchema] = null)
 		{
-			Configuration = configuration;
-
-			Schemas =
-				this ::
+			_schemas =
+				MappingSchemaInfo(configuration) ::
 				match (schemas)
 				{
-					| null => [ MappingSchema.Default ]
+					| null => MappingSchema.Default._schemas
 					| [ ]  => []
-					| [s]  => s.Schemas
+					| [s]  => s._schemas
 					| ss   =>
 						def map = HashSet();
 
-						def compact(l : list[MappingSchema]) : list[MappingSchema]
+						def compact(l : list[MappingSchemaInfo])
 						{
 							match (l)
 							{
@@ -55,17 +53,15 @@ namespace LinqToDB_Temp.Mapping
 							}
 						}
 
-						compact($[ s | s in ss, s in s.Schemas ])
+						compact($[ s | s in ss, s in s._schemas ])
 				}
 		}
 
-		public Schemas : list[MappingSchema] { get; }
+		_schemas : list[MappingSchemaInfo];
 
 		#endregion
 
 		#region Default Values
-
-		_defaultValues = Hashtable();
 
 		public GetDefaultValue(type : Type) : object
 		{
@@ -73,26 +69,24 @@ namespace LinqToDB_Temp.Mapping
 			{
 				| []     => DefaultValue.GetValue(type)
 				| h :: t =>
-					match (h._defaultValues.Get(type))
+					match (h.GetDefaultValue(type))
 					{
 						| Some(v) => v
 						| _       => getValue(t)
 					}
 			}
 
-			getValue(Schemas)
+			getValue(_schemas)
 		}
 
 		public SetDefaultValue[T](value : T) : void
 		{
-			_defaultValues[typeof(T)] = value
+			_schemas.Head.SetDefaultValue(typeof(T), value)
 		}
 
 		#endregion
 
 		#region Convert
-
-		_convertInfo  : ConvertInfo = ConvertInfo();
 
 		public GetConvertExpression[TFrom,TTo]() : Expression[Func[TFrom,TTo]]
 		{
@@ -113,7 +107,7 @@ namespace LinqToDB_Temp.Mapping
 				| (ex, null) =>
 					def rex = ReduceDefaultValue(ex) :> Expression[Func[TFrom,TTo]];
 					def l   = rex.Compile();
-					_convertInfo.Set(typeof(TFrom), typeof(TTo), (ex, l));
+					_schemas.Head.SetConvertInfo(typeof(TFrom), typeof(TTo), (ex, l));
 					l
 				| (_,  l) => l :> Func[TFrom,TTo]
 			}
@@ -122,7 +116,7 @@ namespace LinqToDB_Temp.Mapping
 		public SetConvertExpression[TFrom,TTo]([NotNull] expr : Expression[Func[TFrom,TTo]], addNullCheck : bool = true) : void
 		{
 			def expr  = if (addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null) AddNullCheck(expr) else expr;
-			_convertInfo.Set(typeof(TFrom), typeof(TTo), (expr, null))
+			_schemas.Head.SetConvertInfo(typeof(TFrom), typeof(TTo), (expr, null))
 		}
 
 		public SetConverter[TFrom,TTo]([NotNull] func : Func[TFrom,TTo]) : void
@@ -130,7 +124,7 @@ namespace LinqToDB_Temp.Mapping
 			def p  = Parameter(typeof(TFrom), "p");
 			def ex = Lambda.[Func[TFrom,TTo]](Invoke(Constant(func), p), p);
 
-			_convertInfo.Set(typeof(TFrom), typeof(TTo), (ex, func));
+			_schemas.Head.SetConvertInfo(typeof(TFrom), typeof(TTo), (ex, func));
 		}
 
 		AddNullCheck(expr : LambdaExpression) : LambdaExpression
@@ -152,14 +146,14 @@ namespace LinqToDB_Temp.Mapping
 			{
 				| []     => None()
 				| h :: t =>
-					match (h._convertInfo.Get(from, to, false))
+					match (h.GetConvertInfo(from, to))
 					{
 						| Some((ex,_)) => Some(ex, null)
 						| _            => getConverter(t)
 					}
 			}
 
-			match (getConverter(Schemas))
+			match (getConverter(_schemas))
 			{
 				| None when create =>
 
@@ -255,31 +249,30 @@ namespace LinqToDB_Temp.Mapping
 
 		#region MetadataReader
 
-		protected mutable _metadataReader : IMetadataReader;
-		public             MetadataReader : IMetadataReader
+		public MetadataReader : IMetadataReader
 		{
 			get
 			{
-				when (_metadataReader == null)
-					_metadataReader = MetadataReader();
-				_metadataReader
+				when (_schemas.Head.MetadataReader == null)
+					_schemas.Head.MetadataReader = MetadataReader();
+				_schemas.Head.MetadataReader
 			}
 			set
 			{
-				_metadataReader = value
+				_schemas.Head.MetadataReader = value
 			}
 		}
 
 		public GetAttributes[T](type : Type) : list[T]
 			where T : class, Attribute
 		{
-			$[ a | s in Schemas, a in s._metadataReader?.GetAttributes(type) ?? [] ]
+			$[ a | s in _schemas, a in s.MetadataReader?.GetAttributes(type) ?? [] ]
 		}
 
 		public GetAttributes[T](type : Type, memberName : string) : list[T]
 			where T : class, Attribute
 		{
-			$[ a | s in Schemas, a in s._metadataReader?.GetAttributes(type, memberName) ?? [] ]
+			$[ a | s in _schemas, a in s.MetadataReader?.GetAttributes(type, memberName) ?? [] ]
 		}
 
 		public GetAttribute[T](type : Type) : T
@@ -362,8 +355,6 @@ namespace LinqToDB_Temp.Mapping
 
 		#region Configuration
 
-		public Configuration : string { get; }
-
 		private ConfigurationList : list[string]
 		{
 			mutable _configurationList : list[string];
@@ -374,7 +365,7 @@ namespace LinqToDB_Temp.Mapping
 				{
 					def hash = HashSet();
 
-					def getConfig(schemas : list[MappingSchema])
+					def getConfig(schemas : list[MappingSchemaInfo])
 					{
 						| []     => []
 						| h :: t =>
@@ -384,9 +375,10 @@ namespace LinqToDB_Temp.Mapping
 								getConfig(t)
 					}
 
-					def l = getConfig(Schemas);
+					def l = getConfig(_schemas);
+					def c = _schemas.Head.Configuration;
 
-					_configurationList = if (Configuration != null) Configuration :: l else l
+					_configurationList = if (c != null) c :: l else l
 				}
 
 				_configurationList
@@ -397,14 +389,21 @@ namespace LinqToDB_Temp.Mapping
 
 		#region DefaultMappingSchema
 
+		this(mappingSchemaInfo : MappingSchemaInfo)
+		{
+			_schemas = [ mappingSchemaInfo ];
+		}
+
 		public static Default : MappingSchema = DefaultMappingSchema();
 
 		class DefaultMappingSchema : MappingSchema
 		{
 			public this()
 			{
-				base("", []);
-				_metadataReader = MetadataReader.Default;
+				def ms = MappingSchemaInfo("");
+				ms.MetadataReader = MetadataReader.Default;
+
+				base(ms)
 			}
 		}
 

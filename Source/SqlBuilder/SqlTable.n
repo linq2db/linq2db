@@ -35,16 +35,23 @@ namespace LinqToDB_Temp.SqlBuilder
 				systemType.GetProperties(flags).Select(p => (p, p.PropertyType)));
 
 			Fields = members
-				.Select(((m,t)) => (m, t, mappingSchema.GetAttribute.[ColumnAttribute](systemType, m.Name)))
-				.Where ((_,_,c) => !reqColumn || c != null)
-				.Select((m,t,c) => SqlField(
-					if (string.IsNullOrEmpty(c?.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t),
-					m.Name,
-					c?.Name ?? m.Name,
-					c.CanBeNull))
+				.Select(((m,t)) =>
+				(
+					m,
+					t,
+					mappingSchema.GetAttribute.[ColumnAttribute]     (systemType, m.Name, c => c.Config),
+					mappingSchema.GetAttribute.[AssociationAttribute](systemType, m.Name, c => c.Config),
+					mappingSchema.GetAttribute.[NonColumnAttribute]  (systemType, m.Name, c => c.Config)
+				))
+				.Where ((_,_,c,a,n) => a == null && n == null && (if (reqColumn) c != null else true))
+				.Select((m,t,c,_,_) =>
+				{
+					def dt = if (string.IsNullOrEmpty(c?.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t);
+					SqlField(dt, m.Name, c?.Name ?? m.Name, c?.GetCanBeNull() ?? dt.CanBeNull)
+				})
 				.NToList();
 
-			_fieldTable = Fields.ToHashtable(f => f.Name);
+			_fieldTable = Fields.ToHashtable(f => f.Name)
 		}
 
 		public SystemType : Type;

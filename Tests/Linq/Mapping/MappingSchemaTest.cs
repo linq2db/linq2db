@@ -53,9 +53,9 @@ namespace Tests.Mapping
 			var c1 = ms1.GetConverter<int?,int>();
 			var c2 = ms2.GetConverter<int?,int>();
 
-			Assert.AreEqual(4, c1(2));
-			Assert.AreEqual(0, c1(null));
-			Assert.AreEqual(4, c2(2));
+			Assert.AreEqual( 4, c1(2));
+			Assert.AreEqual( 0, c1(null));
+			Assert.AreEqual( 4, c2(2));
 			Assert.AreEqual(-1, c2(null));
 		}
 
@@ -110,6 +110,7 @@ namespace Tests.Mapping
 			}
 		}
 
+		/*
 		[Test]
 		public void BaseSchema3()
 		{
@@ -119,16 +120,17 @@ namespace Tests.Mapping
 			var ms4 = new MappingSchema(ms3, ms2, ms1);
 			var ms5 = new MappingSchema(ms3, ms4, ms2);
 
-			var ms = ms5.Schemas.ToArray();
+			var ms = ms5._schemas.ToArray();
 
 			Assert.AreEqual(6,   ms.Length);
-			Assert.AreSame (ms5, ms[0]);
-			Assert.AreSame (ms4, ms[1]);
-			Assert.AreSame (ms3, ms[2]);
-			Assert.AreSame (ms2, ms[3]);
-			Assert.AreSame (ms1, ms[4]);
-			Assert.AreSame (MappingSchema.Default, ms[5]);
+			Assert.AreSame (ms5._schemas.Head, ms[0]);
+			Assert.AreSame (ms4._schemas.Head, ms[1]);
+			Assert.AreSame (ms3._schemas.Head, ms[2]);
+			Assert.AreSame (ms2._schemas.Head, ms[3]);
+			Assert.AreSame (ms1._schemas.Head, ms[4]);
+			Assert.AreSame (MappingSchema.Default._schemas.Head, ms[5]);
 		}
+		*/
 
 		[Test]
 		public void CultureInfo()

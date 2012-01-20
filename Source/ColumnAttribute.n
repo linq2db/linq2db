@@ -10,6 +10,17 @@ namespace LinqToDB_Temp
 		public Config    : string { get; set; }
 		public Name      : string { get; set; }
 		public DbType    : string { get; set; }
-		public CanBeNull : bool   { get; set; }
+
+		private _canBeNull : bool? { get; set; }
+		public   CanBeNull : bool
+		{
+			get { _canBeNull ?? true }
+			set { _canBeNull = value }
+		}
+
+		public GetCanBeNull() : bool?
+		{
+			_canBeNull
+		}
 	}
 }

@@ -1,0 +1,56 @@
+﻿using System;
+using System.Linq.Expressions;
+
+using Nemerle;
+using Nemerle.Collections;
+
+namespace LinqToDB_Temp.Mapping
+{
+	using Common;
+	using Metadata;
+
+	class MappingSchemaInfo
+	{
+		public this(configuration : string)
+		{
+			Configuration  = configuration;
+		}
+
+		public         Configuration  : string;
+		public mutable MetadataReader : IMetadataReader;
+
+		mutable _defaultValues : Hashtable[Type,object];
+
+		public GetDefaultValue(type : Type) : option[object]
+		{
+			if (_defaultValues == null)
+				None()
+			else
+				_defaultValues.Get(type)
+		}
+
+		public SetDefaultValue(type : Type, value : object) : void
+		{
+			when (_defaultValues == null)
+				_defaultValues = Hashtable();
+			_defaultValues[type] = value
+		}
+
+		mutable _convertInfo : ConvertInfo;
+
+		public SetConvertInfo(from : Type, to : Type, expr : LambdaExpression * Delegate) : void
+		{
+			when (_convertInfo == null)
+				_convertInfo = ConvertInfo();
+			_convertInfo.Set(from, to, expr);
+		}
+
+		public GetConvertInfo(from : Type, to : Type) : option[LambdaExpression * Delegate]
+		{
+			if (_convertInfo == null)
+				None()
+			else
+				_convertInfo.Get(from, to, false);
+		}
+	}
+}

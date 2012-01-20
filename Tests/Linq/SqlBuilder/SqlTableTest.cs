@@ -13,7 +13,7 @@ namespace Tests.SqlBuilder
 		[Table]
 		class Table1
 		{
-			[Column(DbType = "varchar(max)")] public string Field1 = "";
+			[Column(DbType = "varchar(max)", CanBeNull = false)] public string Field1 = "";
 			public string Field2 = "";
 		}
 
@@ -23,6 +23,7 @@ namespace Tests.SqlBuilder
 			var t = new SqlTable(typeof(Table1));
 
 			Assert.AreEqual(1, t.Fields.Length);
+			Assert.AreEqual(false,          t["Field1"].CanBeNull);
 			Assert.AreEqual("VarChar(max)", t["Field1"].Type.ToString());
 		}
 
@@ -38,6 +39,7 @@ namespace Tests.SqlBuilder
 			var t = new SqlTable(typeof(Table2));
 
 			Assert.AreEqual(2, t.Fields.Length);
+			Assert.AreEqual(true,             t["Field1"].CanBeNull);
 			Assert.AreEqual("NVarChar(4000)", t["Field1"].Type.ToString());
 		}
 	}

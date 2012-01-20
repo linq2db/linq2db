@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 //[assembly: Nemerle.Macro.Settings(@"Properties\Settings.settings")]
 
 [assembly: InternalsVisibleTo("linq2db.Tests")]
-//[assembly: InternalsVisibleTo("linq2db.Tests.Nemerle")]
+[assembly: InternalsVisibleTo("linq2db.Friend")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
