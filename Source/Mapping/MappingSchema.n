@@ -355,7 +355,7 @@ namespace LinqToDB_Temp.Mapping
 
 		#region Configuration
 
-		private ConfigurationList : list[string]
+		ConfigurationList : list[string]
 		{
 			mutable _configurationList : list[string];
 

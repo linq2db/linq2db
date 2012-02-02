@@ -12,10 +12,10 @@ namespace Tests.SqlBuilder
 		[Test]
 		public void SqlNullableTest()
 		{
-			var p = new SqlExpr.Parameter(new SqlDataType.Int32(typeof(SqlInt32)), "p", new SqlValue.Object(new SqlInt32(1)));
+			var p = new SqlExpr.Parameter(new SqlDataType.Int32(typeof(SqlInt32)), "p");
 			Assert.IsTrue(p.CanBeNull);
 
-			p = new SqlExpr.Parameter(new SqlDataType.Int32(typeof(Int32)), "p", new SqlValue.Int32(1));
+			p = new SqlExpr.Parameter(new SqlDataType.Int32(typeof(Int32)), "p");
 			Assert.IsFalse(p.CanBeNull);
 		}
 	}

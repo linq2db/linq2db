@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -69,6 +71,26 @@ namespace Tests.Model
 			}
 
 			return string.Join("\n\n", commands);
+		}
+
+		[MethodExpression("Expression9")]
+		static public IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[MethodExpression("Expression9")]
+		public IQueryable<Parent> GetParent10(Child ch)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<ITestDataContext, Child, IQueryable<Parent>>> Expression9()
+		{
+			return (db, ch) =>
+				from p in db.Parent
+				where p.ParentID == (int)Math.Floor(ch.ChildID / 10.0)
+				select p;
 		}
 	}
 }

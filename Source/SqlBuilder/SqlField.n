@@ -8,6 +8,7 @@ namespace LinqToDB_Temp.SqlBuilder
 	[Record]
 	public class SqlField
 	{
+		public Table     : SqlTable    { get; }
 		public Type      : SqlDataType { get; }
 		public Name      : string      { get; }
 		public DbName    : string      { get; }

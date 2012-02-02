@@ -14,10 +14,10 @@ namespace LinqToDB_Temp.SqlBuilder
 		| Insert
 		| InsertOrUpdate
 
-		public Where : SqlPredicate
-		{
-			get; set;
-		}
+		//public Where : SqlPredicate
+		//{
+		//	get; set;
+		//}
 
 		public CanBeNull : bool
 		{

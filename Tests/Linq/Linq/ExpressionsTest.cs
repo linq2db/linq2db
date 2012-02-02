@@ -142,5 +142,75 @@ namespace Tests.Linq
 					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
 					db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
+		[MethodExpression("Expression8")]
+		static IQueryable<Parent> GetParent(ITestDataContext db, Child ch)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<ITestDataContext, Child, IQueryable<Parent>>> Expression8()
+		{
+			return (db, ch) =>
+				from p in db.Parent
+				where p.ParentID == (int)Math.Floor(ch.ChildID / 10.0)
+				select p;
+		}
+
+		[Test]
+		public void MethodExpression8([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					from p in
+						from p in Parent
+						where p.ParentID == ch.ChildID / 10
+						select p
+					where ch.ParentID == p.ParentID
+					select ch
+					,
+					from ch in db.Child
+					from p in GetParent(db, ch)
+					where ch.ParentID == p.ParentID
+					select ch);
+		}
+
+		[Test]
+		public void MethodExpression9()
+		{
+			using (var db = new TestDbManager())
+				AreEqual(
+					from ch in Child
+					from p in
+						from p in Parent
+						where p.ParentID == ch.ChildID / 10
+						select p
+					where ch.ParentID == p.ParentID
+					select ch
+					,
+					from ch in db.Child
+					from p in TestDbManager.GetParent9(db, ch)
+					where ch.ParentID == p.ParentID
+					select ch);
+		}
+
+		[Test]
+		public void MethodExpression10()
+		{
+			using (var db = new TestDbManager())
+				AreEqual(
+					from ch in Child
+					from p in
+						from p in Parent
+						where p.ParentID == ch.ChildID / 10
+						select p
+					where ch.ParentID == p.ParentID
+					select ch
+					,
+					from ch in db.Child
+					from p in db.GetParent10(ch)
+					where ch.ParentID == p.ParentID
+					select ch);
+		}
 	}
 }

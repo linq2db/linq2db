@@ -176,7 +176,7 @@ namespace Tests.Linq
 						.Select(p1 => new Person { ID = p1.ID * 2,           FirstName = p1.FirstName })
 						.Select(p2 => new        { ID = p2.ID / "22".Length, p2.FirstName })
 
-				).ToList().Where(p => p.ID == 1).First();
+				).ToList().First(p => p.ID == 1);
 				Assert.AreEqual(1,      person.ID);
 				Assert.AreEqual("John", person.FirstName);
 			}
@@ -203,6 +203,88 @@ namespace Tests.Linq
 					.Select(p2 => new        { p2.ID, p2.p1, p2 })
 					.Select(p3 => new        { p3.ID, p3.p1.FirstName, p11 = p3.p2.p1, p3 })
 					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
+		}
+
+		[Test]
+		public void MultipleSelect11()
+		{
+			var dt = DateTime.Now;
+
+			using (var db = new TestDbManager())
+			{
+				var q =
+					from p in db.Parent
+					from  g1 in p.GrandChildren.DefaultIfEmpty()
+					let   c1 = g1.Child.ChildID
+					where c1 == 1
+					from  g2 in p.GrandChildren.DefaultIfEmpty()
+					let   c2 = g2.Child.ChildID
+					where c2 == 2
+					from  g3 in p.GrandChildren.DefaultIfEmpty()
+					let   c3 = g3.Child.ChildID
+					where c3 == 3
+					from  g4 in p.GrandChildren.DefaultIfEmpty()
+					let   c4 = g4.Child.ChildID
+					where c4 == 4
+					from  g5 in p.GrandChildren.DefaultIfEmpty()
+					let   c5 = g5.Child.ChildID
+					where c5 == 5
+					from  g6 in p.GrandChildren.DefaultIfEmpty()
+					let   c6 = g6.Child.ChildID
+					where c6 == 6
+					from  g7 in p.GrandChildren.DefaultIfEmpty()
+					let   c7 = g7.Child.ChildID
+					where c7 == 7
+					from  g8 in p.GrandChildren.DefaultIfEmpty()
+					let   c8 = g8.Child.ChildID
+					where c8 == 8
+					from  g9 in p.GrandChildren.DefaultIfEmpty()
+					let   c9 = g9.Child.ChildID
+					where c9 == 9
+					from  g10 in p.GrandChildren.DefaultIfEmpty()
+					let   c10 = g10.Child.ChildID
+					where c10 == 10
+					from  g11 in p.GrandChildren.DefaultIfEmpty()
+					let   c11 = g11.Child.ChildID
+					where c11 == 11
+					from  g12 in p.GrandChildren.DefaultIfEmpty()
+					let   c12 = g12.Child.ChildID
+					where c12 == 12
+					from  g13 in p.GrandChildren.DefaultIfEmpty()
+					let   c13 = g13.Child.ChildID
+					where c13 == 13
+					from  g14 in p.GrandChildren.DefaultIfEmpty()
+					let   c14 = g14.Child.ChildID
+					where c14 == 14
+					from  g15 in p.GrandChildren.DefaultIfEmpty()
+					let   c15 = g15.Child.ChildID
+					where c15 == 15
+					from  g16 in p.GrandChildren.DefaultIfEmpty()
+					let   c16 = g16.Child.ChildID
+					where c16 == 16
+					from  g17 in p.GrandChildren.DefaultIfEmpty()
+					let   c17 = g17.Child.ChildID
+					where c17 == 17
+					from  g18 in p.GrandChildren.DefaultIfEmpty()
+					let   c18 = g18.Child.ChildID
+					where c18 == 18
+					from  g19 in p.GrandChildren.DefaultIfEmpty()
+					let   c19 = g19.Child.ChildID
+					where c19 == 19
+					from  g20 in p.GrandChildren.DefaultIfEmpty()
+					let   c20 = g20.Child.ChildID
+					where c20 == 20
+					orderby c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20
+					select new
+					{
+						p,
+						cs = new [] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20 }
+					};
+
+				q.ToList();
+			}
+
+			Assert.IsTrue((DateTime.Now - dt).TotalSeconds < 30);
 		}
 
 		[Test]

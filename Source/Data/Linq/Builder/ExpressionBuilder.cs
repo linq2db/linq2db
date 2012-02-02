@@ -268,7 +268,21 @@ namespace LinqToDB.Data.Linq.Builder
 			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethods()); }
 		}
 
+		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
+
 		Expression OptimizeExpression(Expression expression)
+		{
+			Expression expr;
+
+			if (_optimizedExpressions.TryGetValue(expression, out expr))
+				return expr;
+
+			_optimizedExpressions[expression] = expr = OptimizeExpressionImpl(expression);
+
+			return expr;
+		}
+
+		Expression OptimizeExpressionImpl(Expression expression)
 		{
 			return expression.Transform(expr =>
 			{

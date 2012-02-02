@@ -5,6 +5,7 @@ using System.Text;
 using Nemerle;
 using Nemerle.Assertions;
 using Nemerle.Extensions;
+using Nemerle.Internal;
 
 namespace LinqToDB_Temp.SqlBuilder
 {
@@ -24,8 +25,9 @@ namespace LinqToDB_Temp.SqlBuilder
 		[ReplaceCtorParameter(precedence, Primary)]
 		| Column
 		{
-			Expr  : SqlExpr;
-			Alias : string;
+			Expr : SqlExpr;
+
+			[IgnoreField] mutable Alias : string;
 		}
 
 		[ReplaceCtorParameter(type,       field.Type)]
@@ -62,8 +64,7 @@ namespace LinqToDB_Temp.SqlBuilder
 		[ReplaceCtorParameter(precedence, Primary)]
 		| Parameter
 		{
-			Name      : string;
-			new Value : SqlValue;
+			Name : string;
 		}
 
 		[ReplaceCtorParameter(precedence, Primary)]
@@ -98,7 +99,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				{
 					| Function
 					| Query                 => true
-					| Column    (e , _    ) => e.CanBeNull
+					| Column    (e        ) => e.CanBeNull
 					| Field     (f        ) => f.CanBeNull
 					| Binary    (e1, _, e2) => e1.CanBeNull || e2.CanBeNull
 					| Expression(_ , ps   ) => ps.Find(p => p.CanBeNull).IsSome
@@ -119,7 +120,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				| Binary    (e1, op, e2) => $"$e1 $op $e2"
 				| Expression(ex, ps)     => string.Format(ex, ps.ToArray)
 				| Function  (nm, ps)     => $"$nm(..$ps)"
-				| Parameter (nm, v)      => def n = nm ?? "parameter"; $"@$n[$v]"
+				| Parameter (nm)         => def n = nm ?? "parameter"; $"@$n"
 				| Value     (v)          => v.ToString()
 				| DataType               => Type.ToString()
 				| Condition (p)          => p.ToString()

@@ -220,6 +220,9 @@
     <Compile Include="SqlBuilder\SqlValue.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SqlBuilder\TableSource.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TableAttribute.n">
       <SubType>Code</SubType>
     </Compile>

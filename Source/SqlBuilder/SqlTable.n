@@ -47,7 +47,7 @@ namespace LinqToDB_Temp.SqlBuilder
 				.Select((m,t,c,_,_) =>
 				{
 					def dt = if (string.IsNullOrEmpty(c?.DbType)) ((t : Type) : SqlDataType) else SqlDataType.FromString(c.DbType, t);
-					SqlField(dt, m.Name, c?.Name ?? m.Name, c?.GetCanBeNull() ?? dt.CanBeNull)
+					SqlField(this, dt, m.Name, c?.Name ?? m.Name, c?.GetCanBeNull() ?? dt.CanBeNull)
 				})
 				.NToList();
 
@@ -59,6 +59,8 @@ namespace LinqToDB_Temp.SqlBuilder
 		public Schema     : string;
 		public Database   : string;
 		public Fields     : list[SqlField];
+
+		public mutable Alias : string;
 
 		_fieldTable : Hashtable[string,SqlField];
 
