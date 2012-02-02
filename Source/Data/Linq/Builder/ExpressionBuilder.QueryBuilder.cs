@@ -120,7 +120,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 							if (IsSubQuery(context, ce))
 							{
-								if (typeof(IEnumerable).IsSameOrParentOf(expr.Type))
+									if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
 									return new TransformInfo(BuildMultipleQuery(context, expr));
 
 								return new TransformInfo(GetSubQuery(context, ce).BuildExpression(null, 0));

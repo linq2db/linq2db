@@ -212,5 +212,18 @@ namespace Tests.Linq
 					db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()));
 			}
 		}
+
+		[Test]
+		public void MultipleQuery()
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from p in db.Product
+					select db.Category.Select(zrp => zrp.CategoryName).FirstOrDefault();
+
+				q.ToList();
+			}
+		}
 	}
 }
