@@ -213,14 +213,16 @@ namespace LinqToDB.Extensions
 
 						if (e1.Member == e2.Member)
 						{
-							if (e1.Expression == e2.Expression)
+							if (e1.Expression == e2.Expression || e1.Expression.Type == e2.Expression.Type)
 							{
 								if (queryableAccessorDic.Count > 0)
 								{
 									Func<Expression,IQueryable> func;
 
 									if (queryableAccessorDic.TryGetValue(expr1, out func))
-										return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
+										return
+											e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic) &&
+											func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
 								}
 							}
 

@@ -213,6 +213,45 @@ namespace Tests.Linq
 			}
 		}
 
+		void SkipTake6(ITestDataContext db, bool doSkip)
+		{
+			var q1 = from g in db.GrandChild select g;
+
+			if (doSkip)
+				q1 = q1.Skip(12);
+			q1 = q1.Take(3);
+
+			var q2 =
+				from c in db.Child
+				from p in q1
+				where c.ParentID == p.ParentID
+				select c;
+
+			var q3 = from g in GrandChild select g;
+
+			if (doSkip)
+				q3 = q3.Skip(12);
+			q3 = q3.Take(3);
+
+			var q4 =
+				from c in Child
+				from p in q3
+				where c.ParentID == p.ParentID
+				select c;
+
+			AreEqual(q4, q2);
+		}
+
+		[Test]
+		public void SkipTake6([DataContexts(ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				SkipTake6(db, false);
+				SkipTake6(db, true);
+			}
+		}
+
 		[Test]
 		public void SkipTakeCount([DataContexts(ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
