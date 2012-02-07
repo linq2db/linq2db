@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class CountTest : TestBase
 	{
@@ -73,6 +75,19 @@ namespace Tests.Linq
 					from p in db.Parent where p.Children.Count > 2 select p);
 		}
 
+		[Test]
+		public void SubQueryCount()
+		{
+			using (var db = new TestDbManager())
+			{
+				AreEqual(
+					from p in Parent
+					select Parent.Where(t => t.ParentID == p.ParentID).Count()
+					,
+					from p in db.Parent
+					select Sql.AsSql(db.Parent.Count()));
+			}
+		}
 		[Test]
 		public void GroupBy1([DataContexts] string context)
 		{
