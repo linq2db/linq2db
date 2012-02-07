@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SqlTypes;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
@@ -80,6 +81,11 @@ namespace LinqToDB.Data.Linq
 		public class Constant : Expressor<ConstantExpression>
 		{
 			public static MethodInfo Value = PropertyExpressor(e => e.Value);
+		}
+
+		public class QueryableInt : Expressor<IQueryable>
+		{
+			public static MethodInfo Expression = PropertyExpressor(e => e.Expression);
 		}
 
 		public class MethodCall : Expressor<MethodCallExpression>

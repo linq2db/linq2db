@@ -92,14 +92,15 @@ namespace LinqToDB_Temp.MacroInternal.Extensions
 
 		public DoPathExpr(type : PExpr, props : list[PExpr]) : PExpr
 		{
-			def path  = <[ $("pathExpr" : usesite) ]>;
-			def func  = <[ $("func"     : usesite) ]>;
-			def expr  = <[ $("expr"     : usesite) ]>;
-			def p     = <[ $("p"        : usesite) ]>;
-			def e     = <[ $("e"        : usesite) ]>;
-			def calls = props.Map(fun(expr)
+			def visited  = <[ $("visited"  : usesite) ]>;
+			def path     = <[ $("pathExpr" : usesite) ]>;
+			def func     = <[ $("func"     : usesite) ]>;
+			def expr     = <[ $("expr"     : usesite) ]>;
+			def p        = <[ $("p"        : usesite) ]>;
+			def e        = <[ $("e"        : usesite) ]>;
+			def calls    = props.Map(fun(expr)
 			{
-				| <[ $(n : name) ]> => <[ Path($e.$(n : name), $p, InfoOf($type.$(n : name)), $func) ]>
+				| <[ $(n : name) ]> => <[ Path($e.$(n : name), $visited, $p, InfoOf($type.$(n : name)), $func) ]>
 				| expr => expr
 			});
 

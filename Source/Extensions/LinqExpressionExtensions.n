@@ -359,7 +359,7 @@ namespace LinqToDB_Temp.Extensions
 			Expression.Convert(expr, type);
 		}
 
-		Path[T](source : IEnumerable[T], pathExpr : Expression, property : MethodInfo, func : T * Expression -> void) : void
+		Path[T](source : IEnumerable[T], _visited : HashSet[Expression], pathExpr : Expression, property : MethodInfo, func : T * Expression -> void) : void
 			where T : class
 		{
 			def prop = Expression.Property(pathExpr, property);
@@ -368,12 +368,17 @@ namespace LinqToDB_Temp.Extensions
 				func(item, Expression.Call(prop, infoof(ReadOnlyCollection[T].Item), array[ Expression.Constant({ i++; i }) ]));
 		}
 
-		Path(expr : Expression, pathExpr : Expression, property : MethodInfo, func : Expression * Expression -> void) : void
+		Path(expr : Expression, visited : HashSet[Expression], pathExpr : Expression, property : MethodInfo, func : Expression * Expression -> void) : void
 		{
-			Path(expr, Expression.Property(pathExpr, property), func);
+			Path(expr, visited, Expression.Property(pathExpr, property), func);
 		}
 
 		public Path(this expr : Expression, pathExpr : Expression, func : Expression * Expression -> void) : void
+		{
+			Path(expr, HashSet.[Expression](), pathExpr, func);
+		}
+
+		Path(expr : Expression, visited : HashSet[Expression], pathExpr : Expression, func : Expression * Expression -> void) : void
 		{
 			when (expr != null)
 			{
@@ -409,13 +414,32 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.TypeEqual
 					| ExpressionType.TypeIs          => path TypeBinaryExpression  members (Expression)
 					| ExpressionType.Block           => path BlockExpression       members (Variables,  Expressions)
-					| ExpressionType.Constant        => ConvertTo(pathExpr, typeof(ConstantExpression))
 					| ExpressionType.Parameter       => ConvertTo(pathExpr, typeof(ParameterExpression))
+					| ExpressionType.Constant        =>
+					
+						def pe = ConvertTo(pathExpr, typeof(ConstantExpression));
+						def e  = expr :> ConstantExpression;
+
+						match (e.Value)
+						{
+							| iq is IQueryable when !visited.Contains(iq.Expression) =>
+							
+								_ = visited.Add(iq.Expression);
+
+								def p = Expression.Property(pe, propertyof(ConstantExpression.Value));
+								def p = ConvertTo(p, typeof(IQueryable));
+								Path(iq.Expression, visited, p, propertyof(IQueryable.Expression), func);
+
+							| _ => ()
+						}
+
+						pe
+
 					| ExpressionType.ListInit        =>
 
 						path ListInitExpression members (
 							NewExpression,
-							Path(e.Initializers, p, infoof(ListInitExpression.Initializers), (ex,p) => Path(ex.Arguments, p, infoof(ElementInit.Arguments), func)))
+							Path(e.Initializers, visited, p, infoof(ListInitExpression.Initializers), (ex,p) => Path(ex.Arguments, visited, p, infoof(ElementInit.Arguments), func)))
 
 					| ExpressionType.MemberInit      =>
 
@@ -426,6 +450,7 @@ namespace LinqToDB_Temp.Extensions
 								| MemberBindingType.Assignment =>
 									Path(
 										(b :> MemberAssignment).Expression,
+										visited,
 										ConvertTo(pinf, typeof(MemberAssignment)),
 										infoof(MemberAssignment.Expression),
 										func);
@@ -433,13 +458,15 @@ namespace LinqToDB_Temp.Extensions
 								| MemberBindingType.ListBinding =>
 									Path(
 										(b :> MemberListBinding).Initializers,
+										visited,
 										ConvertTo(pinf, typeof(MemberListBinding)),
 										infoof(MemberListBinding.Initializers),
-										(p,psi) => Path(p.Arguments, psi, infoof(ElementInit.Arguments), func));
+										(p,psi) => Path(p.Arguments, visited, psi, infoof(ElementInit.Arguments), func));
 
 								| MemberBindingType.MemberBinding =>
 									Path(
 										(b :> MemberMemberBinding).Bindings,
+										visited,
 										ConvertTo(pinf, typeof(MemberMemberBinding)),
 										infoof(MemberMemberBinding.Bindings),
 										modify);
@@ -447,8 +474,8 @@ namespace LinqToDB_Temp.Extensions
 						}
 
 						path MemberInitExpression members (
-							Path(e.NewExpression, p, infoof(MemberInitExpression.NewExpression), func),
-							Path(e.Bindings,      p, infoof(MemberInitExpression.Bindings),      modify));
+							Path(e.NewExpression, visited, p, infoof(MemberInitExpression.NewExpression), func),
+							Path(e.Bindings,      visited, p, infoof(MemberInitExpression.Bindings),      modify));
 
 					| ExpressionType.Extension when expr is DefaultValueExpression => ConvertTo(pathExpr, typeof(DefaultValueExpression))
 					| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
