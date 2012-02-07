@@ -264,7 +264,7 @@ namespace LinqToDB.Data.Linq.Builder
 				while (mc != null)
 				{
 					if (!mc.IsQueryable())
-						return false;
+						return GetTableFunctionAttribute(mc.Method) != null;
 
 					mc = mc.Arguments[0] as MethodCallExpression;
 				}
