@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.SqlProvider;
 
@@ -12,7 +12,7 @@ namespace Tests.Linq
     using Model;
 
     [TestFixture]
-    public class IdlTest : TestBase
+    public partial class IdlTest : TestBase
     {
         #region PersonWithId
 
@@ -415,6 +415,146 @@ namespace Tests.Linq
 
                 });
         }
+
+        #region GenericQuery classes
+
+        public abstract partial class GenericQueryBase
+        {
+            private readonly IdlPatientSource m_ds;
+
+            protected GenericQueryBase(ITestDataContext ds)
+            {
+                m_ds = new IdlPatientSource(ds);
+            }
+
+            #region Object sources
+
+            protected IQueryable<IdlPerson> AllPersons
+            {
+                get { return m_ds.Persons(); }
+            }
+
+            protected IQueryable<IdlPatient> AllPatients
+            {
+                get { return m_ds.Patients(); }
+            }
+
+            protected IQueryable<IdlGrandChild> AllGrandChilds
+            {
+                get { return m_ds.GrandChilds(); }
+            }
+
+            #endregion
+
+            public abstract IEnumerable<object> Query();
+        }
+
+        public class GenericConcatQuery : GenericQueryBase
+        {
+            private System.String @p1;
+            private System.Int32 @p2;
+
+            public GenericConcatQuery(ITestDataContext ds, object[] args)
+                : base(ds)
+            {
+                @p1 = (System.String)args[0];
+                @p2 = (System.Int32)args[1];
+            }
+
+            public override IEnumerable<object> Query()
+            {
+                return (from y in AllPersons
+                        select y.Name)
+                            .Concat(
+                                from x in AllPersons
+                                from z in AllPatients
+                                where (x.Name == @p1 || z.Id == new ObjectId { Value = @p2 })
+                                select x.Name
+                            );
+            }
+        }
+
+        [Test]
+        public void TestMono01()
+        {
+            ForMySqlProvider(
+                 db =>
+                 {
+                     var ds = new IdlPatientSource(db);
+                     var t = "A";
+                     var query =
+                         (from y in ds.Persons()
+                          select y.Name)
+                             .Concat(
+                                 from x in ds.Persons()
+                                 where x.Name == t
+                                 select x.Name
+                             );
+
+                     Assert.That(query.ToList(), Is.Not.Null);
+                 });
+        }
+
+        [Test]
+        public void TestMono03()
+        {
+            ForMySqlProvider(
+                db => Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null));
+        }
+
+        public static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
+        {
+            return source1.Provider.CreateQuery<TSource>(
+                Expression.Call(
+                    null,
+                    typeof(Queryable).GetMethod("Concat").MakeGenericMethod(typeof(TSource)),
+                    new[] { source1.Expression, Expression.Constant(source2, typeof (IEnumerable<TSource>)) }));
+        }
+
+        [Test]
+        public void TestMonoConcat()
+        {
+            ForMySqlProvider(db =>
+            {
+                var ds = new IdlPatientSource(db);
+                var t  = "A";
+                var query = Concat2(
+                    from y in ds.Persons() select y.Name,
+                    from x in ds.Persons() where x.Name == t select x.Name);
+
+                Assert.That(query.ToList(), Is.Not.Null);
+            });
+        }
+
+        [Test]
+        public void TestMonoConcat2()
+        {
+            ForMySqlProvider(
+            db =>
+            {
+                var ds = new IdlPatientSource(db);
+                var t = "A";
+                var query1 = Concat2(
+                from y in ds.Persons() select y.Name,
+                from x in ds.Persons() where x.Name == t select x.Name);
+
+                Assert.That(query1.ToList(), Is.Not.Null);
+            });
+
+            ForMySqlProvider(
+            db =>
+            {
+                var ds = new IdlPatientSource(db);
+                var t = "A";
+                var query2 = Concat2(
+                from y in ds.Persons() select y.Name,
+                from x in ds.Persons() where x.Name == t select x.Name);
+
+                Assert.That(query2.ToList(), Is.Not.Null);
+            });
+        }
+
+        #endregion
     }
 
     #region TestConvertFunction classes

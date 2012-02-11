@@ -46,7 +46,16 @@ namespace LinqToDB.Extensions
 
 		#region EqualsTo
 
-		public static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,Func<Expression,IQueryable>> queryableAccessorDic)
+		public static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression, Func<Expression, IQueryable>> queryableAccessorDic)
+		{
+			return EqualsTo(expr1, expr2, new HashSet<Expression>(), queryableAccessorDic);
+		}
+
+		static bool EqualsTo(
+			this Expression     expr1,
+			Expression          expr2,
+			HashSet<Expression> visited,
+			Dictionary<Expression,Func<Expression,IQueryable>> queryableAccessorDic)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -88,9 +97,9 @@ namespace LinqToDB.Extensions
 						var e2 = (BinaryExpression)expr2;
 						return
 							e1.Method == e2.Method &&
-							e1.Conversion.EqualsTo(e2.Conversion, queryableAccessorDic) &&
-							e1.Left.      EqualsTo(e2.Left,       queryableAccessorDic) &&
-							e1.Right.     EqualsTo(e2.Right,      queryableAccessorDic);
+							e1.Conversion.EqualsTo(e2.Conversion, visited, queryableAccessorDic) &&
+							e1.Left.      EqualsTo(e2.Left,       visited, queryableAccessorDic) &&
+							e1.Right.     EqualsTo(e2.Right,      visited, queryableAccessorDic);
 					}
 
 				case ExpressionType.ArrayLength:
@@ -105,7 +114,7 @@ namespace LinqToDB.Extensions
 					{
 						var e1 = (UnaryExpression)expr1;
 						var e2 = (UnaryExpression)expr2;
-						return e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, queryableAccessorDic);
+						return e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, visited, queryableAccessorDic);
 					}
 
 				case ExpressionType.Call:
@@ -121,14 +130,14 @@ namespace LinqToDB.Extensions
 							Func<Expression,IQueryable> func;
 
 							if (queryableAccessorDic.TryGetValue(expr1, out func))
-								return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
+								return func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
 						}
 
-						if (!e1.Object.EqualsTo(e2.Object, queryableAccessorDic))
+						if (!e1.Object.EqualsTo(e2.Object, visited, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;
@@ -139,9 +148,9 @@ namespace LinqToDB.Extensions
 						var e1 = (ConditionalExpression)expr1;
 						var e2 = (ConditionalExpression)expr2;
 						return
-							e1.Test.   EqualsTo(e2.Test,   queryableAccessorDic) &&
-							e1.IfTrue. EqualsTo(e2.IfTrue, queryableAccessorDic) &&
-							e1.IfFalse.EqualsTo(e2.IfFalse, queryableAccessorDic);
+							e1.Test.   EqualsTo(e2.Test,    visited, queryableAccessorDic) &&
+							e1.IfTrue. EqualsTo(e2.IfTrue,  visited, queryableAccessorDic) &&
+							e1.IfFalse.EqualsTo(e2.IfFalse, visited, queryableAccessorDic);
 					}
 
 				case ExpressionType.Constant:
@@ -149,7 +158,28 @@ namespace LinqToDB.Extensions
 						var e1 = (ConstantExpression)expr1;
 						var e2 = (ConstantExpression)expr2;
 
-						return e1.Value == null && e2.Value == null || e1.Type.IsConstantable() ? Equals(e1.Value, e2.Value) : true;
+						if (e1.Value == null && e2.Value == null)
+							return true;
+
+						if (IsConstantable(e1.Type))
+							return Equals(e1.Value, e2.Value);
+
+						if (e1.Value == null || e2.Value == null)
+							return false;
+
+						if (e1.Value is IQueryable)
+						{
+							var eq1 = ((IQueryable)e1.Value).Expression;
+							var eq2 = ((IQueryable)e2.Value).Expression;
+
+							if (!visited.Contains(eq1))
+							{
+								visited.Add(eq1);
+								return eq1.EqualsTo(eq2, visited, queryableAccessorDic);
+							}
+						}
+
+						return true;
 					}
 
 				case ExpressionType.Invoke:
@@ -157,11 +187,11 @@ namespace LinqToDB.Extensions
 						var e1 = (InvocationExpression)expr1;
 						var e2 = (InvocationExpression)expr2;
 
-						if (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic))
+						if (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;
@@ -172,11 +202,11 @@ namespace LinqToDB.Extensions
 						var e1 = (LambdaExpression)expr1;
 						var e2 = (LambdaExpression)expr2;
 
-						if (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, queryableAccessorDic))
+						if (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, visited, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Parameters.Count; i++)
-							if (!e1.Parameters[i].EqualsTo(e2.Parameters[i], queryableAccessorDic))
+							if (!e1.Parameters[i].EqualsTo(e2.Parameters[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;
@@ -187,7 +217,7 @@ namespace LinqToDB.Extensions
 						var e1 = (ListInitExpression)expr1;
 						var e2 = (ListInitExpression)expr2;
 
-						if (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
+						if (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
 							return false;
 
 						for (var i = 0; i < e1.Initializers.Count; i++)
@@ -199,7 +229,7 @@ namespace LinqToDB.Extensions
 								return false;
 
 							for (var j = 0; j < i1.Arguments.Count; j++)
-								if (!i1.Arguments[j].EqualsTo(i2.Arguments[j], queryableAccessorDic))
+								if (!i1.Arguments[j].EqualsTo(i2.Arguments[j], visited, queryableAccessorDic))
 									return false;
 						}
 
@@ -221,12 +251,12 @@ namespace LinqToDB.Extensions
 
 									if (queryableAccessorDic.TryGetValue(expr1, out func))
 										return
-											e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic) &&
-											func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
+											e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic) &&
+											func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
 								}
 							}
 
-							return e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
+							return e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
 						}
 
 						return false;
@@ -237,7 +267,7 @@ namespace LinqToDB.Extensions
 						var e1 = (MemberInitExpression)expr1;
 						var e2 = (MemberInitExpression)expr2;
 
-						if (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
+						if (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
 							return false;
 
 						Func<MemberBinding,MemberBinding,bool> compareBindings = null; compareBindings = (b1,b2) =>
@@ -251,7 +281,7 @@ namespace LinqToDB.Extensions
 							switch (b1.BindingType)
 							{
 								case MemberBindingType.Assignment:
-									return ((MemberAssignment)b1).Expression.EqualsTo(((MemberAssignment)b2).Expression, queryableAccessorDic);
+									return ((MemberAssignment)b1).Expression.EqualsTo(((MemberAssignment)b2).Expression, visited, queryableAccessorDic);
 
 								case MemberBindingType.ListBinding:
 									var ml1 = (MemberListBinding)b1;
@@ -269,7 +299,7 @@ namespace LinqToDB.Extensions
 											return false;
 
 										for (var j = 0; j < ei1.Arguments.Count; j++)
-											if (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], queryableAccessorDic))
+											if (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], visited, queryableAccessorDic))
 												return false;
 									}
 
@@ -332,7 +362,7 @@ namespace LinqToDB.Extensions
 						}
 
 						for (var i = 0; i < e1.Arguments.Count; i++)
-							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+							if (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;
@@ -348,7 +378,7 @@ namespace LinqToDB.Extensions
 							return false;
 
 						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
+							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;
@@ -365,7 +395,7 @@ namespace LinqToDB.Extensions
 					{
 						var e1 = (TypeBinaryExpression)expr1;
 						var e2 = (TypeBinaryExpression)expr2;
-						return e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
+						return e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
 					}
 
 #if FW4 || SILVERLIGHT
@@ -376,11 +406,11 @@ namespace LinqToDB.Extensions
 						var e2 = (BlockExpression)expr2;
 
 						for (var i = 0; i < e1.Expressions.Count; i++)
-							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
+							if (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
 								return false;
 
 						for (var i = 0; i < e1.Variables.Count; i++)
-							if (!e1.Variables[i].EqualsTo(e2.Variables[i], queryableAccessorDic))
+							if (!e1.Variables[i].EqualsTo(e2.Variables[i], visited, queryableAccessorDic))
 								return false;
 
 						return true;

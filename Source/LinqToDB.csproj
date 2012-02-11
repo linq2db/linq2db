@@ -60,9 +60,11 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ExpressionQueryImpl.cs" />
     <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -168,12 +170,12 @@
     <Compile Include="Data\Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Data\Linq\DefaultDataContextInfo.cs" />
-    <Compile Include="Data\Linq\ExpressionQuery.cs" />
+    <Compile Include="ExpressionQuery.cs" />
     <Compile Include="Data\Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
     <Compile Include="Data\Linq\IDataContextInfo.cs" />
-    <Compile Include="Data\Linq\IExpressionQuery.cs" />
+    <Compile Include="IExpressionQuery.cs" />
     <Compile Include="Data\Linq\IQueryContext.cs" />
     <Compile Include="Data\Linq\ISelectInsertable.cs" />
     <Compile Include="Data\Linq\IUpdateable.cs" />

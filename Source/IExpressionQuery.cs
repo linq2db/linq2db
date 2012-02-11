@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Data.Linq
+namespace LinqToDB
 {
 	interface IExpressionQuery
 	{

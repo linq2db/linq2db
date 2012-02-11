@@ -38,6 +38,11 @@ namespace LinqToDB_Temp.Extensions
 
 		public EqualsTo(this expr1 : Expression, expr2 : Expression, queryableAccessorDic : Dictionary[Expression,Func[Expression,IQueryable]]) : bool
 		{
+			EqualsTo(expr1, expr2, HashSet(), queryableAccessorDic) : bool
+		}
+
+		public EqualsTo(this expr1 : Expression, expr2 : Expression, visited : HashSet[Expression], queryableAccessorDic : Dictionary[Expression,Func[Expression,IQueryable]]) : bool
+		{
 			if (expr1 === expr2)
 				true
 			else if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
@@ -61,9 +66,9 @@ namespace LinqToDB_Temp.Extensions
 					def e2 = expr2 :> BinaryExpression;
 
 					e1.Method == e2.Method &&
-					e1.Conversion.EqualsTo(e2.Conversion, queryableAccessorDic) &&
-					e1.Left.      EqualsTo(e2.Left,       queryableAccessorDic) &&
-					e1.Right.     EqualsTo(e2.Right,      queryableAccessorDic)
+					e1.Conversion.EqualsTo(e2.Conversion, visited, queryableAccessorDic) &&
+					e1.Left.      EqualsTo(e2.Left,       visited, queryableAccessorDic) &&
+					e1.Right.     EqualsTo(e2.Right,      visited, queryableAccessorDic)
 
 				| ExpressionType.ArrayLength
 				| ExpressionType.Convert       | ExpressionType.ConvertChecked  | ExpressionType.Negate          | ExpressionType.PostIncrementAssign
@@ -76,7 +81,7 @@ namespace LinqToDB_Temp.Extensions
 					def e1 = expr1 :> UnaryExpression;
 					def e2 = expr2 :> UnaryExpression;
 
-					e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, queryableAccessorDic)
+					e1.Method == e2.Method && e1.Operand.EqualsTo(e2.Operand, visited, queryableAccessorDic)
 
 				| ExpressionType.Call            =>
 
@@ -91,14 +96,14 @@ namespace LinqToDB_Temp.Extensions
 						mutable func;
 
 						when (queryableAccessorDic.TryGetValue(expr1, out func))
-							return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
+							return func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
 					}
 
-					when (!e1.Object.EqualsTo(e2.Object, queryableAccessorDic))
+					when (!e1.Object.EqualsTo(e2.Object, visited, queryableAccessorDic))
 						return false;
 
 					for (mutable i = 0; i < e1.Arguments.Count; i++)
-						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 							return false;
 
 					true
@@ -108,27 +113,47 @@ namespace LinqToDB_Temp.Extensions
 					def e1 = expr1 :> ConditionalExpression;
 					def e2 = expr2 :> ConditionalExpression;
 
-					e1.Test.   EqualsTo(e2.Test,    queryableAccessorDic) &&
-					e1.IfTrue. EqualsTo(e2.IfTrue,  queryableAccessorDic) &&
-					e1.IfFalse.EqualsTo(e2.IfFalse, queryableAccessorDic);
+					e1.Test.   EqualsTo(e2.Test,    visited, queryableAccessorDic) &&
+					e1.IfTrue. EqualsTo(e2.IfTrue,  visited, queryableAccessorDic) &&
+					e1.IfFalse.EqualsTo(e2.IfFalse, visited, queryableAccessorDic);
 
 				| ExpressionType.Constant        =>
 
 					def e1 = expr1 :> ConstantExpression;
 					def e2 = expr2 :> ConstantExpression;
 
-					e1.Type == e2.Type && (e1.Value == null && e2.Value == null || !e1.Type.IsConstantable() || Equals(e1.Value, e2.Value))
+					if (e1.Value == null && e2.Value == null)
+						true
+					else if (IsConstantable(e1.Type))
+						Equals(e1.Value, e2.Value)
+					else if (e1.Value == null || e2.Value == null)
+						false
+					else if (e1.Value is IQueryable)
+					{
+						def eq1 = (e1.Value :> IQueryable).Expression;
+						def eq2 = (e2.Value :> IQueryable).Expression;
+
+						if (!visited.Contains(eq1))
+						{
+							_ = visited.Add(eq1);
+							eq1.EqualsTo(eq2, visited, queryableAccessorDic);
+						}
+						else
+							true
+					}
+					else
+						true;
 
 				| ExpressionType.Invoke          =>
 
 					def e1 = expr1 :> InvocationExpression;
 					def e2 = expr2 :> InvocationExpression;
 
-					when (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic))
+					when (e1.Arguments.Count != e2.Arguments.Count || !e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic))
 						return false;
 
 					for (mutable i = 0; i < e1.Arguments.Count; i++)
-						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 							return false;
 
 					true;
@@ -138,11 +163,11 @@ namespace LinqToDB_Temp.Extensions
 					def e1 = expr1 :> LambdaExpression;
 					def e2 = expr2 :> LambdaExpression;
 
-					when (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, queryableAccessorDic))
+					when (e1.Parameters.Count != e2.Parameters.Count || !e1.Body.EqualsTo(e2.Body, visited, queryableAccessorDic))
 						return false;
 
 					for (mutable i = 0; i < e1.Parameters.Count; i++)
-						when (!e1.Parameters[i].EqualsTo(e2.Parameters[i], queryableAccessorDic))
+						when (!e1.Parameters[i].EqualsTo(e2.Parameters[i], visited, queryableAccessorDic))
 							return false;
 
 					true;
@@ -152,7 +177,7 @@ namespace LinqToDB_Temp.Extensions
 					def e1 = expr1 :> ListInitExpression;
 					def e2 = expr2 :> ListInitExpression;
 
-					when (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
+					when (e1.Initializers.Count != e2.Initializers.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
 						return false;
 
 					for (mutable i = 0; i < e1.Initializers.Count; i++)
@@ -164,7 +189,7 @@ namespace LinqToDB_Temp.Extensions
 							return false;
 
 						for (mutable j = 0; j < i1.Arguments.Count; j++)
-							when (!i1.Arguments[j].EqualsTo(i2.Arguments[j], queryableAccessorDic))
+							when (!i1.Arguments[j].EqualsTo(i2.Arguments[j], visited, queryableAccessorDic))
 								return false;
 					}
 
@@ -184,11 +209,11 @@ namespace LinqToDB_Temp.Extensions
 								mutable func;
 
 								when (queryableAccessorDic.TryGetValue(expr1, out func))
-									return func(expr1).Expression.EqualsTo(func(expr2).Expression, queryableAccessorDic);
+									return func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
 							}
 						}
 
-						e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
+						e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
 					}
 					else
 						false
@@ -198,7 +223,7 @@ namespace LinqToDB_Temp.Extensions
 					def e1 = expr1 :> MemberInitExpression;
 					def e2 = expr2 :> MemberInitExpression;
 
-					when (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, queryableAccessorDic))
+					when (e1.Bindings.Count != e2.Bindings.Count || !e1.NewExpression.EqualsTo(e2.NewExpression, visited, queryableAccessorDic))
 						return false;
 
 					def compareBindings (b1 : MemberBinding, b2 : MemberBinding) : bool
@@ -230,7 +255,7 @@ namespace LinqToDB_Temp.Extensions
 										return false;
 
 									for (mutable j = 0; j < ei1.Arguments.Count; j++)
-										when (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], queryableAccessorDic))
+										when (!ei1.Arguments[j].EqualsTo(ei2.Arguments[j], visited, queryableAccessorDic))
 											return false;
 								}
 
@@ -290,7 +315,7 @@ namespace LinqToDB_Temp.Extensions
 					}
 
 					for (mutable i = 0; i < e1.Arguments.Count; i++)
-						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], queryableAccessorDic))
+						when (!e1.Arguments[i].EqualsTo(e2.Arguments[i], visited, queryableAccessorDic))
 							return false;
 
 					true;
@@ -305,7 +330,7 @@ namespace LinqToDB_Temp.Extensions
 						return false;
 
 					for (mutable i = 0; i < e1.Expressions.Count; i++)
-						when (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
+						when (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
 							return false;
 
 					true;
@@ -321,7 +346,7 @@ namespace LinqToDB_Temp.Extensions
 
 					def e1 = expr1 :> TypeBinaryExpression;
 					def e2 = expr2 :> TypeBinaryExpression;
-					e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, queryableAccessorDic);
+					e1.TypeOperand == e2.TypeOperand && e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic);
 
 				| ExpressionType.Block           =>
 
@@ -329,18 +354,18 @@ namespace LinqToDB_Temp.Extensions
 					def e2 = expr2 :> BlockExpression;
 
 					for (mutable i = 0; i < e1.Expressions.Count; i++)
-						when (!e1.Expressions[i].EqualsTo(e2.Expressions[i], queryableAccessorDic))
+						when (!e1.Expressions[i].EqualsTo(e2.Expressions[i], visited, queryableAccessorDic))
 							return false;
 
 					for (mutable i = 0; i < e1.Variables.Count; i++)
-						when (!e1.Variables[i].EqualsTo(e2.Variables[i], queryableAccessorDic))
+						when (!e1.Variables[i].EqualsTo(e2.Variables[i], visited, queryableAccessorDic))
 							return false;
 
 					true;
 
 				| ExpressionType.Extension when expr1.CanReduce && expr2.CanReduce =>
 
-					expr1.Reduce().EqualsTo(expr2.Reduce(), queryableAccessorDic)
+					expr1.Reduce().EqualsTo(expr2.Reduce(), visited, queryableAccessorDic)
 
 				| ExpressionType.DebugInfo     | ExpressionType.Dynamic         | ExpressionType.Default         | ExpressionType.RuntimeVariables
 				| ExpressionType.Extension     | ExpressionType.Goto            | ExpressionType.Index           | ExpressionType.Label
