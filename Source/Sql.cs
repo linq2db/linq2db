@@ -708,13 +708,13 @@ namespace LinqToDB
 		[SqlFunction] public static Double?  Cot    (Double?  value) { return value == null ? null : (Double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
 		[SqlFunction] public static Decimal? Degrees(Decimal? value) { return value == null ? null : (Decimal?)(value.Value * 180m / (Decimal)Math.PI); }
-		[SqlFunction] public static Double?  Degrees(Double?  value) { return value == null ? null : (Double?) (value * 180 / Math.PI); }
-		[SqlFunction] public static Int16?   Degrees(Int16?   value) { return value == null ? null : (Int16?)  (value * 180 / Math.PI); }
-		[SqlFunction] public static Int32?   Degrees(Int32?   value) { return value == null ? null : (Int32?)  (value * 180 / Math.PI); }
-		[SqlFunction] public static Int64?   Degrees(Int64?   value) { return value == null ? null : (Int64?)  (value * 180 / Math.PI); }
+		[SqlFunction] public static Double?  Degrees(Double?  value) { return value == null ? null : (Double?) (value.Value * 180 / Math.PI); }
+		[SqlFunction] public static Int16?   Degrees(Int16?   value) { return value == null ? null : (Int16?)  (value.Value * 180 / Math.PI); }
+		[SqlFunction] public static Int32?   Degrees(Int32?   value) { return value == null ? null : (Int32?)  (value.Value * 180 / Math.PI); }
+		[SqlFunction] public static Int64?   Degrees(Int64?   value) { return value == null ? null : (Int64?)  (value.Value * 180 / Math.PI); }
 		[CLSCompliant(false)]
-		[SqlFunction] public static SByte?   Degrees(SByte?   value) { return value == null ? null : (SByte?)  (value * 180 / Math.PI); }
-		[SqlFunction] public static Single?  Degrees(Single?  value) { return value == null ? null : (Single?) (value * 180 / Math.PI); }
+		[SqlFunction] public static SByte?   Degrees(SByte?   value) { return value == null ? null : (SByte?)  (value.Value * 180 / Math.PI); }
+		[SqlFunction] public static Single?  Degrees(Single?  value) { return value == null ? null : (Single?) (value.Value * 180 / Math.PI); }
 
 		[SqlFunction] public static Double?  Exp    (Double?  value) { return value == null ? null : (Double?)Math.Exp    (value.Value); }
 
