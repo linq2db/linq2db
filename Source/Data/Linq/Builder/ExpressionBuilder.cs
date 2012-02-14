@@ -210,6 +210,7 @@ namespace LinqToDB.Data.Linq.Builder
 		{
 			var expr = ConvertParameters(expression);
 
+			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
 			if (SequenceParameter == null)
@@ -251,6 +252,63 @@ namespace LinqToDB.Data.Linq.Builder
 						}
 
 						break;
+				}
+
+				return expr;
+			});
+		}
+
+		#endregion
+
+		#region ExposeExpression
+
+		Expression ExposeExpression(Expression expression)
+		{
+			return expression.Transform(expr =>
+			{
+				switch (expr.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+						{
+							var me = (MemberExpression)expr;
+							var l  = ConvertMethodExpression(me.Member);
+
+							if (l != null)
+							{
+								var body = l.Body.Unwrap();
+								var ex = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
+
+								if (ex.Type != expr.Type)
+									ex = new ChangeTypeExpression(ex, expr.Type);
+
+								return ExposeExpression(ex);
+							}
+
+							break;
+						}
+
+					case ExpressionType.Constant :
+						{
+							var c = (ConstantExpression)expr;
+
+							// Fix Mono behaviour.
+							//
+							//if (c.Value is IExpressionQuery)
+							//	return ((IQueryable)c.Value).Expression;
+
+							if (c.Value is IQueryable && !(c.Value is ITable))
+							{
+								var e = ((IQueryable)c.Value).Expression;
+
+								if (!_visitedExpressions.Contains(e))
+								{
+									_visitedExpressions.Add(e);
+									return ExposeExpression(e);
+								}
+							}
+
+							break;
+						}
 				}
 
 				return expr;
@@ -325,19 +383,6 @@ namespace LinqToDB.Data.Linq.Builder
 									return ConvertExpressionTree(ex);
 							}
 
-							var l = ConvertMethodExpression(me.Member);
-
-							if (l != null)
-							{
-								var body = l.Body.Unwrap();
-								var ex = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
-
-								if (ex.Type != expr.Type)
-									ex = new ChangeTypeExpression(ex, expr.Type);
-
-								return OptimizeExpression(ex);
-							}
-
 							return ConvertSubquery(expr);
 						}
 
@@ -389,29 +434,6 @@ namespace LinqToDB.Data.Linq.Builder
 							}
 
 							return ConvertSubquery(expr);
-						}
-
-					case ExpressionType.Constant :
-						{
-							var c = (ConstantExpression)expr;
-
-							// Fix Mono behaviour.
-							//
-							//if (c.Value is IExpressionQuery)
-							//	return ((IQueryable)c.Value).Expression;
-
-							if (c.Value is IQueryable && !(c.Value is ITable))
-							{
-								var e = ((IQueryable)c.Value).Expression;
-
-								if (!_visitedExpressions.Contains(e))
-								{
-									_visitedExpressions.Add(e);
-									return OptimizeExpression(e);
-								}
-							}
-
-							break;
 						}
 				}
 
