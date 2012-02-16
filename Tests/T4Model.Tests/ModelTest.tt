@@ -4,7 +4,10 @@
 <#
 	Source.Namespaces[0].Name = "T4Model.Tests";
 
+	Source.Usings.Add("System.ComponentModel");
 	Source.Usings.Add("System.Collections.Generic");
+	Source.Usings.Add("System.Xml.Serialization");
+	Source.Usings.Add("T4Model.Tests");
 	
 	Source.Namespaces[0].Types.Add(new Class
 	{
@@ -13,7 +16,7 @@
 		{
 			new MemberGroup
 			{
-				Name      = "Test Region",
+				Region    = "Test Region",
 				IsCompact = true,
 				Members   =
 				{
@@ -21,11 +24,45 @@
 					new Field { Type = "string", Name = "Field2" },
 				}
 			},
-			new Field { Type = "List<int>", Name = "Field3", EndLineComment = "Field3 comment" },
-			new Field { Type = "List<int>", Name = "Field31" },
 			new MemberGroup
 			{
+				Region    = "Test Region 2",
+				IsCompact = true,
 				Members   =
+				{
+					new Field { Type = "int",    Name = "Field12" },
+					new Field { Type = "string", Name = "Field22" },
+				}
+			},
+			new Field
+			{
+				Type           = "List<int>",
+				Name           = "Field3",
+				EndLineComment = "Field3 comment",
+				Attributes     =
+				{
+					//new Attribute { Name = "DisplayName" },
+					new Attribute { Name = "XmlArrayItem", Parameters = { "typeof(int)", "DataType=\"List\"" } },
+				}
+			},
+			new Property
+			{
+				Type           = "char",
+				Name           = "Property1",
+				EndLineComment = "Property1 comment",
+				Attributes     =
+				{
+					new Attribute { Name = "DisplayName", Parameters = { "\"Prop\"" } }
+				}
+			},
+			new Field
+			{
+				Type = "List<int>",
+				Name = "Field31"
+			},
+			new MemberGroup
+			{
+				Members =
 				{
 					new Field("double",    "Field5"),
 					new Field("List<int>", "Field6"),
@@ -36,8 +73,11 @@
 				IsCompact = true,
 				Members   =
 				{
-					new Field("double",    "Fld7")   { EndLineComment = "Fld7" },
-					new Field("List<int>", "Field8") { EndLineComment = "Fld8" },
+					new Field   ("double",       "Fld7")          { EndLineComment = "Fld7" },
+					new Field   ("List<int>",    "Field8"),
+					new Field   ("DateTime",     "FieldLongName") { EndLineComment = "field long name" },
+					new Property("List<string>", "Property2")     { EndLineComment = "Property2" },
+					new Property("int?",         "Prop1")         { EndLineComment = "Prop1" },
 				}
 			},
 			new Field { Type = "List<string>", Name = "Field4" },
@@ -46,8 +86,14 @@
 
 	Source.Namespaces[0].Types.Add(new Class
 	{
-		Name      = "TestClass2",
-		BaseClass = "TestClass1",
+		Name       = "TestClass2",
+		BaseClass  = "TestClass1",
+		//Interfaces = { "IDisposable" }
+		Attributes =
+		{
+			new Attribute { Name = "Serializable" },
+			new Attribute { Name = "DisplayName",  Parameters = { "\"TestClass\"" } },
+		}
 	});
 	
 	GenerateModel();
