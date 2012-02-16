@@ -1,0 +1,54 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".cs"                                  #>
+<#@ include file="..\..\Templates\T4Model.ttinclude"        #>
+<#
+	Source.Namespaces[0].Name = "T4Model.Tests";
+
+	Source.Usings.Add("System.Collections.Generic");
+	
+	Source.Namespaces[0].Types.Add(new Class
+	{
+		Name    = "TestClass1",
+		Members =
+		{
+			new MemberGroup
+			{
+				Name      = "Test Region",
+				IsCompact = true,
+				Members   =
+				{
+					new Field { Type = "int",    Name = "Field1" },
+					new Field { Type = "string", Name = "Field2" },
+				}
+			},
+			new Field { Type = "List<int>", Name = "Field3", EndLineComment = "Field3 comment" },
+			new Field { Type = "List<int>", Name = "Field31" },
+			new MemberGroup
+			{
+				Members   =
+				{
+					new Field("double",    "Field5"),
+					new Field("List<int>", "Field6"),
+				}
+			},
+			new MemberGroup
+			{
+				IsCompact = true,
+				Members   =
+				{
+					new Field("double",    "Fld7")   { EndLineComment = "Fld7" },
+					new Field("List<int>", "Field8") { EndLineComment = "Fld8" },
+				}
+			},
+			new Field { Type = "List<string>", Name = "Field4" },
+		}
+	});
+
+	Source.Namespaces[0].Types.Add(new Class
+	{
+		Name      = "TestClass2",
+		BaseClass = "TestClass1",
+	});
+	
+	GenerateModel();
+#>

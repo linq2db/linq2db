@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\T4Model.ttinclude = Templates\T4Model.ttinclude
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Tests", "Tests\T4Model.Tests\T4Model.Tests.csproj", "{61B2E318-9756-468D-B43A-6A96C4BC8D52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
