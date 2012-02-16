@@ -41,11 +41,12 @@ namespace T4Model.Tests
 
 		public List<int> Field6;
 
-		public double       Fld7;                   // Fld7
+		public double       Fld7;                           // Fld7
 		public List<int>    Field8;
-		public DateTime     FieldLongName;          // field long name
-		public List<string> Property2 { get; set; } // Property2
-		public int?         Prop1     { get; set; } // Prop1
+		public DateTime     FieldLongName;                  // field long name
+		public List<string> Property2 { get;         set; } // Property2
+		public List<int?>   Property3 { get; private set; } // Property3
+		public int?         Prop1     { get;         set; } // Prop1
 
 		public List<string> Field4;
 	}

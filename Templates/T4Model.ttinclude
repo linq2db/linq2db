@@ -243,21 +243,35 @@ public partial class MemberGroup : MemberBase
 
 				foreach (var m in allMembers)
 					m.TypeLen = max;
-				
+
+				var notHasGetter = allMembers.OfType<Property>().Any(m => m.IsAuto && !m.HasGetter);
+				var notHasSetter = allMembers.OfType<Property>().Any(m => m.IsAuto && !m.HasSetter);
+
 				max = allMembers.Max(m =>
 				{
 					var n = m.Name.Length;
 					
 					if (m is Field)
 						n += 1;  // ';'
-					else if (m is Property && ((Property)m).IsAuto)
-						n += 14; // ' { get; set; }'
+					else if (m is Property)
+					{
+						var p = (Property)m;
+						
+						if (p.IsAuto)
+							n += (4 + (p.HasGetter ? 5 : 13) +  + (p.HasSetter ? 5 : 13)); // ' { get; set; }'
+					}
 					
 					return n;
 				});
 
 				foreach (var m in allMembers)
 					m.NameLen = max;
+
+				foreach (var p in allMembers.OfType<Property>())
+				{
+					if (notHasGetter) p.GetterLen = 13;
+					if (notHasSetter) p.SetterLen = 13;
+				}
 			}
 		}
 
@@ -351,8 +365,23 @@ static Action<GeneratedTextTransformation,Property> WriteProperty = (tt,p) =>
 
 	if (p.IsAuto)
 	{
-		tt.Write(LenDiff(p.NameLen - 14, p.Name));
-		tt.Write(" { get; set; }");
+		tt.Write(LenDiff(p.NameLen - (4 + p.GetterLen + p.SetterLen), p.Name));
+
+		tt.Write(" { ");
+		
+		if (!p.HasGetter)
+			tt.Write("private ");
+		else if (p.GetterLen == 13)
+			tt.Write("        ");
+		tt.Write("get; ");
+
+		if (!p.HasSetter)
+			tt.Write("private ");
+		else if (p.SetterLen == 13)
+			tt.Write("        ");
+		tt.Write("set; ");
+		
+		tt.Write("}");
 	}
 	
 	if (!string.IsNullOrEmpty(p.EndLineComment))
@@ -368,7 +397,12 @@ static Action<GeneratedTextTransformation,Property> WriteProperty = (tt,p) =>
 
 public partial class Property : MemberBase
 {
-	public bool IsAuto = true;
+	public bool IsAuto    = true;
+	public bool HasGetter = true;
+	public bool HasSetter = true;
+
+	public int GetterLen = 5;
+	public int SetterLen = 5;
 	
 	public Property()
 	{
