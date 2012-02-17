@@ -91,11 +91,12 @@
 				IsCompact = true,
 				Members   =
 				{
-					new Field   ("int",    "Field12"),
-					new Field   ("string", "Field22"),
+					new Field   ("int",    "Field12") { EndLineComment = "Field3 comnt" },
+					new Field   ("string", "Field22_____"),
+					new Property("string", "PField121"),
 					new Property("string", "PField221", new[] { "var a = 1;", "return null;" }),
 					new Property("string", "PField222", new[] { "return null;" }) { EndLineComment = "Field3 comment" },
-					new Property("string", "PField223", new[] { "return null;" }, new[] { "value.ToString();" }),
+					new Property("string", "PField23",  new[] { "return null;" }, new[] { "value.ToString();" }) { EndLineComment = "Fieomment" },
 				}
 			},
 			new Field
@@ -124,7 +125,8 @@
 				EndLineComment = "Property1 comment",
 				Attributes     =
 				{
-					new Attribute("DisplayName", "\"Prop\"")
+					new Attribute("DisplayName", "\"Prop\""),
+					new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
 				}
 			},
 			new Property("char", "Property11",

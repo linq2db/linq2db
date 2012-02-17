@@ -20,7 +20,7 @@ namespace T4Model.Tests
 		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int    Field1;
 		[                                            XmlArray("Name1")                             ] public string Field2;
 		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public string Field21;
-		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public string Field221 { get; set; }
+		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public string Field221  { get; set; }
 		                                                                                             public string Field2212;
 		[XmlAttribute("Nm1", typeof(int))                                                          ] public string Field23;
 		[XmlElement("Nm1", typeof(int)),             XmlElement                                    ] public string Field23a;
@@ -29,18 +29,19 @@ namespace T4Model.Tests
 
 		#region Test Region 2
 
-		public int    Field12;
-		public string Field22;
-		public string PField221 { get { var a = 1; return null; } }
-		public string PField222 { get { return null; } } // Field3 comment
-		public string PField223 { get { return null; } set { value.ToString(); } }
+		public int    Field12;                                                        // Field3 comnt
+		public string Field22_____;
+		public string PField121    { get; set; }
+		public string PField221    { get { var a = 1; return null; } }
+		public string PField222    { get { return null; } }                           // Field3 comment
+		public string PField23     { get { return null; } set { value.ToString(); } } // Fieomment
 
 		#endregion
 
 		[XmlArrayItem(typeof(int), DataType="List")]
 		public List<int> Field3; // Field3 comment
 
-		[DisplayName("Prop")]
+		[DisplayName("Prop"), XmlArrayItem(typeof(int), DataType="List")]
 		public char Property1 // Property1 comment
 		{
 			get
@@ -67,12 +68,12 @@ namespace T4Model.Tests
 
 		public List<int> Field6;
 
-		public double       Fld7;                           // Fld7
+		public double       Fld7;                               // Fld7
 		public List<int>    Field8;
-		public DateTime     FieldLongName;                  // field long name
-		public List<string> Property2 { get;         set; } // Property2
-		public List<int?>   Property3 { get; private set; } // Property3
-		public int?         Prop1     { get;         set; } // Prop1
+		public DateTime     FieldLongName;                      // field long name
+		public List<string> Property2     { get;         set; } // Property2
+		public List<int?>   Property3     { get; private set; } // Property3
+		public int?         Prop1         { get;         set; } // Prop1
 
 		public List<string> Field4;
 	}
