@@ -17,8 +17,12 @@ namespace T4Model.Tests
 	{
 		#region Test Region
 
-		public int    Field1;
-		public string Field2;
+		[XmlArrayItem(typeof(int), DataType="List")                                                                 ] public int    Field1;
+		[                                            XmlArray("Name1")                                              ] public string Field2;
+		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char), DataType="List")] public string Field21;
+		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                                 ] public string Field221 { get; set; }
+		                                                                                                              public string Field2212;
+		[XmlAttribute("Nm1", typeof(int))                                                                           ] public string Field23;
 
 		#endregion
 

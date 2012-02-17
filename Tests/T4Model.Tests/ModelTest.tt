@@ -20,8 +20,59 @@
 				IsCompact = true,
 				Members   =
 				{
-					new Field { Type = "int",    Name = "Field1" },
-					new Field { Type = "string", Name = "Field2" },
+					new Field
+					{
+						Type       = "int",
+						Name       = "Field1",
+						Attributes =
+						{
+							new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
+						}
+					},
+					new Field
+					{
+						Type       = "string",
+						Name       = "Field2",
+						Attributes =
+						{
+							new Attribute("XmlArray", "\"Name1\""),
+						}
+					},
+					new Field
+					{
+						Type       = "string",
+						Name       = "Field21",
+						Attributes =
+						{
+							new Attribute("XmlArray",     "\"Name21\""),
+							new Attribute("XmlArrayItem", "typeof(int)",  "DataType=\"List\""),
+							new Attribute("XmlArrayItem", "typeof(char)", "DataType=\"List\""),
+						}
+					},
+					new Property
+					{
+						Type       = "string",
+						Name       = "Field221",
+						Attributes =
+						{
+							new Attribute("XmlAttribute", "\"Name1\"",  "typeof(int)"),
+							new Attribute("XmlArray",     "\"N2\""),
+						}
+					},
+					new Field
+					{
+						Type       = "string",
+						Name       = "Field2212",
+					},
+					new Field
+					{
+						Type = "string",
+						Name = "Field23",
+						Attributes =
+						{
+							new Attribute("XmlAttribute", "\"Nm1\"",  "typeof(int)"),
+						}
+					},
 				}
 			},
 			new MemberGroup
@@ -42,7 +93,7 @@
 				Attributes     =
 				{
 					//new Attribute { Name = "DisplayName" },
-					new Attribute { Name = "XmlArrayItem", Parameters = { "typeof(int)", "DataType=\"List\"" } },
+					new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
 				}
 			},
 			new Property
@@ -52,7 +103,7 @@
 				EndLineComment = "Property1 comment",
 				Attributes     =
 				{
-					new Attribute { Name = "DisplayName", Parameters = { "\"Prop\"" } }
+					new Attribute("DisplayName", "\"Prop\"")
 				}
 			},
 			new Field
@@ -92,8 +143,8 @@
 		//Interfaces = { "IDisposable" }
 		Attributes =
 		{
-			new Attribute { Name = "Serializable" },
-			new Attribute { Name = "DisplayName",  Parameters = { "\"TestClass\"" } },
+			new Attribute("Serializable"),
+			new Attribute("DisplayName", "\"TestClass\""),
 		}
 	});
 	
