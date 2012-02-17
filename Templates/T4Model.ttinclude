@@ -185,7 +185,7 @@ public partial class Class : TypeBase
 				tt.WriteLine("]");
 			}
 			
-			m.Render(tt);
+			m.Render(tt, false);
 			tt.WriteLine("");
 		}
 
@@ -208,7 +208,7 @@ public abstract partial class MemberBase
 	public int NameLen;
 	public int TypeLen;
 
-	public abstract void Render(GeneratedTextTransformation tt);
+	public abstract void Render(GeneratedTextTransformation tt, bool isCompact);
 }
 
 static Action<GeneratedTextTransformation,string> BeginRegion = (tt,s) => { tt.WriteLine("#region {0}", s); };
@@ -220,7 +220,7 @@ public partial class MemberGroup : MemberBase
 	public bool             IsCompact;
 	public List<MemberBase> Members = new List<MemberBase>();
 
-	public override void Render(GeneratedTextTransformation tt)
+	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		if (!string.IsNullOrEmpty(Region))
 		{
@@ -462,7 +462,7 @@ public partial class MemberGroup : MemberBase
 						}
 					}
 					
-					m.Render(tt);
+					m.Render(tt, true);
 
 					if (!IsCompact)
 						tt.WriteLine("");
@@ -486,7 +486,7 @@ public partial class MemberGroup : MemberBase
 					tt.WriteLine("]");
 				}
 				
-				m.Render(tt);
+				m.Render(tt, false);
 
 				if (!IsCompact)
 					tt.WriteLine("");
@@ -545,13 +545,13 @@ public partial class Field : MemberBase
 		Name = name;
 	}
 	
-	public override void Render(GeneratedTextTransformation tt)
+	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		WriteField(tt, this);
 	}
 }
 
-static Action<GeneratedTextTransformation,Property> WriteProperty = (tt,p) =>
+static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,compact) =>
 {
 	var am = p.AccessModifier.ToString().ToLower();
 
@@ -560,6 +560,19 @@ static Action<GeneratedTextTransformation,Property> WriteProperty = (tt,p) =>
 		p.Type, LenDiff(p.TypeLen,           p.Type),
 		p.Name);
 
+	Action writeComment = () =>
+	{
+		if (!string.IsNullOrEmpty(p.EndLineComment))
+		{
+			tt.Write(" ");
+			if (!p.IsAuto)
+				tt.Write(LenDiff(p.NameLen, p.Name));
+			WriteComment(tt, " " + p.EndLineComment);
+		}
+		else	
+			tt.WriteLine("");
+	};	
+	
 	if (p.IsAuto)
 	{
 		tt.Write(LenDiff(p.NameLen - (4 + p.GetterLen + p.SetterLen), p.Name));
@@ -579,24 +592,94 @@ static Action<GeneratedTextTransformation,Property> WriteProperty = (tt,p) =>
 		tt.Write("set; ");
 		
 		tt.Write("}");
+		
+		writeComment();
 	}
-	
-	if (!string.IsNullOrEmpty(p.EndLineComment))
+	else
 	{
-		tt.Write(" ");
-		if (!p.IsAuto)
-			tt.Write(LenDiff(p.NameLen, p.Name));
-		WriteComment(tt, " " + p.EndLineComment);
+		if (compact)
+		{
+			tt.Write(" { ");
+			
+			if (p.HasGetter)
+			{
+				tt.Write("get { ");
+				foreach (var t in p.GetBody)
+					tt.Write("{0} ", t);
+				tt.Write("} ");
+			}
+
+			if (p.HasSetter)
+			{
+				tt.Write("set { ");
+				foreach (var t in p.SetBody)
+					tt.Write("{0} ", t);
+				tt.Write("} ");
+			}
+			
+			tt.Write("}");
+			writeComment();
+		}
+		else
+		{
+			writeComment();
+			
+			tt.WriteLine("{");
+			tt.PushIndent("\t");
+			
+			if (p.HasGetter)
+			{
+				if (p.GetBody.Length == 1)
+				{
+					tt.WriteLine("get {{ {0} }}", p.GetBody);
+				}
+				else
+				{
+					tt.WriteLine("get");
+					tt.WriteLine("{");
+					tt.PushIndent("\t");
+				
+					foreach (var t in p.GetBody)
+						tt.WriteLine(t);
+					
+					tt.PopIndent();
+					tt.WriteLine("}");
+				}
+			}
+
+			if (p.HasSetter)
+			{
+				if (p.SetBody.Length == 1)
+				{
+					tt.WriteLine("set {{ {0} }}", p.SetBody);
+				}
+				else
+				{
+					tt.WriteLine("set");
+					tt.WriteLine("{");
+					tt.PushIndent("\t");
+				
+					foreach (var t in p.SetBody)
+						tt.WriteLine(t);
+					
+					tt.PopIndent();
+					tt.WriteLine("}");
+				}
+			}
+			
+			tt.PopIndent();
+			tt.WriteLine("}");
+		}
 	}
-	else	
-		tt.WriteLine("");
 };
 
 public partial class Property : MemberBase
 {
-	public bool IsAuto    = true;
-	public bool HasGetter = true;
-	public bool HasSetter = true;
+	public bool     IsAuto    = true;
+	public bool     HasGetter = true;
+	public bool     HasSetter = true;
+	public string[] GetBody;
+	public string[] SetBody;
 
 	public int GetterLen = 5;
 	public int SetterLen = 5;
@@ -605,15 +688,24 @@ public partial class Property : MemberBase
 	{
 	}
 	
-	public Property(string type, string name)
+	public Property(string type, string name, IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
 	{
-		Type = type;
-		Name = name;
+		Type    = type;
+		Name    = name;
+		GetBody = getBody == null ? null : getBody.ToArray();
+		SetBody = setBody == null ? null : setBody.ToArray();
+		IsAuto  = getBody == null && setBody == null;
+
+		if (!IsAuto)
+		{
+			HasGetter = GetBody != null;
+			HasSetter = SetBody != null;
+		}
 	}
 	
-	public override void Render(GeneratedTextTransformation tt)
+	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		WriteProperty(tt, this);
+		WriteProperty(tt, this, isCompact);
 	}
 }
 

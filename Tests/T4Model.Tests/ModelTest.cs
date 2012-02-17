@@ -17,12 +17,13 @@ namespace T4Model.Tests
 	{
 		#region Test Region
 
-		[XmlArrayItem(typeof(int), DataType="List")                                                                 ] public int    Field1;
-		[                                            XmlArray("Name1")                                              ] public string Field2;
-		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char), DataType="List")] public string Field21;
-		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                                 ] public string Field221 { get; set; }
-		                                                                                                              public string Field2212;
-		[XmlAttribute("Nm1", typeof(int))                                                                           ] public string Field23;
+		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int    Field1;
+		[                                            XmlArray("Name1")                             ] public string Field2;
+		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public string Field21;
+		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public string Field221 { get; set; }
+		                                                                                             public string Field2212;
+		[XmlAttribute("Nm1", typeof(int))                                                          ] public string Field23;
+		[XmlElement("Nm1", typeof(int)),             XmlElement                                    ] public string Field23a;
 
 		#endregion
 
@@ -30,6 +31,9 @@ namespace T4Model.Tests
 
 		public int    Field12;
 		public string Field22;
+		public string PField221 { get { var a = 1; return null; } }
+		public string PField222 { get { return null; } } // Field3 comment
+		public string PField223 { get { return null; } set { value.ToString(); } }
 
 		#endregion
 
@@ -37,7 +41,25 @@ namespace T4Model.Tests
 		public List<int> Field3; // Field3 comment
 
 		[DisplayName("Prop")]
-		public char Property1 { get; set; } // Property1 comment
+		public char Property1 // Property1 comment
+		{
+			get
+			{
+				int a = 1;
+				return 'a';
+			}
+			set
+			{
+				var a = value;
+				a.ToString();
+			}
+		}
+
+		public char Property11
+		{
+			get { return 'a'; }
+			set { var a = value; }
+		}
 
 		public List<int> Field31;
 
