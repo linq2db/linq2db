@@ -13,7 +13,7 @@ using T4Model.Tests;
 
 namespace T4Model.Tests
 {
-	public partial class TestClass1
+	public partial class TestClass1 : INotifyPropertyChanged
 	{
 		#region Test Region
 
@@ -76,6 +76,43 @@ namespace T4Model.Tests
 		public int?         Prop1         { get;         set; } // Prop1
 
 		public List<string> Field4;
+
+		#region Group : string
+
+		private string _testProperty1;
+
+		public  string  TestProperty1
+		{
+			get { return _testProperty1; }
+			set
+			{
+				if (value != _testProperty1)
+				{
+					BeforePropertyChanged(value);
+					_testProperty1 = value;
+					AfterPropertyChanged();
+
+					OnTestProperty1Changed();
+				}
+			}
+		}
+
+		partial void BeforePropertyChanged (string newValue);
+		partial void AfterPropertyChanged  ();
+		private void OnTestProperty1Changed()                { OnPropertyChanged("TestProperty1"); }
+
+		#endregion
+
+		#region INotifyPropertyChanged
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			OnPropertyChanged("TestProperty1");
+		}
+
+		#endregion
 	}
 
 	[Serializable, DisplayName("TestClass")]

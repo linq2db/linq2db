@@ -113,7 +113,8 @@ public enum AccessModifier
 	Public,
 	Protected,
 	Internal,
-	Private
+	Private,
+	Partial
 }
 
 public abstract partial class TypeBase
@@ -205,12 +206,16 @@ public abstract partial class MemberBase
 	public List<Attribute> Attributes = new List<Attribute>();
 
 	public int AccessModifierLen;
+	public int ModifierLen;
 	public int TypeLen;
 	public int NameLen;
+	public int ParamLen;
 	public int BodyLen;
 
-	public abstract int  CalcBodyLen();
-	public abstract void Render(GeneratedTextTransformation tt, bool isCompact);
+	public virtual  int  CalcModifierLen() { return 0; }
+	public abstract int  CalcBodyLen    ();
+	public virtual  int  CalcParamLen   () { return 0; }
+	public abstract void Render         (GeneratedTextTransformation tt, bool isCompact);
 }
 
 static Action<GeneratedTextTransformation,string> BeginRegion = (tt,s) => { tt.WriteLine("#region {0}", s); };
@@ -241,7 +246,11 @@ public partial class MemberGroup : MemberBase
 				int max = allMembers.Max(m => m.AccessModifier.ToString().Length);
 				foreach (var m in allMembers)
 					m.AccessModifierLen = max;
-				
+
+				max = allMembers.Max(m => m.CalcModifierLen());
+				foreach (var m in allMembers)
+					m.ModifierLen = max;
+
 				max = allMembers.Max(m => m.Type.Length);
 				foreach (var m in allMembers)
 					m.TypeLen = max;
@@ -259,6 +268,10 @@ public partial class MemberGroup : MemberBase
 				foreach (var m in allMembers)
 					m.NameLen = max;
 
+				max = allMembers.Max(m => m.CalcParamLen());
+				foreach (var m in allMembers)
+					m.ParamLen = max;
+				
 				max = allMembers.Max(m => m.CalcBodyLen());
 				foreach (var m in allMembers)
 					m.BodyLen = max;
@@ -509,14 +522,15 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 {
 	var am = f.AccessModifier.ToString().ToLower();
 
-	tt.Write("{0}{1} {2}{3} {4};",
+	tt.Write("{0}{1}{2} {3}{4} {5};",
 		am,     LenDiff(f.AccessModifierLen, am),
+		        LenDiff(f.ModifierLen,       ""),
 		f.Type, LenDiff(f.TypeLen,           f.Type),
 		f.Name);
-	
+
 	if (!string.IsNullOrEmpty(f.EndLineComment))
 	{
-		tt.WriteSpaces(f.NameLen - f.Name.Length + f.BodyLen - 1);
+		tt.WriteSpaces(f.NameLen - f.Name.Length + f.BodyLen + f.ParamLen - 1);
 		tt.Write(" ");
 		WriteComment(tt, " " + f.EndLineComment);
 	}
@@ -544,12 +558,54 @@ public partial class Field : MemberBase
 	}
 }
 
+static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
+{
+	var am = m.AccessModifier.ToString().ToLower();
+
+	tt.Write("{0}{1} event{2} {3}{4} {5};",
+		am,     LenDiff(m.AccessModifierLen, am),
+		        LenDiff(m.ModifierLen,       " event"),
+		m.Type, LenDiff(m.TypeLen,           m.Type),
+		m.Name);
+
+	if (!string.IsNullOrEmpty(m.EndLineComment))
+	{
+		tt.WriteSpaces(m.NameLen - m.Name.Length + m.BodyLen + m.ParamLen - 1);
+		tt.Write(" ");
+		WriteComment(tt, " " + m.EndLineComment);
+	}
+	else	
+		tt.WriteLine("");
+};
+
+public partial class Event : MemberBase
+{
+	public Event()
+	{
+	}
+	
+	public Event(string type, string name)
+	{
+		Type = type;
+		Name = name;
+	}
+
+	public override int  CalcModifierLen() { return " event".Length; }
+	public override int  CalcBodyLen    () { return 1; }
+	
+	public override void Render(GeneratedTextTransformation tt, bool isCompact)
+	{
+		WriteEvent(tt, this);
+	}
+}
+
 static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,compact) =>
 {
 	var am = p.AccessModifier.ToString().ToLower();
 
-	tt.Write("{0}{1} {2}{3} {4}",
+	tt.Write("{0}{1}{2} {3}{4} {5}",
 		am,     LenDiff(p.AccessModifierLen, am),
+		        LenDiff(p.ModifierLen,       ""),
 		p.Type, LenDiff(p.TypeLen,           p.Type),
 		p.Name);
 
@@ -566,7 +622,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 	
 	if (p.IsAuto)
 	{
-		tt.Write(LenDiff(p.NameLen, p.Name));
+		tt.Write(LenDiff(p.NameLen + p.ParamLen, p.Name));
 
 		var len = tt.GenerationEnvironment.Length;
 
@@ -594,7 +650,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 	{
 		if (compact)
 		{
-			tt.Write(LenDiff(p.NameLen, p.Name));
+			tt.Write(LenDiff(p.NameLen + p.ParamLen, p.Name));
 			
 			var len = tt.GenerationEnvironment.Length;
 			
@@ -705,7 +761,7 @@ public partial class Property : MemberBase
 			HasSetter = setBody != null;
 		}
 	}
-	
+
 	public override int  CalcBodyLen()
 	{
 		if (IsAuto)
@@ -737,6 +793,141 @@ public partial class Property : MemberBase
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		WriteProperty(tt, this, isCompact);
+	}
+}
+
+static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
+{
+	var am  = m.AccessModifier.ToString().ToLower();
+	var mdf = m.IsAbstract ? " abstract" : "";	
+
+	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
+		am,     LenDiff(m.AccessModifierLen, am),
+		mdf,    LenDiff(m.ModifierLen,       mdf),
+		m.Type, LenDiff(m.TypeLen,           m.Type),
+		m.Name);
+
+	Action writeComment = () =>
+	{
+		if (!string.IsNullOrEmpty(m.EndLineComment))
+		{
+			tt.Write(" ");
+			WriteComment(tt, " " + m.EndLineComment);
+		}
+		else	
+			tt.WriteLine("");
+	};	
+
+	Action writeParams = () =>
+	{
+		tt.Write("(");
+		
+		for (int i = 0; i < m.Parameters.Count; i++)
+		{
+			if (i > 0)
+				tt.Write(", ");
+			tt.Write(m.Parameters[i]);
+		}
+
+		tt.Write(")");
+	};	
+
+	if (compact)
+	{
+		tt.Write(LenDiff(m.NameLen, m.Name));
+
+		var len = tt.GenerationEnvironment.Length;
+		
+		writeParams();
+
+		len = tt.GenerationEnvironment.Length - len;
+		
+		if (m.IsAbstract || m.AccessModifier == AccessModifier.Partial)
+		{
+			tt.Write(";");
+			len = 0;
+		}
+		else		
+		{
+			tt.WriteSpaces(m.ParamLen - len);
+		
+			len = tt.GenerationEnvironment.Length;
+
+			tt.Write(" {");
+		
+			foreach (var t in m.Body)
+				tt.Write(" {0}", t);
+
+			tt.Write(" }");
+		}
+		
+		if (!string.IsNullOrEmpty(m.EndLineComment))
+			tt.WriteSpaces(m.BodyLen - (tt.GenerationEnvironment.Length - len));
+		writeComment();
+	}
+	else
+	{
+		writeParams ();
+		writeComment();
+
+		tt.WriteLine("{");
+		tt.PushIndent("\t");
+		
+		foreach (var t in m.Body)
+			tt.WriteLine(t);
+
+		tt.PopIndent();
+		tt.WriteLine("}");
+	}
+};
+
+public partial class Method : MemberBase
+{
+	public bool         IsAbstract;
+	public List<string> Parameters = new List<string>();
+	public List<string> Body       = new List<string>();
+	
+	public Method()
+	{
+	}
+	
+	public Method(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
+	{
+		Type       = type;
+		Name       = name;
+
+		if (parameters != null) Parameters.AddRange(parameters);
+		if (body       != null) Body.      AddRange(body);
+	}
+	
+	public override int CalcModifierLen()
+	{ 
+		return IsAbstract ? " abstract".Length :  0;
+	}
+	
+	public override int CalcBodyLen()
+	{
+		if (IsAbstract || AccessModifier == AccessModifier.Partial)
+			return 1;
+		
+		var len = " {".Length;
+			
+		foreach (var t in Body)
+			len += 1 + t.Length;
+
+		len += " }".Length;
+		
+		return len;
+	}
+
+	public override int CalcParamLen()
+	{
+		return Parameters.Sum(p => p.Length + 2);
+	}
+
+	public override void Render(GeneratedTextTransformation tt, bool isCompact)
+	{
+		WriteMethod(tt, this, isCompact);
 	}
 }
 
