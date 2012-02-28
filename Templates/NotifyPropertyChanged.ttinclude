@@ -123,6 +123,9 @@ void NotifyPropertyChangedImpl()
 			
 			if (!cl.Interfaces.Contains("INotifyPropertyChanged"))
 			{
+				if (!Model.Usings.Contains("System.ComponentModel"))
+					Model.Usings.Add("System.ComponentModel");
+				
 				cl.Interfaces.Add("INotifyPropertyChanged");
 
 				cl.Members.Add(new MemberGroup
@@ -131,29 +134,31 @@ void NotifyPropertyChangedImpl()
 					Members =
 					{
 						new Event("PropertyChangedEventHandler", "PropertyChanged"),
-						new Method("void", "OnPropertyChanged",
-							new[]
-							{
-								"string propertyName"
-							},
-							new[]
-							{
-								"if (PropertyChanged != null)",
-								"{",
-								"#if SILVERLIGHT",
-								"#else",
-								"#endif",
-								"}",
-							})
-							{
-								AccessModifier = AccessModifier.Protected
-							},
+						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
+						{
+							AccessModifier = AccessModifier.Protected
+						},
 					}
 				});				
 			}
 		}
 	}	
 }
+
+public string[] OnPropertyChangedBody = new[]
+{
+	"if (PropertyChanged != null)",
+	"{",
+	"#if SILVERLIGHT",
+	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+	"\t\tPropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
+	"\telse",
+	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
+	"\t\t\t() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));",
+	"#else",
+	"#endif",
+	"}",
+};
 
 partial class Property
 {

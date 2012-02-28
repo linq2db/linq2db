@@ -148,6 +148,11 @@ namespace T4Model.Tests
 			if (PropertyChanged != null)
 			{
 #if SILVERLIGHT
+				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
+					PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				else
+					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
+						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
 #else
 #endif
 			}

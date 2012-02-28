@@ -1,0 +1,22 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
+<#@ output extension=".generated.cs"                                         #>
+<#@ import namespace="System.Linq"                                 #>
+<#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
+<#
+	Model.Namespace.Name = "T4Model.Silverlight";
+
+	Model.Usings.Add("System.Windows.Media");
+	
+	Model.Namespace.Types.Add(new Class
+	{
+		Name    = "ViewModel",
+		Members =
+		{
+			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
+			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },
+			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter("GetBrush()"),
+		}
+	});
+
+	GenerateModel();
+#>

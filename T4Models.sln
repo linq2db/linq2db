@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Tests", "Tests\T4Model.Tests\T4Model.Tests.csproj", "{61B2E318-9756-468D-B43A-6A96C4BC8D52}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Silverlight", "Tests\T4Model.Silverlight\T4Model.Silverlight.csproj", "{4E93F137-4644-4EE3-863D-070395B760EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Silverlight.Web", "Tests\T4Model.Silverlight.Web\T4Model.Silverlight.Web.csproj", "{D0F21871-382F-49C2-A298-3FE33B2D612C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,14 @@ Global
 		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61B2E318-9756-468D-B43A-6A96C4BC8D52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E93F137-4644-4EE3-863D-070395B760EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E93F137-4644-4EE3-863D-070395B760EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E93F137-4644-4EE3-863D-070395B760EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E93F137-4644-4EE3-863D-070395B760EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0F21871-382F-49C2-A298-3FE33B2D612C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F21871-382F-49C2-A298-3FE33B2D612C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0F21871-382F-49C2-A298-3FE33B2D612C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0F21871-382F-49C2-A298-3FE33B2D612C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
