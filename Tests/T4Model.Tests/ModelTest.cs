@@ -77,29 +77,65 @@ namespace T4Model.Tests
 
 		public List<string> Field4;
 
-		#region Group : string
+		#region NotifiedProp1 : string
 
-		private string _testProperty1;
-
-		public  string  TestProperty1
+		private string _NotifiedProp1;
+		public  string  NotifiedProp1
 		{
-			get { return _testProperty1; }
+			get { return _NotifiedProp1; }
 			set
 			{
-				if (value != _testProperty1)
+				if (_NotifiedProp1 != value)
 				{
-					BeforePropertyChanged(value);
-					_testProperty1 = value;
-					AfterPropertyChanged();
+					BeforeNotifiedProp1Changed(value);
+					_NotifiedProp1 = value;
+					AfterNotifiedProp1Changed();
 
-					OnTestProperty1Changed();
+					OnNotifiedProp2Changed();
+					OnNotifiedProp3Changed();
 				}
 			}
 		}
 
-		partial void BeforePropertyChanged (string newValue);
-		partial void AfterPropertyChanged  ();
-		private void OnTestProperty1Changed()                { OnPropertyChanged("TestProperty1"); }
+		partial void BeforeNotifiedProp1Changed(string newValue);
+		partial void AfterNotifiedProp1Changed ();
+		private void OnNotifiedProp1Changed    ()                { OnPropertyChanged("NotifiedProp1"); }
+
+		#endregion
+
+		#region NotifiedProp2 : int
+
+		private int _NotifiedProp2 = 1;
+		public  int  NotifiedProp2
+		{
+			get { return _NotifiedProp2; }
+			set
+			{
+				if (_NotifiedProp2 != value)
+				{
+					BeforeNotifiedProp2Changed(value);
+					_NotifiedProp2 = value;
+					AfterNotifiedProp2Changed();
+
+					OnNotifiedProp2Changed();
+				}
+			}
+		}
+
+		partial void BeforeNotifiedProp2Changed(int newValue);
+		partial void AfterNotifiedProp2Changed ();
+		private void OnNotifiedProp2Changed    ()             { OnPropertyChanged("NotifiedProp2"); }
+
+		#endregion
+
+		#region NotifiedProp3 : long
+
+		public long NotifiedProp3
+		{
+			get { return 1; }
+		}
+
+		private void OnNotifiedProp3Changed() { OnPropertyChanged("NotifiedProp3"); }
 
 		#endregion
 
@@ -109,7 +145,12 @@ namespace T4Model.Tests
 
 		protected void OnPropertyChanged(string propertyName)
 		{
-			OnPropertyChanged("TestProperty1");
+			if (PropertyChanged != null)
+			{
+#if SILVERLIGHT
+#else
+#endif
+			}
 		}
 
 		#endregion

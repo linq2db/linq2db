@@ -1,0 +1,185 @@
+﻿<#@ include file="T4Model.ttinclude" #>
+<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			NotifyPropertyChangedImpl();
+		};
+	}
+#>
+<#+
+void NotifyPropertyChangedImpl()
+{
+	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
+	{
+		List<MemberBase> parentMembers;
+		
+		if (prop.Parent is Class)
+		{
+			var parent = (Class)prop.Parent;
+			parentMembers = parent.Members;
+		}
+		else
+		{
+			var parent = (MemberGroup)prop.Parent;
+			parentMembers = parent.Members;
+		}
+		
+		var gr = new MemberGroup
+		{
+			Region  = prop.Name + " : " + prop.Type,
+			Members = { prop }
+		};
+
+		var index = parentMembers.IndexOf(prop);
+		
+		parentMembers.RemoveAt(index);
+		parentMembers.Insert  (index, gr);
+		
+		var name = prop.Name;
+		var type = prop.Type;
+		
+		if (prop.IsAuto)
+		{
+			var field = new Field(type, "_" + name)
+			{
+				AccessModifier       = AccessModifier.Private,
+				InsertBlankLineAfter = false,
+			};
+			
+			if (prop.InitValue != null)
+				field.InitValue = prop.InitValue;
+			
+			gr.Members.Insert(0, field);
+			
+			prop.Name   = " " + name;
+			prop.Type   = " " + type;
+			prop.IsAuto = false;
+			
+			if (prop.HasGetter) prop.GetBody.Add("return " + field.Name + ";");			
+			if (prop.HasSetter) prop.SetBody.Add(field.Name + " = value;");			
+		}
+
+		var methods = new MemberGroup
+		{
+			IsCompact = true,
+			Members   =
+			{
+				new Method("void", "On"     + name + "Changed", null, new[] { "OnPropertyChanged(\"" + name + "\");" }) { AccessModifier = AccessModifier.Private }
+			}
+		};
+		
+		gr.Members.Add(methods);
+			
+		if (prop.HasSetter)
+		{
+			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();
+			
+			string getValue;
+			
+			if (prop.GetBody.Count == 1 && prop.GetBody[0].StartsWith("return"))
+			{
+				getValue = prop.GetBody[0].Substring("return".Length).Trim(' ', '\t', ';');
+			}
+			else
+			{
+				getValue = name;
+			}
+			
+			prop.SetBody.Insert(0, "if (" + getValue + " != value)");
+			prop.SetBody.Insert(1, "{");
+			prop.SetBody.Insert(2, "\tBefore" + name + "Changed(value);");
+			
+			if (prop.SetBody.Count > 4)
+			{
+				prop.SetBody.Insert(3, "");
+				prop.SetBody.Add("");
+			}
+			
+			prop.SetBody.Add("\tAfter" + name + "Changed();");
+			prop.SetBody.Add("");
+			
+			foreach (var dp in prop.Dependencies)
+				prop.SetBody.Add("\tOn" + dp + "Changed();");
+			
+			prop.SetBody.Add("}");
+
+			methods.Members.Insert(0, new Method("void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial });
+			methods.Members.Insert(1, new Method("void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial });
+		}
+		
+		prop.Parent.SetTree();
+		
+		ITree p = prop.Parent;
+		
+		while (!(p is Class) && p != null)
+			p = p.Parent;
+		
+		if (p != null)
+		{
+			var cl = (Class)p;
+			
+			if (!cl.Interfaces.Contains("INotifyPropertyChanged"))
+			{
+				cl.Interfaces.Add("INotifyPropertyChanged");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "INotifyPropertyChanged",
+					Members =
+					{
+						new Event("PropertyChangedEventHandler", "PropertyChanged"),
+						new Method("void", "OnPropertyChanged",
+							new[]
+							{
+								"string propertyName"
+							},
+							new[]
+							{
+								"if (PropertyChanged != null)",
+								"{",
+								"#if SILVERLIGHT",
+								"#else",
+								"#endif",
+								"}",
+							})
+							{
+								AccessModifier = AccessModifier.Protected
+							},
+					}
+				});				
+			}
+		}
+	}	
+}
+
+partial class Property
+{
+	public bool         IsNotifying;
+	public string       InitValue;
+	public List<string> Dependencies = new List<string>();
+}
+
+class NotifyingProperty : Property
+{
+	public NotifyingProperty()
+	{
+		IsNotifying = true;
+	}
+	
+	public NotifyingProperty(string type, string name, params string[] dependencies)
+		: base(type, name, null, null)
+	{
+		IsNotifying = true;
+
+		if (dependencies.Length == 0)
+			Dependencies.Add(name);
+		else
+			Dependencies.AddRange(dependencies);
+	}
+	
+}
+
+#>

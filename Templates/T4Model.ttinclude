@@ -5,8 +5,14 @@
 <#+
 static Action<GeneratedTextTransformation,string> WriteComment = (tt,s) => tt.WriteLine("//{0}", s);
 
+Action BeforeGenerateModel = () => {};
+
 void GenerateModel()
 {
+	Model.SetTree();
+	
+	BeforeGenerateModel();
+
 	if (GenerationEnvironment.Length > 0 && GenerationEnvironment.ToString().Trim().Length == 0)
 		GenerationEnvironment.Length = 0;
 
@@ -17,7 +23,7 @@ void GenerateModel()
 	WriteComment(this, " </auto-generated>");
 	WriteComment(this, "---------------------------------------------------------------------------------------------------");
 
-	Source.Render(this);
+	Model.Render(this);
 }
 
 void Trim()
@@ -54,12 +60,22 @@ void RenderUsings(List<string> usings)
 
 // Base data types.
 //
-SourceUnit Source = new SourceUnit();
+public interface ITree
+{
+	ITree              Parent { get; set; }
+	IEnumerable<ITree> GetNodes();
+	void               SetTree();
+}
 
-public partial class SourceUnit
+ModelSource Model = new ModelSource();
+
+public partial class ModelSource : ITree
 {
 	public List<string>    Usings     = new List<String>    { "System"        };
 	public List<Namespace> Namespaces = new List<Namespace> { new Namespace() };
+
+	public Namespace      Namespace { get { return Namespaces[0];       } }
+	public List<TypeBase> Types     { get { return Namespaces[0].Types; } }
 
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
@@ -74,12 +90,24 @@ public partial class SourceUnit
 
 		tt.Trim();
 	}
+
+	public ITree              Parent     { get; set; }
+	public IEnumerable<ITree> GetNodes() { return Namespaces; }
+
+	public void SetTree()
+	{
+		foreach (var ch in GetNodes())
+		{
+			ch.Parent = this;
+			ch.SetTree();
+		}
+	}
 }
 
 static Action<GeneratedTextTransformation,string> WriteBeginNamespace = (tt,s) => { tt.WriteLine("namespace {0}", s); tt.WriteLine("{"); };
 static Action<GeneratedTextTransformation>        WriteEndNamespace   =  tt    => tt.WriteLine("}");
 
-public partial class Namespace
+public partial class Namespace : ITree
 {
 	public string         Name;
 	public List<TypeBase> Types = new List<TypeBase>();
@@ -106,6 +134,18 @@ public partial class Namespace
 			WriteEndNamespace(tt);
 		}
 	}
+
+	public ITree              Parent     { get; set; }
+	public IEnumerable<ITree> GetNodes() { return Types; }
+
+	public void SetTree()
+	{
+		foreach (var ch in GetNodes())
+		{
+			ch.Parent = this;
+			ch.SetTree();
+		}
+	}
 }
 
 public enum AccessModifier
@@ -117,20 +157,24 @@ public enum AccessModifier
 	Partial
 }
 
-public abstract partial class TypeBase
+public abstract partial class TypeBase : ITree
 {
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
 	public List<Attribute> Attributes = new List<Attribute>();
 
 	public abstract void Render(GeneratedTextTransformation tt);
+
+	public          ITree              Parent { get; set; }
+	public abstract IEnumerable<ITree> GetNodes();
+	public abstract void               SetTree ();
 }
 
 static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 {
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
 	tt.Write("partial class {0}", cl.Name);
-	
+
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
 		var arr = new[] { cl.BaseClass }.Concat(cl.Interfaces)
@@ -176,7 +220,7 @@ public partial class Class : TypeBase
 			if (m.Attributes.Count > 0)
 			{
 				tt.Write("[");
-				
+
 				for (var i = 0; i < m.Attributes.Count; i++)
 				{
 					if (i > 0) tt.Write(", ");
@@ -187,7 +231,8 @@ public partial class Class : TypeBase
 			}
 			
 			m.Render(tt, false);
-			tt.WriteLine("");
+			if (m.InsertBlankLineAfter)
+				tt.WriteLine("");
 		}
 
 		tt.Trim();
@@ -195,15 +240,31 @@ public partial class Class : TypeBase
 		tt.PopIndent();
 		WriteEndClass(tt);
 	}
+
+	public override IEnumerable<ITree> GetNodes()
+	{
+		return Members;
+	}
+
+	public override void SetTree()
+	{
+		foreach (var ch in GetNodes())
+		{
+			ch.Parent = this;
+			ch.SetTree();
+		}
+	}
 }
 
-public abstract partial class MemberBase
+public abstract partial class MemberBase : ITree
 {
+	public string          ID;
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
 	public string          Type;
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
+	public bool            InsertBlankLineAfter = true;
 
 	public int AccessModifierLen;
 	public int ModifierLen;
@@ -216,6 +277,10 @@ public abstract partial class MemberBase
 	public abstract int  CalcBodyLen    ();
 	public virtual  int  CalcParamLen   () { return 0; }
 	public abstract void Render         (GeneratedTextTransformation tt, bool isCompact);
+
+	public         ITree              Parent     { get; set; }
+	public virtual IEnumerable<ITree> GetNodes() { return Enumerable.Empty<ITree>(); }
+	public virtual void               SetTree () {}
 }
 
 static Action<GeneratedTextTransformation,string> BeginRegion = (tt,s) => { tt.WriteLine("#region {0}", s); };
@@ -239,7 +304,7 @@ public partial class MemberGroup : MemberBase
 
 		if (IsCompact)
 		{
-			var allMembers = GetAllMembers().ToList();
+			var allMembers = GetTreeNodes(this).OfType<MemberBase>().Where(m => !(m is MemberGroup)).ToList();
 			
 			if (allMembers.Count > 0)
 			{
@@ -307,13 +372,13 @@ public partial class MemberGroup : MemberBase
 					select new { m, w = m.attrs.Sum(aa => attrWeight[aa.name]) } into m
 					orderby m.w descending
 					select m.m;
-				
+
 				var attrs = new List<string>();
-					
+
 				foreach (var m in q)
 				{
 					var list = m.attrs.Select(a => a.name).ToList();
-					
+
 					if (attrs.Count == 0)
 						attrs.AddRange(list);
 					else
@@ -332,10 +397,10 @@ public partial class MemberGroup : MemberBase
 									{
 										attrs.Insert(idx, nm);
 										break;
-									}	
+									}
 								}
 							}
-							
+
 							if (!attrs.Contains(nm))
 								attrs.Add(nm);
 						}
@@ -345,13 +410,13 @@ public partial class MemberGroup : MemberBase
 				var mms = members.Select(m =>
 				{
 					var arr = new Attribute[attrs.Count];
-					
+
 					foreach (var a in m.attrs)
 						arr[attrs.IndexOf(a.name)] = a.a;
-					
+
 					return new { m.m, attrs = arr.ToList() };
 				}).ToList();
-				
+
 				var idxs = Enumerable.Range(0, attrs.Count).Select(_ => new List<int>()).ToList();
 				
 				for (var i = 0; i < mms.Count; i++)
@@ -367,7 +432,7 @@ public partial class MemberGroup : MemberBase
 					{
 						if (idxs[j] == null)
 							continue;
-					
+
 						if (idxs[i].Intersect(idxs[j]).Count() == 0)
 						{
 							foreach (var m in mms)
@@ -387,23 +452,23 @@ public partial class MemberGroup : MemberBase
 					}
 					
 				}
-		
+
 				foreach (var n in toRemove.OrderByDescending(i => i))
 					foreach (var m in mms)
 						m.attrs.RemoveAt(n);
-						
+
 				var lens = new int[attrs.Count - toRemove.Count];
-				
+
 				foreach (var m in mms)
 				{
 					for (var i = 0; i < m.attrs.Count; i++)
 					{
 						var a = m.attrs[i];
-						
+
 						if (a != null)
 						{
 							var len = a.Name.Length;
-							
+
 							if (a.Parameters.Count >= 0)
 								len += a.Parameters.Sum(p => 2 + p.Length);
 							
@@ -411,21 +476,21 @@ public partial class MemberGroup : MemberBase
 						}
 					}
 				}
-				
+
 				foreach (var m in allMembers)
 				{
 					if (attrs.Count > 0)
 					{
 						var ma = mms.First(mr => mr.m == m);
-							
+
 						if (m.Attributes.Count > 0)
 						{
 							tt.Write("[");
-							
+
 							for (var i = 0; i < ma.attrs.Count; i++)
 							{
 								var a = ma.attrs[i];
-								
+
 								if (a == null)
 								{
 									tt.WriteSpaces(lens[i]);
@@ -449,7 +514,7 @@ public partial class MemberGroup : MemberBase
 											break;
 										}
 									}
-									
+
 									if (i + 1 < ma.attrs.Count && !commaAdded)
 										tt.Write("  ");
 
@@ -464,7 +529,7 @@ public partial class MemberGroup : MemberBase
 							tt.WriteSpaces(lens.Sum() + ma.attrs.Count * 2 + 1);
 						}
 					}
-					
+
 					m.Render(tt, true);
 
 					if (!IsCompact)
@@ -479,7 +544,7 @@ public partial class MemberGroup : MemberBase
 				if (m.Attributes.Count > 0)
 				{
 					tt.Write("[");
-					
+
 					for (var i = 0; i < m.Attributes.Count; i++)
 					{
 						if (i > 0) tt.Write(", ");
@@ -491,7 +556,7 @@ public partial class MemberGroup : MemberBase
 				
 				m.Render(tt, false);
 
-				if (!IsCompact)
+				if (m.InsertBlankLineAfter)
 					tt.WriteLine("");
 			}
 		}
@@ -505,15 +570,14 @@ public partial class MemberGroup : MemberBase
 		}
 	}
 
-	IEnumerable<MemberBase> GetAllMembers()
+	public override IEnumerable<ITree> GetNodes() { return Members; }
+
+	public override void SetTree()
 	{
-		foreach (var m in Members)
+		foreach (var ch in GetNodes())
 		{
-			if (m is MemberGroup)
-				foreach (var gm in ((MemberGroup)m).GetAllMembers())
-					yield return gm;
-			else
-				yield return m;
+			ch.Parent = this;
+			ch.SetTree();
 		}
 	}
 }
@@ -522,12 +586,19 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 {
 	var am = f.AccessModifier.ToString().ToLower();
 
-	tt.Write("{0}{1}{2} {3}{4} {5};",
+	tt.Write("{0}{1}{2} {3}{4} {5}",
 		am,     LenDiff(f.AccessModifierLen, am),
 		        LenDiff(f.ModifierLen,       ""),
 		f.Type, LenDiff(f.TypeLen,           f.Type),
 		f.Name);
 
+	if (f.InitValue != null)
+	{
+		tt.Write(" = {0}", f.InitValue);		
+	}
+	
+	tt.Write(";");
+	
 	if (!string.IsNullOrEmpty(f.EndLineComment))
 	{
 		tt.WriteSpaces(f.NameLen - f.Name.Length + f.BodyLen + f.ParamLen - 1);
@@ -540,6 +611,8 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 
 public partial class Field : MemberBase
 {
+	public string InitValue;
+	
 	public Field()
 	{
 	}
@@ -550,7 +623,7 @@ public partial class Field : MemberBase
 		Name = name;
 	}
 
-	public override int  CalcBodyLen() { return 1; }
+	public override int  CalcBodyLen() { return InitValue == null ? 1 : 4 + InitValue.Length; }
 	
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
@@ -574,7 +647,7 @@ static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
 		tt.Write(" ");
 		WriteComment(tt, " " + m.EndLineComment);
 	}
-	else	
+	else
 		tt.WriteLine("");
 };
 
@@ -592,7 +665,7 @@ public partial class Event : MemberBase
 
 	public override int  CalcModifierLen() { return " event".Length; }
 	public override int  CalcBodyLen    () { return 1; }
-	
+
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
 		WriteEvent(tt, this);
@@ -616,10 +689,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 			tt.Write(" ");
 			WriteComment(tt, " " + p.EndLineComment);
 		}
-		else	
+		else
 			tt.WriteLine("");
-	};	
-	
+	};
+
 	if (p.IsAuto)
 	{
 		tt.Write(LenDiff(p.NameLen + p.ParamLen, p.Name));
@@ -639,9 +712,9 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 		else if (p.SetterLen == 13)
 			tt.Write("        ");
 		tt.Write("set; ");
-		
+
 		tt.Write("}");
-		
+
 		if (!string.IsNullOrEmpty(p.EndLineComment))
 			tt.WriteSpaces(p.BodyLen - (tt.GenerationEnvironment.Length - len));
 		writeComment();
@@ -651,11 +724,11 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 		if (compact)
 		{
 			tt.Write(LenDiff(p.NameLen + p.ParamLen, p.Name));
-			
+
 			var len = tt.GenerationEnvironment.Length;
-			
+
 			tt.Write(" { ");
-			
+
 			if (p.HasGetter)
 			{
 				tt.Write("get { ");
@@ -671,9 +744,9 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.Write("{0} ", t);
 				tt.Write("} ");
 			}
-			
+
 			tt.Write("}");
-			
+
 			if (!string.IsNullOrEmpty(p.EndLineComment))
 				tt.WriteSpaces(p.BodyLen - (tt.GenerationEnvironment.Length - len));
 			writeComment();
@@ -681,10 +754,10 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 		else
 		{
 			writeComment();
-			
+
 			tt.WriteLine("{");
 			tt.PushIndent("\t");
-			
+
 			if (p.HasGetter)
 			{
 				if (p.GetBody.Count == 1)
@@ -696,7 +769,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("get");
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
-				
+
 					foreach (var t in p.GetBody)
 						tt.WriteLine(t);
 					
@@ -716,15 +789,15 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 					tt.WriteLine("set");
 					tt.WriteLine("{");
 					tt.PushIndent("\t");
-				
+
 					foreach (var t in p.SetBody)
 						tt.WriteLine(t);
-					
+
 					tt.PopIndent();
 					tt.WriteLine("}");
 				}
 			}
-			
+
 			tt.PopIndent();
 			tt.WriteLine("}");
 		}
@@ -741,34 +814,26 @@ public partial class Property : MemberBase
 
 	public int GetterLen = 5;
 	public int SetterLen = 5;
-	
+
 	public Property()
 	{
 	}
-	
+
 	public Property(string type, string name, IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
 	{
-		Type   = type;
-		Name   = name;
-		IsAuto = getBody == null && setBody == null;
+		Type = type;
+		Name = name;
 		
-		if (getBody != null) GetBody.AddRange(getBody);
-		if (setBody != null) SetBody.AddRange(setBody);
-
-		if (!IsAuto)
-		{
-			HasGetter = getBody != null;
-			HasSetter = setBody != null;
-		}
+		InitBody(getBody, setBody);
 	}
 
 	public override int  CalcBodyLen()
 	{
 		if (IsAuto)
 			return 4 + GetterLen + SetterLen; // ' { get; set; }'
-		
+
 		var len = " {".Length;
-			
+
 		if (HasGetter)
 		{
 			len += " get {".Length;
@@ -784,15 +849,51 @@ public partial class Property : MemberBase
 				len += 1 + t.Length;
 			len += " }".Length;
 		}
-			
+
 		len += " }".Length;
-		
+
 		return len;
 	}
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
+		if (!IsAuto && HasGetter && GetBody.Count > 0)
+		{
+			var t = GetBody[GetBody.Count - 1];
+			
+			if (!t.StartsWith("return"))
+			{
+				t = "return " + t;
+				
+				if (!t.EndsWith(";"))
+					t += ";";
+				
+				GetBody[GetBody.Count - 1] = t;
+			}
+		}
+		
 		WriteProperty(tt, this, isCompact);
+	}
+	
+	public Property InitBody(IEnumerable<string> getBody = null, IEnumerable<string> setBody = null)
+	{
+		IsAuto = getBody == null && setBody == null;
+
+		if (getBody != null) GetBody.AddRange(getBody);
+		if (setBody != null) SetBody.AddRange(setBody);
+
+		if (!IsAuto)
+		{
+			HasGetter = getBody != null;
+			HasSetter = setBody != null;
+		}
+		
+		return this;
+	}
+	
+	public Property InitGetter(params string[] getBody)
+	{
+		return InitBody(getBody, null);
 	}
 }
 
@@ -814,14 +915,14 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 			tt.Write(" ");
 			WriteComment(tt, " " + m.EndLineComment);
 		}
-		else	
+		else
 			tt.WriteLine("");
-	};	
+	};
 
 	Action writeParams = () =>
 	{
 		tt.Write("(");
-		
+
 		for (int i = 0; i < m.Parameters.Count; i++)
 		{
 			if (i > 0)
@@ -830,7 +931,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		}
 
 		tt.Write(")");
-	};	
+	};
 
 	if (compact)
 	{
@@ -841,16 +942,16 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		writeParams();
 
 		len = tt.GenerationEnvironment.Length - len;
-		
+
 		if (m.IsAbstract || m.AccessModifier == AccessModifier.Partial)
 		{
 			tt.Write(";");
 			len = 0;
 		}
-		else		
+		else
 		{
 			tt.WriteSpaces(m.ParamLen - len);
-		
+
 			len = tt.GenerationEnvironment.Length;
 
 			tt.Write(" {");
@@ -860,7 +961,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 
 			tt.Write(" }");
 		}
-		
+
 		if (!string.IsNullOrEmpty(m.EndLineComment))
 			tt.WriteSpaces(m.BodyLen - (tt.GenerationEnvironment.Length - len));
 		writeComment();
@@ -874,7 +975,19 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		tt.PushIndent("\t");
 		
 		foreach (var t in m.Body)
+		{
+			if (t.Length > 1 && t[0] == '#')
+			{
+				tt.Write(" ");
+
+				while (tt.GenerationEnvironment.Length > 0 &&
+					(tt.GenerationEnvironment[tt.GenerationEnvironment.Length - 1] == ' ' ||
+					 tt.GenerationEnvironment[tt.GenerationEnvironment.Length - 1] == '\t'))
+					tt.GenerationEnvironment.Length--;
+			}
+
 			tt.WriteLine(t);
+		}
 
 		tt.PopIndent();
 		tt.WriteLine("}");
@@ -890,7 +1003,7 @@ public partial class Method : MemberBase
 	public Method()
 	{
 	}
-	
+
 	public Method(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
 	{
 		Type       = type;
@@ -899,24 +1012,24 @@ public partial class Method : MemberBase
 		if (parameters != null) Parameters.AddRange(parameters);
 		if (body       != null) Body.      AddRange(body);
 	}
-	
+
 	public override int CalcModifierLen()
-	{ 
+	{
 		return IsAbstract ? " abstract".Length :  0;
 	}
-	
+
 	public override int CalcBodyLen()
 	{
 		if (IsAbstract || AccessModifier == AccessModifier.Partial)
 			return 1;
-		
+
 		var len = " {".Length;
-			
+
 		foreach (var t in Body)
 			len += 1 + t.Length;
 
 		len += " }".Length;
-		
+
 		return len;
 	}
 
@@ -939,7 +1052,7 @@ static Action<GeneratedTextTransformation,Attribute> WriteAttribute = (tt,a) =>
 	{
 		tt.Write("(");
 		tt.Write(string.Join(", ", a.Parameters.ToArray()));
-		tt.Write(")");		
+		tt.Write(")");
 	}
 };
 
@@ -957,7 +1070,7 @@ public partial class Attribute
 		Name = name;
 		Parameters.AddRange(ps);
 	}
-	
+
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
 		WriteAttribute(tt, this);
@@ -981,6 +1094,33 @@ public void WriteSpaces(int len)
 {
 	while (len-- > 0)
 		Write(" ");
+}
+
+public static IEnumerable<ITree> GetTreeNodes(ITree parent)
+{
+	foreach (var node in parent.GetNodes())
+	{
+		yield return node;
+
+		foreach (var grandNode in GetTreeNodes(node))
+			yield return grandNode;
+	}
+}
+
+public static ITree FindNode(ITree parent, Func<ITree,bool> func)
+{
+	foreach (var node in parent.GetNodes())
+	{
+		if (func(node))
+			return node;
+
+		var n = FindNode(node, func);
+		
+		if (n != null)
+			return n;
+	}
+
+	return null;
 }
 
 #>

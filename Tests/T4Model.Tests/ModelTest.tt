@@ -1,23 +1,19 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
-<#@ output extension=".cs"                                  #>
-<#@ import namespace="System.Linq"                          #>
-<#@ include file="..\..\Templates\T4Model.ttinclude"        #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
+<#@ output extension=".cs"                                         #>
+<#@ import namespace="System.Linq"                                 #>
+<#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
 <#
-	Source.Namespaces[0].Name = "T4Model.Tests";
+	Model.Namespaces[0].Name = "T4Model.Tests";
 
-	Source.Usings.Add("System.ComponentModel");
-	Source.Usings.Add("System.Collections.Generic");
-	Source.Usings.Add("System.Xml.Serialization");
-	Source.Usings.Add("T4Model.Tests");
-	Source.Usings.Add("System.ComponentModel");
+	Model.Usings.Add("System.ComponentModel");
+	Model.Usings.Add("System.Collections.Generic");
+	Model.Usings.Add("System.Xml.Serialization");
+	Model.Usings.Add("T4Model.Tests");
+	Model.Usings.Add("System.ComponentModel");
 	
-	Source.Namespaces[0].Types.Add(new Class
+	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name       = "TestClass1",
-		Interfaces =
-		{
-			"INotifyPropertyChanged"
-		},
 		Members    =
 		{
 			new MemberGroup
@@ -136,14 +132,8 @@
 				}
 			},
 			new Property("char", "Property11",
-				new[]
-				{
-					"return 'a';"
-				},
-				new[]
-				{
-					"var a = value;",
-				}),
+				new[] { "'a'" },
+				new[] { "var a = value;" }),
 			new Field
 			{
 				Type = "List<int>",
@@ -171,60 +161,13 @@
 				}
 			},
 			new Field { Type = "List<string>", Name = "Field4" },
-			new MemberGroup
-			{
-				Region  = "Group : string",
-				Members =
-				{
-					new Field   ("string", "_testProperty1") { AccessModifier = AccessModifier.Private },
-					new Property(" string", " TestProperty1",
-						new[] { "return _testProperty1;" },
-						@"
-							if (value != _testProperty1)
-							{
-								BeforePropertyChanged(value);
-								_testProperty1 = value;
-								AfterPropertyChanged();
-
-								OnTestProperty1Changed();
-							}
-						".TrimEnd('\t').Trim('\r', '\n').Split('\n').Select(s => s.Replace("\t\t\t\t\t\t\t", "").Trim('\r', '\n'))),
-					new MemberGroup
-					{
-						IsCompact = true,
-						Members   =
-						{
-							new Method("void", "BeforePropertyChanged", new[] { "string newValue" }) { AccessModifier = AccessModifier.Partial },
-							new Method("void", "AfterPropertyChanged")  { AccessModifier = AccessModifier.Partial },
-							new Method("void", "OnTestProperty1Changed", null, new[] { "OnPropertyChanged(\"TestProperty1\");" })
-							{
-								AccessModifier = AccessModifier.Private,
-							}
-						}
-					}
-				},
-			},
-			new MemberGroup
-			{
-				Region    = "INotifyPropertyChanged",
-				Members   =
-				{
-					new Event("PropertyChangedEventHandler", "PropertyChanged"),
-					new Method("void", "OnPropertyChanged",
-						new[]
-						{
-							"string propertyName"
-						},
-						new[] { "OnPropertyChanged(\"TestProperty1\");" })
-						{
-							AccessModifier = AccessModifier.Protected
-						},
-				}
-			}
+			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
+			new NotifyingProperty("int",    "NotifiedProp2") { InitValue = "1" },
+			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
 		}
 	});
 
-	Source.Namespaces[0].Types.Add(new Class
+	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name       = "TestClass2",
 		BaseClass  = "TestClass1",
