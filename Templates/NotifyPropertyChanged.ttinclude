@@ -75,12 +75,15 @@ void NotifyPropertyChangedImpl()
 			IsCompact = true,
 			Members   =
 			{
-				new Method("void", "On"     + name + "Changed", null, new[] { "OnPropertyChanged(\"" + name + "\");" }) { AccessModifier = AccessModifier.Private }
+				new Method("void", "On" + name + "Changed", null, new[] { "OnPropertyChanged(\"" + name + "\");" }) { AccessModifier = AccessModifier.Private }
 			}
 		};
 		
 		gr.Members.Add(methods);
-			
+
+		if (prop.Dependencies.Count == 0)
+			prop.Dependencies.Add(name);
+		
 		if (prop.HasSetter)
 		{
 			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();

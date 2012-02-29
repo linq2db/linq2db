@@ -166,6 +166,7 @@ namespace T4Model.Tests
 					_currentEditableInt1 = value;
 					AfterEditableInt1Changed();
 
+					OnEditableInt1Changed();
 				}
 			}
 		}
