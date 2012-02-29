@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ModelTest.cs">
+    <Compile Include="ModelTest.generated.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ModelTest.tt</DependentUpon>
@@ -50,7 +50,7 @@
   <ItemGroup>
     <None Include="ModelTest.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ModelTest.cs</LastGenOutput>
+      <LastGenOutput>ModelTest.generated.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

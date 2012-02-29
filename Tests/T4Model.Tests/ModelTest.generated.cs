@@ -139,6 +139,47 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region EditableLong1 : long
+
+		private long _currentEditableLong1;
+		private long _originalEditableLong1;
+		public  long  EditableLong1
+		{
+			get { return _currentEditableLong1; }
+			set { _currentEditableLong1 = value; }
+		}
+
+		#endregion
+
+		#region EditableInt1 : int
+
+		private int _currentEditableInt1;
+		private int _originalEditableInt1;
+		#region  EditableInt1 :  int
+
+		public  int  EditableInt1
+		{
+			get { return _currentEditableInt1; }
+			set
+			{
+				if (_currentEditableInt1 != value)
+				{
+					BeforeEditableInt1Changed(value);
+					_currentEditableInt1 = value;
+					AfterEditableInt1Changed();
+
+				}
+			}
+		}
+
+		partial void BeforeEditableInt1Changed(int newValue);
+		partial void AfterEditableInt1Changed ();
+		private void OnEditableInt1Changed    ()             { OnPropertyChanged("EditableInt1"); }
+
+		#endregion
+
+		#endregion
+
 		#region INotifyPropertyChanged
 
 		public event PropertyChangedEventHandler PropertyChanged;

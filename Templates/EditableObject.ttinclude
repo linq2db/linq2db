@@ -3,15 +3,15 @@
 		var beforeGenerateModel = BeforeGenerateModel;
 		BeforeGenerateModel = () =>
 		{
+			EditableObjectImpl();
 			beforeGenerateModel();
-			NotifyPropertyChangedImpl();
 		};
 	}
 #>
 <#+
-void NotifyPropertyChangedImpl()
+void EditableObjectImpl()
 {
-	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
+	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsEditable).ToList())
 	{
 		List<MemberBase> parentMembers;
 		
@@ -37,30 +37,39 @@ void NotifyPropertyChangedImpl()
 		parentMembers.RemoveAt(index);
 		parentMembers.Insert  (index, gr);
 		
-		var name = prop.Name.Trim();
-		var type = prop.Type.Trim();
-		
-		if (prop.IsAuto)
-		{
-			var field = new Field(type, "_" + name)
-			{
-				AccessModifier       = AccessModifier.Private,
-				InsertBlankLineAfter = false,
-			};
-			
-			if (prop.InitValue != null)
-				field.InitValue = prop.InitValue;
-			
-			gr.Members.Insert(0, field);
-			
-			prop.Name   = " " + name;
-			prop.Type   = " " + type;
-			prop.IsAuto = false;
-			
-			if (prop.HasGetter) prop.GetBody.Add("return " + field.Name + ";");			
-			if (prop.HasSetter) prop.SetBody.Add(field.Name + " = value;");			
-		}
+		var name = prop.Name;
+		var type = prop.Type;
 
+		var originalField = new Field(type, "_original" + name)
+		{
+			AccessModifier       = AccessModifier.Private,
+			InsertBlankLineAfter = false,
+		};
+		
+		if (prop.InitValue != null)
+			originalField.InitValue = prop.InitValue;
+		
+		gr.Members.Insert(0, originalField);
+		
+		var currentField = new Field(type, "_current" + name)
+		{
+			AccessModifier       = AccessModifier.Private,
+			InsertBlankLineAfter = false,
+		};
+		
+		if (prop.InitValue != null)
+			currentField.InitValue = prop.InitValue;
+		
+		gr.Members.Insert(0, currentField);
+		
+		prop.Name   = " " + name;
+		prop.Type   = " " + type;
+		prop.IsAuto = false;
+		
+		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name + ";");			
+		if (prop.HasSetter) prop.SetBody.Add(currentField.Name + " = value;");			
+
+		/*
 		var methods = new MemberGroup
 		{
 			IsCompact = true,
@@ -141,47 +150,26 @@ void NotifyPropertyChangedImpl()
 				});				
 			}
 		}
+		*/
 	}	
 }
 
-public string[] OnPropertyChangedBody = new[]
-{
-	"if (PropertyChanged != null)",
-	"{",
-	"#if SILVERLIGHT",
-	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
-	"\t\tPropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
-	"\telse",
-	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
-	"\t\t\t() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));",
-	"#else",
-	"\tPropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
-	"#endif",
-	"}",
-};
-
 partial class Property
 {
-	public bool         IsNotifying;
-	public List<string> Dependencies = new List<string>();
+	public bool IsEditable;
 }
 
-class NotifyingProperty : Property
+class EditableProperty : Property
 {
-	public NotifyingProperty()
+	public EditableProperty()
 	{
-		IsNotifying = true;
+		IsEditable = true;
 	}
 	
-	public NotifyingProperty(string type, string name, params string[] dependencies)
+	public EditableProperty(string type, string name)
 		: base(type, name, null, null)
 	{
-		IsNotifying = true;
-
-		if (dependencies.Length == 0)
-			Dependencies.Add(name);
-		else
-			Dependencies.AddRange(dependencies);
+		IsEditable = true;
 	}
 }
 

@@ -817,6 +817,7 @@ static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,c
 public partial class Property : MemberBase
 {
 	public bool         IsAuto    = true;
+	public string       InitValue;
 	public bool         HasGetter = true;
 	public bool         HasSetter = true;
 	public List<string> GetBody   = new List<string>();
