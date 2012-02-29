@@ -156,6 +156,7 @@ public string[] OnPropertyChangedBody = new[]
 	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
 	"\t\t\t() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));",
 	"#else",
+	"\tPropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
 	"#endif",
 	"}",
 };

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Media;
 
-namespace T4Model.Silverlight
+namespace T4Model.Wpf
 {
 	partial class ViewModel
 	{

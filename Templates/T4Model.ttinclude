@@ -197,6 +197,16 @@ public partial class Class : TypeBase
 	public List<string>     Interfaces = new List<string>();
 	public List<MemberBase> Members    = new List<MemberBase>();
 
+	public Class()
+	{
+	}
+
+	public Class(string name, params MemberBase[] members)
+	{
+		Name = name;
+		Members.AddRange(members);
+	}
+	
 	public override void Render(GeneratedTextTransformation tt)
 	{
 		if (Attributes.Count > 0)

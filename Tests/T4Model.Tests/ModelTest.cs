@@ -154,6 +154,7 @@ namespace T4Model.Tests
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
 						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
 #else
+				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 #endif
 			}
 		}

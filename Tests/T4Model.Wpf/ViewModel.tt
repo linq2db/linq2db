@@ -3,7 +3,7 @@
 <#@ import namespace="System.Linq"                                 #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
 <#
-	Model.Namespace.Name = "T4Model.Silverlight";
+	Model.Namespace.Name = "T4Model.Wpf";
 
 	Model.Usings.Add("System.Windows.Media");
 	

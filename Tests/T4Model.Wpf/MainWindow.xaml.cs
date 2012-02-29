@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Threading;
-using System.Windows.Controls;
+using System.Windows;
 
-namespace T4Model.Silverlight
+namespace T4Model.Wpf
 {
-	public partial class MainPage : UserControl
+	/// <summary>
+	/// Interaction logic for MainWindow.xaml
+	/// </summary>
+	public partial class MainWindow : Window
 	{
-		public MainPage()
+		public MainWindow()
 		{
 			InitializeComponent();
 
