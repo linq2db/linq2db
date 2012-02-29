@@ -141,9 +141,9 @@ namespace T4Model.Tests
 
 		#region EditableLong1 : long
 
-		private long _currentEditableLong1;
+		private long  _currentEditableLong1;
 		private long _originalEditableLong1;
-		public  long  EditableLong1
+		public  long          EditableLong1
 		{
 			get { return _currentEditableLong1; }
 			set { _currentEditableLong1 = value; }
@@ -153,11 +153,9 @@ namespace T4Model.Tests
 
 		#region EditableInt1 : int
 
-		private int _currentEditableInt1;
+		private int  _currentEditableInt1;
 		private int _originalEditableInt1;
-		#region  EditableInt1 :  int
-
-		public  int  EditableInt1
+		public  int          EditableInt1
 		{
 			get { return _currentEditableInt1; }
 			set
@@ -175,8 +173,6 @@ namespace T4Model.Tests
 		partial void BeforeEditableInt1Changed(int newValue);
 		partial void AfterEditableInt1Changed ();
 		private void OnEditableInt1Changed    ()             { OnPropertyChanged("EditableInt1"); }
-
-		#endregion
 
 		#endregion
 

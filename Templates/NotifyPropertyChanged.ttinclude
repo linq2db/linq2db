@@ -15,6 +15,8 @@ void NotifyPropertyChangedImpl()
 	{
 		List<MemberBase> parentMembers;
 		
+		MemberGroup gr = null;
+		
 		if (prop.Parent is Class)
 		{
 			var parent = (Class)prop.Parent;
@@ -24,22 +26,29 @@ void NotifyPropertyChangedImpl()
 		{
 			var parent = (MemberGroup)prop.Parent;
 			parentMembers = parent.Members;
-		}
-		
-		var gr = new MemberGroup
-		{
-			Region  = prop.Name + " : " + prop.Type,
-			Members = { prop }
-		};
 
-		var index = parentMembers.IndexOf(prop);
-		
-		parentMembers.RemoveAt(index);
-		parentMembers.Insert  (index, gr);
+			if (parent.IsPropertyGroup)
+				gr = parent;
+		}
 		
 		var name = prop.Name.Trim();
 		var type = prop.Type.Trim();
-		
+
+		if (gr == null)
+		{
+			gr = new MemberGroup
+			{
+				Region          = name + " : " + type,
+				Members         = { prop },
+				IsPropertyGroup = true,
+			};
+
+			var index = parentMembers.IndexOf(prop);
+
+			parentMembers.RemoveAt(index);
+			parentMembers.Insert  (index, gr);
+		}
+
 		if (prop.IsAuto)
 		{
 			var field = new Field(type, "_" + name)

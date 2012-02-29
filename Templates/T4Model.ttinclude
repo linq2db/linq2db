@@ -300,6 +300,7 @@ public partial class MemberGroup : MemberBase
 {
 	public string           Region;
 	public bool             IsCompact;
+	public bool             IsPropertyGroup;
 	public List<MemberBase> Members = new List<MemberBase>();
 
 	public override int  CalcBodyLen() { return 0; }

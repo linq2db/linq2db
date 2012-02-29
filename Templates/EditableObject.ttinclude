@@ -15,6 +15,8 @@ void EditableObjectImpl()
 	{
 		List<MemberBase> parentMembers;
 		
+		MemberGroup gr = null;
+		
 		if (prop.Parent is Class)
 		{
 			var parent = (Class)prop.Parent;
@@ -24,21 +26,28 @@ void EditableObjectImpl()
 		{
 			var parent = (MemberGroup)prop.Parent;
 			parentMembers = parent.Members;
+
+			//if (parent.IsPropertyGroup)
+			//	gr = parent;
 		}
 		
-		var gr = new MemberGroup
-		{
-			Region  = prop.Name + " : " + prop.Type,
-			Members = { prop }
-		};
+		var name = prop.Name.Trim();
+		var type = prop.Type.Trim();
 
-		var index = parentMembers.IndexOf(prop);
-		
-		parentMembers.RemoveAt(index);
-		parentMembers.Insert  (index, gr);
-		
-		var name = prop.Name;
-		var type = prop.Type;
+		if (gr == null)
+		{
+			gr = new MemberGroup
+			{
+				Region          = name + " : " + type,
+				Members         = { prop },
+				IsPropertyGroup = true,
+			};
+
+			var index = parentMembers.IndexOf(prop);
+
+			parentMembers.RemoveAt(index);
+			parentMembers.Insert  (index, gr);
+		}
 
 		var originalField = new Field(type, "_original" + name)
 		{
@@ -51,7 +60,7 @@ void EditableObjectImpl()
 		
 		gr.Members.Insert(0, originalField);
 		
-		var currentField = new Field(type, "_current" + name)
+		var currentField = new Field(type, " _current" + name)
 		{
 			AccessModifier       = AccessModifier.Private,
 			InsertBlankLineAfter = false,
@@ -62,12 +71,12 @@ void EditableObjectImpl()
 		
 		gr.Members.Insert(0, currentField);
 		
-		prop.Name   = " " + name;
+		prop.Name   = "         " + name;
 		prop.Type   = " " + type;
 		prop.IsAuto = false;
 		
-		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name + ";");			
-		if (prop.HasSetter) prop.SetBody.Add(currentField.Name + " = value;");			
+		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name.Trim() + ";");
+		if (prop.HasSetter) prop.SetBody.Add(currentField.Name.Trim() + " = value;");
 
 		/*
 		var methods = new MemberGroup
