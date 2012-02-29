@@ -3,11 +3,9 @@
 <#@ import namespace="System.Linq"                                 #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
 <#
-	Model.Namespace.Name = "T4Model.Silverlight";
-
 	Model.Usings.Add("System.Windows.Media");
-	
-	Model.Namespace.Types.Add(
+	Model.Namespace.Name = "T4Model.Silverlight";
+	Model.Types.Add(
 		new Class("ViewModel",
 			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
 			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },

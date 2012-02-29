@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
-<#@ output extension=".cs"                                         #>
+<#@ output extension=".generated.cs"                                         #>
 <#@ import namespace="System.Linq"                                 #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
 <#

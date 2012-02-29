@@ -90,6 +90,7 @@ namespace T4Model.Silverlight
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
 						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
 #else
+				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 #endif
 			}
 		}
