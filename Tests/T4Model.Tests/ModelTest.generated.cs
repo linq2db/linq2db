@@ -376,7 +376,7 @@ namespace T4Model.Tests
 				return
 					IsEditableLong1Dirty ||
 					IsEditableInt1Dirty  ||
-					IsEditableInt3Dirty ;
+					IsEditableInt3Dirty;
 			}
 		}
 
@@ -384,6 +384,7 @@ namespace T4Model.Tests
 
 		#region INotifyPropertyChanged support
 
+		[field : NonSerialized]
 		public virtual event PropertyChangedEventHandler PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)

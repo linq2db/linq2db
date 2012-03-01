@@ -77,8 +77,8 @@ void EditableObjectImpl()
 		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name.Trim() + ";");
 		if (prop.HasSetter) prop.SetBody.Add(currentField.Name.Trim() + " = value;");
 
-		var ac = new Method ("void", "Accept" + name + "Changes", null, new[] { string.Format("_original{0} = _current{0};", name) });
-		var rc = new Method ("void", "Reject" + name + "Changes", null, new[] { string.Format("{0} = _original{0};", name) });
+		var ac = new Method  ("void", "Accept" + name + "Changes", null, new[] { string.Format("_original{0} = _current{0};", name) });
+		var rc = new Method  ("void", "Reject" + name + "Changes", null, new[] { string.Format("{0} = _original{0};", name) });
 		var id = new Property("bool", "Is" + name + "Dirty").InitGetter(string.Format("_current{0} != _original{0}", name));
 
 		gr.Members.Add(new MemberGroup
@@ -136,7 +136,7 @@ void EditableObjectImpl()
 			ac.Body.Add("AfterAcceptChanges();");
 			rc.Body.Add("");
 			rc.Body.Add("AfterRejectChanges();");
-			id.GetBody[id.GetBody.Count - 1] = id.GetBody[id.GetBody.Count - 1].Replace(" ||", ";");
+			id.GetBody[id.GetBody.Count - 1] = id.GetBody[id.GetBody.Count - 1].Trim(' ' , '|') + ";";
 
 			cl.Members.Add(new MemberGroup
 			{

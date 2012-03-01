@@ -162,7 +162,11 @@ void NotifyPropertyChangedImpl()
 					Region  = "INotifyPropertyChanged support",
 					Members =
 					{
-						new Event("PropertyChangedEventHandler", "PropertyChanged") { IsVirtual = true },
+						new Event("PropertyChangedEventHandler", "PropertyChanged")
+						{
+							IsVirtual  = true,
+							Attributes = { new Attribute("field : NonSerialized") }
+						},
 						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
 						{
 							AccessModifier = AccessModifier.Protected
