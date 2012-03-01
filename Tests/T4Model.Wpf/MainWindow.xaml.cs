@@ -9,6 +9,8 @@ namespace T4Model.Wpf
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		static volatile bool _stop;
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -16,11 +18,13 @@ namespace T4Model.Wpf
 			var data = new ViewModel();
 			DataContext = data;
 
+			Application.Current.Exit += (s,e) => { _stop = true; };
+
 			new Thread(() =>
 			{
 				var r = new Random();
 
-				while (true)
+				while (!_stop)
 				{
 					data.NotifiedProp1 = (r.NextDouble() - 0.5) * 1000;
 					Thread.Sleep(data.NotifiedProp2);
