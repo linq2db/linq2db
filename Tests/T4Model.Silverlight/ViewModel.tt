@@ -1,6 +1,6 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
-<#@ output extension=".generated.cs"                                         #>
-<#@ import namespace="System.Linq"                                 #>
+<#@ output extension=".generated.cs"                               #>
+<#@ include file="..\..\Templates\T4Model.ttinclude"               #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
 <#
 	Model.Usings.Add("System.Windows.Media");

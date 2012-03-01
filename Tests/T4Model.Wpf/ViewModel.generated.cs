@@ -32,9 +32,19 @@ namespace T4Model.Wpf
 			}
 		}
 
+		#region INotifyPropertyChanged support
+
 		partial void BeforeNotifiedProp1Changed(double newValue);
 		partial void AfterNotifiedProp1Changed ();
-		private void OnNotifiedProp1Changed    ()                { OnPropertyChanged("NotifiedProp1"); }
+
+		private static readonly PropertyChangedEventArgs _NotifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+
+		private void OnNotifiedProp1Changed()
+		{
+			OnPropertyChanged(_NotifiedProp1ChangedEventArgs);
+		}
+
+		#endregion
 
 		#endregion
 
@@ -58,9 +68,19 @@ namespace T4Model.Wpf
 			}
 		}
 
+		#region INotifyPropertyChanged support
+
 		partial void BeforeNotifiedProp2Changed(int newValue);
 		partial void AfterNotifiedProp2Changed ();
-		private void OnNotifiedProp2Changed    ()             { OnPropertyChanged("NotifiedProp2"); }
+
+		private static readonly PropertyChangedEventArgs _NotifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+
+		private void OnNotifiedProp2Changed()
+		{
+			OnPropertyChanged(_NotifiedProp2ChangedEventArgs);
+		}
+
+		#endregion
 
 		#endregion
 
@@ -71,13 +91,22 @@ namespace T4Model.Wpf
 			get { return GetBrush(); }
 		}
 
-		private void OnNotifiedBrush1Changed() { OnPropertyChanged("NotifiedBrush1"); }
+		#region INotifyPropertyChanged support
+
+		private static readonly PropertyChangedEventArgs _NotifiedBrush1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedBrush1");
+
+		private void OnNotifiedBrush1Changed()
+		{
+			OnPropertyChanged(_NotifiedBrush1ChangedEventArgs);
+		}
 
 		#endregion
 
-		#region INotifyPropertyChanged
+		#endregion
 
-		public event PropertyChangedEventHandler PropertyChanged;
+		#region INotifyPropertyChanged support
+
+		public virtual event PropertyChangedEventHandler PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
 		{
@@ -91,6 +120,22 @@ namespace T4Model.Wpf
 						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
 #else
 				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+#endif
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			if (PropertyChanged != null)
+			{
+#if SILVERLIGHT
+				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
+					PropertyChanged(this, arg);
+				else
+					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
+						() => PropertyChanged(this, arg));
+#else
+				PropertyChanged(this, arg);
 #endif
 			}
 		}

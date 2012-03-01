@@ -9,21 +9,11 @@
 	}
 #>
 <#+
-partial class IsNotifyingSetter
-{
-	partial void Set(Property property);
-
-	public void SetIsNotifying(Property property)
-	{
-		Set(property);
-	}
-}
-
 void EditableObjectImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsEditable).ToList())
 	{
-		new IsNotifyingSetter().SetIsNotifying(prop);
+		new PartialHelper().SetIsNotifying(prop);
 
 		List<MemberBase> parentMembers;
 		
@@ -201,4 +191,11 @@ class EditableProperty : Property
 	}
 }
 
+partial class PartialHelper
+{
+	public void SetIsNotifying(Property property)
+	{
+		Set(property);
+	}
+}
 #>

@@ -1170,4 +1170,9 @@ public static ITree FindNode(ITree parent, Func<ITree,bool> func)
 	return null;
 }
 
+partial class PartialHelper
+{
+	partial void Set(Property property);
+}
+
 #>

@@ -1,6 +1,5 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
 <#@ output extension=".generated.cs"                               #>
-<#@ import namespace="System.Linq"                                 #>
 <#@ include file="..\..\Templates\T4Model.ttinclude"               #>
 <#@ include file="..\..\Templates\EditableObject.ttinclude"        #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>

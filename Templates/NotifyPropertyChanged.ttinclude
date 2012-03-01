@@ -9,14 +9,6 @@
 	}
 #>
 <#+
-partial class IsNotifyingSetter
-{
-	partial void Set(Property property)
-	{
-		property.IsNotifying = true;
-	}
-}
-
 void NotifyPropertyChangedImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
@@ -243,4 +235,11 @@ class NotifyingProperty : Property
 	}
 }
 
+partial class PartialHelper
+{
+	partial void Set(Property property)
+	{
+		property.IsNotifying = true;
+	}
+}
 #>
