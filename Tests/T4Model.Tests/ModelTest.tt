@@ -15,9 +15,14 @@
 	
 	Model.Namespaces[0].Types.Add(new Class
 	{
-		Name       = "TestClass1",
-		Members    =
+		Name    = "TestClass1",
+		Members =
 		{
+			new EditableProperty ("long",   "EditableLong1") { InitValue = "12345" },
+			new EditableProperty ("int",    "EditableInt1"),
+			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
+			new NotifyingProperty("int",    "NotifiedProp2") { InitValue = "1" },
+			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
 			new MemberGroup
 			{
 				Region    = "Test Region",
@@ -163,11 +168,6 @@
 				}
 			},
 			new Field { Type = "List<string>", Name = "Field4" },
-			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
-			new NotifyingProperty("int",    "NotifiedProp2") { InitValue = "1" },
-			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
-			new EditableProperty ("long",   "EditableLong1"),
-			new EditableProperty ("int",    "EditableInt1") { IsNotifying = true },
 		}
 	});
 

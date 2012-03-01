@@ -327,7 +327,7 @@ public partial class MemberGroup : MemberBase
 				foreach (var m in allMembers)
 					m.ModifierLen = max;
 
-				max = allMembers.Max(m => m.Type.Length);
+				max = allMembers.Max(m => (m.Type ?? "").Length);
 				foreach (var m in allMembers)
 					m.TypeLen = max;
 
@@ -596,10 +596,13 @@ public partial class MemberGroup : MemberBase
 static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 {
 	var am = f.AccessModifier.ToString().ToLower();
+	var mdf =
+		(f.IsStatic   ? " static"   : "") +
+		(f.IsReadonly ? " readonly" : "") ;
 
-	tt.Write("{0}{1}{2} {3}{4} {5}",
+	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
 		am,     LenDiff(f.AccessModifierLen, am),
-		        LenDiff(f.ModifierLen,       ""),
+		mdf,    LenDiff(f.ModifierLen,       mdf),
 		f.Type, LenDiff(f.TypeLen,           f.Type),
 		f.Name);
 
@@ -622,8 +625,10 @@ static Action<GeneratedTextTransformation,Field> WriteField = (tt,f) =>
 
 public partial class Field : MemberBase
 {
+	public bool   IsStatic;
+	public bool   IsReadonly;
 	public string InitValue;
-	
+
 	public Field()
 	{
 	}
@@ -632,6 +637,13 @@ public partial class Field : MemberBase
 	{
 		Type = type;
 		Name = name;
+	}
+
+	public override int CalcModifierLen()
+	{
+		return
+			(IsStatic   ? " static".  Length : 0) +
+			(IsReadonly ? " readonly".Length : 0) ;
 	}
 
 	public override int  CalcBodyLen() { return InitValue == null ? 1 : 4 + InitValue.Length; }
@@ -644,11 +656,15 @@ public partial class Field : MemberBase
 
 static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
 {
-	var am = m.AccessModifier.ToString().ToLower();
+	var am  = m.AccessModifier.ToString().ToLower();
+	var mdf =
+		(m.IsStatic  ? " static"  : "") +
+		(m.IsVirtual ? " virtual" : "") +
+		" event";
 
-	tt.Write("{0}{1} event{2} {3}{4} {5};",
+	tt.Write("{0}{1}{2}{3} {4}{5} {6};",
 		am,     LenDiff(m.AccessModifierLen, am),
-		        LenDiff(m.ModifierLen,       " event"),
+		mdf,    LenDiff(m.ModifierLen,       mdf),
 		m.Type, LenDiff(m.TypeLen,           m.Type),
 		m.Name);
 
@@ -664,6 +680,9 @@ static Action<GeneratedTextTransformation,Event> WriteEvent = (tt,m) =>
 
 public partial class Event : MemberBase
 {
+	public bool IsStatic;
+	public bool IsVirtual;
+	
 	public Event()
 	{
 	}
@@ -674,8 +693,15 @@ public partial class Event : MemberBase
 		Name = name;
 	}
 
-	public override int  CalcModifierLen() { return " event".Length; }
-	public override int  CalcBodyLen    () { return 1; }
+	public override int CalcModifierLen()
+	{
+		return
+			(IsStatic  ? " static". Length : 0) +
+			(IsVirtual ? " virtual".Length : 0) +
+			" event".Length;
+	}
+
+	public override int CalcBodyLen() { return 1; }
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
@@ -685,11 +711,12 @@ public partial class Event : MemberBase
 
 static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,compact) =>
 {
-	var am = p.AccessModifier.ToString().ToLower();
+	var am  = p.AccessModifier.ToString().ToLower();
+	var mdf = p.IsVirtual ? " virtual" : "";
 
-	tt.Write("{0}{1}{2} {3}{4} {5}",
+	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
 		am,     LenDiff(p.AccessModifierLen, am),
-		        LenDiff(p.ModifierLen,       ""),
+		mdf,    LenDiff(p.ModifierLen,       mdf),
 		p.Type, LenDiff(p.TypeLen,           p.Type),
 		p.Name);
 
@@ -819,6 +846,7 @@ public partial class Property : MemberBase
 {
 	public bool         IsAuto    = true;
 	public string       InitValue;
+	public bool         IsVirtual;
 	public bool         HasGetter = true;
 	public bool         HasSetter = true;
 	public List<string> GetBody   = new List<string>();
@@ -839,7 +867,12 @@ public partial class Property : MemberBase
 		InitBody(getBody, setBody);
 	}
 
-	public override int  CalcBodyLen()
+	public override int CalcModifierLen()
+	{
+		return IsVirtual ? " virtual".Length : 0;
+	}
+
+	public override int CalcBodyLen()
 	{
 		if (IsAuto)
 			return 4 + GetterLen + SetterLen; // ' { get; set; }'
@@ -869,7 +902,7 @@ public partial class Property : MemberBase
 
 	public override void Render(GeneratedTextTransformation tt, bool isCompact)
 	{
-		if (!IsAuto && HasGetter && GetBody.Count > 0)
+		if (!IsAuto && HasGetter && GetBody.Count == 1)
 		{
 			var t = GetBody[GetBody.Count - 1];
 			
@@ -912,12 +945,13 @@ public partial class Property : MemberBase
 static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
 {
 	var am  = m.AccessModifier.ToString().ToLower();
-	var mdf = m.IsAbstract ? " abstract" : "";	
+	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : "";
 
-	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
+	tt.Write("{0}{1}{2}{3}{4}{5}{6} {7}",
 		am,     LenDiff(m.AccessModifierLen, am),
 		mdf,    LenDiff(m.ModifierLen,       mdf),
-		m.Type, LenDiff(m.TypeLen,           m.Type),
+		m.Type == null ? "" : " ",
+		m.Type, LenDiff(m.TypeLen,           m.Type ?? ""),
 		m.Name);
 
 	Action writeComment = () =>
@@ -1009,6 +1043,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 public partial class Method : MemberBase
 {
 	public bool         IsAbstract;
+	public bool         IsVirtual;
 	public List<string> Parameters = new List<string>();
 	public List<string> Body       = new List<string>();
 	
@@ -1027,7 +1062,7 @@ public partial class Method : MemberBase
 
 	public override int CalcModifierLen()
 	{
-		return IsAbstract ? " abstract".Length :  0;
+		return IsAbstract ? " abstract".Length : IsVirtual ? " virtual".Length : 0;
 	}
 
 	public override int CalcBodyLen()

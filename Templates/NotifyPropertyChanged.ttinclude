@@ -9,6 +9,14 @@
 	}
 #>
 <#+
+partial class IsNotifyingSetter
+{
+	partial void Set(Property property)
+	{
+		property.IsNotifying = true;
+	}
+}
+
 void NotifyPropertyChangedImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
@@ -72,10 +80,21 @@ void NotifyPropertyChangedImpl()
 
 		var methods = new MemberGroup
 		{
-			IsCompact = true,
-			Members   =
+			Region  = "INotifyPropertyChanged support",
+			Members =
 			{
-				new Method("void", "On" + name + "Changed", null, new[] { "OnPropertyChanged(\"" + name + "\");" }) { AccessModifier = AccessModifier.Private }
+				new Field("PropertyChangedEventArgs", "_" + name + "ChangedEventArgs")
+				{
+					InitValue      = "new PropertyChangedEventArgs(\"" + name + "\")",
+					AccessModifier = AccessModifier.Private,
+					IsStatic       = true,
+					IsReadonly     = true,
+				},
+				new Method("void", "On" + name + "Changed", null,
+					new[] { "OnPropertyChanged(_" + name + "ChangedEventArgs);" })
+				{
+					AccessModifier = AccessModifier.Private
+				}
 			}
 		};
 		
@@ -117,8 +136,15 @@ void NotifyPropertyChangedImpl()
 			
 			prop.SetBody.Add("}");
 
-			methods.Members.Insert(0, new Method("void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial });
-			methods.Members.Insert(1, new Method("void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial });
+			methods.Members.Insert(0, new MemberGroup
+			{
+				IsCompact = true,
+				Members   =
+				{
+					new Method("void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial },
+					new Method("void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial },
+				}
+			});
 		}
 		
 		prop.Parent.SetTree();
@@ -141,19 +167,23 @@ void NotifyPropertyChangedImpl()
 
 				cl.Members.Add(new MemberGroup
 				{
-					Region  = "INotifyPropertyChanged",
+					Region  = "INotifyPropertyChanged support",
 					Members =
 					{
-						new Event("PropertyChangedEventHandler", "PropertyChanged"),
+						new Event("PropertyChangedEventHandler", "PropertyChanged") { IsVirtual = true },
 						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
 						{
 							AccessModifier = AccessModifier.Protected
 						},
+						new Method("void", "OnPropertyChanged", new[] { "PropertyChangedEventArgs arg" }, OnPropertyChangedArgBody)
+						{
+							AccessModifier = AccessModifier.Protected
+						},
 					}
-				});				
+				});
 			}
 		}
-	}	
+	}
 }
 
 public string[] OnPropertyChangedBody = new[]
@@ -168,6 +198,22 @@ public string[] OnPropertyChangedBody = new[]
 	"\t\t\t() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));",
 	"#else",
 	"\tPropertyChanged(this, new PropertyChangedEventArgs(propertyName));",
+	"#endif",
+	"}",
+};
+
+public string[] OnPropertyChangedArgBody = new[]
+{
+	"if (PropertyChanged != null)",
+	"{",
+	"#if SILVERLIGHT",
+	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+	"\t\tPropertyChanged(this, arg);",
+	"\telse",
+	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
+	"\t\t\t() => PropertyChanged(this, arg));",
+	"#else",
+	"\tPropertyChanged(this, arg);",
 	"#endif",
 	"}",
 };

@@ -15,6 +15,212 @@ namespace T4Model.Tests
 {
 	public partial class TestClass1 : INotifyPropertyChanged
 	{
+		public TestClass1()
+		{
+			AcceptChanges();
+		}
+
+		#region EditableLong1 : long
+
+		private long  _currentEditableLong1 = 12345;
+		private long _originalEditableLong1;
+		public  long          EditableLong1
+		{
+			get { return _currentEditableLong1; }
+			set
+			{
+				if (_currentEditableLong1 != value)
+				{
+					BeforeEditableLong1Changed(value);
+					_currentEditableLong1 = value;
+					AfterEditableLong1Changed();
+
+					OnEditableLong1Changed();
+				}
+			}
+		}
+
+		#region EditableObject support
+
+		public void AcceptEditableLong1Changes()
+		{
+			_originalEditableLong1 = _currentEditableLong1;
+		}
+
+		public void RejectEditableLong1Changes()
+		{
+			EditableLong1 = _originalEditableLong1;
+		}
+
+		public bool IsEditableLong1Dirty
+		{
+			get { return _currentEditableLong1 != _originalEditableLong1; }
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEditableLong1Changed(long newValue);
+		partial void AfterEditableLong1Changed ();
+
+		private static readonly PropertyChangedEventArgs _EditableLong1ChangedEventArgs = new PropertyChangedEventArgs("EditableLong1");
+
+		private void OnEditableLong1Changed()
+		{
+			OnPropertyChanged(_EditableLong1ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region EditableInt1 : int
+
+		private int  _currentEditableInt1;
+		private int _originalEditableInt1;
+		public  int          EditableInt1
+		{
+			get { return _currentEditableInt1; }
+			set
+			{
+				if (_currentEditableInt1 != value)
+				{
+					BeforeEditableInt1Changed(value);
+					_currentEditableInt1 = value;
+					AfterEditableInt1Changed();
+
+					OnEditableInt1Changed();
+				}
+			}
+		}
+
+		#region EditableObject support
+
+		public void AcceptEditableInt1Changes()
+		{
+			_originalEditableInt1 = _currentEditableInt1;
+		}
+
+		public void RejectEditableInt1Changes()
+		{
+			EditableInt1 = _originalEditableInt1;
+		}
+
+		public bool IsEditableInt1Dirty
+		{
+			get { return _currentEditableInt1 != _originalEditableInt1; }
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEditableInt1Changed(int newValue);
+		partial void AfterEditableInt1Changed ();
+
+		private static readonly PropertyChangedEventArgs _EditableInt1ChangedEventArgs = new PropertyChangedEventArgs("EditableInt1");
+
+		private void OnEditableInt1Changed()
+		{
+			OnPropertyChanged(_EditableInt1ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region NotifiedProp1 : string
+
+		private string _NotifiedProp1;
+		public  string  NotifiedProp1
+		{
+			get { return _NotifiedProp1; }
+			set
+			{
+				if (_NotifiedProp1 != value)
+				{
+					BeforeNotifiedProp1Changed(value);
+					_NotifiedProp1 = value;
+					AfterNotifiedProp1Changed();
+
+					OnNotifiedProp2Changed();
+					OnNotifiedProp3Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNotifiedProp1Changed(string newValue);
+		partial void AfterNotifiedProp1Changed ();
+
+		private static readonly PropertyChangedEventArgs _NotifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+
+		private void OnNotifiedProp1Changed()
+		{
+			OnPropertyChanged(_NotifiedProp1ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region NotifiedProp2 : int
+
+		private int _NotifiedProp2 = 1;
+		public  int  NotifiedProp2
+		{
+			get { return _NotifiedProp2; }
+			set
+			{
+				if (_NotifiedProp2 != value)
+				{
+					BeforeNotifiedProp2Changed(value);
+					_NotifiedProp2 = value;
+					AfterNotifiedProp2Changed();
+
+					OnNotifiedProp2Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNotifiedProp2Changed(int newValue);
+		partial void AfterNotifiedProp2Changed ();
+
+		private static readonly PropertyChangedEventArgs _NotifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+
+		private void OnNotifiedProp2Changed()
+		{
+			OnPropertyChanged(_NotifiedProp2ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region NotifiedProp3 : long
+
+		public long NotifiedProp3
+		{
+			get { return 1; }
+		}
+
+		#region INotifyPropertyChanged support
+
+		private static readonly PropertyChangedEventArgs _NotifiedProp3ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp3");
+
+		private void OnNotifiedProp3Changed()
+		{
+			OnPropertyChanged(_NotifiedProp3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region Test Region
 
 		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int    Field1;
@@ -77,109 +283,49 @@ namespace T4Model.Tests
 
 		public List<string> Field4;
 
-		#region NotifiedProp1 : string
+		#region EditableObject support
 
-		private string _NotifiedProp1;
-		public  string  NotifiedProp1
+		partial void BeforeAcceptChanges();
+		partial void AfterAcceptChanges ();
+
+		public virtual void AcceptChanges()
 		{
-			get { return _NotifiedProp1; }
-			set
-			{
-				if (_NotifiedProp1 != value)
-				{
-					BeforeNotifiedProp1Changed(value);
-					_NotifiedProp1 = value;
-					AfterNotifiedProp1Changed();
+			BeforeAcceptChanges();
 
-					OnNotifiedProp2Changed();
-					OnNotifiedProp3Changed();
-				}
+			AcceptEditableLong1Changes();
+			AcceptEditableInt1Changes();
+
+			AfterAcceptChanges();
+		}
+
+		partial void BeforeRejectChanges();
+		partial void AfterRejectChanges ();
+
+		public virtual void RejectChanges()
+		{
+			BeforeRejectChanges();
+
+			RejectEditableLong1Changes();
+			RejectEditableInt1Changes();
+
+			AfterRejectChanges();
+		}
+
+		public virtual bool IsDirty
+		{
+			get
+			{
+				return
+					IsEditableLong1Dirty ||
+					IsEditableInt1Dirty ;
 			}
 		}
 
-		partial void BeforeNotifiedProp1Changed(string newValue);
-		partial void AfterNotifiedProp1Changed ();
-		private void OnNotifiedProp1Changed    ()                { OnPropertyChanged("NotifiedProp1"); }
-
 		#endregion
 
-		#region NotifiedProp2 : int
+		#region INotifyPropertyChanged support
 
-		private int _NotifiedProp2 = 1;
-		public  int  NotifiedProp2
-		{
-			get { return _NotifiedProp2; }
-			set
-			{
-				if (_NotifiedProp2 != value)
-				{
-					BeforeNotifiedProp2Changed(value);
-					_NotifiedProp2 = value;
-					AfterNotifiedProp2Changed();
-
-					OnNotifiedProp2Changed();
-				}
-			}
-		}
-
-		partial void BeforeNotifiedProp2Changed(int newValue);
-		partial void AfterNotifiedProp2Changed ();
-		private void OnNotifiedProp2Changed    ()             { OnPropertyChanged("NotifiedProp2"); }
-
-		#endregion
-
-		#region NotifiedProp3 : long
-
-		public long NotifiedProp3
-		{
-			get { return 1; }
-		}
-
-		private void OnNotifiedProp3Changed() { OnPropertyChanged("NotifiedProp3"); }
-
-		#endregion
-
-		#region EditableLong1 : long
-
-		private long  _currentEditableLong1;
-		private long _originalEditableLong1;
-		public  long          EditableLong1
-		{
-			get { return _currentEditableLong1; }
-			set { _currentEditableLong1 = value; }
-		}
-
-		#endregion
-
-		#region EditableInt1 : int
-
-		private int  _currentEditableInt1;
-		private int _originalEditableInt1;
-		public  int          EditableInt1
-		{
-			get { return _currentEditableInt1; }
-			set
-			{
-				if (_currentEditableInt1 != value)
-				{
-					BeforeEditableInt1Changed(value);
-					_currentEditableInt1 = value;
-					AfterEditableInt1Changed();
-
-					OnEditableInt1Changed();
-				}
-			}
-		}
-
-		partial void BeforeEditableInt1Changed(int newValue);
-		partial void AfterEditableInt1Changed ();
-		private void OnEditableInt1Changed    ()             { OnPropertyChanged("EditableInt1"); }
-
-		#endregion
-
-		#region INotifyPropertyChanged
-
-		public event PropertyChangedEventHandler PropertyChanged;
+		public virtual event PropertyChangedEventHandler PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
 		{
@@ -193,6 +339,22 @@ namespace T4Model.Tests
 						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
 #else
 				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+#endif
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			if (PropertyChanged != null)
+			{
+#if SILVERLIGHT
+				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
+					PropertyChanged(this, arg);
+				else
+					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
+						() => PropertyChanged(this, arg));
+#else
+				PropertyChanged(this, arg);
 #endif
 			}
 		}

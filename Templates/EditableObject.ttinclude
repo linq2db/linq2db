@@ -9,10 +9,22 @@
 	}
 #>
 <#+
+partial class IsNotifyingSetter
+{
+	partial void Set(Property property);
+
+	public void SetIsNotifying(Property property)
+	{
+		Set(property);
+	}
+}
+
 void EditableObjectImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsEditable).ToList())
 	{
+		new IsNotifyingSetter().SetIsNotifying(prop);
+
 		List<MemberBase> parentMembers;
 		
 		MemberGroup gr = null;
@@ -27,10 +39,10 @@ void EditableObjectImpl()
 			var parent = (MemberGroup)prop.Parent;
 			parentMembers = parent.Members;
 
-			//if (parent.IsPropertyGroup)
-			//	gr = parent;
+//			if (parent.IsPropertyGroup)
+//				gr = parent;
 		}
-		
+
 		var name = prop.Name.Trim();
 		var type = prop.Type.Trim();
 
@@ -54,113 +66,120 @@ void EditableObjectImpl()
 			AccessModifier       = AccessModifier.Private,
 			InsertBlankLineAfter = false,
 		};
-		
-		if (prop.InitValue != null)
-			originalField.InitValue = prop.InitValue;
-		
+
 		gr.Members.Insert(0, originalField);
-		
+
 		var currentField = new Field(type, " _current" + name)
 		{
 			AccessModifier       = AccessModifier.Private,
 			InsertBlankLineAfter = false,
 		};
-		
+
 		if (prop.InitValue != null)
 			currentField.InitValue = prop.InitValue;
-		
+
 		gr.Members.Insert(0, currentField);
-		
+
 		prop.Name   = "         " + name;
 		prop.Type   = " " + type;
 		prop.IsAuto = false;
-		
+
 		if (prop.HasGetter) prop.GetBody.Add("return " + currentField.Name.Trim() + ";");
 		if (prop.HasSetter) prop.SetBody.Add(currentField.Name.Trim() + " = value;");
 
-		/*
-		var methods = new MemberGroup
-		{
-			IsCompact = true,
-			Members   =
-			{
-				new Method("void", "On"     + name + "Changed", null, new[] { "OnPropertyChanged(\"" + name + "\");" }) { AccessModifier = AccessModifier.Private }
-			}
-		};
-		
-		gr.Members.Add(methods);
-			
-		if (prop.HasSetter)
-		{
-			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();
-			
-			string getValue;
-			
-			if (prop.GetBody.Count == 1 && prop.GetBody[0].StartsWith("return"))
-			{
-				getValue = prop.GetBody[0].Substring("return".Length).Trim(' ', '\t', ';');
-			}
-			else
-			{
-				getValue = name;
-			}
-			
-			prop.SetBody.Insert(0, "if (" + getValue + " != value)");
-			prop.SetBody.Insert(1, "{");
-			prop.SetBody.Insert(2, "\tBefore" + name + "Changed(value);");
-			
-			if (prop.SetBody.Count > 4)
-			{
-				prop.SetBody.Insert(3, "");
-				prop.SetBody.Add("");
-			}
-			
-			prop.SetBody.Add("\tAfter" + name + "Changed();");
-			prop.SetBody.Add("");
-			
-			foreach (var dp in prop.Dependencies)
-				prop.SetBody.Add("\tOn" + dp + "Changed();");
-			
-			prop.SetBody.Add("}");
+		var ac = new Method ("void", "Accept" + name + "Changes", null, new[] { string.Format("_original{0} = _current{0};", name) });
+		var rc = new Method ("void", "Reject" + name + "Changes", null, new[] { string.Format("{0} = _original{0};", name) });
+		var id = new Property("bool", "Is" + name + "Dirty").InitGetter(string.Format("_current{0} != _original{0}", name));
 
-			methods.Members.Insert(0, new Method("void", "Before" + name + "Changed", new[] { type + " newValue" }) { AccessModifier = AccessModifier.Partial });
-			methods.Members.Insert(1, new Method("void", "After"  + name + "Changed") { AccessModifier = AccessModifier.Partial });
-		}
-		
+		gr.Members.Add(new MemberGroup
+		{
+			Region  = "EditableObject support",
+			Members = { ac, rc, id },
+		});
+
 		prop.Parent.SetTree();
-		
-		ITree p = prop.Parent;
-		
-		while (!(p is Class) && p != null)
-			p = p.Parent;
-		
-		if (p != null)
-		{
-			var cl = (Class)p;
-			
-			if (!cl.Interfaces.Contains("INotifyPropertyChanged"))
-			{
-				if (!Model.Usings.Contains("System.ComponentModel"))
-					Model.Usings.Add("System.ComponentModel");
-				
-				cl.Interfaces.Add("INotifyPropertyChanged");
+	}
 
-				cl.Members.Add(new MemberGroup
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => p.IsEditable).ToList();
+
+		if (props.Count > 0)
+		{
+			if (props.Any(p => p.IsEditable))
+			{
+				var ctor = GetTreeNodes(cl)
+					.OfType<Method>()
+					.FirstOrDefault(m => m.Name == cl.Name && m.Parameters.Count == 0);
+
+				if (ctor == null)
 				{
-					Region  = "INotifyPropertyChanged",
-					Members =
-					{
-						new Event("PropertyChangedEventHandler", "PropertyChanged"),
-						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
-						{
-							AccessModifier = AccessModifier.Protected
-						},
-					}
-				});				
+					ctor = new Method(null, cl.Name);
+					cl.Members.Insert(0, ctor);
+				}
+
+				ctor.Body.Add("AcceptChanges();");
 			}
+
+			var maxLen = props.Max(p => p.Name.Trim().Length);
+
+			var ac = new Method("void", "AcceptChanges") { IsVirtual = true };
+			var rc = new Method("void", "RejectChanges") { IsVirtual = true };
+			var id = new Property("bool", "IsDirty") { IsAuto = false, HasSetter = false, IsVirtual = true };
+
+			ac.Body.Add("BeforeAcceptChanges();");
+			ac.Body.Add("");
+			rc.Body.Add("BeforeRejectChanges();");
+			rc.Body.Add("");
+			id.GetBody.Add("return");
+
+			foreach (var p in props)
+			{
+				var name = p.Name.Trim();
+
+				ac.Body.Add(string.Format("Accept{0}Changes();", name));
+				rc.Body.Add(string.Format("Reject{0}Changes();", name));
+				id.GetBody.Add(string.Format("\tIs{0}Dirty{1} ||", name, LenDiff(maxLen, name)));
+			}
+
+			ac.Body.Add("");
+			ac.Body.Add("AfterAcceptChanges();");
+			rc.Body.Add("");
+			rc.Body.Add("AfterRejectChanges();");
+			id.GetBody[id.GetBody.Count - 1] = id.GetBody[id.GetBody.Count - 1].Replace(" ||", ";");
+
+			cl.Members.Add(new MemberGroup
+			{
+				Region  = "EditableObject support",
+				Members =
+				{
+					new MemberGroup
+					{
+						IsCompact = true,
+						Members   =
+						{
+							new Method("void", "BeforeAcceptChanges") { AccessModifier = AccessModifier.Partial },
+							new Method("void", "AfterAcceptChanges")  { AccessModifier = AccessModifier.Partial },
+						}
+					},
+					ac,
+					new MemberGroup
+					{
+						IsCompact = true,
+						Members   =
+						{
+							new Method("void", "BeforeRejectChanges") { AccessModifier = AccessModifier.Partial },
+							new Method("void", "AfterRejectChanges")  { AccessModifier = AccessModifier.Partial },
+						}
+					},
+					rc,
+					id
+				},
+			});
 		}
-		*/
-	}	
+
+		cl.SetTree();
+	}
 }
 
 partial class Property
