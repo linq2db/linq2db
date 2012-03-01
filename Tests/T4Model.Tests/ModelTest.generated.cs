@@ -64,11 +64,11 @@ namespace T4Model.Tests
 		partial void BeforeEditableLong1Changed(long newValue);
 		partial void AfterEditableLong1Changed ();
 
-		private static readonly PropertyChangedEventArgs _EditableLong1ChangedEventArgs = new PropertyChangedEventArgs("EditableLong1");
+		private static readonly PropertyChangedEventArgs _editableLong1ChangedEventArgs = new PropertyChangedEventArgs("EditableLong1");
 
 		private void OnEditableLong1Changed()
 		{
-			OnPropertyChanged(_EditableLong1ChangedEventArgs);
+			OnPropertyChanged(_editableLong1ChangedEventArgs);
 		}
 
 		#endregion
@@ -119,11 +119,11 @@ namespace T4Model.Tests
 		partial void BeforeEditableInt1Changed(int newValue);
 		partial void AfterEditableInt1Changed ();
 
-		private static readonly PropertyChangedEventArgs _EditableInt1ChangedEventArgs = new PropertyChangedEventArgs("EditableInt1");
+		private static readonly PropertyChangedEventArgs _editableInt1ChangedEventArgs = new PropertyChangedEventArgs("EditableInt1");
 
 		private void OnEditableInt1Changed()
 		{
-			OnPropertyChanged(_EditableInt1ChangedEventArgs);
+			OnPropertyChanged(_editableInt1ChangedEventArgs);
 		}
 
 		#endregion
@@ -175,11 +175,11 @@ namespace T4Model.Tests
 		partial void BeforeEditableInt3Changed(int newValue);
 		partial void AfterEditableInt3Changed ();
 
-		private static readonly PropertyChangedEventArgs _EditableInt3ChangedEventArgs = new PropertyChangedEventArgs("EditableInt3");
+		private static readonly PropertyChangedEventArgs _editableInt3ChangedEventArgs = new PropertyChangedEventArgs("EditableInt3");
 
 		private void OnEditableInt3Changed()
 		{
-			OnPropertyChanged(_EditableInt3ChangedEventArgs);
+			OnPropertyChanged(_editableInt3ChangedEventArgs);
 		}
 
 		#endregion
@@ -188,16 +188,16 @@ namespace T4Model.Tests
 
 		#region NotifiedProp1 : string
 
-		private string _NotifiedProp1;
+		private string _notifiedProp1;
 		public  string  NotifiedProp1
 		{
-			get { return _NotifiedProp1; }
+			get { return _notifiedProp1; }
 			set
 			{
-				if (_NotifiedProp1 != value)
+				if (_notifiedProp1 != value)
 				{
 					BeforeNotifiedProp1Changed(value);
-					_NotifiedProp1 = value;
+					_notifiedProp1 = value;
 					AfterNotifiedProp1Changed();
 
 					OnNotifiedProp2Changed();
@@ -211,11 +211,11 @@ namespace T4Model.Tests
 		partial void BeforeNotifiedProp1Changed(string newValue);
 		partial void AfterNotifiedProp1Changed ();
 
-		private static readonly PropertyChangedEventArgs _NotifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
 
 		private void OnNotifiedProp1Changed()
 		{
-			OnPropertyChanged(_NotifiedProp1ChangedEventArgs);
+			OnPropertyChanged(_notifiedProp1ChangedEventArgs);
 		}
 
 		#endregion
@@ -224,16 +224,16 @@ namespace T4Model.Tests
 
 		#region NotifiedProp2 : int
 
-		private int _NotifiedProp2 = 1;
+		private int _notifiedProp2 = 1;
 		public  int  NotifiedProp2
 		{
-			get { return _NotifiedProp2; }
+			get { return _notifiedProp2; }
 			set
 			{
-				if (_NotifiedProp2 != value)
+				if (_notifiedProp2 != value)
 				{
 					BeforeNotifiedProp2Changed(value);
-					_NotifiedProp2 = value;
+					_notifiedProp2 = value;
 					AfterNotifiedProp2Changed();
 
 					OnNotifiedProp2Changed();
@@ -246,11 +246,11 @@ namespace T4Model.Tests
 		partial void BeforeNotifiedProp2Changed(int newValue);
 		partial void AfterNotifiedProp2Changed ();
 
-		private static readonly PropertyChangedEventArgs _NotifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
 
 		private void OnNotifiedProp2Changed()
 		{
-			OnPropertyChanged(_NotifiedProp2ChangedEventArgs);
+			OnPropertyChanged(_notifiedProp2ChangedEventArgs);
 		}
 
 		#endregion
@@ -266,11 +266,46 @@ namespace T4Model.Tests
 
 		#region INotifyPropertyChanged support
 
-		private static readonly PropertyChangedEventArgs _NotifiedProp3ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp3");
+		private static readonly PropertyChangedEventArgs _notifiedProp3ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp3");
 
 		private void OnNotifiedProp3Changed()
 		{
-			OnPropertyChanged(_NotifiedProp3ChangedEventArgs);
+			OnPropertyChanged(_notifiedProp3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region IDProp3 : string
+
+		private string _idProp3;
+		public  string  IDProp3
+		{
+			get { return _idProp3; }
+			set
+			{
+				if (_idProp3 != value)
+				{
+					BeforeIDProp3Changed(value);
+					_idProp3 = value;
+					AfterIDProp3Changed();
+
+					OnIDProp3Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIDProp3Changed(string newValue);
+		partial void AfterIDProp3Changed ();
+
+		private static readonly PropertyChangedEventArgs _idProp3ChangedEventArgs = new PropertyChangedEventArgs("IDProp3");
+
+		private void OnIDProp3Changed()
+		{
+			OnPropertyChanged(_idProp3ChangedEventArgs);
 		}
 
 		#endregion

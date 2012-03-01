@@ -1170,6 +1170,29 @@ public static ITree FindNode(ITree parent, Func<ITree,bool> func)
 	return null;
 }
 
+string ToCamelCase(string name)
+{
+	var n = 0;
+
+	foreach (var c in name)
+	{
+		if (char.IsUpper(c))
+			n++;
+		else
+			break;
+	}
+
+	if (n == 0)
+		return name;
+
+	if (n == name.Length)
+		return name.ToLower();
+
+	n = Math.Max(1, n - 1);
+
+	return name.Substring(0, n).ToLower() + name.Substring(n);
+}
+
 partial class PartialHelper
 {
 	partial void Set(Property property);

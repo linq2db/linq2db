@@ -23,6 +23,7 @@
 			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
 			new NotifyingProperty("int",    "NotifiedProp2") { InitValue = "1" },
 			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
+			new NotifyingProperty("string", "IDProp3"),
 			new MemberGroup
 			{
 				Region    = "Test Region",
@@ -75,8 +76,8 @@
 					},
 					new Field
 					{
-						Type = "string",
-						Name = "Field23",
+						Type       = "string",
+						Name       = "Field23",
 						Attributes =
 						{
 							new Attribute("XmlAttribute", "\"Nm1\"",  "typeof(int)"),
@@ -84,8 +85,8 @@
 					},
 					new Field
 					{
-						Type = "string",
-						Name = "Field23a",
+						Type       = "string",
+						Name       = "Field23a",
 						Attributes =
 						{
 							new Attribute("XmlElement", "\"Nm1\"",  "typeof(int)"),

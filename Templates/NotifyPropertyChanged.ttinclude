@@ -51,7 +51,7 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.IsAuto)
 		{
-			var field = new Field(type, "_" + name)
+			var field = new Field(type, "_" + ToCamelCase(name))
 			{
 				AccessModifier       = AccessModifier.Private,
 				InsertBlankLineAfter = false,
@@ -75,7 +75,7 @@ void NotifyPropertyChangedImpl()
 			Region  = "INotifyPropertyChanged support",
 			Members =
 			{
-				new Field("PropertyChangedEventArgs", "_" + name + "ChangedEventArgs")
+				new Field("PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")
 				{
 					InitValue      = "new PropertyChangedEventArgs(\"" + name + "\")",
 					AccessModifier = AccessModifier.Private,
@@ -83,7 +83,7 @@ void NotifyPropertyChangedImpl()
 					IsReadonly     = true,
 				},
 				new Method("void", "On" + name + "Changed", null,
-					new[] { "OnPropertyChanged(_" + name + "ChangedEventArgs);" })
+					new[] { "OnPropertyChanged(_" + ToCamelCase(name) + "ChangedEventArgs);" })
 				{
 					AccessModifier = AccessModifier.Private
 				}
