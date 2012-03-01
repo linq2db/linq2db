@@ -92,8 +92,8 @@ void NotifyPropertyChangedImpl()
 		
 		gr.Members.Add(methods);
 
-		if (prop.Dependencies.Count == 0)
-			prop.Dependencies.Add(name);
+		if (prop.Dependents.Count == 0)
+			prop.Dependents.Add(name);
 		
 		if (prop.HasSetter)
 		{
@@ -123,7 +123,7 @@ void NotifyPropertyChangedImpl()
 			prop.SetBody.Add("\tAfter" + name + "Changed();");
 			prop.SetBody.Add("");
 			
-			foreach (var dp in prop.Dependencies)
+			foreach (var dp in prop.Dependents)
 				prop.SetBody.Add("\tOn" + dp + "Changed();");
 			
 			prop.SetBody.Add("}");
@@ -213,7 +213,7 @@ public string[] OnPropertyChangedArgBody = new[]
 partial class Property
 {
 	public bool         IsNotifying;
-	public List<string> Dependencies = new List<string>();
+	public List<string> Dependents = new List<string>();
 }
 
 class NotifyingProperty : Property
@@ -223,15 +223,15 @@ class NotifyingProperty : Property
 		IsNotifying = true;
 	}
 	
-	public NotifyingProperty(string type, string name, params string[] dependencies)
+	public NotifyingProperty(string type, string name, params string[] dependents)
 		: base(type, name, null, null)
 	{
 		IsNotifying = true;
 
-		if (dependencies.Length == 0)
-			Dependencies.Add(name);
+		if (dependents.Length == 0)
+			Dependents.Add(name);
 		else
-			Dependencies.AddRange(dependencies);
+			Dependents.AddRange(dependents);
 	}
 }
 

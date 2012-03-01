@@ -130,6 +130,62 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region EditableInt3 : int
+
+		private int  _currentEditableInt3;
+		private int _originalEditableInt3;
+		public  int          EditableInt3
+		{
+			get { return _currentEditableInt3; }
+			set
+			{
+				if (_currentEditableInt3 != value)
+				{
+					BeforeEditableInt3Changed(value);
+					_currentEditableInt3 = value;
+					AfterEditableInt3Changed();
+
+					OnEditableInt1Changed();
+					OnEditableInt3Changed();
+				}
+			}
+		}
+
+		#region EditableObject support
+
+		public void AcceptEditableInt3Changes()
+		{
+			_originalEditableInt3 = _currentEditableInt3;
+		}
+
+		public void RejectEditableInt3Changes()
+		{
+			EditableInt3 = _originalEditableInt3;
+		}
+
+		public bool IsEditableInt3Dirty
+		{
+			get { return _currentEditableInt3 != _originalEditableInt3; }
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEditableInt3Changed(int newValue);
+		partial void AfterEditableInt3Changed ();
+
+		private static readonly PropertyChangedEventArgs _EditableInt3ChangedEventArgs = new PropertyChangedEventArgs("EditableInt3");
+
+		private void OnEditableInt3Changed()
+		{
+			OnPropertyChanged(_EditableInt3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
 		#region NotifiedProp1 : string
 
 		private string _NotifiedProp1;
@@ -294,6 +350,7 @@ namespace T4Model.Tests
 
 			AcceptEditableLong1Changes();
 			AcceptEditableInt1Changes();
+			AcceptEditableInt3Changes();
 
 			AfterAcceptChanges();
 		}
@@ -307,6 +364,7 @@ namespace T4Model.Tests
 
 			RejectEditableLong1Changes();
 			RejectEditableInt1Changes();
+			RejectEditableInt3Changes();
 
 			AfterRejectChanges();
 		}
@@ -317,7 +375,8 @@ namespace T4Model.Tests
 			{
 				return
 					IsEditableLong1Dirty ||
-					IsEditableInt1Dirty ;
+					IsEditableInt1Dirty  ||
+					IsEditableInt3Dirty ;
 			}
 		}
 
