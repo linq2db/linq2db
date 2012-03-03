@@ -246,68 +246,70 @@ namespace LinqToDB.Data.Linq.Builder
 
 		static IEnumerable<SequenceConvertPath> GetExpressions(ParameterExpression param, Expression path, int level, Expression expression)
 		{
-			switch (expression.NodeType)
-			{
-				// new { ... }
-				//
-				case ExpressionType.New        :
-					{
-						var expr = (NewExpression)expression;
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
+			//switch (expression.NodeType)
+			//{
+			//  // new { ... }
+			//  //
+			//  case ExpressionType.New        :
+			//    {
+			//      var expr = (NewExpression)expression;
 
-						if (expr.Members != null) for (var i = 0; i < expr.Members.Count; i++)
-						{
-							var q = GetExpressions(param, Expression.MakeMemberAccess(path, expr.Members[i]), level + 1, expr.Arguments[i]);
-							foreach (var e in q)
-								yield return e;
-						}
+			//      if (expr.Members != null) for (var i = 0; i < expr.Members.Count; i++)
+			//      {
+			//        var q = GetExpressions(param, Expression.MakeMemberAccess(path, expr.Members[i]), level + 1, expr.Arguments[i]);
+			//        foreach (var e in q)
+			//          yield return e;
+			//      }
 
-						break;
-					}
+			//      break;
+			//    }
 
-				// new MyObject { ... }
-				//
-				case ExpressionType.MemberInit :
-					{
-						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
-							.Select((m,i) => new { m, i })
-							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
+			//  // new MyObject { ... }
+			//  //
+			//  case ExpressionType.MemberInit :
+			//    {
+			//      var expr = (MemberInitExpression)expression;
+			//      var dic  = TypeAccessor.GetAccessor(expr.Type).Members
+			//        .Select((m,i) => new { m, i })
+			//        .ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
-						{
-							var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
-							foreach (var e in q)
-								yield return e;
-						}
+			//      foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
+			//      {
+			//        var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
+			//        foreach (var e in q)
+			//          yield return e;
+			//      }
 
-						break;
-					}
+			//      break;
+			//    }
 
-				// parameter
-				//
-				case ExpressionType.Parameter  :
-					if (ReferenceEquals(expression, param))
-						yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-					break;
+			//  // parameter
+			//  //
+			//  case ExpressionType.Parameter  :
+			//    if (ReferenceEquals(expression, param))
+			//      yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
+			//    break;
 
-				case ExpressionType.TypeAs     :
-					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-					break;
+			//  case ExpressionType.TypeAs     :
+			//    yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
+			//    break;
 
-				// Queriable method.
-				//
-				case ExpressionType.Call       :
-					{
-						var call = (MethodCallExpression)expression;
+			//  // Queriable method.
+			//  //
+			//  case ExpressionType.Call       :
+			//    {
+			//      var call = (MethodCallExpression)expression;
 
-						if (call.IsQueryable())
-							if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
-							    typeof(IQueryable). IsSameOrParentOf(call.Type))
-								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
+			//      if (call.IsQueryable())
+			//        if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
+			//            typeof(IQueryable). IsSameOrParentOf(call.Type))
+			//          yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 
-						break;
-					}
-			}
+			//      break;
+			//    }
+			//}
 		}
 
 		#endregion

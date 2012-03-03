@@ -412,7 +412,9 @@ namespace Tests.Linq
 
 		IEnumerable<int> GetList(int i)
 		{
-			yield return i;
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException(); 
+			//yield return i;
 		}
 
 		[Test]

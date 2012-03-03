@@ -263,12 +263,15 @@ namespace Tests
 		{
 			get
 			{
-				if (_types == null)
-					using (var db = new TestDbManager())
-						_types = db.Types.ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
 
-				foreach (var type in _types)
-					yield return type;
+				//if (_types == null)
+				//  using (var db = new TestDbManager())
+				//    _types = db.Types.ToList();
+
+				//foreach (var type in _types)
+				//  yield return type;
 			}
 		}
 
@@ -289,17 +292,19 @@ namespace Tests
 		{
 			get
 			{
-				if (_person == null)
-				{
-					using (var db = new TestDbManager())
-						_person = db.Person.ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_person == null)
+				//{
+				//  using (var db = new TestDbManager())
+				//    _person = db.Person.ToList();
 
-					foreach (var p in _person)
-						p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
-				}
+				//  foreach (var p in _person)
+				//    p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
+				//}
 
-				foreach (var item in _person)
-					yield return item;
+				//foreach (var item in _person)
+				//  yield return item;
 			}
 		}
 
@@ -328,22 +333,24 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent == null)
-					using (var db = new TestDbManager())
-					{
-						_parent = db.Parent.ToList();
-						db.Close();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_parent == null)
+				//  using (var db = new TestDbManager())
+				//  {
+				//    _parent = db.Parent.ToList();
+				//    db.Close();
 
-						foreach (var p in _parent)
-						{
-							p.Children      = Child.     Where(c => c.ParentID == p.ParentID).ToList();
-							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
-							p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
-						}
-					}
+				//    foreach (var p in _parent)
+				//    {
+				//      p.Children      = Child.     Where(c => c.ParentID == p.ParentID).ToList();
+				//      p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
+				//      p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
+				//    }
+				//  }
 
-				foreach (var parent in _parent)
-					yield return parent;
+				//foreach (var parent in _parent)
+				//  yield return parent;
 			}
 		}
 
@@ -352,11 +359,13 @@ namespace Tests
 		{
 			get
 			{
-				if (_parent1 == null)
-					_parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_parent1 == null)
+				//  _parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
-				foreach (var parent in _parent1)
-					yield return parent;
+				//foreach (var parent in _parent1)
+				//  yield return parent;
 			}
 		}
 
@@ -391,15 +400,17 @@ namespace Tests
 		{
 			get
 			{
-				if (_parentInheritance == null)
-					_parentInheritance = Parent.Select(p =>
-						p.Value1       == null ? new ParentInheritanceNull  { ParentID = p.ParentID } :
-						p.Value1.Value == 1    ? new ParentInheritance1     { ParentID = p.ParentID, Value1 = p.Value1.Value } :
-						 (ParentInheritanceBase) new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
-					).ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_parentInheritance == null)
+				//  _parentInheritance = Parent.Select(p =>
+				//    p.Value1       == null ? new ParentInheritanceNull  { ParentID = p.ParentID } :
+				//    p.Value1.Value == 1    ? new ParentInheritance1     { ParentID = p.ParentID, Value1 = p.Value1.Value } :
+				//     (ParentInheritanceBase) new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
+				//  ).ToList();
 
-				foreach (var item in _parentInheritance)
-					yield return item;
+				//foreach (var item in _parentInheritance)
+				//  yield return item;
 			}
 		}
 
@@ -442,23 +453,25 @@ namespace Tests
 		{
 			get
 			{
-				if (_child == null)
-					using (var db = new TestDbManager())
-					{
-						_child = db.Child.ToList();
-						db.Clone();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_child == null)
+				//  using (var db = new TestDbManager())
+				//  {
+				//    _child = db.Child.ToList();
+				//    db.Clone();
 
-						foreach (var ch in _child)
-						{
-							ch.Parent        = Parent. Single(p => p.ParentID == ch.ParentID);
-							ch.Parent1       = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
-							ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
-						}
-					}
+				//    foreach (var ch in _child)
+				//    {
+				//      ch.Parent        = Parent. Single(p => p.ParentID == ch.ParentID);
+				//      ch.Parent1       = Parent1.Single(p => p.ParentID == ch.ParentID);
+				//      ch.ParentID2     = new Parent3 { ParentID2 = ch.Parent.ParentID, Value1 = ch.Parent.Value1 };
+				//      ch.GrandChildren = GrandChild.Where(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID).ToList();
+				//    }
+				//  }
 
-				foreach (var child in _child)
-					yield return child;
+				//foreach (var child in _child)
+				//  yield return child;
 			}
 		}
 
@@ -467,18 +480,20 @@ namespace Tests
 		{
 			get
 			{
-				if (_grandChild == null)
-					using (var db = new TestDbManager())
-					{
-						_grandChild = db.GrandChild.ToList();
-						db.Close();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_grandChild == null)
+				//  using (var db = new TestDbManager())
+				//  {
+				//    _grandChild = db.GrandChild.ToList();
+				//    db.Close();
 
-						foreach (var ch in _grandChild)
-							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
-					}
+				//    foreach (var ch in _grandChild)
+				//      ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+				//  }
 
-				foreach (var grandChild in _grandChild)
-					yield return grandChild;
+				//foreach (var grandChild in _grandChild)
+				//  yield return grandChild;
 			}
 		}
 
@@ -487,20 +502,22 @@ namespace Tests
 		{
 			get
 			{
-				if (_grandChild1 == null)
-					using (var db = new TestDbManager())
-					{
-						_grandChild1 = db.GrandChild1.ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_grandChild1 == null)
+				//  using (var db = new TestDbManager())
+				//  {
+				//    _grandChild1 = db.GrandChild1.ToList();
 
-						foreach (var ch in _grandChild1)
-						{
-							ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
-							ch.Child  = Child.  Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
-						}
-					}
+				//    foreach (var ch in _grandChild1)
+				//    {
+				//      ch.Parent = Parent1.Single(p => p.ParentID == ch.ParentID);
+				//      ch.Child  = Child.  Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
+				//    }
+				//  }
 
-				foreach (var grandChild in _grandChild1)
-					yield return grandChild;
+				//foreach (var grandChild in _grandChild1)
+				//  yield return grandChild;
 			}
 		}
 
@@ -611,12 +628,14 @@ namespace Tests
 		{
 			get
 			{
-				if (_product == null)
-					using (var db = new NorthwindDB())
-						_product = db.Product.ToList();
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (_product == null)
+				//  using (var db = new NorthwindDB())
+				//    _product = db.Product.ToList();
 
-				foreach (var product in _product)
-					yield return product;
+				//foreach (var product in _product)
+				//  yield return product;
 			}
 		}
 

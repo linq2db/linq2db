@@ -102,7 +102,9 @@ namespace LinqToDB.Data.Linq
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextInfo dci, Expression expr, object[] ps)
 		{
-			yield return ConvertTo<T>.From(GetElement(qc, dci, expr, ps));
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
+			//yield return ConvertTo<T>.From(GetElement(qc, dci, expr, ps));
 		}
 
 		#endregion
@@ -317,26 +319,29 @@ namespace LinqToDB.Data.Linq
 
 		IEnumerable<IDataReader> RunQuery(IDataContextInfo dataContextInfo, Expression expr, object[] parameters, int queryNumber)
 		{
-			var dataContext = dataContextInfo.DataContext;
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
 
-			object query = null;
+			//var dataContext = dataContextInfo.DataContext;
 
-			try
-			{
-				query = SetCommand(dataContext, expr, parameters, queryNumber);
+			//object query = null;
 
-				using (var dr = dataContext.ExecuteReader(query))
-					while (dr.Read())
-						yield return dr;
-			}
-			finally
-			{
-				if (query != null)
-					dataContext.ReleaseQuery(query);
+			//try
+			//{
+			//  query = SetCommand(dataContext, expr, parameters, queryNumber);
 
-				if (dataContextInfo.DisposeContext)
-					dataContext.Dispose();
-			}
+			//  using (var dr = dataContext.ExecuteReader(query))
+			//    while (dr.Read())
+			//      yield return dr;
+			//}
+			//finally
+			//{
+			//  if (query != null)
+			//    dataContext.ReleaseQuery(query);
+
+			//  if (dataContextInfo.DisposeContext)
+			//    dataContext.Dispose();
+			//}
 		}
 
 		object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx)
@@ -973,11 +978,14 @@ namespace LinqToDB.Data.Linq
 			object[]                 ps,
 			Func<QueryContext,IDataContext,IDataReader,Expression,object[],T> mapper)
 		{
-			if (queryContext == null)
-				queryContext = new QueryContext(dataContextInfo, expr, ps);
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
 
-			foreach (var dr in data)
-				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+			//if (queryContext == null)
+			//  queryContext = new QueryContext(dataContextInfo, expr, ps);
+
+			//foreach (var dr in data)
+			//  yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 		}
 
 		#endregion

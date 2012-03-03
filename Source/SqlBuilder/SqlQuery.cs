@@ -2551,12 +2551,14 @@ namespace LinqToDB.SqlBuilder
 
 			IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
 			{
-				if (source.Source.ElementType == elementType)
-					yield return source.Source;
+				// FIXME: Баг в реализации yield в C#-поддержке
+				throw new NotImplementedException();
+				//if (source.Source.ElementType == elementType)
+				//  yield return source.Source;
 
-				foreach (var join in source.Joins)
-					foreach (var table in GetJoinTables(join.Table, elementType))
-						yield return table;
+				//foreach (var join in source.Joins)
+				//  foreach (var table in GetJoinTables(join.Table, elementType))
+				//    yield return table;
 			}
 
 			internal IEnumerable<ISqlTableSource> GetFromTables()
