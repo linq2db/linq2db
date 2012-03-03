@@ -51,7 +51,7 @@ namespace LinqToDB.Extensions
 			return EqualsTo(expr1, expr2, new HashSet<Expression>(), queryableAccessorDic);
 		}
 
-		static bool EqualsTo(
+		public static bool EqualsTo(
 			this Expression     expr1,
 			Expression          expr2,
 			HashSet<Expression> visited,
@@ -459,7 +459,7 @@ namespace LinqToDB.Extensions
 			Path(expr, new HashSet<Expression>(), path, func);
 		}
 
-		static void Path(
+		public static void Path(
 			this Expression expr,
 			HashSet<Expression> visited,
 			Expression path,

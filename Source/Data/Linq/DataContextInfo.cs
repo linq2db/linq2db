@@ -27,7 +27,8 @@ namespace LinqToDB.Data.Linq
 
 		public ISqlProvider CreateSqlProvider()
 		{
-			return DataContext.CreateSqlProvider();
+			// FIXME: has non-functional type
+			return DataContext.CreateSqlProvider.Invoke();
 		}
 
 		public IDataContextInfo Clone()

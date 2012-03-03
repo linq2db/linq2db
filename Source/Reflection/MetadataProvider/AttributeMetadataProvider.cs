@@ -35,7 +35,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _mapFieldAttributes ?? (_mapFieldAttributes = typeAccessor.Type.GetAttributes<MapFieldAttribute>());
+				return ((object[])_mapFieldAttributes) ?? (_mapFieldAttributes = (object[])typeAccessor.Type.GetAttributes<MapFieldAttribute>());
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
-				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
+				return ((object[])_nonUpdatableAttributes) ?? (_nonUpdatableAttributes = (object[])typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
 			}
 		}
 
@@ -208,7 +208,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			object[] attrs = member.GetAttributes<MapValueAttribute>();
+			object[] attrs = (object[])member.GetAttributes<MapValueAttribute>();
 
 			if (attrs != null)
 			{
@@ -218,7 +218,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 					list.Add(new MapValue(a.OrigValue, a.Values));
 			}
 
-			attrs = member.GetTypeAttributes<MapValueAttribute>();
+			attrs = (object[])member.GetTypeAttributes<MapValueAttribute>();
 
 			if (attrs != null && attrs.Length > 0)
 			{

@@ -224,10 +224,11 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(type))
 			{
-				var attrs = type.GetCustomAttributes(typeof(InheritanceMappingAttribute), true);
+				// FIXME: type name `InheritanceMappingAttribute' is ambiguous
+				var attrs = type.GetCustomAttributes(typeof(LinqToDB.Mapping.InheritanceMappingAttribute), true);
 
 				if (attrs.Length > 0)
-					return attrs.Select(a => (InheritanceMappingAttribute)a).ToArray();
+					return attrs.Select(a => (LinqToDB.Mapping.InheritanceMappingAttribute)a).ToArray();
 			}
 
 			return base.GetInheritanceMapping(type, typeExtension);

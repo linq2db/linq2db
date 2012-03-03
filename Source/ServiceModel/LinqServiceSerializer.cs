@@ -232,7 +232,8 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + (c - '0');
+					// FIXME: typing fails on finding the operator op_Subtraction
+					value = value * 10 + ((int)c - '0');
 
 				return minus ? -value : value;
 			}
@@ -247,7 +248,8 @@ namespace LinqToDB.ServiceModel
 				var value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
-					value = value * 10 + (c - '0');
+					// FIXME: typing fails on finding the operator op_Subtraction
+					value = value * 10 + ((int)c - '0');
 
 				return value;
 			}
@@ -1355,7 +1357,8 @@ namespace LinqToDB.ServiceModel
 
 							var col = new SqlQuery.Column(null, expression, alias);
 
-							_actions.Add(() => col.Parent = _queries[sid]);
+							// FIXME: Не ясно как это можно исправить. Присвоение возвращает значение. Этом меняет тип лямбды.
+							_actions.Add(() => { col.Parent = _queries[sid]; return; });
 
 							obj = col;
 

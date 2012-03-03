@@ -254,7 +254,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region Static Members
 
-		public static event OnCreateProvider OnCreateProvider;
+		public static event OnCreateProvider OnCreateProviderEvent;
 
 		private static CreateProvider _createProvider = CreateInternal;
 		public  static CreateProvider  CreateProvider
@@ -267,8 +267,8 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			var list = new MetadataProviderList();
 
-			if (OnCreateProvider != null)
-				OnCreateProvider(list);
+			if (OnCreateProviderEvent != null)
+				OnCreateProviderEvent(list);
 
 			return list;
 		}
