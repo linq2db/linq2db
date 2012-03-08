@@ -246,8 +246,6 @@ namespace LinqToDB.Data.Linq.Builder
 
 		static IEnumerable<SequenceConvertPath> GetExpressions(ParameterExpression param, Expression path, int level, Expression expression)
 		{
-			// FIXME: Баг в реализации yield в C#-поддержке
-			//throw new NotImplementedException();
 			switch (expression.NodeType)
 			{
 				// new { ... }

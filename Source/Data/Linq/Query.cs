@@ -102,8 +102,6 @@ namespace LinqToDB.Data.Linq
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextInfo dci, Expression expr, object[] ps)
 		{
-			// FIXME: Баг в реализации yield в C#-поддержке
-			//throw new NotImplementedException();
 			yield return ConvertTo<T>.From(GetElement(qc, dci, expr, ps));
 		}
 
@@ -319,9 +317,6 @@ namespace LinqToDB.Data.Linq
 
 		IEnumerable<IDataReader> RunQuery(IDataContextInfo dataContextInfo, Expression expr, object[] parameters, int queryNumber)
 		{
-			// FIXME: Баг в реализации yield в C#-поддержке
-			//throw new NotImplementedException();
-
 			var dataContext = dataContextInfo.DataContext;
 
 			object query = null;
@@ -978,9 +973,6 @@ namespace LinqToDB.Data.Linq
 			object[]                 ps,
 			Func<QueryContext,IDataContext,IDataReader,Expression,object[],T> mapper)
 		{
-			// FIXME: Баг в реализации yield в C#-поддержке
-			//throw new NotImplementedException();
-
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
 

@@ -1979,9 +1979,6 @@ namespace LinqToDB.SqlProvider
 
 		protected IEnumerable<SqlQuery.Column> AlternativeGetSelectedColumns(ColumnSelector columnSelector)
 		{
-			// FIXME: Баг в реализации yield в C#-поддержке
-			//throw new NotImplementedException();
-
 			foreach (var col in columnSelector())
 				yield return col;
 

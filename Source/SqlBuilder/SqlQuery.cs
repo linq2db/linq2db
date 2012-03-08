@@ -2551,8 +2551,6 @@ namespace LinqToDB.SqlBuilder
 
 			IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
 			{
-				// FIXME: Баг в реализации yield в C#-поддержке
-				//throw new NotImplementedException();
 				if (source.Source.ElementType == elementType)
 					yield return source.Source;
 
