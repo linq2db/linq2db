@@ -262,7 +262,7 @@ namespace LinqToDB.ServiceModel
 			public IEnumerable<ResourceSet>      ResourceSets       { get { return _data.Sets.Values;   } }
 			public IEnumerable<ResourceType>     Types              { get { return _data.Types.Values;  } }
 			// FIXME: Баг в реализации yield в C#-поддержке
-			public IEnumerable<ServiceOperation> ServiceOperations { get { throw new NotImplementedException();/*yield break;*/                } }
+			public IEnumerable<ServiceOperation> ServiceOperations { get { return Enumerable.Empty<ServiceOperation>();/*yield break;*/                } }
 		}
 
 		#endregion

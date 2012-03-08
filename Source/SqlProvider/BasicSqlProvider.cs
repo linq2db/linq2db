@@ -1980,15 +1980,15 @@ namespace LinqToDB.SqlProvider
 		protected IEnumerable<SqlQuery.Column> AlternativeGetSelectedColumns(ColumnSelector columnSelector)
 		{
 			// FIXME: Баг в реализации yield в C#-поддержке
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 
-			//foreach (var col in columnSelector())
-			//  yield return col;
+			foreach (var col in columnSelector())
+				yield return col;
 
-			//var obys = GetTempAliases(SqlQuery.OrderBy.Items.Count, "oby");
+			var obys = GetTempAliases(SqlQuery.OrderBy.Items.Count, "oby");
 
-			//for (var i = 0; i < obys.Length; i++)
-			//  yield return new SqlQuery.Column(SqlQuery, SqlQuery.OrderBy.Items[i].Expression, obys[i]);
+			for (var i = 0; i < obys.Length; i++)
+				yield return new SqlQuery.Column(SqlQuery, SqlQuery.OrderBy.Items[i].Expression, obys[i]);
 		}
 
 		protected bool IsDateDataType(ISqlExpression expr, string dateName)
