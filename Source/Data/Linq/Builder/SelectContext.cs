@@ -481,27 +481,27 @@ namespace LinqToDB.Data.Linq.Builder
 						case ConvertFlags.Key   :
 						case ConvertFlags.All   :
 							{
-								// FIXME: there is no member named `Sql' in <>_N_AnonymousClasses._N_Anonymous_<sql>_<member>_<>3699977524[_N__77816, _N__77817] with type ?
-								throw new NotImplementedException();
-								//var p = Expression.Parameter(Body.Type, "p");
-								//var q =
-								//  from m in Members.Keys
-								//  where !(m is MethodInfo)
-								//  select new
-								//  {
-								//    Sql    = ConvertToIndex(Expression.MakeMemberAccess(p, m), 1, flags),
-								//    Member = m
-								//  } into mm
-								//  from m in mm.Sql.Select(s => new SqlInfo
-								//    {
-								//      Sql    = s.Sql,
-								//      Index  = s.Index,
-								//      Member = mm.Member,
-								//      Query  = s.Query
-								//    })
-								//  select m;
+								var p = Expression.Parameter(Body.Type, "p");
+								var q =
+									from m in Members.Keys
+									where !(m is MethodInfo)
+									select new
+									{
+										//  FIXME: there is no member named `Sql' in <>_N_AnonymousClasses._N_Anonymous_<sql>_<member>_<>3699977524[_N__77816, _N__77817] with type ?
+										Sqls = ConvertToIndex(Expression.MakeMemberAccess(p, m), 1, flags),
+										Member = m
+									} into mm
+									from m in mm.Sqls.Select(s => 
+										new SqlInfo
+										{
+											Sql    = s.Sql,
+											Index  = s.Index,
+											Member = mm.Member,
+											Query  = s.Query
+										})
+									select m;
 
-								//return q.ToArray();
+								return q.ToArray();
 							}
 					}
 				}
