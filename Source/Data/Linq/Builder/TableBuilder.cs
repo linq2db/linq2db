@@ -865,99 +865,96 @@ namespace LinqToDB.Data.Linq.Builder
 
 			SqlField GetField(Expression expression, int level, bool throwException)
 			{
-				// FIXME: non local goto (block return?) detected
-				throw new NotImplementedException();
+				if (expression.NodeType == ExpressionType.MemberAccess)
+				{
+					var memberExpression = (MemberExpression)expression;
+					var levelExpression = expression.GetLevelExpression(level);
 
-				//if (expression.NodeType == ExpressionType.MemberAccess)
-				//{
-				//  var memberExpression = (MemberExpression)expression;
-				//  var levelExpression  = expression.GetLevelExpression(level);
+					if (levelExpression.NodeType == ExpressionType.MemberAccess)
+					{
+						if (levelExpression != expression)
+						{
+							var levelMember = (MemberExpression)levelExpression;
 
-				//  if (levelExpression.NodeType == ExpressionType.MemberAccess)
-				//  {
-				//    if (levelExpression != expression)
-				//    {
-				//      var levelMember = (MemberExpression)levelExpression;
+							if (memberExpression.Member.IsNullableValueMember() && memberExpression.Expression == levelExpression)
+								memberExpression = levelMember;
+							else
+							{
+								var sameType =
+									levelMember.Member.ReflectedType == SqlTable.ObjectType ||
+									levelMember.Member.DeclaringType == SqlTable.ObjectType;
 
-				//      if (memberExpression.Member.IsNullableValueMember() && memberExpression.Expression == levelExpression)
-				//        memberExpression = levelMember;
-				//      else
-				//      {
-				//        var sameType =
-				//          levelMember.Member.ReflectedType == SqlTable.ObjectType ||
-				//          levelMember.Member.DeclaringType == SqlTable.ObjectType;
+								if (!sameType)
+								{
+									var mi = SqlTable.ObjectType.GetMember(levelMember.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+									sameType = mi.Any(_ => _.DeclaringType == levelMember.Member.DeclaringType);
+								}
 
-				//        if (!sameType)
-				//        {
-				//          var mi = SqlTable.ObjectType.GetMember(levelMember.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-				//          sameType = mi.Any(_ => _.DeclaringType == levelMember.Member.DeclaringType);
-				//        }
+								if (sameType || InheritanceMapping.Count > 0)
+								{
+									foreach (var field in SqlTable.Fields.Values)
+									{
+										if (field.MemberMapper is MemberMapper.ComplexMapper)
+										{
+											var name = levelMember.Member.Name;
 
-				//        if (sameType || InheritanceMapping.Count > 0)
-				//        {
-				//          foreach (var field in SqlTable.Fields.Values)
-				//          {
-				//            if (field.MemberMapper is MemberMapper.ComplexMapper)
-				//            {
-				//              var name = levelMember.Member.Name;
+											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
+												name += "." + ex.Member.Name;
 
-				//              for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
-				//                name += "." + ex.Member.Name;
+											if (field.MemberMapper.MemberName == name)
+												return field;
+										}
+									}
+								}
+							}
+						}
 
-				//              if (field.MemberMapper.MemberName == name)
-				//                return field;
-				//            }
-				//          }
-				//        }
-				//      }
-				//    }
+						if (levelExpression == memberExpression)
+						{
+							foreach (var field in SqlTable.Fields.Values)
+							{
+								if (field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+								{
+									if (field.MemberMapper is MemberMapper.ComplexMapper &&
+										field.MemberMapper.MemberName.IndexOf('.') > 0)
+									{
+										var name = memberExpression.Member.Name;
+										var me = memberExpression;
 
-				//    if (levelExpression == memberExpression)
-				//    {
-				//      foreach (var field in SqlTable.Fields.Values)
-				//      {
-				//        if (field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
-				//        {
-				//          if (field.MemberMapper is MemberMapper.ComplexMapper &&
-				//            field.MemberMapper.MemberName.IndexOf('.') > 0)
-				//          {
-				//            var name = memberExpression.Member.Name;
-				//            var me   = memberExpression;
+										if (!(me.Expression is MemberExpression))
+											return null;
 
-				//            if (!(me.Expression is MemberExpression))
-				//              return null;
+										while (me.Expression is MemberExpression)
+										{
+											me = (MemberExpression)me.Expression;
+											name = me.Member.Name + '.' + name;
+										}
 
-				//            while (me.Expression is MemberExpression)
-				//            {
-				//              me   = (MemberExpression)me.Expression;
-				//              name = me.Member.Name + '.' + name;
-				//            }
+										return SqlTable.Fields.Values.FirstOrDefault(f => f.MemberMapper.MemberName == name);
+									}
 
-				//            return SqlTable.Fields.Values.FirstOrDefault(f => f.MemberMapper.MemberName == name);
-				//          }
+									return field;
+								}
 
-				//          return field;
-				//        }
+								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+									foreach (var mapping in InheritanceMapping)
+										foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(mapping.Type))
+											if (mm.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+												return field;
+							}
 
-				//        if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
-				//          foreach (var mapping in InheritanceMapping)
-				//            foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(mapping.Type))
-				//              if (mm.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
-				//                return field;
-				//      }
+							if (throwException &&
+								ObjectMapper != null &&
+								ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
+							{
+								throw new LinqException("Member '{0}.{1}' is not a table column.",
+									memberExpression.Member.Name, memberExpression.Member.Name);
+							}
+						}
+					}
+				}
 
-				//      if (throwException &&
-				//        ObjectMapper != null &&
-				//        ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
-				//      {
-				//        throw new LinqException("Member '{0}.{1}' is not a table column.",
-				//          memberExpression.Member.Name, memberExpression.Member.Name);
-				//      }
-				//    }
-				//  }
-				//}
-
-				//return null;
+				return null;
 			}
 
 			[JetBrains.Annotations.NotNull]
