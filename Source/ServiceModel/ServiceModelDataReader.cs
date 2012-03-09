@@ -191,7 +191,7 @@ namespace LinqToDB.ServiceModel
 
 			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
 			{
-				// FIXME: expected char, got int in array index
+				//  FIXME: expected char, got int in array index
 				type = _result.VaryingTypes[(int)value[1]];
 				value = value.Substring(2);
 			}

@@ -224,7 +224,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(type))
 			{
-				// FIXME: type name `InheritanceMappingAttribute' is ambiguous
+				//  FIXME: type name `InheritanceMappingAttribute' is ambiguous
 				var attrs = type.GetCustomAttributes(typeof(LinqToDB.Mapping.InheritanceMappingAttribute), true);
 
 				if (attrs.Length > 0)

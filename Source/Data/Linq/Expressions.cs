@@ -15,7 +15,7 @@ using System.Text;
 
 namespace LinqToDB.Data.Linq
 {
-	using B = System.Boolean; // FIXME: using B = Boolean;
+	using B = System.Boolean; //  FIXME: using B = Boolean;
 	using C = System.Char;
 	using S = System.String;
 	using I = System.Int32;

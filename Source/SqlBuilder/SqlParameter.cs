@@ -124,7 +124,7 @@ namespace LinqToDB.SqlBuilder
 
 		static Converter<object,object> GetLikeEscaper(string start, string end)
 		{
-			// FIXME: expected System.Converter[object, object], got string -> string- in function body
+			//  FIXME: expected System.Converter[object, object], got string -> string- in function body
 			return (object value) =>
 			{
 				if (value == null)
