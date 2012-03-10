@@ -137,8 +137,8 @@ namespace LinqToDB.Data.Linq
 
 		static public   Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>  Members { get { return _members; } }
 		// FIXME:  expected System.Nullable[int]+, got int in call result
-		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members = null;
-		/* new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
+		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members = //null;
+		new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
 		{
 			{ "", new Dictionary<MemberInfo,LambdaExpression> {
 
@@ -1046,7 +1046,7 @@ namespace LinqToDB.Data.Linq
 			}},
 
 			#endregion
-		};*/
+		};//*/
 
 		#region Sql specific
 
