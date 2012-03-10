@@ -73,9 +73,11 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ExpressionQueryImpl.cs" />
     <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -181,12 +183,12 @@
     <Compile Include="Data\Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Data\Linq\DefaultDataContextInfo.cs" />
-    <Compile Include="Data\Linq\ExpressionQuery.cs" />
+    <Compile Include="ExpressionQuery.cs" />
     <Compile Include="Data\Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
     <Compile Include="Data\Linq\IDataContextInfo.cs" />
-    <Compile Include="Data\Linq\IExpressionQuery.cs" />
+    <Compile Include="IExpressionQuery.cs" />
     <Compile Include="Data\Linq\IQueryContext.cs" />
     <Compile Include="Data\Linq\ISelectInsertable.cs" />
     <Compile Include="Data\Linq\IUpdateable.cs" />
@@ -337,7 +339,9 @@
     <Compile Include="ServiceModel\SoapDataContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Reflection\Extension\TypeExtension.xsd">
@@ -346,24 +350,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Configuration\" />
-    <Folder Include="DataAccess\" />
-    <Folder Include="DataProvider\" />
-    <Folder Include="Data\" />
-    <Folder Include="Data\Linq\" />
-    <Folder Include="Data\Linq\Builder\" />
-    <Folder Include="Extensions\" />
-    <Folder Include="Mapping\" />
-    <Folder Include="Properties\" />
-    <Folder Include="Reflection\" />
-    <Folder Include="Reflection\Extension\" />
-    <Folder Include="Reflection\MetadataProvider\" />
-    <Folder Include="ServiceModel\" />
-    <Folder Include="SqlBuilder\" />
-    <Folder Include="SqlProvider\" />
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
