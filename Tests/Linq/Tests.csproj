@@ -121,7 +121,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\MySql.Data.6.4.4\lib\net40\mysql.data.dll</HintPath>
     </Reference>
-    <Reference Include="Nemerle, Version=1.1.436.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd, processorArchitecture=MSIL" />
+    <Reference Include="Nemerle">
+      <HintPath>C:\Program Files (x86)\Nemerle\Net-4.0\Nemerle.dll</HintPath>
+    </Reference>
     <Reference Include="Npgsql, Version=2.0.11.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Npgsql.2.0.11\lib\Net40\Npgsql.dll</HintPath>
     </Reference>
