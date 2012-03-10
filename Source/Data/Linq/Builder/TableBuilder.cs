@@ -868,7 +868,7 @@ namespace LinqToDB.Data.Linq.Builder
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
 					var memberExpression = (MemberExpression)expression;
-					var levelExpression  = expression.GetLevelExpression(level);
+					var levelExpression = expression.GetLevelExpression(level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -919,14 +919,14 @@ namespace LinqToDB.Data.Linq.Builder
 										field.MemberMapper.MemberName.IndexOf('.') > 0)
 									{
 										var name = memberExpression.Member.Name;
-										var me   = memberExpression;
+										var me = memberExpression;
 
 										if (!(me.Expression is MemberExpression))
 											return null;
 
 										while (me.Expression is MemberExpression)
 										{
-											me   = (MemberExpression)me.Expression;
+											me = (MemberExpression)me.Expression;
 											name = me.Member.Name + '.' + name;
 										}
 
@@ -1029,14 +1029,15 @@ namespace LinqToDB.Data.Linq.Builder
 							if (levelExpression == expression)
 								return new TableLevel { Table = tableAssociation, Level = level };
 
-							var al = tableAssociation.GetAssociation(expression, level + 1);
+							// FIXME: Cannot access protected method
+							//var al = tableAssociation.GetAssociation(expression, level + 1);
 
-							if (al != null)
-								return al;
+							//if (al != null)
+							//  return al;
 
-							var field = tableAssociation.GetField(expression, level + 1, false);
+							//var field = tableAssociation.GetField(expression, level + 1, false);
 
-							return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1 };
+							//return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1 };
 						}
 					}
 				}

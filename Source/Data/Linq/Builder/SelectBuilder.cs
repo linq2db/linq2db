@@ -250,27 +250,27 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				// new { ... }
 				//
-				case ExpressionType.New        :
+				case ExpressionType.New:
 					{
 						var expr = (NewExpression)expression;
 
 						if (expr.Members != null) for (var i = 0; i < expr.Members.Count; i++)
-						{
-							var q = GetExpressions(param, Expression.MakeMemberAccess(path, expr.Members[i]), level + 1, expr.Arguments[i]);
-							foreach (var e in q)
-								yield return e;
-						}
+							{
+								var q = GetExpressions(param, Expression.MakeMemberAccess(path, expr.Members[i]), level + 1, expr.Arguments[i]);
+								foreach (var e in q)
+									yield return e;
+							}
 
 						break;
 					}
 
 				// new MyObject { ... }
 				//
-				case ExpressionType.MemberInit :
+				case ExpressionType.MemberInit:
 					{
 						var expr = (MemberInitExpression)expression;
-						var dic  = TypeAccessor.GetAccessor(expr.Type).Members
-							.Select((m,i) => new { m, i })
+						var dic = TypeAccessor.GetAccessor(expr.Type).Members
+							.Select((m, i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
@@ -285,24 +285,24 @@ namespace LinqToDB.Data.Linq.Builder
 
 				// parameter
 				//
-				case ExpressionType.Parameter  :
+				case ExpressionType.Parameter:
 					if (ReferenceEquals(expression, param))
 						yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 
-				case ExpressionType.TypeAs     :
+				case ExpressionType.TypeAs:
 					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 
 				// Queriable method.
 				//
-				case ExpressionType.Call       :
+				case ExpressionType.Call:
 					{
 						var call = (MethodCallExpression)expression;
 
 						if (call.IsQueryable())
 							if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
-							    typeof(IQueryable). IsSameOrParentOf(call.Type))
+									typeof(IQueryable).IsSameOrParentOf(call.Type))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 
 						break;

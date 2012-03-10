@@ -806,8 +806,10 @@ namespace Tests.Linq
 
 		static IEnumerable<int> GetIds()
 		{
-			yield return 1;
-			yield return 2;
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
+			//yield return 1;
+			//yield return 2;
 		}
 
 		[Test]
@@ -821,8 +823,10 @@ namespace Tests.Linq
 
 		static IEnumerable<int> GetIds(int start, int n)
 		{
-			for (int i = 0; i < n; i++)
-				yield return start + i;
+			// FIXME: Баг в реализации yield в C#-поддержке
+			throw new NotImplementedException();
+			//for (int i = 0; i < n; i++)
+			//  yield return start + i;
 		}
 
 		[Test]
