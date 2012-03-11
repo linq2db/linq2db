@@ -10,7 +10,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 	using Extension;
 	using Mapping;
 
-	public delegate void                 OnCreateProvider(MetadataProviderBase parentProvider);
 	public delegate MetadataProviderBase CreateProvider();
 	public delegate MemberMapper         EnsureMapperHandler(string mapName, string origName);
 
@@ -254,7 +253,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region Static Members
 
-		public static event OnCreateProvider OnCreateProvider;
+		public static event Action<MetadataProviderBase> OnCreateProvider;
 
 		private static CreateProvider _createProvider = CreateInternal;
 		public  static CreateProvider  CreateProvider

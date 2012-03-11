@@ -535,7 +535,7 @@ namespace LinqToDB.SqlBuilder
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append(SqlDbType);
+			sb.Append(this.SqlDbType);
 
 			if (Length != 0)
 				sb.Append('(').Append(Length).Append(')');

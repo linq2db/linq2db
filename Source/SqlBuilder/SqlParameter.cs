@@ -152,7 +152,7 @@ namespace LinqToDB.SqlBuilder
 						sb.Append(c);
 				}
 
-				return sb.ToString();
+				return (object)sb.ToString();
 			};
 		}
 
