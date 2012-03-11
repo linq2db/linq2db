@@ -261,7 +261,7 @@ namespace LinqToDB.ServiceModel
 			public string                        ContainerName      { get { return typeof(T).Name;      } }
 			public IEnumerable<ResourceSet>      ResourceSets       { get { return _data.Sets.Values;   } }
 			public IEnumerable<ResourceType>     Types              { get { return _data.Types.Values;  } }
-			public IEnumerable<ServiceOperation> ServiceOperations  { get { yield break;                } }
+			public IEnumerable<ServiceOperation> ServiceOperations  { get { return Enumerable.Empty<ServiceOperation>(); } }
 		}
 
 		#endregion

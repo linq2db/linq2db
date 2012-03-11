@@ -432,6 +432,12 @@ namespace LinqToDB.Data.Linq.Builder
 
 		readonly Dictionary<Tuple<MemberInfo,ConvertFlags>,SqlInfo[]> _memberIndex = new Dictionary<Tuple<MemberInfo,ConvertFlags>,SqlInfo[]>();
 
+		class SqlData
+		{
+			public SqlInfo[]  Sql;
+			public MemberInfo Member;
+		}
+
 		SqlInfo[] ConvertToIndexInternal(Expression expression, int level, ConvertFlags flags)
 		{
 			if (IsScalar)
@@ -485,7 +491,7 @@ namespace LinqToDB.Data.Linq.Builder
 								var q =
 									from m in Members.Keys
 									where !(m is MethodInfo)
-									select new
+									select new SqlData
 									{
 										Sql    = ConvertToIndex(Expression.MakeMemberAccess(p, m), 1, flags),
 										Member = m
