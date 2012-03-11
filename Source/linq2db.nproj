@@ -17,14 +17,16 @@
     <NemerleBinPathRoot Condition=" '$(NemerleBinPathRoot)' == '' ">$(ProgramFiles)\Nemerle</NemerleBinPathRoot>
     <Nemerle Condition=" '$(Nemerle)' == '' ">$(NemerleBinPathRoot)\$(NemerleVersion)</Nemerle>
     <NoWarn>10011;168;10001</NoWarn>
+    <DocumentationFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;NEMERLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -350,6 +352,24 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="DataAccess\" />
+    <Folder Include="DataProvider\" />
+    <Folder Include="Data\" />
+    <Folder Include="Data\Linq\" />
+    <Folder Include="Data\Linq\Builder\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Mapping\" />
+    <Folder Include="Properties\" />
+    <Folder Include="Reflection\" />
+    <Folder Include="Reflection\Extension\" />
+    <Folder Include="Reflection\MetadataProvider\" />
+    <Folder Include="ServiceModel\" />
+    <Folder Include="SqlBuilder\" />
+    <Folder Include="SqlProvider\" />
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

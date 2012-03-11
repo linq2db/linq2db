@@ -51,6 +51,9 @@ namespace LinqToDB.Extensions
 			return EqualsTo(expr1, expr2, new HashSet<Expression>(), queryableAccessorDic);
 		}
 
+#if NEMERLE
+		public
+#endif
 		static bool EqualsTo(
 			this Expression     expr1,
 			Expression          expr2,
@@ -459,6 +462,9 @@ namespace LinqToDB.Extensions
 			Path(expr, new HashSet<Expression>(), path, func);
 		}
 
+#if NEMERLE
+		public
+#endif
 		static void Path(
 			this Expression expr,
 			HashSet<Expression> visited,

@@ -136,7 +136,11 @@ namespace LinqToDB.Data.Linq
 		#endregion
 
 		static public   Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>  Members { get { return _members; } }
-		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members = new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
+		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members =
+#if NEMERLE
+			null;
+#else
+		new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
 		{
 			{ "", new Dictionary<MemberInfo,LambdaExpression> {
 
@@ -1045,6 +1049,7 @@ namespace LinqToDB.Data.Linq
 
 			#endregion
 		};
+#endif
 
 		#region Sql specific
 
