@@ -227,7 +227,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 				var attrs = type.GetCustomAttributes(typeof(InheritanceMappingAttribute), true);
 
 				if (attrs.Length > 0)
-					return attrs.Select(a => (InheritanceMappingAttribute)a).ToArray();
+					return attrs.Select(a => (LinqToDB.Mapping.InheritanceMappingAttribute)a).ToArray();
 			}
 
 			return base.GetInheritanceMapping(type, typeExtension);

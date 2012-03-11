@@ -35,7 +35,11 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
+#if NEMERLE
+				return ((object[])_mapFieldAttributes) ?? (_mapFieldAttributes = (object[])typeAccessor.Type.GetAttributes<MapFieldAttribute>());
+#else
 				return _mapFieldAttributes ?? (_mapFieldAttributes = typeAccessor.Type.GetAttributes<MapFieldAttribute>());
+#endif
 			}
 		}
 
@@ -45,7 +49,11 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				EnsureMapper(typeAccessor);
 
+#if NEMERLE
+				return ((object[])_nonUpdatableAttributes) ?? (_nonUpdatableAttributes = (object[])typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
+#else
 				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
+#endif
 			}
 		}
 
@@ -208,7 +216,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			object[] attrs = member.GetAttributes<MapValueAttribute>();
+			var attrs = member.GetAttributes<MapValueAttribute>();
 
 			if (attrs != null)
 			{

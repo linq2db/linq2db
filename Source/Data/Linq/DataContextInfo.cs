@@ -27,7 +27,11 @@ namespace LinqToDB.Data.Linq
 
 		public ISqlProvider CreateSqlProvider()
 		{
-			return DataContext.CreateSqlProvider();
+			return DataContext.CreateSqlProvider
+#if NEMERLE
+				.Invoke
+#endif
+				();
 		}
 
 		public IDataContextInfo Clone()
