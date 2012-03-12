@@ -67,10 +67,10 @@ namespace LinqToDB.Data.Linq.Builder
 
 					var n = ConvertToParentIndex(idx, this);
 
-					var e = Expression.Call(
+					Expression e = Expression.Call(
 						ExpressionBuilder.DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(n)) as Expression;
+						Expression.Constant(n));
 
 					var defaultValue = _defaultValue ?? Expression.Constant(null, expr.Type);
 
