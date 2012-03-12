@@ -436,7 +436,7 @@ namespace LinqToDB.Data.Linq
 			for (var i = 0; i < members.Length; i++)
 			{
 				var member = members[i];
-				var pof    = Expression.PropertyOrField(getter, member) as Expression;
+        Expression pof = Expression.PropertyOrField(getter, member);
 
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}

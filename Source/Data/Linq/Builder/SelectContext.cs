@@ -628,7 +628,6 @@ namespace LinqToDB.Data.Linq.Builder
 			{
 				switch (requestFlag)
 				{
-					default                     : return IsExpressionResult.False;
 					case RequestFor.Table       :
 					case RequestFor.Association :
 					case RequestFor.Field       :
@@ -694,7 +693,8 @@ namespace LinqToDB.Data.Linq.Builder
 
 							break;
 						}
-				}
+          default: return IsExpressionResult.False;
+        }
 			}
 
 			throw new NotImplementedException();
