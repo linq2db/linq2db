@@ -25,7 +25,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Full version string.
 		/// </summary>
+#if NEMERLE
+		public const string FullVersionString = "1.0.0.0";
+#else
 		public const string FullVersionString = MajorVersion + "." + MinorVersion + "." + Build + "." + Revision;
+#endif
 
 		/// <summary>
 		/// Full BLT version.

@@ -138,9 +138,9 @@
     <Compile Include="CompilerServices.vb" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
-      <Name>LinqToDB</Name>
+    <ProjectReference Include="..\..\Source\LinqToDB.n.nproj">
+      <Project>{1DEF559F-D2AC-4CA1-BCE5-10135579A386}</Project>
+      <Name>LinqToDB.n</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Tests.Model.csproj">
       <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>

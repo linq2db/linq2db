@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</ProjectGuid>
+    <ProjectGuid>{1def559f-d2ac-4ca1-bce5-10135579a386}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LinqToDB</RootNamespace>
-    <AssemblyName>linq2db</AssemblyName>
+    <AssemblyName>linq2db.n</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>true</NoStdLib>
@@ -19,6 +19,9 @@
     <NoWarn>10011;168;10001;10012;10003;10013</NoWarn>
     <!--CustomArguments>-debugger</CustomArguments-->
     <DocumentationFile />
+    <Name>LinqToDB.n</Name>
+    <StartupObject />
+    <ApplicationIcon />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -27,15 +30,16 @@
     <DefineConstants>TRACE;DEBUG;FW4;NEMERLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FW4</DefineConstants>
+    <DefineConstants>TRACE;FW4;NEMERLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

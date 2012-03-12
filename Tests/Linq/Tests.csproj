@@ -322,9 +322,9 @@
       <Project>{6CD8CC3D-643D-4D09-8660-A26085C44FBC}</Project>
       <Name>LinqToDB.Sybase</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
-      <Name>LinqToDB</Name>
+    <ProjectReference Include="..\..\Source\LinqToDB.n.nproj">
+      <Project>{1DEF559F-D2AC-4CA1-BCE5-10135579A386}</Project>
+      <Name>LinqToDB.n</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.Temp.nproj">
       <Project>{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}</Project>
