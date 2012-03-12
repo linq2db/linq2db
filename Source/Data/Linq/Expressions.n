@@ -1,0 +1,85 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+
+using Nemerle;
+using Nemerle.Extensions;
+using Nemerle.Linq;
+
+namespace LinqToDB.Data.Linq
+{
+	using B = System.Boolean;
+	using C = System.Char;
+	using S = System.String;
+	using I = System.Int32;
+	using O = System.Object;
+	using D = System.DateTime;
+	using T = System.TimeSpan;
+	using F = System.Double;
+	using M = System.Decimal;
+	
+	partial module Expressions
+	{
+		GetExpressions() : Dictionary[string,Dictionary[MemberInfo,LambdaExpression]]
+		{
+			Dictionary.[string,Dictionary[MemberInfo,LambdaExpression]]() <-
+			[ "" = Dictionary.[MemberInfo,LambdaExpression]() <-
+
+				#region String
+
+				[
+					M(() => "".Length               ) = L((obj:S)              => Sql.Length(obj).Value),
+					M(() => "".Substring  (0)       ) = L((obj:S,p0:I)         => Sql.Substring(obj, p0 + 1, obj.Length - p0)),
+					M(() => "".Substring  (0,0)     ) = L((obj:S,p0:I,p1:I)    => Sql.Substring(obj, p0 + 1, p1)),
+					/*
+					M(() => "".IndexOf    ("")      ) = L((obj:S,p0:S)         => (p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)                      .Value) - 1)),
+					M(() => "".IndexOf    ("",0)    ) = L((obj:S,p0:S,p1:I)    => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+					M(() => "".IndexOf    ("",0,0)  ) = L<S,S,I,I,I>((obj:S,p0,p1,p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)    .Value) - 1) },
+					M(() => "".IndexOf    (' ')     ) = L<S,C,I>    ((obj:S,p0)       =>                                          (Sql.CharIndex(p0, obj)                      .Value) - 1) },
+					M(() => "".IndexOf    (' ',0)   ) = L<S,C,I,I>  ((obj:S,p0,p1)    =>                                          (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+					M(() => "".IndexOf    (' ',0,0) ) = L<S,C,I,I,I>((obj:S,p0,p1,p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1) },
+					M(() => "".LastIndexOf("")      ) = L<S,S,I>    ((obj:S,p0)       => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))                               .Value) - p0.Length + 1) },
+					M(() => "".LastIndexOf("",0)    ) = L<S,S,I,I>  ((obj:S,p0,p1)    => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1).Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value) - p0.Length + 1) },
+					M(() => "".LastIndexOf("",0,0)  ) = L<S,S,I,I,I>((obj:S,p0,p1,p2) => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))             .Value) - p0.Length + 1) },
+					M(() => "".LastIndexOf(' ')     ) = L<S,C,I>    ((obj:S,p0)       => (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))                               .Value)) },
+					M(() => "".LastIndexOf(' ',0)   ) = L<S,C,I,I>  ((obj:S,p0,p1)    => (Sql.CharIndex(p0, obj, p1 + 1)                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value)) },
+					M(() => "".LastIndexOf(' ',0,0) ) = L<S,C,I,I,I>((obj:S,p0,p1,p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))             .Value)) },
+					M(() => "".Insert     (0,"")    ) = L<S,I,S,S>  ((obj:S,p0,p1)    => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1)) },
+					M(() => "".Remove     (0)       ) = L<S,I,S>    ((obj:S,p0)       => Sql.Left     (obj, p0)) },
+					M(() => "".Remove     (0,0)     ) = L<S,I,I,S>  ((obj:S,p0,p1)    => Sql.Stuff    (obj, p0 + 1, p1, "")) },
+					M(() => "".PadLeft    (0)       ) = L<S,I,S>    ((obj:S,p0)       => Sql.PadLeft  (obj, p0, ' ')) },
+					M(() => "".PadLeft    (0,' ')   ) = L<S,I,C,S>  ((obj:S,p0,p1)    => Sql.PadLeft  (obj, p0, p1)) },
+					M(() => "".PadRight   (0)       ) = L<S,I,S>    ((obj:S,p0)       => Sql.PadRight (obj, p0, ' ')) },
+					M(() => "".PadRight   (0,' ')   ) = L<S,I,C,S>  ((obj:S,p0,p1)    => Sql.PadRight (obj, p0, p1)) },
+					M(() => "".Replace    ("","")   ) = L<S,S,S,S>  ((obj:S,p0,p1)    => Sql.Replace  (obj, p0, p1)) },
+					M(() => "".Replace    (' ',' ') ) = L<S,C,C,S>  ((obj:S,p0,p1)    => Sql.Replace  (obj, p0, p1)) },
+					M(() => "".Trim       ()        ) = L<S,S>      ( obj:S           => Sql.Trim     (obj)) },
+					M(() => "".TrimEnd    ()        ) = L<S,C[],S>  ((obj:S,ch)       =>     TrimRight(obj, ch)) },
+					M(() => "".TrimStart  ()        ) = L<S,C[],S>  ((obj:S,ch)       =>     TrimLeft (obj, ch)) },
+					M(() => "".ToLower    ()        ) = L<S,S>      ( obj:S           => Sql.Lower(obj)) },
+					M(() => "".ToUpper    ()        ) = L<S,S>      ( obj:S           => Sql.Upper(obj)) },
+					M(() => "".CompareTo  ("")      ) = L<S,S,I>    ((obj:S,p0)       => ConvertToCaseCompareTo(obj, p0).Value ) },
+					M(() => "".CompareTo  (1)       ) = L<S,O,I>    ((obj:S,p0)       => ConvertToCaseCompareTo(obj, p0.ToString()).Value ) },
+
+					M(() => string.IsNullOrEmpty ("")    ),           L<S,B>          ( p0               => p0 == null || p0.Length == 0) },
+					M(() => string.CompareOrdinal("","")),            L<S,S,I>        ((s1,s2)           => s1.CompareTo(s2)) },
+					M(() => string.CompareOrdinal("",0,"",0,0)),      L<S,I,S,I,I,I>  ((s1,i1,s2,i2,l)   => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
+					M(() => string.Compare       ("","")),            L<S,S,I>        ((s1,s2)           => s1.CompareTo(s2)) },
+					M(() => string.Compare       ("",0,"",0,0)),      L<S,I,S,I,I,I>  ((s1,i1,s2,i2,l)   => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l))) },
+	#if !SILVERLIGHT
+					M(() => string.Compare       ("","",true)),       L<S,S,B,I>      ((s1,s2,b)         => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2)) },
+					M(() => string.Compare       ("",0,"",0,0,true)), L<S,I,S,I,I,B,I>((s1,i1,s2,i2,l,b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
+	#endif
+
+					M(() => AltStuff("",0,0,"")), L<S,I?,I?,S,S>((p0, p1,p2,p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1))) },
+					*/
+
+				]
+
+				#endregion
+			];
+		}
+	}
+}

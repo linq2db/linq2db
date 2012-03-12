@@ -25,7 +25,7 @@ namespace LinqToDB.Data.Linq
 	using F = System.Double;
 	using M = System.Decimal;
 
-	public static class Expressions
+	public static partial class Expressions
 	{
 		#region MapMember
 
@@ -125,6 +125,11 @@ namespace LinqToDB.Data.Linq
 			return ReflectionHelper.MemeberInfo(func);
 		}
 
+		static MemberInfo ME(Expression<Func<object>> func)
+		{
+			return ReflectionHelper.MemeberInfo(func);
+		}
+
 		static LambdaExpression L<TR>                   (Expression<Func<TR>>                   func) { return func; }
 		static LambdaExpression L<T1,TR>                (Expression<Func<T1,TR>>                func) { return func; }
 		static LambdaExpression L<T1,T2,TR>             (Expression<Func<T1,T2,TR>>             func) { return func; }
@@ -137,8 +142,8 @@ namespace LinqToDB.Data.Linq
 
 		static public   Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>  Members { get { return _members; } }
 		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members =
-#if NEMERLE
-			null;
+#if NEMERLE1
+			GetExpressions();
 #else
 		new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
 		{
@@ -146,86 +151,86 @@ namespace LinqToDB.Data.Linq
 
 				#region String
 
-				{ M(() => "".Length               ), L<S,I>      ( obj           => Sql.Length(obj).Value) },
-				{ M(() => "".Substring  (0)       ), L<S,I,S>    ((obj,p0)       => Sql.Substring(obj, p0 + 1, obj.Length - p0)) },
-				{ M(() => "".Substring  (0,0)     ), L<S,I,I,S>  ((obj,p0,p1)    => Sql.Substring(obj, p0 + 1, p1)) },
-				{ M(() => "".IndexOf    ("")      ), L<S,S,I>    ((obj,p0)       => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)                      .Value) - 1) },
-				{ M(() => "".IndexOf    ("",0)    ), L<S,S,I,I>  ((obj,p0,p1)    => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
-				{ M(() => "".IndexOf    ("",0,0)  ), L<S,S,I,I,I>((obj,p0,p1,p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)    .Value) - 1) },
-				{ M(() => "".IndexOf    (' ')     ), L<S,C,I>    ((obj,p0)       =>                                          (Sql.CharIndex(p0, obj)                      .Value) - 1) },
-				{ M(() => "".IndexOf    (' ',0)   ), L<S,C,I,I>  ((obj,p0,p1)    =>                                          (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
-				{ M(() => "".IndexOf    (' ',0,0) ), L<S,C,I,I,I>((obj,p0,p1,p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1) },
-				{ M(() => "".LastIndexOf("")      ), L<S,S,I>    ((obj,p0)       => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))                               .Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf("",0)    ), L<S,S,I,I>  ((obj,p0,p1)    => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1).Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf("",0,0)  ), L<S,S,I,I,I>((obj,p0,p1,p2) => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))             .Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf(' ')     ), L<S,C,I>    ((obj,p0)       => (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))                               .Value)) },
-				{ M(() => "".LastIndexOf(' ',0)   ), L<S,C,I,I>  ((obj,p0,p1)    => (Sql.CharIndex(p0, obj, p1 + 1)                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value)) },
-				{ M(() => "".LastIndexOf(' ',0,0) ), L<S,C,I,I,I>((obj,p0,p1,p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))             .Value)) },
-				{ M(() => "".Insert     (0,"")    ), L<S,I,S,S>  ((obj,p0,p1)    => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1)) },
-				{ M(() => "".Remove     (0)       ), L<S,I,S>    ((obj,p0)       => Sql.Left     (obj, p0)) },
-				{ M(() => "".Remove     (0,0)     ), L<S,I,I,S>  ((obj,p0,p1)    => Sql.Stuff    (obj, p0 + 1, p1, "")) },
-				{ M(() => "".PadLeft    (0)       ), L<S,I,S>    ((obj,p0)       => Sql.PadLeft  (obj, p0, ' ')) },
-				{ M(() => "".PadLeft    (0,' ')   ), L<S,I,C,S>  ((obj,p0,p1)    => Sql.PadLeft  (obj, p0, p1)) },
-				{ M(() => "".PadRight   (0)       ), L<S,I,S>    ((obj,p0)       => Sql.PadRight (obj, p0, ' ')) },
-				{ M(() => "".PadRight   (0,' ')   ), L<S,I,C,S>  ((obj,p0,p1)    => Sql.PadRight (obj, p0, p1)) },
-				{ M(() => "".Replace    ("","")   ), L<S,S,S,S>  ((obj,p0,p1)    => Sql.Replace  (obj, p0, p1)) },
-				{ M(() => "".Replace    (' ',' ') ), L<S,C,C,S>  ((obj,p0,p1)    => Sql.Replace  (obj, p0, p1)) },
-				{ M(() => "".Trim       ()        ), L<S,S>      ( obj           => Sql.Trim     (obj)) },
-				{ M(() => "".TrimEnd    ()        ), L<S,C[],S>  ((obj,ch)       =>     TrimRight(obj, ch)) },
-				{ M(() => "".TrimStart  ()        ), L<S,C[],S>  ((obj,ch)       =>     TrimLeft (obj, ch)) },
-				{ M(() => "".ToLower    ()        ), L<S,S>      ( obj           => Sql.Lower(obj)) },
-				{ M(() => "".ToUpper    ()        ), L<S,S>      ( obj           => Sql.Upper(obj)) },
-				{ M(() => "".CompareTo  ("")      ), L<S,S,I>    ((obj,p0)       => ConvertToCaseCompareTo(obj, p0).Value ) },
-				{ M(() => "".CompareTo  (1)       ), L<S,O,I>    ((obj,p0)       => ConvertToCaseCompareTo(obj, p0.ToString()).Value ) },
+				{ M(() => "".Length               ), L<S,I>      ((S obj)                => Sql.Length(obj).Value) },
+				{ M(() => "".Substring  (0)       ), L<S,I,S>    ((S obj,I p0)           => Sql.Substring(obj, p0 + 1, obj.Length - p0)) },
+				{ M(() => "".Substring  (0,0)     ), L<S,I,I,S>  ((S obj,I p0,I p1)      => Sql.Substring(obj, p0 + 1, p1)) },
+				{ M(() => "".IndexOf    ("")      ), L<S,S,I>    ((S obj,S p0)           => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)                      .Value) - 1) },
+				{ M(() => "".IndexOf    ("",0)    ), L<S,S,I,I>  ((S obj,S p0,I p1)      => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+				{ M(() => "".IndexOf    ("",0,0)  ), L<S,S,I,I,I>((S obj,S p0,I p1,I p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)    .Value) - 1) },
+				{ M(() => "".IndexOf    (' ')     ), L<S,C,I>    ((S obj,C p0)           =>                                          (Sql.CharIndex(p0, obj)                      .Value) - 1) },
+				{ M(() => "".IndexOf    (' ',0)   ), L<S,C,I,I>  ((S obj,C p0,I p1)      =>                                          (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+				{ M(() => "".IndexOf    (' ',0,0) ), L<S,C,I,I,I>((S obj,C p0,I p1,I p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1) },
+				{ M(() => "".LastIndexOf("")      ), L<S,S,I>    ((S obj,S p0)           => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))                               .Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf("",0)    ), L<S,S,I,I>  ((S obj,S p0,I p1)      => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1).Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf("",0,0)  ), L<S,S,I,I,I>((S obj,S p0,I p1,I p2) => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))             .Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf(' ')     ), L<S,C,I>    ((S obj,C p0)           => (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))                               .Value)) },
+				{ M(() => "".LastIndexOf(' ',0)   ), L<S,C,I,I>  ((S obj,C p0,I p1)      => (Sql.CharIndex(p0, obj, p1 + 1)                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value)) },
+				{ M(() => "".LastIndexOf(' ',0,0) ), L<S,C,I,I,I>((S obj,C p0,I p1,I p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))             .Value)) },
+				{ M(() => "".Insert     (0,"")    ), L<S,I,S,S>  ((S obj,I p0,S p1)      => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1)) },
+				{ M(() => "".Remove     (0)       ), L<S,I,S>    ((S obj,I p0)           => Sql.Left     (obj, p0)) },
+				{ M(() => "".Remove     (0,0)     ), L<S,I,I,S>  ((S obj,I p0,I p1)      => Sql.Stuff    (obj, p0 + 1, p1, "")) },
+				{ M(() => "".PadLeft    (0)       ), L<S,I,S>    ((S obj,I p0)           => Sql.PadLeft  (obj, p0, ' ')) },
+				{ M(() => "".PadLeft    (0,' ')   ), L<S,I,C,S>  ((S obj,I p0,C p1)      => Sql.PadLeft  (obj, p0, p1)) },
+				{ M(() => "".PadRight   (0)       ), L<S,I,S>    ((S obj,I p0)           => Sql.PadRight (obj, p0, ' ')) },
+				{ M(() => "".PadRight   (0,' ')   ), L<S,I,C,S>  ((S obj,I p0,C p1)      => Sql.PadRight (obj, p0, p1)) },
+				{ M(() => "".Replace    ("","")   ), L<S,S,S,S>  ((S obj,S p0,S p1)      => Sql.Replace  (obj, p0, p1)) },
+				{ M(() => "".Replace    (' ',' ') ), L<S,C,C,S>  ((S obj,C p0,C p1)      => Sql.Replace  (obj, p0, p1)) },
+				{ M(() => "".Trim       ()        ), L<S,S>      ((S obj)                => Sql.Trim     (obj)) },
+				{ M(() => "".TrimEnd    ()        ), L<S,C[],S>  ((S obj,C[] ch)         =>     TrimRight(obj, ch)) },
+				{ M(() => "".TrimStart  ()        ), L<S,C[],S>  ((S obj,C[] ch)         =>     TrimLeft (obj, ch)) },
+				{ M(() => "".ToLower    ()        ), L<S,S>      ((S obj)                => Sql.Lower(obj)) },
+				{ M(() => "".ToUpper    ()        ), L<S,S>      ((S obj)                => Sql.Upper(obj)) },
+				{ M(() => "".CompareTo  ("")      ), L<S,S,I>    ((S obj,S p0)           => ConvertToCaseCompareTo(obj, p0).Value ) },
+				{ M(() => "".CompareTo  (1)       ), L<S,O,I>    ((S obj,O p0)           => ConvertToCaseCompareTo(obj, p0.ToString()).Value ) },
 
-				{ M(() => string.IsNullOrEmpty ("")    ),           L<S,B>          ( p0               => p0 == null || p0.Length == 0) },
-				{ M(() => string.CompareOrdinal("","")),            L<S,S,I>        ((s1,s2)           => s1.CompareTo(s2)) },
-				{ M(() => string.CompareOrdinal("",0,"",0,0)),      L<S,I,S,I,I,I>  ((s1,i1,s2,i2,l)   => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
-				{ M(() => string.Compare       ("","")),            L<S,S,I>        ((s1,s2)           => s1.CompareTo(s2)) },
-				{ M(() => string.Compare       ("",0,"",0,0)),      L<S,I,S,I,I,I>  ((s1,i1,s2,i2,l)   => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l))) },
+				{ M(() => string.IsNullOrEmpty ("")    ),           L<S,B>          ((S p0)                        => p0 == null || p0.Length == 0) },
+				{ M(() => string.CompareOrdinal("","")),            L<S,S,I>        ((S s1,S s2)                   => s1.CompareTo(s2)) },
+				{ M(() => string.CompareOrdinal("",0,"",0,0)),      L<S,I,S,I,I,I>  ((S s1,I i1,S s2,I i2,I l)     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
+				{ M(() => string.Compare       ("","")),            L<S,S,I>        ((S s1,S s2)                   => s1.CompareTo(s2)) },
+				{ M(() => string.Compare       ("",0,"",0,0)),      L<S,I,S,I,I,I>  ((S s1,I i1,S s2,I i2,I l)     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l))) },
 #if !SILVERLIGHT
-				{ M(() => string.Compare       ("","",true)),       L<S,S,B,I>      ((s1,s2,b)         => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2)) },
-				{ M(() => string.Compare       ("",0,"",0,0,true)), L<S,I,S,I,I,B,I>((s1,i1,s2,i2,l,b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
+				{ M(() => string.Compare       ("","",true)),       L<S,S,B,I>      ((S s1,S s2,B b)               => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2)) },
+				{ M(() => string.Compare       ("",0,"",0,0,true)), L<S,I,S,I,I,B,I>((S s1,I i1,S s2,I i2,I l,B b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
 #endif
 
-				{ M(() => AltStuff("",0,0,"")), L<S,I?,I?,S,S>((p0, p1,p2,p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1))) },
+				{ M(() => AltStuff("",0,0,"")), L<S,I?,I?,S,S>((S p0, I? p1,I ?p2,S p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1))) },
 
 				#endregion
 
 				#region Binary
 
-				{ M(() => ((Binary)null).Length ), L<Binary,I>(obj => Sql.Length(obj).Value) },
+				{ M(() => ((Binary)null).Length ), L<Binary,I>((Binary obj) => Sql.Length(obj).Value) },
 
 				#endregion
 
 				#region DateTime
 
-				{ M(() => Sql.GetDate()                  ), L<D>      (()       => Sql.CurrentTimestamp2 ) },
-				{ M(() => DateTime.Now                   ), L<D>      (()       => Sql.CurrentTimestamp2 ) },
+				{ M(() => Sql.GetDate()                  ), L<D>      (()            => Sql.CurrentTimestamp2 ) },
+				{ M(() => DateTime.Now                   ), L<D>      (()            => Sql.CurrentTimestamp2 ) },
 
-				{ M(() => DateTime.Now.Year              ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Year,        obj).Value     ) },
-				{ M(() => DateTime.Now.Month             ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Month,       obj).Value     ) },
-				{ M(() => DateTime.Now.DayOfYear         ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.DayOfYear,   obj).Value     ) },
-				{ M(() => DateTime.Now.Day               ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Day,         obj).Value     ) },
-				{ M(() => DateTime.Now.DayOfWeek         ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.WeekDay,     obj).Value - 1 ) },
-				{ M(() => DateTime.Now.Hour              ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Hour,        obj).Value     ) },
-				{ M(() => DateTime.Now.Minute            ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Minute,      obj).Value     ) },
-				{ M(() => DateTime.Now.Second            ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Second,      obj).Value     ) },
-				{ M(() => DateTime.Now.Millisecond       ), L<D,I>    (obj      => Sql.DatePart(Sql.DateParts.Millisecond, obj).Value     ) },
-				{ M(() => DateTime.Now.Date              ), L<D,D>    (obj      => Sql.Convert2(Sql.Date,                  obj)     ) },
-				{ M(() => DateTime.Now.TimeOfDay         ), L<D,T>    (obj      => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj)).Value    ) },
-				{ M(() => DateTime.Now.AddYears       (0)), L<D,I,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Year,        p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddMonths      (0)), L<D,I,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Month,       p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddDays        (0)), L<D,F,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Day,         p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddHours       (0)), L<D,F,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddMinutes     (0)), L<D,F,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddSeconds     (0)), L<D,F,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Second,      p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddMilliseconds(0)), L<D,F,D>  ((obj,p0) => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj).Value ) },
-				{ M(() => new DateTime(0, 0, 0)          ), L<I,I,I,D>((y,m,d)  => Sql.MakeDateTime(y, m, d).Value                    ) },
+				{ M(() => DateTime.Now.Year              ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Year,        obj).Value     ) },
+				{ M(() => DateTime.Now.Month             ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Month,       obj).Value     ) },
+				{ M(() => DateTime.Now.DayOfYear         ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.DayOfYear,   obj).Value     ) },
+				{ M(() => DateTime.Now.Day               ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Day,         obj).Value     ) },
+				{ M(() => DateTime.Now.DayOfWeek         ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.WeekDay,     obj).Value - 1 ) },
+				{ M(() => DateTime.Now.Hour              ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Hour,        obj).Value     ) },
+				{ M(() => DateTime.Now.Minute            ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Minute,      obj).Value     ) },
+				{ M(() => DateTime.Now.Second            ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Second,      obj).Value     ) },
+				{ M(() => DateTime.Now.Millisecond       ), L<D,I>    ((D obj)       => Sql.DatePart(Sql.DateParts.Millisecond, obj).Value     ) },
+				{ M(() => DateTime.Now.Date              ), L<D,D>    ((D obj)       => Sql.Convert2(Sql.Date,                  obj)     ) },
+				{ M(() => DateTime.Now.TimeOfDay         ), L<D,T>    ((D obj)       => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj)).Value    ) },
+				{ M(() => DateTime.Now.AddYears       (0)), L<D,I,D>  ((D obj,I p0)  => Sql.DateAdd(Sql.DateParts.Year,        p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddMonths      (0)), L<D,I,D>  ((D obj,I p0)  => Sql.DateAdd(Sql.DateParts.Month,       p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddDays        (0)), L<D,F,D>  ((D obj,F p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddHours       (0)), L<D,F,D>  ((D obj,F p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddMinutes     (0)), L<D,F,D>  ((D obj,F p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddSeconds     (0)), L<D,F,D>  ((D obj,F p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddMilliseconds(0)), L<D,F,D>  ((D obj,F p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj).Value ) },
+				{ M(() => new DateTime(0, 0, 0)          ), L<I,I,I,D>((I y,I m,I d) => Sql.MakeDateTime(y, m, d).Value                    ) },
 
-				{ M(() => Sql.MakeDateTime(0, 0, 0)          ), L<I?,I?,I?,D?>         ((y,m,d)        => Sql.Convert(Sql.Date, y.ToString() + "-" + m.ToString() + "-" + d.ToString())) },
-				{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), L<I,I,I,I,I,I,D>       ((y,m,d,h,mm,s) => Sql.MakeDateTime(y, m, d, h, mm, s).Value ) },
-				{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), L<I?,I?,I?,I?,I?,I?,D?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
+				{ M(() => Sql.MakeDateTime(0, 0, 0)          ), L<I?,I?,I?,D?>         ((I? y,I? m,I? d)                 => Sql.Convert(Sql.Date, y.ToString() + "-" + m.ToString() + "-" + d.ToString())) },
+				{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), L<I,I,I,I,I,I,D>       ((I y,I m,I d,I h,I mm,I s)       => Sql.MakeDateTime(y, m, d, h, mm, s).Value ) },
+				{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), L<I?,I?,I?,I?,I?,I?,D?>((I? y,I? m,I? d,I? h,I? mm,I? s) => Sql.Convert(Sql.DateTime2,
 					y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 					h.ToString() + ":" + mm.ToString() + ":" + s.ToString())) },
 
@@ -233,41 +238,41 @@ namespace LinqToDB.Data.Linq
 
 				#region Parse
 
-				{ M(() => Boolean. Parse("")), L<String,Boolean> (p0 => Sql.ConvertTo<Boolean>. From(p0) ) },
-				{ M(() => Byte.    Parse("")), L<String,Byte>    (p0 => Sql.ConvertTo<Byte>.    From(p0) ) },
+				{ M(() => Boolean. Parse("")), L<String,Boolean> ((S p0) => Sql.ConvertTo<Boolean>. From(p0) ) },
+				{ M(() => Byte.    Parse("")), L<String,Byte>    ((S p0) => Sql.ConvertTo<Byte>.    From(p0) ) },
 #if !SILVERLIGHT
-				{ M(() => Char.    Parse("")), L<String,Char>    (p0 => Sql.ConvertTo<Char>.    From(p0) ) },
+				{ M(() => Char.    Parse("")), L<String,Char>    ((S p0) => Sql.ConvertTo<Char>.    From(p0) ) },
 #endif
-				{ M(() => DateTime.Parse("")), L<String,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ) },
-				{ M(() => Decimal. Parse("")), L<String,Decimal> (p0 => Sql.ConvertTo<Decimal>. From(p0) ) },
-				{ M(() => Double.  Parse("")), L<String,Double>  (p0 => Sql.ConvertTo<Double>.  From(p0) ) },
-				{ M(() => Int16.   Parse("")), L<String,Int16>   (p0 => Sql.ConvertTo<Int16>.   From(p0) ) },
-				{ M(() => Int32.   Parse("")), L<String,Int32>   (p0 => Sql.ConvertTo<Int32>.   From(p0) ) },
-				{ M(() => Int64.   Parse("")), L<String,Int64>   (p0 => Sql.ConvertTo<Int64>.   From(p0) ) },
-				{ M(() => SByte.   Parse("")), L<String,SByte>   (p0 => Sql.ConvertTo<SByte>.   From(p0) ) },
-				{ M(() => Single.  Parse("")), L<String,Single>  (p0 => Sql.ConvertTo<Single>.  From(p0) ) },
-				{ M(() => UInt16.  Parse("")), L<String,UInt16>  (p0 => Sql.ConvertTo<UInt16>.  From(p0) ) },
-				{ M(() => UInt32.  Parse("")), L<String,UInt32>  (p0 => Sql.ConvertTo<UInt32>.  From(p0) ) },
-				{ M(() => UInt64.  Parse("")), L<String,UInt64>  (p0 => Sql.ConvertTo<UInt64>.  From(p0) ) },
+				{ M(() => DateTime.Parse("")), L<String,DateTime>((S p0) => Sql.ConvertTo<DateTime>.From(p0) ) },
+				{ M(() => Decimal. Parse("")), L<String,Decimal> ((S p0) => Sql.ConvertTo<Decimal>. From(p0) ) },
+				{ M(() => Double.  Parse("")), L<String,Double>  ((S p0) => Sql.ConvertTo<Double>.  From(p0) ) },
+				{ M(() => Int16.   Parse("")), L<String,Int16>   ((S p0) => Sql.ConvertTo<Int16>.   From(p0) ) },
+				{ M(() => Int32.   Parse("")), L<String,Int32>   ((S p0) => Sql.ConvertTo<Int32>.   From(p0) ) },
+				{ M(() => Int64.   Parse("")), L<String,Int64>   ((S p0) => Sql.ConvertTo<Int64>.   From(p0) ) },
+				{ M(() => SByte.   Parse("")), L<String,SByte>   ((S p0) => Sql.ConvertTo<SByte>.   From(p0) ) },
+				{ M(() => Single.  Parse("")), L<String,Single>  ((S p0) => Sql.ConvertTo<Single>.  From(p0) ) },
+				{ M(() => UInt16.  Parse("")), L<String,UInt16>  ((S p0) => Sql.ConvertTo<UInt16>.  From(p0) ) },
+				{ M(() => UInt32.  Parse("")), L<String,UInt32>  ((S p0) => Sql.ConvertTo<UInt32>.  From(p0) ) },
+				{ M(() => UInt64.  Parse("")), L<String,UInt64>  ((S p0) => Sql.ConvertTo<UInt64>.  From(p0) ) },
 
 				#endregion
 
 				#region ToString
 
-				{ M(() => ((Boolean)true).ToString()), L<Boolean, String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Byte)    0)  .ToString()), L<Byte,    String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Char)   '0') .ToString()), L<Char,    String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Decimal) 0)  .ToString()), L<Decimal, String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Double)  0)  .ToString()), L<Double,  String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int16)   0)  .ToString()), L<Int16,   String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int32)   0)  .ToString()), L<Int32,   String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int64)   0)  .ToString()), L<Int64,   String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((SByte)   0)  .ToString()), L<SByte,   String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Single)  0)  .ToString()), L<Single,  String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((String) "0") .ToString()), L<String,  String>(p0 => p0                             ) },
-				{ M(() => ((UInt16)  0)  .ToString()), L<UInt16,  String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((UInt32)  0)  .ToString()), L<UInt32,  String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((UInt64)  0)  .ToString()), L<UInt64,  String>(p0 => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Boolean)true).ToString()), L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Byte)    0)  .ToString()), L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Char)   '0') .ToString()), L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Decimal) 0)  .ToString()), L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Double)  0)  .ToString()), L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Int16)   0)  .ToString()), L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Int32)   0)  .ToString()), L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Int64)   0)  .ToString()), L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((SByte)   0)  .ToString()), L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((Single)  0)  .ToString()), L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((String) "0") .ToString()), L<String,  String>((String  p0) => p0                             ) },
+				{ M(() => ((UInt16)  0)  .ToString()), L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((UInt32)  0)  .ToString()), L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0) ) },
+				{ M(() => ((UInt64)  0)  .ToString()), L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0) ) },
 
 				#endregion
 
@@ -275,47 +280,47 @@ namespace LinqToDB.Data.Linq
 
 				#region ToBoolean
 
-				{ M(() => Convert.ToBoolean((Boolean)true)), L<Boolean, Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Byte)    0)  ), L<Byte,    Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Char)   '0') ), L<Char,    Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Boolean)true)), L<Boolean, Boolean>((Boolean  p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Byte)    0)  ), L<Byte,    Boolean>((Byte     p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Char)   '0') ), L<Char,    Boolean>((Char     p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
 #if !SILVERLIGHT
-				{ M(() => Convert.ToBoolean(DateTime.Now) ), L<DateTime,Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean(DateTime.Now) ), L<DateTime,Boolean>((DateTime p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
 #endif
-				{ M(() => Convert.ToBoolean((Decimal) 0)  ), L<Decimal, Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Double)  0)  ), L<Double,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Int16)   0)  ), L<Int16,   Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Int32)   0)  ), L<Int32,   Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Int64)   0)  ), L<Int64,   Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Object)  0)  ), L<Object,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((SByte)   0)  ), L<SByte,   Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((Single)  0)  ), L<Single,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((String) "0") ), L<String,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((UInt16)  0)  ), L<UInt16,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((UInt32)  0)  ), L<UInt32,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
-				{ M(() => Convert.ToBoolean((UInt64)  0)  ), L<UInt64,  Boolean>(p0 => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Decimal) 0)  ), L<Decimal, Boolean>((Decimal  p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Double)  0)  ), L<Double,  Boolean>((Double   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Int16)   0)  ), L<Int16,   Boolean>((Int16    p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Int32)   0)  ), L<Int32,   Boolean>((Int32    p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Int64)   0)  ), L<Int64,   Boolean>((Int64    p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Object)  0)  ), L<Object,  Boolean>((Object   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((SByte)   0)  ), L<SByte,   Boolean>((SByte    p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((Single)  0)  ), L<Single,  Boolean>((Single   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((String) "0") ), L<String,  Boolean>((String   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((UInt16)  0)  ), L<UInt16,  Boolean>((UInt16   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((UInt32)  0)  ), L<UInt32,  Boolean>((UInt32   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
+				{ M(() => Convert.ToBoolean((UInt64)  0)  ), L<UInt64,  Boolean>((UInt64   p0) => Sql.ConvertTo<Boolean>.From(p0) ) },
 
 				#endregion
 
 				#region ToByte
 
-				{ M(() => Convert.ToByte((Boolean)true)), L<Boolean, Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Byte)    0)  ), L<Byte,    Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Char)   '0') ), L<Char,    Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Boolean)true)), L<Boolean, Byte>((Boolean  p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Byte)    0)  ), L<Byte,    Byte>((Byte     p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Char)   '0') ), L<Char,    Byte>((Char     p0) => Sql.ConvertTo<Byte>.From(p0) ) },
 #if !SILVERLIGHT
-				{ M(() => Convert.ToByte(DateTime.Now) ), L<DateTime,Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte(DateTime.Now) ), L<DateTime,Byte>((DateTime p0) => Sql.ConvertTo<Byte>.From(p0) ) },
 #endif
-				{ M(() => Convert.ToByte((Decimal) 0)  ), L<Decimal, Byte>(p0 => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
-				{ M(() => Convert.ToByte((Double)  0)  ), L<Double,  Byte>(p0 => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
-				{ M(() => Convert.ToByte((Int16)   0)  ), L<Int16,   Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Int32)   0)  ), L<Int32,   Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Int64)   0)  ), L<Int64,   Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Object)  0)  ), L<Object,  Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((SByte)   0)  ), L<SByte,   Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((Single)  0)  ), L<Single,  Byte>(p0 => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
-				{ M(() => Convert.ToByte((String) "0") ), L<String,  Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((UInt16)  0)  ), L<UInt16,  Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((UInt32)  0)  ), L<UInt32,  Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
-				{ M(() => Convert.ToByte((UInt64)  0)  ), L<UInt64,  Byte>(p0 => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Decimal) 0)  ), L<Decimal, Byte>((Decimal  p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
+				{ M(() => Convert.ToByte((Double)  0)  ), L<Double,  Byte>((Double   p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
+				{ M(() => Convert.ToByte((Int16)   0)  ), L<Int16,   Byte>((Int16    p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Int32)   0)  ), L<Int32,   Byte>((Int32    p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Int64)   0)  ), L<Int64,   Byte>((Int64    p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Object)  0)  ), L<Object,  Byte>((Object   p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((SByte)   0)  ), L<SByte,   Byte>((SByte    p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((Single)  0)  ), L<Single,  Byte>((Single   p0) => Sql.ConvertTo<Byte>.From(Sql.RoundToEven(p0)) ) },
+				{ M(() => Convert.ToByte((String) "0") ), L<String,  Byte>((String   p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((UInt16)  0)  ), L<UInt16,  Byte>((UInt16   p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((UInt32)  0)  ), L<UInt32,  Byte>((UInt32   p0) => Sql.ConvertTo<Byte>.From(p0) ) },
+				{ M(() => Convert.ToByte((UInt64)  0)  ), L<UInt64,  Byte>((UInt64   p0) => Sql.ConvertTo<Byte>.From(p0) ) },
 
 				#endregion
 
@@ -622,18 +627,18 @@ namespace LinqToDB.Data.Linq
 
 				#region Math
 
-				{ M(() => Math.Abs    ((Decimal)0)), L<Decimal,Decimal>(p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((Double) 0)), L<Double, Double> (p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((Int16)  0)), L<Int16,  Int16>  (p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((Int32)  0)), L<Int32,  Int32>  (p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((Int64)  0)), L<Int64,  Int64>  (p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((SByte)  0)), L<SByte,  SByte>  (p => Sql.Abs(p).Value ) },
-				{ M(() => Math.Abs    ((Single) 0)), L<Single, Single> (p => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Decimal)0)), L<Decimal,Decimal>((Decimal p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Double) 0)), L<Double, Double> ((Double  p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Int16)  0)), L<Int16,  Int16>  ((Int16   p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Int32)  0)), L<Int32,  Int32>  ((Int32   p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Int64)  0)), L<Int64,  Int64>  ((Int64   p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((SByte)  0)), L<SByte,  SByte>  ((SByte   p) => Sql.Abs(p).Value ) },
+				{ M(() => Math.Abs    ((Single) 0)), L<Single, Single> ((Single  p) => Sql.Abs(p).Value ) },
 
-				{ M(() => Math.Acos   (0)   ), L<F,F>  ( p    => Sql.Acos   (p)   .Value ) },
-				{ M(() => Math.Asin   (0)   ), L<F,F>  ( p    => Sql.Asin   (p)   .Value ) },
-				{ M(() => Math.Atan   (0)   ), L<F,F>  ( p    => Sql.Atan   (p)   .Value ) },
-				{ M(() => Math.Atan2  (0,0) ), L<F,F,F>((x,y) => Sql.Atan2  (x, y).Value ) },
+				{ M(() => Math.Acos   (0)   ), L<F,F>  ((F p)   => Sql.Acos   (p)   .Value ) },
+				{ M(() => Math.Asin   (0)   ), L<F,F>  ((F p)   => Sql.Asin   (p)   .Value ) },
+				{ M(() => Math.Atan   (0)   ), L<F,F>  ((F p)   => Sql.Atan   (p)   .Value ) },
+				{ M(() => Math.Atan2  (0,0) ), L<F,F,F>((F x,y) => Sql.Atan2  (x, y).Value ) },
 #if !SILVERLIGHT
 				{ M(() => Math.Ceiling((M)0)), L<M,M>  ( p    => Sql.Ceiling(p)   .Value ) },
 #endif

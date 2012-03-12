@@ -76,6 +76,9 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Data\Linq\Expressions.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">
       <SubType>Code</SubType>
