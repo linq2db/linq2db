@@ -1894,13 +1894,13 @@ namespace LinqToDB.Data
 // ReSharper restore AccessToModifiedClosure
 					Converter<IDbDataParameter,string> c2 = p => p.ParameterName;
 
+					var arr = (object[])Array.ConvertAll(
+						baseParameters,
+						baseParameters.Length > 0 && baseParameters[0].ParameterName != paramName? c1 : c2);
+
 					sb
 						.Append("\n")
-						.AppendFormat(
-							baseSql,
-							Array.ConvertAll(
-								baseParameters,
-								baseParameters.Length > 0 && baseParameters[0].ParameterName != paramName? c1 : c2));
+						.AppendFormat(baseSql, arr);
 
 					rowSql.Add(sb.Length);
 
