@@ -1881,7 +1881,7 @@ namespace LinqToDB.Data
 // ReSharper restore AccessToModifiedClosure
 					Converter<IDbDataParameter,string> c2 = p => p.ParameterName;
 
-					var arr = Array.ConvertAll(
+					var arr = (object[])Array.ConvertAll(
 						baseParameters,
 						baseParameters.Length > 0 && baseParameters[0].ParameterName != paramName? c1 : c2);
 
