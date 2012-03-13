@@ -88,6 +88,7 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
+#if !MOBILE
 		[Test]
 		public void Enum7([DataContexts] string context)
 		{
@@ -103,6 +104,7 @@ namespace Tests.Linq
 					new Create.CreateData().PostgreSQL();
 			}
 		}
+#endif
 
 		enum TestValue
 		{
