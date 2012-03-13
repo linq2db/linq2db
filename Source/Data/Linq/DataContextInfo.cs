@@ -34,9 +34,9 @@ namespace LinqToDB.Data.Linq
 				();
 		}
 
-		public IDataContextInfo Clone()
+		public IDataContextInfo Clone(bool forNestedQuery)
 		{
-			return new DataContextInfo(DataContext.Clone());
+			return new DataContextInfo(DataContext.Clone(forNestedQuery));
 		}
 
 		public static IDataContextInfo Create(IDataContext dataContext)

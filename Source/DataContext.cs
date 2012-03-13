@@ -44,6 +44,23 @@ namespace LinqToDB
 			}
 		}
 
+		private bool? _isMarsEnabled;
+		public  bool   IsMarsEnabled
+		{
+			get
+			{
+				if (_isMarsEnabled == null)
+				{
+					if (_dbManager == null)
+						return false;
+					_isMarsEnabled = _dbManager.IsMarsEnabled;
+				}
+
+				return _isMarsEnabled.Value;
+			}
+			set { _isMarsEnabled = value; }
+		}
+
 		internal int LockDbManagerCounter;
 
 		string    _connectionString;
@@ -177,9 +194,9 @@ namespace LinqToDB
 
 		DataContext(int n) {}
 
-		IDataContext IDataContext.Clone()
+		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
-			return new DataContext(0)
+			var dc = new DataContext(0)
 			{
 				ConfigurationString = ConfigurationString,
 				KeepConnectionAlive = KeepConnectionAlive,
@@ -187,6 +204,13 @@ namespace LinqToDB
 				ContextID           = ContextID,
 				MappingSchema       = MappingSchema,
 			};
+
+			if (forNestedQuery && _dbManager != null && _dbManager.IsMarsEnabled)
+				dc._dbManager = _dbManager.Transaction != null ?
+					new DbManager(DataProvider, _dbManager.Transaction) { MappingSchema = MappingSchema } :
+					new DbManager(DataProvider, _dbManager.Connection)  { MappingSchema = MappingSchema };
+
+			return dc;
 		}
 
 		public event EventHandler OnClosing;

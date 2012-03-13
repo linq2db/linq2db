@@ -14,6 +14,6 @@ namespace LinqToDB.Data.Linq
 		bool          DisposeContext { get; }
 
 		ISqlProvider     CreateSqlProvider();
-		IDataContextInfo Clone();
+		IDataContextInfo Clone(bool forNestedQuery);
 	}
 }

@@ -19,6 +19,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
+				db.BeginTransaction();
+
 				var q =
 					from ch in db.Child
 					group ch by ch.ParentID;
@@ -451,7 +453,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var expected = 
+				db.BeginTransaction();
+
+				var expected =
 					(
 						from ch in Child
 						group ch by ch.ParentID > 2 ? ch.ParentID > 3 ? "1" : "2" : "3"

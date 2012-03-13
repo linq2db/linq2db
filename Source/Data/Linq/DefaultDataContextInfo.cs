@@ -20,9 +20,9 @@ namespace LinqToDB.Data.Linq
 			return _dataProvider.CreateSqlProvider();
 		}
 
-		public IDataContextInfo Clone()
+		public IDataContextInfo Clone(bool forNestedQuery)
 		{
-			return new DataContextInfo(DataContext.Clone());
+			return new DataContextInfo(DataContext.Clone(forNestedQuery));
 		}
 
 		static readonly DataProviderBase _dataProvider = DbManager.GetDataProvider(DbManager.DefaultConfiguration);

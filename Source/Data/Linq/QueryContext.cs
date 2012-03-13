@@ -43,7 +43,7 @@ namespace LinqToDB.Data.Linq
 				}
 			}
 
-			var ctx = new DataContextContext { DataContextInfo = RootDataContext.Clone(), InUse = true };
+			var ctx = new DataContextContext { DataContextInfo = RootDataContext.Clone(true), InUse = true };
 
 			_contexts.Add(ctx);
 

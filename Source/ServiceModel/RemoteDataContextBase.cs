@@ -255,7 +255,7 @@ namespace LinqToDB.ServiceModel
 			return sb.ToString();
 		}
 
-		IDataContext IDataContext.Clone()
+		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{
 			return Clone();
 		}
