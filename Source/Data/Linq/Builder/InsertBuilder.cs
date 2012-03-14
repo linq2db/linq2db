@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
@@ -72,6 +73,27 @@ namespace LinqToDB.Data.Linq.Builder
 
 						break;
 					}
+			}
+
+			var insert = sequence.SqlQuery.Insert;
+
+			var q = insert.Into.Fields.Values.Except(insert.Items.Select(e => e.Column))
+				.OfType<SqlField>()
+				.Where(f => f.IsIdentity);
+
+			foreach (var field in q)
+			{
+				var expr = builder.SqlProvider.GetIdentityExpression(insert.Into, field, false);
+
+				if (expr != null)
+				{
+					insert.Items.Insert(0, new SqlQuery.SetExpression(field, expr));
+
+					if (methodCall.Arguments.Count == 3)
+					{
+						sequence.SqlQuery.Select.Columns.Insert(0, new SqlQuery.Column(sequence.SqlQuery, insert.Items[0].Expression));
+					}
+				}
 			}
 
 			sequence.SqlQuery.QueryType           = QueryType.Insert;

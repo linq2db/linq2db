@@ -196,6 +196,7 @@
     <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
     <Compile Include="Linq\IdlTest.Additional.cs" />
+    <Compile Include="Linq\TestAK107.cs" />
     <Compile Include="Macros\InfoOfTest.cs" />
     <Compile Include="Mapping\MappingSchemaTest.cs" />
     <Compile Include="Metadata\AttributeReaderTest.cs" />
