@@ -66,6 +66,7 @@ namespace Tests.Model
 	[TableName("LinqDataTypes")]
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
+		[PrimaryKey]
 		public int       ID;
 		public decimal   MoneyValue;
 		public DateTime? DateTimeValue;

@@ -161,10 +161,21 @@ namespace LinqToDB.ServiceModel
 									case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
 									case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString(CultureInfo.InvariantCulture); break;
 									case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString(CultureInfo.InvariantCulture); break;
-									case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToString(CultureInfo.InvariantCulture); break;
+									case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToString("o");                          break;
 									default                :
 										{
-											if (ret.FieldTypes[i] == typeof(byte[]))
+											if (type == typeof(DateTimeOffset))
+											{
+												var dt = rd.GetValue(i);
+
+												if (dt is DateTime)
+													data[i] = ((DateTime)dt).ToString("o");
+												else if (dt is DateTimeOffset)
+													data[i] = ((DateTimeOffset)dt).ToString("o");
+												else
+													data[i] = rd.GetValue(i).ToString();
+											}
+											else if (ret.FieldTypes[i] == typeof(byte[]))
 												data[i] = Convert.ToBase64String((byte[])rd.GetValue(i));
 											else
 												data[i] = (rd.GetValue(i) ?? "").ToString();

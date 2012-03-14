@@ -555,6 +555,8 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
+							Append((int)elem.DbType);
+							Append(elem.DbSize);
 
 							var type = elem.Value == null ? elem.SystemType : elem.Value.GetType();
 
@@ -569,31 +571,6 @@ namespace LinqToDB.ServiceModel
 
 								Append(GetArrayType(elemType), value);
 							}
-
-							/*
-							if (elem.EnumTypes == null)
-								Builder.Append(" -");
-							else
-							{
-								Append(elem.EnumTypes.Count);
-
-								foreach (var type in elem.EnumTypes)
-									Append(type);
-							}
-
-							if (elem.TakeValues == null)
-								Builder.Append(" -");
-							else
-							{
-								Append(elem.TakeValues.Count);
-
-								foreach (var type in elem.TakeValues)
-									Append(type);
-							}
-
-							Append(elem.LikeStart);
-							Append(elem.LikeEnd);
-							*/
 
 							break;
 						}
@@ -1072,6 +1049,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
+							var dbType           = (DbType)ReadInt();
+							var dbSize           = ReadInt();
+
 							var systemType       = Read<Type>();
 							var value            = ReadValue(systemType);
 							//var enumTypes        = ReadList<Type>();
@@ -1095,6 +1075,8 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value, (MappingSchema)null)
 							{
 								IsQueryParameter = isQueryParameter,
+								DbType           = dbType,
+								DbSize           = dbSize,
 								//EnumTypes        = enumTypes,
 								//TakeValues       = takeValues,
 								//LikeStart        = likeStart,
