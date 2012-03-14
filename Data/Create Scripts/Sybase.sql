@@ -452,14 +452,15 @@ GO
 
 CREATE TABLE LinqDataTypes
 (
-	ID            int,
-	MoneyValue    decimal(10,4) NULL,
-	DateTimeValue datetime      NULL,
-	BoolValue     bit,
-	GuidValue     char(36)      NULL,
-	BinaryValue   binary(500)   NULL,
-	SmallIntValue smallint      NULL,
-	IntValue      int           NULL,
-	BigIntValue   bigint NULL
+	ID             int,
+	MoneyValue     decimal(10,4) NULL,
+	DateTimeValue  datetime      NULL,
+	DateTimeValue2 datetime      NULL,
+	BoolValue      bit,
+	GuidValue      char(36)      NULL,
+	BinaryValue    binary(500)   NULL,
+	SmallIntValue  smallint      NULL,
+	IntValue       int           NULL,
+	BigIntValue    bigint NULL
 )
 GO

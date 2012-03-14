@@ -587,15 +587,16 @@ CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 
 CREATE TABLE LinqDataTypes
 (
-	ID            int,
-	MoneyValue    decimal(10,4),
-	DateTimeValue timestamp,
-	BoolValue     smallint,
-	GuidValue     raw(16),
-	BinaryValue   blob,
-	SmallIntValue smallint,
-	IntValue      int NULL,
-	BigIntValue   number(20,0) NULL
+	ID             int,
+	MoneyValue     decimal(10,4),
+	DateTimeValue  timestamp,
+	DateTimeValue2 timestamp,
+	BoolValue      smallint,
+	GuidValue      raw(16),
+	BinaryValue    blob,
+	SmallIntValue  smallint,
+	IntValue       int NULL,
+	BigIntValue    number(20,0) NULL
 )
 /
 

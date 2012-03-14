@@ -258,14 +258,15 @@ GO
 
 CREATE TABLE LinqDataTypes
 (
-	ID            int,
-	MoneyValue    decimal(10,4),
-	DateTimeValue datetime,
-	BoolValue     bit,
-	GuidValue     uniqueidentifier,
-	BinaryValue   OleObject,
-	SmallIntValue smallint,
-	IntValue      int NULL,
-	BigIntValue   long NULL
+	ID             int,
+	MoneyValue     decimal(10,4),
+	DateTimeValue  datetime,
+	DateTimeValue2 datetime,
+	BoolValue      bit,
+	GuidValue      uniqueidentifier,
+	BinaryValue    OleObject,
+	SmallIntValue  smallint,
+	IntValue       int NULL,
+	BigIntValue    long NULL
 )
 GO

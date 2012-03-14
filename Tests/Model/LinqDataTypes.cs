@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.Linq;
 
 using LinqToDB;
@@ -68,6 +69,8 @@ namespace Tests.Model
 		public int       ID;
 		public decimal   MoneyValue;
 		public DateTime? DateTimeValue;
+		[DbType(DbType.DateTime2)]
+		public DateTime? DateTimeValue2;
 		public bool?     BoolValue;
 		public Guid?     GuidValue;
 		public short?    SmallIntValue;

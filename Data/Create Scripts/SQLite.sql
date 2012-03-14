@@ -117,13 +117,14 @@ CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int);
 DROP TABLE IF EXISTS LinqDataTypes;
 CREATE TABLE LinqDataTypes
 (
-	ID            int,
-	MoneyValue    decimal(10,4),
-	DateTimeValue datetime,
-	BoolValue     boolean,
-	GuidValue     uniqueidentifier,
-	BinaryValue   binary(5000),
-	SmallIntValue smallint,
-	IntValue      int NULL,
-	BigIntValue   bigint NULL
+	ID             int,
+	MoneyValue     decimal(10,4),
+	DateTimeValue  datetime,
+	DateTimeValue2 datetime2,
+	BoolValue      boolean,
+	GuidValue      uniqueidentifier,
+	BinaryValue    binary(5000),
+	SmallIntValue  smallint,
+	IntValue       int NULL,
+	BigIntValue    bigint NULL
 );

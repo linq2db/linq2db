@@ -119,7 +119,7 @@ namespace LinqToDB.Data
 			var y = DataProvider.Convert("y", ConvertType.NameToQueryParameter).ToString();
 			var c = x == y ? pq.SqlParameters.Count : parameters.Length;
 
-            List<IDbDataParameter> parms = new List<IDbDataParameter>(c);
+			List<IDbDataParameter> parms = new List<IDbDataParameter>(c);
 
 			if (x == y)
 			{
@@ -155,8 +155,12 @@ namespace LinqToDB.Data
 
 			if (value != null)
 			{
-				parms.Add(Parameter(name, value));
-			}
+				if (parm.DbType == DbType.Object)
+					parms.Add(Parameter(name, value));
+				else if (parm.DbSize == 0)
+					parms.Add(Parameter(name, value, parm.DbType));
+				else
+					parms.Add(Parameter(name, value, parm.DbType, parm.DbSize));			}
 			else
 			{
 				var dataType = DataProvider.GetDbType(parm.SystemType);

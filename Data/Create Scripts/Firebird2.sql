@@ -536,15 +536,16 @@ DROP TABLE LinqDataTypes COMMIT;
 
 CREATE TABLE LinqDataTypes
 (
-	ID            int,
-	MoneyValue    decimal(10,4),
-	DateTimeValue timestamp,
-	BoolValue     char(1),
-	GuidValue     char(38),
-	BinaryValue   blob,
-	SmallIntValue smallint,
-	IntValue      int,
-	BigIntValue   bigint
+	ID             int,
+	MoneyValue     decimal(10,4),
+	DateTimeValue  timestamp,
+	DateTimeValue2 timestamp,
+	BoolValue      char(1),
+	GuidValue      char(38),
+	BinaryValue    blob,
+	SmallIntValue  smallint,
+	IntValue       int,
+	BigIntValue    bigint
 )
 COMMIT;
 

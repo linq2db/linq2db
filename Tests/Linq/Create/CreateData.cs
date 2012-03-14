@@ -18,10 +18,15 @@ namespace Tests.Create
 
 			var text = File.ReadAllText(@"..\..\..\..\Data\Create Scripts\" + name + ".sql");
 
-			var idx = text.IndexOf("SKIP " + configString + " BEGIN");
+			while (true)
+			{
+				var idx = text.IndexOf("SKIP " + configString + " BEGIN");
 
-			if (idx >= 0)
-				text = text.Substring(0, idx) + text.Substring(text.IndexOf("SKIP " + configString + " END"));
+				if (idx >= 0)
+					text = text.Substring(0, idx) + text.Substring(text.IndexOf("SKIP " + configString + " END", idx));
+				else
+					break;
+			}
 
 			var cmds = text.Replace("\r", "").Replace(divider, "\x1").Split('\x1');
 

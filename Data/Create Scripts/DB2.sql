@@ -67,14 +67,15 @@ GO
 
 CREATE TABLE "LinqDataTypes"
 (
-	"ID"            int,
-	"MoneyValue"    decimal(10,4),
-	"DateTimeValue" timestamp,
-	"BoolValue"     smallint,
-	"GuidValue"     char(16) for bit DATA,
-	"BinaryValue"   blob(5000),
-	"SmallIntValue" smallint,
-	"IntValue"      int NULL,
-	"BigIntValue"   bigint NULL
+	"ID"             int,
+	"MoneyValue"     decimal(10,4),
+	"DateTimeValue"  timestamp,
+	"DateTimeValue2" timestamp NULL,
+	"BoolValue"      smallint,
+	"GuidValue"      char(16) for bit DATA,
+	"BinaryValue"    blob(5000),
+	"SmallIntValue"  smallint,
+	"IntValue"       int NULL,
+	"BigIntValue"    bigint NULL
 )
 GO
