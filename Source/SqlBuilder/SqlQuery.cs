@@ -3526,7 +3526,7 @@ namespace LinqToDB.SqlBuilder
 					}
 				}
 
-				if (cond.Predicate is Predicate.Expr)
+				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (Predicate.Expr)cond.Predicate;
 
@@ -3545,7 +3545,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				var cond = searchCondition.Conditions[i];
 
-				if (cond.Predicate is Predicate.Expr)
+				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
 					var expr = (Predicate.Expr)cond.Predicate;
 

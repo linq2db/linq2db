@@ -555,6 +555,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void BoolTest31([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types2 where (t.BoolValue ?? false) select t,
+					from t in db.Types2 where t.BoolValue.Value      select t);
+		}
+
+		[Test]
+		public void BoolTest32([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types2 where (t.BoolValue ?? false) select t,
+					from t in db.Types2 where t.BoolValue == true    select t);
+		}
+
+		[Test]
+		public void BoolTest33([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types2 where (t.BoolValue ?? false) select t,
+					from t in db.Types2 where true == t.BoolValue    select t);
+		}
+
+		[Test]
 		public void LongTest1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
