@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 //[assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("linq2db")]
-//[assembly: AssemblyCopyright("Copyright © Microsoft 2011")]
+//[assembly: AssemblyCopyright("Copyright © Microsoft 2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

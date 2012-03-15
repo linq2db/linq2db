@@ -77,7 +77,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 			var insert = sequence.SqlQuery.Insert;
 
-			var q = insert.Into.Fields.Values.Except(insert.Items.Select(e => e.Column))
+			var q = insert.Into.Fields.Values.Cast<ISqlExpression>().Except(insert.Items.Select(e => e.Column))
 				.OfType<SqlField>()
 				.Where(f => f.IsIdentity);
 
