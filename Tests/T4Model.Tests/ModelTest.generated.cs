@@ -419,7 +419,9 @@ namespace T4Model.Tests
 
 		#region INotifyPropertyChanged support
 
+#if !SILVERLIGHT
 		[field : NonSerialized]
+#endif
 		public virtual event PropertyChangedEventHandler PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)

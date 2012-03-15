@@ -14,16 +14,16 @@ namespace T4Model.Wpf
 	{
 		#region NotifiedProp1 : double
 
-		private double _NotifiedProp1;
+		private double _notifiedProp1;
 		public  double  NotifiedProp1
 		{
-			get { return _NotifiedProp1; }
+			get { return _notifiedProp1; }
 			set
 			{
-				if (_NotifiedProp1 != value)
+				if (_notifiedProp1 != value)
 				{
 					BeforeNotifiedProp1Changed(value);
-					_NotifiedProp1 = value;
+					_notifiedProp1 = value;
 					AfterNotifiedProp1Changed();
 
 					OnNotifiedProp1Changed();
@@ -37,11 +37,11 @@ namespace T4Model.Wpf
 		partial void BeforeNotifiedProp1Changed(double newValue);
 		partial void AfterNotifiedProp1Changed ();
 
-		private static readonly PropertyChangedEventArgs _NotifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
 
 		private void OnNotifiedProp1Changed()
 		{
-			OnPropertyChanged(_NotifiedProp1ChangedEventArgs);
+			OnPropertyChanged(_notifiedProp1ChangedEventArgs);
 		}
 
 		#endregion
@@ -50,16 +50,16 @@ namespace T4Model.Wpf
 
 		#region NotifiedProp2 : int
 
-		private int _NotifiedProp2 = 500;
+		private int _notifiedProp2 = 500;
 		public  int  NotifiedProp2
 		{
-			get { return _NotifiedProp2; }
+			get { return _notifiedProp2; }
 			set
 			{
-				if (_NotifiedProp2 != value)
+				if (_notifiedProp2 != value)
 				{
 					BeforeNotifiedProp2Changed(value);
-					_NotifiedProp2 = value;
+					_notifiedProp2 = value;
 					AfterNotifiedProp2Changed();
 
 					OnNotifiedProp1Changed();
@@ -73,11 +73,11 @@ namespace T4Model.Wpf
 		partial void BeforeNotifiedProp2Changed(int newValue);
 		partial void AfterNotifiedProp2Changed ();
 
-		private static readonly PropertyChangedEventArgs _NotifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
 
 		private void OnNotifiedProp2Changed()
 		{
-			OnPropertyChanged(_NotifiedProp2ChangedEventArgs);
+			OnPropertyChanged(_notifiedProp2ChangedEventArgs);
 		}
 
 		#endregion
@@ -93,11 +93,11 @@ namespace T4Model.Wpf
 
 		#region INotifyPropertyChanged support
 
-		private static readonly PropertyChangedEventArgs _NotifiedBrush1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedBrush1");
+		private static readonly PropertyChangedEventArgs _notifiedBrush1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedBrush1");
 
 		private void OnNotifiedBrush1Changed()
 		{
-			OnPropertyChanged(_NotifiedBrush1ChangedEventArgs);
+			OnPropertyChanged(_notifiedBrush1ChangedEventArgs);
 		}
 
 		#endregion
@@ -106,6 +106,9 @@ namespace T4Model.Wpf
 
 		#region INotifyPropertyChanged support
 
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
 		public virtual event PropertyChangedEventHandler PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)

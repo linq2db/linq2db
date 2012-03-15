@@ -165,7 +165,7 @@ void NotifyPropertyChangedImpl()
 						new Event("PropertyChangedEventHandler", "PropertyChanged")
 						{
 							IsVirtual  = true,
-							Attributes = { new Attribute("field : NonSerialized") }
+							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
 						},
 						new Method("void", "OnPropertyChanged", new[] { "string propertyName" }, OnPropertyChangedBody)
 						{

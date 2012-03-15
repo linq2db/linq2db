@@ -229,15 +229,36 @@ public partial class Class : TypeBase
 		{
 			if (m.Attributes.Count > 0)
 			{
-				tt.Write("[");
-
-				for (var i = 0; i < m.Attributes.Count; i++)
+				var q =
+					from a in m.Attributes
+					group a by a.Conditional ?? "";
+				
+				foreach (var g in q)
 				{
-					if (i > 0) tt.Write(", ");
-					m.Attributes[i].Render(tt);
-				}
+					if (g.Key.Length > 0)
+					{
+						tt.RemoveSpace();
+						tt.WriteLine("#if " + g.Key);
+					}
+					
+					var attrs = g.ToList();
+					
+					tt.Write("[");
 
-				tt.WriteLine("]");
+					for (var i = 0; i < attrs.Count; i++)
+					{
+						if (i > 0) tt.Write(", ");
+						attrs[i].Render(tt);
+					}
+
+					tt.WriteLine("]");
+
+					if (g.Key.Length > 0)
+					{
+						tt.RemoveSpace();
+						tt.WriteLine("#endif");
+					}
+				}				
 			}
 			
 			m.Render(tt, false);
@@ -554,15 +575,36 @@ public partial class MemberGroup : MemberBase
 			{
 				if (m.Attributes.Count > 0)
 				{
-					tt.Write("[");
-
-					for (var i = 0; i < m.Attributes.Count; i++)
+					var q =
+						from a in m.Attributes
+						group a by a.Conditional ?? "";
+					
+					foreach (var g in q)
 					{
-						if (i > 0) tt.Write(", ");
-						m.Attributes[i].Render(tt);
-					}
+						if (g.Key.Length > 0)
+						{
+							tt.RemoveSpace();
+							tt.WriteLine("#if " + g.Key);
+						}
+						
+						var attrs = g.ToList();
+						
+						tt.Write("[");
 
-					tt.WriteLine("]");
+						for (var i = 0; i < attrs.Count; i++)
+						{
+							if (i > 0) tt.Write(", ");
+							attrs[i].Render(tt);
+						}
+
+						tt.WriteLine("]");
+
+						if (g.Key.Length > 0)
+						{
+							tt.RemoveSpace();
+							tt.WriteLine("#endif");
+						}
+					}				
 				}
 				
 				m.Render(tt, false);
@@ -1024,12 +1066,7 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		{
 			if (t.Length > 1 && t[0] == '#')
 			{
-				tt.Write(" ");
-
-				while (tt.GenerationEnvironment.Length > 0 &&
-					(tt.GenerationEnvironment[tt.GenerationEnvironment.Length - 1] == ' ' ||
-					 tt.GenerationEnvironment[tt.GenerationEnvironment.Length - 1] == '\t'))
-					tt.GenerationEnvironment.Length--;
+				tt.RemoveSpace();
 			}
 
 			tt.WriteLine(t);
@@ -1107,6 +1144,7 @@ public partial class Attribute
 {
 	public string       Name;
 	public List<string> Parameters = new List<string>();
+	public string       Conditional;
 
 	public Attribute()
 	{
@@ -1141,6 +1179,16 @@ public void WriteSpaces(int len)
 {
 	while (len-- > 0)
 		Write(" ");
+}
+
+void RemoveSpace()
+{
+	Write(" ");
+	
+	while (GenerationEnvironment.Length > 0 &&
+		(GenerationEnvironment[GenerationEnvironment.Length - 1] == ' ' ||
+		 GenerationEnvironment[GenerationEnvironment.Length - 1] == '\t'))
+		GenerationEnvironment.Length--;
 }
 
 public static IEnumerable<ITree> GetTreeNodes(ITree parent)
