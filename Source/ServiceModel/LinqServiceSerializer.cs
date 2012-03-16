@@ -229,12 +229,12 @@ namespace LinqToDB.ServiceModel
 				Get(' ');
 
 				var minus = Get('-');
-				var value = 0;
+				long value = 0;
 
 				for (var c = Peek(); char.IsDigit(c); c = Next())
 					value = value * 10 + ((int)c - '0');
 
-				return minus ? -value : value;
+				return unchecked(minus ? (int)-value : (int)value);
 			}
 
 			protected int? ReadCount()
