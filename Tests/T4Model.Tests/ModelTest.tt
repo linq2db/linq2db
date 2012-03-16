@@ -34,6 +34,7 @@
 					{
 						Type       = "int",
 						Name       = "Field1",
+						Comment    = { "/ <summary>", "/ 123", "/ </summary>" },
 						Attributes =
 						{
 							new Attribute("XmlArrayItem", "typeof(int)", "DataType=\"List\""),
@@ -111,6 +112,7 @@
 			},
 			new Field
 			{
+				Comment        = { "/ <summary>", "/ 456", "/ </summary>" },
 				Type           = "List<int>",
 				Name           = "Field3",
 				EndLineComment = "Field3 comment",

@@ -3,7 +3,7 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq"                #>
 <#+
-static Action<GeneratedTextTransformation,string> WriteComment = (tt,s) => tt.WriteLine("//{0}", s);
+static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt.WriteLine("//{0}", s);
 
 Action BeforeGenerateModel = () => {};
 
@@ -227,6 +227,9 @@ public partial class Class : TypeBase
 
 		foreach (var m in Members)
 		{
+			foreach (var c in m.Comment)
+				WriteComment(tt, c);
+
 			if (m.Attributes.Count > 0)
 			{
 				var q =
@@ -293,6 +296,7 @@ public abstract partial class MemberBase : ITree
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
 	public string          Type;
+	public List<string>    Comment = new List<string>();
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
 	public bool            InsertBlankLineAfter = true;
@@ -511,6 +515,9 @@ public partial class MemberGroup : MemberBase
 
 				foreach (var m in allMembers)
 				{
+					foreach (var c in m.Comment)
+						WriteComment(tt, c);
+
 					if (attrs.Count > 0)
 					{
 						var ma = mms.First(mr => mr.m == m);
@@ -573,6 +580,9 @@ public partial class MemberGroup : MemberBase
 		{
 			foreach (var m in Members)
 			{
+				foreach (var c in m.Comment)
+					WriteComment(tt, c);
+
 				if (m.Attributes.Count > 0)
 				{
 					var q =

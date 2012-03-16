@@ -314,6 +314,9 @@ namespace T4Model.Tests
 
 		#region Test Region
 
+		/// <summary>
+		/// 123
+		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int    Field1;
 		[                                            XmlArray("Name1")                             ] public string Field2;
 		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public string Field21;
@@ -335,6 +338,9 @@ namespace T4Model.Tests
 
 		#endregion
 
+		/// <summary>
+		/// 456
+		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")]
 		public List<int> Field3; // Field3 comment
 
