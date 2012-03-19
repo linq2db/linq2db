@@ -75,9 +75,14 @@ void NotifyPropertyChangedImpl()
 			Region  = "INotifyPropertyChanged support",
 			Members =
 			{
+				new Field("const string", "NameOf" + name)
+				{
+					InitValue      = "\"" + name + "\"",
+					AccessModifier = AccessModifier.Public,
+				},
 				new Field("PropertyChangedEventArgs", "_" + ToCamelCase(name) + "ChangedEventArgs")
 				{
-					InitValue      = "new PropertyChangedEventArgs(\"" + name + "\")",
+					InitValue      = "new PropertyChangedEventArgs(NameOf" + name + ")",
 					AccessModifier = AccessModifier.Private,
 					IsStatic       = true,
 					IsReadonly     = true,

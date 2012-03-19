@@ -64,7 +64,9 @@ namespace T4Model.Tests
 		partial void BeforeEditableLong1Changed(long newValue);
 		partial void AfterEditableLong1Changed ();
 
-		private static readonly PropertyChangedEventArgs _editableLong1ChangedEventArgs = new PropertyChangedEventArgs("EditableLong1");
+		public const string NameOfEditableLong1 = "EditableLong1";
+
+		private static readonly PropertyChangedEventArgs _editableLong1ChangedEventArgs = new PropertyChangedEventArgs(NameOfEditableLong1);
 
 		private void OnEditableLong1Changed()
 		{
@@ -119,7 +121,9 @@ namespace T4Model.Tests
 		partial void BeforeEditableInt1Changed(int newValue);
 		partial void AfterEditableInt1Changed ();
 
-		private static readonly PropertyChangedEventArgs _editableInt1ChangedEventArgs = new PropertyChangedEventArgs("EditableInt1");
+		public const string NameOfEditableInt1 = "EditableInt1";
+
+		private static readonly PropertyChangedEventArgs _editableInt1ChangedEventArgs = new PropertyChangedEventArgs(NameOfEditableInt1);
 
 		private void OnEditableInt1Changed()
 		{
@@ -175,7 +179,9 @@ namespace T4Model.Tests
 		partial void BeforeEditableInt3Changed(int newValue);
 		partial void AfterEditableInt3Changed ();
 
-		private static readonly PropertyChangedEventArgs _editableInt3ChangedEventArgs = new PropertyChangedEventArgs("EditableInt3");
+		public const string NameOfEditableInt3 = "EditableInt3";
+
+		private static readonly PropertyChangedEventArgs _editableInt3ChangedEventArgs = new PropertyChangedEventArgs(NameOfEditableInt3);
 
 		private void OnEditableInt3Changed()
 		{
@@ -211,7 +217,9 @@ namespace T4Model.Tests
 		partial void BeforeNotifiedProp1Changed(string newValue);
 		partial void AfterNotifiedProp1Changed ();
 
-		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+		public const string NameOfNotifiedProp1 = "NotifiedProp1";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp1);
 
 		private void OnNotifiedProp1Changed()
 		{
@@ -246,7 +254,9 @@ namespace T4Model.Tests
 		partial void BeforeNotifiedProp2Changed(int newValue);
 		partial void AfterNotifiedProp2Changed ();
 
-		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+		public const string NameOfNotifiedProp2 = "NotifiedProp2";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp2);
 
 		private void OnNotifiedProp2Changed()
 		{
@@ -266,7 +276,9 @@ namespace T4Model.Tests
 
 		#region INotifyPropertyChanged support
 
-		private static readonly PropertyChangedEventArgs _notifiedProp3ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp3");
+		public const string NameOfNotifiedProp3 = "NotifiedProp3";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp3ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp3);
 
 		private void OnNotifiedProp3Changed()
 		{
@@ -301,7 +313,9 @@ namespace T4Model.Tests
 		partial void BeforeIDProp3Changed(string newValue);
 		partial void AfterIDProp3Changed ();
 
-		private static readonly PropertyChangedEventArgs _idProp3ChangedEventArgs = new PropertyChangedEventArgs("IDProp3");
+		public const string NameOfIDProp3 = "IDProp3";
+
+		private static readonly PropertyChangedEventArgs _idProp3ChangedEventArgs = new PropertyChangedEventArgs(NameOfIDProp3);
 
 		private void OnIDProp3Changed()
 		{

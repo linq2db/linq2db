@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
+		DataModel.ttinclude = DataModel.ttinclude
 		Templates\EditableObject.ttinclude = Templates\EditableObject.ttinclude
 		Templates\NotifyPropertyChanged.ttinclude = Templates\NotifyPropertyChanged.ttinclude
 		Templates\T4Model.ttinclude = Templates\T4Model.ttinclude
