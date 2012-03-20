@@ -36,17 +36,18 @@ namespace LinqToDB.Data.Linq
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
-		readonly Dictionary<Expression,Func<Expression,IQueryable>> _queryableAccessorDic  = new Dictionary<Expression,Func<Expression,IQueryable>>();
-		readonly List<Func<Expression,IQueryable>>                  _queryableAccessorList = new List<Func<Expression,IQueryable>>();
+		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
+		readonly List<QueryableAccessor>                  _queryableAccessorList = new List<QueryableAccessor>();
 
-		public int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
+		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
 		{
-			Func<Expression,IQueryable> e;
+			QueryableAccessor e;
 
 			if (_queryableAccessorDic.TryGetValue(expr, out e))
 				return _queryableAccessorList.IndexOf(e);
 
-			e = qe.Compile();
+			e = new QueryableAccessor { Accessor = qe.Compile() };
+			e.Queryable = e.Accessor(expr);
 
 			_queryableAccessorDic. Add(expr, e);
 			_queryableAccessorList.Add(e);
@@ -56,7 +57,8 @@ namespace LinqToDB.Data.Linq
 
 		public Expression GetIQueryable(int n, Expression expr)
 		{
-			return _queryableAccessorList[n](expr).Expression;
+			//return _queryableAccessorList[n].Accessor(expr).Expression;
+			return _queryableAccessorList[n].Queryable.Expression;
 		}
 
 		#endregion

@@ -155,6 +155,39 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Test8([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var parent  =
+					from p in db.Parent
+					where p.ParentID == 1
+					select p.ParentID;
+
+				var chilren =
+					from c in db.Child
+					where parent.Contains(c.ParentID)
+					select c;
+
+				var chs1 = chilren.ToList();
+
+				parent  =
+					from p in db.Parent
+					where p.ParentID == 2
+					select p.ParentID;
+
+				chilren =
+					from c in db.Child
+					where parent.Contains(c.ParentID)
+					select c;
+
+				var chs2 = chilren.ToList();
+
+				Assert.AreEqual(chs2.Count, chs2.Except(chs1).Count());
+			}
+		}
+
+		[Test]
 		public void ObjectCompare([DataContexts(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))

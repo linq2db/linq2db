@@ -46,7 +46,7 @@ namespace LinqToDB.Extensions
 
 		#region EqualsTo
 
-		public static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression, Func<Expression, IQueryable>> queryableAccessorDic)
+		internal static bool EqualsTo(this Expression expr1, Expression expr2, Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
 		{
 			return EqualsTo(expr1, expr2, new HashSet<Expression>(), queryableAccessorDic);
 		}
@@ -58,7 +58,7 @@ namespace LinqToDB.Extensions
 			this Expression     expr1,
 			Expression          expr2,
 			HashSet<Expression> visited,
-			Dictionary<Expression,Func<Expression,IQueryable>> queryableAccessorDic)
+			Dictionary<Expression,QueryableAccessor> queryableAccessorDic)
 		{
 			if (expr1 == expr2)
 				return true;
@@ -130,10 +130,10 @@ namespace LinqToDB.Extensions
 
 						if (queryableAccessorDic.Count > 0)
 						{
-							Func<Expression,IQueryable> func;
+							QueryableAccessor qa;
 
-							if (queryableAccessorDic.TryGetValue(expr1, out func))
-								return func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
+							if (queryableAccessorDic.TryGetValue(expr1, out qa))
+								return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, visited, queryableAccessorDic);
 						}
 
 						if (!e1.Object.EqualsTo(e2.Object, visited, queryableAccessorDic))
@@ -250,12 +250,12 @@ namespace LinqToDB.Extensions
 							{
 								if (queryableAccessorDic.Count > 0)
 								{
-									Func<Expression,IQueryable> func;
+									QueryableAccessor qa;
 
-									if (queryableAccessorDic.TryGetValue(expr1, out func))
+									if (queryableAccessorDic.TryGetValue(expr1, out qa))
 										return
 											e1.Expression.EqualsTo(e2.Expression, visited, queryableAccessorDic) &&
-											func(expr1).Expression.EqualsTo(func(expr2).Expression, visited, queryableAccessorDic);
+											qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, visited, queryableAccessorDic);
 								}
 							}
 

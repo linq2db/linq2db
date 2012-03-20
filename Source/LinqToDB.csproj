@@ -60,6 +60,7 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Data\Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">
       <SubType>Code</SubType>
