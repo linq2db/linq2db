@@ -62,6 +62,22 @@ namespace LinqToDB.ServiceModel
 			protected readonly Dictionary<object,int> Dic     = new Dictionary<object,int>();
 			protected int                             Index;
 
+			string ConvertToString(Type type, object value)
+			{
+				switch (Type.GetTypeCode(type))
+				{
+					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.Single   : return ((float)   value).ToString(CultureInfo.InvariantCulture);
+					case TypeCode.DateTime : return ((DateTime)value).ToString("o");
+				}
+
+				if (type == typeof(DateTimeOffset))
+					return ((DateTimeOffset)value).ToString("o");
+
+				return Common.Convert.ToString(value);
+			}
+
 			protected void Append(Type type, object value)
 			{
 				Append(type);
@@ -70,19 +86,7 @@ namespace LinqToDB.ServiceModel
 					Append((string)null);
 				else if (!type.IsArray)
 				{
-					switch (Type.GetTypeCode(type))
-					{
-						case TypeCode.Decimal  : Append(((decimal) value).ToString(CultureInfo.InvariantCulture)); break;
-						case TypeCode.Double   : Append(((double)  value).ToString(CultureInfo.InvariantCulture)); break;
-						case TypeCode.Single   : Append(((float)   value).ToString(CultureInfo.InvariantCulture)); break;
-						case TypeCode.DateTime : Append(((DateTime)value).ToString("o"));                          break;
-						default                :
-							if (type == typeof(DateTimeOffset))
-								Append(((DateTimeOffset)value).ToString("o"));
-							else
-								Append(Common.Convert.ToString(value));
-							break;
-					}
+					Append(ConvertToString(type, value));
 				}
 				else
 				{
@@ -102,7 +106,10 @@ namespace LinqToDB.ServiceModel
 					else
 						foreach (var val in (IEnumerable)value)
 						{
-							Append(val == null ? null : Common.Convert.ToString(val));
+							if (val == null)
+								Append((string)null);
+							else
+								Append(ConvertToString(val.GetType(), val));
 							cnt++;
 						}
 
