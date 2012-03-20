@@ -73,7 +73,7 @@ namespace LinqToDB.Data
 			if (!object.ReferenceEquals(sql, newSql))
 			{
 				sql = newSql;
-				sql.ParameterDependent = true;
+				sql.IsParameterDependent = true;
 			}
 
 			var sqlProvider = DataProvider.CreateSqlProvider();
@@ -91,7 +91,7 @@ namespace LinqToDB.Data
 				commands[i] = sb.ToString();
 			}
 
-			if (!query.SqlQuery.ParameterDependent)
+			if (!query.SqlQuery.IsParameterDependent)
 				query.Context = commands;
 
 			return new PreparedQuery

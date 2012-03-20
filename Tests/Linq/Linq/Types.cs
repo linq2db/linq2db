@@ -404,6 +404,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DateTimeArray1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t,
+					from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
+		}
+
+		[Test]
+		public void DateTimeArray2([DataContexts] string context)
+		{
+			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types2 where arr.Contains(t.DateTimeValue) select t,
+					from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
+		}
+
+		[Test]
 		public void Nullable([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

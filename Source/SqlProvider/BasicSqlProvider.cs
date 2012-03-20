@@ -1534,7 +1534,7 @@ namespace LinqToDB.SqlProvider
 			else if (value is string)                 BuildString(sb, value.ToString());
 			else if (value is char || value is char?) sb.Append('\'').Append(value.ToString().Replace("'", "''")).Append('\'');
 			else if (value is bool || value is bool?) sb.Append((bool)value ? "1" : "0");
-			else if (value is DateTime)               sb.AppendFormat("'{0:yyyy-MM-dd HH:mm:ss.fffffff}'", value);
+			else if (value is DateTime)               sb.Append("'").Append(string.Format("{0:yyyy-MM-dd HH:mm:ss.fffffff}", value).TrimEnd('0').TrimEnd('.')).Append("'");
 			else if (value is Guid)                   sb.Append('\'').Append(value).Append('\'');
 			else if (value is decimal)                sb.Append(((decimal)value).ToString(NumberFormatInfo));
 			else if (value is double)                 sb.Append(((double) value).ToString(NumberFormatInfo));
@@ -2859,7 +2859,7 @@ namespace LinqToDB.SqlProvider
 									if (expr1.CanBeNull() && expr2.CanBeNull())
 									{
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
-											SqlQuery.ParameterDependent = true;
+											SqlQuery.IsParameterDependent = true;
 										else
 											if (expr1 is SqlQuery.Column || expr1 is SqlField)
 											if (expr2 is SqlQuery.Column || expr2 is SqlField)

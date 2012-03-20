@@ -70,17 +70,17 @@ namespace LinqToDB.SqlBuilder
 			bool               parameterDependent,
 			List<SqlParameter> parameters)
 		{
-			_insert             = insert;
-			_update             = update;
-			_select             = select;
-			_from               = from;
-			_where              = where;
-			_groupBy            = groupBy;
-			_having             = having;
-			_orderBy            = orderBy;
-			_unions             = unions;
-			ParentSql          = parentSql;
-			ParameterDependent = parameterDependent;
+			_insert              = insert;
+			_update              = update;
+			_select              = select;
+			_from                = from;
+			_where               = where;
+			_groupBy             = groupBy;
+			_having              = having;
+			_orderBy             = orderBy;
+			_unions              = unions;
+			ParentSql            = parentSql;
+			IsParameterDependent = parameterDependent;
 			_parameters.AddRange(parameters);
 
 			foreach (var col in select.Columns)
@@ -106,8 +106,8 @@ namespace LinqToDB.SqlBuilder
 			get { return _properties ?? (_properties = new List<object>()); }
 		}
 
-		public bool     ParameterDependent { get; set; }
-		public SqlQuery ParentSql          { get; set; }
+		public bool     IsParameterDependent { get; set; }
+		public SqlQuery ParentSql            { get; set; }
 
 		public bool IsSimple
 		{
@@ -3437,8 +3437,8 @@ namespace LinqToDB.SqlBuilder
 					sql.ParentSql = this;
 					sql.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
 
-					if (sql.ParameterDependent)
-						ParameterDependent = true;
+					if (sql.IsParameterDependent)
+						IsParameterDependent = true;
 				}
 			});
 
@@ -4065,7 +4065,7 @@ namespace LinqToDB.SqlBuilder
 								Parameters.Add(p);
 							}
 							else
-								ParameterDependent = true;
+								IsParameterDependent = true;
 						}
 
 						break;
@@ -4131,7 +4131,7 @@ namespace LinqToDB.SqlBuilder
 
 		public SqlQuery ProcessParameters()
 		{
-			if (ParameterDependent)
+			if (IsParameterDependent)
 			{
 				var query = new QueryVisitor().Convert(this, e =>
 				{
@@ -4376,7 +4376,7 @@ namespace LinqToDB.SqlBuilder
 			_orderBy = new OrderByClause(this, clone._orderBy, objectTree, doClone);
 
 			_parameters.AddRange(clone._parameters.ConvertAll(p => (SqlParameter)p.Clone(objectTree, doClone)));
-			ParameterDependent = clone.ParameterDependent;
+			IsParameterDependent = clone.IsParameterDependent;
 
 			new QueryVisitor().Visit(this, expr =>
 			{

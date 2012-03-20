@@ -807,7 +807,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Having);
 							Append(elem.OrderBy);
 							Append(elem.ParentSql == null ? 0 : elem.ParentSql.SourceID);
-							Append(elem.ParameterDependent);
+							Append(elem.IsParameterDependent);
 
 							if (!elem.HasUnion)
 								Builder.Append(" -");
