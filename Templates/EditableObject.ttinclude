@@ -28,9 +28,6 @@ void EditableObjectImpl()
 		{
 			var parent = (MemberGroup)prop.Parent;
 			parentMembers = parent.Members;
-
-//			if (parent.IsPropertyGroup)
-//				gr = parent;
 		}
 
 		var name = prop.Name.Trim();
@@ -166,6 +163,41 @@ void EditableObjectImpl()
 					id
 				},
 			});
+			
+			if (!cl.Interfaces.Contains("IEditableObject"))
+			{
+				if (!Model.Usings.Contains("System.ComponentModel"))
+					Model.Usings.Add("System.ComponentModel");
+				
+				cl.Interfaces.Add("IEditableObject");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "IEditableObject support",
+					Members =
+					{
+						new MemberGroup
+						{
+							IsCompact = true,
+							Members   =
+							{
+								new Field   ("bool", "_isEditing"),
+								new Property("bool", " IsEditing").InitGetter("_isEditing"),
+							}
+						},
+						new MemberGroup
+						{
+							IsCompact = true,
+							Members   =
+							{
+								new Method("void", "BeginEdit",  null, new[] { "_isEditing = true;" })                       { IsVirtual = true },
+								new Method("void", "CancelEdit", null, new[] { "_isEditing = false;", "RejectChanges();", }) { IsVirtual = true },
+								new Method("void", "EndEdit",    null, new[] { "_isEditing = false;", "AcceptChanges();", }) { IsVirtual = true },
+							}
+						},
+					}
+				});
+			}
 		}
 
 		cl.SetTree();

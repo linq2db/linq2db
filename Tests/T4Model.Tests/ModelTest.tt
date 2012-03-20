@@ -12,6 +12,8 @@
 	Model.Usings.Add("T4Model.Tests");
 	Model.Usings.Add("System.ComponentModel");
 	
+	ImplementNotifyPropertyChanging = true;
+	
 	Model.Namespaces[0].Types.Add(new Class
 	{
 		Name    = "TestClass1",

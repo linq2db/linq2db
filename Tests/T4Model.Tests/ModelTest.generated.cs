@@ -13,7 +13,7 @@ using T4Model.Tests;
 
 namespace T4Model.Tests
 {
-	public partial class TestClass1 : INotifyPropertyChanged
+	public partial class TestClass1 : IEditableObject, INotifyPropertyChanged, INotifyPropertyChanging
 	{
 		public TestClass1()
 		{
@@ -31,6 +31,8 @@ namespace T4Model.Tests
 			{
 				if (_currentEditableLong1 != value)
 				{
+					OnEditableLong1Changing();
+
 					BeforeEditableLong1Changed(value);
 					_currentEditableLong1 = value;
 					AfterEditableLong1Changed();
@@ -75,6 +77,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _editableLong1ChangingEventArgs = new PropertyChangingEventArgs(NameOfEditableLong1);
+
+		private void OnEditableLong1Changing()
+		{
+			OnPropertyChanging(_editableLong1ChangingEventArgs);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region EditableInt1 : int
@@ -88,6 +101,8 @@ namespace T4Model.Tests
 			{
 				if (_currentEditableInt1 != value)
 				{
+					OnEditableInt1Changing();
+
 					BeforeEditableInt1Changed(value);
 					_currentEditableInt1 = value;
 					AfterEditableInt1Changed();
@@ -132,6 +147,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _editableInt1ChangingEventArgs = new PropertyChangingEventArgs(NameOfEditableInt1);
+
+		private void OnEditableInt1Changing()
+		{
+			OnPropertyChanging(_editableInt1ChangingEventArgs);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region EditableInt3 : int
@@ -145,6 +171,9 @@ namespace T4Model.Tests
 			{
 				if (_currentEditableInt3 != value)
 				{
+					OnEditableInt1Changing();
+					OnEditableInt3Changing();
+
 					BeforeEditableInt3Changed(value);
 					_currentEditableInt3 = value;
 					AfterEditableInt3Changed();
@@ -190,6 +219,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _editableInt3ChangingEventArgs = new PropertyChangingEventArgs(NameOfEditableInt3);
+
+		private void OnEditableInt3Changing()
+		{
+			OnPropertyChanging(_editableInt3ChangingEventArgs);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region NotifiedProp1 : string
@@ -202,6 +242,9 @@ namespace T4Model.Tests
 			{
 				if (_notifiedProp1 != value)
 				{
+					OnNotifiedProp2Changing();
+					OnNotifiedProp3Changing();
+
 					BeforeNotifiedProp1Changed(value);
 					_notifiedProp1 = value;
 					AfterNotifiedProp1Changed();
@@ -228,6 +271,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _notifiedProp1ChangingEventArgs = new PropertyChangingEventArgs(NameOfNotifiedProp1);
+
+		private void OnNotifiedProp1Changing()
+		{
+			OnPropertyChanging(_notifiedProp1ChangingEventArgs);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region NotifiedProp2 : int
@@ -240,6 +294,8 @@ namespace T4Model.Tests
 			{
 				if (_notifiedProp2 != value)
 				{
+					OnNotifiedProp2Changing();
+
 					BeforeNotifiedProp2Changed(value);
 					_notifiedProp2 = value;
 					AfterNotifiedProp2Changed();
@@ -261,6 +317,17 @@ namespace T4Model.Tests
 		private void OnNotifiedProp2Changed()
 		{
 			OnPropertyChanged(_notifiedProp2ChangedEventArgs);
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _notifiedProp2ChangingEventArgs = new PropertyChangingEventArgs(NameOfNotifiedProp2);
+
+		private void OnNotifiedProp2Changing()
+		{
+			OnPropertyChanging(_notifiedProp2ChangingEventArgs);
 		}
 
 		#endregion
@@ -287,6 +354,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _notifiedProp3ChangingEventArgs = new PropertyChangingEventArgs(NameOfNotifiedProp3);
+
+		private void OnNotifiedProp3Changing()
+		{
+			OnPropertyChanging(_notifiedProp3ChangingEventArgs);
+		}
+
+		#endregion
+
 		#endregion
 
 		#region IDProp3 : string
@@ -299,6 +377,8 @@ namespace T4Model.Tests
 			{
 				if (_idProp3 != value)
 				{
+					OnIDProp3Changing();
+
 					BeforeIDProp3Changed(value);
 					_idProp3 = value;
 					AfterIDProp3Changed();
@@ -320,6 +400,17 @@ namespace T4Model.Tests
 		private void OnIDProp3Changed()
 		{
 			OnPropertyChanged(_idProp3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+		private static readonly PropertyChangingEventArgs _idProp3ChangingEventArgs = new PropertyChangingEventArgs(NameOfIDProp3);
+
+		private void OnIDProp3Changing()
+		{
+			OnPropertyChanging(_idProp3ChangingEventArgs);
 		}
 
 		#endregion
@@ -437,6 +528,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+		#region IEditableObject support
+
+		public bool _isEditing;
+		public bool  IsEditing { get { return _isEditing; } }
+
+		public virtual void BeginEdit () { _isEditing = true; }
+		public virtual void CancelEdit() { _isEditing = false; RejectChanges(); }
+		public virtual void EndEdit   () { _isEditing = false; AcceptChanges(); }
+
+		#endregion
+
 		#region INotifyPropertyChanged support
 
 #if !SILVERLIGHT
@@ -472,6 +574,47 @@ namespace T4Model.Tests
 						() => PropertyChanged(this, arg));
 #else
 				PropertyChanged(this, arg);
+#endif
+			}
+		}
+
+		#endregion
+
+		#region INotifyPropertyChanging support
+
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
+		public virtual event PropertyChangingEventHandler PropertyChanging;
+
+		protected void OnPropertyChanging(string propertyName)
+		{
+			if (PropertyChanged != null)
+			{
+#if SILVERLIGHT
+				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
+					PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+				else
+					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
+						() => PropertyChanging(this, new PropertyChangingEventArgs(propertyName)));
+#else
+				PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+#endif
+			}
+		}
+
+		protected void OnPropertyChanging(PropertyChangingEventArgs arg)
+		{
+			if (PropertyChanged != null)
+			{
+#if SILVERLIGHT
+				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
+					PropertyChanging(this, arg);
+				else
+					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
+						() => PropertyChanging(this, arg));
+#else
+				PropertyChanging(this, arg);
 #endif
 			}
 		}

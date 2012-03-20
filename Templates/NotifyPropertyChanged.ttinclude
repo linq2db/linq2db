@@ -9,6 +9,8 @@
 	}
 #>
 <#+
+bool ImplementNotifyPropertyChanging;
+
 void NotifyPropertyChangedImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
@@ -99,7 +101,30 @@ void NotifyPropertyChangedImpl()
 
 		if (prop.Dependents.Count == 0)
 			prop.Dependents.Add(name);
-		
+
+		if (ImplementNotifyPropertyChanging)
+		{
+			gr.Members.Add(new MemberGroup
+			{
+				Region  = "INotifyPropertyChanging support",
+				Members =
+				{
+					new Field("PropertyChangingEventArgs", "_" + ToCamelCase(name) + "ChangingEventArgs")
+					{
+						InitValue      = "new PropertyChangingEventArgs(NameOf" + name + ")",
+						AccessModifier = AccessModifier.Private,
+						IsStatic       = true,
+						IsReadonly     = true,
+					},
+					new Method("void", "On" + name + "Changing", null,
+						new[] { "OnPropertyChanging(_" + ToCamelCase(name) + "ChangingEventArgs);" })
+					{
+						AccessModifier = AccessModifier.Private
+					}
+				}
+			});
+		}
+
 		if (prop.HasSetter)
 		{
 			prop.SetBody = prop.SetBody.Select(s => "\t" + s).ToList();
@@ -115,11 +140,22 @@ void NotifyPropertyChangedImpl()
 				getValue = name;
 			}
 			
-			prop.SetBody.Insert(0, "if (" + getValue + " != value)");
-			prop.SetBody.Insert(1, "{");
-			prop.SetBody.Insert(2, "\tBefore" + name + "Changed(value);");
+			var insSpaces = prop.SetBody.Count > 1;
+			var n = 0;
 			
-			if (prop.SetBody.Count > 4)
+			prop.SetBody.Insert(n++, "if (" + getValue + " != value)");
+			prop.SetBody.Insert(n++, "{");
+			
+			if (ImplementNotifyPropertyChanging)
+			{
+				foreach (var dp in prop.Dependents)
+					prop.SetBody.Insert(n++, "\tOn" + dp + "Changing();");
+				prop.SetBody.Insert(n++, "");
+			}
+			
+			prop.SetBody.Insert(n++, "\tBefore" + name + "Changed(value);");
+			
+			if (insSpaces)
 			{
 				prop.SetBody.Insert(3, "");
 				prop.SetBody.Add("");
@@ -183,6 +219,35 @@ void NotifyPropertyChangedImpl()
 					}
 				});
 			}
+			
+			if (ImplementNotifyPropertyChanging && !cl.Interfaces.Contains("INotifyPropertyChanging"))
+			{
+				if (!Model.Usings.Contains("System.ComponentModel"))
+					Model.Usings.Add("System.ComponentModel");
+				
+				cl.Interfaces.Add("INotifyPropertyChanging");
+
+				cl.Members.Add(new MemberGroup
+				{
+					Region  = "INotifyPropertyChanging support",
+					Members =
+					{
+						new Event("PropertyChangingEventHandler", "PropertyChanging")
+						{
+							IsVirtual  = true,
+							Attributes = { new Attribute("field : NonSerialized") { Conditional = "!SILVERLIGHT" } }
+						},
+						new Method("void", "OnPropertyChanging", new[] { "string propertyName" }, OnPropertyChangingBody)
+						{
+							AccessModifier = AccessModifier.Protected
+						},
+						new Method("void", "OnPropertyChanging", new[] { "PropertyChangingEventArgs arg" }, OnPropertyChangingArgBody)
+						{
+							AccessModifier = AccessModifier.Protected
+						},
+					}
+				});
+			}
 		}
 	}
 }
@@ -215,6 +280,38 @@ public string[] OnPropertyChangedArgBody = new[]
 	"\t\t\t() => PropertyChanged(this, arg));",
 	"#else",
 	"\tPropertyChanged(this, arg);",
+	"#endif",
+	"}",
+};
+
+public string[] OnPropertyChangingBody = new[]
+{
+	"if (PropertyChanged != null)",
+	"{",
+	"#if SILVERLIGHT",
+	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+	"\t\tPropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
+	"\telse",
+	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
+	"\t\t\t() => PropertyChanging(this, new PropertyChangingEventArgs(propertyName)));",
+	"#else",
+	"\tPropertyChanging(this, new PropertyChangingEventArgs(propertyName));",
+	"#endif",
+	"}",
+};
+
+public string[] OnPropertyChangingArgBody = new[]
+{
+	"if (PropertyChanged != null)",
+	"{",
+	"#if SILVERLIGHT",
+	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
+	"\t\tPropertyChanging(this, arg);",
+	"\telse",
+	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
+	"\t\t\t() => PropertyChanging(this, arg));",
+	"#else",
+	"\tPropertyChanging(this, arg);",
 	"#endif",
 	"}",
 };
