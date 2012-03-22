@@ -4145,18 +4145,6 @@ namespace LinqToDB.SqlBuilder
 
 							break;
 
-						case QueryElementType.SqlValue :
-							{
-								var v = (SqlParameter)e;
-
-								if (v.Value != null && v.Value is DateTime)
-								{
-									
-								}
-							}
-
-							break;
-
 						case QueryElementType.ExprExprPredicate :
 							{
 								var ee = (Predicate.ExprExpr)e;
