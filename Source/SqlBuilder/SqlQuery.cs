@@ -6,10 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-
-using JetBrains.Annotations;
-
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.SqlBuilder
@@ -674,7 +672,7 @@ namespace LinqToDB.SqlBuilder
 
 			public class Expr : Predicate
 			{
-				public Expr([NotNull] ISqlExpression exp1, int precedence)
+				public Expr([JetBrains.Annotations.NotNull] ISqlExpression exp1, int precedence)
 					: base(precedence)
 				{
 					if (exp1 == null) throw new ArgumentNullException("exp1");
@@ -682,7 +680,7 @@ namespace LinqToDB.SqlBuilder
 					Expr1 = exp1;
 				}
 
-				public Expr([NotNull] ISqlExpression exp1)
+				public Expr([JetBrains.Annotations.NotNull] ISqlExpression exp1)
 					: base(exp1.Precedence)
 				{
 					if (exp1 == null) throw new ArgumentNullException("exp1");
@@ -4147,6 +4145,18 @@ namespace LinqToDB.SqlBuilder
 
 							break;
 
+						case QueryElementType.SqlValue :
+							{
+								var v = (SqlParameter)e;
+
+								if (v.Value != null && v.Value is DateTime)
+								{
+									
+								}
+							}
+
+							break;
+
 						case QueryElementType.ExprExprPredicate :
 							{
 								var ee = (Predicate.ExprExpr)e;
@@ -4194,11 +4204,16 @@ namespace LinqToDB.SqlBuilder
 
 					new QueryVisitor().VisitAll(query, expr =>
 					{
-						if (expr.ElementType == QueryElementType.SqlParameter)
+						switch (expr.ElementType)
 						{
-							var p = (SqlParameter)expr;
-							if (p.IsQueryParameter)
-								query.Parameters.Add(p);
+							case QueryElementType.SqlParameter :
+								{
+									var p = (SqlParameter)expr;
+									if (p.IsQueryParameter)
+										query.Parameters.Add(p);
+
+									break;
+								}
 						}
 					});
 				}
@@ -4209,7 +4224,7 @@ namespace LinqToDB.SqlBuilder
 			return this;
 		}
 
-		static Predicate ConvertInListPredicate(Predicate.InList p)
+		Predicate ConvertInListPredicate(Predicate.InList p)
 		{
 			if (p.Values == null || p.Values.Count == 0)
 				return new Predicate.Expr(new SqlValue(p.IsNot));
@@ -4221,88 +4236,33 @@ namespace LinqToDB.SqlBuilder
 				if (pr.Value == null)
 					return new Predicate.Expr(new SqlValue(p.IsNot));
 
-				if (pr.Value is IEnumerable && p.Expr1 is ISqlTableSource)
+				if (pr.Value is IEnumerable)
 				{
 					var items = (IEnumerable)pr.Value;
-					var table = (ISqlTableSource)p.Expr1;
-					var keys  = table.GetKeys(true);
 
-					if (keys == null || keys.Count == 0)
-						throw new SqlException("Cant create IN expression.");
-
-					if (keys.Count == 1)
+					if (p.Expr1 is ISqlTableSource)
 					{
-						var values = new List<ISqlExpression>();
-						var field  = GetUnderlayingField(keys[0]);
+						var table = (ISqlTableSource)p.Expr1;
+						var keys  = table.GetKeys(true);
 
-						foreach (var item in items)
-						{
-							var value = field.MemberMapper.GetValue(item);
-							values.Add(new SqlValue(value));
-						}
+						if (keys == null || keys.Count == 0)
+							throw new SqlException("Cant create IN expression.");
 
-						if (values.Count == 0)
-							return new Predicate.Expr(new SqlValue(p.IsNot));
-
-						return new Predicate.InList(keys[0], p.IsNot, values);
-					}
-
-					{
-						var sc = new SearchCondition();
-
-						foreach (var item in items)
-						{
-							var itemCond = new SearchCondition();
-
-							foreach (var key in keys)
-							{
-								var field = GetUnderlayingField(key);
-								var value = field.MemberMapper.GetValue(item);
-								var cond  = value == null ?
-									new Condition(false, new Predicate.IsNull  (field, false)) :
-									new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, new SqlValue(value)));
-
-								itemCond.Conditions.Add(cond);
-							}
-
-							sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
-						}
-
-						if (sc.Conditions.Count == 0)
-							return new Predicate.Expr(new SqlValue(p.IsNot));
-
-						if (p.IsNot)
-							return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);
-
-						return new Predicate.Expr(sc, SqlBuilder.Precedence.LogicalDisjunction);
-					}
-				}
-
-				if (pr.Value is IEnumerable && p.Expr1 is SqlExpression)
-				{
-					var expr  = (SqlExpression)p.Expr1;
-
-					if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
-					{
-						var items = (IEnumerable)pr.Value;
-						var type  = items.GetListItemType();
-						var ta    = TypeAccessor.GetAccessor(type);
-						var names = expr.Expr.Substring(1).Split(',');
-
-						if (expr.Parameters.Length == 1)
+						if (keys.Count == 1)
 						{
 							var values = new List<ISqlExpression>();
+							var field  = GetUnderlayingField(keys[0]);
 
 							foreach (var item in items)
 							{
-								var value = ta[names[0]].GetValue(item);
+								var value = field.MemberMapper.GetValue(item);
 								values.Add(new SqlValue(value));
 							}
 
 							if (values.Count == 0)
 								return new Predicate.Expr(new SqlValue(p.IsNot));
 
-							return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
+							return new Predicate.InList(keys[0], p.IsNot, values);
 						}
 
 						{
@@ -4312,13 +4272,13 @@ namespace LinqToDB.SqlBuilder
 							{
 								var itemCond = new SearchCondition();
 
-								for (var i = 0; i < expr.Parameters.Length; i++)
+								foreach (var key in keys)
 								{
-									var sql   = expr.Parameters[i];
-									var value = ta[names[i]].GetValue(item);
+									var field = GetUnderlayingField(key);
+									var value = field.MemberMapper.GetValue(item);
 									var cond  = value == null ?
-										new Condition(false, new Predicate.IsNull  (sql, false)) :
-										new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
+										new Condition(false, new Predicate.IsNull  (field, false)) :
+										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, new SqlValue(value)));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -4335,6 +4295,79 @@ namespace LinqToDB.SqlBuilder
 							return new Predicate.Expr(sc, SqlBuilder.Precedence.LogicalDisjunction);
 						}
 					}
+
+					if (p.Expr1 is SqlExpression)
+					{
+						var expr  = (SqlExpression)p.Expr1;
+
+						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
+						{
+							var type  = items.GetListItemType();
+							var ta    = TypeAccessor.GetAccessor(type);
+							var names = expr.Expr.Substring(1).Split(',');
+
+							if (expr.Parameters.Length == 1)
+							{
+								var values = new List<ISqlExpression>();
+
+								foreach (var item in items)
+								{
+									var value = ta[names[0]].GetValue(item);
+									values.Add(new SqlValue(value));
+								}
+
+								if (values.Count == 0)
+									return new Predicate.Expr(new SqlValue(p.IsNot));
+
+								return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
+							}
+
+							{
+								var sc = new SearchCondition();
+
+								foreach (var item in items)
+								{
+									var itemCond = new SearchCondition();
+
+									for (var i = 0; i < expr.Parameters.Length; i++)
+									{
+										var sql   = expr.Parameters[i];
+										var value = ta[names[i]].GetValue(item);
+										var cond  = value == null ?
+											new Condition(false, new Predicate.IsNull  (sql, false)) :
+											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
+
+										itemCond.Conditions.Add(cond);
+									}
+
+									sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
+								}
+
+								if (sc.Conditions.Count == 0)
+									return new Predicate.Expr(new SqlValue(p.IsNot));
+
+								if (p.IsNot)
+									return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);
+
+								return new Predicate.Expr(sc, SqlBuilder.Precedence.LogicalDisjunction);
+							}
+						}
+					}
+
+					/*
+					var itemType = items.GetType().GetItemType();
+
+					if (itemType == typeof(DateTime)  || itemType == typeof(DateTimeOffset) ||
+						itemType == typeof(DateTime?) || itemType == typeof(DateTimeOffset?))
+					{
+						var list = new List<SqlParameter>();
+
+						foreach (var item in items)
+							list.Add(new SqlParameter(itemType, "p", item, (MappingSchema)null));
+
+						return new Predicate.InList(p.Expr1, p.IsNot, list);
+					}
+					*/
 				}
 			}
 
