@@ -725,6 +725,16 @@ namespace LinqToDB.Data.Linq.Builder
 				{
 					case ExpressionType.MemberAccess :
 						{
+							if (levelExpression == expression && Sequence.Length == 1 && !(Sequence[0] is GroupByBuilder.GroupByContext))
+							{
+								var memberExpression = GetMemberExpression(
+									((MemberExpression)levelExpression).Member,
+									levelExpression == expression,
+									levelExpression.Type);
+
+								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SqlQuery));
+							}
+
 							var context = ProcessMemberAccess(
 								expression,
 								(MemberExpression)levelExpression,

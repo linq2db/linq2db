@@ -408,5 +408,33 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Test]
+		public void LetTest1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					let chs = p.Children
+					select new { p.ParentID, Count = chs.Count() },
+					from p in db.Parent
+					let chs = p.Children
+					select new { p.ParentID, Count = chs.Count() });
+		}
+
+		[Test]
+		public void LetTest2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					select new { p } into p
+					let chs = p.p.Children
+					select new { p.p.ParentID, Count = chs.Count() },
+					from p in db.Parent
+					select new { p } into p
+					let chs = p.p.Children
+					select new { p.p.ParentID, Count = chs.Count() });
+		}
 	}
 }
