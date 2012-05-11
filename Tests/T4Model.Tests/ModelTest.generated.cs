@@ -7,12 +7,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 
 using T4Model.Tests;
 
 namespace T4Model.Tests
 {
+	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableLong1")]
 	public partial class TestClass1 : IEditableObject, INotifyPropertyChanged, INotifyPropertyChanging
 	{
 		public TestClass1()
@@ -530,8 +532,8 @@ namespace T4Model.Tests
 
 		#region IEditableObject support
 
-		public bool _isEditing;
-		public bool  IsEditing { get { return _isEditing; } }
+		private bool _isEditing;
+		public  bool  IsEditing { get { return _isEditing; } }
 
 		public virtual void BeginEdit () { _isEditing = true; }
 		public virtual void CancelEdit() { _isEditing = false; RejectChanges(); }
@@ -616,6 +618,22 @@ namespace T4Model.Tests
 #else
 				PropertyChanging(this, arg);
 #endif
+			}
+		}
+
+		#endregion
+
+		#region Custom Validation
+
+		public static partial class CustomValidator
+		{
+			// The follow method must be implemented:
+			// public static ValidationResult ValidateEditableLong1(TestClass1 obj) { return ValidationResult.Success; }
+			//
+			public static bool IsValid(TestClass1 obj)
+			{
+				return
+					ValidateEditableLong1(obj) == ValidationResult.Success;
 			}
 		}
 

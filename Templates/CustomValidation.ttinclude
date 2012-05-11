@@ -1,0 +1,62 @@
+﻿<#
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			CustomValidationImpl();
+		};
+	}
+#>
+<#+
+void CustomValidationImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		var props = GetTreeNodes(cl).OfType<Property>().Where(p => p.CustomValidation).ToList();
+		
+		if (props.Count > 0)
+		{
+			if (!Model.Usings.Contains("System.ComponentModel.DataAnnotations"))
+				Model.Usings.Add("System.ComponentModel.DataAnnotations");
+			
+			var isValid   = new Method("bool", "IsValid", new[] { cl.Name + " obj" }) { IsStatic = true };
+			var validator = new Class("CustomValidator", isValid) { IsStatic = true, };
+			
+			isValid.Comment.Add(" The follow method must be implemented:");
+			isValid.Body.   Add("return");
+			
+			cl.Members.Add(new MemberGroup
+			{
+				Region  = "Custom Validation",
+				Members = { validator },
+			});
+
+			foreach (var p in props)
+			{
+				var mname = "Validate" + p.Name.Trim();
+				
+				cl.Attributes.Add(
+					new Attribute("CustomValidation",
+						"typeof(" + cl.Name + ".CustomValidator)",
+						"\"" + mname + "\""));
+				
+				isValid.Comment.Add(" public static ValidationResult " + mname + "(" + cl.Name + " obj) { return ValidationResult.Success; }");
+				isValid.Body.   Add("\t" + mname + "(obj) == ValidationResult.Success &&");
+			}
+
+			var lastLine = isValid.Body[isValid.Body.Count - 1];
+			isValid.Body[isValid.Body.Count - 1] = lastLine.Substring(0, lastLine.Length - 3) + ";";
+			
+			isValid.Comment.Add("");
+			
+			cl.SetTree();			
+		}
+	}
+}
+
+partial class Property
+{
+	public bool CustomValidation;
+}
+#>

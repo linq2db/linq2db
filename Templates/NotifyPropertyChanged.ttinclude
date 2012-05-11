@@ -15,7 +15,7 @@ void NotifyPropertyChangedImpl()
 {
 	foreach (Property prop in GetTreeNodes(Model).OfType<Property>().Where(p => p.IsNotifying).ToList())
 	{
-		List<MemberBase> parentMembers;
+		List<IClassMember> parentMembers;
 		
 		MemberGroup gr = null;
 		

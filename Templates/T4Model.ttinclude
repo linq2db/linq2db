@@ -148,6 +148,10 @@ public partial class Namespace : ITree
 	}
 }
 
+public interface IClassMember : ITree
+{
+}
+
 public enum AccessModifier
 {
 	Public,
@@ -157,7 +161,7 @@ public enum AccessModifier
 	Partial
 }
 
-public abstract partial class TypeBase : ITree
+public abstract partial class TypeBase : IClassMember
 {
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
@@ -173,6 +177,7 @@ public abstract partial class TypeBase : ITree
 static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 {
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
+	if (cl.IsStatic) tt.Write("static ");		
 	tt.Write("partial class {0}", cl.Name);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
@@ -193,15 +198,16 @@ static Action<GeneratedTextTransformation> WriteEndClass = tt => tt.WriteLine("}
 
 public partial class Class : TypeBase
 {
-	public string           BaseClass;
-	public List<string>     Interfaces = new List<string>();
-	public List<MemberBase> Members    = new List<MemberBase>();
+	public string             BaseClass;
+	public bool               IsStatic   = false;
+	public List<string>       Interfaces = new List<string>();
+	public List<IClassMember> Members    = new List<IClassMember>();
 
 	public Class()
 	{
 	}
 
-	public Class(string name, params MemberBase[] members)
+	public Class(string name, params IClassMember[] members)
 	{
 		Name = name;
 		Members.AddRange(members);
@@ -225,48 +231,60 @@ public partial class Class : TypeBase
 		WriteBeginClass(tt, this);
 		tt.PushIndent("\t");
 
-		foreach (var m in Members)
+		foreach (var cm in Members)
 		{
-			foreach (var c in m.Comment)
-				WriteComment(tt, c);
-
-			if (m.Attributes.Count > 0)
+			if (cm is MemberBase)
 			{
-				var q =
-					from a in m.Attributes
-					group a by a.Conditional ?? "";
+				var m = (MemberBase)cm;
 				
-				foreach (var g in q)
+				foreach (var c in m.Comment)
+					WriteComment(tt, c);
+
+				if (m.Attributes.Count > 0)
 				{
-					if (g.Key.Length > 0)
-					{
-						tt.RemoveSpace();
-						tt.WriteLine("#if " + g.Key);
-					}
+					var q =
+						from a in m.Attributes
+						group a by a.Conditional ?? "";
 					
-					var attrs = g.ToList();
-					
-					tt.Write("[");
-
-					for (var i = 0; i < attrs.Count; i++)
+					foreach (var g in q)
 					{
-						if (i > 0) tt.Write(", ");
-						attrs[i].Render(tt);
-					}
+						if (g.Key.Length > 0)
+						{
+							tt.RemoveSpace();
+							tt.WriteLine("#if " + g.Key);
+						}
+						
+						var attrs = g.ToList();
+						
+						tt.Write("[");
 
-					tt.WriteLine("]");
+						for (var i = 0; i < attrs.Count; i++)
+						{
+							if (i > 0) tt.Write(", ");
+							attrs[i].Render(tt);
+						}
 
-					if (g.Key.Length > 0)
-					{
-						tt.RemoveSpace();
-						tt.WriteLine("#endif");
-					}
-				}				
+						tt.WriteLine("]");
+
+						if (g.Key.Length > 0)
+						{
+							tt.RemoveSpace();
+							tt.WriteLine("#endif");
+						}
+					}				
+				}
+
+				m.Render(tt, false);
+				if (m.InsertBlankLineAfter)
+					tt.WriteLine("");
 			}
-			
-			m.Render(tt, false);
-			if (m.InsertBlankLineAfter)
+			else if (cm is TypeBase)
+			{
+				var t = (TypeBase)cm;
+				
+				t.Render(tt);
 				tt.WriteLine("");
+			}
 		}
 
 		tt.Trim();
@@ -290,7 +308,7 @@ public partial class Class : TypeBase
 	}
 }
 
-public abstract partial class MemberBase : ITree
+public abstract partial class MemberBase : IClassMember
 {
 	public string          ID;
 	public AccessModifier  AccessModifier = AccessModifier.Public;
@@ -323,10 +341,10 @@ static Action<GeneratedTextTransformation>        EndRegion   = (tt)   => { tt.W
 
 public partial class MemberGroup : MemberBase
 {
-	public string           Region;
-	public bool             IsCompact;
-	public bool             IsPropertyGroup;
-	public List<MemberBase> Members = new List<MemberBase>();
+	public string             Region;
+	public bool               IsCompact;
+	public bool               IsPropertyGroup;
+	public List<IClassMember> Members = new List<IClassMember>();
 
 	public override int  CalcBodyLen() { return 0; }
 	
@@ -578,49 +596,61 @@ public partial class MemberGroup : MemberBase
 		}
 		else
 		{
-			foreach (var m in Members)
+			foreach (var cm in Members)
 			{
-				foreach (var c in m.Comment)
-					WriteComment(tt, c);
-
-				if (m.Attributes.Count > 0)
+				if (cm is MemberBase)
 				{
-					var q =
-						from a in m.Attributes
-						group a by a.Conditional ?? "";
+					var m = (MemberBase)cm;
 					
-					foreach (var g in q)
+					foreach (var c in m.Comment)
+						WriteComment(tt, c);
+
+					if (m.Attributes.Count > 0)
 					{
-						if (g.Key.Length > 0)
-						{
-							tt.RemoveSpace();
-							tt.WriteLine("#if " + g.Key);
-						}
+						var q =
+							from a in m.Attributes
+							group a by a.Conditional ?? "";
 						
-						var attrs = g.ToList();
-						
-						tt.Write("[");
-
-						for (var i = 0; i < attrs.Count; i++)
+						foreach (var g in q)
 						{
-							if (i > 0) tt.Write(", ");
-							attrs[i].Render(tt);
-						}
+							if (g.Key.Length > 0)
+							{
+								tt.RemoveSpace();
+								tt.WriteLine("#if " + g.Key);
+							}
+							
+							var attrs = g.ToList();
+							
+							tt.Write("[");
 
-						tt.WriteLine("]");
+							for (var i = 0; i < attrs.Count; i++)
+							{
+								if (i > 0) tt.Write(", ");
+								attrs[i].Render(tt);
+							}
 
-						if (g.Key.Length > 0)
-						{
-							tt.RemoveSpace();
-							tt.WriteLine("#endif");
-						}
-					}				
+							tt.WriteLine("]");
+
+							if (g.Key.Length > 0)
+							{
+								tt.RemoveSpace();
+								tt.WriteLine("#endif");
+							}
+						}				
+					}
+					
+					m.Render(tt, false);
+
+					if (m.InsertBlankLineAfter)
+						tt.WriteLine("");
 				}
-				
-				m.Render(tt, false);
+				else if (cm is TypeBase)
+				{
+					var t = (TypeBase)cm;
 
-				if (m.InsertBlankLineAfter)
+					t.Render(tt);
 					tt.WriteLine("");
+				}
 			}
 		}
 
@@ -997,7 +1027,7 @@ public partial class Property : MemberBase
 static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
 {
 	var am  = m.AccessModifier.ToString().ToLower();
-	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : "";
+	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsStatic ? " static" : "";
 
 	tt.Write("{0}{1}{2}{3}{4}{5}{6} {7}",
 		am,     LenDiff(m.AccessModifierLen, am),
@@ -1091,6 +1121,7 @@ public partial class Method : MemberBase
 {
 	public bool         IsAbstract;
 	public bool         IsVirtual;
+	public bool         IsStatic;
 	public List<string> Parameters = new List<string>();
 	public List<string> Body       = new List<string>();
 	
@@ -1109,7 +1140,10 @@ public partial class Method : MemberBase
 
 	public override int CalcModifierLen()
 	{
-		return IsAbstract ? " abstract".Length : IsVirtual ? " virtual".Length : 0;
+		return
+			IsAbstract ? " abstract".Length :
+			IsVirtual  ? " virtual".Length  :
+			IsStatic   ? " static".Length   : 0;
 	}
 
 	public override int CalcBodyLen()

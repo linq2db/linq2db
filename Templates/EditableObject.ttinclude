@@ -15,7 +15,7 @@ void EditableObjectImpl()
 	{
 		new PartialHelper().SetIsNotifying(prop);
 
-		List<MemberBase> parentMembers;
+		List<IClassMember> parentMembers;
 		
 		MemberGroup gr = null;
 		
@@ -181,7 +181,7 @@ void EditableObjectImpl()
 							IsCompact = true,
 							Members   =
 							{
-								new Field   ("bool", "_isEditing"),
+								new Field   ("bool", "_isEditing") { AccessModifier = AccessModifier.Private },
 								new Property("bool", " IsEditing").InitGetter("_isEditing"),
 							}
 						},

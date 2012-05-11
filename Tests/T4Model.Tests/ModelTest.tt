@@ -3,6 +3,7 @@
 <#@ include file="..\..\Templates\T4Model.ttinclude"               #>
 <#@ include file="..\..\Templates\EditableObject.ttinclude"        #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
+<#@ include file="..\..\Templates\CustomValidation.ttinclude"      #>
 <#
 	Model.Namespaces[0].Name = "T4Model.Tests";
 
@@ -19,7 +20,7 @@
 		Name    = "TestClass1",
 		Members =
 		{
-			new EditableProperty ("long",   "EditableLong1") { InitValue = "12345" },
+			new EditableProperty ("long",   "EditableLong1") { InitValue = "12345", CustomValidation = true },
 			new EditableProperty ("int",    "EditableInt1"),
 			new EditableProperty ("int",    "EditableInt3") { Dependents = { "EditableInt1", "EditableInt3" } },
 			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
