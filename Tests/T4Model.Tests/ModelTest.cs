@@ -11,6 +11,11 @@ namespace T4Model.Tests
 			{
 				return ValidationResult.Success;
 			}
+
+			public static ValidationResult ValidateEditableInt1(TestClass1 obj)
+			{
+				return ValidationResult.Success;
+			}
 		}
 	}
 }

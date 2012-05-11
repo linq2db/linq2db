@@ -15,6 +15,7 @@ using T4Model.Tests;
 namespace T4Model.Tests
 {
 	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableLong1")]
+	[CustomValidation(typeof(TestClass1.CustomValidator), "ValidateEditableInt1")]
 	public partial class TestClass1 : IEditableObject, INotifyPropertyChanged, INotifyPropertyChanging
 	{
 		public TestClass1()
@@ -627,13 +628,15 @@ namespace T4Model.Tests
 
 		public static partial class CustomValidator
 		{
-			// The follow method must be implemented:
+			// The following method(s) must be implemented:
 			// public static ValidationResult ValidateEditableLong1(TestClass1 obj) { return ValidationResult.Success; }
+			// public static ValidationResult ValidateEditableInt1(TestClass1 obj) { return ValidationResult.Success; }
 			//
 			public static bool IsValid(TestClass1 obj)
 			{
 				return
-					ValidateEditableLong1(obj) == ValidationResult.Success;
+					ValidateEditableLong1(obj) == ValidationResult.Success &&
+					ValidateEditableInt1(obj) == ValidationResult.Success;
 			}
 		}
 

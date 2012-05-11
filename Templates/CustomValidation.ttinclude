@@ -23,7 +23,7 @@ void CustomValidationImpl()
 			var isValid   = new Method("bool", "IsValid", new[] { cl.Name + " obj" }) { IsStatic = true };
 			var validator = new Class("CustomValidator", isValid) { IsStatic = true, };
 			
-			isValid.Comment.Add(" The follow method must be implemented:");
+			isValid.Comment.Add(" The following method(s) must be implemented:");
 			isValid.Body.   Add("return");
 			
 			cl.Members.Add(new MemberGroup
@@ -39,7 +39,10 @@ void CustomValidationImpl()
 				cl.Attributes.Add(
 					new Attribute("CustomValidation",
 						"typeof(" + cl.Name + ".CustomValidator)",
-						"\"" + mname + "\""));
+						"\"" + mname + "\"")
+						{
+							IsSeparated = true
+						});
 				
 				isValid.Comment.Add(" public static ValidationResult " + mname + "(" + cl.Name + " obj) { return ValidationResult.Success; }");
 				isValid.Body.   Add("\t" + mname + "(obj) == ValidationResult.Success &&");

@@ -217,17 +217,31 @@ public partial class Class : TypeBase
 	{
 		if (Attributes.Count > 0)
 		{
-			tt.Write("[");
+			var aa = Attributes.Where(a => !a.IsSeparated).ToList();
 			
-			for (var i = 0; i < Attributes.Count; i++)
+			if (aa.Count > 0)
 			{
-				if (i > 0) tt.Write(", ");
-				Attributes[i].Render(tt);
+				tt.Write("[");
+				
+				for (var i = 0; i < aa.Count; i++)
+				{
+					if (i > 0) tt.Write(", ");
+					aa[i].Render(tt);
+				}
+
+				tt.WriteLine("]");
 			}
-
-			tt.WriteLine("]");
+			
+			aa = Attributes.Where(a => a.IsSeparated).ToList();
+			
+			foreach (var a in aa)
+			{
+				tt.Write("[");
+				a.Render(tt);
+				tt.WriteLine("]");
+			}
 		}
-
+		
 		WriteBeginClass(tt, this);
 		tt.PushIndent("\t");
 
@@ -1189,6 +1203,7 @@ public partial class Attribute
 	public string       Name;
 	public List<string> Parameters = new List<string>();
 	public string       Conditional;
+	public bool         IsSeparated;
 
 	public Attribute()
 	{
