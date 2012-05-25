@@ -416,6 +416,21 @@ namespace Tests.Linq
                 });
         }
 
+        [Test]
+        public void TestIsContainedInArrayOfEnumValues()
+        {
+            var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
+
+            ForMySqlProvider(
+                db =>
+                    {
+                        var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
+                            .ToList();
+
+                        Assert.That(result, Is.Not.Null);
+                    });
+        }
+
         #region GenericQuery classes
 
         public abstract partial class GenericQueryBase
