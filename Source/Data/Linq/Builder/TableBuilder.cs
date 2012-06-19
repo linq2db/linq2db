@@ -537,7 +537,7 @@ namespace LinqToDB.Data.Linq.Builder
 							ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
 							throw new LinqException("Member '{0}.{1}' is not a table column.",
-								memberExpression.Member.Name, memberExpression.Member.Name);
+								memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
 						}
 					}
 
@@ -951,7 +951,7 @@ namespace LinqToDB.Data.Linq.Builder
 								ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
-									memberExpression.Member.Name, memberExpression.Member.Name);
+									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
 							}
 						}
 					}

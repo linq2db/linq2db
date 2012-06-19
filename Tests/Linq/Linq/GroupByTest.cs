@@ -239,7 +239,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MemberInit([DataContexts] string context)
+		public void MemberInit1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -249,6 +249,60 @@ namespace Tests.Linq
 					,
 					from ch in db.Child
 					group ch by new Child { ParentID = ch.ParentID } into g
+					select g.Key);
+		}
+
+		class GroupByInfo
+		{
+			public GroupByInfo Prev;
+			public object      Field;
+
+			public override bool Equals(object obj)
+			{
+				return Equals(obj as GroupByInfo);
+			}
+
+			public bool Equals(GroupByInfo other)
+			{
+				if (ReferenceEquals(null, other)) return false;
+				if (ReferenceEquals(this, other)) return true;
+				return Equals(other.Prev, Prev) && Equals(other.Field, Field);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return ((Prev != null ? Prev.GetHashCode() : 0) * 397) ^ (Field != null ? Field.GetHashCode() : 0);
+				}
+			}
+		}
+
+		[Test]
+		public void MemberInit2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					group ch by new GroupByInfo { Prev = new GroupByInfo { Field = ch.ParentID }, Field = ch.ChildID } into g
+					select g.Key
+					,
+					from ch in db.Child
+					group ch by new GroupByInfo { Prev = new GroupByInfo { Field = ch.ParentID }, Field = ch.ChildID } into g
+					select g.Key);
+		}
+
+		[Test]
+		public void MemberInit3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					group ch by new { Prev = new { Field = ch.ParentID }, Field = ch.ChildID } into g
+					select g.Key
+					,
+					from ch in db.Child
+					group ch by new { Prev = new { Field = ch.ParentID }, Field = ch.ChildID } into g
 					select g.Key);
 		}
 
