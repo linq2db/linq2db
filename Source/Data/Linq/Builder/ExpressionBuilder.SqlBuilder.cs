@@ -1113,14 +1113,17 @@ namespace LinqToDB.Data.Linq.Builder
 
 					if (!expr.Type.IsConstantable() || AsParameters.Contains(c))
 					{
-						var val = expressionAccessors[expr];
-
-						expr = Expression.Convert(val, expr.Type);
-
-						if (expression.NodeType == ExpressionType.MemberAccess)
+						Expression val;
+						
+						if (expressionAccessors.TryGetValue(expr, out val))
 						{
-							var ma = (MemberExpression)expression;
-							setName(ma.Member.Name);
+							expr = Expression.Convert(val, expr.Type);
+
+							if (expression.NodeType == ExpressionType.MemberAccess)
+							{
+								var ma = (MemberExpression)expression;
+								setName(ma.Member.Name);
+							}
 						}
 					}
 				}

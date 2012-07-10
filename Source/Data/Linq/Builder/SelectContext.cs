@@ -651,8 +651,6 @@ namespace LinqToDB.Data.Linq.Builder
 							{
 								case ExpressionType.MemberAccess :
 									{
-										var memberExpression = Members[((MemberExpression)levelExpression).Member];
-										/*
 										var member = ((MemberExpression)levelExpression).Member;
 
 										Expression memberExpression;
@@ -662,16 +660,23 @@ namespace LinqToDB.Data.Linq.Builder
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
 											if (nm != null && member.DeclaringType.IsInterface)
-												if (TypeHelper.IsSameOrParent(member.DeclaringType, nm.DeclaringType))
+											{
+												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
 													memberExpression = Members[nm];
+												else
+												{
+													var mdt = member.DeclaringType.GetDefiningTypes(member);
+													var ndt = Body.Type.           GetDefiningTypes(nm);
 
-											//var pm = member.DeclaringType.GetInterfaceMap();
+													if (mdt.Intersect(ndt).Any())
+														memberExpression = Members[nm];
+												}
+											}
 
 											if (memberExpression == null)
 												throw new InvalidOperationException(
 													string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
-										*/
 
 										if (ReferenceEquals(levelExpression, expression))
 										{

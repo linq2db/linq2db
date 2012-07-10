@@ -177,6 +177,30 @@ namespace LinqToDB.Extensions
 			return type;
 		}
 
+		public static IEnumerable<Type> GetDefiningTypes(this Type child, MemberInfo member)
+		{
+			if (member.MemberType == MemberTypes.Property)
+			{
+				var prop = (PropertyInfo)member;
+				member = prop.GetGetMethod();
+			}
+
+			foreach (var inf in child.GetInterfaces())
+			{
+				var pm = child.GetInterfaceMap(inf);
+
+				for (var i = 0; i < pm.TargetMethods.Length; i++)
+				{
+					var method = pm.TargetMethods[i];
+
+					if (method == member || (method.DeclaringType == member.DeclaringType && method.Name == member.Name))
+						yield return inf;
+				}
+			}
+
+			yield return member.DeclaringType;
+		}
+
 		/// <summary>
 		/// Determines whether the specified types are considered equal.
 		/// </summary>
