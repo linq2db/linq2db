@@ -538,6 +538,37 @@ namespace Tests.Update
 		}
 
 		[Test]
+		public void Insert31([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
+				{
+					var id = 1001;
+
+					db.Child.Delete(c => c.ChildID > 1000);
+
+					Assert.AreEqual(1,
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.Select(c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							})
+							.Insert(db.Child, c => c));
+					Assert.AreEqual(1, db.Child.Count(c => c.ChildID == id));
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
+
+		[Test]
 		public void Insert4([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

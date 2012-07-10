@@ -108,16 +108,44 @@ namespace LinqToDB.Data.Linq.Builder
 			List<SqlQuery.SetExpression> items,
 			IBuildContext                sequence)
 		{
-			if (setter.Body.NodeType != ExpressionType.MemberInit)
-				throw new LinqException("Object initializer expected for insert statement.");
+			var path = Expression.Parameter(setter.Body.Type, "p");
+			var ctx  = new ExpressionContext(buildInfo.Parent, sequence, setter);
 
-			var ex  = (MemberInitExpression)setter.Body;
-			var p   = sequence.Parent;
-			var ctx = new ExpressionContext(buildInfo.Parent, sequence, setter);
+			if (setter.Body.NodeType == ExpressionType.MemberInit)
+			{
+				var ex  = (MemberInitExpression)setter.Body;
+				var p   = sequence.Parent;
 
-			BuildSetter(builder, into, items, ctx, ex, Expression.Parameter(ex.Type, "p"));
+				BuildSetter(builder, into, items, ctx, ex, path);
 
-			builder.ReplaceParent(ctx, p);
+				builder.ReplaceParent(ctx, p);
+			}
+			else
+			{
+				var sqlInfo = ctx.ConvertToSql(setter.Body, 0, ConvertFlags.All);
+
+				foreach (var info in sqlInfo)
+				{
+					if (info.Member == null)
+						throw new LinqException("Object initializer expected for insert statement.");
+
+					var pe     = Expression.MakeMemberAccess(path, info.Member);
+					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
+					var expr   = info.Sql;
+
+					if (expr is SqlParameter)
+					{
+						var type = info.Member.MemberType == MemberTypes.Field ?
+							((FieldInfo)   info.Member).FieldType :
+							((PropertyInfo)info.Member).PropertyType;
+
+						if (type.IsEnum)
+							((SqlParameter)expr).SetEnumConverter(type, builder.MappingSchema);
+					}
+
+					items.Add(new SqlQuery.SetExpression(column[0].Sql, expr));
+				}
+			}
 		}
 
 		static void BuildSetter(

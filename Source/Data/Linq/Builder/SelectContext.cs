@@ -350,6 +350,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
+			/*
 			switch (expression.NodeType)
 			{
 				case ExpressionType.MemberAccess :
@@ -361,6 +362,7 @@ namespace LinqToDB.Data.Linq.Builder
 
 					return new[] { new SqlInfo { Sql = sql.Sql, Member = member, Query = sql.Query } };
 			}
+			*/
 
 			var exprs =  ConvertExpressions(expression, flags);
 
