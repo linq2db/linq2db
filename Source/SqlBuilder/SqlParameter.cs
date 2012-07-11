@@ -76,14 +76,21 @@ namespace LinqToDB.SqlBuilder
 			set { _valueConverter = value; }
 		}
 
+		bool _isEnumConverterSet;
+
 		internal void SetEnumConverter(Type type, MappingSchema ms)
 		{
-			if (EnumTypes == null)
-				EnumTypes = new List<Type>();
+			if (!_isEnumConverterSet)
+			{
+				_isEnumConverterSet = true;
 
-			EnumTypes.Add(type);
+				if (EnumTypes == null)
+					EnumTypes = new List<Type>();
 
-			SetEnumConverterInternal(type, ms);
+				EnumTypes.Add(type);
+
+				SetEnumConverterInternal(type, ms);
+			}
 		}
 
 		void SetEnumConverterInternal(Type type, MappingSchema ms)
