@@ -203,6 +203,7 @@
     <Compile Include="Mapping\MetadataReaderTest.cs" />
     <Compile Include="Metadata\XmlReaderTest.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="SqlBuilder\OptimizerTest.cs" />
     <Compile Include="SqlBuilder\SqlDataTypeTest.cs" />
     <Compile Include="SqlBuilder\SqlTableTest.cs" />

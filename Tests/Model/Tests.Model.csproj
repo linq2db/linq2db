@@ -126,6 +126,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PostgreSQLSpecific.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ITestDataContext.cs" />
     <Compile Include="BinaryData.cs" />

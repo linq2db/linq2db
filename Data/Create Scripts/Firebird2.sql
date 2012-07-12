@@ -558,7 +558,7 @@ DROP TABLE SequenceTest COMMIT;
 
 CREATE TABLE SequenceTest
 (
-	ID                 int NOT NULL PRIMARY KEY,
+	ID     int         NOT NULL PRIMARY KEY,
 	Value_ VARCHAR(50) NOT NULL
 )
 COMMIT;
