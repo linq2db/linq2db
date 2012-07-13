@@ -420,5 +420,10 @@ namespace LinqToDB.SqlProvider
 
 			return value;
 		}
+
+		protected override void BuildDateTime(StringBuilder sb, object value)
+		{
+			sb.Append(string.Format("#{0:yyyy-MM-dd HH:mm:ss}#", value));
+		}
 	}
 }

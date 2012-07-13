@@ -413,9 +413,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray2([DataContexts] string context)
+		public void DateTimeArray2([DataContexts(ProviderName.Access)] string context)
 		{
-			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2005, 5, 15, 5, 15, 25, 500) };
+			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2012, 11, 7, 19, 19, 29, 90) };
 
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -424,7 +424,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray3([DataContexts] string context)
+		public void DateTimeArray3([DataContexts(ProviderName.Access)] string context)
 		{
 			var arr = new List<DateTime?> { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
 
