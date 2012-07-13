@@ -610,16 +610,18 @@ namespace Tests.Linq
 						.OrderBy(x => x.Parent.ParentID));
 		}
 
-		public enum EnumInt
-		{
-			[MapValue(1)] One
-		}
-
 		[TableName("Child")]
-		public class EnumChild
+		public class CountedChild
 		{
-			public int     ParentID;
-			public EnumInt ChildID;
+			public static int Count;
+
+			public CountedChild()
+			{
+				Count++;
+			}
+
+			public int ParentID;
+			public int ChildID;
 		}
 
 		[Test]
@@ -629,13 +631,16 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.Parent
-						join ch in new Table<EnumChild>(db) on p.ParentID equals ch.ParentID into lj1
+						join ch in new Table<CountedChild>(db) on p.ParentID equals ch.ParentID into lj1
 						from ch in lj1.DefaultIfEmpty()
 					where ch == null
-					select new { p, ch };
+					select new { p, ch, ch1 = ch };
+
+				CountedChild.Count = 0;
 
 				var list = q.ToList();
-				list.ToString();
+
+				Assert.AreEqual(0, CountedChild.Count);
 			}
 		}
 
