@@ -194,6 +194,7 @@
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="Data\DataConnectionTest.cs" />
+    <Compile Include="Exceptions\DataExceptionTest.cs" />
     <Compile Include="Exceptions\MetadataTest.cs" />
     <Compile Include="Linq\IdlTest.Additional.cs" />
     <Compile Include="Linq\TestAK107.cs" />
