@@ -593,9 +593,9 @@ CREATE TABLE LinqDataTypes
 	DateTimeValue2 timestamp,
 	BoolValue      smallint,
 	GuidValue      raw(16),
-	BinaryValue    blob,
+	BinaryValue    blob         NULL,
 	SmallIntValue  smallint,
-	IntValue       int NULL,
+	IntValue       int          NULL,
 	BigIntValue    number(20,0) NULL
 )
 /

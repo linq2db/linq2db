@@ -164,6 +164,14 @@ namespace LinqToDB.DataProvider
 				commandParameters = list.ToArray();
 		}
 
+		public override DbType GetDbType(Type systemType)
+		{
+			if (systemType == typeof(byte[]))
+				return DbType.Object;
+
+			return base.GetDbType(systemType);
+		}
+
 		#region DataReaderEx
 
 		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)

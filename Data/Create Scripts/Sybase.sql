@@ -290,7 +290,7 @@ CREATE TABLE BinaryData
 	BinaryDataID int             IDENTITY,
 	Stamp        timestamp       NOT NULL,
 	Data         varbinary(1024) NOT NULL,
-    CONSTRAINT PK_BinaryData PRIMARY KEY CLUSTERED (BinaryDataID)
+	CONSTRAINT PK_BinaryData PRIMARY KEY CLUSTERED (BinaryDataID)
 )
 GO
 
@@ -461,6 +461,6 @@ CREATE TABLE LinqDataTypes
 	BinaryValue    binary(500)   NULL,
 	SmallIntValue  smallint      NULL,
 	IntValue       int           NULL,
-	BigIntValue    bigint NULL
+	BigIntValue    bigint        NULL
 )
 GO

@@ -350,11 +350,15 @@ namespace LinqToDB.ServiceModel
 			{
 				public object GetArray(DeserializerBase deserializer)
 				{
-					var count = deserializer.ReadInt();
-					var arr   = new T[count];
+					var count = deserializer.ReadCount();
+
+					if (count == null)
+						return null;
+
+					var arr   = new T[count.Value];
 					var type  = typeof(T);
 
-					for (var i = 0; i < count; i++)
+					for (var i = 0; i < count.Value; i++)
 						arr[i] = (T)deserializer.ReadValue(type);
 
 					return arr;
@@ -373,7 +377,7 @@ namespace LinqToDB.ServiceModel
 				{
 					var elem = type.GetElementType();
 
-					Func<DeserializerBase, object > deserializer;
+					Func<DeserializerBase,object> deserializer;
 
 					lock (_arrayDeserializers)
 					{

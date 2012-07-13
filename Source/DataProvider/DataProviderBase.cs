@@ -253,7 +253,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual DbType GetDbType(Type systemType)
 		{
-			if (systemType == typeof(Binary))
+			if (systemType == typeof(Binary) || systemType == typeof(byte[]))
 				return DbType.Binary;
 
 			return DbType.Object;

@@ -94,7 +94,7 @@ GO
 CREATE Procedure Person_SelectByKey(id int)
 BEGIN
 
-    SELECT * FROM Person WHERE PersonID = id;
+	SELECT * FROM Person WHERE PersonID = id;
 
 END
 GO
@@ -461,9 +461,9 @@ CREATE TABLE LinqDataTypes
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
 	GuidValue      char(36),
-	BinaryValue    varbinary(5000),
+	BinaryValue    varbinary(5000) NULL,
 	SmallIntValue  smallint,
-	IntValue       int NULL,
-	BigIntValue    bigint NULL
+	IntValue       int             NULL,
+	BigIntValue    bigint          NULL
 )
 GO

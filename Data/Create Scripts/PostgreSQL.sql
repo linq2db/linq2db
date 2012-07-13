@@ -91,9 +91,9 @@ CREATE TABLE "LinqDataTypes"
 	"DateTimeValue2" timestamp,
 	"BoolValue"      boolean,
 	"GuidValue"      uuid,
-	"BinaryValue"    bytea,
+	"BinaryValue"    bytea  NULL,
 	"SmallIntValue"  smallint,
-	"IntValue"       int NULL,
+	"IntValue"       int    NULL,
 	"BigIntValue"    bigint NULL
 )
 GO

@@ -418,6 +418,9 @@ namespace LinqToDB.Extensions
 		/// and, therefore, can be treated as scalar types.</remarks>
 		public static bool IsScalar(this Type type)
 		{
+			while (type.IsArray)
+				type = type.GetElementType();
+
 			return type.IsValueType
 				|| type == typeof(string)
 				|| type == typeof(Binary)

@@ -123,8 +123,8 @@ CREATE TABLE LinqDataTypes
 	DateTimeValue2 datetime2,
 	BoolValue      boolean,
 	GuidValue      uniqueidentifier,
-	BinaryValue    binary(5000),
+	BinaryValue    binary(5000) NULL,
 	SmallIntValue  smallint,
-	IntValue       int NULL,
-	BigIntValue    bigint NULL
+	IntValue       int          NULL,
+	BigIntValue    bigint       NULL
 );
