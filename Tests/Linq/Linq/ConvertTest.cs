@@ -24,7 +24,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select              Sql.ConvertTo<int>.From(t.MoneyValue),
+					from t in    Types select           Sql.ConvertTo<int>.From(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.ConvertTo<int>.From(t.MoneyValue)));
 		}
 
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select              Sql.Convert<int,decimal>(t.MoneyValue),
+					from t in    Types select           Sql.Convert<int,decimal>(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.Convert<int,decimal>(t.MoneyValue)));
 		}
 
@@ -154,7 +154,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select              Sql.ConvertTo<uint>.From(t.MoneyValue),
+					from t in    Types select           Sql.ConvertTo<uint>.From(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
 		}
 
@@ -163,7 +163,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select              Sql.Convert<uint,decimal>(t.MoneyValue),
+					from t in    Types select           Sql.Convert<uint,decimal>(t.MoneyValue),
 					from t in db.Types select Sql.AsSql(Sql.Convert<uint,decimal>(t.MoneyValue)));
 		}
 
