@@ -501,7 +501,7 @@ namespace LinqToDB.DataProvider
 
 		private static Stream CopyStream(Stream stream, OracleCommand cmd)
 		{
-			return CopyStream(Common.Convert.ToByteArray(stream), cmd);
+			return CopyStream(Common.ConvertOld.ToByteArray(stream), cmd);
 		}
 
 		private static Stream CopyStream(Byte[] bytes, OracleCommand cmd)

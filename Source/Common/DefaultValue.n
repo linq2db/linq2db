@@ -9,7 +9,7 @@ using Nemerle.Assertions;
 using Nemerle.Linq;
 using Nemerle.Extensions;
 
-namespace LinqToDB_Temp
+namespace LinqToDB_Temp.Common
 {
 	using Extensions;
 

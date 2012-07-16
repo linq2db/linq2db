@@ -9,7 +9,7 @@ using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.SqlBuilder;
 
-using Convert = LinqToDB.Common.Convert;
+using Convert = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
 {

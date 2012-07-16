@@ -45,9 +45,15 @@
   <ItemGroup>
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
-    <Compile Include="Common\Convert.cs" />
+    <Compile Include="Common\ConvertOld.cs" />
     <Compile Include="Common\Convert.generated.cs" />
+    <Compile Include="Common\Converter.cs" />
+    <Compile Include="Common\ConverterMaker.cs" />
+    <Compile Include="Common\ConvertInfo.cs" />
+    <Compile Include="Common\ConvertOldT.cs" />
     <Compile Include="Common\ConvertT.cs" />
+    <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\DefaultValueExpression.cs" />
     <Compile Include="Common\NameOrIndexParameter.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
     <Compile Include="Configuration\DataProviderElement.cs" />
@@ -69,6 +75,9 @@
     <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Metadata\AttributeInfo.cs" />
+    <Compile Include="Metadata\AttributeReader.cs" />
+    <Compile Include="Metadata\IMetadataReader.cs" />
     <Compile Include="NonUpdatableAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -286,7 +295,6 @@
     <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
-    <Compile Include="Properties\Revision.generated.cs" />
     <Compile Include="Reflection\ExprMemberAccessor.cs" />
     <Compile Include="Reflection\ExprTypeAccessor.cs" />
     <Compile Include="Reflection\Extension\AttributeExtension.cs" />

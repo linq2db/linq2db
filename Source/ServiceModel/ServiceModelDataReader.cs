@@ -198,7 +198,7 @@ namespace LinqToDB.ServiceModel
 			if (type.IsArray && type == typeof(byte[]))
 				return value == null ? null : System.Convert.FromBase64String(value);
 
-			return Convert.ChangeTypeFromString(value, type);
+			return ConvertOld.ChangeTypeFromString(value, type);
 		}
 
 		public int GetValues(object[] values)

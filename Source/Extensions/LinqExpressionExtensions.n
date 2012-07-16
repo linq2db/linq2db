@@ -1005,7 +1005,7 @@ namespace LinqToDB_Temp.Extensions
 					| ExpressionType.TypeEqual
 					| ExpressionType.TypeIs          => transform2 TypeBinaryExpression  members (Expression)
 					| ExpressionType.Block           => transform2 BlockExpression       members (Variables, Expressions)
- 					| ExpressionType.Extension
+					| ExpressionType.Extension
 					| ExpressionType.Constant
 					| ExpressionType.Parameter       => func(expr).Expression
 					| ExpressionType.Lambda          =>

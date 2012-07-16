@@ -78,12 +78,12 @@ namespace LinqToDB.DataProvider
 
 					if (rawType.Length > 2)
 					{
-						p.Precision = Common.Convert.ToByte(rawType[1]);
-						p.Scale     = Common.Convert.ToByte(rawType[2]);
+						p.Precision = Common.ConvertOld.ToByte(rawType[1]);
+						p.Scale     = Common.ConvertOld.ToByte(rawType[2]);
 					}
 					else if (rawType.Length > 1)
 					{
-						p.Size      = Common.Convert.ToInt32(rawType[1]);
+						p.Size      = Common.ConvertOld.ToInt32(rawType[1]);
 					}
 
 					command.Parameters.Add(p);

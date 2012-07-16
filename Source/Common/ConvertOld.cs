@@ -10,7 +10,7 @@ namespace LinqToDB.Common
 	using Properties;
 
 	/// <summary>Converts a base data type to another base data type.</summary>
-	public static partial class Convert
+	public static partial class ConvertOld
 	{
 		#region Boolean
 

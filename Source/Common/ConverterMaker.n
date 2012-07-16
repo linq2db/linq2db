@@ -136,7 +136,6 @@ namespace LinqToDB_Temp.Common
 				Lambda(Convert(p, typeof(object)), p)
 			else
 			{
-				def p = Parameter(from, "p");
 				def e =
 					match (GetConverter(from, to, p))
 					{

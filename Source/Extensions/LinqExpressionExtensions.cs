@@ -1561,7 +1561,8 @@ namespace LinqToDB.Extensions
 
 #endif
 
-				case ExpressionType.Constant : return func(expr);
+				case ExpressionType.Extension:
+				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr);
 
 				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
@@ -1912,7 +1913,8 @@ namespace LinqToDB.Extensions
 
 #endif
 
-				case ExpressionType.Constant : return func(expr).Expression;
+				case ExpressionType.Extension:
+				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr).Expression;
 
 				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :

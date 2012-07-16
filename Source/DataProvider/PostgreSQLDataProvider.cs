@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider
 			var quoteIdentifiers = attributes["QuoteIdentifiers"];
 
 			if (quoteIdentifiers != null)
-				QuoteIdentifiers = Common.Convert.ToBoolean(quoteIdentifiers);
+				QuoteIdentifiers = Common.ConvertOld.ToBoolean(quoteIdentifiers);
 
 			var queryCaseConcert = attributes["QueryCaseConvert"];
 			if (queryCaseConcert != null)

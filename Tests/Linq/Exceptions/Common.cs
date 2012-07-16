@@ -35,7 +35,7 @@ namespace Tests.Exceptions
 
 					if (expr != null)
 					{
-						var value = ConvertTo<int>.From(((IValueContainer)expr.Expression).Value);
+						var value = ConvertToOld<int>.From(((IValueContainer)expr.Expression).Value);
 
 						if (value == 555)
 						{

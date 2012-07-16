@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Linq.Mapping;
 
-using LinqToDB_Temp.Metadata;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -18,7 +18,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual(null, attrs.Head.Description);
+			Assert.AreEqual(null, attrs[0].Description);
 		}
 
 		public int Field1;
@@ -43,7 +43,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs.Head.Name);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 	}
 }

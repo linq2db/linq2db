@@ -2,35 +2,9 @@ using System;
 
 namespace LinqToDB
 {
-	/// <summary>
-	/// Global library constants.
-	/// </summary>
-	public static partial class LinqToDBConstants
+	public static class LinqToDBConstants
 	{
-		/// <summary>
-		/// Major component of version.
-		/// </summary>
-		public const string MajorVersion = "1";
-
-		/// <summary>
-		/// Minor component of version.
-		/// </summary>
-		public const string MinorVersion = "0";
-
-		/// <summary>
-		/// Build component of version.
-		/// </summary>
-		public const string Build = "0";
-
-		/// <summary>
-		/// Full version string.
-		/// </summary>
-		public const string FullVersionString = MajorVersion + "." + MinorVersion + "." + Build + "." + Revision;
-
-		/// <summary>
-		/// Full BLT version.
-		/// </summary>
-		public static readonly Version FullVersion = new Version(FullVersionString);
+		public const string FullVersionString = "1.0.0.0";
 
 		public const string ProductName        = "Linq to DB";
 		public const string ProductDescription = "Linq to DB";

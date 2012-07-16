@@ -15,7 +15,7 @@ namespace LinqToDB.Common
 {
 	using Properties;
 
-	public partial class Convert
+	public partial class ConvertOld
 	{ 
 		#region Simple Types
 

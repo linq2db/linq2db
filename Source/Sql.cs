@@ -52,7 +52,7 @@ namespace LinqToDB
 		[SqlFunction("Convert", 0, 1, ServerSideOnly = true)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
+			var dt = Common.ConvertToOld<TTo>.From(from);
 			return dt;
 		}
 
@@ -60,7 +60,7 @@ namespace LinqToDB
 		[SqlFunction("Convert", 0, 1, 2, ServerSideOnly = true)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
-			var dt = Common.ConvertTo<TTo>.From(from);
+			var dt = Common.ConvertToOld<TTo>.From(from);
 			return dt;
 		}
 
@@ -68,14 +68,14 @@ namespace LinqToDB
 		[SqlFunction("Convert", 0, 1)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
-			return Common.ConvertTo<TTo>.From(from);
+			return Common.ConvertToOld<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
 		[SqlFunction("$Convert$", 1, 2, 0)]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
-			return Common.ConvertTo<TTo>.From(obj);
+			return Common.ConvertToOld<TTo>.From(obj);
 		}
 
 		public static class ConvertTo<TTo>
@@ -84,7 +84,7 @@ namespace LinqToDB
 			[SqlFunction("$Convert$", 1, 2, 0)]
 			public static TTo From<TFrom>(TFrom obj)
 			{
-				return Common.ConvertTo<TTo>.From(obj);
+				return Common.ConvertToOld<TTo>.From(obj);
 			}
 		}
 

@@ -4,7 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
 
-using LinqToDB_Temp.Common;
+using LinqToDB.Common;
 
 using NUnit.Framework;
 
@@ -16,9 +16,9 @@ namespace Tests.Common
 		[Test]
 		public void SameType()
 		{
-			Assert.AreEqual(1,   ConvertTo<int>.From(1));
-			Assert.AreEqual("1", ConvertTo<string>.From("1"));
-			Assert.AreEqual(1,   Convert<int,int>.From(1));
+			Assert.AreEqual(1,   ConvertTo<int>.        From(1));
+			Assert.AreEqual("1", ConvertTo<string>.     From("1"));
+			Assert.AreEqual(1,   Convert<int,int>      .From(1));
 			Assert.AreEqual("1", Convert<string,string>.From("1"));
 		}
 

@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider
 					case '0': case 'F' :case 'N' : case 'f': case 'n': return false;
 				}
 
-			return Common.Convert.ToBoolean(value);
+			return Common.ConvertOld.ToBoolean(value);
 		}
 
 		public override bool ConvertToBoolean(object value)
@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider
 
 		public System.Data.SqlTypes.SqlBinary ConvertToSqlBinary(string value)
 		{
-			return Common.Convert.ToSqlBinary(ConvertToByteArray(value));
+			return Common.ConvertOld.ToSqlBinary(ConvertToByteArray(value));
 		}
 
 		public override System.Data.SqlTypes.SqlBinary ConvertToSqlBinary(object value)
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider
 
 		public System.Data.SqlTypes.SqlBytes ConvertToSqlBytes(string value)
 		{
-			return Common.Convert.ToSqlBytes(ConvertToByteArray(value));
+			return Common.ConvertOld.ToSqlBytes(ConvertToByteArray(value));
 		}
 
 		public override System.Data.SqlTypes.SqlBytes ConvertToSqlBytes(object value)

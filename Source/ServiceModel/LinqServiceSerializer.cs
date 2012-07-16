@@ -75,7 +75,7 @@ namespace LinqToDB.ServiceModel
 				if (type == typeof(DateTimeOffset))
 					return ((DateTimeOffset)value).ToString("o");
 
-				return Common.Convert.ToString(value);
+				return Common.ConvertOld.ToString(value);
 			}
 
 			protected void Append(Type type, object value)
@@ -404,7 +404,7 @@ namespace LinqToDB.ServiceModel
 				if (type == typeof(DateTimeOffset))
 					return DateTimeOffset.ParseExact(str, "o", CultureInfo.InvariantCulture);
 
-				return Common.Convert.ChangeTypeFromString(str, type);
+				return Common.ConvertOld.ChangeTypeFromString(str, type);
 			}
 
 			protected readonly List<string> UnresolvedTypes = new List<string>();

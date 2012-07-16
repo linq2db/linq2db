@@ -107,8 +107,10 @@ namespace LinqToDB.DataProvider
 					if (value is FbException)
 					{
 						var ex = (FbException) value;
+
 						if (ex.Errors.Count > 0)
-							return ex.Errors[0].Number;
+							foreach (var error in ex.Errors)
+								return error.Number;
 					}
 
 					break;
@@ -231,15 +233,15 @@ namespace LinqToDB.DataProvider
 
 			var isReturnValueEmulation = attributes["IsReturnValueEmulation"];
 			if (isReturnValueEmulation != null)
-				IsReturnValueEmulation = Common.Convert.ToBoolean(isReturnValueEmulation);
+				IsReturnValueEmulation = Common.ConvertOld.ToBoolean(isReturnValueEmulation);
 
 			var isInOutParameterEmulation = attributes["IsInOutParameterEmulation"];
 			if (isInOutParameterEmulation != null)
-				IsInOutParameterEmulation = Common.Convert.ToBoolean(isInOutParameterEmulation);
+				IsInOutParameterEmulation = Common.ConvertOld.ToBoolean(isInOutParameterEmulation);
 
 			var quoteIdentifiers = attributes["QuoteIdentifiers"];
 			if (quoteIdentifiers != null)
-				QuoteIdentifiers = Common.Convert.ToBoolean(quoteIdentifiers);
+				QuoteIdentifiers = Common.ConvertOld.ToBoolean(quoteIdentifiers);
 
 			base.Configure(attributes);
 		}

@@ -142,7 +142,7 @@ namespace LinqToDB.Mapping
 				{
 					var setter    = MapSetData<D>.I;
 					var getter    = MapGetData<S>.I;
-					var converter = Convert<D,S>.From;
+					var converter = ConvertOld<D,S>.From;
 
 					setter.To(dest, destObject, destIndex,
 						converter(getter.From(source, sourceObject, sourceIndex)));

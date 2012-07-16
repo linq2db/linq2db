@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider
 
 			string tryConvertParameterSymbol = attributes["TryConvertParameterSymbol"];
 			if (tryConvertParameterSymbol != null)
-				TryConvertParameterSymbol = LinqToDB.Common.Convert.ToBoolean(tryConvertParameterSymbol);
+				TryConvertParameterSymbol = LinqToDB.Common.ConvertOld.ToBoolean(tryConvertParameterSymbol);
 
 			base.Configure(attributes);
 		}
