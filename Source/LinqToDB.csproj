@@ -78,6 +78,10 @@
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
+    <Compile Include="Metadata\MemberInfo.cs" />
+    <Compile Include="Metadata\MetadataException.cs" />
+    <Compile Include="Metadata\TypeInfo.cs" />
+    <Compile Include="Metadata\XmlAttributeReadercs.cs" />
     <Compile Include="NonUpdatableAttribute.cs">
       <SubType>Code</SubType>
     </Compile>

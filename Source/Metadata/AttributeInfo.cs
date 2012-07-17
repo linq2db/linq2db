@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
+	using Common;
 	using Extensions;
 
 	class AttributeInfo
@@ -21,7 +22,6 @@ namespace LinqToDB.Metadata
 
 		Func<Attribute> _func;
 
-		/*
 		public Attribute MakeAttribute(Type type)
 		{
 			if (_func == null)
@@ -40,7 +40,9 @@ namespace LinqToDB.Metadata
 									var member = type.GetMember(k.Key)[0];
 									var mtype   = member.GetMemberType();
 
-									Expression.Bind(member, Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
+									return Expression.Bind(
+										member,
+										Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
 								})),
 							typeof(Attribute)));
 
@@ -52,8 +54,7 @@ namespace LinqToDB.Metadata
 				}
 			}
 
-			_func();
+			return _func();
 		}
-		*/
 	}
 }
