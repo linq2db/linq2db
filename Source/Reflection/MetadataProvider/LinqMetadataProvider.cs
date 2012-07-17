@@ -125,7 +125,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullable
 
-		public override bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public override bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{

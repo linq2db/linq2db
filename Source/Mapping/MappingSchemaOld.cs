@@ -27,11 +27,11 @@ using Convert  = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
 {
-	public class MappingSchema
+	public class MappingSchemaOld
 	{
 		#region Constructors
 
-		public MappingSchema()
+		public MappingSchemaOld()
 		{
 			InitNullValues();
 		}

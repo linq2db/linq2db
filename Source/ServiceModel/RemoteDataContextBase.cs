@@ -22,8 +22,8 @@ namespace LinqToDB.ServiceModel
 			get { return _contextID ?? (_contextID = ContextIDPrefix + SqlProviderType.Name.Replace("SqlProvider", "")); }
 		}
 
-		private MappingSchema _mappingSchema;
-		public  MappingSchema  MappingSchema
+		private MappingSchemaOld _mappingSchema;
+		public  MappingSchemaOld  MappingSchema
 		{
 			get
 			{

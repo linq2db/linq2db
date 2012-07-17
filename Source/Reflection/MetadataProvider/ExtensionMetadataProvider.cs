@@ -209,7 +209,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullable
 
-		public override bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public override bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			// Check extension <Member1 Nullable='true' />
 			//
@@ -230,7 +230,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullable
 
-		public override object GetNullValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public override object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			// Check extension <Member1 NullValue='-1' />
 			//

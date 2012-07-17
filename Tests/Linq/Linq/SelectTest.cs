@@ -337,7 +337,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyMapSchema : MappingSchema
+		class MyMapSchema : MappingSchemaOld
 		{
 			public override void InitNullValues()
 			{

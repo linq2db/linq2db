@@ -8,7 +8,7 @@ namespace LinqToDB.Mapping
 
 	public class DataReaderMapper : IMapDataSource
 	{
-		public DataReaderMapper(MappingSchema mappingSchema, IDataReader dataReader)
+		public DataReaderMapper(MappingSchemaOld mappingSchema, IDataReader dataReader)
 		{
 			_mappingSchema = mappingSchema;
 			_dataReader    = dataReader;
@@ -23,8 +23,8 @@ namespace LinqToDB.Mapping
 			get { return _dataReader; }
 		}
 
-		readonly MappingSchema _mappingSchema;
-		public   MappingSchema  MappingSchema
+		readonly MappingSchemaOld _mappingSchema;
+		public   MappingSchemaOld  MappingSchema
 		{
 			get { return _mappingSchema; }
 		}

@@ -11,7 +11,7 @@ namespace LinqToDB.Data.Linq
 		private IDataContext _dataContext;
 		public  IDataContext  DataContext    { get { return _dataContext ?? (_dataContext = new DbManager()); } }
 
-		public MappingSchema  MappingSchema  { get { return Map.DefaultSchema; } }
+		public MappingSchemaOld  MappingSchema  { get { return Map.DefaultSchema; } }
 		public bool           DisposeContext { get { return true; } }
 		public string         ContextID      { get { return _dataProvider.Name; } }
 

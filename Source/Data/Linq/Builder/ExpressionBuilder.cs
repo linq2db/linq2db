@@ -122,7 +122,7 @@ namespace LinqToDB.Data.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		public MappingSchema MappingSchema
+		public MappingSchemaOld MappingSchema
 		{
 			get { return DataContextInfo.MappingSchema; }
 		}

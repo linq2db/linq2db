@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region Nested type: SQLiteMappingSchema
-		public class SQLiteMappingSchema : MappingSchema
+		public class SQLiteMappingSchema : MappingSchemaOld
 		{
 			#region Convert
 			public override XmlReader ConvertToXmlReader(object value)

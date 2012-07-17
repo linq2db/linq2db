@@ -27,7 +27,7 @@ namespace LinqToDB.ServiceModel
 
 		static Tuple<T,MetadataInfo> _defaultMetadata;
 
-		public DataService(MappingSchema mappingSchema)
+		public DataService(MappingSchemaOld mappingSchema)
 		{
 			lock (_cache)
 			{
@@ -42,8 +42,8 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		readonly static Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache =
-			new Dictionary<MappingSchema,Tuple<T,MetadataInfo>>();
+		readonly static Dictionary<MappingSchemaOld,Tuple<T,MetadataInfo>> _cache =
+			new Dictionary<MappingSchemaOld,Tuple<T,MetadataInfo>>();
 
 		readonly MetadataProvider _metadata;
 		readonly QueryProvider    _query;
@@ -75,13 +75,13 @@ namespace LinqToDB.ServiceModel
 
 		class MetadataInfo
 		{
-			public MetadataInfo(MappingSchema mappingSchema)
+			public MetadataInfo(MappingSchemaOld mappingSchema)
 			{
 				_mappingSchema = mappingSchema;
 				LoadMetadata();
 			}
 
-			readonly MappingSchema _mappingSchema;
+			readonly MappingSchemaOld _mappingSchema;
 
 			readonly public Dictionary<Type,TypeInfo>                  TypeDic     = new Dictionary<Type,TypeInfo>();
 			readonly public Dictionary<string,ResourceType>            Types       = new Dictionary<string,ResourceType>();

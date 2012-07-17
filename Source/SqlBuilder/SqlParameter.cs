@@ -9,7 +9,7 @@ namespace LinqToDB.SqlBuilder
 
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
-		public SqlParameter(Type systemType, string name, object value, MappingSchema mappingSchema)
+		public SqlParameter(Type systemType, string name, object value, MappingSchemaOld mappingSchema)
 		{
 			IsQueryParameter = true;
 			Name             = name;
@@ -24,7 +24,7 @@ namespace LinqToDB.SqlBuilder
 		}
 
 		public SqlParameter(Type systemType, string name, object value, Converter<object,object> valueConverter)
-			: this(systemType, name, value, (MappingSchema)null)
+			: this(systemType, name, value, (MappingSchemaOld)null)
 		{
 			_valueConverter = valueConverter;
 		}
@@ -78,7 +78,7 @@ namespace LinqToDB.SqlBuilder
 
 		bool _isEnumConverterSet;
 
-		internal void SetEnumConverter(Type type, MappingSchema ms)
+		internal void SetEnumConverter(Type type, MappingSchemaOld ms)
 		{
 			if (!_isEnumConverterSet)
 			{
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlBuilder
 			}
 		}
 
-		void SetEnumConverterInternal(Type type, MappingSchema ms)
+		void SetEnumConverterInternal(Type type, MappingSchemaOld ms)
 		{
 			if (_valueConverter == null)
 			{

@@ -139,7 +139,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region EnsureMapper
 
-		public override void EnsureMapper(TypeAccessor typeAccessor, MappingSchema mappingSchema, EnsureMapperHandler handler)
+		public override void EnsureMapper(TypeAccessor typeAccessor, MappingSchemaOld mappingSchema, EnsureMapperHandler handler)
 		{
 			foreach (MapFieldAttribute attr in GetMapFieldAttributes(typeAccessor))
 			{
@@ -313,7 +313,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullable
 
-		public override bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public override bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			// Check member [Nullable(true | false)]
 			//
@@ -385,7 +385,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			return value;
 		}
 
-		public override object GetNullValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public override object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			// Check member [NullValue(0)]
 			//

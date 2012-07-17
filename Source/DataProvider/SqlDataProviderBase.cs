@@ -202,7 +202,7 @@ namespace LinqToDB.DataProvider
 
 		#region GetDataReader
 
-		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return dataReader is SqlDataReader?
 				new SqlDataReaderEx((SqlDataReader)dataReader):

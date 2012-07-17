@@ -280,7 +280,7 @@
     <Compile Include="Mapping\MapImplicitAttribute.cs" />
     <Compile Include="Mapping\MapMemberInfo.cs" />
     <Compile Include="Mapping\MappingException.cs" />
-    <Compile Include="Mapping\MappingSchema.cs" />
+    <Compile Include="Mapping\MappingSchemaOld.cs" />
     <Compile Include="Mapping\MapSetDataT.cs" />
     <Compile Include="Mapping\MapValue.cs" />
     <Compile Include="Mapping\MapValueAttribute.cs" />

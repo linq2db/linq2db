@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider
 
 		#region DataReaderEx
 
-		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return dataReader is OleDbDataReader?
 				new DataReaderEx((OleDbDataReader)dataReader):

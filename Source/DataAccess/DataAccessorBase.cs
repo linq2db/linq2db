@@ -91,8 +91,8 @@ namespace LinqToDB.DataAccess
 			set { _disposeDbManager = value; }
 		}
 
-		private MappingSchema _mappingSchema;
-		public  MappingSchema  MappingSchema
+		private MappingSchemaOld _mappingSchema;
+		public  MappingSchemaOld  MappingSchema
 		{
 			get { return _mappingSchema ?? (_mappingSchema = _dbManager != null? _dbManager.MappingSchema: Map.DefaultSchema); }
 			set { _mappingSchema = value; }

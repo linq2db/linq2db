@@ -10,7 +10,7 @@ namespace LinqToDB.Data.Linq
 	{
 		IDataContext  DataContext    { get; }
 		string        ContextID      { get; }
-		MappingSchema MappingSchema  { get; }
+		MappingSchemaOld MappingSchema  { get; }
 		bool          DisposeContext { get; }
 
 		ISqlProvider     CreateSqlProvider();

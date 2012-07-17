@@ -263,7 +263,7 @@ namespace LinqToDB.SqlProvider
 
 		readonly FirebirdMappingSchema _mappingSchema = new FirebirdMappingSchema();
 
-		MappingSchema IMappingSchemaProvider.MappingSchema
+		MappingSchemaOld IMappingSchemaProvider.MappingSchema
 		{
 			get { return _mappingSchema; }
 		}

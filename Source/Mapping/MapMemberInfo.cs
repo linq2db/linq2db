@@ -29,7 +29,7 @@ namespace LinqToDB.Mapping
 		public int             DbSize                     { get; set; }
 		public bool            IsDbTypeSet                { get; set; }
 		public bool            IsDbSizeSet                { get; set; }
-		public MappingSchema   MappingSchema              { get; set; }
+		public MappingSchemaOld   MappingSchema              { get; set; }
 		public MapValue[]      MapValues                  { get; set; }
 		public MemberExtension MemberExtension            { get; set; }
 		public DbType          DbType                     { get; set; }

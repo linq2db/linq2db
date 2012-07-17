@@ -193,7 +193,7 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		public virtual MappingSchema MappingSchema { get; set; }
+		public virtual MappingSchemaOld MappingSchema { get; set; }
 
 		public virtual void PrepareCommand(ref CommandType commandType, ref string commandText, ref IDbDataParameter[] commandParameters)
 		{
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider
 			get { return _sqlProvider ?? (_sqlProvider = CreateSqlProvider()); }
 		}
 
-		public virtual IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public virtual IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return dataReader;
 		}

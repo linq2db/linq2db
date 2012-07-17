@@ -55,7 +55,7 @@ namespace LinqToDB.Mapping
 
 		#region Public Properties
 
-		public MappingSchema  MappingSchema  { get; private set; }
+		public MappingSchemaOld  MappingSchema  { get; private set; }
 		public string         Name           { get; private set; }
 		public string         MemberName     { get; private set; }
 		public string         Storage        { get; private set; }

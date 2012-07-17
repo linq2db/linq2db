@@ -26,9 +26,9 @@ namespace LinqToDB.Data.Linq
 
 		public string        ContextID;
 		public Expression    Expression;
-		public MappingSchema MappingSchema;
+		public MappingSchemaOld MappingSchema;
 
-		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
+		public bool Compare(string contextID, MappingSchemaOld mappingSchema, Expression expr)
 		{
 			return
 				ContextID.Length == contextID.Length &&
@@ -402,7 +402,7 @@ namespace LinqToDB.Data.Linq
 			QueryContext  qc,
 			IDataContext  dc,
 			IDataReader   rd,
-			MappingSchema ms,
+			MappingSchemaOld ms,
 			Expression    expr,
 			object[]      ps);
 

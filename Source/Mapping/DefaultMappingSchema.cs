@@ -1,6 +1,6 @@
 namespace LinqToDB.Mapping
 {
-	public sealed class DefaultMappingSchema : MappingSchema
+	public sealed class DefaultMappingSchema : MappingSchemaOld
 	{
 	}
 }

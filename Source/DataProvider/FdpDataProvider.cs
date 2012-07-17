@@ -248,7 +248,7 @@ namespace LinqToDB.DataProvider
 		#endregion
 
 		#region FbDataReaderEx
-		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return
 				dataReader is FbDataReader

@@ -57,7 +57,7 @@ namespace LinqToDB.SqlBuilder
 
 		#region Init from type
 
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
+		public SqlTable([JetBrains.Annotations.NotNull] MappingSchemaOld mappingSchema, Type objectType) : this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 
@@ -154,7 +154,7 @@ namespace LinqToDB.SqlBuilder
 		{
 		}
 
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, ExtensionList extensions, string name) : this()
+		public SqlTable([JetBrains.Annotations.NotNull] MappingSchemaOld mappingSchema, ExtensionList extensions, string name) : this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 			if (extensions    == null) throw new ArgumentNullException("extensions");

@@ -96,15 +96,15 @@ namespace LinqToDB.Data
 
 		#region Public Properties
 
-		private MappingSchema _mappingSchema = Map.DefaultSchema;
+		private MappingSchemaOld _mappingSchema = Map.DefaultSchema;
 		/// <summary>
-		/// Gets the <see cref="LinqToDB.Mapping.MappingSchema"/> 
+		/// Gets the <see cref="LinqToDB.Mapping.MappingSchemaOld"/> 
 		/// used by this instance of the <see cref="DbManager"/>.
 		/// </summary>
 		/// <value>
 		/// A mapping schema.
 		/// </value>
-		public MappingSchema MappingSchema
+		public MappingSchemaOld MappingSchema
 		{
 			[DebuggerStepThrough]
 			get { return _mappingSchema; }

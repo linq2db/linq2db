@@ -269,7 +269,7 @@ namespace Tests.Linq
 			public int?  Value1;
 		}
 
-		class MyMappingSchema : MappingSchema
+		class MyMappingSchema : MappingSchemaOld
 		{
 			public override object ConvertChangeType(object value, Type conversionType, bool isNullable)
 			{

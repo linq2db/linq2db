@@ -23,7 +23,7 @@ namespace LinqToDB.Data.Linq
 		public IDataContext  DataContext    { get; private set; }
 		public bool          DisposeContext { get; private set; }
 		public string        ContextID      { get { return DataContext.ContextID;     } }
-		public MappingSchema MappingSchema  { get { return DataContext.MappingSchema; } }
+		public MappingSchemaOld MappingSchema  { get { return DataContext.MappingSchema; } }
 
 		public ISqlProvider CreateSqlProvider()
 		{

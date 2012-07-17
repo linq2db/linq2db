@@ -1083,7 +1083,7 @@ namespace LinqToDB.ServiceModel
 							var likeEnd   = ReadString();
 							*/
 
-							obj = new SqlParameter(systemType, name, value, (MappingSchema)null)
+							obj = new SqlParameter(systemType, name, value, (MappingSchemaOld)null)
 							{
 								IsQueryParameter = isQueryParameter,
 								DbType           = dbType,

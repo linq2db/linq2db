@@ -194,7 +194,7 @@ namespace LinqToDB.Data.Linq
 			public static FieldInfo Counter = FieldExpressor(ctx => ctx.Counter);
 		}
 
-		public class MapSchema : Expressor<Mapping.MappingSchema>
+		public class MapSchema : Expressor<Mapping.MappingSchemaOld>
 		{
 			public static MethodInfo MapValueToEnum = MethodExpressor(m => m.MapValueToEnum   (null, null));
 			public static MethodInfo ChangeType     = MethodExpressor(m => m.ConvertChangeType(null, null));

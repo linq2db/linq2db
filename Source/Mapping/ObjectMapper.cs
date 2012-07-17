@@ -213,8 +213,8 @@ namespace LinqToDB.Mapping
 			get { return _typeAccessor; }
 		}
 
-		private MappingSchema _mappingSchema;
-		public  MappingSchema  MappingSchema
+		private MappingSchemaOld _mappingSchema;
+		public  MappingSchemaOld  MappingSchema
 		{
 			get { return _mappingSchema; }
 		}
@@ -223,7 +223,7 @@ namespace LinqToDB.Mapping
 
 		#region Init Mapper
 
-		public virtual void Init(MappingSchema mappingSchema, Type type)
+		public virtual void Init(MappingSchemaOld mappingSchema, Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
 

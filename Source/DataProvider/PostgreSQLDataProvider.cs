@@ -133,7 +133,7 @@ namespace LinqToDB.DataProvider
 			return command.CommandType == newCommandType;
 		}
 
-		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return
 				dataReader is NpgsqlDataReader
@@ -144,9 +144,9 @@ namespace LinqToDB.DataProvider
 		class NpgsqlDataReaderEx : IDataReader
 		{
 			private readonly NpgsqlDataReader _reader;
-			private readonly MappingSchema _schema;
+			private readonly MappingSchemaOld _schema;
 
-			public NpgsqlDataReaderEx(MappingSchema schema, NpgsqlDataReader reader)
+			public NpgsqlDataReaderEx(MappingSchemaOld schema, NpgsqlDataReader reader)
 			{
 				_reader = reader;
 				_schema = schema;

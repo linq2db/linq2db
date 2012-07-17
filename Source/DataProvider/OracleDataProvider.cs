@@ -587,7 +587,7 @@ namespace LinqToDB.DataProvider
 			return new OracleSqlProvider();
 		}
 
-		public override IDataReader GetDataReader(MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return dataReader is OracleDataReader ?
 				new OracleDataReaderEx((OracleDataReader)dataReader) :
@@ -634,7 +634,7 @@ namespace LinqToDB.DataProvider
 
 		#region Inner types
 
-		public class OracleMappingSchema : MappingSchema
+		public class OracleMappingSchema : MappingSchemaOld
 		{
 			public override DataReaderMapper CreateDataReaderMapper(IDataReader dataReader)
 			{
@@ -1132,7 +1132,7 @@ namespace LinqToDB.DataProvider
 		//
 		public class OracleDataReaderMapper : DataReaderMapper
 		{
-			public OracleDataReaderMapper(MappingSchema mappingSchema, IDataReader dataReader)
+			public OracleDataReaderMapper(MappingSchemaOld mappingSchema, IDataReader dataReader)
 				: base(mappingSchema, dataReader)
 			{
 				_dataReader = dataReader is OracleDataReaderEx?

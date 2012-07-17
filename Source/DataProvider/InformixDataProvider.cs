@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider
 
 		#region GetDataReader
 
-		public override IDataReader GetDataReader(Mapping.MappingSchema schema, IDataReader dataReader)
+		public override IDataReader GetDataReader(Mapping.MappingSchemaOld schema, IDataReader dataReader)
 		{
 			return dataReader is IfxDataReader?
 				new InformixDataReaderEx((IfxDataReader)dataReader):

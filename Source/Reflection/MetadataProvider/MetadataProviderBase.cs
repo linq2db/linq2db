@@ -64,7 +64,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region EnsureMapper
 
-		public virtual void EnsureMapper(TypeAccessor typeAccessor, MappingSchema mappingSchema, EnsureMapperHandler handler)
+		public virtual void EnsureMapper(TypeAccessor typeAccessor, MappingSchemaOld mappingSchema, EnsureMapperHandler handler)
 		{
 		}
 
@@ -108,7 +108,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullable
 
-		public virtual bool GetNullable(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public virtual bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			isSet = false;
 			return
@@ -123,7 +123,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetNullValue
 
-		public virtual object GetNullValue(MappingSchema mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
+		public virtual object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
 			isSet = false;
 
@@ -210,7 +210,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#region GetPrimaryKeyFields
 
-		protected static List<string> GetPrimaryKeyFields(MappingSchema schema, TypeAccessor ta, TypeExtension tex)
+		protected static List<string> GetPrimaryKeyFields(MappingSchemaOld schema, TypeAccessor ta, TypeExtension tex)
 		{
 			var mdp  = schema.MetadataProvider;
 			var keys = new List<string>();

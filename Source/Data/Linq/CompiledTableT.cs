@@ -21,7 +21,7 @@ namespace LinqToDB.Data.Linq
 		readonly object           _sync = new object();
 
 		string        _lastContextID;
-		MappingSchema _lastMappingSchema;
+		MappingSchemaOld _lastMappingSchema;
 		Query<T>      _lastQuery;
 
 		readonly Dictionary<object,Query<T>> _infos = new Dictionary<object, Query<T>>();
@@ -31,7 +31,7 @@ namespace LinqToDB.Data.Linq
 			var dataContextInfo = DataContextInfo.Create(dataContext);
 
 			string        lastContextID;
-			MappingSchema lastMappingSchema;
+			MappingSchemaOld lastMappingSchema;
 			Query<T>      query;
 
 			lock (_sync)
