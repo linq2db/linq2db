@@ -26,7 +26,7 @@ namespace LinqToDB
 		}
 
 		public string           ConfigurationString { get; private set; }
-		public DataProviderBase DataProvider        { get; private set; }
+		public DataProviderBaseOld DataProvider        { get; private set; }
 		public string           ContextID           { get; set;         }
 		public MappingSchemaOld    MappingSchema       { get; set;         }
 		public string           LastQuery           { get; set;         }

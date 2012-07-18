@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 {
 	using SqlProvider;
 
-	class DB2DataProvider : DataProviderBase
+	class DB2DataProvider : DataProviderBaseOld
 	{
 		public override IDbConnection CreateConnectionObject () { return new DB2Connection (); }
 		public override DbDataAdapter CreateDataAdapterObject() { return new DB2DataAdapter(); }

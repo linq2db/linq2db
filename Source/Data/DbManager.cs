@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 	{
 		#region Init
 
-		public DbManager(DataProviderBase dataProvider, string connectionString)
+		public DbManager(DataProviderBaseOld dataProvider, string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
@@ -46,7 +46,7 @@ namespace LinqToDB.Data
 			_dataProvider.InitDbManager(this);
 		}
 
-		public DbManager(DataProviderBase dataProvider, IDbConnection connection)
+		public DbManager(DataProviderBaseOld dataProvider, IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (connection   == null) throw new ArgumentNullException("connection");
@@ -57,7 +57,7 @@ namespace LinqToDB.Data
 			_dataProvider.InitDbManager(this);
 		}
 
-		public DbManager(DataProviderBase dataProvider, IDbTransaction transaction)
+		public DbManager(DataProviderBaseOld dataProvider, IDbTransaction transaction)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (transaction  == null) throw new ArgumentNullException("transaction");
@@ -111,16 +111,16 @@ namespace LinqToDB.Data
 			set { _mappingSchema = value ?? Map.DefaultSchema; }
 		}
 
-		private DataProviderBase _dataProvider;
+		private DataProviderBaseOld _dataProvider;
 		/// <summary>
-		/// Gets the <see cref="DataProviderBase"/> 
+		/// Gets the <see cref="DataProviderBaseOld"/> 
 		/// used by this instance of the <see cref="DbManager"/>.
 		/// </summary>
 		/// <value>
 		/// A data provider.
 		/// </value>
 		/// <include file="Examples.xml" path='examples/db[@name="DataProvider"]/*' />
-		public DataProviderBase DataProvider
+		public DataProviderBaseOld DataProvider
 		{
 			[DebuggerStepThrough]
 			get           { return _dataProvider;  }

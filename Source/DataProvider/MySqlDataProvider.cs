@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider
 	using Common;
 	using SqlProvider;
 
-	public class MySqlDataProvider :  DataProviderBase
+	public class MySqlDataProvider :  DataProviderBaseOld
 	{
 		#region Static configuration
 

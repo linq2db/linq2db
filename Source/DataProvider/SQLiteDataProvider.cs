@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider
 	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 	/// </remarks>
 	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public sealed class SQLiteDataProvider : DataProviderBase
+	public sealed class SQLiteDataProvider : DataProviderBaseOld
 	{
 		/// <summary>
 		/// Returns connection type.

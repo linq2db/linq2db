@@ -30,7 +30,7 @@ namespace LinqToDB_Temp.Data
 			match (_configurations.TryGetValue(configurationString))
 			{
 				| ((s,p), true) => this(p, s)
-				| _             => this(LinqToDBException("Configuration '$configurationString' is not defined."));
+				| _             => this(LinqToDBException($"Configuration '$configurationString' is not defined."));
 			}
 		}
 

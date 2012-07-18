@@ -20,7 +20,7 @@ namespace LinqToDB_Temp.Configuration
 			_properties.Add(_propDefaultDataProvider);
 		}
 		
-		public  static  Instance : LinqToDBSection
+		public static Instance : LinqToDBSection
 		{
 			mutable static _instance : LinqToDBSection;
 

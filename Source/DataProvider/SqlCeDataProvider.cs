@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider
 	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
 	/// </remarks>
 	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public sealed class SqlCeDataProvider: DataProviderBase
+	public sealed class SqlCeDataProvider: DataProviderBaseOld
 	{
 		/// <summary>
 		/// Creates the database connection object.

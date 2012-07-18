@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	public class SybaseDataProvider : DataProviderBase
+	public class SybaseDataProvider : DataProviderBaseOld
 	{
 		public override IDbConnection CreateConnectionObject()
 		{

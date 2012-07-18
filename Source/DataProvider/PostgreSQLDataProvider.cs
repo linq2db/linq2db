@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	public class PostgreSQLDataProvider : DataProviderBase
+	public class PostgreSQLDataProvider : DataProviderBaseOld
 	{
 		#region Configurable
 

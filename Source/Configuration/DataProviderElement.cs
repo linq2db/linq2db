@@ -28,7 +28,7 @@ namespace LinqToDB.Configuration
 
 		/// <summary>
 		/// Gets or sets a name of this data provider.
-		/// If not set, <see cref="DataProviderBase.Name"/> is used.
+		/// If not set, <see cref="DataProviderBaseOld.Name"/> is used.
 		/// </summary>
 		public string Name
 		{

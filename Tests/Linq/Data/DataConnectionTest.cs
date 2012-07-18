@@ -3,9 +3,9 @@ using System.Data;
 
 using NUnit.Framework;
 
-using LinqToDB_Temp;
-using LinqToDB_Temp.Data;
-using LinqToDB_Temp.DataProvider;
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
 
 namespace Tests.Data
 {

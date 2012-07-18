@@ -9,35 +9,38 @@ namespace LinqToDB.Configuration
 	/// </summary>
 	internal class LinqToDBSection : ConfigurationSection
 	{
-		private const string SectionName = "LinqToDB";
-		private static readonly ConfigurationPropertyCollection _properties =
-			new ConfigurationPropertyCollection();
+		private const string SectionName = "linq2db";
 
-		private static readonly ConfigurationProperty           _propDataProviders = 
-			new ConfigurationProperty("dataProviders",           typeof(DataProviderElementCollection),
-			new DataProviderElementCollection(),                 ConfigurationPropertyOptions.None);
-		private static readonly ConfigurationProperty           _propDefaultConfiguration =
-			new ConfigurationProperty("defaultConfiguration",    typeof(string),
-			null,                                                ConfigurationPropertyOptions.None);
+		static readonly ConfigurationPropertyCollection _properties               = new ConfigurationPropertyCollection();
+		static readonly ConfigurationProperty           _propDataProviders        = new ConfigurationProperty("dataProviders",        typeof(DataProviderElementCollection), new DataProviderElementCollection(), ConfigurationPropertyOptions.None);
+		static readonly ConfigurationProperty           _propDefaultConfiguration = new ConfigurationProperty("defaultConfiguration", typeof(string),                        null,                                ConfigurationPropertyOptions.None);
+		static readonly ConfigurationProperty           _propDefaultDataProvider  = new ConfigurationProperty("defaultDataProvider",  typeof(string),                        null,                                ConfigurationPropertyOptions.None);
 
 		static LinqToDBSection()
 		{
 			_properties.Add(_propDataProviders);
 			_properties.Add(_propDefaultConfiguration);
+			_properties.Add(_propDefaultDataProvider);
 		}
 
-		public static LinqToDBSection Instance
+		private static LinqToDBSection _instance;
+		public  static LinqToDBSection  Instance
 		{
 			get
 			{
-				try
+				if (_instance == null)
 				{
-					return (LinqToDBSection)ConfigurationManager.GetSection(SectionName);
+					try
+					{
+						_instance = (LinqToDBSection)ConfigurationManager.GetSection(SectionName);
+					}
+					catch (SecurityException)
+					{
+						return null;
+					}
 				}
-				catch (SecurityException)
-				{
-					return null;
-				}
+
+				return _instance;
 			}
 		}
 
@@ -51,9 +54,7 @@ namespace LinqToDB.Configuration
 			get { return (DataProviderElementCollection) base[_propDataProviders]; }
 		}
 
-		public string DefaultConfiguration
-		{
-			get { return (string)base[_propDefaultConfiguration]; }
-		}
+		public string DefaultConfiguration { get { return (string)base[_propDefaultConfiguration]; } }
+		public string DefaultDataProvider  { get { return (string)base[_propDefaultDataProvider];  } }
 	}
 }

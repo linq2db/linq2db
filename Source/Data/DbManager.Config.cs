@@ -201,7 +201,7 @@ namespace LinqToDB.Data
 		{
 			AddDataProvider(new Sql2008DataProvider());
 			AddDataProvider(new SqlDataProvider());
-			AddDataProvider(new AccessDataProvider());
+			AddDataProvider(new AccessDataProviderOld());
 			AddDataProvider(new OleDbDataProvider());
 			AddDataProvider(new OdbcDataProvider());
 
@@ -214,7 +214,7 @@ namespace LinqToDB.Data
 				foreach (DataProviderElement provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true);
-					var providerInstance = (DataProviderBase)Activator.CreateInstance(dataProviderType);
+					var providerInstance = (DataProviderBaseOld)Activator.CreateInstance(dataProviderType);
 
 					if (!string.IsNullOrEmpty(provider.Name))
 						providerInstance.UniqueName = provider.Name;
@@ -245,11 +245,11 @@ namespace LinqToDB.Data
 		}
 
 		volatile static string             _firstConfiguration;
-		private  static DataProviderBase   _firstProvider;
+		private  static DataProviderBaseOld   _firstProvider;
 		private  static readonly Hashtable _configurationList = Hashtable.Synchronized(new Hashtable());
 		private  static readonly Hashtable _anyProviderConfigurationList = Hashtable.Synchronized(new Hashtable());
 
-		private static DataProviderBase GetDataProvider(IDbConnection connection)
+		private static DataProviderBaseOld GetDataProvider(IDbConnection connection)
 		{
 			if (connection == null) throw new ArgumentNullException("connection");
 
@@ -262,7 +262,7 @@ namespace LinqToDB.Data
 			return dp;
 		}
 
-		public static DataProviderBase GetDataProvider(string configurationString)
+		public static DataProviderBaseOld GetDataProvider(string configurationString)
 		{
 			if (configurationString == null) throw new ArgumentNullException("configurationString");
 
@@ -272,7 +272,7 @@ namespace LinqToDB.Data
 			if (configurationString == _firstConfiguration)
 				return _firstProvider;
 
-			var dp = (DataProviderBase)_configurationList[configurationString];
+			var dp = (DataProviderBaseOld)_configurationList[configurationString];
 
 			if (dp == null)
 			{
@@ -357,7 +357,7 @@ namespace LinqToDB.Data
 					(configurationString.Substring(dividerPos + ProviderNameDivider.Length), csWithoutProvider);
 		}
 
-		private static DataProviderBase FindFirstSuitableProvider(string configurationString)
+		private static DataProviderBaseOld FindFirstSuitableProvider(string configurationString)
 		{
 			var cs = (string)_anyProviderConfigurationList[configurationString];
 			var searchRequired = (cs == null);
@@ -489,8 +489,8 @@ namespace LinqToDB.Data
 
 		#region AddDataProvider
 
-		static readonly Dictionary<string, DataProviderBase> _dataProviderNameList = new Dictionary<string, DataProviderBase>(8, StringComparer.OrdinalIgnoreCase);
-		static readonly Dictionary<Type,   DataProviderBase> _dataProviderTypeList = new Dictionary<Type,   DataProviderBase>(4);
+		static readonly Dictionary<string, DataProviderBaseOld> _dataProviderNameList = new Dictionary<string, DataProviderBaseOld>(8, StringComparer.OrdinalIgnoreCase);
+		static readonly Dictionary<Type,   DataProviderBaseOld> _dataProviderTypeList = new Dictionary<Type,   DataProviderBaseOld>(4);
 		static readonly object                               _dataProviderListLock = new object();
 
 		/// <summary>
@@ -500,9 +500,9 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="DataProviderBase.Name"/>
-		/// <param name="dataProvider">An instance of the <see cref="DataProviderBase"/> interface.</param>
-		public static void AddDataProvider(DataProviderBase dataProvider)
+		/// <seealso cref="DataProviderBaseOld.Name"/>
+		/// <param name="dataProvider">An instance of the <see cref="DataProviderBaseOld"/> interface.</param>
+		public static void AddDataProvider(DataProviderBaseOld dataProvider)
 		{
 			if (null == dataProvider)
 				throw new ArgumentNullException("dataProvider");
@@ -532,10 +532,10 @@ namespace LinqToDB.Data
 		/// </remarks>
 		/// <include file="Examples1.xml" path='examples/db[@name="AddDataProvider(DataProvider.IDataProvider)"]/*' />
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBaseOld.Name"/>
 		/// <param name="providerName">The data provider name.</param>
-		/// <param name="dataProvider">An instance of the <see cref="DataProviderBase"/> interface.</param>
-		public static void AddDataProvider(string providerName, DataProviderBase dataProvider)
+		/// <param name="dataProvider">An instance of the <see cref="DataProviderBaseOld"/> interface.</param>
+		public static void AddDataProvider(string providerName, DataProviderBaseOld dataProvider)
 		{
 			if (dataProvider == null)
 				throw new ArgumentNullException("dataProvider");
@@ -554,11 +554,11 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBaseOld.Name"/>
 		/// <param name="dataProviderType">A data provider type.</param>
 		public static void AddDataProvider(Type dataProviderType)
 		{
-			AddDataProvider((DataProviderBase)Activator.CreateInstance(dataProviderType));
+			AddDataProvider((DataProviderBaseOld)Activator.CreateInstance(dataProviderType));
 		}
 
 		/// <summary>
@@ -568,12 +568,12 @@ namespace LinqToDB.Data
 		/// The method can be used to register a new data provider for further use.
 		/// </remarks>
 		/// <seealso cref="AddConnectionString(string)"/>
-		/// <seealso cref="DataProviderBase.Name"/>
+		/// <seealso cref="DataProviderBaseOld.Name"/>
 		/// <param name="providerName">The data provider name.</param>
 		/// <param name="dataProviderType">A data provider type.</param>
 		public static void AddDataProvider(string providerName, Type dataProviderType)
 		{
-			AddDataProvider(providerName, (DataProviderBase)Activator.CreateInstance(dataProviderType));
+			AddDataProvider(providerName, (DataProviderBaseOld)Activator.CreateInstance(dataProviderType));
 		}
 
 		#endregion

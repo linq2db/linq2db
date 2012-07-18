@@ -10,6 +10,7 @@ namespace LinqToDB
 		public const string Informix   = "Informix";
 		public const string MsSql2005  = "MsSql2005";
 		public const string MsSql2008  = "MsSql2008";
+		public const string SqlServer  = "SqlServer";
 		public const string MySql      = "MySql";
 		public const string Oracle     = "Oracle";
 		public const string PostgreSQL = "PostgreSQL";

@@ -67,6 +67,12 @@
     <Compile Include="DataAccess\DataAccessorBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataProvider\AccessDataProvider.cs" />
+    <Compile Include="DataProvider\DataProviderBase.cs" />
+    <Compile Include="DataProvider\IDataProvider.cs" />
+    <Compile Include="DataProvider\SqlServerDataProvider.cs" />
+    <Compile Include="DataProvider\SqlServerVersion.cs" />
+    <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Data\Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">
@@ -111,9 +117,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Data\DataException.cs" />
-    <Compile Include="DataProvider\AccessDataProvider.cs" />
+    <Compile Include="DataProvider\AccessDataProviderOld.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
-    <Compile Include="DataProvider\DataProviderBase.cs" />
+    <Compile Include="DataProvider\DataProviderBaseOld.cs" />
     <None Include="DataProvider\DB2DataProvider.cs" />
     <None Include="DataProvider\FdpDataProvider.cs" />
     <Compile Include="DataProvider\FirebirdMappingSchema.cs" />

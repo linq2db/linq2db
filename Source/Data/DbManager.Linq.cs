@@ -346,7 +346,7 @@ namespace LinqToDB.Data
 			get { return DataProvider.Name; }
 		}
 
-		static Func<ISqlProvider> GetCreateSqlProvider(DataProviderBase dp)
+		static Func<ISqlProvider> GetCreateSqlProvider(DataProviderBaseOld dp)
 		{
 			return dp.CreateSqlProvider;
 		}

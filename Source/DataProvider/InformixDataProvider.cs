@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 {
 	using SqlProvider;
 
-	class InformixDataProvider :  DataProviderBase
+	class InformixDataProvider :  DataProviderBaseOld
 	{
 		public override IDbConnection CreateConnectionObject () { return new IfxConnection      (); }
 		public override DbDataAdapter CreateDataAdapterObject() { return new IfxDataAdapter     (); }

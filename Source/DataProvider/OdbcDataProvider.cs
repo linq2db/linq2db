@@ -12,18 +12,18 @@ namespace LinqToDB.DataProvider
 	/// Implements access to the Data Provider for ODBC.
 	/// </summary>
 	/// <remarks>
-	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+	/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 	/// </remarks>
-	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public class OdbcDataProvider : DataProviderBase
+	/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataManager Method</seealso>
+	public class OdbcDataProvider : DataProviderBaseOld
 	{
 		/// <summary>
 		/// Creates the database connection object.
 		/// </summary>
 		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+		/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
+		/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataManager Method</seealso>
 		/// <returns>The database connection object.</returns>
 		public override IDbConnection CreateConnectionObject()
 		{
@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider
 		/// Creates the data adapter object.
 		/// </summary>
 		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+		/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
+		/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataManager Method</seealso>
 		/// <returns>A data adapter object.</returns>
 		public override DbDataAdapter CreateDataAdapterObject()
 		{
@@ -48,9 +48,9 @@ namespace LinqToDB.DataProvider
 		/// parameter information for the stored procedure specified in the <see cref="IDbCommand"/>.
 		/// </summary>
 		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+		/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
+		/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataManager Method</seealso>
 		/// <param name="command">The <see cref="IDbCommand"/> referencing the stored procedure for which the parameter
 		/// information is to be derived. The derived parameters will be populated into 
 		/// the Parameters of this command.</param>
@@ -86,9 +86,9 @@ namespace LinqToDB.DataProvider
 		/// Returns connection type.
 		/// </summary>
 		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+		/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
+		/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataManager Method</seealso>
 		/// <value>An instance of the <see cref="Type"/> class.</value>
 		public override Type ConnectionType
 		{
@@ -101,9 +101,9 @@ namespace LinqToDB.DataProvider
 		/// Returns the data provider name.
 		/// </summary>
 		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
+		/// See the <see cref="DbManager.AddDataProvider(DataProviderBaseOld)"/> method to find an example.
 		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataProvider Method</seealso>
+		/// <seealso cref="DbManager.AddDataProvider(DataProviderBaseOld)">AddDataProvider Method</seealso>
 		/// <value>Data provider name.</value>
 		public override string Name
 		{
