@@ -55,6 +55,7 @@
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="Common\DefaultValueExpression.cs" />
     <Compile Include="Common\NameOrIndexParameter.cs" />
+    <Compile Include="Common\Option.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
     <Compile Include="Configuration\DataProviderElement.cs" />
     <Compile Include="Configuration\DataProviderElementCollection.cs" />
@@ -75,11 +76,14 @@
     <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Mapping\MappingSchema.cs" />
+    <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
     <Compile Include="Metadata\MemberInfo.cs" />
     <Compile Include="Metadata\MetadataException.cs" />
+    <Compile Include="Metadata\MetadataReader.cs" />
     <Compile Include="Metadata\TypeInfo.cs" />
     <Compile Include="Metadata\XmlAttributeReadercs.cs" />
     <Compile Include="NonUpdatableAttribute.cs">

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Globalization;
 
-using LinqToDB_Temp;
-using LinqToDB_Temp.Common;
-using LinqToDB_Temp.Mapping;
+using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -101,7 +100,7 @@ namespace Tests.Mapping
 
 			{
 				var c0 = Convert<string,DateTime>.Lambda;
-				var c1 = ms1.GetConverter<string, DateTime>();
+				var c1 = ms1.GetConverter<string,DateTime>();
 				var c2 = ms2.GetConverter<string,DateTime>();
 
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c0("01/20/2012 16:30:40"));

@@ -10,6 +10,12 @@ namespace LinqToDB.Common
 
 		public class LambdaInfo
 		{
+			public LambdaInfo(LambdaExpression lambda, Delegate @delegate)
+			{
+				Lambda   = lambda;
+				Delegate = @delegate;
+			}
+
 			public LambdaExpression Lambda;
 			public Delegate         Delegate;
 		}
@@ -42,7 +48,7 @@ namespace LinqToDB.Common
 
 			var ex  = ConverterMaker.GetConverter(from, to);
 			var lm  = ex.Compile();
-			var ret = new LambdaInfo { Lambda = ex, Delegate = lm };
+			var ret = new LambdaInfo(ex, lm);
 
 			Set(from, to , ret);
 
