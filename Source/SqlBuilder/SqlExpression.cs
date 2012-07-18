@@ -69,19 +69,7 @@ namespace LinqToDB.SqlBuilder
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression other)
 		{
-			if (this == other)
-				return true;
-
-			var expr = other as SqlExpression;
-
-			if (expr == null || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
-				return false;
-
-			for (var i = 0; i < Parameters.Length; i++)
-				if (!Parameters[i].Equals(expr.Parameters[i]))
-					return false;
-
-			return true;
+			return Equals(other, DefaultComparer);
 		}
 
 		#endregion
@@ -97,6 +85,25 @@ namespace LinqToDB.SqlBuilder
 			return false;
 		}
 
+		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+
+		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		{
+			if (this == other)
+				return true;
+
+			var expr = other as SqlExpression;
+
+			if (expr == null || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
+				return false;
+
+			for (var i = 0; i < Parameters.Length; i++)
+				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
+					return false;
+
+			return comparer(this, other);
+		}
+	
 		#endregion
 
 		#region ICloneableElement Members

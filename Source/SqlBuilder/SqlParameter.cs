@@ -223,11 +223,16 @@ namespace LinqToDB.SqlBuilder
 			return SqlDataType.CanBeNull(SystemType ?? _value.GetType());
 		}
 
+		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		{
+			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
+		}
+
 		#endregion
 
 		#region ICloneableElement Members
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 		{
 			if (!doClone(this))
 				return this;

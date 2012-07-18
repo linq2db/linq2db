@@ -510,6 +510,11 @@ namespace LinqToDB.SqlBuilder
 			return false;
 		}
 
+		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		{
+			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
+		}
+
 		#endregion
 
 		#region ICloneableElement Members

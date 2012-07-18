@@ -511,6 +511,29 @@ namespace Tests.Linq
                     });
         }
 
+        [Test]
+        public void ConcatOrderByTest()
+        {
+            ForMySqlProvider(
+                db =>
+                {
+                    var q = from p in db.Person
+                             where p.ID < 0
+                             select new { Rank = 0, FirstName = (string)null, LastName = (string)null };
+                    var q2 =
+                        q.Concat(
+                            from p in db.Person
+                            select new { Rank = p.ID, p.FirstName, p.LastName });
+
+                    var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
+                    
+                    var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.InvariantCultureIgnoreCase);
+                    var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
+                 
+                    Assert.That(rqp.Count(),  Is.EqualTo(3));
+                });
+        }
+
         #region GenericQuery classes
 
         public abstract partial class GenericQueryBase
