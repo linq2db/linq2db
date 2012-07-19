@@ -3,7 +3,7 @@ using System.Data.Linq.Mapping;
 using System.IO;
 using System.Text;
 
-using LinqToDB_Temp.Metadata;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -13,7 +13,7 @@ namespace Tests.Metadata
 	{
 		const string Data =
 			@"<?xml version='1.0' encoding='utf-8' ?>
-			<Types xmlns='urn:schemas-bltoolkit-net:typeext'>
+			<Types>
 				<Type Name='MyType'>
 					<Member Name='Field1'>
 						<!-- 12345 -->
@@ -58,7 +58,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs.Head.Name);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 
 		public int Field1;
@@ -71,7 +71,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs.Head.Name);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 
 		public int Property1 { get; set; }
@@ -84,7 +84,7 @@ namespace Tests.Metadata
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("TestName", attrs.Head.Name);
+			Assert.AreEqual("TestName", attrs[0].Name);
 		}
 	}
 }

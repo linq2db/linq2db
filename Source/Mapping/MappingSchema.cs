@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
@@ -13,6 +14,11 @@ namespace LinqToDB.Mapping
 	public class MappingSchema
 	{
 		#region Init
+
+		public MappingSchema()
+			: this(null, (MappingSchema[])null)
+		{
+		}
 
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)

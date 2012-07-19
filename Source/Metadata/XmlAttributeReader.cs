@@ -11,16 +11,16 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 
-	public class XmlAttributeReadercs : IMetadataReader
+	public class XmlAttributeReader : IMetadataReader
 	{
 		readonly Dictionary<string,TypeInfo> _types;
 
-		public XmlAttributeReadercs(string xmlFile)
+		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
 		{
 		}
 
-		public XmlAttributeReadercs([NotNull] string xmlFile, [NotNull] Assembly assembly)
+		public XmlAttributeReader([NotNull] string xmlFile, [NotNull] Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException("assembly");
 			if (xmlFile  == null) throw new ArgumentNullException("xmlFile");
@@ -65,7 +65,7 @@ namespace LinqToDB.Metadata
 			}
 		}
 
-		public XmlAttributeReadercs([NotNull] Stream xmlDocStream)
+		public XmlAttributeReader([NotNull] Stream xmlDocStream)
 		{
 			if (xmlDocStream == null) throw new ArgumentNullException("xmlDocStream");
 

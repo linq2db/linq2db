@@ -3,7 +3,6 @@ using System.Data.Linq.Mapping;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
@@ -11,12 +10,12 @@ namespace Tests.Linq
 {
 	using Model;
 
-	[Table(Name = "Person")]
+	[System.Data.Linq.Mapping.Table(Name = "Person")]
 	public class L2SPersons
 	{
 		private int _personID;
 
-		[Column(
+		[System.Data.Linq.Mapping.Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
 			DbType        = "integer(32,0)",
@@ -29,10 +28,10 @@ namespace Tests.Linq
 			get { return _personID;  }
 			set { _personID = value; }
 		}
-		[Column] public string FirstName { get; set; }
-		[Column] public string LastName;
-		[Column] public string MiddleName;
-		[Column] public string Gender;
+		[System.Data.Linq.Mapping.Column] public string FirstName { get; set; }
+		[System.Data.Linq.Mapping.Column] public string LastName;
+		[System.Data.Linq.Mapping.Column] public string MiddleName;
+		[System.Data.Linq.Mapping.Column] public string Gender;
 	}
 
 	[TestFixture]

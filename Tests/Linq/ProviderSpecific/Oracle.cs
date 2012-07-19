@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Data.Linq.Mapping;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data.Linq;
 
 using NUnit.Framework;
 
@@ -54,7 +52,7 @@ namespace Tests.ProviderSpecific
 
 		#region InsertBatch
 
-		[Table(Name = "stg_trade_information")]
+		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
 		public class Trade
 		{
 			[MapField("STG_TRADE_ID")]          public int       ID             { get; set; }

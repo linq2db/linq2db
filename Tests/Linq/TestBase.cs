@@ -155,7 +155,7 @@ namespace Tests
 			new ProviderInfo(ProviderName.MsSql2008,  null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
 			new ProviderInfo(ProviderName.SqlCe,      "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProvider"),
 			new ProviderInfo(ProviderName.SQLite,     "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
-			new ProviderInfo(ProviderName.Access,     null,                 "LinqToDB.DataProvider.AccessDataProvider"),
+			new ProviderInfo(ProviderName.Access,     null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
 
 #if !MOBILE
 			new ProviderInfo(ProviderName.MsSql2005,  null,                 "LinqToDB.DataProvider.SqlDataProvider"),

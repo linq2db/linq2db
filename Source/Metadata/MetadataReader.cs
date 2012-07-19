@@ -8,8 +8,8 @@ namespace LinqToDB.Metadata
 	public class MetadataReader : IMetadataReader
 	{
 		public static MetadataReader Default = new MetadataReader(
-			new AttributeReader()//,
-			//new SystemDataLinqAttributeReader()
+			new AttributeReader(),
+			new SystemDataLinqAttributeReader()
 		);
 
 		public MetadataReader([NotNull] params IMetadataReader[] readers)

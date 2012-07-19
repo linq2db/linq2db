@@ -2,8 +2,9 @@
 using System.Data.Linq.Mapping;
 using System.IO;
 using System.Text;
-using LinqToDB_Temp.Mapping;
-using LinqToDB_Temp.Metadata;
+
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -14,7 +15,7 @@ namespace Tests.Mapping
 	{
 		const string Data =
 			@"<?xml version='1.0' encoding='utf-8' ?>
-			<Types xmlns='urn:schemas-bltoolkit-net:typeext'>
+			<Types>
 				<Type Name='TestClass'>
 					<Table>
 						<Name Value='TestName' />

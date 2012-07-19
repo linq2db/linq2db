@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertOld.cs" />
@@ -90,8 +91,9 @@
     <Compile Include="Metadata\MemberInfo.cs" />
     <Compile Include="Metadata\MetadataException.cs" />
     <Compile Include="Metadata\MetadataReader.cs" />
+    <Compile Include="Metadata\SystemDataLinqAttributeReader.cs" />
     <Compile Include="Metadata\TypeInfo.cs" />
-    <Compile Include="Metadata\XmlAttributeReadercs.cs" />
+    <Compile Include="Metadata\XmlAttributeReader.cs" />
     <Compile Include="NonUpdatableAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -113,6 +115,7 @@
     <Compile Include="DataAccess\SqlQueryT.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TableAttribute.cs" />
     <Compile Include="TableNameAttribute.cs">
       <SubType>Code</SubType>
     </Compile>

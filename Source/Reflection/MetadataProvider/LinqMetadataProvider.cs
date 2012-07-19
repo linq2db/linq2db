@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq.Mapping;
 using System.Linq;
 
 namespace LinqToDB.Reflection.MetadataProvider
@@ -32,7 +31,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 				if (_isLinqObject == null)
 				{
-					var attrs = type.GetCustomAttributes(typeof(TableAttribute), true);
+					var attrs = type.GetCustomAttributes(typeof(System.Data.Linq.Mapping.TableAttribute), true);
 					_isLinqObject = attrs.Length > 0;
 				}
 
@@ -48,7 +47,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
-				var a = member.GetAttribute<ColumnAttribute>();
+				var a = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (a != null && !string.IsNullOrEmpty(a.Name))
 				{
@@ -68,7 +67,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
-				var a = member.GetAttribute<ColumnAttribute>();
+				var a = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (a != null && !string.IsNullOrEmpty(a.Name))
 				{
@@ -88,7 +87,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
-				var a = member.GetAttribute<ColumnAttribute>();
+				var a = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (a != null && !string.IsNullOrEmpty(a.Name))
 				{
@@ -106,7 +105,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		public override bool GetMapIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
 		{
-			if (member.GetAttribute<AssociationAttribute>() != null)
+			if (member.GetAttribute<System.Data.Linq.Mapping.AssociationAttribute>() != null)
 			{
 				isSet = true;
 				return true;
@@ -115,7 +114,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
 				isSet = true;
-				return member.GetAttribute<ColumnAttribute>() == null;
+				return member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>() == null;
 			}
 
 			return base.GetMapIgnore(typeExtension, member, out isSet);
@@ -129,7 +128,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
-				var attr = member.GetAttribute<ColumnAttribute>();
+				var attr = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (attr != null)
 				{
@@ -151,9 +150,9 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				isSet = true;
 
-				var attrs = type.GetCustomAttributes(typeof(TableAttribute), true);
+				var attrs = type.GetCustomAttributes(typeof(System.Data.Linq.Mapping.TableAttribute), true);
 
-				return ((TableAttribute)attrs[0]).Name;
+				return ((System.Data.Linq.Mapping.TableAttribute)attrs[0]).Name;
 			}
 
 			return base.GetTableName(type, extensions, out isSet);
@@ -167,7 +166,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(type))
 			{
-				ColumnAttribute a = member.GetAttribute<ColumnAttribute>();
+				var a = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (a != null && a.IsPrimaryKey)
 				{
@@ -187,7 +186,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			if (IsLinqObject(member.TypeAccessor.Type))
 			{
-				var a = member.GetAttribute<ColumnAttribute>();
+				var a = member.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
 				if (a != null)
 				{
