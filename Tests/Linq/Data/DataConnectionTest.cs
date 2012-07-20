@@ -33,22 +33,31 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test3()
+		public void Test3([Values(
+			ProviderName.SqlServer,
+			ProviderName.SqlServer2008,
+			ProviderName.SqlServer2008 + ".1",
+			ProviderName.SqlServer2005,
+			ProviderName.SqlServer2005 + ".1",
+			ProviderName.Access
+			)] string config)
 		{
-			using (var conn = new DataConnection(ProviderName.SqlServer))
+			using (var conn = new DataConnection(config))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(ProviderName.SqlServer));
-			}
-		}
+				Assert.That(conn.ConfigurationString, Is.EqualTo(config));
 
-		[Test]
-		public void Test4()
-		{
-			using (var conn = new DataConnection(ProviderName.Access))
-			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(ProviderName.Access));
+				if (config.EndsWith(".2005"))
+				{
+					var sdp = (SqlServerDataProvider)conn.DataProvider;
+					Assert.That(sdp.Version, Is.EqualTo(SqlServerVersion.v2005));
+				}
+
+				if (config.EndsWith(".2008"))
+				{
+					var sdp = (SqlServerDataProvider)conn.DataProvider;
+					Assert.That(sdp.Version, Is.EqualTo(SqlServerVersion.v2008));
+				}
 			}
 		}
 	}

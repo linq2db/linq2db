@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider
 
 		public abstract IDbConnection CreateConnection(string connectionString);
 
-		public virtual void Configure(NameValueCollection attributes)
+		public virtual void Configure(string name, string value)
 		{
 		}
 	}

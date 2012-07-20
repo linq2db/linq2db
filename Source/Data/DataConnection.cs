@@ -91,18 +91,23 @@ namespace LinqToDB.Data
 			IEnumerable<KeyValuePair<string,IDataProvider>> ps,
 			IDataProvider defp)
 		{
-			return
-				ps.Where(dp => configuration.StartsWith(dp.Key)).       Select(dp => dp.Value).FirstOrDefault() ??
-				ps.Where(dp => configuration.StartsWith(dp.Value.Name)).Select(dp => dp.Value).FirstOrDefault() ??
-				defp;
+			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
+				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
+					return p.Value;
+
+			foreach (var p in ps.OrderByDescending(kv => kv.Value.Name.Length))
+				if (configuration == p.Value.Name || configuration.StartsWith(p.Value.Name + '.'))
+					return p.Value;
+
+			return defp;
 		}
 
 		static DataConnection()
 		{
-			AddDataProvider(                                  new SqlServerDataProvider(SqlServerVersion.v2008));
-			AddDataProvider(ProviderName.SqlServer + ".2008", new SqlServerDataProvider(SqlServerVersion.v2008));
-			AddDataProvider(ProviderName.SqlServer + ".2005", new SqlServerDataProvider(SqlServerVersion.v2005));
-			AddDataProvider(                                  new AccessDataProvider());
+			AddDataProvider(                            new SqlServerDataProvider(SqlServerVersion.v2008));
+			AddDataProvider(ProviderName.SqlServer2008, new SqlServerDataProvider(SqlServerVersion.v2008));
+			AddDataProvider(ProviderName.SqlServer2005, new SqlServerDataProvider(SqlServerVersion.v2005));
+			AddDataProvider(                            new AccessDataProvider());
 
 			var section = LinqToDBSection.Instance;
 
@@ -117,7 +122,8 @@ namespace LinqToDB.Data
 					var providerInstance = (IDataProvider)Activator.CreateInstance(dataProviderType);
 					var providerName     = string.IsNullOrEmpty(provider.Name) ? providerInstance.Name : provider.Name;
 
-					providerInstance.Configure(provider.Attributes);
+					for (var i = 0; i < provider.Attributes.Count; i++)
+						providerInstance.Configure(provider.Attributes.GetKey(i), provider.Attributes.Get(i));
 
 					AddDataProvider(providerName, providerInstance);
 				}
@@ -138,6 +144,8 @@ namespace LinqToDB.Data
 					dataProvider = FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]);
 				else if (_dataProviders.ContainsKey(providerName))
 					dataProvider = _dataProviders[providerName];
+				else if (_dataProviders.ContainsKey(configuration))
+					dataProvider = _dataProviders[configuration];
 				else
 				{
 					var providers = _dataProviders.Where(dp => dp.Value.ProviderName == providerName).ToList();

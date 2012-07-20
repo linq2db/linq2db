@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider
 		string Name         { get; }
 		string ProviderName { get; }
 
-		void          Configure       (NameValueCollection attributes);
-		IDbConnection CreateConnection(string              connectionString);
+		void          Configure       (string name, string value);
+		IDbConnection CreateConnection(string       connectionString);
 	}
 }

@@ -26,9 +26,9 @@ namespace LinqToDB.DataProvider
 			return new SqlConnection(connectionString);
 		}
 		
-		public override void Configure(NameValueCollection attributes)
+		public override void Configure(string name, string value)
 		{
-			switch (attributes["version"])
+			if (name == "version") switch (value)
 			{
 				case "2005" : Version = SqlServerVersion.v2005; break;
 				case "2008" : Version = SqlServerVersion.v2008; break;
