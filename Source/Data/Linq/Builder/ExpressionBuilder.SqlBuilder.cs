@@ -1345,6 +1345,27 @@ namespace LinqToDB.Data.Linq.Builder
 					if (!context.SqlQuery.IsParameterDependent && (l is SqlParameter || r is SqlParameter) && l.CanBeNull() && r.CanBeNull())
 						context.SqlQuery.IsParameterDependent = true;
 
+					// | (SqlQuery(Select([]) as q), SqlValue(null))
+					// | (SqlValue(null), SqlQuery(Select([]) as q))  =>
+
+					SqlQuery q =
+						l.ElementType == QueryElementType.SqlQuery &&
+						r.ElementType == QueryElementType.SqlValue &&
+						((SqlValue)r).Value == null &&
+						((SqlQuery)l).Select.Columns.Count == 0 ?
+							(SqlQuery)l :
+						r.ElementType == QueryElementType.SqlQuery &&
+						l.ElementType == QueryElementType.SqlValue &&
+						((SqlValue)l).Value == null &&
+						((SqlQuery)r).Select.Columns.Count == 0 ?
+							(SqlQuery)r :
+							null;
+
+					if (q != null)
+					{
+						q.Select.Columns.Add(new SqlQuery.Column(q, new SqlValue(1)));
+					}
+
 					break;
 			}
 
