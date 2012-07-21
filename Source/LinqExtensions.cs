@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Data.Linq;
+	using Linq;
 
 	public static class LinqExtensions
 	{

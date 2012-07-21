@@ -1,13 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {
 	using DataAccess;
 	using Extension;
+	using Extensions;
 	using Mapping;
 
 	public class AttributeMetadataProvider : MetadataProviderBase
@@ -222,7 +221,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				list = new List<MapValue>(attrs.Length);
 
-				foreach (MapValueAttribute a in attrs)
+				foreach (var a in attrs)
 					list.Add(new MapValue(a.OrigValue, a.Values));
 			}
 
@@ -233,7 +232,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 				if (list == null)
 					list = new List<MapValue>(attrs.Length);
 
-				foreach (MapValueAttribute a in attrs)
+				foreach (var a in attrs)
 					if (a.Type == null && a.OrigValue != null && a.OrigValue.GetType() == member.Type ||
 						a.Type is Type && (Type)a.Type == member.Type)
 						list.Add(new MapValue(a.OrigValue, a.Values));

@@ -8,9 +8,8 @@ using System.Web.Services;
 namespace LinqToDB.ServiceModel
 {
 	using Data;
-	using Data.Linq;
+	using Linq;
 	using SqlBuilder;
-
 
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	[WebService       (Namespace  = "http://tempuri.org/")]

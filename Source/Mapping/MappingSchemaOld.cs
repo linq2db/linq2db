@@ -9,12 +9,6 @@ using System.Reflection;
 using System.Threading;
 using System.Xml;
 
-using LinqToDB.Extensions;
-using LinqToDB.Properties;
-using LinqToDB.Reflection;
-using LinqToDB.Reflection.Extension;
-using LinqToDB.Reflection.MetadataProvider;
-
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEvident
 // ReSharper disable UseObjectOrCollectionInitializer
@@ -27,6 +21,12 @@ using Convert  = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
 {
+	using Extensions;
+	using Properties;
+	using Reflection;
+	using Reflection.Extension;
+	using Reflection.MetadataProvider;
+
 	public class MappingSchemaOld
 	{
 		#region Constructors

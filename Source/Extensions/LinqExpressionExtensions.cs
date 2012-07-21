@@ -6,8 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Extensions
 {
-	using Data.Linq;
-	using Data.Linq.Builder;
+	using Linq;
+	using Linq.Builder;
 
 	public static class LinqExpressionExtensions
 	{

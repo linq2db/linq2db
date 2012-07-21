@@ -3,8 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Data.Linq;
-using LinqToDB.Data.Linq.Builder;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
 using LinqToDB.SqlBuilder;
 
 using NUnit.Framework;

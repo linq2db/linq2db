@@ -1,7 +1,7 @@
 ﻿using System;
 
 using LinqToDB;
-using LinqToDB.Data.Linq;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 

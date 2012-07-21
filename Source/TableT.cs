@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Data.Linq;
+	using Linq;
 
 	public class Table<T> : ExpressionQuery<T>, ITable
 	{

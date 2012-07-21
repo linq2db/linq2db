@@ -6,7 +6,7 @@ namespace LinqToDB
 {
 	using Data;
 	using DataProvider;
-	using Data.Linq;
+	using Linq;
 	using Mapping;
 	using SqlProvider;
 

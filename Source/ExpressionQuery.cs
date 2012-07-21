@@ -10,8 +10,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Data.Linq;
 	using Extensions;
+	using Linq;
 
 	public abstract class ExpressionQuery<T> : IOrderedQueryable<T>, IQueryProvider
 	{

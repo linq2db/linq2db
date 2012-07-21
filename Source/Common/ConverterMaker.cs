@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LinqToDB.Common
 {
-	using Data.Linq;
+	using Linq;
 	using Extensions;
 
 	static class ConverterMaker

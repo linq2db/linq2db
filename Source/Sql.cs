@@ -7,8 +7,8 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Data.Linq;
 	using Extensions;
+	using Linq;
 	using SqlBuilder;
 
 	public static class Sql

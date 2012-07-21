@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Data.Linq;
 	using Extensions;
+	using Linq;
 
 	/// <summary>
 	/// Provides for compilation and caching of queries for reuse.

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
-	using Data.Linq;
+	using Linq;
 	using Mapping;
 	using SqlBuilder;
 

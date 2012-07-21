@@ -11,8 +11,8 @@ using System.Text;
 namespace LinqToDB.SqlProvider
 {
 	using Extensions;
+	using Linq;
 	using Mapping;
-	using Data.Linq;
 	using SqlBuilder;
 
 	public abstract class BasicSqlProvider : ISqlProvider

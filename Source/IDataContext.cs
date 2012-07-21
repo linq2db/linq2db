@@ -3,7 +3,7 @@ using System.Data;
 
 namespace LinqToDB
 {
-	using Data.Linq;
+	using Linq;
 	using Mapping;
 	using SqlProvider;
 

@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using Data.Linq;
+	using Linq;
 	using Extensions;
 
 	public static class DefaultValue

@@ -8,8 +8,8 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Data;
-	using Data.Linq;
 	using DataAccess;
+	using Linq;
 
 	public static class DataExtensions
 	{

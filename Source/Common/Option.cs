@@ -26,7 +26,7 @@ namespace LinqToDB.Common
 			return new Option(value);
 		}
 
-		private static object _none = new object();
-		public  static Option  None = new Option(_none);
+		static readonly object _none = new object();
+		static public   Option  None = new Option(_none);
 	}
 }

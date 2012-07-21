@@ -2,7 +2,6 @@
 using System.ServiceModel;
 
 using LinqToDB;
-using LinqToDB.Data.Linq;
 using LinqToDB.ServiceModel;
 
 namespace Tests.Model

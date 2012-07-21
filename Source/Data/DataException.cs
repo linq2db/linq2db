@@ -15,6 +15,8 @@ namespace LinqToDB.Data
 	[Serializable] 
 	public class DataException : System.Data.DataException
 	{
+		#region .ctor
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DataException"/> class.
 		/// </summary>
@@ -81,6 +83,8 @@ namespace LinqToDB.Data
 			: base(info, context)
 		{
 		}
+
+		#endregion
 
 		#region Internal
 
