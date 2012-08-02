@@ -773,5 +773,27 @@ namespace Tests.Linq
 				Assert.That(arr, Is.Not.Empty);
 			}
 		}
+
+		[Test]
+		public void StackOverflow()
+		{
+			using (var db = new TestDbManager())
+			{
+				var q =
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select new { p, c };
+
+				for (var i = 0; i < 100; i++)
+				{
+					q =
+						from c in q
+						join p in db.Parent on c.p.ParentID equals p.ParentID
+						select new { p, c.c };
+				}
+
+				var list = q.ToList();
+			}
+		}
 	}
 }

@@ -410,14 +410,16 @@ namespace LinqToDB.SqlBuilder
 				get { return _joins;  }
 			}
 
-			public void ForEach(Action<TableSource> action)
+			public void ForEach(Action<TableSource> action, HashSet<SqlQuery> visitedQueries)
 			{
 				action(this);
 				foreach (var join in Joins)
-					join.ForEach(action);
+					join.Table.ForEach(action, visitedQueries);
 
-				if (Source is SqlQuery)
-					((SqlQuery)Source).ForEachTable(action);
+				var sqlQuery = Source as SqlQuery;
+
+				if (sqlQuery != null && visitedQueries.Contains(sqlQuery))
+					sqlQuery.ForEachTable(action, visitedQueries);
 			}
 
 			public int GetJoinNumber()
@@ -607,11 +609,6 @@ namespace LinqToDB.SqlBuilder
 						(SearchCondition)Condition.Clone(objectTree, doClone)));
 
 				return clone;
-			}
-
-			public void ForEach(Action<TableSource> action)
-			{
-				Table.ForEach(action);
 			}
 
 #if OVERRIDETOSTRING
@@ -3126,7 +3123,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			var data = new QueryData { Query = this };
 
-			new QueryVisitor().Visit(this, true, e =>
+			new QueryVisitor().VisitParentFirst(this, e =>
 			{
 				switch (e.ElementType)
 				{
@@ -3239,7 +3236,7 @@ namespace LinqToDB.SqlBuilder
 			}
 
 			if (dic.Count > 0)
-				new QueryVisitor().Visit(data.Query, true, e =>
+				new QueryVisitor().VisitParentFirst(data.Query, e =>
 				{
 					ISqlExpression ex;
 
@@ -3449,7 +3446,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				foreach (var join in table.Joins)
 					OptimizeSearchCondition(join.Condition);
-			});
+			}, new HashSet<SqlQuery>());
 
 			new QueryVisitor().Visit(this, e =>
 			{
@@ -3602,14 +3599,18 @@ namespace LinqToDB.SqlBuilder
 			}
 		}
 
-		void ForEachTable(Action<TableSource> action)
+		void ForEachTable(Action<TableSource> action, HashSet<SqlQuery> visitedQueries)
 		{
-			From.Tables.ForEach(tbl => tbl.ForEach(action));
+			if (!visitedQueries.Add(this))
+				return;
+
+			foreach (var table in From.Tables)
+				table.ForEach(action, visitedQueries);
 
 			new QueryVisitor().Visit(this, e =>
 			{
 				if (e is SqlQuery && e != this)
-					((SqlQuery)e).ForEachTable(action);
+					((SqlQuery)e).ForEachTable(action, visitedQueries);
 			});
 		}
 
@@ -3692,7 +3693,7 @@ namespace LinqToDB.SqlBuilder
 						}
 					}
 				}
-			});
+			}, new HashSet<SqlQuery>());
 		}
 
 		TableSource OptimizeSubQuery(

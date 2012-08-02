@@ -1628,6 +1628,8 @@ namespace LinqToDB.Extensions
 			if (expr == null)
 				return null;
 
+			TransformInfo ti;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Add:
@@ -1658,9 +1660,9 @@ namespace LinqToDB.Extensions
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (BinaryExpression)expr;
 						var c = Transform(e.Conversion, func);
@@ -1682,9 +1684,9 @@ namespace LinqToDB.Extensions
 				case ExpressionType.TypeAs:
 				case ExpressionType.UnaryPlus:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (UnaryExpression)expr;
 						var o = Transform(e.Operand, func);
@@ -1696,9 +1698,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.Call:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (MethodCallExpression)expr;
 						var o = Transform(e.Object,    func);
@@ -1711,9 +1713,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.Conditional:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (ConditionalExpression)expr;
 						var s = Transform(e.Test,    func);
@@ -1727,9 +1729,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.Invoke:
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (InvocationExpression)expr;
 						var ex = Transform(e.Expression, func);
@@ -1740,22 +1742,22 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.Lambda:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (LambdaExpression)expr;
 						var b = Transform(e.Body,       func);
 						var p = Transform2(e.Parameters, func);
 
-						return b != e.Body || p != e.Parameters ? Expression.Lambda(ex.Expression.Type, b, p.ToArray()) : expr;
+						return b != e.Body || p != e.Parameters ? Expression.Lambda(ti.Expression.Type, b, p.ToArray()) : expr;
 					}
 
 				case ExpressionType.ListInit:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (ListInitExpression)expr;
 						var n = Transform(e.NewExpression, func);
@@ -1772,9 +1774,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.MemberAccess:
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (MemberExpression)expr;
 						var ex = Transform(e.Expression, func);
@@ -1784,9 +1786,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.MemberInit:
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						Func<MemberBinding,MemberBinding> modify = null; modify = b =>
 						{
@@ -1844,9 +1846,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.New:
 					{
-						var ex = func(expr);
-						if (ex.Stop || ex.Expression != expr)
-							return ex.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e = (NewExpression)expr;
 						var a = Transform2(e.Arguments, func);
@@ -1860,9 +1862,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.NewArrayBounds:
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (NewArrayExpression)expr;
 						var ex = Transform2(e.Expressions, func);
@@ -1872,9 +1874,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.NewArrayInit:
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (NewArrayExpression)expr;
 						var ex = Transform2(e.Expressions, func);
@@ -1886,9 +1888,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.TypeIs :
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (TypeBinaryExpression)expr;
 						var ex = Transform(e.Expression, func);
@@ -1900,9 +1902,9 @@ namespace LinqToDB.Extensions
 
 				case ExpressionType.Block :
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (BlockExpression)expr;
 						var ex = Transform2(e.Expressions, func);
@@ -1919,9 +1921,9 @@ namespace LinqToDB.Extensions
 
 				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
 					{
-						var exp = func(expr);
-						if (exp.Stop || exp.Expression != expr)
-							return exp.Expression;
+						ti = func(expr);
+						if (ti.Stop || ti.Expression != expr)
+							return ti.Expression;
 
 						var e  = (ChangeTypeExpression)expr;
 						var ex = Transform(e.Expression, func);
