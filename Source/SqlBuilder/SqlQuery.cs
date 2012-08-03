@@ -416,10 +416,8 @@ namespace LinqToDB.SqlBuilder
 				foreach (var join in Joins)
 					join.Table.ForEach(action, visitedQueries);
 
-				var sqlQuery = Source as SqlQuery;
-
-				if (sqlQuery != null && visitedQueries.Contains(sqlQuery))
-					sqlQuery.ForEachTable(action, visitedQueries);
+				if (Source is SqlQuery && visitedQueries.Contains((SqlQuery)Source))
+					((SqlQuery)Source).ForEachTable(action, visitedQueries);
 			}
 
 			public int GetJoinNumber()

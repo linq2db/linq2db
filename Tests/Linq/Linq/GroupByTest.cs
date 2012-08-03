@@ -1438,5 +1438,77 @@ namespace Tests.Linq
 				Assert.AreEqual(-1, lastQuery.IndexOf(fieldName, fieldPos + 1));
 			}
 		}
+
+		[Test]
+		public void DoubleGroupBy1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in
+						from p in Parent
+						where p.Value1 != null
+						group p by p.ParentID into g
+						select new
+						{
+							ID  = g.Key,
+							Max = g.Max(t => t.Value1)
+						}
+					group t by t.ID into g
+					select new
+					{
+						g.Key,
+						Sum = g.Sum(t => t.Max)
+					},
+					from t in
+						from p in db.Parent
+						where p.Value1 != null
+						group p by p.ParentID into g
+						select new
+						{
+							ID  = g.Key,
+							Max = g.Max(t => t.Value1)
+						}
+					group t by t.ID into g
+					select new
+					{
+						g.Key,
+						Sum = g.Sum(t => t.Max)
+					});
+		}
+
+		[Test]
+		public void DoubleGroupBy2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					where p.Value1 != null
+					group p by p.ParentID into g
+					select new
+					{
+						ID  = g.Key,
+						Max = g.Max(t => t.Value1)
+					} into t
+					group t by t.ID into g
+					select new
+					{
+						g.Key,
+						Sum = g.Sum(t => t.Max)
+					},
+					from p in db.Parent
+					where p.Value1 != null
+					group p by p.ParentID into g
+					select new
+					{
+						ID  = g.Key,
+						Max = g.Max(t => t.Value1)
+					} into t
+					group t by t.ID into g
+					select new
+					{
+						g.Key,
+						Sum = g.Sum(t => t.Max)
+					});
+		}
 	}
 }

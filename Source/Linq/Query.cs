@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
@@ -129,7 +130,33 @@ namespace LinqToDB.Linq
 
 					if (query == null)
 					{
-						query = new ExpressionBuilder(new Query<T>(), dataContextInfo, expr, null).Build<T>();
+						if (Configuration.Linq.GenerateExpressionTest)
+						{
+							var testFile = "";//new ExpressionTestGenerator().GenerateSource(expr);
+#if !SILVERLIGHT
+							DbManager.WriteTraceLine(
+								"Expression test code generated: '" + testFile + "'.", 
+								DbManager.TraceSwitch.DisplayName);
+#endif
+						}
+
+						try
+						{
+							query = new ExpressionBuilder(new Query<T>(), dataContextInfo, expr, null).Build<T>();
+						}
+						catch (Exception)
+						{
+							if (!Configuration.Linq.GenerateExpressionTest)
+							{
+#if !SILVERLIGHT
+								DbManager.WriteTraceLine(
+									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
+									DbManager.TraceSwitch.DisplayName);
+#endif
+							}
+
+							throw;
+						}
 
 						query.Next = _first;
 						_first = query;

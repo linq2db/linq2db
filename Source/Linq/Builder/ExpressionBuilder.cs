@@ -340,105 +340,102 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions.TryGetValue(expression, out expr))
 				return expr;
 
-			_optimizedExpressions[expression] = expr = OptimizeExpressionImpl(expression);
+			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,Expression>)OptimizeExpressionImpl);
 
 			return expr;
 		}
 
-		Expression OptimizeExpressionImpl(Expression expression)
+		Expression OptimizeExpressionImpl(Expression expr)
 		{
-			return expression.Transform(expr =>
+			switch (expr.NodeType)
 			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.MemberAccess:
+				case ExpressionType.MemberAccess:
+					{
+						var me = (MemberExpression)expr;
+
+						// Replace Count with Count()
+						//
+						if (me.Member.Name == "Count")
 						{
-							var me = (MemberExpression)expr;
+							var isList = typeof(ICollection).IsAssignableFrom(me.Member.DeclaringType);
 
-							// Replace Count with Count()
-							//
-							if (me.Member.Name == "Count")
+							if (!isList)
+								isList = me.Member.DeclaringType.GetInterfaces()
+									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<>));
+
+							if (isList)
 							{
-								var isList = typeof(ICollection).IsAssignableFrom(me.Member.DeclaringType);
+								var mi = EnumerableMethods
+									.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
+									.MakeGenericMethod(me.Expression.Type.GetItemType());
 
-								if (!isList)
-									isList = me.Member.DeclaringType.GetInterfaces()
-										.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<>));
-
-								if (isList)
-								{
-									var mi = EnumerableMethods
-										.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
-										.MakeGenericMethod(me.Expression.Type.GetItemType());
-
-									return Expression.Call(null, mi, me.Expression);
-								}
+								return Expression.Call(null, mi, me.Expression);
 							}
+						}
+
+						if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
+						{
+							var ex = ConvertIQueriable(expr);
+
+							if (!ReferenceEquals(ex, expr))
+								return ConvertExpressionTree(ex);
+						}
+
+						return ConvertSubquery(expr);
+					}
+
+				case ExpressionType.Call :
+					{
+						var call = (MethodCallExpression)expr;
+
+						if (call.IsQueryable())
+						{
+							switch (call.Method.Name)
+							{
+								case "Where"              : return ConvertWhere     (call);
+								case "GroupBy"            : return ConvertGroupBy   (call);
+								case "SelectMany"         : return ConvertSelectMany(call);
+								case "Select"             : return ConvertSelect    (call);
+								case "LongCount"          :
+								case "Count"              :
+								case "Single"             :
+								case "SingleOrDefault"    :
+								case "First"              :
+								case "FirstOrDefault"     : return ConvertPredicate (call);
+								case "Min"                :
+								case "Max"                : return ConvertSelector  (call, true);
+								case "Sum"                :
+								case "Average"            : return ConvertSelector  (call, false);
+								case "ElementAt"          :
+								case "ElementAtOrDefault" : return ConvertElementAt (call);
+							}
+						}
+						else
+						{
+							var l = ConvertMethodExpression(call.Method);
+
+							if (l != null)
+								return OptimizeExpression(ConvertMethod(call, l));
 
 							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
-								var ex = ConvertIQueriable(expr);
+								var attr = GetTableFunctionAttribute(call.Method);
 
-								if (!ReferenceEquals(ex, expr))
-									return ConvertExpressionTree(ex);
-							}
-
-							return ConvertSubquery(expr);
-						}
-
-					case ExpressionType.Call :
-						{
-							var call = (MethodCallExpression)expr;
-
-							if (call.IsQueryable())
-							{
-								switch (call.Method.Name)
+								if (attr == null)
 								{
-									case "Where"              : return ConvertWhere     (call);
-									case "GroupBy"            : return ConvertGroupBy   (call);
-									case "SelectMany"         : return ConvertSelectMany(call);
-									case "Select"             : return ConvertSelect    (call);
-									case "LongCount"          :
-									case "Count"              :
-									case "Single"             :
-									case "SingleOrDefault"    :
-									case "First"              :
-									case "FirstOrDefault"     : return ConvertPredicate (call);
-									case "Min"                :
-									case "Max"                : return ConvertSelector  (call, true);
-									case "Sum"                :
-									case "Average"            : return ConvertSelector  (call, false);
-									case "ElementAt"          :
-									case "ElementAtOrDefault" : return ConvertElementAt (call);
+									var ex = ConvertIQueriable(expr);
+
+									if (!ReferenceEquals(ex, expr))
+										return ConvertExpressionTree(ex);
 								}
 							}
-							else
-							{
-								var l = ConvertMethodExpression(call.Method);
-
-								if (l != null)
-									return OptimizeExpression(ConvertMethod(call, l));
-
-								if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
-								{
-									var attr = GetTableFunctionAttribute(call.Method);
-
-									if (attr == null)
-									{
-										var ex = ConvertIQueriable(expr);
-
-										if (!ReferenceEquals(ex, expr))
-											return ConvertExpressionTree(ex);
-									}
-								}
-							}
-
-							return ConvertSubquery(expr);
 						}
-				}
 
-				return expr;
-			});
+						return ConvertSubquery(expr);
+					}
+			}
+
+			return expr;
 		}
 
 		LambdaExpression ConvertMethodExpression(MemberInfo mi)

@@ -591,9 +591,8 @@ namespace LinqToDB.SqlBuilder
 								break;
 						}
 
-						 Visit2(q.From);
+						// Visit2(q.From);
 						//
-						/*
 						if (q.From != null && (_all || !_visitedElements.ContainsKey(q.From)))
 						{
 							foreach (var t in q.From.Tables)
@@ -616,7 +615,6 @@ namespace LinqToDB.SqlBuilder
 							if (!_all)
 								_visitedElements.Add(q.From, q.From);
 						}
-						*/
 
 						Visit2(q.Where);
 						Visit2(q.GroupBy);
