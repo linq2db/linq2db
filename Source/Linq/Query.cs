@@ -59,8 +59,7 @@ namespace LinqToDB.Linq
 
 		public Expression GetIQueryable(int n, Expression expr)
 		{
-			//return _queryableAccessorList[n].Accessor(expr).Expression;
-			return _queryableAccessorList[n].Queryable.Expression;
+			return _queryableAccessorList[n].Accessor(expr).Expression;
 		}
 
 		#endregion
