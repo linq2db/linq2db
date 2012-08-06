@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 						var btype  = typeof(ExpressionHoder<,>).MakeGenericType(types[0], selector.Body.Type);
 						var fields = btype.GetFields();
 						var pold   = selector.Parameters[0];
-						var psel   = Expression.Parameter(types[0], selector.Parameters[0].Name);
+						var psel   = Expression.Parameter(types[0], pold.Name);
 
 						methodCall = Expression.Call(
 							methodCall.Object,
@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.MemberInit(
 									Expression.New(btype),
 									Expression.Bind(fields[0], psel),
-									Expression.Bind(fields[1], selector.Body)),
+									Expression.Bind(fields[1], selector.Body.Transform(e => e == pold ? psel : e))),
 								psel));
 
 						selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
@@ -302,7 +302,8 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.IsQueryable())
 							if (typeof(IEnumerable).IsSameOrParentOf(call.Type) ||
-							    typeof(IQueryable). IsSameOrParentOf(call.Type))
+							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
+							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 
 						break;

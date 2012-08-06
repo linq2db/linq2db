@@ -9,10 +9,12 @@ namespace LinqToDB.Linq.Builder
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
+		public static string[] MethodNames = new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder _builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return 
-				methodCall.IsQueryable("First", "FirstOrDefault", "Single", "SingleOrDefault") &&
+				methodCall.IsQueryable(MethodNames) &&
 				methodCall.Arguments.Count == 1;
 		}
 

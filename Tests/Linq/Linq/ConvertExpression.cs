@@ -500,5 +500,33 @@ namespace Tests.Linq
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
+
+		[Test]
+		public void LetTest11([DataContexts] string context)
+		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					let ch1 = Child.FirstOrDefault(c => c.ParentID > 0)
+					let ch2 = Child.Where(c => c.ChildID > -100)
+					select new
+					{
+						First1 = ch1 == null ? 0 : ch1.ParentID,
+						First2 = ch2.FirstOrDefault()
+					}
+					,
+					from p in db.Parent
+					let ch1 = db.Child.FirstOrDefault(c => c.ParentID > 0)
+					let ch2 = Child.Where(c => c.ChildID > -100)
+					select new
+					{
+						First1 = ch1 == null ? 0 : ch1.ParentID,
+						First2 = ch2.FirstOrDefault()
+					});
+
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+		}
 	}
 }

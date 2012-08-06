@@ -213,18 +213,54 @@ namespace LinqToDB.Linq.Builder
 			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
-			//if (SequenceParameter == null)
-				SequenceParameter = Expression.Parameter(expr.Type, "cp");
+			var paramType   = expr.Type;
+			var isQueryable = false;
+
+			if (expression.NodeType == ExpressionType.Call)
+			{
+				var call = (MethodCallExpression)expression;
+
+				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericType)
+				{
+					var type = call.Type.GetGenericTypeDefinition();
+
+					if (type == typeof(IQueryable<>) || type == typeof(IEnumerable<>))
+					{
+						var arg = call.Type.GetGenericArguments();
+
+						if (arg.Length == 1)
+						{
+							paramType   = arg[0];
+							isQueryable = true;
+						}
+					}
+				}
+			}
+
+			SequenceParameter = Expression.Parameter(paramType, "cp");
 
 			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SqlQuery()), SequenceParameter);
 
 			if (sequence != null)
 			{
 				if (sequence.Expression.Type != expr.Type)
-					throw new InvalidOperationException();
+				{
+					if (isQueryable)
+					{
+						var p = sequence.ExpressionsToReplace.SingleOrDefault(s => s.Path.NodeType == ExpressionType.Parameter);
 
-				expr = ExposeExpression  (sequence.Expression);
-				expr = OptimizeExpression(expr);
+						return Expression.Call(
+							((MethodCallExpression)expr).Method.DeclaringType,
+							"Select",
+							new[] { p.Path.Type, paramType },
+							sequence.Expression,
+							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
+					}
+
+					throw new InvalidOperationException();
+				}
+
+				return sequence.Expression;
 			}
 
 			return expr;
@@ -1142,12 +1178,10 @@ namespace LinqToDB.Linq.Builder
 			var slambda = (LambdaExpression)((MethodCallExpression)sequence).Arguments[1].Unwrap();
 			var sbody   = slambda.Body.Unwrap();
 
-			var l = (LambdaExpression)OptimizeExpression(lambda);
-
-			if (l == lambda && (slambda.Parameters.Count > 1 || sbody.NodeType != ExpressionType.MemberAccess))
+			if (slambda.Parameters.Count > 1 || sbody.NodeType != ExpressionType.MemberAccess)
 				return method;
 
-			lambda = l;
+			lambda = (LambdaExpression)OptimizeExpression(lambda);
 
 			var types1 = GetMethodGenericTypes((MethodCallExpression)sequence);
 			var types2 = GetMethodGenericTypes(method);
