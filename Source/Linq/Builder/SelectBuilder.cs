@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
 
-			if (!ReferenceEquals(param, builder.SequenceParameter))
+			if (param != null && !ReferenceEquals(param, builder.SequenceParameter))
 			{
 				var list =
 					(

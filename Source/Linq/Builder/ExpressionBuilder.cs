@@ -213,17 +213,18 @@ namespace LinqToDB.Linq.Builder
 			expr = ExposeExpression  (expr);
 			expr = OptimizeExpression(expr);
 
-			if (SequenceParameter == null)
+			//if (SequenceParameter == null)
 				SequenceParameter = Expression.Parameter(expr.Type, "cp");
 
 			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SqlQuery()), SequenceParameter);
 
 			if (sequence != null)
 			{
-				expr = sequence.Expression;
-
-				if (sequence.Parameter.Type != SequenceParameter.Type)
+				if (sequence.Expression.Type != expr.Type)
 					throw new InvalidOperationException();
+
+				expr = ExposeExpression  (sequence.Expression);
+				expr = OptimizeExpression(expr);
 			}
 
 			return expr;
@@ -276,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 							if (l != null)
 							{
 								var body = l.Body.Unwrap();
-								var ex = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
+								var ex   = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? me.Expression : wpi);
 
 								if (ex.Type != expr.Type)
 									ex = new ChangeTypeExpression(ex, expr.Type);
@@ -509,7 +510,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		private System.Linq.Expressions.Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
+		Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
 		{
 			var param = Expression.Parameter(call.Type, "p");
 			var selector = expr.Transform(e => e == call ? param : e);
@@ -561,8 +562,8 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.IsQueryable(AggregationBuilder.MethodNames))
 						{
-							while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression) arg).Method.Name == "Select")
-								arg = ((MethodCallExpression) arg).Arguments[0];
+							while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
+								arg = ((MethodCallExpression)arg).Arguments[0];
 
 							if (arg.NodeType == ExpressionType.Call)
 								exprs.Add(ex);
@@ -1141,10 +1142,12 @@ namespace LinqToDB.Linq.Builder
 			var slambda = (LambdaExpression)((MethodCallExpression)sequence).Arguments[1].Unwrap();
 			var sbody   = slambda.Body.Unwrap();
 
-			if (slambda.Parameters.Count > 1 || sbody.NodeType != ExpressionType.MemberAccess)
+			var l = (LambdaExpression)OptimizeExpression(lambda);
+
+			if (l == lambda && (slambda.Parameters.Count > 1 || sbody.NodeType != ExpressionType.MemberAccess))
 				return method;
 
-			lambda = (LambdaExpression)OptimizeExpression(lambda);
+			lambda = l;
 
 			var types1 = GetMethodGenericTypes((MethodCallExpression)sequence);
 			var types2 = GetMethodGenericTypes(method);

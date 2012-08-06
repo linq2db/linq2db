@@ -41,6 +41,16 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
 		{
+			var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null);
+
+			if (info != null)
+			{
+				info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
+				info.Parameter  = param;
+
+				return info;
+			}
+
 			return null;
 		}
 

@@ -81,34 +81,38 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.Parameter :
 
-					foreach (var item in info.ExpressionsToReplace)
-						if (expression == item.Path || expression == param && item.Path.NodeType == ExpressionType.Parameter)
-							return item.Expr;
+					if (info.ExpressionsToReplace != null)
+						foreach (var item in info.ExpressionsToReplace)
+							if (expression == item.Path || expression == param && item.Path.NodeType == ExpressionType.Parameter)
+								return item.Expr;
 					break;
 
 				case ExpressionType.MemberAccess :
 
-					foreach (var item in info.ExpressionsToReplace)
+					if (info.ExpressionsToReplace != null)
 					{
-						var ex1 = expression;
-						var ex2 = item.Path;
-
-						while (ex1.NodeType == ex2.NodeType)
+						foreach (var item in info.ExpressionsToReplace)
 						{
-							if (ex1.NodeType == ExpressionType.Parameter)
-								return ex1 == ex2 || info.Parameter == ex2? item.Expr : expression;
+							var ex1 = expression;
+							var ex2 = item.Path;
 
-							if (ex2.NodeType != ExpressionType.MemberAccess)
-								break;
+							while (ex1.NodeType == ex2.NodeType)
+							{
+								if (ex1.NodeType == ExpressionType.Parameter)
+									return ex1 == ex2 || info.Parameter == ex2? item.Expr : expression;
 
-							var ma1 = (MemberExpression)ex1;
-							var ma2 = (MemberExpression)ex2;
+								if (ex2.NodeType != ExpressionType.MemberAccess)
+									break;
 
-							if (ma1.Member != ma2.Member)
-								break;
+								var ma1 = (MemberExpression)ex1;
+								var ma2 = (MemberExpression)ex2;
 
-							ex1 = ma1.Expression;
-							ex2 = ma2.Expression;
+								if (ma1.Member != ma2.Member)
+									break;
+
+								ex1 = ma1.Expression;
+								ex2 = ma2.Expression;
+							}
 						}
 					}
 

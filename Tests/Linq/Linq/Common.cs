@@ -416,6 +416,35 @@ namespace Tests.Linq
 						from tt in gr.DefaultIfEmpty()
 					select p.ParentID);
 		}
+
+		void ProcessItem(ITestDataContext db, int id)
+		{
+			var hashQuery1 = Parent.Where(t => t.ParentID == id);
+
+			var groups1 = Child
+				.Where(p => hashQuery1.Any(e => e.ParentID == p.ParentID))
+				.GroupBy(e => e.ParentID)
+				.Select(g => g.Key);
+
+			var hashQuery2 = db.Parent.Where(t => t.ParentID == id);
+
+			var groups2 = db.Child
+				.Where(p => hashQuery2.Any(e => e.ParentID == p.ParentID))
+				.GroupBy(e => e.ParentID)
+				.Select(g => g.Key);
+
+			AreEqual(groups1, groups2);
+		}
+
+		[Test]
+		public void ParameterTest1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				ProcessItem(db, 1);
+				ProcessItem(db, 2);
+			}
+		}
 	}
 
 	static class Extender
