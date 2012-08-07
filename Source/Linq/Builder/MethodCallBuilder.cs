@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 		protected abstract IBuildContext       BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 		protected abstract SequenceConvertInfo Convert           (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param);
 
-		protected internal static Expression ConvertMethod(
+		protected static Expression ConvertMethod(
 			MethodCallExpression methodCall,
 			int                  sourceTypeNumber,
 			SequenceConvertInfo  info,

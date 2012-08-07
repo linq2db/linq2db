@@ -529,7 +529,7 @@ namespace LinqToDB.Linq.Builder
 										case "SingleOrDefault" :
 										case "First"           :
 										case "FirstOrDefault"  :
-												return ConvertSingleOrFirst(expr, call);
+											return ConvertSingleOrFirst(expr, call);
 									}
 
 								return expr;
