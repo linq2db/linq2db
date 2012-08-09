@@ -870,8 +870,17 @@ namespace LinqToDB.Linq.Builder
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
 			}
 
+			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
+			{
+				var predicate = ConvertPredicate(context, expression);
+				if (predicate != null)
+					return new SqlQuery.SearchCondition(new SqlQuery.Condition(false, predicate));
+			}
+
 			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 		}
+
+		readonly HashSet<Expression> _convertedPredicates = new HashSet<Expression>();
 
 		#endregion
 
