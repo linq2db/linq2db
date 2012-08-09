@@ -873,6 +873,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
 			{
 				var predicate = ConvertPredicate(context, expression);
+				_convertedPredicates.Remove(expression);
 				if (predicate != null)
 					return new SqlQuery.SearchCondition(new SqlQuery.Condition(false, predicate));
 			}
