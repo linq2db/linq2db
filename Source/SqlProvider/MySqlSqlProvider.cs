@@ -229,6 +229,30 @@ namespace LinqToDB.SqlProvider
 
 						return str;
 					}
+
+				case ConvertType.NameToQueryField     :
+				case ConvertType.NameToQueryFieldAlias:
+				case ConvertType.NameToQueryTableAlias:
+					{
+						var name = value.ToString();
+						if (name.Length > 0 && name[0] == '`')
+							return value;
+						return "`" + value + "`";
+					}
+
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToOwner     :
+				case ConvertType.NameToQueryTable:
+					{
+						var name = value.ToString();
+						if (name.Length > 0 && name[0] == '`')
+							return value;
+
+						if (name.IndexOf('.') > 0)
+							value = string.Join("`.`", name.Split('.'));
+
+						return "`" + value + "`";
+					}
 			}
 
 			return value;
