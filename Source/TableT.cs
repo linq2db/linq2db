@@ -8,37 +8,37 @@ namespace LinqToDB
 	public class Table<T> : ExpressionQuery<T>, ITable
 	{
 		public Table(IDataContextInfo dataContextInfo, Expression expression)
-			: base(dataContextInfo, expression)
 		{
+			Init(dataContextInfo, expression);
 		}
 
 		public Table(IDataContextInfo dataContextInfo)
-			: base(dataContextInfo, null)
 		{
+			Init(dataContextInfo, null);
 		}
 
 #if !SILVERLIGHT
 
 		public Table()
-			: base(null, null)
 		{
+			Init(null, null);
 		}
 
 		public Table(Expression expression)
-			: base(null, expression)
 		{
+			Init(null, expression);
 		}
 
 #endif
 
 		public Table(IDataContext dataContext)
-			: base(dataContext == null ? null : new DataContextInfo(dataContext), null)
 		{
+			Init(dataContext == null ? null : new DataContextInfo(dataContext), null);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
-			: base(dataContext == null ? null : new DataContextInfo(dataContext), expression)
 		{
+			Init(dataContext == null ? null : new DataContextInfo(dataContext), expression);
 		}
 
 		#region Overrides
