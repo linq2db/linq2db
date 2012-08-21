@@ -74,6 +74,7 @@
     <Compile Include="DataProvider\SqlServerDataProvider.cs" />
     <Compile Include="DataProvider\SqlServerVersion.cs" />
     <Compile Include="Data\DataConnection.cs" />
+    <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
     <Compile Include="DbTypeAttribute.cs">

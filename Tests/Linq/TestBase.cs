@@ -9,6 +9,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
@@ -24,6 +25,7 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			Configuration.Linq.GenerateExpressionTest = true;
 			AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
 			{
 				string assembly;

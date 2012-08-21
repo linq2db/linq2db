@@ -131,7 +131,7 @@ namespace LinqToDB.Linq
 					{
 						if (Configuration.Linq.GenerateExpressionTest)
 						{
-							var testFile = "";//new ExpressionTestGenerator().GenerateSource(expr);
+							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 #if !SILVERLIGHT
 							DbManager.WriteTraceLine(
 								"Expression test code generated: '" + testFile + "'.", 

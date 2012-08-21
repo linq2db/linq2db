@@ -261,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DoulbeJoin([DataContexts] string context)
+		public void DoubleJoin([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
