@@ -13,23 +13,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tests.VisualBasic", "Tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataProviders", "DataProviders", "{17AF81E6-18DD-42AF-BEE3-83EE02DA9126}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.DB2", "DataProviders\LinqToDB.DB2.csproj", "{86BF4F10-3606-4016-9919-84C3335813B6}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Firebird", "DataProviders\LinqToDB.Firebird.csproj", "{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Informix", "DataProviders\LinqToDB.Informix.csproj", "{B1DEA25C-7667-471B-BBAD-64D017FDD104}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.MySql", "DataProviders\LinqToDB.MySql.csproj", "{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Oracle", "DataProviders\LinqToDB.Oracle.csproj", "{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.PostgreSQL", "DataProviders\LinqToDB.PostgreSQL.csproj", "{5A556D57-0D68-433B-AD78-02849583582B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SqlCe", "DataProviders\LinqToDB.SqlCe.csproj", "{85E90F57-8DE1-4912-8414-28578F4D71CD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SQLite", "DataProviders\LinqToDB.SQLite.csproj", "{3E414663-B673-47A8-AB59-0E08FE43DA86}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Sybase", "DataProviders\LinqToDB.Sybase.csproj", "{6CD8CC3D-643D-4D09-8660-A26085C44FBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.DB2", "DataProviders\DB2\LinqToDB.DB2.csproj", "{86BF4F10-3606-4016-9919-84C3335813B6}"
 EndProject
 Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "LinqToDB.MacroInternal", "Source\MacroInternal\LinqToDB.MacroInternal.nproj", "{4695FB81-2075-4A16-88A4-688B7D9795AB}"
 EndProject
@@ -41,6 +25,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{E526ED
 	ProjectSection(SolutionItems) = preProject
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Firebird", "DataProviders\Firebird\LinqToDB.Firebird.csproj", "{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Informix", "DataProviders\Informix\LinqToDB.Informix.csproj", "{B1DEA25C-7667-471B-BBAD-64D017FDD104}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.MySql", "DataProviders\MySql\LinqToDB.MySql.csproj", "{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Oracle", "DataProviders\Oracle\LinqToDB.Oracle.csproj", "{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.PostgreSQL", "DataProviders\PostgreSQL\LinqToDB.PostgreSQL.csproj", "{5A556D57-0D68-433B-AD78-02849583582B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SqlCe", "DataProviders\SqlCe\LinqToDB.SqlCe.csproj", "{85E90F57-8DE1-4912-8414-28578F4D71CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SQLite", "DataProviders\SQLite\LinqToDB.SQLite.csproj", "{3E414663-B673-47A8-AB59-0E08FE43DA86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Sybase", "DataProviders\Sybase\LinqToDB.Sybase.csproj", "{6CD8CC3D-643D-4D09-8660-A26085C44FBC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,6 +101,36 @@ Global
 		{86BF4F10-3606-4016-9919-84C3335813B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{86BF4F10-3606-4016-9919-84C3335813B6}.ReleaseMono|Any CPU.ActiveCfg = ReleaseMono|Any CPU
 		{86BF4F10-3606-4016-9919-84C3335813B6}.ReleaseMono|Any CPU.Build.0 = ReleaseMono|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
+		{4695FB81-2075-4A16-88A4-688B7D9795AB}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
+		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
+		{688761B7-E1EE-48CD-8643-99768D424B3E}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
 		{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}.Debug FW 3.5|Any CPU.ActiveCfg = DebugMono|Any CPU
 		{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}.Debug FW 3.5|Any CPU.Build.0 = DebugMono|Any CPU
 		{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -181,36 +211,6 @@ Global
 		{6CD8CC3D-643D-4D09-8660-A26085C44FBC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6CD8CC3D-643D-4D09-8660-A26085C44FBC}.ReleaseMono|Any CPU.ActiveCfg = ReleaseMono|Any CPU
 		{6CD8CC3D-643D-4D09-8660-A26085C44FBC}.ReleaseMono|Any CPU.Build.0 = ReleaseMono|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
-		{4695FB81-2075-4A16-88A4-688B7D9795AB}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
-		{848BF0EB-DA01-44CF-B4DA-4DDBF4F314D8}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug FW 3.5|Any CPU.ActiveCfg = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug FW 3.5|Any CPU.Build.0 = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.DebugMono|Any CPU.ActiveCfg = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.DebugMono|Any CPU.Build.0 = Debug|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.ReleaseMono|Any CPU.ActiveCfg = Release|Any CPU
-		{688761B7-E1EE-48CD-8643-99768D424B3E}.ReleaseMono|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

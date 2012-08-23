@@ -161,6 +161,10 @@
     <Reference Include="System.Data.SQLite.Linq, Version=1.0.81.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Data.SQLite.1.0.81.1\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
     </Reference>
+    <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Windows.Forms" />
@@ -295,39 +299,39 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.DB2.csproj">
-      <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
-      <Name>LinqToDB.DB2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.Firebird.csproj">
+    <ProjectReference Include="..\..\DataProviders\Firebird\LinqToDB.Firebird.csproj">
       <Project>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</Project>
       <Name>LinqToDB.Firebird</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.Informix.csproj">
+    <ProjectReference Include="..\..\DataProviders\Informix\LinqToDB.Informix.csproj">
       <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
       <Name>LinqToDB.Informix</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.MySql.csproj">
+    <ProjectReference Include="..\..\DataProviders\DB2\LinqToDB.DB2.csproj">
+      <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
+      <Name>LinqToDB.DB2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\DataProviders\MySql\LinqToDB.MySql.csproj">
       <Project>{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}</Project>
       <Name>LinqToDB.MySql</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.Oracle.csproj">
+    <ProjectReference Include="..\..\DataProviders\Oracle\LinqToDB.Oracle.csproj">
       <Project>{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}</Project>
       <Name>LinqToDB.Oracle</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.PostgreSQL.csproj">
+    <ProjectReference Include="..\..\DataProviders\PostgreSQL\LinqToDB.PostgreSQL.csproj">
       <Project>{5A556D57-0D68-433B-AD78-02849583582B}</Project>
       <Name>LinqToDB.PostgreSQL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.SqlCe.csproj">
+    <ProjectReference Include="..\..\DataProviders\SqlCe\LinqToDB.SqlCe.csproj">
       <Project>{85E90F57-8DE1-4912-8414-28578F4D71CD}</Project>
       <Name>LinqToDB.SqlCe</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.SQLite.csproj">
+    <ProjectReference Include="..\..\DataProviders\SQLite\LinqToDB.SQLite.csproj">
       <Project>{3E414663-B673-47A8-AB59-0E08FE43DA86}</Project>
       <Name>LinqToDB.SQLite</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\LinqToDB.Sybase.csproj">
+    <ProjectReference Include="..\..\DataProviders\Sybase\LinqToDB.Sybase.csproj">
       <Project>{6CD8CC3D-643D-4D09-8660-A26085C44FBC}</Project>
       <Name>LinqToDB.Sybase</Name>
     </ProjectReference>
@@ -386,6 +390,13 @@
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    if not exist "$(TargetDir)x86" md "$(TargetDir)x86"
+    xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\*.*" "$(TargetDir)x86"
+    if not exist "$(TargetDir)amd64" md "$(TargetDir)amd64"
+    xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\*.*" "$(TargetDir)amd64"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

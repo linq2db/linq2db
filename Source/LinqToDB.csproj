@@ -70,6 +70,7 @@
     </Compile>
     <Compile Include="DataProvider\AccessDataProvider.cs" />
     <Compile Include="DataProvider\DataProviderBase.cs" />
+    <Compile Include="DataProvider\FirebirdMappingSchema.cs" />
     <Compile Include="DataProvider\IDataProvider.cs" />
     <Compile Include="DataProvider\SqlServerDataProvider.cs" />
     <Compile Include="DataProvider\SqlServerVersion.cs" />
@@ -124,23 +125,13 @@
     <Compile Include="DataProvider\AccessDataProviderOld.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="DataProvider\DataProviderBaseOld.cs" />
-    <None Include="DataProvider\DB2DataProvider.cs" />
-    <None Include="DataProvider\FdpDataProvider.cs" />
-    <Compile Include="DataProvider\FirebirdMappingSchema.cs" />
-    <None Include="DataProvider\InformixDataProvider.cs" />
     <None Include="DataProvider\MonoSqliteDataProvider.cs" />
-    <None Include="DataProvider\MySqlDataProvider.cs" />
     <Compile Include="DataProvider\OdbcDataProvider.cs" />
-    <None Include="DataProvider\OracleDataProvider.cs" />
     <Compile Include="DataProvider\OleDbDataProvider.cs" />
-    <None Include="DataProvider\PostgreSQLDataProvider.cs" />
     <Compile Include="ProviderName.cs" />
     <Compile Include="DataProvider\Sql2008DataProvider.cs" />
-    <None Include="DataProvider\SqlCeDataProvider.cs" />
     <Compile Include="DataProvider\SqlDataProvider.cs" />
     <Compile Include="DataProvider\SqlDataProviderBase.cs" />
-    <None Include="DataProvider\SQLiteDataProvider.cs" />
-    <None Include="DataProvider\SybaseDataProvider.cs" />
     <Compile Include="Data\DbManager.Config.cs" />
     <Compile Include="Data\DbManager.cs" />
     <Compile Include="Data\DbManager.Linq.cs" />
