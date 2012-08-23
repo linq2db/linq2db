@@ -131,29 +131,15 @@
       <HintPath>..\..\packages\Npgsql.2.0.11\lib\Net40\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="nunit-console-runner">
-      <HintPath>..\..\Tools\NUnit\lib\nunit-console-runner.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.Runners.2.6.1\tools\lib\nunit-console-runner.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.core">
-      <HintPath>..\..\Tools\NUnit\lib\nunit.core.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.core.interfaces">
-      <HintPath>..\..\Tools\NUnit\lib\nunit.core.interfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=2.5.0.9122, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Tools\NUnit\framework\nunit.framework.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.util">
-      <HintPath>..\..\Tools\NUnit\lib\nunit.util.dll</HintPath>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\packages\NUnit.2.6.1\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=2.102.4.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
       <Private>False</Private>
-    </Reference>
-    <Reference Include="pnunit.framework, Version=1.0.4399.30232, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Tools\NUnit\framework\pnunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Sybase.AdoNet2.AseClient, Version=1.15.192.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

@@ -66,13 +66,7 @@ namespace Tests
 					}
 					else
 					{
-#if FW4
-						var fileName = info.Assembly + ".dll";
-#else
-						var fileName = info.Assembly + ".3.dll";
-#endif
-
-						var assembly = Assembly.LoadFile(Path.Combine(path, fileName));
+						var assembly = Assembly.LoadFile(Path.Combine(path, info.Assembly + ".dll"));
 
 						type = assembly.GetType(info.Type, true);
 					}
@@ -98,7 +92,7 @@ namespace Tests
 			};
 		}
 
-		const  int StartIP = 12345;
+		const  int StartIP = 12354;
 		static int _lastIP = StartIP;
 
 		static int GetIP(string config)

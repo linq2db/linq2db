@@ -37,6 +37,11 @@ Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "LinqToDB.Temp", "Source\Lin
 EndProject
 Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "Tests.Nemerle", "Tests\Nemerle\Tests.Nemerle.nproj", "{688761B7-E1EE-48CD-8643-99768D424B3E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{E526EDF0-4442-4931-8C5E-E12ECD480202}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug FW 3.5|Any CPU = Debug FW 3.5|Any CPU
