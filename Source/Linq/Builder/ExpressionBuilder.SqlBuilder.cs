@@ -1841,9 +1841,9 @@ namespace LinqToDB.Linq.Builder
 				Expression.Call(
 				Expression.Call(
 					e.Arguments[0],
+						mi, Expression.Constant("~"), Expression.Constant("~~")),
 						mi, Expression.Constant("%"), Expression.Constant("~%")),
-						mi, Expression.Constant("_"), Expression.Constant("~_")),
-						mi, Expression.Constant("~"), Expression.Constant("~~"));
+						mi, Expression.Constant("_"), Expression.Constant("~_"));
 
 			var expr = ConvertToSql(context, ConvertExpression(ex));
 
