@@ -560,6 +560,25 @@ namespace Tests.Linq
 			}
 		}
 
+		public void CompareToNotEqual1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.FirstName.CompareTo("Jo") != 0 && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void CompareToNotEqual2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where 0 != p.FirstName.CompareTo("Jo") && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
 		[Test]
 		public void CompareTo1([DataContexts] string context)
 		{
@@ -581,11 +600,51 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CompareTo21([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.FirstName.CompareTo("Johnn") <= 0 && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void CompareTo22([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where 0 >= p.FirstName.CompareTo("Johnn") && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
 		public void CompareTo3([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo(55) > 0 && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void CompareTo31([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.FirstName.CompareTo(55) >= 0 && p.ID == 1 select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void CompareTo32([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where 0 <= p.FirstName.CompareTo(55) && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

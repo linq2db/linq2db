@@ -2843,9 +2843,12 @@ namespace LinqToDB.SqlProvider
 
 						switch (expr.Operator)
 						{
-							case SqlQuery.Predicate.Operator.Equal:
-							case SqlQuery.Predicate.Operator.Greater:
-							case SqlQuery.Predicate.Operator.Less :
+							case SqlQuery.Predicate.Operator.Equal         :
+							case SqlQuery.Predicate.Operator.NotEqual      :
+							case SqlQuery.Predicate.Operator.Greater       :
+							case SqlQuery.Predicate.Operator.GreaterOrEqual:
+							case SqlQuery.Predicate.Operator.Less          :
+							case SqlQuery.Predicate.Operator.LessOrEqual   :
 								predicate = OptimizeCase(expr);
 								break;
 						}
@@ -2932,6 +2935,22 @@ namespace LinqToDB.SqlProvider
 			return cond;
 		}
 
+		static SqlQuery.Predicate.Operator InvertOperator(SqlQuery.Predicate.Operator op, bool skipEqual)
+		{
+			switch (op)
+			{
+				case SqlQuery.Predicate.Operator.Equal          : return skipEqual ? op : SqlQuery.Predicate.Operator.NotEqual;
+				case SqlQuery.Predicate.Operator.NotEqual       : return skipEqual ? op : SqlQuery.Predicate.Operator.Equal;
+				case SqlQuery.Predicate.Operator.Greater        : return SqlQuery.Predicate.Operator.LessOrEqual;
+				case SqlQuery.Predicate.Operator.NotLess        :
+				case SqlQuery.Predicate.Operator.GreaterOrEqual : return SqlQuery.Predicate.Operator.Less;
+				case SqlQuery.Predicate.Operator.Less           : return SqlQuery.Predicate.Operator.GreaterOrEqual;
+				case SqlQuery.Predicate.Operator.NotGreater     :
+				case SqlQuery.Predicate.Operator.LessOrEqual    : return SqlQuery.Predicate.Operator.Greater;
+				default: throw new InvalidOperationException();
+			}
+		}
+
 		ISqlPredicate OptimizeCase(SqlQuery.Predicate.ExprExpr expr)
 		{
 			var value = expr.Expr1 as SqlValue;
@@ -2995,8 +3014,24 @@ namespace LinqToDB.SqlProvider
 												 SqlQuery.Predicate.Operator.Less,
 										ee1.Expr2));
 								}
-							}
 
+								//	CASE
+								//		WHEN [p].[FirstName] > 'John'
+								//			THEN 1
+								//		WHEN [p].[FirstName] = 'John'
+								//			THEN 0
+								//		ELSE -1
+								//	END <= 0
+								if (ee1.Operator == SqlQuery.Predicate.Operator.Greater && i1 == 1 &&
+									ee2.Operator == SqlQuery.Predicate.Operator.Equal   && i2 == 0 &&
+									i3 == -1 && n == 0)
+								{
+									return ConvertPredicate(new SqlQuery.Predicate.ExprExpr(
+										ee1.Expr1,
+										valueFirst ? InvertOperator(expr.Operator, true) : expr.Operator,
+										ee1.Expr2));
+								}
+							}
 						}
 					}
 				}
@@ -3025,21 +3060,7 @@ namespace LinqToDB.SqlProvider
 
 							if (ee != null)
 							{
-								SqlQuery.Predicate.Operator op;
-
-								switch (ee.Operator)
-								{
-									case SqlQuery.Predicate.Operator.Equal          : op = SqlQuery.Predicate.Operator.NotEqual;       break;
-									case SqlQuery.Predicate.Operator.NotEqual       : op = SqlQuery.Predicate.Operator.Equal;          break;
-									case SqlQuery.Predicate.Operator.Greater        : op = SqlQuery.Predicate.Operator.LessOrEqual;    break;
-									case SqlQuery.Predicate.Operator.NotLess        :
-									case SqlQuery.Predicate.Operator.GreaterOrEqual : op = SqlQuery.Predicate.Operator.Less;           break;
-									case SqlQuery.Predicate.Operator.Less           : op = SqlQuery.Predicate.Operator.GreaterOrEqual; break;
-									case SqlQuery.Predicate.Operator.NotGreater     :
-									case SqlQuery.Predicate.Operator.LessOrEqual    : op = SqlQuery.Predicate.Operator.Greater;        break;
-									default: throw new InvalidOperationException();
-								}
-
+								var op = InvertOperator(ee.Operator, false);
 								return new SqlQuery.Predicate.ExprExpr(ee.Expr1, op, ee.Expr2);
 							}
 
