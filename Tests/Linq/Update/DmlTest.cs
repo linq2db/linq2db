@@ -419,7 +419,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void DistinctInsert([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		public void DistinctInsert1([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -441,6 +441,35 @@ namespace Tests.Update
 								GuidValue = Sql.NewGuid(),
 								BoolValue = true
 							}));
+				}
+				finally
+				{
+					db.Types.Delete(c => c.ID > 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void DistinctInsert2([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
+				{
+					db.Types.Delete(c => c.ID > 1000);
+
+					Assert.AreEqual(
+						Types.Select(_ => _.ID / 3).Distinct().Count(),
+						db.Types
+							.Select(_ => Math.Floor(_.ID / 3.0))
+							.Distinct()
+							.Into(db.Types)
+								.Value(t => t.ID,        t => (int)(t + 1001))
+								.Value(t => t.GuidValue, t => Sql.NewGuid())
+								.Value(t => t.BoolValue, t => true)
+							.Insert());
 				}
 				finally
 				{

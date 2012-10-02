@@ -177,6 +177,10 @@ namespace LinqToDB.Linq.Builder
 				if (source.NodeType == ExpressionType.Constant && ((ConstantExpression)source).Value == null)
 				{
 					sequence = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SqlQuery()));
+
+					if (sequence.SqlQuery.Select.IsDistinct)
+						sequence = new SubQueryContext(sequence);
+
 					sequence.SqlQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
 					sequence.SqlQuery.From.Tables.Clear();
 				}
@@ -185,6 +189,10 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, source));
+
+					if (sequence.SqlQuery.Select.IsDistinct)
+						sequence = new SubQueryContext(sequence);
+
 					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SqlQuery()));
 					sequence.SqlQuery.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}
