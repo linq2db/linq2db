@@ -16,7 +16,7 @@ namespace Tests.Linq
 	public class ComplexTest : TestBase
 	{
 		[Test]
-		public void Contains1([DataContexts(ProviderName.Firebird, ProviderName.Access)] string context)
+		public void Contains1([DataContexts(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -59,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataContexts(ProviderName.Firebird, ProviderName.Access)] string context)
+		public void Contains2([DataContexts(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -25,7 +25,8 @@ namespace Tests
 	{
 		static TestBase()
 		{
-			Configuration.Linq.GenerateExpressionTest = true;
+			//Configuration.Linq.GenerateExpressionTest = true;
+
 			AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
 			{
 				string assembly;

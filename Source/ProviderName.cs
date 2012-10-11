@@ -13,6 +13,7 @@ namespace LinqToDB
 		public const string SqlServer     = "SqlServer";
 		public const string SqlServer2005 = "SqlServer.2005";
 		public const string SqlServer2008 = "SqlServer.2008";
+		public const string SqlServer2012 = "SqlServer.2012";
 		public const string MySql         = "MySql";
 		public const string Oracle        = "Oracle";
 		public const string PostgreSQL    = "PostgreSQL";
