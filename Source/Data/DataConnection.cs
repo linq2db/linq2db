@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -105,6 +106,7 @@ namespace LinqToDB.Data
 		static DataConnection()
 		{
 			AddDataProvider(                            new SqlServerDataProvider(SqlServerVersion.v2008));
+			AddDataProvider(ProviderName.SqlServer2012, new SqlServerDataProvider(SqlServerVersion.v2012));
 			AddDataProvider(ProviderName.SqlServer2008, new SqlServerDataProvider(SqlServerVersion.v2008));
 			AddDataProvider(ProviderName.SqlServer2005, new SqlServerDataProvider(SqlServerVersion.v2005));
 			AddDataProvider(                            new AccessDataProvider());
@@ -169,7 +171,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly Dictionary<string,IDataProvider> _dataProviders = new Dictionary<string,IDataProvider>(4);
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
+			new ConcurrentDictionary<string,IDataProvider>();
 
 		public static void AddDataProvider([NotNull] string providerName, [NotNull] IDataProvider dataProvider)
 		{
@@ -197,11 +200,12 @@ namespace LinqToDB.Data
 				DataProvider     = dataProvider;
 			}
 
-			public string        ConnectionString;
-			public IDataProvider DataProvider;
+			public readonly string        ConnectionString;
+			public readonly IDataProvider DataProvider;
 		}
 
-		static readonly Dictionary<string,ConfigurationInfo> _configurations = new Dictionary<string,ConfigurationInfo>(4);
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
+			new ConcurrentDictionary<string, ConfigurationInfo>();
 
 		public static void AddConfiguration([NotNull] string configuration, [NotNull] string connectionString, IDataProvider dataProvider = null)
 		{

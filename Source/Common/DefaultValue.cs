@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -11,27 +11,29 @@ namespace LinqToDB.Common
 
 	public static class DefaultValue
 	{
-		static readonly Dictionary<Type,object> _values = new Dictionary<Type,object>()
+		static DefaultValue()
 		{
-			{ typeof(int),            default(int)            },
-			{ typeof(uint),           default(uint)           },
-			{ typeof(byte),           default(byte)           },
-			{ typeof(char),           default(char)           },
-			{ typeof(bool),           default(bool)           },
-			{ typeof(sbyte),          default(sbyte)          },
-			{ typeof(short),          default(short)          },
-			{ typeof(long),           default(long)           },
-			{ typeof(ushort),         default(ushort)         },
-			{ typeof(ulong),          default(ulong)          },
-			{ typeof(float),          default(float)          },
-			{ typeof(double),         default(double)         },
-			{ typeof(decimal),        default(decimal)        },
-			{ typeof(DateTime),       default(DateTime)       },
-			{ typeof(TimeSpan),       default(TimeSpan)       },
-			{ typeof(DateTimeOffset), default(DateTimeOffset) },
-			{ typeof(Guid),           default(Guid)           },
-			{ typeof(string),         default(string)         },
-		};
+			_values[typeof(int)]            = default(int);
+			_values[typeof(uint)]           = default(uint);
+			_values[typeof(byte)]           = default(byte);
+			_values[typeof(char)]           = default(char);
+			_values[typeof(bool)]           = default(bool);
+			_values[typeof(sbyte)]          = default(sbyte);
+			_values[typeof(short)]          = default(short);
+			_values[typeof(long)]           = default(long);
+			_values[typeof(ushort)]         = default(ushort);
+			_values[typeof(ulong)]          = default(ulong);
+			_values[typeof(float)]          = default(float);
+			_values[typeof(double)]         = default(double);
+			_values[typeof(decimal)]        = default(decimal);
+			_values[typeof(DateTime)]       = default(DateTime);
+			_values[typeof(TimeSpan)]       = default(TimeSpan);
+			_values[typeof(DateTimeOffset)] = default(DateTimeOffset);
+			_values[typeof(Guid)]           = default(Guid);
+			_values[typeof(string)]         = default(string);
+		}
+
+		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
 
 		public static object GetValue([NotNull] Type type)
 		{
@@ -42,9 +44,7 @@ namespace LinqToDB.Common
 			if (_values.TryGetValue(type, out value))
 				return value;
 
-			if (type.IsClass || type.IsNullable())
-				value = null;
-			else
+			if (!type.IsClass && !type.IsNullable())
 			{
 				var mi = ReflectionHelper.Expressor<int>.MethodExpressor(o => GetValue<int>());
 
@@ -53,7 +53,7 @@ namespace LinqToDB.Common
 						Expression.Convert(
 							Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
 							typeof(object)))
-					.Compile()();
+						.Compile()();
 			}
 
 			_values[type] = value;
@@ -69,6 +69,7 @@ namespace LinqToDB.Common
 				return (T)value;
 
 			_values[typeof(T)] = default(T);
+
 			return default(T);
 		}
 

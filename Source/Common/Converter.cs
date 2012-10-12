@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Common
@@ -8,7 +8,7 @@ namespace LinqToDB.Common
 
 	public static class Converter
 	{
-		static readonly Dictionary<object,Func<object,object>> _converters = new Dictionary<object, Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
 
 		public static object ChangeType(object value, Type conversionType)
 		{
@@ -24,10 +24,7 @@ namespace LinqToDB.Common
 
 			Func<object,object> l;
 
-			lock (_converters)
-				_converters.TryGetValue(key, out l);
-
-			if (l == null)
+			if (!_converters.TryGetValue(key, out l))
 			{
 				var li = ConvertInfo.Default.Get(value.GetType(), to);
 				var b  = li.Lambda.Body;
@@ -47,8 +44,7 @@ namespace LinqToDB.Common
 
 				l = ex.Compile();
 
-				lock (_converters)
-					_converters[key] = l;
+				_converters[key] = l;
 			}
 
 			return l(value);
@@ -56,7 +52,7 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly Dictionary<Type,Func<object,T>> Converters = new Dictionary<Type,Func<object,T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type, Func<object, T>>();
 		}
 
 		public static object ChangeTypeTo<T>(object value)
@@ -72,10 +68,7 @@ namespace LinqToDB.Common
 
 			Func<object,T> l;
 
-			lock (ExprHolder<T>.Converters)
-				ExprHolder<T>.Converters.TryGetValue(from, out l);
-
-			if (l == null)
+			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
 			{
 				var li = ConvertInfo.Default.Get(value.GetType(), to);
 				var b  = li.Lambda.Body;
@@ -93,8 +86,7 @@ namespace LinqToDB.Common
 
 				l = ex.Compile();
 
-				lock (ExprHolder<T>.Converters)
-					ExprHolder<T>.Converters[from] = l;
+				ExprHolder<T>.Converters[from] = l;
 			}
 
 			return l(value);

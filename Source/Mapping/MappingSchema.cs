@@ -4,11 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Extensions;
 	using Metadata;
 
 	public class MappingSchema
@@ -25,7 +24,7 @@ namespace LinqToDB.Mapping
 		{
 		}
 
-		public MappingSchema(string configuration)
+		public MappingSchema(string configuration/* ??? */)
 			: this(configuration, null)
 		{
 		}
@@ -128,7 +127,7 @@ namespace LinqToDB.Mapping
 			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, func));
 		}
 
-		LambdaExpression AddNullCheck(LambdaExpression expr)
+		static LambdaExpression AddNullCheck(LambdaExpression expr)
 		{
 			var p = expr.Parameters[0];
 
@@ -153,7 +152,7 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo.LambdaInfo GetConverter(Type from, Type to, bool create)
 		{
-			for (int i = 0; i < _schemas.Length; i++)
+			for (var i = 0; i < _schemas.Length; i++)
 			{
 				var info = _schemas[i];
 				var li   = info.GetConvertInfo(@from, to);
@@ -324,24 +323,13 @@ namespace LinqToDB.Mapping
 
 		public IMetadataReader MetadataReader
 		{
-			get
-			{
-				if (_schemas[0].MetadataReader == null)
-					_schemas[0].MetadataReader = new MetadataReader();
-				return _schemas[0].MetadataReader;
-			}
-
-			set
-			{
-				_schemas[0].MetadataReader = value;
-			}
+			get { return _schemas[0].MetadataReader;  }
+			set { _schemas[0].MetadataReader = value; }
 		}
 
 		public T[] GetAttributes<T>(Type type)
 			where T : Attribute
 		{
-			var list = new List<T>();
-
 			foreach (var info in _schemas)
 			{
 				if (info.MetadataReader != null)
@@ -349,18 +337,16 @@ namespace LinqToDB.Mapping
 					var attrs = info.MetadataReader.GetAttributes<T>(type);
 
 					if (attrs != null)
-						list.AddRange(attrs);
+						return attrs;
 				}
 			}
 
-			return list.ToArray();
+			return Array<T>.Empty;
 		}
 
 		public T[] GetAttributes<T>(Type type, string memberName)
 			where T : Attribute
 		{
-			var list = new List<T>();
-
 			foreach (var info in _schemas)
 			{
 				if (info.MetadataReader != null)
@@ -368,11 +354,11 @@ namespace LinqToDB.Mapping
 					var attrs = info.MetadataReader.GetAttributes<T>(type, memberName);
 
 					if (attrs != null)
-						list.AddRange(attrs);
+						return attrs;
 				}
 			}
 
-			return list.ToArray();
+			return Array<T>.Empty;
 		}
 
 		public T GetAttribute<T>(Type type)

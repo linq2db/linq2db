@@ -14,7 +14,7 @@ namespace LinqToDB.Metadata
 		public string          Name;
 		public AttributeInfo[] Attributes;
 
-		public AttributeInfo[] GetAttribute (Type type)
+		public AttributeInfo[] GetAttribute(Type type)
 		{
 			return
 				Attributes.Where(a => a.Name == type.FullName).Concat(

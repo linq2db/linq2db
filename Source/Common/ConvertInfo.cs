@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Common
@@ -20,28 +20,26 @@ namespace LinqToDB.Common
 			public Delegate         Delegate;
 		}
 
-		readonly Dictionary<Type,Dictionary<Type,LambdaInfo>> _expressions = new Dictionary<Type,Dictionary<Type,LambdaInfo>>();
+		readonly ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>> _expressions =
+			new ConcurrentDictionary<Type,ConcurrentDictionary<Type,LambdaInfo>>();
 
 		public void Set(Type from, Type to, LambdaInfo expr)
 		{
-			Dictionary<Type,LambdaInfo> dic;
+			ConcurrentDictionary<Type,LambdaInfo> dic;
 
-			if (_expressions.TryGetValue(from, out dic))
-				dic[to] = expr;
-			else
-				_expressions[from] = new Dictionary<Type,LambdaInfo> { { to, expr } };
+			if (!_expressions.TryGetValue(from, out dic))
+				_expressions[from] = dic = new ConcurrentDictionary<Type, LambdaInfo>();
+
+			dic[to] = expr;
 		}
 
 		public LambdaInfo Get(Type from, Type to, bool create = true)
 		{
-			Dictionary<Type,LambdaInfo> dic;
+			ConcurrentDictionary<Type,LambdaInfo> dic;
+			LambdaInfo li;
 
-			if (_expressions.TryGetValue(from, out dic))
-			{
-				LambdaInfo li;
-				dic.TryGetValue(to, out li);
+			if (_expressions.TryGetValue(from, out dic) && dic.TryGetValue(to, out li))
 				return li;
-			}
 
 			if (!create)
 				return null;

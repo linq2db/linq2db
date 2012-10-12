@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -417,7 +418,7 @@ namespace LinqToDB.Data
 			return dp;
 		}
 
-		private static readonly Dictionary<string,string> _connectionStringList = new Dictionary<string,string>(4);
+		static readonly ConcurrentDictionary<string,string> _connectionStringList = new ConcurrentDictionary<string,string>();
 
 		public static string GetConnectionString(string configurationString)
 		{

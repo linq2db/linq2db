@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -32,6 +31,7 @@ namespace LinqToDB.DataProvider
 			{
 				case "2005" : Version = SqlServerVersion.v2005; break;
 				case "2008" : Version = SqlServerVersion.v2008; break;
+				case "2012" : Version = SqlServerVersion.v2012; break;
 			}
 		}
 	}

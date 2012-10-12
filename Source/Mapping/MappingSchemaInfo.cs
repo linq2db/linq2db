@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace LinqToDB.Mapping
 {
@@ -16,7 +16,7 @@ namespace LinqToDB.Mapping
 		public string          Configuration;
 		public IMetadataReader MetadataReader;
 
-		Dictionary<Type,object> _defaultValues;
+		volatile ConcurrentDictionary<Type,object> _defaultValues;
 
 		public Option GetDefaultValue(Type type)
 		{
@@ -31,7 +31,10 @@ namespace LinqToDB.Mapping
 		public void SetDefaultValue(Type type, object value)
 		{
 			if (_defaultValues == null)
-				_defaultValues = new Dictionary<Type,object>();
+				lock (this)
+					if (_defaultValues == null)
+						_defaultValues = new ConcurrentDictionary<Type,object>();
+
 			_defaultValues[type] = value;
 		}
 

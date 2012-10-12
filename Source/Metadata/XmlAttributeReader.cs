@@ -72,7 +72,7 @@ namespace LinqToDB.Metadata
 			_types = LoadStream(xmlDocStream, "");
 		}
 
-		AttributeInfo[] GetAttrs(string fileName, XElement el, string exclude, string typeName, string memberName)
+		static AttributeInfo[] GetAttrs(string fileName, XElement el, string exclude, string typeName, string memberName)
 		{
 			var attrs = el.Elements().Where(e => e.Name.LocalName != exclude).Select(a =>
 			{
@@ -107,7 +107,7 @@ namespace LinqToDB.Metadata
 			return attrs.ToArray();
 		}
 
-		Dictionary<string,TypeInfo> LoadStream(Stream xmlDocStream, string fileName)
+		static Dictionary<string,TypeInfo> LoadStream(Stream xmlDocStream, string fileName)
 		{
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
 

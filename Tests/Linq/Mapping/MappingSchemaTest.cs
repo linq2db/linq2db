@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -81,6 +82,7 @@ namespace Tests.Mapping
 			var ms2 = new MappingSchema(ms1);
 
 			Convert<DateTime,string>.Lambda = d => d.ToString(DateTimeFormatInfo.InvariantInfo);
+
 			ms1.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("en-US", false).DateTimeFormat));
 			ms2.SetConverter<DateTime,string>(d => d.ToString(new CultureInfo("ru-RU", false).DateTimeFormat));
 
@@ -95,6 +97,7 @@ namespace Tests.Mapping
 			}
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
+
 			ms1.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("en-US", false).DateTimeFormat));
 			ms2.SetConvertExpression<string,DateTime>(s => DateTime.Parse(s, new CultureInfo("ru-RU", false).DateTimeFormat));
 
