@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Linq;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -11,6 +13,9 @@ namespace LinqToDB.Common
 
 	static class ConverterMaker
 	{
+		static readonly MethodInfo _defaultConverter = 
+			ReflectionHelper.Expressor<object>.MethodExpressor(o => Convert.ChangeType(null, typeof(int)));
+
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
 			var ctor = to.GetConstructor(new[] { from });
@@ -113,6 +118,51 @@ namespace LinqToDB.Common
 			return le.Body.Transform(e => e == le.Parameters[0] ? p : e);
 		}
 
+		static Expression GetParseEnum(Type from, Type to, Expression p)
+		{
+			if (from == typeof(string) && to.IsEnum)
+			{
+				var values = Enum.GetValues(to);
+				var names  = Enum.GetNames(to);
+
+				var dic = new Dictionary<string,object>();
+
+				for (var i = 0; i < values.Length; i++)
+				{
+					var val = values.GetValue(i);
+					var lv  = (long)Convert.ChangeType(val, typeof(long));
+
+					dic[lv.ToString()] = val;
+
+					if (lv > 0)
+						dic["+" + lv.ToString()] = val;
+				}
+
+				for (var i = 0; i < values.Length; i++)
+					dic[names[i].ToLowerInvariant()] = values.GetValue(i);
+
+				for (var i = 0; i < values.Length; i++)
+					dic[names[i]] = values.GetValue(i);
+
+				var cases =
+					from v in dic
+					group v.Key by v.Value
+					into g
+					select Expression.SwitchCase(Expression.Constant(g.Key), g.Select(Expression.Constant));
+
+				var expr = Expression.Switch(
+					p,
+					Expression.Convert(
+						Expression.Call(_defaultConverter, Expression.Convert(p, typeof(string)), Expression.Constant(to)),
+						to),
+					cases.ToArray());
+
+				return expr;
+			}
+
+			return null;
+		}
+
 		static Expression GetConverter(Type from, Type to, Expression p)
 		{
 			if (from == to)
@@ -125,7 +175,8 @@ namespace LinqToDB.Common
 				GetConvertion(from, to, p) ??
 				GetParse     (from, to, p) ??
 				GetToString  (from, to, p) ??
-				GetKnownTypes(from, to, p);
+				GetKnownTypes(from, to, p) ??
+				GetParseEnum (from, to, p);
 		}
 
 		public static LambdaExpression GetConverter(Type from, Type to)
@@ -180,10 +231,8 @@ namespace LinqToDB.Common
 			if (ex != null)
 				return Expression.Lambda(ex, p);
 
-			var mi = ReflectionHelper.Expressor<object>.MethodExpressor(o => System.Convert.ChangeType(null, to));
-
 			return Expression.Lambda(
-				Expression.Call(mi, Expression.Convert(p, typeof(object)), Expression.Constant(to)),
+				Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)),
 				p);
 		}
 	}

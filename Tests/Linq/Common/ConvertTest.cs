@@ -25,15 +25,15 @@ namespace Tests.Common
 		[Test]
 		public void SetExpression()
 		{
-			Convert<int, string>.Lambda = i => (i * 2).ToString();
+			Convert<int,string>.Lambda = i => (i * 2).ToString();
 
 			Assert.AreEqual("4", Convert<int,string>.From(2));
 
-			Convert<int, string>.Expression = i => (i * 3).ToString();
+			Convert<int,string>.Expression = i => (i * 3).ToString();
 
 			Assert.AreEqual("9", Convert<int,string>.From(3));
 
-			Convert<int, string>.Lambda = null;
+			Convert<int,string>.Lambda = null;
 
 			Assert.AreEqual("1", Convert<int,string>.From(1));
 		}
@@ -138,6 +138,38 @@ namespace Tests.Common
 		{
 			const string data = "za\u0306\u01FD\u03B2\uD8FF\uDCFF";
 			Assert.AreEqual(Encoding.UTF8.GetBytes(data), ConvertTo<Binary>.From(data).ToArray());
+		}
+
+		enum Enum2
+		{
+			Value1 = 1,
+			Value2 = 2,
+		}
+
+		enum Enum3
+		{
+			Value1 = 1,
+			Value2 = 2,
+		}
+
+		[Test]
+		public void EnumValue()
+		{
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From(Enum2.Value1));
+			Assert.AreEqual(Enum2.Value2, ConvertTo<Enum2>. From(Enum3.Value2));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From(1));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From((int?)1));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2?>.From((int?)1));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2?>.From(1));
+			Assert.AreEqual(Enum3.Value1, ConvertTo<Enum3>. From(1.0));
+			Assert.AreEqual(Enum3.Value1, ConvertTo<Enum3?>.From(1.0));
+			Assert.AreEqual(Enum3.Value1, ConvertTo<Enum3?>.From((double?)1.0));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("1"));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("+1"));
+
+			Assert.AreEqual("Value1", ConvertTo<string>. From(Enum2.Value1));
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("Value1"));
+			Assert.AreEqual(Enum2.Value2, ConvertTo<Enum2>. From("value2"));
 		}
 	}
 }

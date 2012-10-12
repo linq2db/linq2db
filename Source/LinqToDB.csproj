@@ -87,6 +87,7 @@
     </Compile>
     <Compile Include="Mapping\MappingSchema.cs" />
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
+    <Compile Include="Mapping\MapValueAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
@@ -288,7 +289,7 @@
     <Compile Include="Mapping\MappingSchemaOld.cs" />
     <Compile Include="Mapping\MapSetDataT.cs" />
     <Compile Include="Mapping\MapValue.cs" />
-    <Compile Include="Mapping\MapValueAttribute.cs" />
+    <Compile Include="Mapping\MapValueOldAttribute.cs" />
     <Compile Include="Mapping\MemberMapper.cs" />
     <Compile Include="Mapping\MemberMapper.generated.cs" />
     <Compile Include="Mapping\MemberMapperAttribute.cs" />

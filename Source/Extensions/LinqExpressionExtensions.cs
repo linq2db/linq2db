@@ -1443,12 +1443,7 @@ namespace LinqToDB.Extensions
 								case MemberBindingType.Assignment:
 									{
 										var ma = (MemberAssignment)b;
-										var ex = Transform(ma.Expression, func);
-
-										if (ex != ma.Expression)
-											ma = Expression.Bind(ma.Member, ex);
-
-										return ma;
+										return ma.Update(Transform(ma.Expression, func));
 									}
 
 								case MemberBindingType.ListBinding:
@@ -1482,12 +1477,9 @@ namespace LinqToDB.Extensions
 						};
 
 						var e  = (MemberInitExpression)expr;
-						var ne = Transform(e.NewExpression, func);
-						var bb = Transform(e.Bindings,      modify);
-
-						return ne != e.NewExpression || bb != e.Bindings ?
-							Expression.MemberInit((NewExpression)ne, bb) :
-							expr;
+						return e.Update(
+							(NewExpression)Transform(e.NewExpression, func),
+							Transform(e.Bindings, modify));
 					}
 
 				case ExpressionType.New:
@@ -1497,13 +1489,7 @@ namespace LinqToDB.Extensions
 							return ex;
 
 						var e = (NewExpression)expr;
-						var a = Transform(e.Arguments, func);
-
-						return a != e.Arguments ?
-							e.Members == null ?
-								Expression.New(e.Constructor, a) :
-								Expression.New(e.Constructor, a, e.Members) :
-							expr;
+						return e.Update(Transform(e.Arguments, func));
 					}
 
 				case ExpressionType.NewArrayBounds:
@@ -1538,13 +1524,9 @@ namespace LinqToDB.Extensions
 						if (exp != expr)
 							return exp;
 
-						var e  = (TypeBinaryExpression)expr;
-						var ex = Transform(e.Expression, func);
-
-						return ex != e.Expression ? Expression.TypeIs(ex, e.Type) : expr;
+						var e = (TypeBinaryExpression)expr;
+						return e.Update(Transform(e.Expression, func));
 					}
-
-#if FW4 || SILVERLIGHT
 
 				case ExpressionType.Block:
 					{
@@ -1552,14 +1534,11 @@ namespace LinqToDB.Extensions
 						if (exp != expr)
 							return exp;
 
-						var e  = (BlockExpression)expr;
-						var ex = Transform(e.Expressions, func);
-						var v  = Transform(e.Variables,   func);
-
-						return ex != e.Expressions || v != e.Variables ? Expression.Block(e.Type, v, ex) : expr;
+						var e = (BlockExpression)expr;
+						return e.Update(
+							Transform(e.Variables,   func),
+							Transform(e.Expressions, func));
 					}
-
-#endif
 
 				case ExpressionType.Extension:
 				case ExpressionType.Constant :
@@ -1581,6 +1560,19 @@ namespace LinqToDB.Extensions
 							return ex;
 
 						return new ChangeTypeExpression(ex, e.Type);
+					}
+
+				case ExpressionType.Switch :
+					{
+						var exp = func(expr);
+						if (exp != expr)
+							return exp;
+
+						var e = (SwitchExpression)expr;
+						return e.Update(
+							Transform(e.SwitchValue, func),
+							Transform(e.Cases,       c => c.Update(Transform(c.TestValues, func), Transform(c.Body, func))),
+							Transform(e.DefaultBody, func));
 					}
 			}
 

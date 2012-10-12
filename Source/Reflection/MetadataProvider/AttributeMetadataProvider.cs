@@ -215,7 +215,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			List<MapValue> list = null;
 
-			var attrs = member.GetAttributes<MapValueAttribute>();
+			var attrs = member.GetAttributes<MapValueOldAttribute>();
 
 			if (attrs != null)
 			{
@@ -225,7 +225,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 					list.Add(new MapValue(a.OrigValue, a.Values));
 			}
 
-			attrs = member.GetTypeAttributes<MapValueAttribute>();
+			attrs = member.GetTypeAttributes<MapValueOldAttribute>();
 
 			if (attrs != null && attrs.Length > 0)
 			{
@@ -262,9 +262,9 @@ namespace LinqToDB.Reflection.MetadataProvider
 			{
 				if ((fi.Attributes & EnumField) == EnumField)
 				{
-					var enumAttributes = Attribute.GetCustomAttributes(fi, typeof(MapValueAttribute));
+					var enumAttributes = Attribute.GetCustomAttributes(fi, typeof(MapValueOldAttribute));
 
-					foreach (MapValueAttribute attr in enumAttributes)
+					foreach (MapValueOldAttribute attr in enumAttributes)
 					{
 						if (list == null)
 							list = new List<MapValue>(fields.Length);
@@ -289,7 +289,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			if (type.IsEnum)
 				list = GetEnumMapValues(type);
 
-			var attrs = type.GetAttributes<MapValueAttribute>();
+			var attrs = type.GetAttributes<MapValueOldAttribute>();
 
 			if (attrs != null && attrs.Length != 0)
 			{

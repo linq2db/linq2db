@@ -586,7 +586,7 @@ namespace Tests.Linq
 			public string FirstName;
 			public string LastName;
 			public string MiddleName;
-			[MapField("Gender"), MapValue(true, "M"), MapValue(false, "F")]
+			[MapField("Gender"), MapValueOld(true, "M"), MapValueOld(false, "F")]
 			public bool   IsMale;
 		}
 
