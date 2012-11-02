@@ -29,7 +29,7 @@ namespace Tests.Linq
 		public void DatabaseName()
 		{
 			using (var db = new TestDbManager())
-				db.GetTable<Parent>().DatabaseName("BLToolkitData").ToList();
+				db.GetTable<Parent>().DatabaseName("TestData").ToList();
 		}
 
 		[Test]
@@ -44,7 +44,7 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDbManager())
 				db.GetTable<ParenTable>()
-					.DatabaseName("BLToolkitData")
+					.DatabaseName("TestData")
 					.OwnerName("dbo")
 					.TableName("Parent")
 					.ToList();
