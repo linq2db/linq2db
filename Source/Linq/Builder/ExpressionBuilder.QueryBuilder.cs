@@ -23,6 +23,9 @@ namespace LinqToDB.Linq.Builder
 				if (_skippedExpressions.Contains(expr))
 					return new TransformInfo(expr, true);
 
+				if (expr.Find(IsNoneSqlMember) != null)
+					return new TransformInfo(expr);
+
 				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberAccess:
@@ -34,18 +37,6 @@ namespace LinqToDB.Linq.Builder
 
 							if (SqlProvider.ConvertMember(ma.Member) != null)
 								break;
-
-							/*
-							var res = context.IsExpression(pi, 0, RequestFor.Association);
-
-							if (res.Result)
-							{
-								var table = (TableBuilder.AssociatedTableContext)res.Context;
-
-								if (table.IsList)
-									return new ExpressionHelper.ConvertInfo(BuildMultipleQuery(context, pi));
-							}
-							*/
 
 							var ctx = GetContext(context, expr);
 
@@ -223,6 +214,31 @@ namespace LinqToDB.Linq.Builder
 		public Expression BuildSql(Type type, int idx)
 		{
 			return BuildSql(type, idx, null, null);
+		}
+
+		#endregion
+
+		#region IsNonSqlMember
+
+		bool IsNoneSqlMember(Expression expr)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+					{
+						var me = (MemberExpression)expr;
+
+						var om = (
+							from c in Contexts.OfType<TableBuilder.TableContext>()
+							where c.ObjectType == me.Member.DeclaringType
+							select c.ObjectMapper
+						).FirstOrDefault();
+
+						return om != null && om.Associations.All(a => a.MemberAccessor.MemberInfo != me.Member) && om[me.Member.Name] == null;
+					}
+			}
+
+			return false;
 		}
 
 		#endregion

@@ -133,10 +133,10 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual IBuildContext Parent { get; set; }
 
-			public    Type         OriginalType;
-			public    Type         ObjectType;
-			protected ObjectMapper ObjectMapper;
-			public    SqlTable     SqlTable;
+			public Type         OriginalType;
+			public Type         ObjectType;
+			public ObjectMapper ObjectMapper;
+			public SqlTable     SqlTable;
 
 			#endregion
 

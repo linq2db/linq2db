@@ -327,5 +327,45 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+
+		[TableName("Parent")]
+		class MyParent1
+		{
+			public int  ParentID;
+			public int? Value1;
+
+			[MapIgnore]
+			public string Value2 { get { return "1"; } }
+
+			public int GetValue() { return 2;}
+		}
+
+		[Test]
+		public void MapIgnore1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					              Parent    .Select(p => new { p.ParentID,   Value2 = "1" }),
+					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2 }));
+		}
+
+		[Test]
+		public void MapIgnore2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					              Parent    .Select(p => new { p.ParentID,          Length = 1 }),
+					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2.Length }));
+		}
+
+		[Test]
+		public void MapIgnore3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					              Parent    .Select(p => new { p.ParentID, Value = 2            }),
+					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
+		}
 	}
 }
