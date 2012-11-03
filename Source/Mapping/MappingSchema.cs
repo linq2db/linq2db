@@ -155,7 +155,7 @@ namespace LinqToDB.Mapping
 			for (var i = 0; i < _schemas.Length; i++)
 			{
 				var info = _schemas[i];
-				var li   = info.GetConvertInfo(@from, to);
+				var li   = info.GetConvertInfo(this, @from, to);
 
 				if (li != null)
 					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.Lambda, null);
@@ -215,17 +215,16 @@ namespace LinqToDB.Mapping
 					// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 					//
 					var li = GetConverter(from, uto, false);
-					{
-						if (li != null)
-						{
-							var b  = li.Lambda.Body;
-							var ps = li.Lambda.Parameters;
 
-							ex = Expression.Lambda(Expression.Convert(b, to), ps);
-						}
-						else
-							ex = null;
+					if (li != null)
+					{
+						var b  = li.Lambda.Body;
+						var ps = li.Lambda.Parameters;
+
+						ex = Expression.Lambda(Expression.Convert(b, to), ps);
 					}
+					else
+						ex = null;
 				}
 				else
 					ex = null;
@@ -233,7 +232,7 @@ namespace LinqToDB.Mapping
 				if (ex != null)
 					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), null);
 
-				var d = ConvertInfo.Default.Get(from, to);
+				var d = ConvertInfo.Default.Get(this, from, to);
 
 				return new ConvertInfo.LambdaInfo(d.Lambda, null);
 			}

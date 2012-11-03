@@ -14,6 +14,13 @@ namespace LinqToDB.Mapping
 			Value = value;
 		}
 
-		public object Value { get; set; }
+		public MapValueAttribute(object value, bool isDefault)
+		{
+			Value     = value;
+			IsDefault = isDefault;
+		}
+
+		public object Value     { get; set; }
+		public bool   IsDefault { get; set; }
 	}
 }

@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Text;
 
 using LinqToDB.Common;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Common
@@ -170,6 +170,18 @@ namespace Tests.Common
 			Assert.AreEqual("Value1", ConvertTo<string>. From(Enum2.Value1));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("Value1"));
 			Assert.AreEqual(Enum2.Value2, ConvertTo<Enum2>. From("value2"));
+		}
+
+		enum Enum4
+		{
+			[MapValue(15)] Value1,
+			[MapValue(25)] Value2,
+		}
+
+		[Test]
+		public void EnumMapValue()
+		{
+			Assert.AreEqual(Enum4.Value1, ConvertTo<Enum4>.From(15));
 		}
 	}
 }

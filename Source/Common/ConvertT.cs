@@ -22,7 +22,7 @@ namespace LinqToDB.Common
 
 		static void Init()
 		{
-			var expr = ConverterMaker.GetConverter(typeof(TFrom), typeof(TTo));
+			var expr = ConverterMaker.GetConverter(null, typeof(TFrom), typeof(TTo));
 
 			_expression = (Expression<Func<TFrom,TTo>>)expr;
 

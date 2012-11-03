@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Common
 {
@@ -13,7 +14,7 @@ namespace LinqToDB.Common
 
 	static class ConverterMaker
 	{
-		static readonly MethodInfo _defaultConverter = 
+		static readonly MethodInfo _defaultConverter =
 			ReflectionHelper.Expressor<object>.MethodExpressor(o => Convert.ChangeType(null, typeof(int)));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
@@ -62,10 +63,8 @@ namespace LinqToDB.Common
 				case TypeCode.UInt64  :
 				case TypeCode.Single  :
 				case TypeCode.Double  :
-				case TypeCode.Char    :
-					return true;
-				default :
-					return false;
+				case TypeCode.Char    : return true;
+				default               : return false;
 			}
 		}
 
@@ -163,12 +162,38 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		static Expression GetConverter(Type from, Type to, Expression p)
+		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
+
+		static Expression GetToEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
+		{
+			if (to.IsEnum)
+			{
+				var fields = to.GetFields().Where((f => f.Attributes & EnumField) == EnumField);
+
+
+			}
+
+			return null;
+		}
+
+		static Expression GetFromEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
+		{
+			if (from.IsEnum)
+			{
+				
+			}
+
+			return null;
+		}
+
+		static Expression GetConverter(MappingSchema mappingSchema, Type from, Type to, Expression p)
 		{
 			if (from == to)
 				return p;
 
 			return
+				GetToEnum    (from, to, p, mappingSchema) ??
+				GetFromEnum  (from, to, p, mappingSchema) ??
 				GetCtor      (from, to, p) ??
 				GetValue     (from, to, p) ??
 				GetOperator  (from, to, p) ??
@@ -179,8 +204,11 @@ namespace LinqToDB.Common
 				GetParseEnum (from, to, p);
 		}
 
-		public static LambdaExpression GetConverter(Type from, Type to)
+		public static LambdaExpression GetConverter(MappingSchema mappingSchema, Type from, Type to)
 		{
+			if (mappingSchema == null)
+				mappingSchema = MappingSchema.Default;
+
 			var p = Expression.Parameter(from, "p");
 
 			if (from == to)
@@ -189,7 +217,7 @@ namespace LinqToDB.Common
 			if (to == typeof(object))
 				return Expression.Lambda(Expression.Convert(p, typeof(object)), p);
 
-			var ex = GetConverter(from, to, p);
+			var ex = GetConverter(mappingSchema, from, to, p);
 
 			if (ex == null)
 			{
@@ -200,11 +228,11 @@ namespace LinqToDB.Common
 				{
 					var cp = Expression.Convert(p, ufrom);
 
-					ex = GetConverter(ufrom, to, cp);
+					ex = GetConverter(mappingSchema, ufrom, to, cp);
 
 					if (ex == null && to != uto)
 					{
-						ex = GetConverter(ufrom, uto, cp);
+						ex = GetConverter(mappingSchema, ufrom, uto, cp);
 
 						if (ex != null)
 							ex = Expression.Convert(ex, to);
@@ -213,7 +241,7 @@ namespace LinqToDB.Common
 
 				if (ex == null && to != uto)
 				{
-					ex = GetConverter(from, uto, p);
+					ex = GetConverter(mappingSchema, from, uto, p);
 
 					if (ex != null)
 						ex = Expression.Convert(ex, to);

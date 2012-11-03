@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -111,28 +110,6 @@ namespace Tests.Mapping
 				Assert.AreEqual(new DateTime(2012, 1, 20, 16, 30, 40), c2("20.01.2012 16:30:40"));
 			}
 		}
-
-		/*
-		[Test]
-		public void BaseSchema3()
-		{
-			var ms1 = new MappingSchema();
-			var ms2 = new MappingSchema(ms1);
-			var ms3 = new MappingSchema(ms2, ms1);
-			var ms4 = new MappingSchema(ms3, ms2, ms1);
-			var ms5 = new MappingSchema(ms3, ms4, ms2);
-
-			var ms = ms5._schemas.ToArray();
-
-			Assert.AreEqual(6,   ms.Length);
-			Assert.AreSame (ms5._schemas.Head, ms[0]);
-			Assert.AreSame (ms4._schemas.Head, ms[1]);
-			Assert.AreSame (ms3._schemas.Head, ms[2]);
-			Assert.AreSame (ms2._schemas.Head, ms[3]);
-			Assert.AreSame (ms1._schemas.Head, ms[4]);
-			Assert.AreSame (MappingSchema.Default._schemas.Head, ms[5]);
-		}
-		*/
 
 		[Test]
 		public void CultureInfo()

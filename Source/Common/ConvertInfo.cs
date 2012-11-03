@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
+	using Mapping;
+
 	class ConvertInfo
 	{
 		public static ConvertInfo Default = new ConvertInfo();
@@ -33,7 +35,7 @@ namespace LinqToDB.Common
 			dic[to] = expr;
 		}
 
-		public LambdaInfo Get(Type from, Type to, bool create = true)
+		public LambdaInfo Get(MappingSchema mappingSchema, Type from, Type to, bool create = true)
 		{
 			ConcurrentDictionary<Type,LambdaInfo> dic;
 			LambdaInfo li;
@@ -44,7 +46,7 @@ namespace LinqToDB.Common
 			if (!create)
 				return null;
 
-			var ex  = ConverterMaker.GetConverter(from, to);
+			var ex  = ConverterMaker.GetConverter(mappingSchema, from, to);
 			var lm  = ex.Compile();
 			var ret = new LambdaInfo(ex, lm);
 

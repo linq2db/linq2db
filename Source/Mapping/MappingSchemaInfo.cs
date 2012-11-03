@@ -47,9 +47,9 @@ namespace LinqToDB.Mapping
 			_convertInfo.Set(from, to, expr);
 		}
 
-		public ConvertInfo.LambdaInfo GetConvertInfo(Type from, Type to)
+		public ConvertInfo.LambdaInfo GetConvertInfo(MappingSchema mappingSchema, Type from, Type to)
 		{
-			return _convertInfo == null ? null : _convertInfo.Get(@from, to, false);
+			return _convertInfo == null ? null : _convertInfo.Get(mappingSchema, @from, to, false);
 		}
 	}
 }

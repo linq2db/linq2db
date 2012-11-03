@@ -5,12 +5,13 @@ using System.Linq.Expressions;
 namespace LinqToDB.Common
 {
 	using Extensions;
+	using Mapping;
 
 	public static class Converter
 	{
 		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
 
-		public static object ChangeType(object value, Type conversionType)
+		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{
 			if (value == null)
 				return DefaultValue.GetValue(conversionType);
@@ -26,7 +27,7 @@ namespace LinqToDB.Common
 
 			if (!_converters.TryGetValue(key, out l))
 			{
-				var li = ConvertInfo.Default.Get(value.GetType(), to);
+				var li = ConvertInfo.Default.Get(mappingSchema, value.GetType(), to);
 				var b  = li.Lambda.Body;
 				var ps = li.Lambda.Parameters;
 
@@ -52,10 +53,10 @@ namespace LinqToDB.Common
 
 		static class ExprHolder<T>
 		{
-			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type, Func<object, T>>();
+			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
 		}
 
-		public static object ChangeTypeTo<T>(object value)
+		public static object ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
 		{
 			if (value == null)
 				return DefaultValue<T>.Value;
@@ -70,7 +71,7 @@ namespace LinqToDB.Common
 
 			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
 			{
-				var li = ConvertInfo.Default.Get(value.GetType(), to);
+				var li = ConvertInfo.Default.Get(mappingSchema, value.GetType(), to);
 				var b  = li.Lambda.Body;
 				var ps = li.Lambda.Parameters;
 
