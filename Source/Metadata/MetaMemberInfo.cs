@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace LinqToDB.Metadata
 {
-	class MemberInfo
+	class MetaMemberInfo
 	{
-		public MemberInfo(string name, params AttributeInfo[] attributes)
+		public MetaMemberInfo(string name, params AttributeInfo[] attributes)
 		{
 			Name       = name;
 			Attributes = attributes;

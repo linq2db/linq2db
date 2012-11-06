@@ -26,11 +26,7 @@ namespace LinqToDB.Linq
 
 		public ISqlProvider CreateSqlProvider()
 		{
-			return DataContext.CreateSqlProvider
-#if NEMERLE
-				.Invoke
-#endif
-				();
+			return DataContext.CreateSqlProvider();
 		}
 
 		public IDataContextInfo Clone(bool forNestedQuery)

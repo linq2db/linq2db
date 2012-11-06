@@ -5,12 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Common
 {
 	using Linq;
+	using Expressions;
 	using Extensions;
+	using Mapping;
 
 	static class ConverterMaker
 	{
@@ -168,9 +169,14 @@ namespace LinqToDB.Common
 		{
 			if (to.IsEnum)
 			{
-				var fields = to.GetFields().Where((f => f.Attributes & EnumField) == EnumField);
-
-
+				var fields =
+					from f in to.GetFields()
+					where (f.Attributes & EnumField) == EnumField
+					select new
+					{
+						f,
+						attrs = mappingSchema.GetAttributes<MapValueAttribute>(f)
+					};
 			}
 
 			return null;

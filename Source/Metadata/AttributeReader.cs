@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
@@ -16,23 +17,16 @@ namespace LinqToDB.Metadata
 			return arr;
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName)
+		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
-			var member = type.GetMember(memberName);
+			var attrs = memberInfo.GetCustomAttributes(typeof(T), true);
+			var arr   = new T[attrs.Length];
 
-			if (member.Length == 1)
-			{
-				var attrs = member[0].GetCustomAttributes(typeof(T), true);
-				var arr   = new T[attrs.Length];
+			for (var i = 0; i < attrs.Length; i++)
+				arr[i] = (T)attrs[i];
 
-				for (var i = 0; i < attrs.Length; i++)
-					arr[i] = (T)attrs[i];
-
-				return arr;
-			}
-
-			return new T[0];
+			return arr;
 		}
 	}
 }

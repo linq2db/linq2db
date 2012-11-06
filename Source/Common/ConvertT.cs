@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
-	using Extensions;
+	using Expressions;
 
 	public static class ConvertTo<TTo>
 	{

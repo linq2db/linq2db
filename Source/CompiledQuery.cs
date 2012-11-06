@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Expressions;
 	using Extensions;
 	using Linq;
 

@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 {
 	// FIXME: using B = Boolean;
 
-	public static partial class Expressions
+	public static class Expressions
 	{
 		#region MapMember
 
@@ -56,16 +56,16 @@ namespace LinqToDB.Linq
 			MapMember(providerName, M(memberInfo), expression);
 		}
 
-		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>               expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>               expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>            expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>            expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>         expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>         expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>      expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>      expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>   expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
-		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>   expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (string providerName, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (                     Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (string providerName, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (                     Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (string providerName, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (                     Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (string providerName, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (                     Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (                     Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, ReflectionHelper.MemeberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           ReflectionHelper.MemeberInfo(memberInfo), expression); }
 
@@ -139,49 +139,49 @@ namespace LinqToDB.Linq
 
 				#region String
 
-				{ M(() => "".Length               ), L<String,Int32>      ((String obj)                => Sql.Length(obj).Value) },
-				{ M(() => "".Substring  (0)       ), L<String,Int32,String>    ((String obj,Int32 p0)           => Sql.Substring(obj, p0 + 1, obj.Length - p0)) },
-				{ M(() => "".Substring  (0,0)     ), L<String,Int32,Int32,String>  ((String obj,Int32 p0,Int32 p1)      => Sql.Substring(obj, p0 + 1, p1)) },
-				{ M(() => "".IndexOf    ("")      ), L<String,String,Int32>    ((String obj,String p0)           => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)                      .Value) - 1) },
-				{ M(() => "".IndexOf    ("",0)    ), L<String,String,Int32,Int32>  ((String obj,String p0,Int32 p1)      => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
-				{ M(() => "".IndexOf    ("",0,0)  ), L<String,String,Int32,Int32,Int32>((String obj,String p0,Int32 p1,Int32 p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)    .Value) - 1) },
-				{ M(() => "".IndexOf    (' ')     ), L<String,Char,Int32>    ((String obj,Char p0)           =>                                          (Sql.CharIndex(p0, obj)                      .Value) - 1) },
-				{ M(() => "".IndexOf    (' ',0)   ), L<String,Char,Int32,Int32>  ((String obj,Char p0,Int32 p1)      =>                                          (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
-				{ M(() => "".IndexOf    (' ',0,0) ), L<String,Char,Int32,Int32,Int32>((String obj,Char p0,Int32 p1,Int32 p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1) },
-				{ M(() => "".LastIndexOf("")      ), L<String,String,Int32>    ((String obj,String p0)           => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))                               .Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf("",0)    ), L<String,String,Int32,Int32>  ((String obj,String p0,Int32 p1)      => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1).Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf("",0,0)  ), L<String,String,Int32,Int32,Int32>((String obj,String p0,Int32 p1,Int32 p2) => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))             .Value) - p0.Length + 1) },
-				{ M(() => "".LastIndexOf(' ')     ), L<String,Char,Int32>    ((String obj,Char p0)           => (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))                               .Value)) },
-				{ M(() => "".LastIndexOf(' ',0)   ), L<String,Char,Int32,Int32>  ((String obj,Char p0,Int32 p1)      => (Sql.CharIndex(p0, obj, p1 + 1)                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value)) },
-				{ M(() => "".LastIndexOf(' ',0,0) ), L<String,Char,Int32,Int32,Int32>((String obj,Char p0,Int32 p1,Int32 p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))             .Value)) },
-				{ M(() => "".Insert     (0,"")    ), L<String,Int32,String,String>  ((String obj,Int32 p0,String p1)      => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1)) },
-				{ M(() => "".Remove     (0)       ), L<String,Int32,String>    ((String obj,Int32 p0)           => Sql.Left     (obj, p0)) },
-				{ M(() => "".Remove     (0,0)     ), L<String,Int32,Int32,String>  ((String obj,Int32 p0,Int32 p1)      => Sql.Stuff    (obj, p0 + 1, p1, "")) },
-				{ M(() => "".PadLeft    (0)       ), L<String,Int32,String>    ((String obj,Int32 p0)           => Sql.PadLeft  (obj, p0, ' ')) },
-				{ M(() => "".PadLeft    (0,' ')   ), L<String,Int32,Char,String>  ((String obj,Int32 p0,Char p1)      => Sql.PadLeft  (obj, p0, p1)) },
-				{ M(() => "".PadRight   (0)       ), L<String,Int32,String>    ((String obj,Int32 p0)           => Sql.PadRight (obj, p0, ' ')) },
-				{ M(() => "".PadRight   (0,' ')   ), L<String,Int32,Char,String>  ((String obj,Int32 p0,Char p1)      => Sql.PadRight (obj, p0, p1)) },
-				{ M(() => "".Replace    ("","")   ), L<String,String,String,String>  ((String obj,String p0,String p1)      => Sql.Replace  (obj, p0, p1)) },
-				{ M(() => "".Replace    (' ',' ') ), L<String,Char,Char,String>  ((String obj,Char p0,Char p1)      => Sql.Replace  (obj, p0, p1)) },
-				{ M(() => "".Trim       ()        ), L<String,String>      ((String obj)                => Sql.Trim     (obj)) },
-				{ M(() => "".TrimEnd    ()        ), L<String,Char[],String>  ((String obj,Char[] ch)         =>     TrimRight(obj, ch)) },
-				{ M(() => "".TrimStart  ()        ), L<String,Char[],String>  ((String obj,Char[] ch)         =>     TrimLeft (obj, ch)) },
-				{ M(() => "".ToLower    ()        ), L<String,String>      ((String obj)                => Sql.Lower(obj)) },
-				{ M(() => "".ToUpper    ()        ), L<String,String>      ((String obj)                => Sql.Upper(obj)) },
-				{ M(() => "".CompareTo  ("")      ), L<String,String,Int32>    ((String obj,String p0)           => ConvertToCaseCompareTo(obj, p0).Value ) },
-				{ M(() => "".CompareTo  (1)       ), L<String,Object,Int32>    ((String obj,Object p0)           => ConvertToCaseCompareTo(obj, p0.ToString()).Value ) },
+				{ M(() => "".Length               ), L<String,Int32>                   ((String obj)                              => Sql.Length(obj).Value) },
+				{ M(() => "".Substring  (0)       ), L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.Substring(obj, p0 + 1, obj.Length - p0)) },
+				{ M(() => "".Substring  (0,0)     ), L<String,Int32,Int32,String>      ((String obj,Int32  p0,Int32  p1)          => Sql.Substring(obj, p0 + 1, p1)) },
+				{ M(() => "".IndexOf    ("")      ), L<String,String,Int32>            ((String obj,String p0)                    => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)                      .Value) - 1) },
+				{ M(() => "".IndexOf    ("",0)    ), L<String,String,Int32,Int32>      ((String obj,String p0,Int32  p1)          => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+				{ M(() => "".IndexOf    ("",0,0)  ), L<String,String,Int32,Int32,Int32>((String obj,String p0,Int32  p1,Int32 p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)    .Value) - 1) },
+				{ M(() => "".IndexOf    (' ')     ), L<String,Char,Int32>              ((String obj,Char   p0)                    =>                                          (Sql.CharIndex(p0, obj)                      .Value) - 1) },
+				{ M(() => "".IndexOf    (' ',0)   ), L<String,Char,Int32,Int32>        ((String obj,Char   p0,Int32  p1)          =>                                          (Sql.CharIndex(p0, obj,               p1 + 1).Value) - 1) },
+				{ M(() => "".IndexOf    (' ',0,0) ), L<String,Char,Int32,Int32,Int32>  ((String obj,Char   p0,Int32  p1,Int32 p2) =>                                          (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)     ?? 0) - 1) },
+				{ M(() => "".LastIndexOf("")      ), L<String,String,Int32>            ((String obj,String p0)                    => p0.Length == 0 ? obj.Length - 1 : (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj))                               .Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf("",0)    ), L<String,String,Int32,Int32>      ((String obj,String p0,Int32  p1)          => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, obj,                    p1 + 1).Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf("",0,0)  ), L<String,String,Int32,Int32,Int32>((String obj,String p0,Int32  p1,Int32 p2) => p0.Length == 0 ? p1             : (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 :    p1 + p2 - (Sql.CharIndex(Sql.Reverse(p0), Sql.Reverse(obj.Substring(p1, p2)))             .Value) - p0.Length + 1) },
+				{ M(() => "".LastIndexOf(' ')     ), L<String,Char,Int32>              ((String obj,Char   p0)                    => (Sql.CharIndex(p0, obj)                           .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj))                               .Value)) },
+				{ M(() => "".LastIndexOf(' ',0)   ), L<String,Char,Int32,Int32>        ((String obj,Char   p0,Int32  p1)          => (Sql.CharIndex(p0, obj, p1 + 1)                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1))).Value)) },
+				{ M(() => "".LastIndexOf(' ',0,0) ), L<String,Char,Int32,Int32,Int32>  ((String obj,Char   p0,Int32  p1,Int32 p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1).Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))             .Value)) },
+				{ M(() => "".Insert     (0,"")    ), L<String,Int32,String,String>     ((String obj,Int32  p0,String p1)          => obj.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1)) },
+				{ M(() => "".Remove     (0)       ), L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.Left     (obj, p0)) },
+				{ M(() => "".Remove     (0,0)     ), L<String,Int32,Int32,String>      ((String obj,Int32  p0,Int32  p1)          => Sql.Stuff    (obj, p0 + 1, p1, "")) },
+				{ M(() => "".PadLeft    (0)       ), L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.PadLeft  (obj, p0, ' ')) },
+				{ M(() => "".PadLeft    (0,' ')   ), L<String,Int32,Char,String>       ((String obj,Int32  p0,Char   p1)          => Sql.PadLeft  (obj, p0, p1)) },
+				{ M(() => "".PadRight   (0)       ), L<String,Int32,String>            ((String obj,Int32  p0)                    => Sql.PadRight (obj, p0, ' ')) },
+				{ M(() => "".PadRight   (0,' ')   ), L<String,Int32,Char,String>       ((String obj,Int32  p0,Char   p1)          => Sql.PadRight (obj, p0, p1)) },
+				{ M(() => "".Replace    ("","")   ), L<String,String,String,String>    ((String obj,String p0,String p1)          => Sql.Replace  (obj, p0, p1)) },
+				{ M(() => "".Replace    (' ',' ') ), L<String,Char,Char,String>        ((String obj,Char   p0,Char   p1)          => Sql.Replace  (obj, p0, p1)) },
+				{ M(() => "".Trim       ()        ), L<String,String>                  ((String obj)                              => Sql.Trim     (obj)) },
+				{ M(() => "".TrimEnd    ()        ), L<String,Char[],String>           ((String obj,Char[] ch)                    =>     TrimRight(obj, ch)) },
+				{ M(() => "".TrimStart  ()        ), L<String,Char[],String>           ((String obj,Char[] ch)                    =>     TrimLeft (obj, ch)) },
+				{ M(() => "".ToLower    ()        ), L<String,String>                  ((String obj)                              => Sql.Lower(obj)) },
+				{ M(() => "".ToUpper    ()        ), L<String,String>                  ((String obj)                              => Sql.Upper(obj)) },
+				{ M(() => "".CompareTo  ("")      ), L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0).Value ) },
+				{ M(() => "".CompareTo  (1)       ), L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString()).Value ) },
 
-				{ M(() => string.IsNullOrEmpty ("")    ),           L<String,Boolean>          ((String p0)                        => p0 == null || p0.Length == 0) },
-				{ M(() => string.CompareOrdinal("","")),            L<String,String,Int32>        ((String s1,String s2)                   => s1.CompareTo(s2)) },
-				{ M(() => string.CompareOrdinal("",0,"",0,0)),      L<String,Int32,String,Int32,Int32,Int32>  ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
-				{ M(() => string.Compare       ("","")),            L<String,String,Int32>        ((String s1,String s2)                   => s1.CompareTo(s2)) },
-				{ M(() => string.Compare       ("",0,"",0,0)),      L<String,Int32,String,Int32,Int32,Int32>  ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l))) },
+				{ M(() => string.IsNullOrEmpty ("")    ),           L<String,Boolean>                               ((String p0)                                               => p0 == null || p0.Length == 0) },
+				{ M(() => string.CompareOrdinal("","")),            L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2)) },
+				{ M(() => string.CompareOrdinal("",0,"",0,0)),      L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
+				{ M(() => string.Compare       ("","")),            L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2)) },
+				{ M(() => string.Compare       ("",0,"",0,0)),      L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l))) },
 #if !SILVERLIGHT
-				{ M(() => string.Compare       ("","",true)),       L<String,String,Boolean,Int32>      ((String s1,String s2,Boolean b)               => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2)) },
+				{ M(() => string.Compare       ("","",true)),       L<String,String,Boolean,Int32>                  ((String s1,String s2,Boolean b)                           => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2)) },
 				{ M(() => string.Compare       ("",0,"",0,0,true)), L<String,Int32,String,Int32,Int32,Boolean,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l))) },
 #endif
 
-				{ M(() => AltStuff("",0,0,"")), L<String,Int32?,Int32?,String,String>((String p0, Int32? p1,Int32 ?p2,String p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1))) },
+				{ M(() => AltStuff("",0,0,"")), L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32 ?p2,String p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1))) },
 
 				#endregion
 
@@ -193,22 +193,22 @@ namespace LinqToDB.Linq
 
 				#region DateTime
 
-				{ M(() => Sql.GetDate()                  ), L<DateTime>      (()            => Sql.CurrentTimestamp2 ) },
-				{ M(() => DateTime.Now                   ), L<DateTime>      (()            => Sql.CurrentTimestamp2 ) },
+				{ M(() => Sql.GetDate()                  ), L<DateTime>                  (()                        => Sql.CurrentTimestamp2 ) },
+				{ M(() => DateTime.Now                   ), L<DateTime>                  (()                        => Sql.CurrentTimestamp2 ) },
 
-				{ M(() => DateTime.Now.Year              ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Year,        obj).Value     ) },
-				{ M(() => DateTime.Now.Month             ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Month,       obj).Value     ) },
-				{ M(() => DateTime.Now.DayOfYear         ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.DayOfYear,   obj).Value     ) },
-				{ M(() => DateTime.Now.Day               ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Day,         obj).Value     ) },
-				{ M(() => DateTime.Now.DayOfWeek         ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.WeekDay,     obj).Value - 1 ) },
-				{ M(() => DateTime.Now.Hour              ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Hour,        obj).Value     ) },
-				{ M(() => DateTime.Now.Minute            ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Minute,      obj).Value     ) },
-				{ M(() => DateTime.Now.Second            ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Second,      obj).Value     ) },
-				{ M(() => DateTime.Now.Millisecond       ), L<DateTime,Int32>    ((DateTime obj)       => Sql.DatePart(Sql.DateParts.Millisecond, obj).Value     ) },
-				{ M(() => DateTime.Now.Date              ), L<DateTime,DateTime>    ((DateTime obj)       => Sql.Convert2(Sql.Date,                  obj)     ) },
-				{ M(() => DateTime.Now.TimeOfDay         ), L<DateTime,TimeSpan>    ((DateTime obj)       => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj)).Value    ) },
-				{ M(() => DateTime.Now.AddYears       (0)), L<DateTime,Int32,DateTime>  ((DateTime obj,Int32 p0)  => Sql.DateAdd(Sql.DateParts.Year,        p0, obj).Value ) },
-				{ M(() => DateTime.Now.AddMonths      (0)), L<DateTime,Int32,DateTime>  ((DateTime obj,Int32 p0)  => Sql.DateAdd(Sql.DateParts.Month,       p0, obj).Value ) },
+				{ M(() => DateTime.Now.Year              ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Year,        obj).Value     ) },
+				{ M(() => DateTime.Now.Month             ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Month,       obj).Value     ) },
+				{ M(() => DateTime.Now.DayOfYear         ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj).Value     ) },
+				{ M(() => DateTime.Now.Day               ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Day,         obj).Value     ) },
+				{ M(() => DateTime.Now.DayOfWeek         ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.WeekDay,     obj).Value - 1 ) },
+				{ M(() => DateTime.Now.Hour              ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Hour,        obj).Value     ) },
+				{ M(() => DateTime.Now.Minute            ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Minute,      obj).Value     ) },
+				{ M(() => DateTime.Now.Second            ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Second,      obj).Value     ) },
+				{ M(() => DateTime.Now.Millisecond       ), L<DateTime,Int32>            ((DateTime obj)            => Sql.DatePart(Sql.DateParts.Millisecond, obj).Value     ) },
+				{ M(() => DateTime.Now.Date              ), L<DateTime,DateTime>         ((DateTime obj)            => Sql.Convert2(Sql.Date,                  obj)     ) },
+				{ M(() => DateTime.Now.TimeOfDay         ), L<DateTime,TimeSpan>         ((DateTime obj)            => Sql.DateToTime(Sql.Convert2(Sql.Time,   obj)).Value    ) },
+				{ M(() => DateTime.Now.AddYears       (0)), L<DateTime,Int32,DateTime>   ((DateTime obj,Int32 p0)   => Sql.DateAdd(Sql.DateParts.Year,        p0, obj).Value ) },
+				{ M(() => DateTime.Now.AddMonths      (0)), L<DateTime,Int32,DateTime>   ((DateTime obj,Int32 p0)   => Sql.DateAdd(Sql.DateParts.Month,       p0, obj).Value ) },
 				{ M(() => DateTime.Now.AddDays        (0)), L<DateTime,Double,DateTime>  ((DateTime obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Day,         p0, obj).Value ) },
 				{ M(() => DateTime.Now.AddHours       (0)), L<DateTime,Double,DateTime>  ((DateTime obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Hour,        p0, obj).Value ) },
 				{ M(() => DateTime.Now.AddMinutes     (0)), L<DateTime,Double,DateTime>  ((DateTime obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Minute,      p0, obj).Value ) },
@@ -216,8 +216,8 @@ namespace LinqToDB.Linq
 				{ M(() => DateTime.Now.AddMilliseconds(0)), L<DateTime,Double,DateTime>  ((DateTime obj,Double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj).Value ) },
 				{ M(() => new DateTime(0, 0, 0)          ), L<Int32,Int32,Int32,DateTime>((Int32 y,Int32 m,Int32 d) => Sql.MakeDateTime(y, m, d).Value                    ) },
 
-				{ M(() => Sql.MakeDateTime(0, 0, 0)          ), L<Int32?,Int32?,Int32?,DateTime?>         ((Int32? y,Int32? m,Int32? d)                 => (DateTime?)Sql.Convert(Sql.Date, y.ToString() + "-" + m.ToString() + "-" + d.ToString())) },
-				{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), L<Int32,Int32,Int32,Int32,Int32,Int32,DateTime>       ((Int32 y,Int32 m,Int32 d,Int32 h,Int32 mm,Int32 s)       => Sql.MakeDateTime(y, m, d, h, mm, s).Value ) },
+				{ M(() => Sql.MakeDateTime(0, 0, 0)          ), L<Int32?,Int32?,Int32?,DateTime?>                     ((Int32? y,Int32? m,Int32? d)                             => (DateTime?)Sql.Convert(Sql.Date, y.ToString() + "-" + m.ToString() + "-" + d.ToString())) },
+				{ M(() => new DateTime    (0, 0, 0, 0, 0, 0) ), L<Int32,Int32,Int32,Int32,Int32,Int32,DateTime>       ((Int32  y,Int32  m,Int32  d,Int32  h,Int32  mm,Int32 s)  => Sql.MakeDateTime(y, m, d, h, mm, s).Value ) },
 				{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), L<Int32?,Int32?,Int32?,Int32?,Int32?,Int32?,DateTime?>((Int32? y,Int32? m,Int32? d,Int32? h,Int32? mm,Int32? s) => (DateTime?)Sql.Convert(Sql.DateTime2,
 					y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 					h.ToString() + ":" + mm.ToString() + ":" + s.ToString())) },

@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -862,9 +863,6 @@ namespace LinqToDB.Linq.Builder
 
 			#region Helpers
 
-#if NEMERLE
-			internal
-#endif
 			SqlField GetField(Expression expression, int level, bool throwException)
 			{
 				if (expression.NodeType == ExpressionType.MemberAccess)
@@ -963,9 +961,6 @@ namespace LinqToDB.Linq.Builder
 			readonly Dictionary<MemberInfo,AssociatedTableContext> _associations =
 				new Dictionary<MemberInfo,AssociatedTableContext>(new MemberInfoComparer());
 
-#if NEMERLE
-			internal
-#endif
 			class TableLevel
 			{
 				public TableContext Table;
@@ -997,9 +992,6 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-#if NEMERLE
-			internal
-#endif
 			TableLevel GetAssociation(Expression expression, int level)
 			{
 				var objectMapper    = ObjectMapper;

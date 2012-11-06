@@ -13,7 +13,7 @@ namespace LinqToDB.Metadata
 
 	public class XmlAttributeReader : IMetadataReader
 	{
-		readonly Dictionary<string,TypeInfo> _types;
+		readonly Dictionary<string,MetaTypeInfo> _types;
 
 		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
@@ -107,7 +107,7 @@ namespace LinqToDB.Metadata
 			return attrs.ToArray();
 		}
 
-		static Dictionary<string,TypeInfo> LoadStream(Stream xmlDocStream, string fileName)
+		static Dictionary<string,MetaTypeInfo> LoadStream(Stream xmlDocStream, string fileName)
 		{
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
 
@@ -132,10 +132,10 @@ namespace LinqToDB.Metadata
 
 					var mname = maname.Value;
 
-					return new MemberInfo(mname, GetAttrs(fileName, m, null, tname, mname));
+					return new MetaMemberInfo(mname, GetAttrs(fileName, m, null, tname, mname));
 				});
 
-				return new TypeInfo(tname, members.ToDictionary(m => m.Name), GetAttrs(fileName, t, "Member", tname, null));
+				return new MetaTypeInfo(tname, members.ToDictionary(m => m.Name), GetAttrs(fileName, t, "Member", tname, null));
 			})
 			.ToDictionary(t => t.Name);
 		}
@@ -143,7 +143,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type)
 			where T : Attribute
 		{
-			TypeInfo t;
+			MetaTypeInfo t;
 
 			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
 				return t.GetAttribute(typeof(T)).Select(a => (T) a.MakeAttribute(typeof(T))).ToArray();
@@ -151,16 +151,18 @@ namespace LinqToDB.Metadata
 			return new T[0];
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName)
+		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
-			TypeInfo t;
+			var type = memberInfo.DeclaringType;
+
+			MetaTypeInfo t;
 
 			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
 			{
-				MemberInfo m;
+				MetaMemberInfo m;
 
-				if (t.Members.TryGetValue(memberName, out m))
+				if (t.Members.TryGetValue(memberInfo.Name, out m))
 				{
 					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute(typeof(T))).ToArray();
 				}

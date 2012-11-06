@@ -75,6 +75,7 @@
     <Compile Include="DataProvider\SqlServerDataProvider.cs" />
     <Compile Include="DataProvider\SqlServerVersion.cs" />
     <Compile Include="Data\DataConnection.cs" />
+    <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
@@ -91,11 +92,11 @@
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
-    <Compile Include="Metadata\MemberInfo.cs" />
+    <Compile Include="Metadata\MetaMemberInfo.cs" />
     <Compile Include="Metadata\MetadataException.cs" />
     <Compile Include="Metadata\MetadataReader.cs" />
     <Compile Include="Metadata\SystemDataLinqAttributeReader.cs" />
-    <Compile Include="Metadata\TypeInfo.cs" />
+    <Compile Include="Metadata\MetaTypeInfo.cs" />
     <Compile Include="Metadata\XmlAttributeReader.cs" />
     <Compile Include="NonUpdatableAttribute.cs">
       <SubType>Code</SubType>
@@ -264,9 +265,9 @@
     <Compile Include="SqlBuilder\SqlTableT.cs" />
     <Compile Include="SqlBuilder\SqlTableType.cs" />
     <Compile Include="SqlBuilder\SqlValue.cs" />
-    <Compile Include="Extensions\TransformInfo.cs" />
+    <Compile Include="Expressions\TransformInfo.cs" />
     <Compile Include="LinqToDBException.cs" />
-    <Compile Include="Extensions\LinqExpressionExtensions.cs" />
+    <Compile Include="Expressions\LinqExpressionExtensions.cs" />
     <Compile Include="Mapping\Association.cs" />
     <Compile Include="AssociationAttribute.cs" />
     <Compile Include="Mapping\DataReaderMapper.cs" />
@@ -357,6 +358,7 @@
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

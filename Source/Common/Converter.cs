@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
-	using Extensions;
+	using Expressions;
 	using Mapping;
 
 	public static class Converter

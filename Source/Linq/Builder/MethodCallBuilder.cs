@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 
 	abstract class MethodCallBuilder : ISequenceBuilder

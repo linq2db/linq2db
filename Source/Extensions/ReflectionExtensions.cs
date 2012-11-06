@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
@@ -18,7 +19,7 @@ namespace LinqToDB.Extensions
 
 		static class CacheHelper<T>
 		{
-			public static readonly Dictionary<Type,T[]> TypeAttributes = new Dictionary<Type,T[]>();
+			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
 		#region Attributes cache
@@ -112,21 +113,18 @@ namespace LinqToDB.Extensions
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
-			lock (CacheHelper<T>.TypeAttributes)
+			T[] attrs;
+
+			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out attrs))
 			{
-				T[] attrs;
+				var list = new List<object>();
 
-				if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out attrs))
-				{
-					var list = new List<object>();
+				GetAttributesInternal(list, type);
 
-					GetAttributesInternal(list, type);
-
-					CacheHelper<T>.TypeAttributes.Add(type, attrs = list.OfType<T>().ToArray());
-				}
-
-				return attrs;
+				CacheHelper<T>.TypeAttributes[type] = attrs = list.OfType<T>().ToArray();
 			}
+
+			return attrs;
 		}
 
 		/// <summary>
@@ -573,10 +571,10 @@ namespace LinqToDB.Extensions
 		{
 			switch (memberInfo.MemberType)
 			{
-				case MemberTypes.Property    : return ((PropertyInfo)   memberInfo).PropertyType;
-				case MemberTypes.Field       : return ((FieldInfo)      memberInfo).FieldType;
-				case MemberTypes.Method      : return ((MethodInfo)     memberInfo).ReturnType;
-				case MemberTypes.Constructor : return                   memberInfo. DeclaringType;
+				case MemberTypes.Property    : return ((PropertyInfo)memberInfo).PropertyType;
+				case MemberTypes.Field       : return ((FieldInfo)   memberInfo).FieldType;
+				case MemberTypes.Method      : return ((MethodInfo)  memberInfo).ReturnType;
+				case MemberTypes.Constructor : return                memberInfo. DeclaringType;
 			}
 
 			throw new InvalidOperationException();

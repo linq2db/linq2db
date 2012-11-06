@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -27,10 +28,10 @@ namespace LinqToDB.Metadata
 			return _readers.SelectMany(r => r.GetAttributes<T>(type)).ToArray();
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName)
+		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
-			return _readers.SelectMany(r => r.GetAttributes<T>(type, memberName)).ToArray();
+			return _readers.SelectMany(r => r.GetAttributes<T>(memberInfo)).ToArray();
 		}
 	}
 }

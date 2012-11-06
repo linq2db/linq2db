@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
@@ -57,12 +58,12 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName)
+		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(type, memberName);
+				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(memberInfo);
 
 				if (attrs.Length == 1)
 				{

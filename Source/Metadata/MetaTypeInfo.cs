@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Metadata
 {
-	class TypeInfo
+	class MetaTypeInfo
 	{
-		public TypeInfo(string name, Dictionary<string,MemberInfo> members, params AttributeInfo[] attributes)
+		public MetaTypeInfo(string name, Dictionary<string,MetaMemberInfo> members, params AttributeInfo[] attributes)
 		{
 			Name       = name;
 			Members    = members;
@@ -14,10 +14,10 @@ namespace LinqToDB.Metadata
 		}
 
 		public string                        Name;
-		public Dictionary<string,MemberInfo> Members;
+		public Dictionary<string,MetaMemberInfo> Members;
 		public AttributeInfo[]               Attributes;
 
-		public AttributeInfo[] GetAttribute (Type type)
+		public AttributeInfo[] GetAttribute(Type type)
 		{
 			return
 				Attributes.Where(a => a.Name == type.FullName).Concat(

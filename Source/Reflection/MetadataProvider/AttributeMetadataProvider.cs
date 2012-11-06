@@ -33,12 +33,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			lock (_sync)
 			{
 				EnsureMapper(typeAccessor);
-
-#if NEMERLE
-				return ((object[])_mapFieldAttributes) ?? (_mapFieldAttributes = (object[])typeAccessor.Type.GetAttributes<MapFieldAttribute>());
-#else
 				return _mapFieldAttributes ?? (_mapFieldAttributes = typeAccessor.Type.GetAttributes<MapFieldAttribute>());
-#endif
 			}
 		}
 
@@ -47,12 +42,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			lock (_sync)
 			{
 				EnsureMapper(typeAccessor);
-
-#if NEMERLE
-				return ((object[])_nonUpdatableAttributes) ?? (_nonUpdatableAttributes = (object[])typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
-#else
 				return _nonUpdatableAttributes ?? (_nonUpdatableAttributes = typeAccessor.Type.GetAttributes<NonUpdatableAttribute>());
-#endif
 			}
 		}
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Expressions
 {
 	public struct TransformInfo
 	{

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
 	using Extensions;
 	using Metadata;
 
@@ -343,14 +345,14 @@ namespace LinqToDB.Mapping
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName)
+		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
 			foreach (var info in _schemas)
 			{
 				if (info.MetadataReader != null)
 				{
-					var attrs = info.MetadataReader.GetAttributes<T>(type, memberName);
+					var attrs = info.MetadataReader.GetAttributes<T>(memberInfo);
 
 					if (attrs != null)
 						return attrs;
@@ -367,10 +369,10 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
-		public T GetAttribute<T>(Type type, string memberName)
+		public T GetAttribute<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
-			var attrs = GetAttributes<T>(type, memberName);
+			var attrs = GetAttributes<T>(memberInfo);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
@@ -387,13 +389,13 @@ namespace LinqToDB.Mapping
 			return list.ToArray();
 		}
 
-		public T[] GetAttributes<T>(Type type, string memberName, Func<T,string> configGetter)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, Func<T,string> configGetter)
 			where T : Attribute
 		{
 			var list = new List<T>();
 
 			foreach (var c in ConfigurationList)
-				foreach (var a in GetAttributes<T>(type, memberName))
+				foreach (var a in GetAttributes<T>(memberInfo))
 					if ((configGetter(a) ?? "") == c)
 						list.Add(a);
 
@@ -407,10 +409,10 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 		
-		public T GetAttribute<T>(Type type, string memberName, Func<T,string> configGetter)
+		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter)
 			where T : Attribute
 		{
-			var attrs = GetAttributes(type, memberName, configGetter);
+			var attrs = GetAttributes(memberInfo, configGetter);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
