@@ -47,8 +47,8 @@ namespace LinqToDB
 				return Expression.Call(
 					Expression.Constant(table),
 					isQueriable ?
-						ReflectionHelper.Expressor<CompiledTable<T>>.MethodExpressor(t => t.Create (null)) :
-						ReflectionHelper.Expressor<CompiledTable<T>>.MethodExpressor(t => t.Execute(null)),
+						ReflectionHelper.Expressor<CompiledTable<T>>.MethodOf(t => t.Create (null)) :
+						ReflectionHelper.Expressor<CompiledTable<T>>.MethodOf(t => t.Execute(null)),
 					ps);
 			}
 		}

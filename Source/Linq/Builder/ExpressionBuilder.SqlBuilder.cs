@@ -323,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Expression.Call(
 					null,
-					ReflectionHelper.Expressor<T?>.MethodExpressor(p => Sql.ConvertNullable(p)),
+					ReflectionHelper.Expressor<T?>.MethodOf(p => Sql.ConvertNullable(p)),
 					expression.Expression);
 			}
 		}
@@ -398,7 +398,7 @@ namespace LinqToDB.Linq.Builder
 										}
 
 										var ex     = (BinaryExpression)ma.Expression;
-										var method = ReflectionHelper.Expressor<object>.MethodExpressor(
+										var method = ReflectionHelper.Expressor<object>.MethodOf(
 											_ => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
 										var call   =
@@ -1836,7 +1836,7 @@ namespace LinqToDB.Linq.Builder
 				return new SqlQuery.Predicate.Like(o, false, ep.SqlParameter, new SqlValue('~'));
 			}
 
-			var mi = ReflectionHelper.Expressor<string>.MethodExpressor(_ => _.Replace("", ""));
+			var mi = ReflectionHelper.Expressor<string>.MethodOf(_ => _.Replace("", ""));
 			var ex =
 				Expression.Call(
 				Expression.Call(

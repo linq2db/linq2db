@@ -46,7 +46,7 @@ namespace LinqToDB.Common
 
 			if (!type.IsClass && !type.IsNullable())
 			{
-				var mi = ReflectionHelper.Expressor<int>.MethodExpressor(o => GetValue<int>());
+				var mi = ReflectionHelper.Expressor<int>.MethodOf(o => GetValue<int>());
 
 				value =
 					Expression.Lambda<Func<object>>(

@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Builder.BuildSql(
 						_returnType,
 						fieldIndex, 
-						ReflectionHelper.Expressor<object>.MethodExpressor(o => CheckNullValue(o, o)),
+						ReflectionHelper.Expressor<object>.MethodOf(o => CheckNullValue(o, o)),
 						Expression.Constant(_methodName));
 				}
 

@@ -76,6 +76,7 @@
     <Compile Include="DataProvider\SqlServerVersion.cs" />
     <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
@@ -267,7 +268,7 @@
     <Compile Include="SqlBuilder\SqlValue.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
     <Compile Include="LinqToDBException.cs" />
-    <Compile Include="Expressions\LinqExpressionExtensions.cs" />
+    <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Mapping\Association.cs" />
     <Compile Include="AssociationAttribute.cs" />
     <Compile Include="Mapping\DataReaderMapper.cs" />

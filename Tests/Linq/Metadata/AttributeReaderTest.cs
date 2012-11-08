@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq.Mapping;
 
+using LinqToDB.Expressions;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
@@ -27,7 +28,7 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTest), "Field1");
+			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<AttributeReaderTest>(a => a.Field1));
 
 			Assert.AreEqual(0, attrs.Length);
 		}
@@ -39,7 +40,7 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTest), "Property1");
+			var attrs = rd.GetAttributes<ColumnAttribute>(MemberHelper.MemberOf<AttributeReaderTest>(a => a.Property1));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);

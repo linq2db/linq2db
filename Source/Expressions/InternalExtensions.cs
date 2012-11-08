@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Expressions
 {
-	static class LinqExpressionExtensions
+	using Linq;
+	using LinqToDB.Extensions;
+
+	static class InternalExtensions
 	{
 		#region IsConstant
 

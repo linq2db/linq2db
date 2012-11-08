@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlBuilder;
 
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 							defaultValue = Expression.Convert(
 								Expression.Call(
 									null,
-									ReflectionHelper.Expressor<object>.MethodExpressor(_ => SequenceException())),
+									ReflectionHelper.Expressor<object>.MethodOf(_ => SequenceException())),
 								expr.Type);
 
 						expr = Expression.Condition(

@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 
 					var expr = Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodExpressor(_ => Queryable.Where(null, (Expression<Func<TElement,bool>>)null)),
+						ReflectionHelper.Expressor<object>.MethodOf(_ => Queryable.Where(null, (Expression<Func<TElement,bool>>)null)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							Expression.Equal(innerKey, outerParam),
@@ -295,7 +295,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodExpressor(_p => GetGrouping(null, null, default(TKey), null)),
+						ReflectionHelper.Expressor<object>.MethodOf(_p => GetGrouping(null, null, default(TKey), null)),
 						new[]
 						{
 							ExpressionBuilder.ContextParam,

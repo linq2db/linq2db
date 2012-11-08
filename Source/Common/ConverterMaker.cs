@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 	static class ConverterMaker
 	{
 		static readonly MethodInfo _defaultConverter =
-			ReflectionHelper.Expressor<object>.MethodExpressor(o => Convert.ChangeType(null, typeof(int)));
+			ReflectionHelper.Expressor<object>.MethodOf(o => Convert.ChangeType(null, typeof(int)));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{

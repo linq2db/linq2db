@@ -1220,7 +1220,7 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						ReflectionHelper.Expressor<Query>.MethodExpressor(a => a.GetIQueryable(0, null)),
+						ReflectionHelper.Expressor<Query>.MethodOf(a => a.GetIQueryable(0, null)),
 						new[] { Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)) });
 
 				var qex = _query.GetIQueryable(n, expression);
@@ -1258,7 +1258,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (index.NodeType == ExpressionType.Lambda)
 			{
-				skipMethod = ReflectionHelper.Expressor<object>.MethodExpressor(o => LinqExtensions.Skip<object>(null, null));
+				skipMethod = ReflectionHelper.Expressor<object>.MethodOf(o => LinqExtensions.Skip<object>(null, null));
 				skipMethod = skipMethod.GetGenericMethodDefinition();
 			}
 			else

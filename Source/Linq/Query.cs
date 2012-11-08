@@ -5,13 +5,13 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq
 {
 	using Builder;
 	using Common;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlBuilder;
 	using SqlProvider;
@@ -499,7 +499,7 @@ namespace LinqToDB.Linq
 
 			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !mm.Type.IsNullable())
 			{
-				var method = ReflectionHelper.Expressor<int>.MethodExpressor(_ => ConvertNullable(0, 0))
+				var method = ReflectionHelper.Expressor<int>.MethodOf(_ => ConvertNullable(0, 0))
 					.GetGenericMethodDefinition()
 					.MakeGenericMethod(mm.Type);
 

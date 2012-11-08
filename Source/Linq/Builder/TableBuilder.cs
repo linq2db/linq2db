@@ -5,12 +5,12 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using SqlBuilder;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection.Extension;
 
@@ -349,7 +349,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
-			static readonly MethodInfo _mapperMethod = ReflectionHelper.Expressor<object>.MethodExpressor(_ => MapDataReaderToObject(null, null));
+			static readonly MethodInfo _mapperMethod = ReflectionHelper.Expressor<object>.MethodOf(_ => MapDataReaderToObject(null, null));
 
 #if FW4 || SILVERLIGHT
 			ParameterExpression _variable;
@@ -455,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var exceptionMethod = ReflectionHelper.Expressor<object>.MethodExpressor(_ => DefaultInheritanceMappingException(null, null));
+					var exceptionMethod = ReflectionHelper.Expressor<object>.MethodOf(_ => DefaultInheritanceMappingException(null, null));
 					var dindex          =
 						(
 							from f in SqlTable.Fields.Values
