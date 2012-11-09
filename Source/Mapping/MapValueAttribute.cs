@@ -20,7 +20,8 @@ namespace LinqToDB.Mapping
 			IsDefault = isDefault;
 		}
 
-		public object Value     { get; set; }
-		public bool   IsDefault { get; set; }
+		public string Configuration { get; set; }
+		public object Value         { get; set; }
+		public bool   IsDefault     { get; set; }
 	}
 }

@@ -167,7 +167,7 @@ namespace Tests.Common
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("1"));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("+1"));
 
-			Assert.AreEqual("Value1", ConvertTo<string>. From(Enum2.Value1));
+			Assert.AreEqual("Value1", ConvertTo<string>.From(Enum2.Value1));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From("Value1"));
 			Assert.AreEqual(Enum2.Value2, ConvertTo<Enum2>. From("value2"));
 		}

@@ -328,38 +328,47 @@ namespace LinqToDB.Mapping
 			set { _schemas[0].MetadataReader = value; }
 		}
 
+		IMetadataReader[] _metadataReaders;
+		IMetadataReader[]  MetadataReaders
+		{
+			get
+			{
+				if (_metadataReaders == null)
+				{
+					var hash = new HashSet<IMetadataReader>();
+					var list = new List<IMetadataReader>();
+
+					foreach (var s in _schemas)
+						if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+							list.Add(s.MetadataReader);
+
+					_metadataReaders = list.ToArray();
+				}
+
+				return _metadataReaders;
+			}
+		}
+
 		public T[] GetAttributes<T>(Type type)
 			where T : Attribute
 		{
-			foreach (var info in _schemas)
-			{
-				if (info.MetadataReader != null)
-				{
-					var attrs = info.MetadataReader.GetAttributes<T>(type);
+			var q =
+				from mr in MetadataReaders
+				from a in mr.GetAttributes<T>(type)
+				select a;
 
-					if (attrs != null)
-						return attrs;
-				}
-			}
-
-			return Array<T>.Empty;
+			return q.ToArray();
 		}
 
 		public T[] GetAttributes<T>(MemberInfo memberInfo)
 			where T : Attribute
 		{
-			foreach (var info in _schemas)
-			{
-				if (info.MetadataReader != null)
-				{
-					var attrs = info.MetadataReader.GetAttributes<T>(memberInfo);
+			var q =
+				from mr in MetadataReaders
+				from a in mr.GetAttributes<T>(memberInfo)
+				select a;
 
-					if (attrs != null)
-						return attrs;
-				}
-			}
-
-			return Array<T>.Empty;
+			return q.ToArray();
 		}
 
 		public T GetAttribute<T>(Type type)
@@ -379,27 +388,29 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter)
 			where T : Attribute
 		{
-			var list = new List<T>();
+			var list  = new List<T>();
+			var attrs = GetAttributes<T>(type);
 
 			foreach (var c in ConfigurationList)
-				foreach (var a in GetAttributes<T>(type))
-					if ((configGetter(a) ?? "") == c)
+				foreach (var a in attrs)
+					if (configGetter(a) == c)
 						list.Add(a);
 
-			return list.ToArray();
+			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
 		public T[] GetAttributes<T>(MemberInfo memberInfo, Func<T,string> configGetter)
 			where T : Attribute
 		{
-			var list = new List<T>();
+			var list  = new List<T>();
+			var attrs = GetAttributes<T>(memberInfo);
 
 			foreach (var c in ConfigurationList)
-				foreach (var a in GetAttributes<T>(memberInfo))
-					if ((configGetter(a) ?? "") == c)
+				foreach (var a in attrs)
+					if (configGetter(a) == c)
 						list.Add(a);
 
-			return list.ToArray();
+			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
 		public T GetAttribute<T>(Type type, Func<T,string> configGetter)
@@ -431,13 +442,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in _schemas)
-						if (s.Configuration != null && hash.Add(s.Configuration))
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
 							list.Add(s.Configuration);
-
-					var c = _schemas[0].Configuration;
-
-					if (c != null)
-						list.Insert(0, c);
 
 					_configurationList = list.ToArray();
 				}
