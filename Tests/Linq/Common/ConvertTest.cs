@@ -174,14 +174,66 @@ namespace Tests.Common
 
 		enum Enum4
 		{
-			[MapValue(15)] Value1,
-			[MapValue(25)] Value2,
+			[MapValue(15)]
+			[MapValue("115")]
+			Value1,
+
+			[MapValue(25)]
+			[MapValue("125")]
+			Value2,
+
+			[MapValue(null)]
+			[MapValue(35, Configuration = "1")]
+			Value3,
 		}
 
 		[Test]
-		public void EnumMapValue()
+		public void ConvertFromEnum1()
 		{
-			Assert.AreEqual(Enum4.Value1, ConvertTo<Enum4>.From(15));
+			Assert.AreEqual(15,    ConvertTo<int>.   From(Enum4.Value1));
+			Assert.AreEqual(25,    ConvertTo<int>.   From(Enum4.Value2));
+			Assert.AreEqual(0,     ConvertTo<int>.   From(Enum4.Value3));
+
+			Assert.AreEqual("115", ConvertTo<string>.From(Enum4.Value1));
+			Assert.AreEqual("125", ConvertTo<string>.From(Enum4.Value2));
+			Assert.AreEqual(null,  ConvertTo<string>.From(Enum4.Value3));
+		}
+
+		[Test]
+		public void ConvertFromEnum2()
+		{
+			var cf = MappingSchema.Default.GetConverter<Enum4,int>();
+
+			Assert.AreEqual(15, cf(Enum4.Value1));
+			Assert.AreEqual(25, cf(Enum4.Value2));
+			Assert.AreEqual(0,  cf(Enum4.Value3));
+		}
+
+		[Test]
+		public void ConvertFromEnum3()
+		{
+			var cf = new MappingSchema("1").GetConverter<Enum4,int>();
+
+			Assert.AreEqual(15, cf(Enum4.Value1));
+			Assert.AreEqual(25, cf(Enum4.Value2));
+			Assert.AreEqual(35, cf(Enum4.Value3));
+		}
+
+		[Test]
+		public void ConvertFromEnum4()
+		{
+			var cf = MappingSchema.Default.GetConverter<Enum4,int>();
+
+			Assert.AreEqual(0,  cf(Enum4.Value3));
+
+			cf = new MappingSchema("1").GetConverter<Enum4,int>();
+
+			Assert.AreEqual(35, cf(Enum4.Value3));
+		}
+		[Test]
+		public void ConvertToEnum()
+		{
+			Assert.AreEqual(Enum4.Value2, ConvertTo<Enum4>.From(25));
 		}
 	}
 }

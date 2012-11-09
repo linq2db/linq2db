@@ -23,9 +23,11 @@ namespace LinqToDB.Common
 			var to   = conversionType;
 			var key  = new { from, to };
 
+			var converters = mappingSchema == null ? _converters : mappingSchema.Converters;
+
 			Func<object,object> l;
 
-			if (!_converters.TryGetValue(key, out l))
+			if (!converters.TryGetValue(key, out l))
 			{
 				var li = ConvertInfo.Default.Get(mappingSchema, value.GetType(), to);
 				var b  = li.Lambda.Body;
@@ -45,7 +47,7 @@ namespace LinqToDB.Common
 
 				l = ex.Compile();
 
-				_converters[key] = l;
+				converters[key] = l;
 			}
 
 			return l(value);

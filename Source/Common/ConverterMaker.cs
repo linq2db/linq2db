@@ -169,24 +169,62 @@ namespace LinqToDB.Common
 		{
 			if (to.IsEnum)
 			{
-				var fields =
-					from f in to.GetFields()
-					where (f.Attributes & EnumField) == EnumField
-					select new
-					{
-						f,
-						attrs = mappingSchema.GetAttributes<MapValueAttribute>(f)
-					};
 			}
 
 			return null;
 		}
 
+		static object ThrowLinqToDBException(string text)
+		{
+			throw new LinqToDBException(text);
+		}
+
+		static readonly MethodInfo _throwLinqToDBException =
+			ReflectionHelper.Expressor<object>.MethodOf(o => ThrowLinqToDBException(null));
+
 		static Expression GetFromEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
 			if (from.IsEnum)
 			{
-				
+				var fromFields = @from.GetFields()
+					.Where (f => (f.Attributes & EnumField) == EnumField)
+					.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+					.ToList();
+
+				var toTypeFields = fromFields
+					.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
+					.ToList();
+
+				if (toTypeFields.All(f => f.attr != null))
+				{
+					var cases =
+						from f in toTypeFields
+						select Expression.SwitchCase(
+							Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(to), to),
+							Expression.Constant(Enum.Parse(@from, f.f.Name)));
+
+					var expr = Expression.Switch(
+						expression,
+						Expression.Convert(
+							Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+							to),
+						cases.ToArray());
+
+					return expr;
+				}
+
+				if (toTypeFields.Any(f => f.attr != null))
+				{
+					var field = toTypeFields.First(f => f.attr == null);
+
+					return Expression.Convert(
+						Expression.Call(
+							_throwLinqToDBException,
+							Expression.Constant(
+								string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
+									from.FullName, field.f.Name, to.FullName))),
+							to);
+				}
 			}
 
 			return null;
@@ -198,8 +236,8 @@ namespace LinqToDB.Common
 				return p;
 
 			return
-				GetToEnum    (from, to, p, mappingSchema) ??
 				GetFromEnum  (from, to, p, mappingSchema) ??
+				GetToEnum    (from, to, p, mappingSchema) ??
 				GetCtor      (from, to, p) ??
 				GetValue     (from, to, p) ??
 				GetOperator  (from, to, p) ??

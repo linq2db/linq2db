@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -76,6 +77,12 @@ namespace LinqToDB.Mapping
 		#endregion
 
 		#region Convert
+
+		private  ConcurrentDictionary<object,Func<object,object>> _converters;
+		internal ConcurrentDictionary<object,Func<object,object>>  Converters
+		{
+			get { return _converters ?? (_converters = new ConcurrentDictionary<object, Func<object, object>>()); }
+		}
 
 		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>()
 		{

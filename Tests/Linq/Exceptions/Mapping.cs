@@ -2,9 +2,11 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Linq;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Common;
 
 namespace Tests.Exceptions
 {
@@ -33,6 +35,22 @@ namespace Tests.Exceptions
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null);
+		}
+
+		enum Enum4
+		{
+			[MapValue(15)]
+			Value1,
+			Value2,
+		}
+
+		[Test, ExpectedException(
+			typeof(LinqToDBException),
+			ExpectedMessage = "Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.")]
+		public void ConvertFromEnum()
+		{
+			Assert.AreEqual(15, ConvertTo<int>.From(Enum4.Value1));
+			Assert.AreEqual(25, ConvertTo<int>.From(Enum4.Value2));
 		}
 	}
 }
