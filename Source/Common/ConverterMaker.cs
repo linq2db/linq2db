@@ -169,6 +169,45 @@ namespace LinqToDB.Common
 		{
 			if (to.IsEnum)
 			{
+				var toFields = to.GetFields()
+					.Where (f => (f.Attributes & EnumField) == EnumField)
+					.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+					.ToList();
+
+				var fromTypeFields = toFields
+					.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == @from) })
+					.ToList();
+
+				if (fromTypeFields.All(f => f.attr != null))
+				{
+					var cases =
+						from f in fromTypeFields
+						select Expression.SwitchCase(
+							Expression.Constant(Enum.Parse(to, f.f.Name)),
+							Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(@from), @from));
+
+					var expr = Expression.Switch(
+						expression,
+						Expression.Convert(
+							Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+							to),
+						cases.ToArray());
+
+					return expr;
+				}
+
+				if (fromTypeFields.Any(f => f.attr != null))
+				{
+					var field = fromTypeFields.First(f => f.attr == null);
+
+					return Expression.Convert(
+						Expression.Call(
+							_throwLinqToDBException,
+							Expression.Constant(
+								string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
+									to.FullName, field.f.Name, from.FullName))),
+							to);
+				}
 			}
 
 			return null;
@@ -230,14 +269,19 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		static Expression GetConverter(MappingSchema mappingSchema, Type from, Type to, Expression p)
+		static Tuple<Expression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to, Expression p)
 		{
 			if (from == to)
-				return p;
+				return Tuple.Create(p, false);
 
-			return
+			var expr = 
 				GetFromEnum  (from, to, p, mappingSchema) ??
-				GetToEnum    (from, to, p, mappingSchema) ??
+				GetToEnum    (from, to, p, mappingSchema);
+
+			if (expr != null)
+				return Tuple.Create(expr, true);
+
+			expr =
 				GetCtor      (from, to, p) ??
 				GetValue     (from, to, p) ??
 				GetOperator  (from, to, p) ??
@@ -246,9 +290,11 @@ namespace LinqToDB.Common
 				GetToString  (from, to, p) ??
 				GetKnownTypes(from, to, p) ??
 				GetParseEnum (from, to, p);
+
+			return expr != null ? Tuple.Create(expr, false) : null;
 		}
 
-		public static LambdaExpression GetConverter(MappingSchema mappingSchema, Type from, Type to)
+		public static Tuple<LambdaExpression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to)
 		{
 			if (mappingSchema == null)
 				mappingSchema = MappingSchema.Default;
@@ -256,10 +302,10 @@ namespace LinqToDB.Common
 			var p = Expression.Parameter(from, "p");
 
 			if (from == to)
-				return Expression.Lambda(p, p);
+				return Tuple.Create(Expression.Lambda(p, p), false);
 
 			if (to == typeof(object))
-				return Expression.Lambda(Expression.Convert(p, typeof(object)), p);
+				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), false);
 
 			var ex = GetConverter(mappingSchema, from, to, p);
 
@@ -279,7 +325,7 @@ namespace LinqToDB.Common
 						ex = GetConverter(mappingSchema, ufrom, uto, cp);
 
 						if (ex != null)
-							ex = Expression.Convert(ex, to);
+							ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
 					}
 				}
 
@@ -288,24 +334,30 @@ namespace LinqToDB.Common
 					ex = GetConverter(mappingSchema, from, uto, p);
 
 					if (ex != null)
-						ex = Expression.Convert(ex, to);
+						ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
 				}
 			}
 
 			if (ex != null)
 			{
 				if (from.IsNullable())
-					ex = Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex, new DefaultValueExpression(to));
+					ex = Tuple.Create(
+						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(to)) as Expression,
+						ex.Item2);
 				else if (from.IsClass)
-					ex = Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex, new DefaultValueExpression(to));
+					ex = Tuple.Create(
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(to)) as Expression,
+						ex.Item2);
 			}
 
 			if (ex != null)
-				return Expression.Lambda(ex, p);
+				return Tuple.Create(Expression.Lambda(ex.Item1, p), ex.Item2);
 
-			return Expression.Lambda(
-				Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)),
-				p);
+			return Tuple.Create(
+				Expression.Lambda(
+					Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)),
+					p),
+				false);
 		}
 	}
 }

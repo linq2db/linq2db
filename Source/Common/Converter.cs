@@ -29,7 +29,10 @@ namespace LinqToDB.Common
 
 			if (!converters.TryGetValue(key, out l))
 			{
-				var li = ConvertInfo.Default.Get(mappingSchema, value.GetType(), to);
+				var li =
+					ConvertInfo.Default.Get   (               value.GetType(), to) ??
+					ConvertInfo.Default.Create(mappingSchema, value.GetType(), to);
+
 				var b  = li.Lambda.Body;
 				var ps = li.Lambda.Parameters;
 
@@ -73,7 +76,7 @@ namespace LinqToDB.Common
 
 			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
 			{
-				var li = ConvertInfo.Default.Get(mappingSchema, value.GetType(), to);
+				var li = ConvertInfo.Default.Get(value.GetType(), to) ?? ConvertInfo.Default.Create(mappingSchema, value.GetType(), to);
 				var b  = li.Lambda.Body;
 				var ps = li.Lambda.Parameters;
 

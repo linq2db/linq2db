@@ -78,10 +78,9 @@ namespace LinqToDB.Mapping
 
 		#region Convert
 
-		private  ConcurrentDictionary<object,Func<object,object>> _converters;
-		internal ConcurrentDictionary<object,Func<object,object>>  Converters
+		internal ConcurrentDictionary<object,Func<object,object>> Converters
 		{
-			get { return _converters ?? (_converters = new ConcurrentDictionary<object, Func<object, object>>()); }
+			get { return _schemas[0].Converters; }
 		}
 
 		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>()
@@ -105,7 +104,7 @@ namespace LinqToDB.Mapping
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.Lambda);
 				var l   = rex.Compile();
 
-				_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.Lambda, l));
+				_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.Lambda, l, li.IsSchemaSpecific));
 
 				return l;
 			}
@@ -123,7 +122,7 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null));
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, false));
 		}
 
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
@@ -133,7 +132,7 @@ namespace LinqToDB.Mapping
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
-			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, func));
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, func, false));
 		}
 
 		static LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -164,10 +163,10 @@ namespace LinqToDB.Mapping
 			for (var i = 0; i < _schemas.Length; i++)
 			{
 				var info = _schemas[i];
-				var li   = info.GetConvertInfo(this, @from, to);
+				var li   = info.GetConvertInfo(@from, to);
 
-				if (li != null)
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.Lambda, null);
+				if (li != null && (i == 0 || !li.IsSchemaSpecific))
+					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.Lambda, null, false);
 			}
 
 			if (create)
@@ -176,6 +175,7 @@ namespace LinqToDB.Mapping
 				var uto   = to.  ToNullableUnderlying();
 
 				LambdaExpression ex;
+				bool             ss = false;
 
 				if (from != ufrom)
 				{
@@ -190,6 +190,7 @@ namespace LinqToDB.Mapping
 						//
 						var p = Expression.Parameter(from, ps[0].Name);
 
+						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(
 							b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
 							p);
@@ -207,6 +208,7 @@ namespace LinqToDB.Mapping
 							//
 							var p = Expression.Parameter(from, ps[0].Name);
 
+							ss = li.IsSchemaSpecific;
 							ex = Expression.Lambda(
 								Expression.Convert(
 									b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
@@ -230,6 +232,7 @@ namespace LinqToDB.Mapping
 						var b  = li.Lambda.Body;
 						var ps = li.Lambda.Parameters;
 
+						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(Expression.Convert(b, to), ps);
 					}
 					else
@@ -239,11 +242,14 @@ namespace LinqToDB.Mapping
 					ex = null;
 
 				if (ex != null)
-					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), null);
+					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), null, ss);
 
-				var d = ConvertInfo.Default.Get(this, from, to);
+				var d = ConvertInfo.Default.Get(from, to);
 
-				return new ConvertInfo.LambdaInfo(d.Lambda, null);
+				if (d == null || d.IsSchemaSpecific)
+					d = ConvertInfo.Default.Create(this, from, to);
+
+				return new ConvertInfo.LambdaInfo(d.Lambda, null, d.IsSchemaSpecific);
 			}
 
 			return null;

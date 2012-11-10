@@ -24,9 +24,9 @@ namespace LinqToDB.Common
 		{
 			var expr = ConverterMaker.GetConverter(null, typeof(TFrom), typeof(TTo));
 
-			_expression = (Expression<Func<TFrom,TTo>>)expr;
+			_expression = (Expression<Func<TFrom,TTo>>)expr.Item1;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
+			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Item1.Transform(e => e is DefaultValueExpression ? e.Reduce() : e);
 
 			_lambda = rexpr.Compile();
 		}
@@ -49,7 +49,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, _lambda));
+						new ConvertInfo.LambdaInfo(_expression, _lambda, false));
 				}
 			}
 		}
@@ -79,7 +79,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, _lambda));
+						new ConvertInfo.LambdaInfo(_expression, _lambda, false));
 				}
 			}
 		}
