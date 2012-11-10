@@ -349,7 +349,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
-			static readonly MethodInfo _mapperMethod = ReflectionHelper.Expressor<object>.MethodOf(_ => MapDataReaderToObject(null, null));
+			static readonly MethodInfo _mapperMethod = MemberHelper.MethodOf(() => MapDataReaderToObject(null, null));
 
 #if FW4 || SILVERLIGHT
 			ParameterExpression _variable;
@@ -455,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var exceptionMethod = ReflectionHelper.Expressor<object>.MethodOf(_ => DefaultInheritanceMappingException(null, null));
+					var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null));
 					var dindex          =
 						(
 							from f in SqlTable.Fields.Values

@@ -39,5 +39,11 @@ namespace LinqToDB.Expressions
 			var mi = GetMemeberInfo(func);
 			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethod() : (MethodInfo)mi;
 		}
+
+		public static MethodInfo MethodOf(Expression<Func<object>> func)
+		{
+			var mi = GetMemeberInfo(func);
+			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethod() : (MethodInfo)mi;
+		}
 	}
 }

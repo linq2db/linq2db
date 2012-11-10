@@ -358,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 
 				return Expression.Call(
 					null,
-					ReflectionHelper.Expressor<object>.MethodOf(_ => ExecuteSubQuery(null, null, null)),
+					MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
 						ContextParam,
 						Expression.NewArrayInit(typeof(object), parameters),
 						Expression.Constant(queryReader)

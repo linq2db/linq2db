@@ -491,15 +491,15 @@ namespace LinqToDB.Linq
 
 			for (var i = 0; i < members.Length; i++)
 			{
-				var member = members[i];
-		Expression pof = Expression.PropertyOrField(getter, member);
+				var        member = members[i];
+				Expression pof    = Expression.PropertyOrField(getter, member);
 
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
 			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !mm.Type.IsNullable())
 			{
-				var method = ReflectionHelper.Expressor<int>.MethodOf(_ => ConvertNullable(0, 0))
+				var method = MemberHelper.MethodOf(() => ConvertNullable(0, 0))
 					.GetGenericMethodDefinition()
 					.MakeGenericMethod(mm.Type);
 

@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 	static class ConverterMaker
 	{
 		static readonly MethodInfo _defaultConverter =
-			ReflectionHelper.Expressor<object>.MethodOf(o => Convert.ChangeType(null, typeof(int)));
+			MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
@@ -218,8 +218,7 @@ namespace LinqToDB.Common
 			throw new LinqToDBException(text);
 		}
 
-		static readonly MethodInfo _throwLinqToDBException =
-			ReflectionHelper.Expressor<object>.MethodOf(o => ThrowLinqToDBException(null));
+		static readonly MethodInfo _throwLinqToDBException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null));
 
 		static Expression GetFromEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
@@ -264,34 +263,81 @@ namespace LinqToDB.Common
 									from.FullName, field.f.Name, to.FullName))),
 							to);
 				}
+
+				if (to.IsEnum)
+				{
+					var toFields = to.GetFields()
+						.Where (f => (f.Attributes & EnumField) == EnumField)
+						.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+						.ToList();
+
+					var fromTypeFields = fromFields
+						.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == from) })
+						.ToList();
+
+				}
 			}
 
 			return null;
 		}
 
-		static Tuple<Expression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to, Expression p)
+		static Tuple<Expression, bool> GetConverter(MappingSchema mappingSchema, Expression expr, Type @from, Type to)
 		{
 			if (from == to)
-				return Tuple.Create(p, false);
+				return Tuple.Create(expr, false);
 
-			var expr = 
-				GetFromEnum  (from, to, p, mappingSchema) ??
-				GetToEnum    (from, to, p, mappingSchema);
+			var ex =
+				GetFromEnum  (from, to, expr, mappingSchema) ??
+				GetToEnum    (from, to, expr, mappingSchema);
 
-			if (expr != null)
-				return Tuple.Create(expr, true);
+			if (ex != null)
+				return Tuple.Create(ex, true);
 
-			expr =
-				GetCtor      (from, to, p) ??
-				GetValue     (from, to, p) ??
-				GetOperator  (from, to, p) ??
-				GetConvertion(from, to, p) ??
-				GetParse     (from, to, p) ??
-				GetToString  (from, to, p) ??
-				GetKnownTypes(from, to, p) ??
-				GetParseEnum (from, to, p);
+			ex =
+				GetCtor      (from, to, expr) ??
+				GetValue     (from, to, expr) ??
+				GetOperator  (from, to, expr) ??
+				GetConvertion(from, to, expr) ??
+				GetParse     (from, to, expr) ??
+				GetToString  (from, to, expr) ??
+				GetKnownTypes(from, to, expr) ??
+				GetParseEnum (from, to, expr);
 
-			return expr != null ? Tuple.Create(expr, false) : null;
+			return ex != null ? Tuple.Create(ex, false) : null;
+		}
+
+		static Tuple<Expression,bool> ConvertUnderlying(
+			MappingSchema mappingSchema,
+			Expression    expr,
+			Type from, Type ufrom,
+			Type to,   Type uto)
+		{
+			Tuple<Expression,bool> ex = null;
+
+			if (from != ufrom)
+			{
+				var cp = Expression.Convert(expr, ufrom);
+
+				ex = GetConverter(mappingSchema, cp, ufrom, to);
+
+				if (ex == null && to != uto)
+				{
+					ex = GetConverter(mappingSchema, cp, ufrom, uto);
+
+					if (ex != null)
+						ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+				}
+			}
+
+			if (ex == null && to != uto)
+			{
+				ex = GetConverter(mappingSchema, expr, @from, uto);
+
+				if (ex != null)
+					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+			}
+
+			return ex;
 		}
 
 		public static Tuple<LambdaExpression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to)
@@ -307,36 +353,10 @@ namespace LinqToDB.Common
 			if (to == typeof(object))
 				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), false);
 
-			var ex = GetConverter(mappingSchema, from, to, p);
-
-			if (ex == null)
-			{
-				var uto   = to.  ToUnderlying();
-				var ufrom = from.ToUnderlying();
-
-				if (from != ufrom)
-				{
-					var cp = Expression.Convert(p, ufrom);
-
-					ex = GetConverter(mappingSchema, ufrom, to, cp);
-
-					if (ex == null && to != uto)
-					{
-						ex = GetConverter(mappingSchema, ufrom, uto, cp);
-
-						if (ex != null)
-							ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
-					}
-				}
-
-				if (ex == null && to != uto)
-				{
-					ex = GetConverter(mappingSchema, from, uto, p);
-
-					if (ex != null)
-						ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
-				}
-			}
+			var ex =
+				GetConverter     (mappingSchema, p, @from, to) ??
+				ConvertUnderlying(mappingSchema, p, @from, @from.ToNullableUnderlying(), to, to.ToNullableUnderlying()) ??
+				ConvertUnderlying(mappingSchema, p, @from, @from.ToUnderlying(),         to, to.ToUnderlying());
 
 			if (ex != null)
 			{

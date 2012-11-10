@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using Linq;
+	using Expressions;
 	using Extensions;
 
 	public static class DefaultValue
@@ -46,7 +46,7 @@ namespace LinqToDB.Common
 
 			if (!type.IsClass && !type.IsNullable())
 			{
-				var mi = ReflectionHelper.Expressor<int>.MethodOf(o => GetValue<int>());
+				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 
 				value =
 					Expression.Lambda<Func<object>>(

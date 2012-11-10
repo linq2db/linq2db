@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 							defaultValue = Expression.Convert(
 								Expression.Call(
 									null,
-									ReflectionHelper.Expressor<object>.MethodOf(_ => SequenceException())),
+									MemberHelper.MethodOf(() => SequenceException())),
 								expr.Type);
 
 						expr = Expression.Condition(

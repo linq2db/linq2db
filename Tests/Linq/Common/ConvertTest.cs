@@ -230,10 +230,41 @@ namespace Tests.Common
 
 			Assert.AreEqual(35, cf(Enum4.Value3));
 		}
+
 		[Test]
-		public void ConvertToEnum()
+		public void ConvertToEnum1()
 		{
 			Assert.AreEqual(Enum4.Value2, ConvertTo<Enum4>.From(25));
+		}
+
+		enum Enum5
+		{
+			[MapValue(Enum6.Value2)] Value1,
+			[MapValue(Enum6.Value1)] Value2,
+		}
+
+		enum Enum6
+		{
+			Value1,
+			Value2,
+		}
+
+		[Test]
+		public void ConvertToEnum2()
+		{
+			Assert.AreEqual(Enum6.Value2, ConvertTo<Enum6>.From(Enum5.Value1));
+		}
+
+		[Test]
+		public void ConvertToEnum3()
+		{
+			Assert.AreEqual(Enum5.Value2, ConvertTo<Enum5>.From(Enum6.Value1));
+		}
+
+		[Test]
+		public void ConvertToEnum7()
+		{
+			Assert.AreEqual(Enum5.Value2, ConvertTo<Enum5>.From((Enum6?)Enum6.Value1));
 		}
 	}
 }

@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 
 					var expr = Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodOf(_ => Queryable.Where(null, (Expression<Func<TSource,bool>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TSource,bool>>)null)),
 						groupExpression,
 						Expression.Lambda<Func<TSource,bool>>(
 							Expression.Equal(context._key.Lambda.Body, keyParam),
@@ -241,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 
 					expr = Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodOf(_ => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null)),
+						MemberHelper.MethodOf(() => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null)),
 						expr,
 						context._element.Lambda);
 
@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 
 					return Expression.Call(
 						null,
-						ReflectionHelper.Expressor<object>.MethodOf(_ => GetGrouping(null, null, null, null, null, null, null, null)),
+						MemberHelper.MethodOf(() => GetGrouping(null, null, null, null, null, null, null, null)),
 						new Expression[]
 						{
 							ExpressionBuilder.ContextParam,
@@ -546,7 +546,7 @@ namespace LinqToDB.Linq.Builder
 				{
 // ReSharper disable AssignNullToNotNullAttribute
 					//ReflectionHelper.Expressor<object>.MethodExpressor(_ => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
-					var mi   = ReflectionHelper.Expressor<object>.MethodOf(_ => Enumerable.Where(null, (Func<T,bool>)null));
+					var mi   = MemberHelper.MethodOf(() => Enumerable.Where(null, (Func<T,bool>)null));
 // ReSharper restore AssignNullToNotNullAttribute
 					var arg2 = Expression.Lambda<Func<T,bool>>(Expression.Equal(expr1, expr2), new[] { param });
 
