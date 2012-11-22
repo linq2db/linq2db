@@ -165,6 +165,13 @@ namespace LinqToDB.Common
 
 		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
 
+		static object ThrowLinqToDBException(string text)
+		{
+			throw new LinqToDBException(text);
+		}
+
+		static readonly MethodInfo _throwLinqToDBException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null));
+
 		static Expression GetToEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
 			if (to.IsEnum)
@@ -175,16 +182,16 @@ namespace LinqToDB.Common
 					.ToList();
 
 				var fromTypeFields = toFields
-					.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == @from) })
+					.Select(f => new { f.f, attrs = f.attrs.Where(a => a.Value == null || a.Value.GetType() == @from).ToList() })
 					.ToList();
 
-				if (fromTypeFields.All(f => f.attr != null))
+				if (fromTypeFields.All(f => f.attrs.Count != 0))
 				{
 					var cases =
 						from f in fromTypeFields
 						select Expression.SwitchCase(
 							Expression.Constant(Enum.Parse(to, f.f.Name)),
-							Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(@from), @from));
+							f.attrs.Select(a => Expression.Constant(a.Value ?? mappingSchema.GetDefaultValue(@from), @from)));
 
 					var expr = Expression.Switch(
 						expression,
@@ -196,9 +203,9 @@ namespace LinqToDB.Common
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attr != null))
+				if (fromTypeFields.Any(f => f.attrs.Count != 0))
 				{
-					var field = fromTypeFields.First(f => f.attr == null);
+					var field = fromTypeFields.First(f => f.attrs == null);
 
 					return Expression.Convert(
 						Expression.Call(
@@ -213,13 +220,6 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		static object ThrowLinqToDBException(string text)
-		{
-			throw new LinqToDBException(text);
-		}
-
-		static readonly MethodInfo _throwLinqToDBException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null));
-
 		static Expression GetFromEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
 			if (from.IsEnum)
@@ -229,39 +229,44 @@ namespace LinqToDB.Common
 					.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
 					.ToList();
 
-				var toTypeFields = fromFields
-					.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
-					.ToList();
-
-				if (toTypeFields.All(f => f.attr != null))
 				{
-					var cases =
-						from f in toTypeFields
-						select Expression.SwitchCase(
-							Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(to), to),
-							Expression.Constant(Enum.Parse(@from, f.f.Name)));
+					var toTypeFields = fromFields
+						.Select(f => new { f.f, attr = f.attrs
+							.OrderByDescending(a => a.IsDefault)
+							.ThenBy(a => a.Value == null)
+							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
+						.ToList();
 
-					var expr = Expression.Switch(
-						expression,
-						Expression.Convert(
-							Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
-							to),
-						cases.ToArray());
+					if (toTypeFields.All(f => f.attr != null))
+					{
+						var cases =
+							from f in toTypeFields
+							select Expression.SwitchCase(
+								Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(to), to),
+								Expression.Constant(Enum.Parse(@from, f.f.Name)));
 
-					return expr;
-				}
+						var expr = Expression.Switch(
+							expression,
+							Expression.Convert(
+								Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+								to),
+							cases.ToArray());
 
-				if (toTypeFields.Any(f => f.attr != null))
-				{
-					var field = toTypeFields.First(f => f.attr == null);
+						return expr;
+					}
 
-					return Expression.Convert(
-						Expression.Call(
-							_throwLinqToDBException,
-							Expression.Constant(
-								string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
-									from.FullName, field.f.Name, to.FullName))),
-							to);
+					if (toTypeFields.Any(f => f.attr != null))
+					{
+						var field = toTypeFields.First(f => f.attr == null);
+
+						return Expression.Convert(
+							Expression.Call(
+								_throwLinqToDBException,
+								Expression.Constant(
+									string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
+										from.FullName, field.f.Name, to.FullName))),
+								to);
+					}
 				}
 
 				if (to.IsEnum)
@@ -271,10 +276,17 @@ namespace LinqToDB.Common
 						.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
 						.ToList();
 
-					var fromTypeFields = fromFields
-						.Select(f => new { f.f, attr = f.attrs.FirstOrDefault(a => a.Value == null || a.Value.GetType() == from) })
-						.ToList();
+					foreach (var toField in toFields)
+					{
+						if (toField.attrs == null)
+							return null;
 
+						var toAttr = toField.attrs.First();
+
+						toAttr = toField.attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && toAttr.IsDefault) ?? toAttr;
+
+
+					}
 				}
 			}
 
