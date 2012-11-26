@@ -277,5 +277,25 @@ namespace Tests.Mapping
 			Assert.That(attrs[2].Value, Is.EqualTo(2));
 			Assert.That(attrs[3].Value, Is.EqualTo(1));
 		}
+
+		enum Enum1
+		{
+			[MapValue("1", 1), MapValue(2)] Value1,
+			[MapValue(1), MapValue("1", 2)] Value2,
+		}
+
+		[Test]
+		public void ConvertEnum1()
+		{
+			var conv = MappingSchema.Default.GetConverter<int,Enum1>();
+			Assert.That(conv(2), Is.EqualTo(Enum1.Value1));
+		}
+
+		[Test]
+		public void ConvertEnum2()
+		{
+			var conv = new MappingSchema("1").GetConverter<int,Enum1>();
+			Assert.That(conv(2), Is.EqualTo(Enum1.Value2));
+		}
 	}
 }

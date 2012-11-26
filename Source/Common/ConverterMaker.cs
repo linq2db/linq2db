@@ -187,18 +187,50 @@ namespace LinqToDB.Common
 
 				if (fromTypeFields.All(f => f.attrs.Count != 0))
 				{
-					var cases =
-						from f in fromTypeFields
-						select Expression.SwitchCase(
-							Expression.Constant(Enum.Parse(to, f.f.Name)),
-							f.attrs.Select(a => Expression.Constant(a.Value ?? mappingSchema.GetDefaultValue(@from), @from)));
+					var cases = fromTypeFields
+						.Select(f => new
+							{
+								value = Enum.Parse(to, f.f.Name),
+								attrs = f.attrs
+									.Where (a => a.Configuration == f.attrs[0].Configuration)
+									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(@from))
+									.ToList()
+							})
+						.ToList();
+
+					var ambiguityMappings =
+						from c in cases
+						from a in c.attrs
+						group c by a into g
+						where g.Count() > 1
+						select g;
+
+					var ambiguityMapping = ambiguityMappings.FirstOrDefault();
+
+					if (ambiguityMapping != null)
+					{
+						var enums = ambiguityMapping.ToArray();
+
+						return Expression.Convert(
+							Expression.Call(
+								_throwLinqToDBException,
+								Expression.Constant(
+									string.Format("Mapping ambiguity. MapValue({0}) attribute is defined for both '{1}.{2}' and '{1}.{3}'.",
+										ambiguityMapping.Key, to.FullName, enums[0].value, enums[1].value))),
+								to);
+					}
 
 					var expr = Expression.Switch(
 						expression,
 						Expression.Convert(
 							Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
 							to),
-						cases.ToArray());
+						cases
+							.Select(f =>
+								Expression.SwitchCase(
+									Expression.Constant(f.value),
+									f.attrs.Select(a => Expression.Constant(a, @from))))
+							.ToArray());
 
 					return expr;
 				}
@@ -278,12 +310,12 @@ namespace LinqToDB.Common
 
 					foreach (var toField in toFields)
 					{
-						if (toField.attrs == null)
+						if (toField.attrs == null || toField.attrs.Length == 0)
 							return null;
 
 						var toAttr = toField.attrs.First();
 
-						toAttr = toField.attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && toAttr.IsDefault) ?? toAttr;
+						toAttr = toField.attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
 
 
 					}
@@ -293,7 +325,7 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		static Tuple<Expression, bool> GetConverter(MappingSchema mappingSchema, Expression expr, Type @from, Type to)
+		static Tuple<Expression,bool> GetConverter(MappingSchema mappingSchema, Expression expr, Type @from, Type to)
 		{
 			if (from == to)
 				return Tuple.Create(expr, false);
