@@ -360,6 +360,36 @@ namespace Tests.Linq
                     });
         }
 
+        [Test]
+        public void TestDistinctWithGroupBy()
+        {
+            ForIdlProviders(
+                db =>
+                    {
+                        var source = db.Parent.ToList();
+                        // Ensure that the data source has duplicate values.
+                        Assert.That(source.GroupBy(x => x.Value1, (key, x) => x.Count()).Any(x => x > 1), Is.True);
+                        // Success when query is executed in memory
+                        TestDistinctWithGroupBy(source.AsQueryable());
+
+                        // Failed when query is executed on sql server
+                        TestDistinctWithGroupBy(db.Parent);
+                    });
+        }
+
+        private static void TestDistinctWithGroupBy(IQueryable<Parent> source)
+        {
+            const int score = 4;
+            var q = source.Select(x => new {Key = x.Value1, MatchScore = score})
+                .Distinct();
+            var qq = q.GroupBy(x => x.Key,
+                               (key, x) => new {Id = key, MatchScore = x.Sum(y => y.MatchScore)})
+                .Select(x => new {x.Id, x.MatchScore});
+
+            var result = qq.ToList();
+            Assert.That(result.Select(x => x.MatchScore), Is.All.EqualTo(score));
+        }
+
         private static IQueryable<T> GetById<T>(ITestDataContext db, int id) where T : class, IHasID
         {
             return db.GetTable<T>().Where(obj => obj.ID == id);
@@ -367,6 +397,14 @@ namespace Tests.Linq
 
         private void ForMySqlProvider(Action<ITestDataContext> func)
         {
+           using (var db = GetDataContext(ProviderName.MySql))
+               func(db);
+        }
+
+        private void ForIdlProviders(Action<ITestDataContext> func)
+        {
+           using (var db = GetDataContext(ProviderName.SQLite))
+               func(db);
            using (var db = GetDataContext(ProviderName.MySql))
                func(db);
         }
