@@ -444,8 +444,8 @@ namespace LinqToDB.Mapping
 
 		#region Configuration
 
-		string[] _configurationList;
-		string[]  ConfigurationList
+		private string[] _configurationList;
+		public  string[]  ConfigurationList
 		{
 			get
 			{

@@ -252,30 +252,34 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		class EnumValues
+		{
+			public FieldInfo           Field;
+			public MapValueAttribute[] Attrs;
+		}
+
 		static Expression GetFromEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
 			if (from.IsEnum)
 			{
 				var fromFields = @from.GetFields()
 					.Where (f => (f.Attributes & EnumField) == EnumField)
-					.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
 					.ToList();
 
 				{
 					var toTypeFields = fromFields
-						.Select(f => new { f.f, attr = f.attrs
+						.Select(f => new { f.Field, Attrs = f.Attrs
 							.OrderByDescending(a => a.IsDefault)
 							.ThenBy(a => a.Value == null)
 							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
 						.ToList();
 
-					if (toTypeFields.All(f => f.attr != null))
+					if (toTypeFields.All(f => f.Attrs != null))
 					{
-						var cases =
-							from f in toTypeFields
-							select Expression.SwitchCase(
-								Expression.Constant(f.attr.Value ?? mappingSchema.GetDefaultValue(to), to),
-								Expression.Constant(Enum.Parse(@from, f.f.Name)));
+						var cases = toTypeFields.Select(f => Expression.SwitchCase(
+							Expression.Constant(f.Attrs.Value ?? mappingSchema.GetDefaultValue(to), to),
+							Expression.Constant(Enum.Parse(@from, f.Field.Name))));
 
 						var expr = Expression.Switch(
 							expression,
@@ -287,16 +291,16 @@ namespace LinqToDB.Common
 						return expr;
 					}
 
-					if (toTypeFields.Any(f => f.attr != null))
+					if (toTypeFields.Any(f => f.Attrs != null))
 					{
-						var field = toTypeFields.First(f => f.attr == null);
+						var field = toTypeFields.First(f => f.Attrs == null);
 
 						return Expression.Convert(
 							Expression.Call(
 								_throwLinqToDBException,
 								Expression.Constant(
 									string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
-										from.FullName, field.f.Name, to.FullName))),
+										from.FullName, field.Field.Name, to.FullName))),
 								to);
 					}
 				}
@@ -305,19 +309,89 @@ namespace LinqToDB.Common
 				{
 					var toFields = to.GetFields()
 						.Where (f => (f.Attributes & EnumField) == EnumField)
-						.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
+						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
 						.ToList();
+
+					var types =
+					(
+						from tto in
+							from field in toFields
+							from attr  in field.Attrs ?? Array<MapValueAttribute>.Empty
+							select attr.Value == null ? null : attr.Value.GetType()
+						from tfrom in
+							from field in fromFields
+							from attr  in field.Attrs ?? Array<MapValueAttribute>.Empty
+							select attr.Value == null ? null : attr.Value.GetType()
+						where tto == tfrom
+						select tto
+					).ToList();
+
+					var dic = new Dictionary<EnumValues,EnumValues>();
 
 					foreach (var toField in toFields)
 					{
-						if (toField.attrs == null || toField.attrs.Length == 0)
+						if (toField.Attrs == null || toField.Attrs.Length == 0)
 							return null;
 
-						var toAttr = toField.attrs.First();
+						var toAttr = toField.Attrs.First();
 
-						toAttr = toField.attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
+						toAttr = toField.Attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
 
+						var fromAttrs = fromFields.Where(f => f.Attrs.Any(a =>
+							a.Value == null ? toAttr.Value == null : a.Value.Equals(toAttr.Value))).ToList();
 
+						if (fromAttrs.Count == 0)
+							return null;
+
+						if (fromAttrs.Count > 1)
+						{
+							var cl = mappingSchema.ConfigurationList;
+
+							var fa =
+								from f in fromFields
+								select new {
+									f,
+									a = f.Attrs.First(a => a.Value == toAttr.Value)
+								};
+
+							return null;
+						}
+
+						var prev = dic.Values.FirstOrDefault(a => a.Field == fromAttrs[0].Field);
+
+						if (prev != null)
+						{
+							
+
+							return Expression.Convert(
+								Expression.Call(
+									_throwLinqToDBException,
+									Expression.Constant(
+										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+											from.FullName, fromAttrs[0].Field.Name,
+											to.FullName,
+											prev.Field.Name,
+											toField.Field.Name))),
+									to);
+						}
+
+						dic.Add(toField, fromAttrs[0]);
+					}
+
+					if (dic.Count > 0)
+					{
+						var cases = dic.Select(f => Expression.SwitchCase(
+							Expression.Constant(Enum.Parse(@to,   f.Key.  Field.Name)),
+							Expression.Constant(Enum.Parse(@from, f.Value.Field.Name))));
+
+						var expr = Expression.Switch(
+							expression,
+							Expression.Convert(
+								Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+								to),
+							cases.ToArray());
+
+						return expr;
 					}
 				}
 			}

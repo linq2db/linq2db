@@ -3,7 +3,7 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
-
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -314,6 +314,76 @@ namespace Tests.Common
 		{
 			Assert.AreEqual(10, ConvertTo<int>.From(Enum9.Value1));
 			Assert.AreEqual( 2, ConvertTo<int>.From(Enum9.Value2));
+		}
+
+		enum Enum10
+		{
+			[MapValue(1)]
+			[MapValue(3)]
+			Value1,
+
+			[MapValue("2")]
+			Value2,
+
+			[MapValue('3')]
+			Value3,
+		}
+
+		enum Enum11
+		{
+			[MapValue("2")]
+			Value1,
+
+			[MapValue(1)]
+			Value2,
+
+			[MapValue(1, Configuration = "1")]
+			[MapValue('3')]
+			Value3,
+		}
+
+		[Test]
+		public void ConvertToEnum11()
+		{
+			Assert.AreEqual(Enum11.Value2, ConvertTo<Enum11>.From(Enum10.Value1));
+		}
+
+		[Test]
+		public void ConvertToEnum12()
+		{
+			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>();
+
+			Assert.AreEqual(Enum11.Value3, cf(Enum10.Value1));
+		}
+
+		enum Enum12
+		{
+			[MapValue(1)]
+			[MapValue(3)]
+			Value1,
+
+			[MapValue("2")]
+			[MapValue('3')]
+			Value2,
+		}
+
+		enum Enum13
+		{
+			[MapValue("2")]
+			Value1,
+
+			[MapValue(1)]
+			Value2,
+
+			[MapValue("1", 1)]
+			[MapValue('3')]
+			Value3,
+		}
+
+		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value2' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
+		public void ConvertToEnum13()
+		{
+			Assert.AreEqual(Enum13.Value3, ConvertTo<Enum13>.From(Enum12.Value2));
 		}
 	}
 }
