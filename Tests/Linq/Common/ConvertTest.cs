@@ -327,6 +327,9 @@ namespace Tests.Common
 
 			[MapValue('3')]
 			Value3,
+
+			[MapValue(5)]
+			Value4,
 		}
 
 		enum Enum11
@@ -337,7 +340,8 @@ namespace Tests.Common
 			[MapValue(1)]
 			Value2,
 
-			[MapValue(1, Configuration = "1")]
+			[MapValue("1", 1)]
+			[MapValue("2", 5)]
 			[MapValue('3')]
 			Value3,
 		}
@@ -345,15 +349,29 @@ namespace Tests.Common
 		[Test]
 		public void ConvertToEnum11()
 		{
+			Assert.AreEqual(Enum11.Value1, ConvertTo<Enum11>.From(Enum10.Value2));
 			Assert.AreEqual(Enum11.Value2, ConvertTo<Enum11>.From(Enum10.Value1));
+			Assert.AreEqual(Enum11.Value3, ConvertTo<Enum11>.From(Enum10.Value3));
 		}
 
-		[Test]
+		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.")]
 		public void ConvertToEnum12()
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>();
 
+			Assert.AreEqual(Enum11.Value1, cf(Enum10.Value2));
+			Assert.AreEqual(Enum11.Value2, cf(Enum10.Value1));
 			Assert.AreEqual(Enum11.Value3, cf(Enum10.Value1));
+		}
+
+		[Test]
+		public void ConvertToEnum13()
+		{
+			var cf = new MappingSchema("2").GetConverter<Enum10,Enum11>();
+
+			Assert.AreEqual(Enum11.Value1, cf(Enum10.Value2));
+			Assert.AreEqual(Enum11.Value2, cf(Enum10.Value1));
+			Assert.AreEqual(Enum11.Value3, cf(Enum10.Value4));
 		}
 
 		enum Enum12
@@ -380,8 +398,8 @@ namespace Tests.Common
 			Value3,
 		}
 
-		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value2' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
-		public void ConvertToEnum13()
+		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
+		public void ConvertToEnum14()
 		{
 			Assert.AreEqual(Enum13.Value3, ConvertTo<Enum13>.From(Enum12.Value2));
 		}

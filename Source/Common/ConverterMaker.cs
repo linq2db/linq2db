@@ -327,6 +327,7 @@ namespace LinqToDB.Common
 					).ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
+					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => new { c, i }).ToArray();
 
 					foreach (var toField in toFields)
 					{
@@ -345,24 +346,27 @@ namespace LinqToDB.Common
 
 						if (fromAttrs.Count > 1)
 						{
-							var cl = mappingSchema.ConfigurationList;
-
-							var fa =
-								from f in fromFields
+							var fattrs =
+								from f in fromAttrs
 								select new {
 									f,
-									a = f.Attrs.First(a => a.Value == toAttr.Value)
-								};
+									a = f.Attrs.First(a => a.Value == null ? toAttr.Value == null : a.Value.Equals(toAttr.Value))
+								} into fa
+								from c in cl
+								where fa.a.Configuration == c.c
+								orderby c.i
+								select fa.f;
 
-							return null;
+							fromAttrs = fattrs.Take(1).ToList();
 						}
 
-						var prev = dic.Values.FirstOrDefault(a => a.Field == fromAttrs[0].Field);
+						var prev = dic
+							.Where (a => a.Value.Field == fromAttrs[0].Field)
+							.Select(pair => new { To = pair.Key, From = pair.Value })
+							.FirstOrDefault();
 
 						if (prev != null)
 						{
-							
-
 							return Expression.Convert(
 								Expression.Call(
 									_throwLinqToDBException,
@@ -370,7 +374,7 @@ namespace LinqToDB.Common
 										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
-											prev.Field.Name,
+											prev.To.Field.Name,
 											toField.Field.Name))),
 									to);
 						}
