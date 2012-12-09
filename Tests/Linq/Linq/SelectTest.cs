@@ -537,5 +537,27 @@ namespace Tests.Linq
 				p.Arr.Single();
 			}
 		}
+
+		[TableName("Parent")]
+		public class TestParent
+		{
+			[MapField("ParentID")] public int  ParentID_;
+			[MapField("Value1")]   public int? Value1_;
+		}
+
+		[Test]
+		public void SelectField()
+		{
+			using (var db = new TestDbManager())
+			{
+				var q =
+					from p in db.GetTable<TestParent>()
+					select p.Value1_;
+
+				var sql = q.ToString();
+
+				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
+			}
+		}
 	}
 }

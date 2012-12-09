@@ -235,7 +235,7 @@ namespace LinqToDB.Linq.Builder
 							select c.ObjectMapper
 						).FirstOrDefault();
 
-						return om != null && om.Associations.All(a => a.MemberAccessor.MemberInfo != me.Member) && om[me.Member.Name] == null;
+						return om != null && om.Associations.All(a => a.MemberAccessor.MemberInfo != me.Member) && om[me.Member.Name, true] == null;
 					}
 			}
 

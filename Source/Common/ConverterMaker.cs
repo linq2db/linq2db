@@ -8,7 +8,6 @@ using System.Text;
 
 namespace LinqToDB.Common
 {
-	using Linq;
 	using Expressions;
 	using Extensions;
 	using Mapping;
@@ -311,20 +310,6 @@ namespace LinqToDB.Common
 						.Where (f => (f.Attributes & EnumField) == EnumField)
 						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
 						.ToList();
-
-					var types =
-					(
-						from tto in
-							from field in toFields
-							from attr  in field.Attrs ?? Array<MapValueAttribute>.Empty
-							select attr.Value == null ? null : attr.Value.GetType()
-						from tfrom in
-							from field in fromFields
-							from attr  in field.Attrs ?? Array<MapValueAttribute>.Empty
-							select attr.Value == null ? null : attr.Value.GetType()
-						where tto == tfrom
-						select tto
-					).ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
 					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => new { c, i }).ToArray();
