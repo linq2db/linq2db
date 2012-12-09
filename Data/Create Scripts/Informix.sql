@@ -81,3 +81,12 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint
 )
 GO
+
+DROP TABLE TestIdentity
+GO
+
+CREATE TABLE TestIdentity (
+	ID SERIAL NOT NULL,
+	PRIMARY KEY(ID)
+)
+GO

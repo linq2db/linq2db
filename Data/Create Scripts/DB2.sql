@@ -79,3 +79,11 @@ CREATE TABLE "LinqDataTypes"
 	"BigIntValue"    bigint     NULL
 )
 GO
+
+DROP TABLE "TestIdentity"
+GO
+
+CREATE TABLE "TestIdentity" (
+	"ID"   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL
+)
+GO

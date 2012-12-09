@@ -467,3 +467,12 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
+
+DROP TABLE TestIdentity
+GO
+
+CREATE TABLE TestIdentity (
+	ID int AUTO_INCREMENT NOT NULL,
+	CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED (ID)
+)
+GO

@@ -151,3 +151,12 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
+
+
+DROP TABLE TestIdentity
+GO
+
+CREATE TABLE TestIdentity (
+	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY
+)
+GO

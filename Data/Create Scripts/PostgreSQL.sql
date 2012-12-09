@@ -165,3 +165,18 @@ CREATE TABLE "SequenceTest3"
 	"Value" VARCHAR(50)
 )
 GO
+
+
+DROP TABLE "TestIdentity"
+GO
+
+DROP SEQUENCE TestIdentitySeq
+GO
+
+CREATE SEQUENCE TestIdentitySeq INCREMENT 1 START 1
+GO
+
+CREATE TABLE "TestIdentity" (
+	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('TestIdentitySeq')
+)
+GO
