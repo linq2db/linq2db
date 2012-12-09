@@ -170,7 +170,7 @@ namespace LinqToDB.Reflection.Extension
 				{
 					var names = assembly.GetManifestResourceNames();
 
-					// Prepend file anme with a dot to avoid partial name matching.
+					// Prepend file name with a dot to avoid partial name matching.
 					//
 					xmlFile = "." + xmlFile;
 

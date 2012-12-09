@@ -38,5 +38,21 @@ namespace Tests.Linq
 				tran.CommitTransaction();
 			}
 		}
+
+
+		[Test]
+		public void TestContextToString()
+		{
+			using (var ctx = new DataContext(ProviderName.MsSql2008))
+			{
+				Console.WriteLine(ctx.GetTable<Person>().ToString());
+
+				var q =
+					from s in ctx.GetTable<Person>()
+					select s.FirstName;
+
+				Console.WriteLine(q.ToString());
+			}
+		}
 	}
 }

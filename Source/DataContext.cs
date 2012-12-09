@@ -25,11 +25,11 @@ namespace LinqToDB
 			MappingSchema = DataProvider.MappingSchema ?? Map.DefaultSchema;
 		}
 
-		public string           ConfigurationString { get; private set; }
+		public string              ConfigurationString { get; private set; }
 		public DataProviderBaseOld DataProvider        { get; private set; }
-		public string           ContextID           { get; set;         }
+		public string              ContextID           { get; set;         }
 		public MappingSchemaOld    MappingSchema       { get; set;         }
-		public string           LastQuery           { get; set;         }
+		public string              LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
 		public  bool  KeepConnectionAlive
@@ -126,70 +126,15 @@ namespace LinqToDB
 
 		string IDataContext.GetSqlText(object query)
 		{
-			var q = (IQueryContext)query;
+			if (_dbManager != null)
+				return ((IDataContext)_dbManager).GetSqlText(query);
 
-			var sqlProvider = DataProvider.CreateSqlProvider();
+			var ctx = GetDBManager() as IDataContext;
+			var str = ctx.GetSqlText(query);
 
-			var sb = new StringBuilder();
+			ReleaseQuery();
 
-			sb.Append("-- ").Append(ConfigurationString);
-
-			if (ConfigurationString != DataProvider.Name)
-				sb.Append(' ').Append(DataProvider.Name);
-
-			if (DataProvider.Name != sqlProvider.Name)
-				sb.Append(' ').Append(sqlProvider.Name);
-
-			sb.AppendLine();
-
-			if (q.SqlQuery.Parameters != null && q.SqlQuery.Parameters.Count > 0)
-			{
-				foreach (var p in q.SqlQuery.Parameters)
-					sb
-						.Append("-- DECLARE ")
-						.Append(p.Name)
-						.Append(' ')
-						.Append(p.Value == null ? p.SystemType.ToString() : p.Value.GetType().Name)
-						.AppendLine();
-
-				sb.AppendLine();
-
-				foreach (var p in q.SqlQuery.Parameters)
-				{
-					var value = p.Value;
-
-					if (value is string || value is char)
-						value = "'" + value.ToString().Replace("'", "''") + "'";
-
-					sb
-						.Append("-- SET ")
-						.Append(p.Name)
-						.Append(" = ")
-						.Append(value)
-						.AppendLine();
-				}
-
-				sb.AppendLine();
-			}
-
-			var cc       = sqlProvider.CommandCount(q.SqlQuery);
-			var commands = new string[cc];
-
-			for (var i = 0; i < cc; i++)
-			{
-				sb.Length = 0;
-
-				sqlProvider.BuildSql(i, q.SqlQuery, sb, 0, 0, false);
-				commands[i] = sb.ToString();
-			}
-
-			if (!q.SqlQuery.IsParameterDependent)
-				q.Context = commands;
-
-			foreach (var command in commands)
-				sb.AppendLine(command);
-
-			return sb.ToString();
+			return str;
 		}
 
 		DataContext(int n) {}
