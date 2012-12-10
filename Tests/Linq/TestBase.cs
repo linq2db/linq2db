@@ -93,7 +93,7 @@ namespace Tests
 			};
 		}
 
-		const  int StartIP = 12354;
+		const  int StartIP = 22654;
 		static int _lastIP = StartIP;
 
 		static int GetIP(string config)
