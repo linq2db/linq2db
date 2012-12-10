@@ -294,5 +294,10 @@ namespace LinqToDB.SqlProvider
 
 			sb.AppendLine();
 		}
+
+		protected override void BuildEmptyInsert(StringBuilder sb)
+		{
+			sb.AppendLine("() VALUES ()");
+		}
 	}
 }

@@ -207,5 +207,10 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildInsertOrUpdateQueryAsUpdateInsert(sb);
 		}
+
+		protected override void BuildEmptyInsert(StringBuilder sb)
+		{
+			sb.AppendLine("VALUES ()");
+		}
 	}
 }

@@ -361,42 +361,32 @@ namespace LinqToDB.SqlProvider
 			BuildInsertClause(sb, "INSERT INTO ", true);
 		}
 
+		protected virtual void BuildEmptyInsert(StringBuilder sb)
+		{
+			sb.AppendLine("DEFAULT VALUES");
+		}
+
 		protected virtual void BuildInsertClause(StringBuilder sb, string insertText, bool appendTableName)
 		{
 			AppendIndent(sb).Append(insertText);
+
 			if (appendTableName)
 				BuildPhysicalTable(sb, SqlQuery.Insert.Into, null);
-			sb.AppendLine(" ");
 
-			AppendIndent(sb).AppendLine("(");
-
-			_indent++;
-
-			var first = true;
-
-			foreach (var expr in _sqlQuery.Insert.Items)
+			if (_sqlQuery.Insert.Items.Count == 0)
 			{
-				if (!first)
-					sb.Append(',').AppendLine();
-				first = false;
-
-				AppendIndent(sb);
-				BuildExpression(sb, expr.Column, false, true);
+				sb.Append(' ');
+				BuildEmptyInsert(sb);
 			}
-
-			_indent--;
-
-			sb.AppendLine();
-			AppendIndent(sb).AppendLine(")");
-
-			if (_sqlQuery.QueryType == QueryType.InsertOrUpdate || _sqlQuery.From.Tables.Count == 0)
+			else
 			{
-				AppendIndent(sb).AppendLine("VALUES");
+				sb.AppendLine();
+
 				AppendIndent(sb).AppendLine("(");
 
 				_indent++;
 
-				first = true;
+				var first = true;
 
 				foreach (var expr in _sqlQuery.Insert.Items)
 				{
@@ -405,13 +395,38 @@ namespace LinqToDB.SqlProvider
 					first = false;
 
 					AppendIndent(sb);
-					BuildExpression(sb, expr.Expression);
+					BuildExpression(sb, expr.Column, false, true);
 				}
 
 				_indent--;
 
 				sb.AppendLine();
 				AppendIndent(sb).AppendLine(")");
+
+				if (_sqlQuery.QueryType == QueryType.InsertOrUpdate || _sqlQuery.From.Tables.Count == 0)
+				{
+					AppendIndent(sb).AppendLine("VALUES");
+					AppendIndent(sb).AppendLine("(");
+
+					_indent++;
+
+					first = true;
+
+					foreach (var expr in _sqlQuery.Insert.Items)
+					{
+						if (!first)
+							sb.Append(',').AppendLine();
+						first = false;
+
+						AppendIndent(sb);
+						BuildExpression(sb, expr.Expression);
+					}
+
+					_indent--;
+
+					sb.AppendLine();
+					AppendIndent(sb).AppendLine(")");
+				}
 			}
 		}
 

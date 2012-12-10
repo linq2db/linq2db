@@ -50,7 +50,7 @@ namespace LinqToDB.Data
 			GetParameters(queryContext, query);
 
 			if (TraceSwitch.TraceInfo)
-				WriteTraceLine(((IDataContext)this).GetSqlText(query), TraceSwitch.DisplayName);
+				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
 
 			return query;
 		}

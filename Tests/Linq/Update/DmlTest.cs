@@ -1462,5 +1462,27 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Test]
+		public void InsertSingleIdentity([DataContexts(ProviderName.Informix, ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.BeginTransaction();
+
+				try
+				{
+					db.TestIdentity.Delete();
+
+					var id = db.TestIdentity.InsertWithIdentity(() => new TestIdentity {});
+
+					Assert.NotNull(id);
+				}
+				finally
+				{
+					db.TestIdentity.Delete();
+				}
+			}
+		}
 	}
 }

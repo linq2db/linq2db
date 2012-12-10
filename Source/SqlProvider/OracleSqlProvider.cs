@@ -354,5 +354,15 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildInsertOrUpdateQueryAsMerge(sb, "FROM SYS.DUAL");
 		}
+
+		protected override void BuildEmptyInsert(StringBuilder sb)
+		{
+			sb.Append("VALUES ");
+
+			foreach (var col in SqlQuery.Insert.Into.Fields)
+				sb.Append("(DEFAULT)");
+
+			sb.AppendLine();
+		}
 	}
 }

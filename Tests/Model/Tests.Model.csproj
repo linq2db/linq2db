@@ -141,6 +141,7 @@
     <Compile Include="ParentChild.cs" />
     <Compile Include="Patient.cs" />
     <Compile Include="Person.cs" />
+    <Compile Include="TestIdentity.cs" />
     <Compile Include="TypeValue.cs" />
     <Compile Include="TestDbManager.cs" />
     <Compile Include="TestServiceModelDataContext.cs" />

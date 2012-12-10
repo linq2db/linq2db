@@ -300,5 +300,15 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildInsertOrUpdateQueryAsMerge(sb, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
+
+		protected override void BuildEmptyInsert(StringBuilder sb)
+		{
+			sb.Append("VALUES ");
+
+			foreach (var col in SqlQuery.Insert.Into.Fields)
+				sb.Append("(DEFAULT)");
+
+			sb.AppendLine();
+		}
 	}
 }
