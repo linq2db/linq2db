@@ -13,9 +13,9 @@ namespace Tests.ProviderSpecific
 	public class Firebird : TestBase
 	{
 		[Test]
-		public void SequenceInsert()
+		public void SequenceInsert([IncludeDataContexts(ProviderName.Firebird)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Firebird))
+			using (var db = new TestDbManager(context))
 			{
 				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new FirebirdSpecific.SequenceTest { Value = "SeqValue" });
@@ -29,9 +29,9 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity()
+		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Firebird))
+			using (var db = new TestDbManager(context))
 			{
 				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 

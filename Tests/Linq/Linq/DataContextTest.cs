@@ -10,12 +10,12 @@ namespace Tests.Linq
 	using Model;
 
 	[TestFixture]
-	public class DataContextTest
+	public class DataContextTest : TestBase
 	{
 		[Test]
-		public void TestContext()
+		public void TestContext([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			var ctx = new DataContext(ProviderName.SqlServer2008);
+			var ctx = new DataContext(context);
 
 			ctx.GetTable<Person>().ToList();
 
@@ -41,9 +41,9 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestContextToString()
+		public void TestContextToString([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var ctx = new DataContext(ProviderName.SqlServer2008))
+			using (var ctx = new DataContext(context))
 			{
 				Console.WriteLine(ctx.GetTable<Person>().ToString());
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.SqlProvider;
 
@@ -151,77 +152,73 @@ namespace Tests.Linq
         #endregion
 
         [Test]
-        public void TestComplexExpression()
+        public void TestComplexExpression([IncludeDataContexts(ProviderName.MySql)] string context)
         {
             // failed with LinqToDB.Data.Linq.LinqException : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}' 
             //   cannot be converted to SQL.
-            ForMySqlProvider(
-                db =>
-                {
-                    var source = from child in db.GrandChild
-                                 select
-                                     new
-                                     {
-                                              NullableId = new NullableObjectId { Value = child.ChildID }
-                                     };
+            using (var db = new TestDbManager(context))
+            {
+                var source = from child in db.GrandChild
+                                select
+                                    new
+                                    {
+                                            NullableId = new NullableObjectId { Value = child.ChildID }
+                                    };
 
-                    var query = from e in source where e.NullableId == 1 select e;
+                var query = from e in source where e.NullableId == 1 select e;
 
-                    var result = query.ToArray();
-                    Assert.That(result, Is.Not.Null);
-                });
+                var result = query.ToArray();
+                Assert.That(result, Is.Not.Null);
+            }
         }
 
 
         [Test]
-        public void TestJoin()
+        public void TestJoin([IncludeDataContexts(ProviderName.MySql)] string context)
         {
             // failed with System.ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than 
             //   the size of the collection.
             // Parameter name: index
-            ForMySqlProvider(
-                db =>
-                {
-                    var source = from p1 in db.Person
-                                 join p2 in db.Person on p1.ID equals p2.ID
-                                 select
-                                     new { ID1 = new ObjectId { Value = p1.ID }, FirstName2 = p2.FirstName, };
+            using (var db = new TestDbManager(context))
+            {
+                var source = from p1 in db.Person
+                                join p2 in db.Person on p1.ID equals p2.ID
+                                select
+                                    new { ID1 = new ObjectId { Value = p1.ID }, FirstName2 = p2.FirstName, };
 
-                    var query = from p1 in source select p1.ID1.Value;
+                var query = from p1 in source select p1.ID1.Value;
 
-                    var result = query.ToArray();
-                    Assert.That(result, Is.Not.Null);
-                });
+                var result = query.ToArray();
+                Assert.That(result, Is.Not.Null);
+            }
         }
 
         [Test]
-        public void TestNullableExpression()
+        public void TestNullableExpression([IncludeDataContexts(ProviderName.MySql)] string context)
         {
             // failed with System.NullReferenceException : Object reference not set to an instance of an object.
-            ForMySqlProvider(
-                db =>
-                {
-                    var source = from obj in db.Person select new { Id = obj.ID, };
+            using (var db = new TestDbManager(context))
+            {
+                var source = from obj in db.Person select new { Id = obj.ID, };
 
-                    // fails for bool?, double?, int32?, int64?, string
-                    // works for byte?, int16?, DateTime? 
-                    double? @p1 = null;
+                // fails for bool?, double?, int32?, int64?, string
+                // works for byte?, int16?, DateTime? 
+                double? @p1 = null;
 
-                    var r = from c in source where @p1 != null select c;
+                var r = from c in source where @p1 != null select c;
 
-                    Assert.That(r.ToArray(), Is.Not.Null);
-                });
+                Assert.That(r.ToArray(), Is.Not.Null);
+            }
         }
 
         [Test]
-        public void TestLookupWithInterfaceProperty()
+        public void TestLookupWithInterfaceProperty([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                    {
-                        var r = GetById<PersonWithId>(db, 1).SingleOrDefault();
-                        Assert.That(r, Is.Not.Null);
-                    });
+            using (var db = new TestDbManager(context))
+            {
+                var r = GetById<PersonWithId>(db, 1).SingleOrDefault();
+                Assert.That(r, Is.Not.Null);
+            }
         }
 
         #region ObjectExt
@@ -239,18 +236,18 @@ namespace Tests.Linq
         #endregion
 
         [Test]
-        public void TestForObjectExt()
+        public void TestForObjectExt([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(db =>
-                {
-                    var r = from p in db.Parent
-                                select new ParentEx
-                                {
-                                    Id = new ObjectId { Value = p.ParentID },
-                                    Value1 = p.Value1,
-                                };
-                    Assert.That(r.ToArray(), Is.Not.Null);
-                });
+            using (var db = new TestDbManager(context))
+            {
+                var r = from p in db.Parent
+                            select new ParentEx
+                            {
+                                Id = new ObjectId { Value = p.ParentID },
+                                Value1 = p.Value1,
+                            };
+                Assert.That(r.ToArray(), Is.Not.Null);
+            }
         }
 
         private void getData(ITestDataContext db, IEnumerable<int?> d, IEnumerable<int?> compareWith)
@@ -266,115 +263,111 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestForGroupBy()
+        public void TestForGroupBy([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(db =>
-                {
-                    /* no error in first call */
-                    getData(db, new List<int?> { 2 }, new List<int?> { 211, 212, 221, 222 });
+            using (var db = new TestDbManager(context))
+            {
+                /* no error in first call */
+                getData(db, new List<int?> { 2 }, new List<int?> { 211, 212, 221, 222 });
 
-                    /* error in second and more calls */
-                    /*
-                     * GROUP BY select clause is correct
-                        SELECT x.ChildID FROM GrandChild x WHERE x.ParentID IN (3) GROUP BY x.ChildID
+                /* error in second and more calls */
+                /*
+                    * GROUP BY select clause is correct
+                    SELECT x.ChildID FROM GrandChild x WHERE x.ParentID IN (3) GROUP BY x.ChildID
 
-                     * But next SELECT clause contains "x.ParentID IN (2)" instead "x.ParentID IN (3)"
-                        -- DECLARE ?p1 Int32
-                        -- SET ?p1 = 31
-                        SELECT x.GrandChildID FROM GrandChild x WHERE x.ParentID IN (2) AND x.ChildID = ?p1
-                     */
-                    getData(db, new List<int?> { 3 }, new List<int?> { 311, 312, 313, 321, 333 });
+                    * But next SELECT clause contains "x.ParentID IN (2)" instead "x.ParentID IN (3)"
+                    -- DECLARE ?p1 Int32
+                    -- SET ?p1 = 31
+                    SELECT x.GrandChildID FROM GrandChild x WHERE x.ParentID IN (2) AND x.ChildID = ?p1
+                    */
+                getData(db, new List<int?> { 3 }, new List<int?> { 311, 312, 313, 321, 333 });
 
-                });
+            }
         }
 
         [Test]
-        public void TestLinqMax()
+        public void TestLinqMax([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                    {
-                        Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
-                        Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
-                        Assert.Catch<InvalidOperationException>(
-                            () => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
-                        Assert.Catch<InvalidOperationException>(
-                            () => db.Patient.Where(x => x.PersonID < 0).Max(x => x.PersonID));
-                    });
+            using (var db = new TestDbManager(context))
+            {
+                Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
+                Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
+                Assert.Catch<InvalidOperationException>(
+                    () => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
+                Assert.Catch<InvalidOperationException>(
+                    () => db.Patient.Where(x => x.PersonID < 0).Max(x => x.PersonID));
+            }
         }
 
         [Test]
-        public void TestConvertFunction()
+        public void TestConvertFunction([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                {
-                    var ds = new IdlPatientSource(db);
-                    var r1 = ds.Patients().ToList();
-                    var r2 = ds.Persons().ToList();
+            using (var db = new TestDbManager(context))
+            {
+                var ds = new IdlPatientSource(db);
+                var r1 = ds.Patients().ToList();
+                var r2 = ds.Persons().ToList();
 
-                    Assert.That(r1, Is.Not.Empty);
-                    Assert.That(r2, Is.Not.Empty);
+                Assert.That(r1, Is.Not.Empty);
+                Assert.That(r2, Is.Not.Empty);
 
-                    var r3 = ds.Patients().ToIdlPatientEx(ds);
-                    var r4 = r3.ToList();
-                    Assert.That(r4, Is.Not.Empty);
-                });
+                var r3 = ds.Patients().ToIdlPatientEx(ds);
+                var r4 = r3.ToList();
+                Assert.That(r4, Is.Not.Empty);
+            }
         }
 
         [Test]
-        public void TestJoinOrder()
+        public void TestJoinOrder([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                    {
-                        var source = new IdlPatientSource(db);
+            using (var db = new TestDbManager(context))
+            {
+                var source = new IdlPatientSource(db);
 
-                        // Success when use result from second JOIN
-                        var query1 = from p1 in source.GrandChilds()
-                                     join p2 in source.Persons() on p1.ParentID equals p2.Id
-                                     join p3 in source.Persons() on p1.ChildID equals p3.Id
-                                     select
-                                         new
-                                             {
-                                                 p1.ChildID, 
-                                                 p1.ParentID,
-                                                 //Parent = p2,
-                                                 Child = p3,
-                                             };
-                        var data1 = query1.ToList();
-
-                        // Fail when use result from first JOIN
-                        var query2 = from p1 in source.GrandChilds()
-                                    join p2 in source.Persons() on p1.ParentID equals p2.Id
-                                    join p3 in source.Persons() on p1.ChildID equals p3.Id
-                                    select
-                                        new
+                // Success when use result from second JOIN
+                var query1 = from p1 in source.GrandChilds()
+                                join p2 in source.Persons() on p1.ParentID equals p2.Id
+                                join p3 in source.Persons() on p1.ChildID equals p3.Id
+                                select
+                                    new
                                         {
-                                            p1.ChildID,
+                                            p1.ChildID, 
                                             p1.ParentID,
-                                            Parent = p2,
-                                            //Child = p3,
+                                            //Parent = p2,
+                                            Child = p3,
                                         };
-                        var data2 = query2.ToList();
-                    });
+                var data1 = query1.ToList();
+
+                // Fail when use result from first JOIN
+                var query2 = from p1 in source.GrandChilds()
+                            join p2 in source.Persons() on p1.ParentID equals p2.Id
+                            join p3 in source.Persons() on p1.ChildID equals p3.Id
+                            select
+                                new
+                                {
+                                    p1.ChildID,
+                                    p1.ParentID,
+                                    Parent = p2,
+                                    //Child = p3,
+                                };
+                var data2 = query2.ToList();
+            }
         }
 
         [Test]
-        public void TestDistinctWithGroupBy()
+        public void TestDistinctWithGroupBy([IncludeDataContexts(ProviderName.MySql, ProviderName.SQLite)] string context)
         {
-            ForIdlProviders(
-                db =>
-                    {
-                        var source = db.Parent.ToList();
-                        // Ensure that the data source has duplicate values.
-                        Assert.That(source.GroupBy(x => x.Value1, (key, x) => x.Count()).Any(x => x > 1), Is.True);
-                        // Success when query is executed in memory
-                        TestDistinctWithGroupBy(source.AsQueryable());
+            using (var db = new TestDbManager(context))
+            {
+                var source = db.Parent.ToList();
+                // Ensure that the data source has duplicate values.
+                Assert.That(source.GroupBy(x => x.Value1, (key, x) => x.Count()).Any(x => x > 1), Is.True);
+                // Success when query is executed in memory
+                TestDistinctWithGroupBy(source.AsQueryable());
 
-                        // Failed when query is executed on sql server
-                        TestDistinctWithGroupBy(db.Parent);
-                    });
+                // Failed when query is executed on sql server
+                TestDistinctWithGroupBy(db.Parent);
+            }
         }
 
         private static void TestDistinctWithGroupBy(IQueryable<Parent> source)
@@ -395,24 +388,10 @@ namespace Tests.Linq
             return db.GetTable<T>().Where(obj => obj.ID == id);
         }
 
-        private void ForMySqlProvider(Action<ITestDataContext> func)
-        {
-           using (var db = GetDataContext(ProviderName.MySql))
-               func(db);
-        }
-
-        private void ForIdlProviders(Action<ITestDataContext> func)
-        {
-           using (var db = GetDataContext(ProviderName.SQLite))
-               func(db);
-           using (var db = GetDataContext(ProviderName.MySql))
-               func(db);
-        }
-
         [Test]
-        public void ImplicitCastTest()
+        public void ImplicitCastTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(db =>
+            using (var db = new TestDbManager(context))
             {
                 var people =
                     from p in db.Person
@@ -426,96 +405,91 @@ namespace Tests.Linq
                 var sql2 = (from p in people where p.Id.Value == 1 select p).ToString();
 
                 Assert.That(sql1, Is.EqualTo(sql2));
-            });
+            }
         }
 
         [Test]
-        public void ListvsArrayTest()
+        public void ListvsArrayTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                {
-                    var st = "John";
+            using (var db = new TestDbManager(context))
+            {
+                var st = "John";
 
-                    //SQL - x.FirstName IN ('John')
-                    var queryList = from x in db.Person
-                                    where new List<string> { st }.Contains(x.FirstName)
+                //SQL - x.FirstName IN ('John')
+                var queryList = from x in db.Person
+                                where new List<string> { st }.Contains(x.FirstName)
+                                select x.ID;
+
+                //SQL - x.FirstName IN ('J', 'o', 'h', 'n')
+                var queryArray = from x in db.Person
+                                    where new[] { st }.Contains(x.FirstName)
                                     select x.ID;
 
-                    //SQL - x.FirstName IN ('J', 'o', 'h', 'n')
-                    var queryArray = from x in db.Person
-                                     where new[] { st }.Contains(x.FirstName)
-                                     select x.ID;
-
-                    Assert.That(queryList.ToList(), Is.EqualTo(queryArray.ToList()));
-                });
+                Assert.That(queryList.ToList(), Is.EqualTo(queryArray.ToList()));
+            }
         }
 
         [Test]
-        public void ConcatJoinOrderByTest()
+        public void ConcatJoinOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                {
+            using (var db = new TestDbManager(context))
+            {
+                var query = from y in
+                                ((from pat in db.Patient
+                                    where pat.Diagnosis == "a"
+                                    select pat)
+                                .Concat
+                                (from pat in db.Patient
+                                    where pat.Diagnosis == "b"
+                                    select pat))
+                            join person in db.Person on y.PersonID equals person.ID
+                            orderby person.ID
+                            select new { Id = person.ID, Id2 = y.PersonID };
 
-                    var query = from y in
-                                    ((from pat in db.Patient
-                                      where pat.Diagnosis == "a"
-                                      select pat)
-                                    .Concat
-                                    (from pat in db.Patient
-                                     where pat.Diagnosis == "b"
-                                     select pat))
-                                join person in db.Person on y.PersonID equals person.ID
-                                orderby person.ID
-                                select new { Id = person.ID, Id2 = y.PersonID };
+                Assert.That(query.ToList(), Is.Not.Null);
 
-                    Assert.That(query.ToList(), Is.Not.Null);
-
-                });
+            }
         }
 
         [Test]
-        public void TestIsContainedInArrayOfEnumValues()
+        public void TestIsContainedInArrayOfEnumValues([IncludeDataContexts(ProviderName.MySql)] string context)
         {
             var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
 
-            ForMySqlProvider(
-                db =>
-                    {
-                        var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
-                            .ToList();
+            using (var db = new TestDbManager(context))
+            {
+                var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
+                    .ToList();
 
-                        Assert.That(result, Is.Not.Null);
-                    });
+                Assert.That(result, Is.Not.Null);
+            }
         }
 
         [Test]
-        public void TestQueryWithInterface()
+        public void TestQueryWithInterface([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                    {
-                        var persons =
-                            from x in db.Person
-                            select new PersonWithObjectId
-                                {
-                                    Id = new ObjectId { Value = x.ID },
-                                    FistName = x.FirstName,
-                                };
+            using (var db = new TestDbManager(context))
+            {
+                var persons =
+                    from x in db.Person
+                    select new PersonWithObjectId
+                        {
+                            Id = new ObjectId { Value = x.ID },
+                            FistName = x.FirstName,
+                        };
 
-                        // this works
-                        var r1 = FilterSourceByIdDefinedInBaseClass(persons, 5).ToArray();
-                        Assert.That(r1, Is.Not.Null);
+                // this works
+                var r1 = FilterSourceByIdDefinedInBaseClass(persons, 5).ToArray();
+                Assert.That(r1, Is.Not.Null);
 
-                        // and this works
-                        var r2 = FilterSourceByIdDefinedInInterface1(persons, 5).ToArray();
-                        Assert.That(r2, Is.Not.Null);
+                // and this works
+                var r2 = FilterSourceByIdDefinedInInterface1(persons, 5).ToArray();
+                Assert.That(r2, Is.Not.Null);
 
-                        // but this fails
-                        var r3 = FilterSourceByIdDefinedInInterface2(persons, 5).ToArray();
-                        Assert.That(r3, Is.Not.Null);
-                    });
+                // but this fails
+                var r3 = FilterSourceByIdDefinedInInterface2(persons, 5).ToArray();
+                Assert.That(r3, Is.Not.Null);
+            }
         }
 
         private IQueryable<T> FilterSourceByIdDefinedInBaseClass<T>(IQueryable<T> source, int id) where T : WithObjectIdBase
@@ -534,42 +508,40 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestComparePropertyOfEnumTypeToVaribleInSubquery()
+        public void TestComparePropertyOfEnumTypeToVaribleInSubquery([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                    {
-                        var gender = Gender.Other;
-                        var q = from x in db.Patient
-                                join y in db.Person.Where(x => x.Gender == gender) on x.PersonID equals y.ID
-                                select x;
+            using (var db = new TestDbManager(context))
+            {
+                var gender = Gender.Other;
+                var q = from x in db.Patient
+                        join y in db.Person.Where(x => x.Gender == gender) on x.PersonID equals y.ID
+                        select x;
 
-                        var r = q.ToList();
-                        Assert.That(r, Is.Not.Null);
-                    });
+                var r = q.ToList();
+                Assert.That(r, Is.Not.Null);
+            }
         }
 
         [Test]
-        public void ConcatOrderByTest()
+        public void ConcatOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db =>
-                {
-                    var q = from p in db.Person
-                             where p.ID < 0
-                             select new { Rank = 0, FirstName = (string)null, LastName = (string)null };
-                    var q2 =
-                        q.Concat(
-                            from p in db.Person
-                            select new { Rank = p.ID, p.FirstName, p.LastName });
+            using (var db = new TestDbManager(context))
+            {
+                var q = from p in db.Person
+                            where p.ID < 0
+                            select new { Rank = 0, FirstName = (string)null, LastName = (string)null };
+                var q2 =
+                    q.Concat(
+                        from p in db.Person
+                        select new { Rank = p.ID, p.FirstName, p.LastName });
 
-                    var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
+                var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
                     
-                    var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.InvariantCultureIgnoreCase);
-                    var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
+                var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.InvariantCultureIgnoreCase);
+                var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
                  
-                    Assert.That(rqp.Count(),  Is.EqualTo(3));
-                });
+                Assert.That(rqp.Count(),  Is.EqualTo(3));
+            }
         }
 
         #region GenericQuery classes
@@ -631,31 +603,30 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMono01()
+        public void TestMono01([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                 db =>
-                 {
-                     var ds = new IdlPatientSource(db);
-                     var t = "A";
-                     var query =
-                         (from y in ds.Persons()
-                          select y.Name)
-                             .Concat(
-                                 from x in ds.Persons()
-                                 where x.Name == t
-                                 select x.Name
-                             );
+            using (var db = new TestDbManager(context))
+            {
+                var ds = new IdlPatientSource(db);
+                var t = "A";
+                var query =
+                    (from y in ds.Persons()
+                    select y.Name)
+                        .Concat(
+                            from x in ds.Persons()
+                            where x.Name == t
+                            select x.Name
+                        );
 
-                     Assert.That(query.ToList(), Is.Not.Null);
-                 });
+                Assert.That(query.ToList(), Is.Not.Null);
+            }
         }
 
         [Test]
-        public void TestMono03()
+        public void TestMono03([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-                db => Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null));
+            using (var db = new TestDbManager(context))
+                Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
         }
 
         public static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
@@ -668,9 +639,9 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMonoConcat()
+        public void TestMonoConcat([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(db =>
+            using (var db = new TestDbManager(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t  = "A";
@@ -679,14 +650,13 @@ namespace Tests.Linq
                     from x in ds.Persons() where x.Name == t select x.Name);
 
                 Assert.That(query.ToList(), Is.Not.Null);
-            });
+            }
         }
 
         [Test]
-        public void TestMonoConcat2()
+        public void TestMonoConcat2([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            ForMySqlProvider(
-            db =>
+            using (var db = new TestDbManager(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t = "A";
@@ -695,10 +665,9 @@ namespace Tests.Linq
                 from x in ds.Persons() where x.Name == t select x.Name);
 
                 Assert.That(query1.ToList(), Is.Not.Null);
-            });
+            }
 
-            ForMySqlProvider(
-            db =>
+            using (var db = new TestDbManager(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t = "A";
@@ -707,7 +676,7 @@ namespace Tests.Linq
                 from x in ds.Persons() where x.Name == t select x.Name);
 
                 Assert.That(query2.ToList(), Is.Not.Null);
-            });
+            }
         }
 
         #endregion
