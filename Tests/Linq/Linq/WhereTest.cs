@@ -893,7 +893,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectNestedCalculatedTest()
+		public void SelectNestedCalculatedTest([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(

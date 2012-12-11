@@ -10,12 +10,12 @@ using LinqToDB.DataProvider;
 namespace Tests.Data
 {
 	[TestFixture]
-	public class DataConnectionTest
+	public class DataConnectionTest : TestBase
 	{
 		[Test]
-		public void Test1()
+		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(new SqlServerDataProvider(), "Server=.;Database=BLToolkitData;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(new SqlServerDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);

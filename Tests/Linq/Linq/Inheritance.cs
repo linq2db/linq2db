@@ -141,7 +141,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastAsTest1()
+		public void TypeCastAsTest1([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -154,7 +154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastAsTest11()
+		public void TypeCastAsTest11([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -167,7 +167,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastAsTest2()
+		public void TypeCastAsTest2([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -180,7 +180,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FirstOrDefault()
+		public void FirstOrDefault([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				Assert.AreEqual(
@@ -263,7 +263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceNavigation()
+		public void ReferenceNavigation([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -289,7 +289,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastIsChildConditional1()
+		public void TypeCastIsChildConditional1([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastIsChildConditional2()
+		public void TypeCastIsChildConditional2([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -322,7 +322,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TypeCastIsChild()
+		public void TypeCastIsChild([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -368,7 +368,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test15()
+		public void Test15([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -380,7 +380,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test16()
+		public void Test16([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{

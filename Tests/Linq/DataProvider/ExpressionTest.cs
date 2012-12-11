@@ -9,12 +9,12 @@ using LinqToDB.DataProvider;
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class ExpressionTest
+	public class ExpressionTest : TestBase
 	{
 		[Test]
-		public void Test1()
+		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(new SqlServerDataProvider(), "Server=.;Database=BLToolkitData;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(new SqlServerDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				conn.Command.CommandText = "SELECT 1";
 

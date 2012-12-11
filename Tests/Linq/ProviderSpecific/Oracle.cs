@@ -15,9 +15,9 @@ namespace Tests.ProviderSpecific
 		#region Sequence
 
 		[Test]
-		public void SequenceInsert()
+		public void SequenceInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Oracle))
+			using (var db = new TestDbManager(context))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
@@ -31,9 +31,9 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity()
+		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Oracle))
+			using (var db = new TestDbManager(context))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -65,7 +65,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void InsertBatch1()
+		public void InsertBatch1([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
 			var data = new[]
 			{
@@ -79,16 +79,16 @@ namespace Tests.ProviderSpecific
 				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
 			};
 
-			using (var db = new TestDbManager(ProviderName.Oracle))
+			using (var db = new TestDbManager(context))
 			{
 				db.InsertBatch(5, data);
 			}
 		}
 
 		[Test]
-		public void InsertBatch2()
+		public void InsertBatch2([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Oracle))
+			using (var db = new TestDbManager(context))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 

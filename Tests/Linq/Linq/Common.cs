@@ -158,7 +158,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExecuteTest()
+		public void ExecuteTest([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{

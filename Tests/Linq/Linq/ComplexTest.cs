@@ -277,7 +277,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ExpressionTest1()
+		public void ExpressionTest1([IncludeDataContexts("Northwind")] string context)
 		{
 			Expression<Func<Northwind.Customer,bool>> pred1 = cust=>cust.Country=="UK";
 			Expression<Func<Northwind.Customer,bool>> pred2 = cust=>cust.Country=="France";

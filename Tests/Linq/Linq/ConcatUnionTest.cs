@@ -154,7 +154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat7()
+		public void Concat7([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(

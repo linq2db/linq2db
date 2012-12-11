@@ -286,7 +286,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Equals4([DataContexts] string context)
+		public void Equals4([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(

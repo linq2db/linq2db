@@ -1083,7 +1083,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GrooupByAssociation3()
+		public void GrooupByAssociation3([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -1099,7 +1099,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GrooupByAssociation4()
+		public void GrooupByAssociation4([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -1159,7 +1159,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate2()
+		public void GroupByAggregate2([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(

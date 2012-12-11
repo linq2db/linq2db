@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		public void FreeText1([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		public void FreeText2([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -124,7 +124,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText3([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		public void FreeText3([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{

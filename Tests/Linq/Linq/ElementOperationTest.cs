@@ -192,7 +192,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FirstOrDefaultEntitySet()
+		public void FirstOrDefaultEntitySet([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -203,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedSingleOrDefaultTest()
+		public void NestedSingleOrDefaultTest([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -214,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleQuery()
+		public void MultipleQuery([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{

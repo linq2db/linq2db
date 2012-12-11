@@ -26,27 +26,15 @@ namespace Tests
 		{
 			//Configuration.Linq.GenerateExpressionTest = true;
 
-			AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-			{
-				string assembly;
+			var providerListFile =
+				File.Exists(@"..\..\UserDataProviders.txt") ?
+					@"..\..\UserDataProviders.txt" :
+					@"..\..\DefaultDataProviders.txt";
 
-				     if (args.Name.IndexOf("Sybase.AdoNet2.AseClient")  >= 0) assembly = @"Sybase\Sybase.AdoNet2.AseClient.dll";
-				//else if (args.Name.IndexOf("Oracle.DataAccess")         >= 0) assembly = @"Oracle\Oracle.DataAccess.dll";
-				//else if (args.Name.IndexOf("IBM.Data.DB2")              >= 0) assembly = @"IBM\IBM.Data.DB2.dll";
-				//else if (args.Name.IndexOf("Npgsql.resources")          >= 0) return null;
-				//else if (args.Name.IndexOf("Npgsql")                    >= 0) assembly = @"PostgreSql\Npgsql.dll";
-				//else if (args.Name.IndexOf("Mono.Security")             >= 0) assembly = @"PostgreSql\Mono.Security.dll";
-				//else if (args.Name.IndexOf("System.Data.SqlServerCe,")  >= 0) assembly = @"SqlCe\System.Data.SqlServerCe.dll";
-				else
-					return null;
-
-				assembly = @"..\..\..\..\Redist\" + assembly;
-
-				if (!File.Exists(assembly))
-					assembly = @"..\..\" + assembly;
-
-				return Assembly.LoadFrom(assembly);
-			};
+			UserProviders.AddRange(
+				File.ReadAllLines(providerListFile)
+					.Select(s => s.Trim())
+					.Where (s => s.Length > 0 && !s.StartsWith("--")));
 
 			DbManager.TurnTraceSwitchOn();
 
@@ -147,6 +135,7 @@ namespace Tests
 			public          bool   Skip;
 		}
 
+		public static readonly List<string>       UserProviders = new List<string>();
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
 			new ProviderInfo(ProviderName.SqlServer2008, null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
@@ -161,7 +150,6 @@ namespace Tests
 			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
 			new ProviderInfo(ProviderName.MySql,         "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
 			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProvider"),
-			new ProviderInfo(ProviderName.SqlServer,     null,                 "LinqToDB.DataProvider.Sql2008DataProvider") { Skip = true },
 		};
 
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
@@ -180,14 +168,25 @@ namespace Tests
 
 			public override IEnumerable GetData(ParameterInfo parameter)
 			{
+				if (Include != null)
+				{
+					return Include.Intersect(
+						IncludeLinqService ? 
+							UserProviders.Concat(UserProviders.Select(p => p + ".LinqService")) :
+							UserProviders);
+				}
+
 				var providers = new List<string>();
 
 				foreach (var info in Providers)
 				{
+					if (info.Skip && Include == null)
+						continue;
+
 					if (Except != null && Except.Contains(info.Name))
 						continue;
 
-					if (info.Skip && Include == null)
+					if (!UserProviders.Contains(info.Name))
 						continue;
 
 					providers.Add(info.Name);
@@ -198,12 +197,7 @@ namespace Tests
 					}
 				}
 
-				if (Include != null)
-					providers = providers.Intersect(Include).ToList();
-
 				return providers.ToArray();
-
-				//return base.GetData(parameter);
 			}
 		}
 

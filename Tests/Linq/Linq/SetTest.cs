@@ -277,7 +277,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AllNestedTest()
+		public void AllNestedTest([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -290,7 +290,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComplexAllTest()
+		public void ComplexAllTest([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -483,7 +483,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains10()
+		public void Contains10([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -509,7 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains11()
+		public void Contains11([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -528,7 +528,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains12()
+		public void Contains12([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -547,7 +547,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains13()
+		public void Contains13([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
