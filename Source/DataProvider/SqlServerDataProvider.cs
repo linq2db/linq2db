@@ -11,26 +11,61 @@ namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Expressions;
+	using Mapping;
 
 	public class SqlServerDataProvider : DataProviderBase
 	{
-		public SqlServerDataProvider()
+		#region SqlServerMappingSchema
+
+		class SqlServerMappingSchema : MappingSchema
 		{
-			Version = SqlServerVersion.v2008;
-			Init();
+			public SqlServerMappingSchema()
+				: base(LinqToDB.ProviderName.SqlServer)
+			{
+				SetConvertExpression<SqlXml,XmlReader>(s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader());
+
+				SetDefaultValue(SqlBinary.  Null);
+				SetDefaultValue(SqlBoolean. Null);
+				SetDefaultValue(SqlByte.    Null);
+				SetDefaultValue(SqlDateTime.Null);
+				SetDefaultValue(SqlDecimal. Null);
+				SetDefaultValue(SqlDouble.  Null);
+				SetDefaultValue(SqlGuid.    Null);
+				SetDefaultValue(SqlInt16.   Null);
+				SetDefaultValue(SqlInt32.   Null);
+				SetDefaultValue(SqlInt64.   Null);
+				SetDefaultValue(SqlMoney.   Null);
+				SetDefaultValue(SqlSingle.  Null);
+				SetDefaultValue(SqlString.  Null);
+				SetDefaultValue(SqlXml.     Null);
+
+				SetScalarType(typeof(SqlBinary));
+				SetScalarType(typeof(SqlBoolean));
+				SetScalarType(typeof(SqlByte));
+				SetScalarType(typeof(SqlDateTime));
+				SetScalarType(typeof(SqlDecimal));
+				SetScalarType(typeof(SqlDouble));
+				SetScalarType(typeof(SqlGuid));
+				SetScalarType(typeof(SqlInt16));
+				SetScalarType(typeof(SqlInt32));
+				SetScalarType(typeof(SqlInt64));
+				SetScalarType(typeof(SqlMoney));
+				SetScalarType(typeof(SqlSingle));
+				SetScalarType(typeof(SqlString));
+				SetScalarType(typeof(SqlXml));
+			}
+		}
+
+		#endregion
+
+		public SqlServerDataProvider() : this(SqlServerVersion.v2008)
+		{
 		}
 
 		public SqlServerDataProvider(SqlServerVersion version)
+			: base(new SqlServerMappingSchema())
 		{
 			Version = version;
-			Init();
-		}
-
-		void Init()
-		{
-			MappingSchema.SetConvertExpression<SqlXml,XmlReader>(s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader());
-
-			MappingSchema.SetDefaultValue(SqlXml.Null);
 		}
 
 		public override string           Name         { get { return LinqToDB.ProviderName.SqlServer; } }
@@ -59,11 +94,14 @@ namespace LinqToDB.DataProvider
 
 		public override Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			if (toType == typeof(DateTimeOffset))
-				return (Expression<Func<SqlDataReader, DateTimeOffset>>)(rd => rd.GetDateTimeOffset(idx));
+			var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
+
+
+			//if (toType == typeof(DateTimeOffset))
+			//	return (Expression<Func<SqlDataReader,DateTimeOffset>>)(rd => rd.GetDateTimeOffset(idx));
 
 			if (toType == typeof(TimeSpan))
-				return (Expression<Func<SqlDataReader, TimeSpan>>)(rd => rd.GetTimeSpan(idx));
+				return (Expression<Func<SqlDataReader,TimeSpan>>)(rd => rd.GetTimeSpan(idx));
 
 			return base.GetReaderExpression(reader, idx, readerExpression, toType);
 		}

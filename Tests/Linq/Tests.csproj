@@ -184,6 +184,8 @@
     <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
+    <Compile Include="DataProvider\ExpressionTest.cs" />
+    <Compile Include="Data\DataExtensionsTest.cs" />
     <Compile Include="Data\DataConnectionTest.cs" />
     <Compile Include="Exceptions\ConvertTest.cs" />
     <Compile Include="Exceptions\DataExceptionTest.cs" />

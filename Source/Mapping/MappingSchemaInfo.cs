@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Extensions;
 	using Metadata;
 
 	class MappingSchemaInfo
@@ -16,16 +17,18 @@ namespace LinqToDB.Mapping
 		public string          Configuration;
 		public IMetadataReader MetadataReader;
 
+		#region Default Values
+
 		volatile ConcurrentDictionary<Type,object> _defaultValues;
 
-		public Option GetDefaultValue(Type type)
+		public Option<object> GetDefaultValue(Type type)
 		{
 			if (_defaultValues == null)
-				return Option.None;
+				return Option<object>.None;
 
 			object o;
 			_defaultValues.TryGetValue(type, out o);
-			return Option.Some(o);
+			return Option<object>.Some(o);
 		}
 
 		public void SetDefaultValue(Type type, object value)
@@ -37,6 +40,10 @@ namespace LinqToDB.Mapping
 
 			_defaultValues[type] = value;
 		}
+
+		#endregion
+
+		#region ConvertInfo
 
 		ConvertInfo _convertInfo;
 
@@ -57,5 +64,43 @@ namespace LinqToDB.Mapping
 		{
 			get { return _converters ?? (_converters = new ConcurrentDictionary<object,Func<object,object>>()); }
 		}
+
+		#endregion
+
+		#region Scalar Types
+
+		volatile ConcurrentDictionary<Type,bool> _scalarTypes;
+
+		static readonly Option<bool> TrueOption = Option<bool>.Some(true);
+
+		public Option<bool> GetScalarType(Type type)
+		{
+			type = type.ToNullableUnderlying();
+
+			if (type.IsEnum || type.IsPrimitive)
+				return TrueOption;
+
+			if (_scalarTypes == null)
+				return Option<bool>.None;
+
+			bool isScalarType;
+
+			if (_scalarTypes.TryGetValue(type, out isScalarType))
+				return Option<bool>.Some(isScalarType);
+
+			return Option<bool>.None;
+		}
+
+		public void SetScalarType(Type type, bool isScalarType = true)
+		{
+			if (_scalarTypes == null)
+				lock (this)
+					if (_scalarTypes == null)
+						_scalarTypes = new ConcurrentDictionary<Type,bool>();
+
+			_scalarTypes[type] = isScalarType;
+		}
+
+		#endregion
 	}
 }

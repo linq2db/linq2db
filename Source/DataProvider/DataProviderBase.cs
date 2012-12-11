@@ -10,14 +10,14 @@ namespace LinqToDB.DataProvider
 
 	public abstract class DataProviderBase : IDataProvider
 	{
-		public abstract string Name          { get; }
-		public abstract string ProviderName  { get; }
-
-		private readonly MappingSchema _mappingSchema = new MappingSchema();
-		public  virtual  MappingSchema  MappingSchema
+		protected DataProviderBase(MappingSchema mappingSchema)
 		{
-			get { return _mappingSchema; }
+			MappingSchema = mappingSchema;
 		}
+
+		public abstract string        Name          { get; }
+		public abstract string        ProviderName  { get; }
+		public virtual  MappingSchema MappingSchema { get; private set; }
 
 		public abstract IDbConnection CreateConnection (string connectionString);
 		public abstract Expression    ConvertDataReader(Expression reader);
@@ -44,29 +44,15 @@ namespace LinqToDB.DataProvider
 				var variable = Expression.Variable(expr.Type, "value" + idx);
 				var assign   = Expression.Assign(variable, expr);
 
-				expr = Expression.Block(new[] { variable }, new[] { assign, conv.Transform(e => e == conv.Parameters[0] ? variable : e) });
+				expr = Expression.Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
 			}
 			else
 			{
-				expr = conv.Transform(e => e == conv.Parameters[0] ? expr : e);
+				var ex = expr;
+				expr = conv.Body.Transform(e => e == conv.Parameters[0] ? ex : e);
 			}
 
 			return expr;
-
-			/*
-			var eidx = Expression.Constant(idx);
-			var defv = MappingSchema.GetDefaultValue(toType);
-
-			return Expression.Lambda<Func<IDataRecord,T>>(
-				Expression.Condition(
-					Expression.Call(
-						p,
-						MemberHelper.MethodOf<IDataRecord>(r => r.IsDBNull(0)),
-						eidx),
-					Expression.Constant(defv, typeof(T)),
-					p),
-				p);
-			 */
 		}
 
 		protected virtual Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression)

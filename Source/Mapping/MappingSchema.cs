@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -481,7 +482,40 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
+				SetScalarType(typeof(string));
+				SetScalarType(typeof(decimal));
+				SetScalarType(typeof(DateTime));
+				SetScalarType(typeof(DateTimeOffset));
+				SetScalarType(typeof(TimeSpan));
+				SetScalarType(typeof(byte[]));
+				SetScalarType(typeof(Binary));
 			}
+		}
+
+		#endregion
+
+		#region Scalar Types
+
+		public bool IsScalarType(Type type)
+		{
+			foreach (var info in _schemas)
+			{
+				var o = info.GetScalarType(type);
+				if (o.IsSome)
+					return o.Value;
+			}
+
+			var attr = GetAttribute<ScalarTypeAttribute>(type, a => a.Configuration);
+			var ret  = attr != null && attr.IsScalar;
+
+			SetScalarType(type, ret);
+
+			return ret;
+		}
+
+		public void SetScalarType(Type type, bool isScalarType = true)
+		{
+			_schemas[0].SetScalarType(type, isScalarType);
 		}
 
 		#endregion

@@ -398,7 +398,7 @@ namespace LinqToDB.Data
 
 		#region ICloneable Members
 
-		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection)
+ DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection)
 		{
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;

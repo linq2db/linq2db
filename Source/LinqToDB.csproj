@@ -75,6 +75,7 @@
     <Compile Include="DataProvider\SqlServerDataProvider.cs" />
     <Compile Include="DataProvider\SqlServerVersion.cs" />
     <Compile Include="Data\DataConnection.cs" />
+    <Compile Include="Data\DataConnectionExtensions.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Mapping\MappingSchema.cs" />
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Mapping\MapValueAttribute.cs" />
+    <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />

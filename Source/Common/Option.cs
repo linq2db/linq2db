@@ -2,31 +2,30 @@
 
 namespace LinqToDB.Common
 {
-	struct Option
+	class Option<T>
 	{
-		public readonly object Value;
+		public readonly T Value;
 
-		public Option(object value)
+		public Option(T value)
 		{
 			Value = value;
 		}
 
 		public bool IsNone
 		{
-			get { return Value == _none; }
+			get { return this == None; }
 		}
 
 		public bool IsSome
 		{
-			get { return Value != _none; }
+			get { return this != None; }
 		}
 
-		static public Option Some(object value)
+		static public Option<T> Some(T value)
 		{
-			return new Option(value);
+			return new Option<T>(value);
 		}
 
-		static readonly object _none = new object();
-		static public   Option  None = new Option(_none);
+		static public Option<T> None = new Option<T>(default(T));
 	}
 }
