@@ -43,7 +43,7 @@ namespace LinqToDB.Mapping
 			else if (schemas.Length == 1)
 				ss = schemas[0]._schemas;
 			else
-				ss = schemas.SelectMany(s => s._schemas).Distinct().ToArray();
+				ss = schemas.Where(s => s != null).SelectMany(s => s._schemas).Distinct().ToArray();
 
 			_schemas    = new MappingSchemaInfo[ss.Length + 1];
 			_schemas[0] = new MappingSchemaInfo(configuration);

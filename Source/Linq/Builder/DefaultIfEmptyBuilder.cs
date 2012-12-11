@@ -93,8 +93,8 @@ namespace LinqToDB.Linq.Builder
 									{
 										Builder.BlockExpressions[pidx] =
 											Expression.Assign(
-											bex.Left,
-											Expression.Condition(e, defaultValue, bex.Right));
+												bex.Left,
+												Expression.Condition(e, defaultValue, bex.Right));
 									}
 								}
 							}

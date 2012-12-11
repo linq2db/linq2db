@@ -6,23 +6,21 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Data
 {
 	using Configuration;
 	using DataProvider;
+	using Mapping;
 
 	public class DataConnection : ICloneable, IDisposable
 	{
 		#region .ctor
 
-		public DataConnection()
-			: this(DefaultConfiguration)
+		public DataConnection() : this(DefaultConfiguration)
 		{
 		}
 
-		public DataConnection([NotNull] string configurationString)
+		public DataConnection([JetBrains.Annotations.NotNull] string configurationString)
 		{
 			if (configurationString == null) throw new ArgumentNullException("configurationString");
 
@@ -33,6 +31,7 @@ namespace LinqToDB.Data
 			if (_configurations.TryGetValue(configurationString, out ci))
 			{
 				DataProvider     = ci.DataProvider;
+				_mappingSchema   = DataProvider.MappingSchema;
 				ConnectionString = ci.ConnectionString;
 			}
 			else
@@ -41,30 +40,33 @@ namespace LinqToDB.Data
 			}
 		}
 
-		public DataConnection([NotNull] IDataProvider dataProvider, [NotNull] string connectionString)
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
 
 			DataProvider     = dataProvider;
+			_mappingSchema   = DataProvider.MappingSchema;
 			ConnectionString = connectionString;
 		}
 
-		public DataConnection([NotNull] IDataProvider dataProvider, [NotNull] IDbConnection connection)
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (connection   == null) throw new ArgumentNullException("connection");
 
-			DataProvider = dataProvider;
-			_connection  = connection;
+			DataProvider   = dataProvider;
+			_mappingSchema = DataProvider.MappingSchema;
+			_connection    = connection;
 		}
 
-		public DataConnection([NotNull] IDataProvider dataProvider, [NotNull] IDbTransaction transaction)
+		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (transaction  == null) throw new ArgumentNullException("transaction");
 
 			DataProvider      = dataProvider;
+			_mappingSchema    = DataProvider.MappingSchema;
 			_connection       = transaction.Connection;
 			Transaction       = transaction;
 			_closeTransaction = false;
@@ -174,7 +176,7 @@ namespace LinqToDB.Data
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
 			new ConcurrentDictionary<string,IDataProvider>();
 
-		public static void AddDataProvider([NotNull] string providerName, [NotNull] IDataProvider dataProvider)
+		public static void AddDataProvider([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] IDataProvider dataProvider)
 		{
 			if (providerName == null) throw new ArgumentNullException("providerName");
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
@@ -185,7 +187,7 @@ namespace LinqToDB.Data
 			_dataProviders[providerName] = dataProvider;
 		}
 
-		public static void AddDataProvider([NotNull] IDataProvider dataProvider)
+		public static void AddDataProvider([JetBrains.Annotations.NotNull] IDataProvider dataProvider)
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 
@@ -207,7 +209,7 @@ namespace LinqToDB.Data
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
 			new ConcurrentDictionary<string, ConfigurationInfo>();
 
-		public static void AddConfiguration([NotNull] string configuration, [NotNull] string connectionString, IDataProvider dataProvider = null)
+		public static void AddConfiguration([JetBrains.Annotations.NotNull] string configuration, [JetBrains.Annotations.NotNull] string connectionString, IDataProvider dataProvider = null)
 		{
 			if (configuration    == null) throw new ArgumentNullException("configuration");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
@@ -224,7 +226,6 @@ namespace LinqToDB.Data
 		bool          _closeConnection;
 		bool          _closeTransaction;
 		IDbConnection _connection;
-		IDbCommand    _command;
 
 		public IDbConnection Connection
 		{
@@ -275,21 +276,41 @@ namespace LinqToDB.Data
 
 		#endregion
 
+		#region Command
+
+		private int? _commandTimeout;
+		public  int   CommandTimeout
+		{
+			get { return _commandTimeout ?? 0; }
+			set { _commandTimeout = value;     }
+		}
+
+		private IDbCommand _command;
+		public  IDbCommand  Command
+		{
+			get { return _command ?? (_command = CreateCommand()); }
+		}
+
+		public IDbCommand CreateCommand()
+		{
+			var command = Connection.CreateCommand();
+
+			if (_commandTimeout.HasValue)
+				_command.CommandTimeout = _commandTimeout.Value;
+
+			if (Transaction != null)
+				command.Transaction = Transaction;
+
+			return command;
+		}
+
+		#endregion
+
 		#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
 		public virtual void BeginTransaction()
-		{
-			BeginTransaction(Connection.BeginTransaction);
-		}
-
-		public virtual void BeginTransaction(IsolationLevel isolationLevel)
-		{
-			BeginTransaction(() => Connection.BeginTransaction(isolationLevel));
-		}
-
-		void BeginTransaction(Func<IDbTransaction> func)
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -298,7 +319,26 @@ namespace LinqToDB.Data
 
 			// Create new transaction object.
 			//
-			Transaction = func();
+			Transaction = Connection.BeginTransaction();
+
+			_closeTransaction = true;
+
+			// If the active command exists.
+			//
+			if (_command != null)
+				_command.Transaction = Transaction;
+		}
+
+		public virtual void BeginTransaction(IsolationLevel isolationLevel)
+		{
+			// If transaction is open, we dispose it, it will rollback all changes.
+			//
+			if (Transaction != null)
+				Transaction.Dispose();
+
+			// Create new transaction object.
+			//
+			Transaction = Connection.BeginTransaction(isolationLevel);
 
 			_closeTransaction = true;
 
@@ -335,6 +375,24 @@ namespace LinqToDB.Data
 				}
 			}
 		}
+
+		#endregion
+
+		#region MappingSchema
+
+		private MappingSchema _mappingSchema;
+		public  MappingSchema  MappingSchema
+		{
+			get { return _mappingSchema; }
+		}
+
+		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
+		{
+			_mappingSchema = new MappingSchema(mappingSchema, _mappingSchema);
+			return this;
+		}
+
+		public 
 
 		#endregion
 

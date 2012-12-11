@@ -1,17 +1,107 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider
 {
+	using Expressions;
+	using Mapping;
+
 	public abstract class DataProviderBase : IDataProvider
 	{
-		public abstract string Name         { get; }
-		public abstract string ProviderName { get; }
+		public abstract string Name          { get; }
+		public abstract string ProviderName  { get; }
 
-		public abstract IDbConnection CreateConnection(string connectionString);
+		private readonly MappingSchema _mappingSchema = new MappingSchema();
+		public  virtual  MappingSchema  MappingSchema
+		{
+			get { return _mappingSchema; }
+		}
+
+		public abstract IDbConnection CreateConnection (string connectionString);
+		public abstract Expression    ConvertDataReader(Expression reader);
 
 		public virtual void Configure(string name, string value)
 		{
+		}
+
+		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			var expr = GetReaderMethodExpression(reader, idx, readerExpression);
+			var conv = MappingSchema.GetConvertExpression(expr.Type, toType);
+
+			var n = 0;
+
+			conv.Body.Visit(e =>
+			{
+				if (e == conv.Parameters[0])
+					n++;
+			});
+
+			if (n > 1)
+			{
+				var variable = Expression.Variable(expr.Type, "value" + idx);
+				var assign   = Expression.Assign(variable, expr);
+
+				expr = Expression.Block(new[] { variable }, new[] { assign, conv.Transform(e => e == conv.Parameters[0] ? variable : e) });
+			}
+			else
+			{
+				expr = conv.Transform(e => e == conv.Parameters[0] ? expr : e);
+			}
+
+			return expr;
+
+			/*
+			var eidx = Expression.Constant(idx);
+			var defv = MappingSchema.GetDefaultValue(toType);
+
+			return Expression.Lambda<Func<IDataRecord,T>>(
+				Expression.Condition(
+					Expression.Call(
+						p,
+						MemberHelper.MethodOf<IDataRecord>(r => r.IsDBNull(0)),
+						eidx),
+					Expression.Constant(defv, typeof(T)),
+					p),
+				p);
+			 */
+		}
+
+		protected virtual Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression)
+		{
+			var mi = GetReaderMethodInfo(reader, idx);
+
+			if (mi == null)
+				mi = MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
+
+			return Expression.Call(readerExpression, mi, Expression.Constant(idx));
+		}
+
+		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx)
+		{
+			var type = reader.GetFieldType(idx);
+
+			switch (Type.GetTypeCode(type))
+			{
+				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetBoolean (0));
+				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetByte    (0));
+				case TypeCode.Char     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetChar    (0));
+				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt16   (0));
+				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt32   (0));
+				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt64   (0));
+				case TypeCode.Single   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetFloat   (0));
+				case TypeCode.Double   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDouble  (0));
+				case TypeCode.String   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetString  (0));
+				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDecimal (0));
+				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDateTime(0));
+			}
+
+			if (type == typeof(Guid))
+				return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
+
+			return null;
 		}
 	}
 }

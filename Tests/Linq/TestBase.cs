@@ -264,8 +264,7 @@ namespace Tests
 					using (var db = new TestDbManager())
 						_types = db.Types.ToList();
 
-				foreach (var type in _types)
-					yield return type;
+				return _types;
 			}
 		}
 
@@ -277,6 +276,7 @@ namespace Tests
 				if (_types2 == null)
 					using (var db = new TestDbManager())
 						_types2 = db.Types2.ToList();
+
 				return _types2;
 			}
 		}
@@ -295,8 +295,7 @@ namespace Tests
 						p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
 				}
 
-				foreach (var item in _person)
-					yield return item;
+				return _person;
 			}
 		}
 
@@ -339,8 +338,7 @@ namespace Tests
 						}
 					}
 
-				foreach (var parent in _parent)
-					yield return parent;
+				return _parent;
 			}
 		}
 
@@ -352,8 +350,7 @@ namespace Tests
 				if (_parent1 == null)
 					_parent1 = Parent.Select(p => new Parent1 { ParentID = p.ParentID, Value1 = p.Value1 }).ToList();
 
-				foreach (var parent in _parent1)
-					yield return parent;
+				return _parent1;
 			}
 		}
 
@@ -395,8 +392,7 @@ namespace Tests
 						 (ParentInheritanceBase) new ParentInheritanceValue { ParentID = p.ParentID, Value1 = p.Value1.Value }
 					).ToList();
 
-				foreach (var item in _parentInheritance)
-					yield return item;
+				return _parentInheritance;
 			}
 		}
 
@@ -454,8 +450,7 @@ namespace Tests
 						}
 					}
 
-				foreach (var child in _child)
-					yield return child;
+				return _child;
 			}
 		}
 
@@ -474,8 +469,7 @@ namespace Tests
 							ch.Child = Child.Single(c => c.ParentID == ch.ParentID && c.ChildID == ch.ChildID);
 					}
 
-				foreach (var grandChild in _grandChild)
-					yield return grandChild;
+				return _grandChild;
 			}
 		}
 
@@ -496,8 +490,7 @@ namespace Tests
 						}
 					}
 
-				foreach (var grandChild in _grandChild1)
-					yield return grandChild;
+				return _grandChild1;
 			}
 		}
 
@@ -694,7 +687,7 @@ namespace Tests
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine(string.Format("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]));
+					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 
 			Assert.AreEqual(0, exceptExpected);
 			Assert.AreEqual(0, exceptResult);
@@ -730,7 +723,7 @@ namespace Tests
 
 			if (!b)
 				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine(string.Format("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]));
+					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 
 			Assert.IsTrue(b);
 		}
