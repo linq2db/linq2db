@@ -73,5 +73,10 @@ namespace LinqToDB.SqlProvider
 				default                       : base.BuildDataType(sb, type); break;
 			}
 		}
+
+		public override string  Name
+		{
+			get { return ProviderName.SqlServer2005; }
+		}
 	}
 }

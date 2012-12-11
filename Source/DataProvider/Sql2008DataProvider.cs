@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 	{
 		public override string Name
 		{
-			get { return LinqToDB.ProviderName.MsSql2008; }
+			get { return LinqToDB.ProviderName.SqlServer2008; }
 		}
 
 		public override ISqlProvider CreateSqlProvider()

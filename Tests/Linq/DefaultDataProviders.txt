@@ -1,0 +1,15 @@
+﻿Access
+SqlCe
+SQLite
+
+--DB2
+--Firebird
+--Informix
+--SqlServer
+--SqlServer.2005
+--SqlServer.2008
+--SqlServer.2012
+--MySql
+--Oracle
+--PostgreSQL
+--Sybase

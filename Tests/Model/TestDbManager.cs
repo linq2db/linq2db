@@ -19,7 +19,7 @@ namespace Tests.Model
 		}
 
 		public TestDbManager()
-			: base(ProviderName.MsSql2008)
+			: base(ProviderName.Access)
 		{
 		}
 

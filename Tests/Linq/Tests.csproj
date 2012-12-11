@@ -290,6 +290,7 @@
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
       <Link>Database\Create Scripts\Sybase.sql</Link>
     </Content>
+    <Content Include="DefaultDataProviders.txt" />
     <Content Include="x64\SQLite.Interop.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

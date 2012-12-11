@@ -285,7 +285,9 @@ namespace LinqToDB.Data
 					//
 					var provider = css.ProviderName == "System.Data.SqlClient" ?
 						configurationString.IndexOf("2008") >= 0 ?
-							"MSSQL2008" :
+							"SQLSERVER.2008" :
+						configurationString.IndexOf("2005") >= 0 ?
+							"SQLSERVER.2005" :
 							css.ProviderName :
 						css.ProviderName;
 

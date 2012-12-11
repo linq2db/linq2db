@@ -19,30 +19,30 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableName()
+		public void TableName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
 		[Test]
-		public void DatabaseName()
+		public void DatabaseName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 				db.GetTable<Parent>().DatabaseName("TestData").ToList();
 		}
 
 		[Test]
-		public void OwnerName()
+		public void OwnerName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 				db.GetTable<Parent>().OwnerName("dbo").ToList();
 		}
 
 		[Test]
-		public void AllNames()
+		public void AllNames([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 				db.GetTable<ParenTable>()
 					.DatabaseName("TestData")
 					.OwnerName("dbo")

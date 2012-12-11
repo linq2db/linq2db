@@ -9,7 +9,6 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
@@ -32,12 +31,12 @@ namespace Tests
 				string assembly;
 
 				     if (args.Name.IndexOf("Sybase.AdoNet2.AseClient")  >= 0) assembly = @"Sybase\Sybase.AdoNet2.AseClient.dll";
-				else if (args.Name.IndexOf("Oracle.DataAccess")         >= 0) assembly = @"Oracle\Oracle.DataAccess.dll";
-				else if (args.Name.IndexOf("IBM.Data.DB2")              >= 0) assembly = @"IBM\IBM.Data.DB2.dll";
-				else if (args.Name.IndexOf("Npgsql.resources")          >= 0) return null;
-				else if (args.Name.IndexOf("Npgsql")                    >= 0) assembly = @"PostgreSql\Npgsql.dll";
-				else if (args.Name.IndexOf("Mono.Security")             >= 0) assembly = @"PostgreSql\Mono.Security.dll";
-				else if (args.Name.IndexOf("System.Data.SqlServerCe,")  >= 0) assembly = @"SqlCe\System.Data.SqlServerCe.dll";
+				//else if (args.Name.IndexOf("Oracle.DataAccess")         >= 0) assembly = @"Oracle\Oracle.DataAccess.dll";
+				//else if (args.Name.IndexOf("IBM.Data.DB2")              >= 0) assembly = @"IBM\IBM.Data.DB2.dll";
+				//else if (args.Name.IndexOf("Npgsql.resources")          >= 0) return null;
+				//else if (args.Name.IndexOf("Npgsql")                    >= 0) assembly = @"PostgreSql\Npgsql.dll";
+				//else if (args.Name.IndexOf("Mono.Security")             >= 0) assembly = @"PostgreSql\Mono.Security.dll";
+				//else if (args.Name.IndexOf("System.Data.SqlServerCe,")  >= 0) assembly = @"SqlCe\System.Data.SqlServerCe.dll";
 				else
 					return null;
 
@@ -145,28 +144,27 @@ namespace Tests
 			public readonly string Type;
 			public          bool   Loaded;
 			public          int    IP;
+			public          bool   Skip;
 		}
 
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
-			new ProviderInfo(ProviderName.MsSql2008,  null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
-			new ProviderInfo(ProviderName.SqlCe,      "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProvider"),
-			new ProviderInfo(ProviderName.SQLite,     "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
-			new ProviderInfo(ProviderName.Access,     null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
-
-#if !MOBILE
-			new ProviderInfo(ProviderName.MsSql2005,  null,                 "LinqToDB.DataProvider.SqlDataProvider"),
-			new ProviderInfo(ProviderName.DB2,        "linq2db.DB2",        "LinqToDB.DataProvider.DB2DataProvider"),
-			new ProviderInfo(ProviderName.Informix,   "linq2db.Informix",   "LinqToDB.DataProvider.InformixDataProvider"),
-			new ProviderInfo(ProviderName.Firebird,   "linq2db.Firebird",   "LinqToDB.DataProvider.FirebirdDataProvider"),
-			new ProviderInfo(ProviderName.Oracle,     "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProvider"),
-			new ProviderInfo(ProviderName.PostgreSQL, "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
-			new ProviderInfo(ProviderName.MySql,      "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
-			new ProviderInfo(ProviderName.Sybase,     "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProvider"),
-#endif
+			new ProviderInfo(ProviderName.SqlServer2008, null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
+			new ProviderInfo(ProviderName.SqlCe,         "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProvider"),
+			new ProviderInfo(ProviderName.SQLite,        "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
+			new ProviderInfo(ProviderName.Access,        null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
+			new ProviderInfo(ProviderName.SqlServer2005, null,                 "LinqToDB.DataProvider.SqlDataProvider"),
+			new ProviderInfo(ProviderName.DB2,           "linq2db.DB2",        "LinqToDB.DataProvider.DB2DataProvider"),
+			new ProviderInfo(ProviderName.Informix,      "linq2db.Informix",   "LinqToDB.DataProvider.InformixDataProvider"),
+			new ProviderInfo(ProviderName.Firebird,      "linq2db.Firebird",   "LinqToDB.DataProvider.FirebirdDataProvider"),
+			new ProviderInfo(ProviderName.Oracle,        "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProvider"),
+			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
+			new ProviderInfo(ProviderName.MySql,         "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
+			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProvider"),
+			new ProviderInfo(ProviderName.SqlServer,     null,                 "LinqToDB.DataProvider.Sql2008DataProvider") { Skip = true },
 		};
 
-		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 		public class DataContextsAttribute : ValuesAttribute
 		{
 			public DataContextsAttribute(params string[] except)
@@ -177,6 +175,7 @@ namespace Tests
 			const bool IncludeLinqService = true;
 
 			public string[] Except             { get; set; }
+			public string[] Include            { get; set; }
 			public bool     ExcludeLinqService { get; set; }
 
 			public override IEnumerable GetData(ParameterInfo parameter)
@@ -188,7 +187,7 @@ namespace Tests
 					if (Except != null && Except.Contains(info.Name))
 						continue;
 
-					if (!info.Loaded)
+					if (info.Skip && Include == null)
 						continue;
 
 					providers.Add(info.Name);
@@ -199,9 +198,20 @@ namespace Tests
 					}
 				}
 
-				data = providers.ToArray();
+				if (Include != null)
+					providers = providers.Intersect(Include).ToList();
 
-				return base.GetData(parameter);
+				return providers.ToArray();
+
+				//return base.GetData(parameter);
+			}
+		}
+
+		public class IncludeDataContextsAttribute : DataContextsAttribute
+		{
+			public IncludeDataContextsAttribute(params string[] include)
+			{
+				Include = include;
 			}
 		}
 

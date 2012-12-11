@@ -451,7 +451,7 @@ VALUES
 	'<root><element strattr="strvalue" intattr="12345"/></root>')
 GO
 
--- SKIP MsSql2005 BEGIN
+-- SKIP SqlServer.2005 BEGIN
 --
 -- Arrays
 --
@@ -478,7 +478,7 @@ BEGIN
 	SELECT Num * 2 FROM @InputIntArray;
 END
 GO
--- SKIP MsSql2005 END
+-- SKIP SqlServer.2005 END
 
 DROP FUNCTION GetParentByID
 GO
@@ -510,7 +510,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('LinqDataTypes'
 BEGIN DROP TABLE LinqDataTypes END
 GO
 
--- SKIP MsSql2005 BEGIN
+-- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -525,9 +525,9 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint NULL
 )
 GO
--- SKIP MsSql2005 END
+-- SKIP SqlServer.2005 END
 
--- SKIP MsSql2008 BEGIN
+-- SKIP SqlServer.2008 BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -542,7 +542,7 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
--- SKIP MsSql2008 END
+-- SKIP SqlServer.2008 END
 
 DROP TABLE TestIdentity
 GO

@@ -39,7 +39,7 @@ namespace Tests.Data
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
 
-				Assert.That(new[] { 1 }, Is.EquivalentTo(list));
+				Assert.That(list.Count, Is.EqualTo(1));
 			}
 		}
 	}

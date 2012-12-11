@@ -17,6 +17,10 @@ namespace Tests.Exceptions
 	{
 		class MyDbManager : TestDbManager
 		{
+			public MyDbManager(string context) : base(context)
+			{
+			}
+
 			protected override SqlQuery ProcessQuery(SqlQuery sqlQuery)
 			{
 				if (sqlQuery.IsInsert && sqlQuery.Insert.Into.Name == "Parent")
@@ -71,9 +75,9 @@ namespace Tests.Exceptions
 		}
 
 		[Test, ExpectedException(typeof(DataException), ExpectedMessage = "Invalid object name 'Parent1'.")]
-		public void ReplaceTableTest()
+		public void ReplaceTableTest([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new MyDbManager())
+			using (var db = new MyDbManager(context))
 			{
 				db.BeginTransaction();
 

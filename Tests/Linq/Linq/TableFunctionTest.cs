@@ -14,9 +14,9 @@ namespace Tests.Linq
 	public class TableFunctionTest : TestBase
 	{
 		[Test]
-		public void Func1()
+		public void Func1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q =
 					from p in new Tests.Model.Functions(db).GetParentByID(1)
@@ -27,9 +27,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Func2()
+		public void Func2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q =
 					from c in db.Child
@@ -41,9 +41,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Func3()
+		public void Func3([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q =
 					from c in db.Child
@@ -58,9 +58,9 @@ namespace Tests.Linq
 			(DbManager db, int id) => from p in new Tests.Model.Functions(db).GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc1()
+		public void CompiledFunc1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q = _f1(db, 1);
 				q.ToList();
@@ -71,9 +71,9 @@ namespace Tests.Linq
 			(TestDbManager db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
 		[Test]
-		public void CompiledFunc2()
+		public void CompiledFunc2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q = _f2(db, 1);
 				q.ToList();
@@ -81,9 +81,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WithTabLock()
+		public void WithTabLock([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q =
 					from p in new Tests.Model.Functions(db).WithTabLock<Parent>()
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText1()
+		public void FreeText1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText2()
+		public void FreeText2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -124,7 +124,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeText3()
+		public void FreeText3([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
 			using (var db = new NorthwindDB())
 			{

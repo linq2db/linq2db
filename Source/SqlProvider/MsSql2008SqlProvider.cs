@@ -15,5 +15,10 @@ namespace LinqToDB.SqlProvider
 			BuildInsertOrUpdateQueryAsMerge(sb, null);
 			sb.AppendLine(";");
 		}
+
+		public override string  Name
+		{
+			get { return ProviderName.SqlServer2008; }
+		}
 	}
 }

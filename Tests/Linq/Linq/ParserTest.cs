@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.SqlBuilder;
@@ -866,9 +867,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Join6()
+		public void Join6([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				var q =
 					from g in db.GrandChild

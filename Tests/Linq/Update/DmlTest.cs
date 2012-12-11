@@ -1306,9 +1306,9 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void InsertBatch1()
+		public void InsertBatch1([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = GetDataContext(ProviderName.Oracle))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -1325,9 +1325,9 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void InsertBatch2()
+		public void InsertBatch2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDbManager(context))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
@@ -1435,7 +1435,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void Insert14([DataContexts(ProviderName.SqlCe, ProviderName.Access, ProviderName.MsSql2005, ProviderName.Sybase)] string context)
+		public void Insert14([DataContexts(ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.Sybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

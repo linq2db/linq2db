@@ -721,7 +721,7 @@ namespace LinqToDB.Linq
 
 			#region MsSql2008
 
-			{ ProviderName.MsSql2008, new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.SqlServer2008, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
 				{ M(() => Sql.Trim    ("")      ),  L<String,String>        ((String p0)            => Sql.TrimLeft(Sql.TrimRight(p0))) },
@@ -738,7 +738,7 @@ namespace LinqToDB.Linq
 
 			#region MsSql2005
 
-			{ ProviderName.MsSql2005, new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
 				{ M(() => Sql.Trim    ("")      ),  L<String,String>        ((String p0)            => Sql.TrimLeft(Sql.TrimRight(p0))) },

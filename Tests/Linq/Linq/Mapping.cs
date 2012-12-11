@@ -88,7 +88,6 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
-#if !MOBILE
 		[Test]
 		public void Enum7([DataContexts] string context)
 		{
@@ -99,12 +98,10 @@ namespace Tests.Linq
 				db.BeginTransaction();
 				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
 
-
 				if (context == ProviderName.PostgreSQL + ".LinqService")
-					new Create.CreateData().PostgreSQL();
+					new Create.CreateData().PostgreSQL(ProviderName.PostgreSQL);
 			}
 		}
-#endif
 
 		enum TestValue
 		{

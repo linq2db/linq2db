@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContext()
 		{
-			var ctx = new DataContext(ProviderName.MsSql2008);
+			var ctx = new DataContext(ProviderName.SqlServer2008);
 
 			ctx.GetTable<Person>().ToList();
 
@@ -43,7 +43,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContextToString()
 		{
-			using (var ctx = new DataContext(ProviderName.MsSql2008))
+			using (var ctx = new DataContext(ProviderName.SqlServer2008))
 			{
 				Console.WriteLine(ctx.GetTable<Person>().ToString());
 
