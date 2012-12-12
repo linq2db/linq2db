@@ -12,7 +12,7 @@ namespace Tests.Data
 	public class DataExtensionsTest : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestScalar1([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -23,7 +23,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test2([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestScalar2([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -34,11 +34,28 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test3([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestScalar3([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+			}
+		}
+
+		class QueryObject
+		{
+			public int      Column1;
+			public DateTime Column2;
+		}
+
+		[Test]
+		public void TestObject1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
 				Assert.That(list.Count, Is.EqualTo(1));
 			}

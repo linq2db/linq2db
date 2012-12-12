@@ -5,9 +5,9 @@ namespace LinqToDB
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
 	public class ColumnAttribute : Attribute
 	{
-		public  string Config    { get; set; }
-		public  string Name      { get; set; }
-		public  string DbType    { get; set; }
+		public  string Configuration { get; set; }
+		public  string Name          { get; set; }
+		public  string DbType        { get; set; }
 
 		private bool? _canBeNull;
 		public  bool   CanBeNull

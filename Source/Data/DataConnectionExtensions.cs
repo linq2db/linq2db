@@ -3,7 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using System.Linq;
 
 namespace LinqToDB.Data
 {
@@ -52,28 +55,58 @@ namespace LinqToDB.Data
 				var dataProvider   = dataConnection.DataProvider;
 				var parameter      = Expression.Parameter(typeof(IDataReader));
 				var dataReaderExpr = dataProvider.ConvertDataReader(parameter);
+				var dataReaderVar  = Expression.Variable(dataReaderExpr.Type, "dr");
+				var assignment     = Expression.Assign(dataReaderVar, dataReaderExpr);
 
-				if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
+				Expression expr;
+
+				Func<Type,int,Expression> getMemberExpression = (type,idx) =>
 				{
-					var ex = dataProvider.GetReaderExpression(dataReader, 0, dataReaderExpr, typeof(T));
+					var ex = dataProvider.GetReaderExpression(dataReader, idx, dataReaderVar, type);
 
 					if (ex.NodeType == ExpressionType.Lambda)
 					{
 						var l = (LambdaExpression)ex;
-						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
+						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderVar : e);
 					}
 
-					var expr = Expression.Lambda<Func<IDataReader,T>>(ex, parameter);
+					return ex;
+				};
 
-					func = expr.Compile();
+				if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
+				{
+					expr = getMemberExpression(typeof(T), 0);
 				}
 				else
 				{
+					var td    = new TypeDescriptor(dataConnection.MappingSchema, typeof(T));
+					var names = new List<string>(dataReader.FieldCount);
+
 					for (var i = 0; i < dataReader.FieldCount; i++)
-					{
-						var name = dataReader.GetName(i);
-					}
+						names.Add(dataReader.GetName(i));
+
+					var members =
+					(
+						from n in names.Select((name,idx) => new { name, idx })
+						let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
+						where member != null
+						select new
+						{
+							Member = member,
+							Expr   = getMemberExpression(member.MemberType, n.idx),
+						}
+					).ToList();
+
+					expr = Expression.MemberInit(
+						Expression.New(typeof(T)),
+						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
 				}
+
+				expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
+
+				var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+
+				func = lex.Compile();
 			}
 
 			return (Func<IDataReader,T>)func;

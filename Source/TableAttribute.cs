@@ -10,7 +10,7 @@ namespace LinqToDB
 			IsColumnAttributeRequired = true;
 		}
 
-		public string Config                    { get; set; }
+		public string Configuration             { get; set; }
 		public string Name                      { get; set; }
 		public string Schema                    { get; set; }
 		public string Database                  { get; set; }

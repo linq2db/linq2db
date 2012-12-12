@@ -480,11 +480,12 @@ namespace LinqToDB.Common
 			if (ex != null)
 				return Tuple.Create(Expression.Lambda(ex.Item1, p), ex.Item2);
 
-			return Tuple.Create(
-				Expression.Lambda(
-					Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)),
-					p),
-				false);
+			var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)) as Expression;
+
+			if (defex.Type != to)
+				defex = Expression.Convert(defex, to);
+
+			return Tuple.Create(Expression.Lambda(defex, p), false);
 		}
 	}
 }
