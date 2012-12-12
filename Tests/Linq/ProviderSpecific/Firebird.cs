@@ -29,7 +29,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.Firebird)] string context)
 		{
 			using (var db = new TestDbManager(context))
 			{
