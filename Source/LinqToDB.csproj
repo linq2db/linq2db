@@ -72,8 +72,6 @@
     <Compile Include="DataProvider\DataProviderBase.cs" />
     <Compile Include="DataProvider\FirebirdMappingSchema.cs" />
     <Compile Include="DataProvider\IDataProvider.cs" />
-    <Compile Include="DataProvider\SqlServerDataProvider.cs" />
-    <Compile Include="DataProvider\SqlServerVersion.cs" />
     <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Data\DataConnectionExtensions.cs" />
     <Compile Include="Expressions\Extensions.cs" />

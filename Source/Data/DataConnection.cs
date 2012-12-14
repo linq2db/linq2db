@@ -107,10 +107,27 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			AddDataProvider(                            new SqlServerDataProvider(SqlServerVersion.v2008));
-			AddDataProvider(ProviderName.SqlServer2012, new SqlServerDataProvider(SqlServerVersion.v2012));
-			AddDataProvider(ProviderName.SqlServer2008, new SqlServerDataProvider(SqlServerVersion.v2008));
-			AddDataProvider(ProviderName.SqlServer2005, new SqlServerDataProvider(SqlServerVersion.v2005));
+			try
+			{
+				//foreach (var attr in typeof(DataConnection).Assembly.GetCustomAttributes())
+				//{
+				//	if (type.BaseType == typeof(DataProviderBase))
+				//	{
+				//		
+				//	}
+				//}
+
+				//var name = typeof(DataConnection).Assembly.GetName(true);
+				//name.ToString();
+			}
+			catch (Exception)
+			{
+			}
+
+			//AddDataProvider(                            new SqlServerDataProvider(SqlServerVersion.v2008));
+			//AddDataProvider(ProviderName.SqlServer2012, new SqlServerDataProvider(SqlServerVersion.v2012));
+			//AddDataProvider(ProviderName.SqlServer2008, new SqlServerDataProvider(SqlServerVersion.v2008));
+			//AddDataProvider(ProviderName.SqlServer2005, new SqlServerDataProvider(SqlServerVersion.v2005));
 			AddDataProvider(                            new AccessDataProvider());
 
 			var section = LinqToDBSection.Instance;
