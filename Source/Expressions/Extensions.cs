@@ -9,6 +9,23 @@ namespace LinqToDB.Expressions
 
 	public static class Extensions
 	{
+		#region GetCount
+
+		public static int GetCount(this Expression expr, Func<Expression,bool> func)
+		{
+			var n = 0;
+
+			expr.Visit(e =>
+			{
+				if (func(e))
+					n++;
+			});
+
+			return n;
+		}
+
+		#endregion
+
 		#region Visit
 
 		static void Visit<T>(IEnumerable<T> source, Action<T> func)

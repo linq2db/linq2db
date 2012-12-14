@@ -14,8 +14,7 @@ namespace LinqToDB.Common
 
 	static class ConverterMaker
 	{
-		static readonly MethodInfo _defaultConverter =
-			MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
+		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
@@ -63,6 +62,7 @@ namespace LinqToDB.Common
 				case TypeCode.UInt64  :
 				case TypeCode.Single  :
 				case TypeCode.Double  :
+				case TypeCode.Decimal :
 				case TypeCode.Char    : return true;
 				default               : return false;
 			}
@@ -95,26 +95,6 @@ namespace LinqToDB.Common
 			}
 
 			return null;
-		}
-
-		static Expression GetKnownTypes(Type from, Type to, Expression p)
-		{
-			LambdaExpression le;
-
-			if (from == typeof(string) && to == typeof(Binary))
-			{
-				Expression<Func<string,Binary>> l = s => new Binary(Encoding.UTF8.GetBytes(s));
-				le = l;
-			}
-			else if (from == typeof(Binary) && to == typeof(byte[]))
-			{
-				Expression<Func<Binary,byte[]>> l = b => b.ToArray();
-				le = l;
-			}
-			else
-				return null;
-
-			return le.Body.Transform(e => e == le.Parameters[0] ? p : e);
 		}
 
 		static Expression GetParseEnum(Type from, Type to, Expression p)
@@ -388,10 +368,15 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		static Tuple<Expression,bool> GetConverter(MappingSchema mappingSchema, Expression expr, Type @from, Type to)
+		static Tuple<Expression,bool> GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
 		{
 			if (from == to)
 				return Tuple.Create(expr, false);
+
+			var le = Converter.GetConverter(from, to);
+
+			if (le != null)
+				return Tuple.Create(le.Body.Transform(e => e == le.Parameters[0] ? expr : e), false);
 
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??
@@ -401,13 +386,12 @@ namespace LinqToDB.Common
 				return Tuple.Create(ex, true);
 
 			ex =
+				GetConvertion(from, to, expr) ??
 				GetCtor      (from, to, expr) ??
 				GetValue     (from, to, expr) ??
 				GetOperator  (from, to, expr) ??
-				GetConvertion(from, to, expr) ??
 				GetParse     (from, to, expr) ??
 				GetToString  (from, to, expr) ??
-				GetKnownTypes(from, to, expr) ??
 				GetParseEnum (from, to, expr);
 
 			return ex != null ? Tuple.Create(ex, false) : null;

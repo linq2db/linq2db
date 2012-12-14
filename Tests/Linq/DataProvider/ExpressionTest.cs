@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 					var p  = Expression.Parameter(typeof(IDataReader));
 					var dr = dp.ConvertDataReader(p);
 
-					var ex = dp.GetReaderExpression(rd, 0, dr, typeof(int));
+					var ex = dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
 
 					var expr = Expression.Lambda<Func<IDataReader,int>>(ex, p);
 					var func = expr.Compile();

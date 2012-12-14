@@ -16,6 +16,6 @@ namespace LinqToDB.DataProvider
 		IDbConnection CreateConnection   (string       connectionString);
 
 		Expression    ConvertDataReader  (Expression reader);
-		Expression    GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression    GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 	}
 }

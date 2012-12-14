@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Data.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LinqToDB.Common
 {
@@ -9,7 +11,29 @@ namespace LinqToDB.Common
 
 	public static class Converter
 	{
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
+
+		static Converter()
+		{
+			SetConverter<string,         Binary>  (v => new Binary(Encoding.UTF8.GetBytes(v)));
+			SetConverter<Binary,         byte[]>  (v => v.ToArray());
+			SetConverter<bool,           decimal> (v => v ? 1m : 0m);
+			SetConverter<DateTimeOffset, DateTime>(v => v.LocalDateTime);
+		}
+
+		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
+		{
+			_expressions[new { from = typeof(TFrom), to = typeof(TTo) }] = expr;
+		}
+
+		internal static LambdaExpression GetConverter(Type from, Type to)
+		{
+			LambdaExpression l;
+			_expressions.TryGetValue(new { from, to }, out l);
+			return l;
+		}
+
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters  = new ConcurrentDictionary<object,Func<object,object>>();
 
 		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{

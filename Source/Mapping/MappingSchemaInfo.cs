@@ -27,8 +27,7 @@ namespace LinqToDB.Mapping
 				return Option<object>.None;
 
 			object o;
-			_defaultValues.TryGetValue(type, out o);
-			return Option<object>.Some(o);
+			return _defaultValues.TryGetValue(type, out o) ? Option<object>.Some(o) : Option<object>.None;
 		}
 
 		public void SetDefaultValue(Type type, object value)
@@ -80,13 +79,12 @@ namespace LinqToDB.Mapping
 			if (type.IsEnum || type.IsPrimitive)
 				return TrueOption;
 
-			if (_scalarTypes == null)
-				return Option<bool>.None;
-
-			bool isScalarType;
-
-			if (_scalarTypes.TryGetValue(type, out isScalarType))
-				return Option<bool>.Some(isScalarType);
+			if (_scalarTypes != null)
+			{
+				bool isScalarType;
+				if (_scalarTypes.TryGetValue(type, out isScalarType))
+					return Option<bool>.Some(isScalarType);
+			}
 
 			return Option<bool>.None;
 		}

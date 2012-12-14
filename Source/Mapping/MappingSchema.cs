@@ -489,6 +489,7 @@ namespace LinqToDB.Mapping
 				SetScalarType(typeof(TimeSpan));
 				SetScalarType(typeof(byte[]));
 				SetScalarType(typeof(Binary));
+				SetScalarType(typeof(Guid));
 			}
 		}
 

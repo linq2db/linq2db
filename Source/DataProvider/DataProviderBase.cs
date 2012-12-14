@@ -26,20 +26,12 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			var expr = GetReaderMethodExpression(reader, idx, readerExpression);
-			var conv = MappingSchema.GetConvertExpression(expr.Type, toType);
+			var expr = GetReaderMethodExpression(reader, idx, readerExpression, toType);
+			var conv = mappingSchema.GetConvertExpression(expr.Type, toType);
 
-			var n = 0;
-
-			conv.Body.Visit(e =>
-			{
-				if (e == conv.Parameters[0])
-					n++;
-			});
-
-			if (n > 1)
+			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
 			{
 				var variable = Expression.Variable(expr.Type, "value" + idx);
 				var assign   = Expression.Assign(variable, expr);
@@ -55,17 +47,27 @@ namespace LinqToDB.DataProvider
 			return expr;
 		}
 
-		protected virtual Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression)
+		protected virtual Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression, Type toType)
 		{
-			var mi = GetReaderMethodInfo(reader, idx);
+			var mi = GetReaderMethodInfo(reader, idx, toType);
 
 			if (mi == null)
 				mi = MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
 
-			return Expression.Call(readerExpression, mi, Expression.Constant(idx));
+			var expr = Expression.Call(readerExpression, mi, Expression.Constant(idx)) as Expression;
+
+			if (expr.Type == typeof(object))
+			{
+				var type = reader.GetFieldType(idx);
+
+				if (type == typeof(byte[]))
+					expr = Expression.Convert(expr, type);
+			}
+
+			return expr;
 		}
 
-		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx)
+		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
 		{
 			var type = reader.GetFieldType(idx);
 
@@ -84,8 +86,8 @@ namespace LinqToDB.DataProvider
 				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDateTime(0));
 			}
 
-			if (type == typeof(Guid))
-				return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
+			if (type == typeof(Guid))   return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
+			if (type == typeof(byte[])) return MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
 
 			return null;
 		}

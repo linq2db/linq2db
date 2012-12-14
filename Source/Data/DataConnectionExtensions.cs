@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.DataProvider;
+
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
-using System.Linq;
 
 namespace LinqToDB.Data
 {
@@ -55,19 +55,17 @@ namespace LinqToDB.Data
 				var dataProvider   = dataConnection.DataProvider;
 				var parameter      = Expression.Parameter(typeof(IDataReader));
 				var dataReaderExpr = dataProvider.ConvertDataReader(parameter);
-				var dataReaderVar  = Expression.Variable(dataReaderExpr.Type, "dr");
-				var assignment     = Expression.Assign(dataReaderVar, dataReaderExpr);
 
 				Expression expr;
 
 				Func<Type,int,Expression> getMemberExpression = (type,idx) =>
 				{
-					var ex = dataProvider.GetReaderExpression(dataReader, idx, dataReaderVar, type);
+					var ex = dataProvider.GetReaderExpression(dataConnection.MappingSchema, dataReader, idx, dataReaderExpr, type);
 
 					if (ex.NodeType == ExpressionType.Lambda)
 					{
 						var l = (LambdaExpression)ex;
-						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderVar : e);
+						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
 					}
 
 					return ex;
@@ -102,7 +100,14 @@ namespace LinqToDB.Data
 						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
 				}
 
-				expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
+				if (expr.GetCount(e => e == dataReaderExpr) > 1)
+				{
+					var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "dr");
+					var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
+
+					expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+					expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
+				}
 
 				var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
