@@ -3,9 +3,11 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Xml;
 using LinqToDB;
 using LinqToDB.Data;
+
+using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
@@ -193,11 +195,33 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
+		public void TestSqlVariant([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<object>("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo(1));
+				Assert.That(conn.Query<int>   ("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo(1));
+				Assert.That(conn.Query<string>("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo("1"));
+			}
+		}
+
+		[Test]
 		public void TestHierarchyID([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Query<byte[]>("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(new byte[] { 0,0,0,0,0,0,0,1 }));
+				var id = SqlHierarchyId.Parse("/1/3/");
+				Assert.That(conn.Query<SqlHierarchyId>("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
+			}
+		}
+
+		[Test]
+		public void TestXml([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var xml = conn.Query<XmlDocument>("SELECT Cast('<xml/>' as xml)").First();
+				Assert.That(xml, Is.EqualTo("<xml />"));
 			}
 		}
 	}

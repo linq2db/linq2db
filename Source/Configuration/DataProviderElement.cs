@@ -13,9 +13,9 @@ namespace LinqToDB.Configuration
 
 		public DataProviderElement()
 		{
-			_properties.Add(_propTypeName);
-			_properties.Add(_propName);
-			_properties.Add(_propDefault);
+			Properties.Add(_propTypeName);
+			Properties.Add(_propName);
+			Properties.Add(_propDefault);
 		}
 
 		/// <summary>

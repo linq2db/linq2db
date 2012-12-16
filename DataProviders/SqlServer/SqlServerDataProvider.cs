@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 
+using Microsoft.SqlServer.Types;
+
 namespace LinqToDB.DataProvider
 {
 	using Common;
@@ -24,20 +26,23 @@ namespace LinqToDB.DataProvider
 			{
 				SetConvertExpression<SqlXml,XmlReader>(s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader());
 
-				SetDefaultValue(SqlBinary.  Null);
-				SetDefaultValue(SqlBoolean. Null);
-				SetDefaultValue(SqlByte.    Null);
-				SetDefaultValue(SqlDateTime.Null);
-				SetDefaultValue(SqlDecimal. Null);
-				SetDefaultValue(SqlDouble.  Null);
-				SetDefaultValue(SqlGuid.    Null);
-				SetDefaultValue(SqlInt16.   Null);
-				SetDefaultValue(SqlInt32.   Null);
-				SetDefaultValue(SqlInt64.   Null);
-				SetDefaultValue(SqlMoney.   Null);
-				SetDefaultValue(SqlSingle.  Null);
-				SetDefaultValue(SqlString.  Null);
-				SetDefaultValue(SqlXml.     Null);
+				SetDefaultValue(SqlBinary.     Null);
+				SetDefaultValue(SqlBoolean.    Null);
+				SetDefaultValue(SqlByte.       Null);
+				SetDefaultValue(SqlDateTime.   Null);
+				SetDefaultValue(SqlDecimal.    Null);
+				SetDefaultValue(SqlDouble.     Null);
+				SetDefaultValue(SqlGuid.       Null);
+				SetDefaultValue(SqlInt16.      Null);
+				SetDefaultValue(SqlInt32.      Null);
+				SetDefaultValue(SqlInt64.      Null);
+				SetDefaultValue(SqlMoney.      Null);
+				SetDefaultValue(SqlSingle.     Null);
+				SetDefaultValue(SqlString.     Null);
+				SetDefaultValue(SqlXml.        Null);
+				SetDefaultValue(SqlHierarchyId.Null);
+				SetDefaultValue(SqlGeography.  Null);
+				SetDefaultValue(SqlGeometry.   Null);
 
 				SetScalarType(typeof(SqlBinary));
 				SetScalarType(typeof(SqlBoolean));
@@ -53,6 +58,9 @@ namespace LinqToDB.DataProvider
 				SetScalarType(typeof(SqlSingle));
 				SetScalarType(typeof(SqlString));
 				SetScalarType(typeof(SqlXml));
+				SetScalarType(typeof(SqlHierarchyId));
+				SetScalarType(typeof(SqlGeography));
+				SetScalarType(typeof(SqlGeometry));
 			}
 		}
 
@@ -99,6 +107,21 @@ namespace LinqToDB.DataProvider
 			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 			var st   = ((SqlDataReader)reader).GetSchemaTable();
 
+			expr = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Conditional)
+				{
+					var ce = (ConditionalExpression)e;
+
+					if (ce.NodeType == ExpressionType.NotEqual)
+					{
+						
+					}
+				}
+
+				return e;
+			});
+
 			if (st == null || (bool)st.Rows[idx]["allowDBNull"])
 			{
 				expr = Expression.Condition(
@@ -127,20 +150,20 @@ namespace LinqToDB.DataProvider
 
 			if (toType == type)
 			{
-				if (type == typeof(SqlBinary))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBinary     (0));
-				if (type == typeof(SqlBoolean))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBoolean    (0));
-				if (type == typeof(SqlByte))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlByte       (0));
-				if (type == typeof(SqlDateTime)) return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDateTime   (0));
-				if (type == typeof(SqlDecimal))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDecimal    (0));
-				if (type == typeof(SqlDouble))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDouble     (0));
-				if (type == typeof(SqlGuid))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlGuid       (0));
-				if (type == typeof(SqlInt16))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt16      (0));
-				if (type == typeof(SqlInt32))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt32      (0));
-				if (type == typeof(SqlInt64))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt64      (0));
-				if (type == typeof(SqlMoney))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlMoney      (0));
-				if (type == typeof(SqlSingle))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlSingle     (0));
-				if (type == typeof(SqlString))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlString     (0));
-				if (type == typeof(SqlXml))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlXml        (0));
+				if (type == typeof(SqlBinary))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBinary  (0));
+				if (type == typeof(SqlBoolean))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBoolean (0));
+				if (type == typeof(SqlByte))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlByte    (0));
+				if (type == typeof(SqlDateTime)) return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDateTime(0));
+				if (type == typeof(SqlDecimal))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDecimal (0));
+				if (type == typeof(SqlDouble))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDouble  (0));
+				if (type == typeof(SqlGuid))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlGuid    (0));
+				if (type == typeof(SqlInt16))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt16   (0));
+				if (type == typeof(SqlInt32))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt32   (0));
+				if (type == typeof(SqlInt64))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt64   (0));
+				if (type == typeof(SqlMoney))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlMoney   (0));
+				if (type == typeof(SqlSingle))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlSingle  (0));
+				if (type == typeof(SqlString))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlString  (0));
+				if (type == typeof(SqlXml))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlXml     (0));
 			}
 
 			var mi = base.GetReaderMethodInfo(reader, idx, toType);
@@ -150,22 +173,6 @@ namespace LinqToDB.DataProvider
 
 			if (type == typeof(DateTimeOffset)) return MemberHelper.MethodOf<SqlDataReader>(r => r.GetDateTimeOffset(0));
 			if (type == typeof(TimeSpan))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetTimeSpan      (0));
-			//if (type == typeof(SqlBinary))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBinary     (0));
-			//if (type == typeof(SqlBoolean))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBoolean    (0));
-			//if (type == typeof(SqlByte))        return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlByte       (0));
-			//if (type == typeof(SqlDateTime))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDateTime   (0));
-			//if (type == typeof(SqlDecimal))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDecimal    (0));
-			//if (type == typeof(SqlDouble))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDouble     (0));
-			//if (type == typeof(SqlGuid))        return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlGuid       (0));
-			//if (type == typeof(SqlInt16))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt16      (0));
-			//if (type == typeof(SqlInt32))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt32      (0));
-			//if (type == typeof(SqlInt64))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt64      (0));
-			//if (type == typeof(SqlMoney))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlMoney      (0));
-			//if (type == typeof(SqlSingle))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlSingle     (0));
-			//if (type == typeof(SqlString))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlString     (0));
-			//if (type == typeof(SqlXml))         return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlXml        (0));
-
-			//if (type == typeof(SqlFileStream))
 
 			return null;
 		}

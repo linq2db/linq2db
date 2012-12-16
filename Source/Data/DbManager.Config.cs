@@ -212,6 +212,7 @@ namespace LinqToDB.Data
 			{
 				_defaultConfiguration = section.DefaultConfiguration;
 
+				/*
 				foreach (DataProviderElement provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true);
@@ -236,6 +237,7 @@ namespace LinqToDB.Data
 
 					_defaultDataProviderName = providerInstance.UniqueName;
 				}
+				*/
 			}
 
 			if (string.IsNullOrEmpty(_defaultConfiguration))

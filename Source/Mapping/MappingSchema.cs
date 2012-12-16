@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml;
 
 namespace LinqToDB.Mapping
 {
@@ -490,6 +491,8 @@ namespace LinqToDB.Mapping
 				SetScalarType(typeof(byte[]));
 				SetScalarType(typeof(Binary));
 				SetScalarType(typeof(Guid));
+				SetScalarType(typeof(object));
+				SetScalarType(typeof(XmlDocument));
 			}
 		}
 

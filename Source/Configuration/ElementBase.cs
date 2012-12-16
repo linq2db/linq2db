@@ -6,9 +6,8 @@ namespace LinqToDB.Configuration
 {
 	internal abstract class ElementBase : ConfigurationElement
 	{
-		protected ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
-
-		protected override ConfigurationPropertyCollection Properties
+		private   readonly ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
+		protected override ConfigurationPropertyCollection  Properties
 		{
 			get { return _properties; }
 		}
@@ -23,17 +22,21 @@ namespace LinqToDB.Configuration
 		/// <param name="value">The value of the unrecognized attribute.</param>
 		protected override bool OnDeserializeUnrecognizedAttribute(string name, string value)
 		{
-			ConfigurationProperty property = new ConfigurationProperty(name, typeof(string), value);
+			var property = new ConfigurationProperty(name, typeof(string), value);
+
 			_properties.Add(property);
+
 			base[property] = value;
+
 			Attributes.Add(name, value);
+
 			return true;
 		}
 
-		private NameValueCollection _attributes;
-		public  NameValueCollection  Attributes
+		readonly NameValueCollection _attributes = new NameValueCollection(StringComparer.OrdinalIgnoreCase);
+		public   NameValueCollection  Attributes
 		{
-			get { return _attributes ?? (_attributes = new NameValueCollection(StringComparer.OrdinalIgnoreCase));}
+			get { return _attributes; }
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml;
 
 namespace LinqToDB.Common
 {
@@ -13,12 +14,20 @@ namespace LinqToDB.Common
 	{
 		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
 
+		static XmlDocument CreateXmlDocument(string str)
+		{
+			var xml = new XmlDocument();
+			xml.LoadXml(str);
+			return xml;
+		}
+
 		static Converter()
 		{
-			SetConverter<string,         Binary>  (v => new Binary(Encoding.UTF8.GetBytes(v)));
-			SetConverter<Binary,         byte[]>  (v => v.ToArray());
-			SetConverter<bool,           decimal> (v => v ? 1m : 0m);
-			SetConverter<DateTimeOffset, DateTime>(v => v.LocalDateTime);
+			SetConverter<string,         Binary>     (v => new Binary(Encoding.UTF8.GetBytes(v)));
+			SetConverter<Binary,         byte[]>     (v => v.ToArray());
+			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
+			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
+			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v)); 
 		}
 
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
