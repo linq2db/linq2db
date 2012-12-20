@@ -429,18 +429,19 @@ namespace LinqToDB.Common
 			return ex;
 		}
 
-		public static Tuple<LambdaExpression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to)
+		public static Tuple<LambdaExpression,LambdaExpression,bool> GetConverter(MappingSchema mappingSchema, Type from, Type to)
 		{
 			if (mappingSchema == null)
 				mappingSchema = MappingSchema.Default;
 
-			var p = Expression.Parameter(from, "p");
+			var p  = Expression.Parameter(from, "p");
+			var ne = null as LambdaExpression;
 
 			if (from == to)
-				return Tuple.Create(Expression.Lambda(p, p), false);
+				return Tuple.Create(Expression.Lambda(p, p), ne, false);
 
 			if (to == typeof(object))
-				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), false);
+				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), ne, false);
 
 			var ex =
 				GetConverter     (mappingSchema, p, @from, to) ??
@@ -449,6 +450,8 @@ namespace LinqToDB.Common
 
 			if (ex != null)
 			{
+				ne = Expression.Lambda(ex.Item1, p);
+
 				if (from.IsNullable())
 					ex = Tuple.Create(
 						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(to)) as Expression,
@@ -460,14 +463,14 @@ namespace LinqToDB.Common
 			}
 
 			if (ex != null)
-				return Tuple.Create(Expression.Lambda(ex.Item1, p), ex.Item2);
+				return Tuple.Create(Expression.Lambda(ex.Item1, p), ne, ex.Item2);
 
 			var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)) as Expression;
 
 			if (defex.Type != to)
 				defex = Expression.Convert(defex, to);
 
-			return Tuple.Create(Expression.Lambda(defex, p), false);
+			return Tuple.Create(Expression.Lambda(defex, p), ne, false);
 		}
 	}
 }

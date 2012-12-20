@@ -88,13 +88,13 @@ namespace LinqToDB.Mapping
 		public Expression<Func<TFrom,TTo>> GetConvertExpression<TFrom,TTo>()
 		{
 			var li = GetConverter(typeof(TFrom), typeof(TTo), true);
-			return (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.Lambda);
+			return (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
 		}
 
-		public LambdaExpression GetConvertExpression(Type from, Type to)
+		public LambdaExpression GetConvertExpression(Type from, Type to, bool checkNull = true)
 		{
 			var li = GetConverter(from, to, true);
-			return (LambdaExpression)ReduceDefaultValue(li.Lambda);
+			return (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
 		public Func<TFrom,TTo> GetConverter<TFrom,TTo>()
@@ -103,10 +103,10 @@ namespace LinqToDB.Mapping
 
 			if (li.Delegate == null)
 			{
-				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.Lambda);
+				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
 				var l   = rex.Compile();
 
-				_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.Lambda, l, li.IsSchemaSpecific));
+				_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
 
 				return l;
 			}
@@ -124,7 +124,7 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, false));
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, null, false));
 		}
 
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)
@@ -134,7 +134,7 @@ namespace LinqToDB.Mapping
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
 
-			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, func, false));
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, func, false));
 		}
 
 		static LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -168,7 +168,7 @@ namespace LinqToDB.Mapping
 				var li   = info.GetConvertInfo(@from, to);
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
-					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.Lambda, null, false);
+					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
 			}
 
 			if (create)
@@ -185,8 +185,8 @@ namespace LinqToDB.Mapping
 
 					if (li != null)
 					{
-						var b  = li.Lambda.Body;
-						var ps = li.Lambda.Parameters;
+						var b  = li.CheckNullLambda.Body;
+						var ps = li.CheckNullLambda.Parameters;
 
 						// For int? -> byte try to find int -> byte and convert int to int?
 						//
@@ -203,8 +203,8 @@ namespace LinqToDB.Mapping
 
 						if (li != null)
 						{
-							var b  = li.Lambda.Body;
-							var ps = li.Lambda.Parameters;
+							var b  = li.CheckNullLambda.Body;
+							var ps = li.CheckNullLambda.Parameters;
 
 							// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 							//
@@ -231,8 +231,8 @@ namespace LinqToDB.Mapping
 
 					if (li != null)
 					{
-						var b  = li.Lambda.Body;
-						var ps = li.Lambda.Parameters;
+						var b  = li.CheckNullLambda.Body;
+						var ps = li.CheckNullLambda.Parameters;
 
 						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(Expression.Convert(b, to), ps);
@@ -244,14 +244,14 @@ namespace LinqToDB.Mapping
 					ex = null;
 
 				if (ex != null)
-					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), null, ss);
+					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), ex, null, ss);
 
 				var d = ConvertInfo.Default.Get(from, to);
 
 				if (d == null || d.IsSchemaSpecific)
 					d = ConvertInfo.Default.Create(this, from, to);
 
-				return new ConvertInfo.LambdaInfo(d.Lambda, null, d.IsSchemaSpecific);
+				return new ConvertInfo.LambdaInfo(d.CheckNullLambda, d.Lambda, null, d.IsSchemaSpecific);
 			}
 
 			return null;

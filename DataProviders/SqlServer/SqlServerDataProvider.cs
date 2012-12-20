@@ -107,21 +107,6 @@ namespace LinqToDB.DataProvider
 			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 			var st   = ((SqlDataReader)reader).GetSchemaTable();
 
-			expr = expr.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Conditional)
-				{
-					var ce = (ConditionalExpression)e;
-
-					if (ce.NodeType == ExpressionType.NotEqual)
-					{
-						
-					}
-				}
-
-				return e;
-			});
-
 			if (st == null || (bool)st.Rows[idx]["allowDBNull"])
 			{
 				expr = Expression.Condition(

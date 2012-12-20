@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var expr = GetReaderMethodExpression(reader, idx, readerExpression, toType);
-			var conv = mappingSchema.GetConvertExpression(expr.Type, toType);
+			var conv = mappingSchema.GetConvertExpression(expr.Type, toType, false);
 
 			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
 			{

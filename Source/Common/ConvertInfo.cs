@@ -12,14 +12,20 @@ namespace LinqToDB.Common
 
 		public class LambdaInfo
 		{
-			public LambdaInfo(LambdaExpression lambda, Delegate @delegate, bool isSchemaSpecific)
+			public LambdaInfo(
+				LambdaExpression checkNullLambda,
+				LambdaExpression lambda,
+				Delegate         @delegate,
+				bool             isSchemaSpecific)
 			{
-				Lambda           = lambda;
+				CheckNullLambda  = checkNullLambda;
+				Lambda           = lambda ?? checkNullLambda;
 				Delegate         = @delegate;
 				IsSchemaSpecific = isSchemaSpecific;
 			}
 
 			public LambdaExpression Lambda;
+			public LambdaExpression CheckNullLambda;
 			public Delegate         Delegate;
 			public bool             IsSchemaSpecific;
 		}
@@ -54,7 +60,7 @@ namespace LinqToDB.Common
 		{
 			var ex  = ConverterMaker.GetConverter(mappingSchema, from, to);
 			var lm  = ex.Item1.Compile();
-			var ret = new LambdaInfo(ex.Item1, lm, ex.Item2);
+			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 
 			Set(_expressions, from, to , ret);
 

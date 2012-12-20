@@ -49,7 +49,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, _lambda, false));
+						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 				}
 			}
 		}
@@ -79,7 +79,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
-						new ConvertInfo.LambdaInfo(_expression, _lambda, false));
+						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 				}
 			}
 		}
