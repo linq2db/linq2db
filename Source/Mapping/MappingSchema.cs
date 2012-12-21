@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace LinqToDB.Mapping
 {
@@ -493,6 +494,7 @@ namespace LinqToDB.Mapping
 				SetScalarType(typeof(Guid));
 				SetScalarType(typeof(object));
 				SetScalarType(typeof(XmlDocument));
+				SetScalarType(typeof(XDocument));
 			}
 		}
 

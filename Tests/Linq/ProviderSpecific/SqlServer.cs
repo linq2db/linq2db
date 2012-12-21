@@ -4,6 +4,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -220,8 +221,8 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var xml = conn.Query<XmlDocument>("SELECT Cast('<xml/>' as xml)").First();
-				Assert.That(xml.InnerXml, Is.EqualTo("<xml />"));
+				Assert.That(conn.Query<XDocument>  ("SELECT Cast('<xml/>' as xml)").First().ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Query<XmlDocument>("SELECT Cast('<xml/>' as xml)").First().InnerXml,   Is.EqualTo("<xml />"));
 			}
 		}
 	}
