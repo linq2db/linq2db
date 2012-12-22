@@ -91,5 +91,24 @@ namespace LinqToDB.DataProvider
 
 			return null;
 		}
+
+		public virtual IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value)
+		{
+			var p = command.CreateParameter();
+
+			p.ParameterName = name;
+
+			switch (dataType)
+			{
+				case DataType.Char     : p.DbType = DbType.AnsiStringFixedLength; break;
+				case DataType.VarChar  : p.DbType = DbType.AnsiString;            break;
+				case DataType.NChar    : p.DbType = DbType.StringFixedLength;     break;
+				case DataType.NVarChar : p.DbType = DbType.String;                break;
+			}
+
+			p.Value = value ?? DBNull.Value;
+
+			return p;
+		}
 	}
 }

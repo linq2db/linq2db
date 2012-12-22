@@ -2,6 +2,8 @@
 using System.Data;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider
 {
 	using Mapping;
@@ -17,5 +19,7 @@ namespace LinqToDB.DataProvider
 
 		Expression    ConvertDataReader  (Expression reader);
 		Expression    GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+
+		IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value);
 	}
 }

@@ -21,6 +21,17 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, params DataParameter[] parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+				while (rd.Read())
+					yield return objectReader(rd);
+		}
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
 			connection.Command.CommandText = sql;
@@ -37,9 +48,27 @@ namespace LinqToDB.Data
 			}
 		}
 
-		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			return Query<T>(connection, sql);
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+			{
+				if (rd.Read())
+				{
+					var objectReader = GetObjectReader<T>(connection, rd);
+					do
+						yield return objectReader(rd);
+					while (rd.Read());
+				}
+			}
+		}
+
+		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
+		{
+			return Query<T>(connection, sql, parameters);
 		}
 
 		static readonly ConcurrentDictionary<object,Delegate> _objectReaders = new ConcurrentDictionary<object,Delegate>();
@@ -147,6 +176,25 @@ namespace LinqToDB.Data
 			}
 
 			return (Func<IDataReader,T>)func;
+		}
+
+		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
+		{
+			if (parameters == null || parameters.Length == 0)
+				return;
+
+			dataConnection.Command.Parameters.Clear();
+
+			foreach (var parameter in parameters)
+			{
+				var p = dataConnection.DataProvider.GetParameter(
+					dataConnection.Command,
+					parameter.Name,
+					parameter.DataType,
+					parameter.Value);
+
+				dataConnection.Command.Parameters.Add(p);
+			}
 		}
 	}
 }

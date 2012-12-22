@@ -161,5 +161,18 @@ namespace LinqToDB.DataProvider
 
 			return null;
 		}
+
+		public override IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value)
+		{
+			var p = (SqlParameter)base.GetParameter(command, name, dataType, value);
+
+			switch (dataType)
+			{
+				case DataType.Text  : p.SqlDbType = SqlDbType.Text;  break;
+				case DataType.NText : p.SqlDbType = SqlDbType.NText; break;
+			}
+
+			return p;
+		}
 	}
 }

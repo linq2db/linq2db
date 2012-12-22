@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
+using LinqToDB.Mapping;
 using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
@@ -97,6 +97,36 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
+		public void TestChar([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<char>("SELECT Cast('1' as char)").        First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast('1' as char(1))").     First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT Cast('1' as varchar)").     First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast('1' as varchar(20))"). First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT Cast('1' as nchar)").       First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast('1' as nchar(20))").   First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT Cast('1' as nvarchar)").    First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast('1' as nvarchar(20))").First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT @p",                  DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')).First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT @p", DataParameter.VarChar ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT @p", DataParameter.NChar   ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT @p", DataParameter.NVarChar("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char>("SELECT @p", DataParameter.Create  ("p", '1')).First(), Is.EqualTo('1'));
+
+				Assert.That(conn.Query<char>("SELECT @p", new DataParameter { Name = "p", Value = '1' }).First(), Is.EqualTo('1'));
+			}
+		}
+
+		[Test]
 		public void TestString([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -128,6 +158,17 @@ namespace Tests.ProviderSpecific
 
 				Assert.That(conn.Query<string>("SELECT Cast('12345' as nvarchar(max))").First(), Is.EqualTo("12345"));
 				Assert.That(conn.Query<string>("SELECT Cast(NULL    as nvarchar(max))").First(), Is.Null);
+
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Char    ("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.VarChar ("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Text    ("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.NChar   ("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.NVarChar("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.NText   ("p", "123")).First(), Is.EqualTo("123"));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Create  ("p", "123")).First(), Is.EqualTo("123"));
+
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Create("p", null)).First(), Is.EqualTo(null));
+				Assert.That(conn.Query<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }).First(), Is.EqualTo("1"));
 			}
 		}
 
@@ -224,6 +265,22 @@ namespace Tests.ProviderSpecific
 			{
 				Assert.That(conn.Query<XDocument>  ("SELECT Cast('<xml/>' as xml)").First().ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Query<XmlDocument>("SELECT Cast('<xml/>' as xml)").First().InnerXml,   Is.EqualTo("<xml />"));
+			}
+		}
+
+		enum TestEnum
+		{
+			[MapValue("A")] AA,
+			[MapValue("B")] BB,
+		}
+
+		[Test]
+		public void TestEnum1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<TestEnum>("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Query<TestEnum>("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
 			}
 		}
 	}

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
-using JetBrains.Annotations;
-using LinqToDB.Mapping;
-using NUnit.Framework;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Data
 {
