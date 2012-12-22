@@ -25,7 +25,7 @@ namespace LinqToDB.Mapping
 
 		private static TrimmableAttribute GetDefaultTrimmableAttribute()
 		{
-			return Common.Configuration.TrimOnMapping ? Yes : No;
+			return No;
 		}
 
 		public static readonly TrimmableAttribute Yes     = new TrimmableAttribute(true);

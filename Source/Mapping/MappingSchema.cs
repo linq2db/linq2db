@@ -512,7 +512,19 @@ namespace LinqToDB.Mapping
 			}
 
 			var attr = GetAttribute<ScalarTypeAttribute>(type, a => a.Configuration);
-			var ret  = attr != null && attr.IsScalar;
+			var ret  = false;
+
+			if (attr != null)
+			{
+				ret = attr.IsScalar;
+			}
+			else
+			{
+				type = type.ToNullableUnderlying();
+
+				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
+					ret = true;
+			}
 
 			SetScalarType(type, ret);
 

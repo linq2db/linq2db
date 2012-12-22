@@ -229,7 +229,6 @@
     <Compile Include="Exceptions\Inheritance.cs" />
     <Compile Include="Linq\Inheritance.cs" />
     <Compile Include="ProviderSpecific\Access.cs" />
-    <Compile Include="ProviderSpecific\MsSql2008s.cs" />
     <Compile Include="ProviderSpecific\SqlCe.cs" />
     <Compile Include="Linq\SetTest.cs" />
     <Compile Include="Linq\SubQuery.cs" />

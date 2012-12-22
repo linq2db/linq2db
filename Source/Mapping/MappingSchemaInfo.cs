@@ -70,15 +70,8 @@ namespace LinqToDB.Mapping
 
 		volatile ConcurrentDictionary<Type,bool> _scalarTypes;
 
-		static readonly Option<bool> TrueOption = Option<bool>.Some(true);
-
 		public Option<bool> GetScalarType(Type type)
 		{
-			type = type.ToNullableUnderlying();
-
-			if (type.IsEnum || type.IsPrimitive)
-				return TrueOption;
-
 			if (_scalarTypes != null)
 			{
 				bool isScalarType;

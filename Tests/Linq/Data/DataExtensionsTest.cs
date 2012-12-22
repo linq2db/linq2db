@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using JetBrains.Annotations;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using LinqToDB;
@@ -78,6 +79,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ScalarType(false)]
 		struct QueryStruct
 		{
 			public int      Column1;

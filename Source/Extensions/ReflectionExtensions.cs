@@ -50,14 +50,7 @@ namespace LinqToDB.Extensions
 			if (!_typeAttributesInternal.TryGetValue(type, out attrs))
 				_typeAttributesInternal.Add(type, attrs = type.GetCustomAttributes(false));
 
-			if (Common.Configuration.FilterOutBaseEqualAttributes)
-			{
-				foreach (var t in attrs)
-					if (!list.Contains(t))
-						list.Add(t);
-			}
-			else
-				list.AddRange(attrs);
+			list.AddRange(attrs);
 
 			if (type.IsInterface)
 				return;

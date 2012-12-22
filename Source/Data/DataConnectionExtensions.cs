@@ -88,21 +88,48 @@ namespace LinqToDB.Data
 					for (var i = 0; i < dataReader.FieldCount; i++)
 						names.Add(dataReader.GetName(i));
 
-					var members =
-					(
-						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
-						where member != null
-						select new
-						{
-							Member = member,
-							Expr   = getMemberExpression(member.MemberType, n.idx),
-						}
-					).ToList();
+					expr = null;
 
-					expr = Expression.MemberInit(
-						Expression.New(typeof(T)),
-						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
+					var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
+
+					if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
+					{
+						var q =
+							from c in ctors
+							let count = c.ps.Count(p => names.Contains(p.Name))
+							orderby count descending
+							select c;
+
+						var ctor = q.FirstOrDefault();
+
+						if (ctor != null)
+						{
+							expr = Expression.New(
+								ctor.c,
+								ctor.ps.Select(p => names.Contains(p.Name) ?
+									getMemberExpression(p.ParameterType, names.IndexOf(p.Name)) :
+									Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
+						}
+					}
+
+					if (expr == null)
+					{
+						var members =
+						(
+							from n in names.Select((name,idx) => new { name, idx })
+							let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
+							where member != null
+							select new
+							{
+								Member = member,
+								Expr   = getMemberExpression(member.MemberType, n.idx),
+							}
+						).ToList();
+
+						expr = Expression.MemberInit(
+							Expression.New(typeof(T)),
+							members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
+					}
 				}
 
 				if (expr.GetCount(e => e == dataReaderExpr) > 1)
