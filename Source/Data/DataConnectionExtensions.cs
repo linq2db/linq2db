@@ -37,6 +37,11 @@ namespace LinqToDB.Data
 			}
 		}
 
+		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql)
+		{
+			return Query<T>(connection, sql);
+		}
+
 		static readonly ConcurrentDictionary<object,Delegate> _objectReaders = new ConcurrentDictionary<object,Delegate>();
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader)

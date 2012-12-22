@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using JetBrains.Annotations;
 using NUnit.Framework;
 
 using LinqToDB;
@@ -56,6 +56,40 @@ namespace Tests.Data
 			using (var conn = new DataConnection(context))
 			{
 				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void TestObject2([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.Query(
+					new
+					{
+						Column1 = 1,
+						Column2 = DateTime.MinValue
+					},
+					"SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+			}
+		}
+
+		struct QueryStruct
+		{
+			public int      Column1;
+			public DateTime Column2;
+		}
+
+		[Test]
+		public void TestStruct1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.Query<QueryStruct>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
 				Assert.That(list.Count, Is.EqualTo(1));
 			}

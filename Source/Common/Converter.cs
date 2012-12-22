@@ -42,7 +42,7 @@ namespace LinqToDB.Common
 			return l;
 		}
 
-		static readonly ConcurrentDictionary<object,Func<object,object>> _converters  = new ConcurrentDictionary<object,Func<object,object>>();
+		static readonly ConcurrentDictionary<object,Func<object,object>> _converters = new ConcurrentDictionary<object,Func<object,object>>();
 
 		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{
@@ -118,9 +118,9 @@ namespace LinqToDB.Common
 					b.Transform(e =>
 						e == ps[0] ?
 							Expression.Convert (p, e.Type) :
-						IsDefaultValuePlaceHolder(e) ?
-							Expression.Constant(DefaultValue.GetValue(e.Type)) :
-							e),
+							IsDefaultValuePlaceHolder(e) ?
+								Expression.Constant(DefaultValue.GetValue(e.Type)) :
+								e),
 					p);
 
 				l = ex.Compile();

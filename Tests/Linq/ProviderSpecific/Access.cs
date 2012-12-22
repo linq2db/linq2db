@@ -12,9 +12,9 @@ namespace Tests.ProviderSpecific
 	public class Access : TestBase
 	{
 		[Test]
-		public void SqlTest()
+		public void SqlTest([IncludeDataContexts(ProviderName.Access)] string context)
 		{
-			using (var db = new TestDbManager(ProviderName.Access))
+			using (var db = new TestDbManager(context))
 			{
 				var res = db
 					.SetCommand(@"
