@@ -13,6 +13,8 @@ namespace LinqToDB.Data
 {
 	public static class DataConnectionExtensions
 	{
+		#region Query with object reader
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
 		{
 			connection.Command.CommandText = sql;
@@ -45,6 +47,10 @@ namespace LinqToDB.Data
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
+
+		#endregion
+
+		#region Query
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
@@ -105,6 +111,10 @@ namespace LinqToDB.Data
 			}
 		}
 
+		#endregion
+
+		#region Query with template
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return Query<T>(connection, sql, parameters);
@@ -114,6 +124,10 @@ namespace LinqToDB.Data
 		{
 			return Query<T>(connection, sql, parameters);
 		}
+
+		#endregion
+
+		#region Execute
 
 		public static int Execute(this DataConnection connection, string sql)
 		{
@@ -141,7 +155,74 @@ namespace LinqToDB.Data
 			return connection.Command.ExecuteNonQuery();
 		}
 
-		static readonly ConcurrentDictionary<object,Delegate> _objectReaders = new ConcurrentDictionary<object,Delegate>();
+		#endregion
+
+		#region Execute scalar
+
+		public static T Execute<T>(this DataConnection connection, string sql)
+		{
+			connection.Command.CommandText = sql;
+
+			using (var rd = connection.Command.ExecuteReader())
+			{
+				if (rd.Read())
+				{
+					var objectReader = GetObjectReader<T>(connection, rd);
+					return objectReader(rd);
+				}
+			}
+
+			return default(T);
+		}
+
+		public static T Execute<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+			{
+				if (rd.Read())
+				{
+					var objectReader = GetObjectReader<T>(connection, rd);
+					return objectReader(rd);
+				}
+			}
+
+			return default(T);
+		}
+
+		public static T Execute<T>(this DataConnection connection, string sql, DataParameter parameter)
+		{
+			return Execute<T>(connection, sql, new[] { parameter });
+		}
+
+		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			var dps = GetDataParameters(connection.MappingSchema, parameters);
+
+			SetParameters(connection, dps);
+
+			using (var rd = connection.Command.ExecuteReader())
+			{
+				if (rd.Read())
+				{
+					var objectReader = GetObjectReader<T>(connection, rd);
+					return objectReader(rd);
+				}
+			}
+
+			return default(T);
+		}
+
+		#endregion
+
+		#region GetObjectReader
+
+		static readonly ConcurrentDictionary<object, Delegate> _objectReaders = new ConcurrentDictionary<object, Delegate>();
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader)
 		{
@@ -248,6 +329,10 @@ namespace LinqToDB.Data
 			return (Func<IDataReader,T>)func;
 		}
 
+		#endregion
+
+		#region SetParameters
+
 		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			if (parameters == null || parameters.Length == 0)
@@ -351,5 +436,7 @@ namespace LinqToDB.Data
 
 			return func(parameters);
 		}
+
+		#endregion
 	}
 }
