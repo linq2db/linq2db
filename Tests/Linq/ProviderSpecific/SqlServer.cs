@@ -48,7 +48,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestNumerics([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -71,36 +71,44 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestDateTime([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:00' as smalldatetime)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 00)));
+				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").First(),      Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+			}
+		}
+
+		[Test]
+		public void TestDateTimeOffset([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Query<DateTimeOffset>(
-					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)").First(),
-					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
+					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(),
+					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				Assert.That(conn.Query<DateTime>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)").First(),
 					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 
 				Assert.That(conn.Query<DateTimeOffset>(
-					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(),
-					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
+					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)").First(),
+					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
 
 				Assert.That(conn.Query<DateTime>(
 					"SELECT Cast(NULL as datetimeoffset)").First(),
 					Is.EqualTo(default(DateTime)));
 
 				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12' as date)").First(),                   Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:00' as smalldatetime)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 00)));
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").First(),      Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Query<TimeSpan>("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
 			}
 		}
 
 		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestChar([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -130,7 +138,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestString([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -176,7 +184,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestBinary([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -204,7 +212,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestSqlTypes([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestSqlTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -232,7 +240,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestGuid([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -243,7 +251,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestTimestamp([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestTimestamp([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -253,7 +261,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestSqlVariant([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestSqlVariant([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -264,7 +272,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestHierarchyID([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestHierarchyID([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -274,7 +282,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestXml([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -290,7 +298,7 @@ namespace Tests.ProviderSpecific
 		}
 
 		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestEnum1([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

@@ -39,7 +39,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestContextToString([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
