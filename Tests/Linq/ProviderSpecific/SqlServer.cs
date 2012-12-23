@@ -18,7 +18,7 @@ namespace Tests.ProviderSpecific
 	[TestFixture]
 	public class SqlServer : TestBase
 	{
-		static void TestNumerics<T>(DataConnection conn, T expectedValue)
+		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType)
 		{
 			foreach (var sqlType in new[]
 				{
@@ -41,6 +41,9 @@ namespace Tests.ProviderSpecific
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
 				Assert.That(conn.Query<T>(sql).First(), Is.EqualTo(expectedValue));
+
+				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue}), Is.EqualTo(expectedValue));
 			}
 		}
 
@@ -49,21 +52,21 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)   true);
+				TestNumerics(conn, (bool)   true, DataType.Boolean);
 
-				TestNumerics(conn, (sbyte)  1);
-				TestNumerics(conn, (short)  1);
-				TestNumerics(conn, (int)    1);
-				TestNumerics(conn, (long)   1L);
+				TestNumerics(conn, (sbyte)  1,    DataType.SByte);
+				TestNumerics(conn, (short)  1,    DataType.Int16);
+				TestNumerics(conn, (int)    1,    DataType.Int16);
+				TestNumerics(conn, (long)   1L,   DataType.Int64);
 
-				TestNumerics(conn, (byte)   1);
-				TestNumerics(conn, (ushort) 1);
-				TestNumerics(conn, (uint)   1u);
-				TestNumerics(conn, (ulong)  1ul);
+				TestNumerics(conn, (byte)   1,    DataType.Byte);
+				TestNumerics(conn, (ushort) 1,    DataType.UInt16);
+				TestNumerics(conn, (uint)   1u,   DataType.UInt32);
+				TestNumerics(conn, (ulong)  1ul,  DataType.UInt64);
 
-				TestNumerics(conn, (float)  1);
-				TestNumerics(conn, (double) 1d);
-				TestNumerics(conn, (decimal)1m);
+				TestNumerics(conn, (float)  1,    DataType.Single);
+				TestNumerics(conn, (double) 1d,   DataType.Double);
+				TestNumerics(conn, (decimal)1m,   DataType.Decimal);
 			}
 		}
 

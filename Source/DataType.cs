@@ -57,16 +57,19 @@ namespace LinqToDB
 		/// A variable-length stream of binary data ranging from 0 to 2 31 -1 (or 2,147,483,647) bytes.
 		/// </summary>
 		Image,
+		*/
 
 		/// <summary>
 		/// A simple type representing Boolean values of true or false.
 		/// </summary>
 		Boolean,
 
+		/*
 		/// <summary>
 		/// A globally unique identifier (or GUID).
 		/// </summary>
 		Guid,
+		*/
 
 		/// <summary>
 		/// An integral type representing signed 8-bit integers with values between -128 and 127.
@@ -123,6 +126,7 @@ namespace LinqToDB
 		/// </summary>
 		Decimal,
 
+		/*
 		/// <summary>
 		/// A currency value ranging from -2 63 (or -9,223,372,036,854,775,808) to 2 63 -1 (or +9,223,372,036,854,775,807)
 		/// with an accuracy to a ten-thousandth of a currency unit.

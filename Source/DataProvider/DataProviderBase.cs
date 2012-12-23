@@ -105,6 +105,18 @@ namespace LinqToDB.DataProvider
 				case DataType.NChar     : p.DbType = DbType.StringFixedLength;     break;
 				case DataType.NVarChar  : p.DbType = DbType.String;                break;
 				case DataType.VarBinary : p.DbType = DbType.Binary;                break;
+				case DataType.Boolean   : p.DbType = DbType.Boolean;               break;
+				case DataType.SByte     : p.DbType = DbType.SByte;                 break;
+				case DataType.Int16     : p.DbType = DbType.Int16;                 break;
+				case DataType.Int32     : p.DbType = DbType.Int32;                 break;
+				case DataType.Int64     : p.DbType = DbType.Int64;                 break;
+				case DataType.Byte      : p.DbType = DbType.Byte;                  break;
+				case DataType.UInt16    : p.DbType = DbType.UInt16;                break;
+				case DataType.UInt32    : p.DbType = DbType.UInt32;                break;
+				case DataType.UInt64    : p.DbType = DbType.UInt64;                break;
+				case DataType.Single    : p.DbType = DbType.Single;                break;
+				case DataType.Double    : p.DbType = DbType.Double;                break;
+				case DataType.Decimal   : p.DbType = DbType.Decimal;               break;
 			}
 
 			p.Value = value ?? DBNull.Value;

@@ -164,6 +164,15 @@ namespace LinqToDB.DataProvider
 
 		public override IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value)
 		{
+			switch (dataType)
+			{
+				case DataType.SByte     : dataType = DataType.Int16; break;
+				case DataType.Undefined :
+					if (value is sbyte)
+						dataType = DataType.Int16;
+					break;
+			}
+
 			var p = (SqlParameter)base.GetParameter(command, name, dataType, value);
 
 			switch (dataType)
