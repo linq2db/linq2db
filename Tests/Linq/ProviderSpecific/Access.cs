@@ -1,34 +1,29 @@
 ﻿using System;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
 namespace Tests.ProviderSpecific
 {
-	using Model;
-
 	[TestFixture]
 	public class Access : TestBase
 	{
 		[Test]
 		public void SqlTest([IncludeDataContexts(ProviderName.Access)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new DataConnection(context))
 			{
-				var res = db
-					.SetCommand(@"
-						UPDATE
-							[Child] [c]
-								LEFT JOIN [Parent] [t1] ON [c].[ParentID] = [t1].[ParentID]
-						SET
-							[ChildID] = @id
-						WHERE
-							[c].[ChildID] = @id1 AND [t1].[Value1] = 1
-",
-						db.Parameter("@id1", 1001),
-						db.Parameter("@id", 1002))
-					.ExecuteNonQuery();
+				var res = db.Execute(@"
+					UPDATE
+						[Child] [c]
+							LEFT JOIN [Parent] [t1] ON [c].[ParentID] = [t1].[ParentID]
+					SET
+						[ChildID] = @id
+					WHERE
+						[c].[ChildID] = @id1 AND [t1].[Value1] = 1",
+					new { id1 = 1001, id = 1002 });
 			}
 		}
 	}

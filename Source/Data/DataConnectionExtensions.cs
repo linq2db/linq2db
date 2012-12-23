@@ -5,8 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
@@ -22,7 +22,7 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, params DataParameter[] parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			connection.Command.CommandText = sql;
 
@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, object parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
 		{
 			connection.Command.CommandText = sql;
 
@@ -113,6 +113,32 @@ namespace LinqToDB.Data
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object parameters)
 		{
 			return Query<T>(connection, sql, parameters);
+		}
+
+		public static int Execute(this DataConnection connection, string sql)
+		{
+			connection.Command.CommandText = sql;
+			return connection.Command.ExecuteNonQuery();
+		}
+
+		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, parameters);
+
+			return connection.Command.ExecuteNonQuery();
+		}
+
+		public static int Execute(this DataConnection connection, string sql, object parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			var dps = GetDataParameters(connection.MappingSchema, parameters);
+
+			SetParameters(connection, dps);
+
+			return connection.Command.ExecuteNonQuery();
 		}
 
 		static readonly ConcurrentDictionary<object,Delegate> _objectReaders = new ConcurrentDictionary<object,Delegate>();
