@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Reflection;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
@@ -26,6 +27,19 @@ namespace LinqToDB.Data
 			connection.Command.CommandText = sql;
 
 			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+				while (rd.Read())
+					yield return objectReader(rd);
+		}
+
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, object parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			var dps = GetDataParameters(connection.MappingSchema, parameters);
+
+			SetParameters(connection, dps);
 
 			using (var rd = connection.Command.ExecuteReader())
 				while (rd.Read())
@@ -66,7 +80,37 @@ namespace LinqToDB.Data
 			}
 		}
 
+		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, DataParameter parameter)
+		{
+			return Query<T>(connection, sql, new[] { parameter });
+		}
+
+		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			var dps = GetDataParameters(connection.MappingSchema, parameters);
+
+			SetParameters(connection, dps);
+
+			using (var rd = connection.Command.ExecuteReader())
+			{
+				if (rd.Read())
+				{
+					var objectReader = GetObjectReader<T>(connection, rd);
+					do
+						yield return objectReader(rd);
+					while (rd.Read());
+				}
+			}
+		}
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
+		{
+			return Query<T>(connection, sql, parameters);
+		}
+
+		public static IEnumerable<T> Query<T>(this DataConnection connection, T template, string sql, object parameters)
 		{
 			return Query<T>(connection, sql, parameters);
 		}
@@ -195,6 +239,91 @@ namespace LinqToDB.Data
 
 				dataConnection.Command.Parameters.Add(p);
 			}
+		}
+
+		static readonly ConcurrentDictionary<Type, Func<object,DataParameter[]>> _parameterReaders =
+			new ConcurrentDictionary<Type,Func<object,DataParameter[]>>();
+
+		static readonly PropertyInfo _dataParameterName     = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
+		static readonly PropertyInfo _dataParameterDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DataType);
+		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
+
+		static DataParameter[] GetDataParameters(MappingSchema mappingSchema, object parameters)
+		{
+			if (parameters == null)
+				return null;
+
+			if (parameters is DataParameter[])
+				return (DataParameter[])parameters;
+
+			if (parameters is DataParameter)
+				return new[] { (DataParameter)parameters };
+
+			Func<object,DataParameter[]> func;
+			var type = parameters.GetType();
+
+			if (!_parameterReaders.TryGetValue(type, out func))
+			{
+				var td  = new TypeDescriptor(mappingSchema, type);
+				var p   = Expression.Parameter(typeof(object), "p");
+				var obj = Expression.Parameter(parameters.GetType(), "obj");
+
+				var expr = Expression.Lambda<Func<object,DataParameter[]>>(
+					Expression.Block(
+						new[] { obj },
+						new Expression[]
+						{
+							Expression.Assign(obj, Expression.Convert(p, type)),
+							Expression.NewArrayInit(
+								typeof(DataParameter),
+								td.Members.Select(m =>
+								{
+									if (m.MemberType == typeof(DataParameter))
+									{
+										var pobj = Expression.Parameter(typeof(DataParameter));
+
+										return Expression.Block(
+											new[] { pobj },
+											new Expression[]
+											{
+												Expression.Assign(pobj, Expression.PropertyOrField(obj, m.MemberName)),
+												Expression.MemberInit(
+													Expression.New(typeof(DataParameter)),
+													Expression.Bind(
+														_dataParameterName,
+														Expression.Coalesce(
+															Expression.MakeMemberAccess(pobj, _dataParameterName),
+															Expression.Constant(m.ColumnName))),
+													Expression.Bind(
+														_dataParameterDataType,
+														Expression.MakeMemberAccess(pobj, _dataParameterDataType)),
+													Expression.Bind(
+														_dataParameterValue,
+														Expression.Convert(
+															Expression.MakeMemberAccess(pobj, _dataParameterValue),
+															typeof(object))))
+											});
+									}
+
+									return (Expression)Expression.MemberInit(
+										Expression.New(typeof(DataParameter)),
+										Expression.Bind(
+											_dataParameterName,
+											Expression.Constant(m.ColumnName)),
+										Expression.Bind(
+											_dataParameterValue,
+											Expression.Convert(
+												Expression.PropertyOrField(obj, m.MemberName),
+												typeof(object))));
+								}))
+						}
+					),
+					p);
+
+				_parameterReaders[parameters.GetType()] = func = expr.Compile();
+			}
+
+			return func(parameters);
 		}
 	}
 }

@@ -54,7 +54,7 @@ namespace Tests.ProviderSpecific
 				TestNumerics(conn, (sbyte)  1);
 				TestNumerics(conn, (short)  1);
 				TestNumerics(conn, (int)    1);
-				TestNumerics(conn, (long)   1l);
+				TestNumerics(conn, (long)   1L);
 
 				TestNumerics(conn, (byte)   1);
 				TestNumerics(conn, (ushort) 1);
@@ -167,7 +167,7 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<string>("SELECT @p", DataParameter.NText   ("p", "123")).First(), Is.EqualTo("123"));
 				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Create  ("p", "123")).First(), Is.EqualTo("123"));
 
-				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Create("p", null)).First(), Is.EqualTo(null));
+				Assert.That(conn.Query<string>("SELECT @p", DataParameter.Create("p", (string)null)).First(), Is.EqualTo(null));
 				Assert.That(conn.Query<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }).First(), Is.EqualTo("1"));
 			}
 		}
@@ -175,16 +175,28 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void TestBinary([IncludeDataContexts(ProviderName.SqlServer)] string context)
 		{
+			var arr1 = new byte[] {       48, 57 };
+			var arr2 = new byte[] { 0, 0, 48, 57 };
+
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as binary(2))").     First(), Is.EqualTo(           new byte[] {       48, 57 }));
-				Assert.That(conn.Query<Binary>("SELECT Cast(12345 as binary(4))").     First(), Is.EqualTo(new Binary(new byte[] { 0, 0, 48, 57 })));
+				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as binary(2))").     First(), Is.EqualTo(           arr1));
+				Assert.That(conn.Query<Binary>("SELECT Cast(12345 as binary(4))").     First(), Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as varbinary(2))").  First(), Is.EqualTo(           new byte[] {       48, 57 }));
-				Assert.That(conn.Query<Binary>("SELECT Cast(12345 as varbinary(4))").  First(), Is.EqualTo(new Binary(new byte[] { 0, 0, 48, 57 })));
+				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as varbinary(2))").  First(), Is.EqualTo(           arr1));
+				Assert.That(conn.Query<Binary>("SELECT Cast(12345 as varbinary(4))").  First(), Is.EqualTo(new Binary(arr2)));
 
 				Assert.That(conn.Query<byte[]>("SELECT Cast(NULL as image)").          First(), Is.EqualTo(null));
-				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as varbinary(max))").First(), Is.EqualTo(           new byte[] { 0, 0, 48, 57 }));
+				Assert.That(conn.Query<byte[]>("SELECT Cast(12345 as varbinary(max))").First(), Is.EqualTo(           arr2));
+
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)).First(), Is.EqualTo(arr1));
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)).First(), Is.EqualTo(arr1));
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)).First(), Is.EqualTo(arr1));
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)).First(), Is.EqualTo(null));
+				Assert.That(conn.Query<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", new byte[0])).First(), Is.EqualTo(new byte[] {0}));
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.Binary("p", new byte[0])).First(), Is.EqualTo(new byte[8000]));
+				Assert.That(conn.Query<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])).First(), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Query<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }).First(), Is.EqualTo(arr1));
 			}
 		}
 
@@ -200,7 +212,7 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<SqlDouble>  ("SELECT Cast(1        as float)").    First().Value, Is.EqualTo(1.0));
 				Assert.That(conn.Query<SqlInt16>   ("SELECT Cast(1        as smallint)"). First().Value, Is.EqualTo((short)1));
 				Assert.That(conn.Query<SqlInt32>   ("SELECT Cast(1        as int)").      First().Value, Is.EqualTo((int)1));
-				Assert.That(conn.Query<SqlInt64>   ("SELECT Cast(1        as bigint)").   First().Value, Is.EqualTo(1l));
+				Assert.That(conn.Query<SqlInt64>   ("SELECT Cast(1        as bigint)").   First().Value, Is.EqualTo(1L));
 				Assert.That(conn.Query<SqlMoney>   ("SELECT Cast(1        as money)").    First().Value, Is.EqualTo(1m));
 				Assert.That(conn.Query<SqlSingle>  ("SELECT Cast(1        as real)").     First().Value, Is.EqualTo((float)1));
 				Assert.That(conn.Query<SqlString>  ("SELECT Cast('12345'  as char(6))").  First().Value, Is.EqualTo("12345 "));

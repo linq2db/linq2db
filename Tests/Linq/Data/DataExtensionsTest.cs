@@ -79,6 +79,58 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestObject3([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			var arr1 = new byte[] { 48, 57 };
+			var arr2 = new byte[] { 42 };
+
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr1 }).First(), Is.EqualTo(arr1));
+				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr2 }).First(), Is.EqualTo(arr2));
+			}
+		}
+
+		[Test]
+		public void TestObject4([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<int>("SELECT @p", new { p = 1 }).First(), Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public void TestObject5([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<string>(
+					"SELECT @p",
+					new
+					{
+						p  = new DataParameter { DataType = DataType.VarChar, Value = "123" },
+						p1 = 1
+					}).First(), Is.EqualTo("123"));
+			}
+		}
+
+		[Test]
+		public void TestObject6([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<string>(
+					"SELECT @p",
+					new
+					{
+						p1 = new DataParameter { Name = "p", DataType = DataType.Char, Value = "123" },
+						p2 = 1
+					}).First(), Is.EqualTo("123"));
+			}
+		}
+
 		[ScalarType(false)]
 		struct QueryStruct
 		{

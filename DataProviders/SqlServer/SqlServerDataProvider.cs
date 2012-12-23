@@ -168,8 +168,10 @@ namespace LinqToDB.DataProvider
 
 			switch (dataType)
 			{
-				case DataType.Text  : p.SqlDbType = SqlDbType.Text;  break;
-				case DataType.NText : p.SqlDbType = SqlDbType.NText; break;
+				case DataType.Text      : p.SqlDbType = SqlDbType.Text;      break;
+				case DataType.NText     : p.SqlDbType = SqlDbType.NText;     break;
+				case DataType.Binary    : p.SqlDbType = SqlDbType.Binary;    break;
+				case DataType.VarBinary : p.SqlDbType = SqlDbType.VarBinary; break;
 			}
 
 			return p;

@@ -1,7 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Data
 {
+	[ScalarType]
 	public class DataParameter
 	{
 		/// <summary>
@@ -131,6 +134,15 @@ namespace LinqToDB.Data
 			return new DataParameter { DataType = DataType.NText, Name = name, Value = value, };
 		}
 
+		public static DataParameter Binary(string name, byte[] value)
+		{
+			return new DataParameter { DataType = DataType.Binary, Name = name, Value = value, };
+		}
+
+		public static DataParameter VarBinary(string name, byte[] value)
+		{
+			return new DataParameter { DataType = DataType.VarBinary, Name = name, Value = value, };
+		}
 
 
 		public static DataParameter Create(string name, char value)
@@ -141,6 +153,11 @@ namespace LinqToDB.Data
 		public static DataParameter Create(string name, string value)
 		{
 			return new DataParameter { DataType = DataType.NVarChar, Name = name, Value = value, };
+		}
+
+		public static DataParameter Create(string name, byte[] value)
+		{
+			return new DataParameter { DataType = DataType.VarBinary, Name = name, Value = value, };
 		}
 	}
 }

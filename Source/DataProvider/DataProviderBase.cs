@@ -100,10 +100,11 @@ namespace LinqToDB.DataProvider
 
 			switch (dataType)
 			{
-				case DataType.Char     : p.DbType = DbType.AnsiStringFixedLength; break;
-				case DataType.VarChar  : p.DbType = DbType.AnsiString;            break;
-				case DataType.NChar    : p.DbType = DbType.StringFixedLength;     break;
-				case DataType.NVarChar : p.DbType = DbType.String;                break;
+				case DataType.Char      : p.DbType = DbType.AnsiStringFixedLength; break;
+				case DataType.VarChar   : p.DbType = DbType.AnsiString;            break;
+				case DataType.NChar     : p.DbType = DbType.StringFixedLength;     break;
+				case DataType.NVarChar  : p.DbType = DbType.String;                break;
+				case DataType.VarBinary : p.DbType = DbType.Binary;                break;
 			}
 
 			p.Value = value ?? DBNull.Value;

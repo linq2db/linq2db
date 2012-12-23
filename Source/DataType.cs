@@ -41,7 +41,6 @@ namespace LinqToDB
 		/// </summary>
 		NText,
 
-		/*
 		/// <summary>
 		/// A fixed-length stream of binary data ranging between 1 and 8,000 bytes.
 		/// </summary>
@@ -53,6 +52,7 @@ namespace LinqToDB
 		/// </summary>
 		VarBinary,
 
+		/*
 		/// <summary>
 		/// A variable-length stream of binary data ranging from 0 to 2 31 -1 (or 2,147,483,647) bytes.
 		/// </summary>
