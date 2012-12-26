@@ -43,7 +43,7 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<T>(sql).First(), Is.EqualTo(expectedValue));
 
 				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue}), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 			}
 		}
 

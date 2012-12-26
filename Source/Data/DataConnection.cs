@@ -151,7 +151,7 @@ namespace LinqToDB.Data
 			}
 
 			if (string.IsNullOrEmpty(DefaultDataProvider))
-				DefaultDataProvider = ProviderName.SqlServer;
+				DefaultDataProvider = ProviderName.Access;
 
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{

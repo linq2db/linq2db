@@ -222,16 +222,53 @@ namespace LinqToDB.Data
 
 		#region GetObjectReader
 
-		static readonly ConcurrentDictionary<object, Delegate> _objectReaders = new ConcurrentDictionary<object, Delegate>();
+		public struct QueryKey : IEquatable<QueryKey>
+		{
+			public QueryKey(Type type, string configString, string sql)
+			{
+				_type         = type;
+				_configString = configString;
+				_sql          = sql;
+
+				unchecked
+				{
+					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configString.GetHashCode()) + _sql.GetHashCode();
+				}
+			}
+
+			public override bool Equals(object obj)
+			{
+				return Equals((QueryKey)obj);
+			}
+
+			readonly int    _hashCode;
+			readonly Type   _type;
+			readonly string _configString;
+			readonly string _sql;
+
+			public override int GetHashCode()
+			{
+				return _hashCode;
+			}
+
+			public bool Equals(QueryKey other)
+			{
+				return
+					_type         == other._type &&
+					_sql          == other._sql  &&
+					_configString == other._configString
+					;
+			}
+		}
+
+		static readonly ConcurrentDictionary<QueryKey,Delegate> _objectReaders = new ConcurrentDictionary<QueryKey,Delegate>();
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader)
 		{
-			var key = new
-			{
-				Type   = typeof(T),
-				Config = dataConnection.ConfigurationString ?? dataConnection.ConnectionString ?? dataConnection.Connection.ConnectionString,
-				Sql    = dataConnection.Command.CommandText,
-			};
+			var key = new QueryKey(
+				typeof(T),
+				dataConnection.ConfigurationString ?? dataConnection.ConnectionString ?? dataConnection.Connection.ConnectionString,
+				dataConnection.Command.CommandText);
 
 			Delegate func;
 
@@ -323,7 +360,7 @@ namespace LinqToDB.Data
 
 				var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
-				func = lex.Compile();
+				_objectReaders[key] = func = lex.Compile();
 			}
 
 			return (Func<IDataReader,T>)func;
