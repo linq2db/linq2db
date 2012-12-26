@@ -92,36 +92,41 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 
-		public virtual IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value)
+		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			var p = command.CreateParameter();
+			if (parameter.ParameterName != name)
+				parameter.ParameterName = name;
 
-			p.ParameterName = name;
+			DbType dbType;
 
 			switch (dataType)
 			{
-				case DataType.Char      : p.DbType = DbType.AnsiStringFixedLength; break;
-				case DataType.VarChar   : p.DbType = DbType.AnsiString;            break;
-				case DataType.NChar     : p.DbType = DbType.StringFixedLength;     break;
-				case DataType.NVarChar  : p.DbType = DbType.String;                break;
-				case DataType.VarBinary : p.DbType = DbType.Binary;                break;
-				case DataType.Boolean   : p.DbType = DbType.Boolean;               break;
-				case DataType.SByte     : p.DbType = DbType.SByte;                 break;
-				case DataType.Int16     : p.DbType = DbType.Int16;                 break;
-				case DataType.Int32     : p.DbType = DbType.Int32;                 break;
-				case DataType.Int64     : p.DbType = DbType.Int64;                 break;
-				case DataType.Byte      : p.DbType = DbType.Byte;                  break;
-				case DataType.UInt16    : p.DbType = DbType.UInt16;                break;
-				case DataType.UInt32    : p.DbType = DbType.UInt32;                break;
-				case DataType.UInt64    : p.DbType = DbType.UInt64;                break;
-				case DataType.Single    : p.DbType = DbType.Single;                break;
-				case DataType.Double    : p.DbType = DbType.Double;                break;
-				case DataType.Decimal   : p.DbType = DbType.Decimal;               break;
+				case DataType.Char      : dbType = DbType.AnsiStringFixedLength; break;
+				case DataType.VarChar   : dbType = DbType.AnsiString;            break;
+				case DataType.NChar     : dbType = DbType.StringFixedLength;     break;
+				case DataType.NVarChar  : dbType = DbType.String;                break;
+				case DataType.VarBinary : dbType = DbType.Binary;                break;
+				case DataType.Boolean   : dbType = DbType.Boolean;               break;
+				case DataType.SByte     : dbType = DbType.SByte;                 break;
+				case DataType.Int16     : dbType = DbType.Int16;                 break;
+				case DataType.Int32     : dbType = DbType.Int32;                 break;
+				case DataType.Int64     : dbType = DbType.Int64;                 break;
+				case DataType.Byte      : dbType = DbType.Byte;                  break;
+				case DataType.UInt16    : dbType = DbType.UInt16;                break;
+				case DataType.UInt32    : dbType = DbType.UInt32;                break;
+				case DataType.UInt64    : dbType = DbType.UInt64;                break;
+				case DataType.Single    : dbType = DbType.Single;                break;
+				case DataType.Double    : dbType = DbType.Double;                break;
+				case DataType.Decimal   : dbType = DbType.Decimal;               break;
+				default:
+					parameter.Value = value ?? DBNull.Value;
+					return;
 			}
 
-			p.Value = value ?? DBNull.Value;
+			if (parameter.DbType != dbType)
+				parameter.DbType = dbType;
 
-			return p;
+			parameter.Value = value ?? DBNull.Value;
 		}
 	}
 }

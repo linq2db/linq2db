@@ -17,7 +17,13 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+
+				if (connection.Command.Parameters.Count != 0)
+					connection.Command.Parameters.Clear();
+			}
 
 			using (var rd = connection.Command.ExecuteReader())
 				while (rd.Read())
@@ -26,7 +32,11 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			SetParameters(connection, parameters);
 
@@ -37,7 +47,11 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			var dps = GetDataParameters(connection.MappingSchema, parameters);
 
@@ -54,7 +68,13 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+
+				if (connection.Command.Parameters.Count != 0)
+					connection.Command.Parameters.Clear();
+			}
 
 			using (var rd = connection.Command.ExecuteReader())
 			{
@@ -70,7 +90,11 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			SetParameters(connection, parameters);
 
@@ -93,7 +117,11 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			var dps = GetDataParameters(connection.MappingSchema, parameters);
 
@@ -131,13 +159,24 @@ namespace LinqToDB.Data
 
 		public static int Execute(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+
+				if (connection.Command.Parameters.Count != 0)
+					connection.Command.Parameters.Clear();
+			}
+
 			return connection.Command.ExecuteNonQuery();
 		}
 
 		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			SetParameters(connection, parameters);
 
@@ -146,7 +185,11 @@ namespace LinqToDB.Data
 
 		public static int Execute(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			var dps = GetDataParameters(connection.MappingSchema, parameters);
 
@@ -161,7 +204,13 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+
+				if (connection.Command.Parameters.Count != 0)
+					connection.Command.Parameters.Clear();
+			}
 
 			using (var rd = connection.Command.ExecuteReader())
 			{
@@ -177,7 +226,11 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			SetParameters(connection, parameters);
 
@@ -200,7 +253,11 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			if (connection.Command.CommandText != sql)
+			{
+				connection.Command.CommandText = sql;
+				connection.Command.Parameters.Clear();
+			}
 
 			var dps = GetDataParameters(connection.MappingSchema, parameters);
 
@@ -375,17 +432,28 @@ namespace LinqToDB.Data
 			if (parameters == null || parameters.Length == 0)
 				return;
 
-			dataConnection.Command.Parameters.Clear();
-
-			foreach (var parameter in parameters)
+			if (parameters.Length != dataConnection.Command.Parameters.Count)
 			{
-				var p = dataConnection.DataProvider.GetParameter(
-					dataConnection.Command,
-					parameter.Name,
-					parameter.DataType,
-					parameter.Value);
+				for (var i = 0; i < parameters.Length; i++)
+				{
+					var p = dataConnection.Command.CreateParameter();
+					var parameter = parameters[i];
 
-				dataConnection.Command.Parameters.Add(p);
+					dataConnection.DataProvider.SetParameter(
+						p,
+						parameter.Name,
+						parameter.DataType,
+						parameter.Value);
+
+					dataConnection.Command.Parameters.Add(p);
+				}
+			}
+			else
+			{
+				for (var i = 0; i < parameters.Length; i++)
+				{
+					((IDbDataParameter)dataConnection.Command.Parameters[i]).Value = parameters[i].Value;
+				}
 			}
 		}
 

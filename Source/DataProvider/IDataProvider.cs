@@ -20,6 +20,6 @@ namespace LinqToDB.DataProvider
 		Expression    ConvertDataReader  (Expression reader);
 		Expression    GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 
-		IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value);
+		void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value);
 	}
 }

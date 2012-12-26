@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 
-		public override IDataParameter GetParameter(IDbCommand command, string name, DataType dataType, object value)
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)
 			{
@@ -173,17 +173,15 @@ namespace LinqToDB.DataProvider
 					break;
 			}
 
-			var p = (SqlParameter)base.GetParameter(command, name, dataType, value);
+			base.SetParameter(parameter, name, dataType, value);
 
 			switch (dataType)
 			{
-				case DataType.Text      : p.SqlDbType = SqlDbType.Text;      break;
-				case DataType.NText     : p.SqlDbType = SqlDbType.NText;     break;
-				case DataType.Binary    : p.SqlDbType = SqlDbType.Binary;    break;
-				case DataType.VarBinary : p.SqlDbType = SqlDbType.VarBinary; break;
+				case DataType.Text      : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;      break;
+				case DataType.NText     : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;     break;
+				case DataType.Binary    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;    break;
+				case DataType.VarBinary : ((SqlParameter)parameter).SqlDbType = SqlDbType.VarBinary; break;
 			}
-
-			return p;
 		}
 	}
 }
