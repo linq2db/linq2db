@@ -41,6 +41,10 @@ namespace LinqToDB.ServiceModel
 				throw new LinqException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
+		protected virtual void HandleException(Exception exception)
+		{
+		}
+
 		#region ILinqService Members
 
 		public Type SqlProviderType { get; set; }
@@ -48,11 +52,19 @@ namespace LinqToDB.ServiceModel
 		[WebMethod]
 		public virtual string GetSqlProviderType()
 		{
-			if (SqlProviderType == null)
-				using (var ctx = CreateDataContext())
-					SqlProviderType = ctx.CreateSqlProvider().GetType();
+			try
+			{
+				if (SqlProviderType == null)
+					using (var ctx = CreateDataContext())
+						SqlProviderType = ctx.CreateSqlProvider().GetType();
 
-			return SqlProviderType.FullName;
+				return SqlProviderType.FullName;
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
+			}
 		}
 
 		class QueryContext : IQueryContext
@@ -70,156 +82,188 @@ namespace LinqToDB.ServiceModel
 		[WebMethod]
 		public int ExecuteNonQuery(string queryData)
 		{
-			var query = LinqServiceSerializer.Deserialize(queryData);
-
-			ValidateQuery(query);
-
-			using (var db = CreateDataContext())
+			try
 			{
-				var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
-				return db.ExecuteNonQuery(obj);
+				var query = LinqServiceSerializer.Deserialize(queryData);
+
+				ValidateQuery(query);
+
+				using (var db = CreateDataContext())
+				{
+					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+					return db.ExecuteNonQuery(obj);
+				}
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
 			}
 		}
 
 		[WebMethod]
 		public object ExecuteScalar(string queryData)
 		{
-			var query = LinqServiceSerializer.Deserialize(queryData);
-
-			ValidateQuery(query);
-
-			using (var db = CreateDataContext())
+			try
 			{
-				var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
-				return db.ExecuteScalar(obj);
+				var query = LinqServiceSerializer.Deserialize(queryData);
+
+				ValidateQuery(query);
+
+				using (var db = CreateDataContext())
+				{
+					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+					return db.ExecuteScalar(obj);
+				}
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
 			}
 		}
 
 		[WebMethod]
 		public string ExecuteReader(string queryData)
 		{
-			var query = LinqServiceSerializer.Deserialize(queryData);
-
-			ValidateQuery(query);
-
-			using (var db = CreateDataContext())
+			try
 			{
-				var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+				var query = LinqServiceSerializer.Deserialize(queryData);
 
-				using (var rd = db.ExecuteReader(obj))
+				ValidateQuery(query);
+
+				using (var db = CreateDataContext())
 				{
-					var ret = new LinqServiceResult
+					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+
+					using (var rd = db.ExecuteReader(obj))
 					{
-						QueryID    = Guid.NewGuid(),
-						FieldCount = rd.FieldCount,
-						FieldNames = new string[rd.FieldCount],
-						FieldTypes = new Type  [rd.FieldCount],
-						Data       = new List<string[]>(),
-					};
-
-					for (var i = 0; i < ret.FieldCount; i++)
-					{
-						ret.FieldNames[i] = rd.GetName(i);
-						ret.FieldTypes[i] = rd.GetFieldType(i);
-					}
-
-					var varyingTypes = new List<Type>();
-
-					while (rd.Read())
-					{
-						var data  = new string  [rd.FieldCount];
-						var codes = new TypeCode[rd.FieldCount];
-
-						for (var i = 0; i < ret.FieldCount; i++)
-							codes[i] = Type.GetTypeCode(ret.FieldTypes[i]);
-
-						ret.RowCount++;
+						var ret = new LinqServiceResult
+						{
+							QueryID    = Guid.NewGuid(),
+							FieldCount = rd.FieldCount,
+							FieldNames = new string[rd.FieldCount],
+							FieldTypes = new Type  [rd.FieldCount],
+							Data       = new List<string[]>(),
+						};
 
 						for (var i = 0; i < ret.FieldCount; i++)
 						{
-							if (!rd.IsDBNull(i))
-							{
-								var code = codes[i];
-								var type = rd.GetFieldType(i);
-								var idx = -1;
-
-								if (type != ret.FieldTypes[i])
-								{
-									code = Type.GetTypeCode(type);
-									idx  = varyingTypes.IndexOf(type);
-
-									if (idx < 0)
-									{
-										varyingTypes.Add(type);
-										idx = varyingTypes.Count - 1;
-									}
-								}
-
-								switch (code)
-								{
-									case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
-									case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString(CultureInfo.InvariantCulture); break;
-									case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString(CultureInfo.InvariantCulture); break;
-									case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToString("o");                          break;
-									default                :
-										{
-											if (type == typeof(DateTimeOffset))
-											{
-												var dt = rd.GetValue(i);
-
-												if (dt is DateTime)
-													data[i] = ((DateTime)dt).ToString("o");
-												else if (dt is DateTimeOffset)
-													data[i] = ((DateTimeOffset)dt).ToString("o");
-												else
-													data[i] = rd.GetValue(i).ToString();
-											}
-											else if (ret.FieldTypes[i] == typeof(byte[]))
-												data[i] = Convert.ToBase64String((byte[])rd.GetValue(i));
-											else
-												data[i] = (rd.GetValue(i) ?? "").ToString();
-
-											break;
-										}
-								}
-
-								if (idx >= 0)
-									data[i] = "\0" + (char)idx + data[i];
-							}
+							ret.FieldNames[i] = rd.GetName(i);
+							ret.FieldTypes[i] = rd.GetFieldType(i);
 						}
 
-						ret.Data.Add(data);
+						var varyingTypes = new List<Type>();
+
+						while (rd.Read())
+						{
+							var data  = new string  [rd.FieldCount];
+							var codes = new TypeCode[rd.FieldCount];
+
+							for (var i = 0; i < ret.FieldCount; i++)
+								codes[i] = Type.GetTypeCode(ret.FieldTypes[i]);
+
+							ret.RowCount++;
+
+							for (var i = 0; i < ret.FieldCount; i++)
+							{
+								if (!rd.IsDBNull(i))
+								{
+									var code = codes[i];
+									var type = rd.GetFieldType(i);
+									var idx = -1;
+
+									if (type != ret.FieldTypes[i])
+									{
+										code = Type.GetTypeCode(type);
+										idx  = varyingTypes.IndexOf(type);
+
+										if (idx < 0)
+										{
+											varyingTypes.Add(type);
+											idx = varyingTypes.Count - 1;
+										}
+									}
+
+									switch (code)
+									{
+										case TypeCode.Decimal  : data[i] = rd.GetDecimal (i).ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Double   : data[i] = rd.GetDouble  (i).ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.Single   : data[i] = rd.GetFloat   (i).ToString(CultureInfo.InvariantCulture); break;
+										case TypeCode.DateTime : data[i] = rd.GetDateTime(i).ToString("o");                          break;
+										default                :
+											{
+												if (type == typeof(DateTimeOffset))
+												{
+													var dt = rd.GetValue(i);
+
+													if (dt is DateTime)
+														data[i] = ((DateTime)dt).ToString("o");
+													else if (dt is DateTimeOffset)
+														data[i] = ((DateTimeOffset)dt).ToString("o");
+													else
+														data[i] = rd.GetValue(i).ToString();
+												}
+												else if (ret.FieldTypes[i] == typeof(byte[]))
+													data[i] = Convert.ToBase64String((byte[])rd.GetValue(i));
+												else
+													data[i] = (rd.GetValue(i) ?? "").ToString();
+
+												break;
+											}
+									}
+
+									if (idx >= 0)
+										data[i] = "\0" + (char)idx + data[i];
+								}
+							}
+
+							ret.Data.Add(data);
+						}
+
+						ret.VaryingTypes = varyingTypes.ToArray();
+
+						return LinqServiceSerializer.Serialize(ret);
 					}
-
-					ret.VaryingTypes = varyingTypes.ToArray();
-
-					return LinqServiceSerializer.Serialize(ret);
 				}
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
 			}
 		}
 
 		[WebMethod]
 		public int ExecuteBatch(string queryData)
 		{
-			var data    = LinqServiceSerializer.DeserializeStringArray(queryData);
-			var queries = data.Select<string,LinqServiceQuery>(LinqServiceSerializer.Deserialize).ToArray();
-
-			foreach (var query in queries)
-				ValidateQuery(query);
-
-			using (var db = CreateDataContext())
+			try
 			{
-				if (db is DbManager) ((DbManager)db).BeginTransaction();
+				var data    = LinqServiceSerializer.DeserializeStringArray(queryData);
+				var queries = data.Select<string,LinqServiceQuery>(LinqServiceSerializer.Deserialize).ToArray();
 
 				foreach (var query in queries)
+					ValidateQuery(query);
+
+				using (var db = CreateDataContext())
 				{
-					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
-					db.ExecuteNonQuery(obj);
+					if (db is DbManager) ((DbManager)db).BeginTransaction();
+
+					foreach (var query in queries)
+					{
+						var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+						db.ExecuteNonQuery(obj);
+					}
+
+					if (db is DbManager) ((DbManager)db).CommitTransaction();
+
+					return queryData.Length;
 				}
-
-				if (db is DbManager) ((DbManager)db).CommitTransaction();
-
-				return queryData.Length;
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
 			}
 		}
 
