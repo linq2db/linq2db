@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
@@ -18,33 +19,39 @@ namespace Tests.ProviderSpecific
 	[TestFixture]
 	public class SqlServer : TestBase
 	{
-		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType)
+		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
+			var skipTypes = skip.Split(' ');
+
 			foreach (var sqlType in new[]
 				{
 					"bigint",
 					"bit",
 					"decimal",
+					"decimal(38)",
 					"int",
 					"money",
 					"numeric",
+					"numeric(38)",
 					"smallint",
 					"smallmoney",
 					"tinyint",
 
 					"float",
 					"real"
-				})
+				}.Except(skipTypes))
 			{
-				var sql = string.Format("SELECT Cast(1 as {0})", sqlType);
+				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+
+				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue, sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
 				Assert.That(conn.Query<T>(sql).First(), Is.EqualTo(expectedValue));
-
-				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 			}
+
+			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
 		[Test]
@@ -52,21 +59,51 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)   true, DataType.Boolean);
+				TestNumerics(conn, (bool)    true,  DataType.Boolean);
+				TestNumerics(conn, (bool?)   true,  DataType.Boolean);
 
-				TestNumerics(conn, (sbyte)  1,    DataType.SByte);
-				TestNumerics(conn, (short)  1,    DataType.Int16);
-				TestNumerics(conn, (int)    1,    DataType.Int16);
-				TestNumerics(conn, (long)   1L,   DataType.Int64);
+				TestNumerics(conn, (sbyte)   1,     DataType.SByte);
+				TestNumerics(conn, (sbyte?)  1,     DataType.SByte);
+				TestNumerics(conn, sbyte.MinValue,  DataType.SByte,  "bit tinyint");
+				TestNumerics(conn, sbyte.MaxValue,  DataType.SByte,  "bit");
+				TestNumerics(conn, (short)   1,     DataType.Int16);
+				TestNumerics(conn, (short?)  1,     DataType.Int16);
+				TestNumerics(conn, short.MinValue,  DataType.Int16,  "bit tinyint");
+				TestNumerics(conn, short.MaxValue,  DataType.Int16,  "bit tinyint");
+				TestNumerics(conn, (int)     1,     DataType.Int32);
+				TestNumerics(conn, (int?)    1,     DataType.Int32);
+				TestNumerics(conn, int.MinValue,    DataType.Int32,  "bit smallint smallmoney tinyint");
+				TestNumerics(conn, int.MaxValue,    DataType.Int32,  "bit smallint smallmoney tinyint real");
+				TestNumerics(conn, (long)    1L,    DataType.Int64);
+				TestNumerics(conn, (long?)   1L,    DataType.Int64);
+				TestNumerics(conn, long.MinValue,   DataType.Int64,  "bit decimal int money numeric smallint smallmoney tinyint");
+				TestNumerics(conn, long.MaxValue,   DataType.Int64,  "bit decimal int money numeric smallint smallmoney tinyint float real");
 
-				TestNumerics(conn, (byte)   1,    DataType.Byte);
-				TestNumerics(conn, (ushort) 1,    DataType.UInt16);
-				TestNumerics(conn, (uint)   1u,   DataType.UInt32);
-				TestNumerics(conn, (ulong)  1ul,  DataType.UInt64);
+				TestNumerics(conn, (byte)    1,     DataType.Byte);
+				TestNumerics(conn, (byte?)   1,     DataType.Byte);
+				TestNumerics(conn, byte.MaxValue,   DataType.Byte,   "bit");
+				TestNumerics(conn, (ushort)  1,     DataType.UInt16);
+				TestNumerics(conn, (ushort?) 1,     DataType.UInt16);
+				TestNumerics(conn, ushort.MaxValue, DataType.UInt16, "bit smallint tinyint");
+				TestNumerics(conn, (uint)    1u,    DataType.UInt32);
+				TestNumerics(conn, (uint?)   1u,    DataType.UInt32);
+				TestNumerics(conn, uint.MaxValue,   DataType.UInt32, "bit int smallint smallmoney tinyint real");
+				TestNumerics(conn, (ulong)   1ul,   DataType.UInt64);
+				TestNumerics(conn, (ulong?)  1ul,   DataType.UInt64);
+				TestNumerics(conn, ulong.MaxValue,   DataType.UInt64, "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
 
-				TestNumerics(conn, (float)  1,    DataType.Single);
-				TestNumerics(conn, (double) 1d,   DataType.Double);
-				TestNumerics(conn, (decimal)1m,   DataType.Decimal);
+				TestNumerics(conn, (float)   1,      DataType.Single);
+				TestNumerics(conn, (float?)  1,      DataType.Single);
+				TestNumerics(conn, -3.40282306E+38f, DataType.Single,  "bigint bit decimal decimal(38) int money numeric numeric(38) smallint smallmoney tinyint");
+				TestNumerics(conn, 3.40282306E+38f,  DataType.Single,  "bigint bit decimal decimal(38) int money numeric numeric(38) smallint smallmoney tinyint");
+				TestNumerics(conn, (double)  1d,     DataType.Double);
+				TestNumerics(conn, (double?) 1d,     DataType.Double);
+				TestNumerics(conn, -1.79E+308d,      DataType.Double,  "bigint bit decimal decimal(38) int money numeric numeric(38) smallint smallmoney tinyint real");
+				TestNumerics(conn,  1.79E+308d,      DataType.Double,  "bigint bit decimal decimal(38) int money numeric numeric(38) smallint smallmoney tinyint real");
+				TestNumerics(conn, (decimal) 1m,     DataType.Decimal);
+				TestNumerics(conn, (decimal?)1m,     DataType.Decimal);
+				TestNumerics(conn, decimal.MinValue, DataType.Decimal, "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
+				TestNumerics(conn, decimal.MaxValue, DataType.Decimal, "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
 			}
 		}
 
@@ -75,8 +112,10 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:00' as smalldatetime)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 00)));
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").First(),      Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Query<DateTime> ("SELECT Cast('2012-12-12 12:12:00' as smalldatetime)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 00)));
+				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12 12:12:00' as smalldatetime)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 00)));
+				Assert.That(conn.Query<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as datetime)").First(),      Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)").First(),      Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 			}
 		}
 
@@ -89,7 +128,15 @@ namespace Tests.ProviderSpecific
 					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(),
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
+				Assert.That(conn.Query<DateTimeOffset?>(
+					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(),
+					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
+
 				Assert.That(conn.Query<DateTime>(
+					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)").First(),
+					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+
+				Assert.That(conn.Query<DateTime?>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)").First(),
 					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 
@@ -97,13 +144,24 @@ namespace Tests.ProviderSpecific
 					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)").First(),
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
 
+				Assert.That(conn.Query<DateTimeOffset?>(
+					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)").First(),
+					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0))));
+
 				Assert.That(conn.Query<DateTime>(
 					"SELECT Cast(NULL as datetimeoffset)").First(),
 					Is.EqualTo(default(DateTime)));
 
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12' as date)").First(),                   Is.EqualTo(new DateTime(2012, 12, 12)));
-				Assert.That(conn.Query<DateTime>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Query<TimeSpan>("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(conn.Query<DateTime?>(
+					"SELECT Cast(NULL as datetimeoffset)").First(),
+					Is.EqualTo(default(DateTime?)));
+
+				Assert.That(conn.Query<DateTime> ("SELECT Cast('2012-12-12' as date)").First(),                   Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12' as date)").First(),                   Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(conn.Query<DateTime> ("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Query<TimeSpan> ("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(conn.Query<TimeSpan?>("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
 			}
 		}
 
@@ -112,28 +170,44 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Query<char>("SELECT Cast('1' as char)").        First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast('1' as char(1))").     First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as char)").        First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as char)").        First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as char(1))").     First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as char(1))").     First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT Cast('1' as varchar)").     First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast('1' as varchar(20))"). First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as varchar)").     First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as varchar)").     First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as varchar(20))"). First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as varchar(20))"). First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT Cast('1' as nchar)").       First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast('1' as nchar(20))").   First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as nchar)").       First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as nchar)").       First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as nchar(20))").   First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as nchar(20))").   First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT Cast('1' as nvarchar)").    First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast('1' as nvarchar(20))").First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as nvarchar)").    First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as nvarchar)").    First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast('1' as nvarchar(20))").First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast('1' as nvarchar(20))").First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT @p",                  DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p",                  DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p",                  DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')).First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT @p", DataParameter.VarChar ("p", '1')).First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT @p", DataParameter.NChar   ("p", '1')).First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT @p", DataParameter.NVarChar("p", '1')).First(), Is.EqualTo('1'));
-				Assert.That(conn.Query<char>("SELECT @p", DataParameter.Create  ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p", DataParameter.VarChar ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p", DataParameter.VarChar ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p", DataParameter.NChar   ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p", DataParameter.NChar   ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p", DataParameter.NVarChar("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p", DataParameter.NVarChar("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p", DataParameter.Create  ("p", '1')).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p", DataParameter.Create  ("p", '1')).First(), Is.EqualTo('1'));
 
-				Assert.That(conn.Query<char>("SELECT @p", new DataParameter { Name = "p", Value = '1' }).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char> ("SELECT @p", new DataParameter { Name = "p", Value = '1' }).First(), Is.EqualTo('1'));
+				Assert.That(conn.Query<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }).First(), Is.EqualTo('1'));
 			}
 		}
 
@@ -247,6 +321,10 @@ namespace Tests.ProviderSpecific
 				Assert.That(
 					conn.Query<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)").First(),
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+
+				Assert.That(
+					conn.Query<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)").First(),
+					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 			}
 		}
 
@@ -267,6 +345,7 @@ namespace Tests.ProviderSpecific
 			{
 				Assert.That(conn.Query<object>("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo(1));
 				Assert.That(conn.Query<int>   ("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo(1));
+				Assert.That(conn.Query<int?>  ("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo(1));
 				Assert.That(conn.Query<string>("SELECT Cast(1 as sql_variant)"). First(), Is.EqualTo("1"));
 			}
 		}
@@ -277,7 +356,8 @@ namespace Tests.ProviderSpecific
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
-				Assert.That(conn.Query<SqlHierarchyId>("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
+				Assert.That(conn.Query<SqlHierarchyId> ("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
+				Assert.That(conn.Query<SqlHierarchyId?>("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
 			}
 		}
 
@@ -302,8 +382,10 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Query<TestEnum>("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Query<TestEnum>("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Query<TestEnum> ("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Query<TestEnum?>("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Query<TestEnum> ("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Query<TestEnum?>("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
 			}
 		}
 	}

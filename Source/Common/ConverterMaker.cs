@@ -17,7 +17,16 @@ namespace LinqToDB.Common
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
 			var ctor = to.GetConstructor(new[] { from });
-			return ctor != null ? Expression.New(ctor, new[]  { p }) : null;
+
+			if (ctor == null)
+				return null;
+
+			var ptype = ctor.GetParameters()[0].ParameterType;
+
+			if (ptype != from)
+				p = Expression.Convert(p, ptype);
+
+			return Expression.New(ctor, new[]  { p });
 		}
 
 		static Expression GetValue(Type from, Type to, Expression p)
@@ -465,12 +474,28 @@ namespace LinqToDB.Common
 			if (ex != null)
 				return Tuple.Create(Expression.Lambda(ex.Item1, p), ne, ex.Item2);
 
-			var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)) as Expression;
+			if (to.IsNullable())
+			{
+				var uto = to.ToNullableUnderlying();
 
-			if (defex.Type != to)
-				defex = Expression.Convert(defex, to);
+				var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(uto)) as Expression;
 
-			return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+				if (defex.Type != uto)
+					defex = Expression.Convert(defex, uto);
+
+				defex = GetCtor(uto, to, defex);
+
+				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+			}
+			else
+			{
+				var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)) as Expression;
+
+				if (defex.Type != to)
+					defex = Expression.Convert(defex, to);
+
+				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+			}
 		}
 	}
 }

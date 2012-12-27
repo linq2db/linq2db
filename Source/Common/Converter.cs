@@ -27,7 +27,8 @@ namespace LinqToDB.Common
 			SetConverter<Binary,         byte[]>     (v => v.ToArray());
 			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
 			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
-			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v)); 
+			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
+			//SetConverter<long,           int>        (v => checked((int)v));
 		}
 
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)

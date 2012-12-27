@@ -121,6 +121,15 @@ namespace LinqToDB.DataProvider
 		protected override Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression, Type toType)
 		{
 			var expr = base.GetReaderMethodExpression(reader, idx, readerExpression, toType);
+
+			if (expr.Type == typeof(object))
+			{
+				var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
+
+				if (type == typeof(SqlHierarchyId))
+					expr = Expression.Convert(expr, type);
+			}
+
 			var name = ((SqlDataReader)reader).GetDataTypeName(idx);
 
 			if (expr.Type == typeof(string) && (name == "char" || name == "nchar"))
@@ -166,7 +175,10 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
-				case DataType.SByte     : dataType = DataType.Int16; break;
+				case DataType.SByte     : dataType = DataType.Int16;   break;
+				case DataType.UInt16    : dataType = DataType.Int32;   break;
+				case DataType.UInt32    : dataType = DataType.Int64;   break;
+				case DataType.UInt64    : dataType = DataType.Decimal; break;
 				case DataType.Undefined :
 					if (value is sbyte)
 						dataType = DataType.Int16;

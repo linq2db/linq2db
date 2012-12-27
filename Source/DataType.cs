@@ -122,7 +122,8 @@ namespace LinqToDB
 		Double,
 
 		/// <summary>
-		/// A simple type representing values ranging from 1.0 x 10 -28 to approximately 7.9 x 10 28 with 28-29 significant digits.
+		/// A simple type representing values with fixed precision and scale numbers.
+		/// When maximum precision is used, valid values are from -10^38+1 through 10^38-1.
 		/// </summary>
 		Decimal,
 

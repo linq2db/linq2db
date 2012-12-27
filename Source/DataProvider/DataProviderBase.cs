@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
@@ -28,7 +29,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			var expr = GetReaderMethodExpression(reader, idx, readerExpression, toType);
+			var expr = GetReaderMethodExpression(reader, idx, readerExpression, toType.ToNullableUnderlying());
 			var conv = mappingSchema.GetConvertExpression(expr.Type, toType, false);
 
 			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
