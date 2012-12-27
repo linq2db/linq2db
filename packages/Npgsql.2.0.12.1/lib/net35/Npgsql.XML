@@ -398,6 +398,11 @@
              It appends a NULL terminator to the end of the String.
              </summary>
         </member>
+        <member name="M:Npgsql.PGUtil.WriteBytes(System.Byte[],System.IO.Stream)">
+            <summary>
+            This method writes a set of bytes to the stream. It also enables logging of them.
+            </summary>
+        </member>
         <member name="M:Npgsql.PGUtil.WriteLimString(System.String,System.Int32,System.IO.Stream)">
             <summary>
              This method writes a C NULL terminated string limited in length to the
@@ -625,10 +630,14 @@
             A queue with an extra Int32 for keeping track of busy connections.
             </summary>
         </member>
-        <member name="F:Npgsql.NpgsqlConnectorPool.ConnectorQueue.UseCount">
+        <member name="F:Npgsql.NpgsqlConnectorPool.ConnectorQueue.Available">
             <summary>
-            The number of pooled Connectors that belong to this queue but
-            are currently in use.
+            Connections available to the end user
+            </summary>
+        </member>
+        <member name="F:Npgsql.NpgsqlConnectorPool.ConnectorQueue.Busy">
+            <summary>
+            Connections currently in use
             </summary>
         </member>
         <member name="T:Npgsql.NpgsqlBackEndKeyData">
@@ -1931,6 +1940,11 @@
             Convert to a postgres money.
             </summary>
         </member>
+        <member name="M:NpgsqlTypes.BasicNativeToBackendTypeConverter.ToSingleDouble(NpgsqlTypes.NpgsqlNativeTypeInfo,System.Object,System.Boolean)">
+            <summary>
+            Convert to a postgres double with maximum precision.
+            </summary>
+        </member>
         <member name="T:NpgsqlTypes.ExtendedBackendToNativeTypeConverter">
             <summary>
             Provide event handlers to convert extended native supported data types from their backend
@@ -1972,6 +1986,11 @@
             Inet.
             </summary>
         </member>
+        <member name="M:NpgsqlTypes.ExtendedBackendToNativeTypeConverter.ToMacAddress(NpgsqlTypes.NpgsqlBackendTypeInfo,System.String,System.Int16,System.Int32)">
+            <summary>
+            MAC Address.
+            </summary>
+        </member>
         <member name="M:NpgsqlTypes.ExtendedBackendToNativeTypeConverter.ToInterval(NpgsqlTypes.NpgsqlBackendTypeInfo,System.String,System.Int16,System.Int32)">
             <summary>
             interval
@@ -2006,6 +2025,11 @@
         <member name="M:NpgsqlTypes.ExtendedNativeToBackendTypeConverter.ToPolygon(NpgsqlTypes.NpgsqlNativeTypeInfo,System.Object,System.Boolean)">
             <summary>
             Polygon.
+            </summary>
+        </member>
+        <member name="M:NpgsqlTypes.ExtendedNativeToBackendTypeConverter.ToMacAddress(NpgsqlTypes.NpgsqlNativeTypeInfo,System.Object,System.Boolean)">
+            <summary>
+            Convert to a postgres MAC Address.
             </summary>
         </member>
         <member name="M:NpgsqlTypes.ExtendedNativeToBackendTypeConverter.ToCircle(NpgsqlTypes.NpgsqlNativeTypeInfo,System.Object,System.Boolean)">
@@ -2348,6 +2372,11 @@
         <member name="M:Npgsql.NpgsqlDataReader.GetDecimal(System.Int32)">
             <summary>
             Gets the value of a column as Decimal.
+            </summary>
+        </member>
+        <member name="M:Npgsql.NpgsqlDataReader.GetTimeSpan(System.Int32)">
+            <summary>
+            Gets the value of a column as TimeSpan.
             </summary>
         </member>
         <member name="M:Npgsql.NpgsqlDataReader.GetValues(System.Object[])">
@@ -4068,6 +4097,18 @@
             <summary>
             Represents a PostgreSQL inet type.
             </summary>
+        </member>
+        <member name="T:NpgsqlTypes.NpgsqlMacAddress">
+            <summary>
+            Represents a PostgreSQL MacAddress type.
+            </summary>
+        </member>
+        <member name="M:NpgsqlTypes.NpgsqlMacAddress.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="macAddr">The macAddr parameter must contain a string that can only consist of numbers
+            and upper-case letters as hexadecimal digits. (See PhysicalAddress.Parse method on MSDN)</param>
         </member>
         <member name="T:Npgsql.NpgsqlPasswordPacket">
             <summary>
