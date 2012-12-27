@@ -59,38 +59,38 @@ namespace Tests.ProviderSpecific
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)    true,  DataType.Boolean);
-				TestNumerics(conn, (bool?)   true,  DataType.Boolean);
+				TestNumerics(conn, (bool)    true,   DataType.Boolean);
+				TestNumerics(conn, (bool?)   true,   DataType.Boolean);
 
-				TestNumerics(conn, (sbyte)   1,     DataType.SByte);
-				TestNumerics(conn, (sbyte?)  1,     DataType.SByte);
-				TestNumerics(conn, sbyte.MinValue,  DataType.SByte,  "bit tinyint");
-				TestNumerics(conn, sbyte.MaxValue,  DataType.SByte,  "bit");
-				TestNumerics(conn, (short)   1,     DataType.Int16);
-				TestNumerics(conn, (short?)  1,     DataType.Int16);
-				TestNumerics(conn, short.MinValue,  DataType.Int16,  "bit tinyint");
-				TestNumerics(conn, short.MaxValue,  DataType.Int16,  "bit tinyint");
-				TestNumerics(conn, (int)     1,     DataType.Int32);
-				TestNumerics(conn, (int?)    1,     DataType.Int32);
-				TestNumerics(conn, int.MinValue,    DataType.Int32,  "bit smallint smallmoney tinyint");
-				TestNumerics(conn, int.MaxValue,    DataType.Int32,  "bit smallint smallmoney tinyint real");
-				TestNumerics(conn, (long)    1L,    DataType.Int64);
-				TestNumerics(conn, (long?)   1L,    DataType.Int64);
-				TestNumerics(conn, long.MinValue,   DataType.Int64,  "bit decimal int money numeric smallint smallmoney tinyint");
-				TestNumerics(conn, long.MaxValue,   DataType.Int64,  "bit decimal int money numeric smallint smallmoney tinyint float real");
+				TestNumerics(conn, (sbyte)   1,      DataType.SByte);
+				TestNumerics(conn, (sbyte?)  1,      DataType.SByte);
+				TestNumerics(conn, sbyte.MinValue,   DataType.SByte,   "bit tinyint");
+				TestNumerics(conn, sbyte.MaxValue,   DataType.SByte,   "bit");
+				TestNumerics(conn, (short)   1,      DataType.Int16);
+				TestNumerics(conn, (short?)  1,      DataType.Int16);
+				TestNumerics(conn, short.MinValue,   DataType.Int16,   "bit tinyint");
+				TestNumerics(conn, short.MaxValue,   DataType.Int16,   "bit tinyint");
+				TestNumerics(conn, (int)     1,      DataType.Int32);
+				TestNumerics(conn, (int?)    1,      DataType.Int32);
+				TestNumerics(conn, int.MinValue,     DataType.Int32,   "bit smallint smallmoney tinyint");
+				TestNumerics(conn, int.MaxValue,     DataType.Int32,   "bit smallint smallmoney tinyint real");
+				TestNumerics(conn, (long)    1L,     DataType.Int64);
+				TestNumerics(conn, (long?)   1L,     DataType.Int64);
+				TestNumerics(conn, long.MinValue,    DataType.Int64,   "bit decimal int money numeric smallint smallmoney tinyint");
+				TestNumerics(conn, long.MaxValue,    DataType.Int64,   "bit decimal int money numeric smallint smallmoney tinyint float real");
 
-				TestNumerics(conn, (byte)    1,     DataType.Byte);
-				TestNumerics(conn, (byte?)   1,     DataType.Byte);
-				TestNumerics(conn, byte.MaxValue,   DataType.Byte,   "bit");
-				TestNumerics(conn, (ushort)  1,     DataType.UInt16);
-				TestNumerics(conn, (ushort?) 1,     DataType.UInt16);
-				TestNumerics(conn, ushort.MaxValue, DataType.UInt16, "bit smallint tinyint");
-				TestNumerics(conn, (uint)    1u,    DataType.UInt32);
-				TestNumerics(conn, (uint?)   1u,    DataType.UInt32);
-				TestNumerics(conn, uint.MaxValue,   DataType.UInt32, "bit int smallint smallmoney tinyint real");
-				TestNumerics(conn, (ulong)   1ul,   DataType.UInt64);
-				TestNumerics(conn, (ulong?)  1ul,   DataType.UInt64);
-				TestNumerics(conn, ulong.MaxValue,   DataType.UInt64, "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
+				TestNumerics(conn, (byte)    1,      DataType.Byte);
+				TestNumerics(conn, (byte?)   1,      DataType.Byte);
+				TestNumerics(conn, byte.MaxValue,    DataType.Byte,    "bit");
+				TestNumerics(conn, (ushort)  1,      DataType.UInt16);
+				TestNumerics(conn, (ushort?) 1,      DataType.UInt16);
+				TestNumerics(conn, ushort.MaxValue,  DataType.UInt16,  "bit smallint tinyint");
+				TestNumerics(conn, (uint)    1u,     DataType.UInt32);
+				TestNumerics(conn, (uint?)   1u,     DataType.UInt32);
+				TestNumerics(conn, uint.MaxValue,    DataType.UInt32,  "bit int smallint smallmoney tinyint real");
+				TestNumerics(conn, (ulong)   1ul,    DataType.UInt64);
+				TestNumerics(conn, (ulong?)  1ul,    DataType.UInt64);
+				TestNumerics(conn, ulong.MaxValue,   DataType.UInt64,  "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
 
 				TestNumerics(conn, (float)   1,      DataType.Single);
 				TestNumerics(conn, (float?)  1,      DataType.Single);
