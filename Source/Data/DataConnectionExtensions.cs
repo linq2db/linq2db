@@ -291,6 +291,16 @@ namespace LinqToDB.Data
 						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
 					}
 
+					/*
+					ex = Expression.Condition(
+						Expression.Equal(
+							Expression.Call(dataReaderExpr, MemberHelper.MethodOf<IDataReader>(rd => rd.GetFieldType(0)), Expression.Constant(idx)),
+							Expression.Constant(dataReader.GetFieldType(idx))
+						),
+						ex,
+						ex);
+					*/
+
 					return ex;
 				};
 

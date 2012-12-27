@@ -256,7 +256,14 @@ namespace LinqToDB.Common
 				{
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
-							.OrderByDescending(a => a.IsDefault)
+							.OrderBy(a =>
+							{
+								var idx = a.Configuration == null ?
+									int.MaxValue :
+									Array.IndexOf(mappingSchema.ConfigurationList, a.Configuration);
+								return idx < 0 ? int.MaxValue : idx;
+							})
+							.ThenBy(a => !a.IsDefault)
 							.ThenBy(a => a.Value == null)
 							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == to) })
 						.ToList();

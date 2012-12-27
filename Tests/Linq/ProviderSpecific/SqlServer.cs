@@ -408,5 +408,15 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
 			}
 		}
+
+		[Test]
+		public void TestCast([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<string>("SELECT @p", new { p =  1  }).First(), Is.EqualTo("1"));
+				Assert.That(conn.Query<string>("SELECT @p", new { p = "1" }).First(), Is.EqualTo("1"));
+			}
+		}
 	}
 }
