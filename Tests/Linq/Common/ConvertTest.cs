@@ -403,5 +403,45 @@ namespace Tests.Common
 		{
 			Assert.AreEqual(Enum13.Value3, ConvertTo<Enum13>.From(Enum12.Value2));
 		}
+
+		enum Enum14
+		{
+			[MapValue("A")] AA,
+			[MapValue("1", "C")]
+			[MapValue("B")] BB,
+		}
+
+		[Test]
+		public void ConvertFromNullableEnum1()
+		{
+			Assert.AreEqual("A",  ConvertTo<string>.From((Enum14?)Enum14.AA));
+			Assert.AreEqual(null, ConvertTo<string>.From((Enum14?)null));
+
+			Assert.AreEqual("B",  ConvertTo<string>.From((Enum14?)Enum14.BB));
+
+			Assert.AreEqual("B",  new MappingSchema().   GetConverter<Enum14?,string>()(Enum14.BB));
+			Assert.AreEqual("C",  new MappingSchema("1").GetConverter<Enum14?,string>()(Enum14.BB));
+		}
+
+		[Test]
+		public void ConvertToNullableEnum1()
+		{
+			Assert.AreEqual(Enum14.BB,  new MappingSchema().   GetConverter<string,Enum14?>()("B"));
+			Assert.AreEqual(Enum14.BB,  new MappingSchema("1").GetConverter<string,Enum14?>()("C"));
+		}
+
+		enum Enum15
+		{
+			[MapValue(10)] AA,
+			[MapValue(20)] BB,
+		}
+
+		[Test]
+		public void ConvertFromNullableEnum2()
+		{
+			Assert.AreEqual(10,   ConvertTo<int>. From((Enum15?)Enum15.AA));
+			Assert.AreEqual(0,    ConvertTo<int>. From((Enum15?)null));
+			Assert.AreEqual(null, ConvertTo<int?>.From((Enum15?)null));
+		}
 	}
 }

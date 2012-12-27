@@ -95,7 +95,7 @@ namespace LinqToDB.Common
 
 		static Expression GetToString(Type from, Type to, Expression p)
 		{
-			if (to == typeof(string))
+			if (to == typeof(string) && !from.IsNullable())
 			{
 				var mi = from.GetMethod("ToString", BindingFlags.Instance | BindingFlags.Public, null, new Type[0], null);
 				return mi != null ? Expression.Call(p, mi) : null;

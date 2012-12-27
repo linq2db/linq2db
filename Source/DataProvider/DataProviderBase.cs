@@ -2,11 +2,11 @@
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
 	using Expressions;
+	using Extensions;
 	using Mapping;
 
 	public abstract class DataProviderBase : IDataProvider

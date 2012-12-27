@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -374,6 +375,7 @@ namespace Tests.ProviderSpecific
 		enum TestEnum
 		{
 			[MapValue("A")] AA,
+			[MapValue(ProviderName.SqlServer2008, "C")] 
 			[MapValue("B")] BB,
 		}
 
@@ -384,8 +386,26 @@ namespace Tests.ProviderSpecific
 			{
 				Assert.That(conn.Query<TestEnum> ("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Query<TestEnum?>("SELECT 'A'").First(), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Query<TestEnum> ("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
-				Assert.That(conn.Query<TestEnum?>("SELECT 'B'").First(), Is.EqualTo(TestEnum.BB));
+
+				var sql = context == ProviderName.SqlServer2008 ? "SELECT 'C'" : "SELECT 'B'";
+
+				Assert.That(conn.Query<TestEnum> (sql).First(), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Query<TestEnum?>(sql).First(), Is.EqualTo(TestEnum.BB));
+			}
+		}
+
+		[Test]
+		public void TestEnum2([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<string>("SELECT @p", new { p = TestEnum.AA }).           First(), Is.EqualTo("A"));
+				Assert.That(conn.Query<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }).First(),
+					Is.EqualTo(context == ProviderName.SqlServer2008 ? "C" : "B"));
+
+				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }).First(), Is.EqualTo("A"));
+				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
+				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
 			}
 		}
 	}

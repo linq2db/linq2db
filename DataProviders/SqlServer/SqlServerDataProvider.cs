@@ -66,19 +66,44 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
+		static readonly MappingSchema _sqlServerMappingSchema     = new SqlServerMappingSchema();
+		static readonly MappingSchema _sqlServerMappingSchema2005 = new MappingSchema(LinqToDB.ProviderName.SqlServer2005, _sqlServerMappingSchema);
+		static readonly MappingSchema _sqlServerMappingSchema2008 = new MappingSchema(LinqToDB.ProviderName.SqlServer2008, _sqlServerMappingSchema);
+		static readonly MappingSchema _sqlServerMappingSchema2012 = new MappingSchema(LinqToDB.ProviderName.SqlServer2012, _sqlServerMappingSchema);
+
 		public SqlServerDataProvider() : this(SqlServerVersion.v2008)
 		{
 		}
 
 		public SqlServerDataProvider(SqlServerVersion version)
-			: base(new SqlServerMappingSchema())
+			: base(_sqlServerMappingSchema)
 		{
 			Version = version;
 		}
 
-		public override string           Name         { get { return LinqToDB.ProviderName.SqlServer; } }
-		public override string           ProviderName { get { return typeof(SqlConnection).Namespace; } }
-		public          SqlServerVersion Version      { get; set; }
+		public override string Name         { get { return LinqToDB.ProviderName.SqlServer; } }
+		public override string ProviderName { get { return typeof(SqlConnection).Namespace; } }
+
+		private         MappingSchema _mappingSchema = _sqlServerMappingSchema;
+		public override MappingSchema  MappingSchema
+		{
+			get { return _mappingSchema; }
+		}
+
+		private SqlServerVersion _version;
+		public  SqlServerVersion  Version
+		{
+			get { return _version;  }
+			set
+			{
+				switch (_version = value)
+				{
+					case SqlServerVersion.v2005 : _mappingSchema = _sqlServerMappingSchema2005; break;
+					case SqlServerVersion.v2008 : _mappingSchema = _sqlServerMappingSchema2008; break;
+					case SqlServerVersion.v2012 : _mappingSchema = _sqlServerMappingSchema2012; break;
+				}
+			}
+		}
 
 		public override IDbConnection CreateConnection(string connectionString)
 		{
