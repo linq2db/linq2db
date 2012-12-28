@@ -29,27 +29,6 @@ namespace LinqToDB.DataProvider
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			var expr = GetReaderMethodExpression(reader, idx, readerExpression, toType.ToNullableUnderlying());
-			var conv = mappingSchema.GetConvertExpression(expr.Type, toType, false);
-
-			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
-			{
-				var variable = Expression.Variable(expr.Type, "value" + idx);
-				var assign   = Expression.Assign(variable, expr);
-
-				expr = Expression.Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
-			}
-			else
-			{
-				var ex = expr;
-				expr = conv.Body.Transform(e => e == conv.Parameters[0] ? ex : e);
-			}
-
-			return expr;
-		}
-
-		protected virtual Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression, Type toType)
-		{
 			var mi = GetReaderMethodInfo(reader, idx, toType);
 
 			if (mi == null)
@@ -90,6 +69,11 @@ namespace LinqToDB.DataProvider
 			if (type == typeof(Guid))   return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
 			if (type == typeof(byte[])) return MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
 
+			return null;
+		}
+
+		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
 			return null;
 		}
 

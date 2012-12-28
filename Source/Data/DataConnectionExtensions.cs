@@ -5,13 +5,14 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.Extensions;
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
+	using Expressions;
+	using Mapping;
+	using Extensions;
+
 	public static class DataConnectionExtensions
 	{
 		#region Query with object reader
@@ -56,17 +57,7 @@ namespace LinqToDB.Data
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
 			connection.Command.CommandText = sql;
-
-			using (var rd = connection.Command.ExecuteReader())
-			{
-				if (rd.Read())
-				{
-					var objectReader = GetObjectReader<T>(connection, rd);
-					do
-						yield return objectReader(rd);
-					while (rd.Read());
-				}
-			}
+			return ExecuteQuery<T>(connection);
 		}
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -75,16 +66,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			using (var rd = connection.Command.ExecuteReader())
-			{
-				if (rd.Read())
-				{
-					var objectReader = GetObjectReader<T>(connection, rd);
-					do
-						yield return objectReader(rd);
-					while (rd.Read());
-				}
-			}
+			return ExecuteQuery<T>(connection);
 		}
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, DataParameter parameter)
@@ -100,14 +82,39 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
+			return ExecuteQuery<T>(connection);
+		}
+
+		static IEnumerable<T> ExecuteQuery<T>(this DataConnection connection)
+		{
 			using (var rd = connection.Command.ExecuteReader())
 			{
 				if (rd.Read())
 				{
 					var objectReader = GetObjectReader<T>(connection, rd);
+					var isFaulted    = false;
+
 					do
-						yield return objectReader(rd);
-					while (rd.Read());
+					{
+						T result;
+
+						try
+						{
+							result = objectReader(rd);
+						}
+						catch (InvalidCastException)
+						{
+							if (isFaulted)
+								throw;
+
+							isFaulted    = true;
+							objectReader = GetObjectReader2<T>(connection, rd);
+							result       = objectReader(rd);
+						}
+
+						yield return result;
+
+					} while (rd.Read());
 				}
 			}
 		}
@@ -163,17 +170,7 @@ namespace LinqToDB.Data
 		public static T Execute<T>(this DataConnection connection, string sql)
 		{
 			connection.Command.CommandText = sql;
-
-			using (var rd = connection.Command.ExecuteReader())
-			{
-				if (rd.Read())
-				{
-					var objectReader = GetObjectReader<T>(connection, rd);
-					return objectReader(rd);
-				}
-			}
-
-			return default(T);
+			return ExecuteScalar<T>(connection);
 		}
 
 		public static T Execute<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -182,21 +179,16 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			using (var rd = connection.Command.ExecuteReader())
-			{
-				if (rd.Read())
-				{
-					var objectReader = GetObjectReader<T>(connection, rd);
-					return objectReader(rd);
-				}
-			}
-
-			return default(T);
+			return ExecuteScalar<T>(connection);
 		}
 
 		public static T Execute<T>(this DataConnection connection, string sql, DataParameter parameter)
 		{
-			return Execute<T>(connection, sql, new[] { parameter });
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, new[] { parameter });
+
+			return ExecuteScalar<T>(connection);
 		}
 
 		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
@@ -207,12 +199,25 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
+			return ExecuteScalar<T>(connection);
+		}
+
+		static T ExecuteScalar<T>(DataConnection connection)
+		{
 			using (var rd = connection.Command.ExecuteReader())
 			{
 				if (rd.Read())
 				{
 					var objectReader = GetObjectReader<T>(connection, rd);
-					return objectReader(rd);
+
+					try
+					{
+						return objectReader(rd);
+					}
+					catch (InvalidCastException)
+					{
+						return GetObjectReader2<T>(connection, rd)(rd);
+					}
 				}
 			}
 
@@ -262,6 +267,7 @@ namespace LinqToDB.Data
 			}
 		}
 
+		static readonly MethodInfo _isDBNullInfo = MemberHelper.MethodOf<IDataReader>(rd => rd.IsDBNull(0));
 		static readonly ConcurrentDictionary<QueryKey,Delegate> _objectReaders = new ConcurrentDictionary<QueryKey,Delegate>();
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader)
@@ -275,20 +281,28 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				var dataProvider   = dataConnection.DataProvider;
-				var parameter      = Expression.Parameter(typeof(IDataReader));
-				var dataReaderExpr = dataProvider.ConvertDataReader(parameter);
-
-				Expression expr;
-
-				Func<Type,int,Expression> getMemberExpression = (type,idx) =>
+				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dataProvider,type,idx,dataReaderExpr) =>
 				{
-					var ex = dataProvider.GetReaderExpression(dataConnection.MappingSchema, dataReader, idx, dataReaderExpr, type);
+					var ex   = dataProvider.GetReaderExpression(dataConnection.MappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
 
-					if (ex.NodeType == ExpressionType.Lambda)
+					//if (ex.NodeType == ExpressionType.Lambda)
+					//{
+					//	var l = (LambdaExpression)ex;
+					//	ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
+					//}
+
+					var conv = dataConnection.MappingSchema.GetConvertExpression(ex.Type, type, false);
+
+					ex = ReplaceParameter(conv, ex);
+
+					// Add check null expression.
+					//
+					if (dataProvider.IsDBNullAllowed(dataReader, idx) ?? true)
 					{
-						var l = (LambdaExpression)ex;
-						ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
+						ex = Expression.Condition(
+							Expression.Call(dataReaderExpr, _isDBNullInfo, Expression.Constant(idx)),
+							Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(type), type),
+							ex);
 					}
 
 					/*
@@ -302,79 +316,169 @@ namespace LinqToDB.Data
 					*/
 
 					return ex;
-				};
-
-				if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
-				{
-					expr = getMemberExpression(typeof(T), 0);
-				}
-				else
-				{
-					var td    = new TypeDescriptor(dataConnection.MappingSchema, typeof(T));
-					var names = new List<string>(dataReader.FieldCount);
-
-					for (var i = 0; i < dataReader.FieldCount; i++)
-						names.Add(dataReader.GetName(i));
-
-					expr = null;
-
-					var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
-
-					if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
-					{
-						var q =
-							from c in ctors
-							let count = c.ps.Count(p => names.Contains(p.Name))
-							orderby count descending
-							select c;
-
-						var ctor = q.FirstOrDefault();
-
-						if (ctor != null)
-						{
-							expr = Expression.New(
-								ctor.c,
-								ctor.ps.Select(p => names.Contains(p.Name) ?
-									getMemberExpression(p.ParameterType, names.IndexOf(p.Name)) :
-									Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
-						}
-					}
-
-					if (expr == null)
-					{
-						var members =
-						(
-							from n in names.Select((name,idx) => new { name, idx })
-							let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
-							where member != null
-							select new
-							{
-								Member = member,
-								Expr   = getMemberExpression(member.MemberType, n.idx),
-							}
-						).ToList();
-
-						expr = Expression.MemberInit(
-							Expression.New(typeof(T)),
-							members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
-					}
-				}
-
-				if (expr.GetCount(e => e == dataReaderExpr) > 1)
-				{
-					var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "dr");
-					var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
-
-					expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
-					expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
-				}
-
-				var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
-
-				_objectReaders[key] = func = lex.Compile();
+				});
 			}
 
 			return (Func<IDataReader,T>)func;
+		}
+
+		static Func<IDataReader,T> CreateObjectReader<T>(
+			DataConnection dataConnection,
+			IDataReader    dataReader,
+			Func<IDataProvider,Type,int,Expression,Expression> getMemberExpression)
+		{
+			var dataProvider   = dataConnection.DataProvider;
+			var parameter      = Expression.Parameter(typeof(IDataReader));
+			var dataReaderExpr = dataProvider.ConvertDataReader(parameter);
+
+			Expression expr;
+
+			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
+			{
+				expr = getMemberExpression(dataProvider, typeof(T), 0, dataReaderExpr);
+			}
+			else
+			{
+				var td    = new TypeDescriptor(dataConnection.MappingSchema, typeof(T));
+				var names = new List<string>(dataReader.FieldCount);
+
+				for (var i = 0; i < dataReader.FieldCount; i++)
+					names.Add(dataReader.GetName(i));
+
+				expr = null;
+
+				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
+
+				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
+				{
+					var q =
+						from c in ctors
+						let count = c.ps.Count(p => names.Contains(p.Name))
+						orderby count descending
+						select c;
+
+					var ctor = q.FirstOrDefault();
+
+					if (ctor != null)
+					{
+						expr = Expression.New(
+							ctor.c,
+							ctor.ps.Select(p => names.Contains(p.Name) ?
+								getMemberExpression(dataProvider, p.ParameterType, names.IndexOf(p.Name), dataReaderExpr) :
+								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
+					}
+				}
+
+				if (expr == null)
+				{
+					var members =
+					(
+						from n in names.Select((name,idx) => new { name, idx })
+						let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
+						where member != null
+						select new
+						{
+							Member = member,
+							Expr   = getMemberExpression(dataProvider, member.MemberType, n.idx, dataReaderExpr),
+						}
+					).ToList();
+
+					expr = Expression.MemberInit(
+						Expression.New(typeof(T)),
+						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
+				}
+			}
+
+			if (expr.GetCount(e => e == dataReaderExpr) > 1)
+			{
+				var dataReaderVar = Expression.Variable(dataReaderExpr.Type, "dr");
+				var assignment    = Expression.Assign(dataReaderVar, dataReaderExpr);
+
+				expr = expr.Transform(e => e == dataReaderExpr ? dataReaderVar : e);
+				expr = Expression.Block(new[] { dataReaderVar }, new[] { assignment, expr });
+			}
+
+			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
+
+			return lex.Compile();
+		}
+
+		static Expression ReplaceParameter(LambdaExpression conv, Expression param)
+		{
+			// Replace multiple parameters with single variable or single parameter with the reader expression.
+			//
+			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
+			{
+				var variable = Expression.Variable(param.Type);
+				var assign   = Expression.Assign(variable, param);
+
+				return Expression.Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
+			}
+
+			return conv.Body.Transform(e => e == conv.Parameters[0] ? param : e);
+		}
+
+		class ColumnReader
+		{
+			public ColumnReader(MappingSchema mappingSchema, Type columnType, int columnIndex)
+			{
+				_mappingSchema = mappingSchema;
+				_columnType    = columnType;
+				_columnIndex   = columnIndex;
+			}
+
+			public object GetValue(IDataReader dataReader)
+			{
+				var value = dataReader.GetValue(_columnIndex);
+
+				if (value is DBNull || value == null)
+					return null;
+
+				var fromType = value.GetType();
+
+				if (fromType == _columnType)
+					return value;
+
+				Func<object,object> func;
+
+				if (!_columnConverters.TryGetValue(fromType, out func))
+				{
+					var conv = _mappingSchema.GetConvertExpression(fromType, _columnType, false);
+					var pex  = Expression.Parameter(typeof(object));
+					var ex   = ReplaceParameter(conv, Expression.Convert(pex, fromType));
+					var lex  = Expression.Lambda<Func<object, object>>(
+						ex.Type == typeof(object) ? ex : Expression.Convert(ex, typeof(object)),
+						pex);
+
+					_columnConverters[fromType] = func = lex.Compile();
+				}
+
+				return func(dataReader);
+			}
+
+			readonly ConcurrentDictionary<Type,Func<object,object>> _columnConverters = new ConcurrentDictionary<Type,Func<object,object>>();
+
+			readonly MappingSchema _mappingSchema;
+			readonly Type          _columnType;
+			readonly int           _columnIndex;
+
+		}
+
+		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
+
+		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader)
+		{
+			return CreateObjectReader<T>(dataConnection, dataReader, (dataProvider,type,idx,dataReaderExpr) =>
+			{
+				var columnReader = new ColumnReader(dataConnection.MappingSchema, type, idx);
+
+				return Expression.Convert(
+					Expression.Call(
+						Expression.Constant(columnReader),
+						_columnReaderGetValueInfo,
+						dataReaderExpr),
+					type);
+			});
 		}
 
 		#endregion

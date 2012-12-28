@@ -37,6 +37,8 @@ namespace LinqToDB.Common
 			get { return _expression; }
 			set
 			{
+				var setDefault = _expression != null;
+
 				if (value == null)
 				{
 					Init();
@@ -44,13 +46,14 @@ namespace LinqToDB.Common
 				else
 				{
 					_expression = value;
-					_lambda     = _expression.Compile();
+					_lambda = _expression.Compile();
+				}
 
+				if (setDefault)
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
-				}
 			}
 		}
 
@@ -60,6 +63,8 @@ namespace LinqToDB.Common
 			get { return _lambda; }
 			set
 			{
+				var setDefault = _expression != null;
+
 				if (value == null)
 				{
 					Init();
@@ -75,12 +80,13 @@ namespace LinqToDB.Common
 								System.Linq.Expressions.Expression.Constant(value),
 								p),
 							p);
+				}
 
+				if (setDefault)
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
-				}
 			}
 		}
 

@@ -125,27 +125,9 @@ namespace LinqToDB.DataProvider
 			return Expression.Convert(reader, typeof(SqlDataReader));
 		}
 
-		static readonly MethodInfo _isDBNullInfo = MemberHelper.MethodOf<IDataReader>(rd => rd.IsDBNull(0));
-
 		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var st   = ((SqlDataReader)reader).GetSchemaTable();
-
-			if (st == null || (bool)st.Rows[idx]["allowDBNull"])
-			{
-				expr = Expression.Condition(
-					Expression.Call(readerExpression, _isDBNullInfo, Expression.Constant(idx)),
-					Expression.Constant(mappingSchema.GetDefaultValue(toType), toType),
-					expr);
-			}
-
-			return expr;
-		}
-
-		protected override Expression GetReaderMethodExpression(IDataRecord reader, int idx, Expression readerExpression, Type toType)
-		{
-			var expr = base.GetReaderMethodExpression(reader, idx, readerExpression, toType);
 
 			if (expr.Type == typeof(object))
 			{
@@ -194,6 +176,12 @@ namespace LinqToDB.DataProvider
 			if (type == typeof(TimeSpan))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetTimeSpan      (0));
 
 			return null;
+		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			var st = ((SqlDataReader)reader).GetSchemaTable();
+			return st == null || (bool)st.Rows[idx]["allowDBNull"];
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
