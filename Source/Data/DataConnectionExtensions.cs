@@ -281,7 +281,7 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				return GetObjectReader2<T>(dataConnection, dataReader);
+				//return GetObjectReader2<T>(dataConnection, dataReader);
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 					GetColumnReader(dataConnection.DataProvider, dataConnection.MappingSchema, dataReader, type, idx, dataReaderExpr));
 			}
@@ -398,6 +398,8 @@ namespace LinqToDB.Data
 
 			public object GetValue(IDataReader dataReader)
 			{
+				var value = dataReader.GetValue(_columnIndex);
+
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
 				Func<IDataReader,object> func;

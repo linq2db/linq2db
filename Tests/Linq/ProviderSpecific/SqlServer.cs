@@ -161,8 +161,16 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12' as date)").First(),                   Is.EqualTo(new DateTime(2012, 12, 12)));
 				Assert.That(conn.Query<DateTime> ("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Query<DateTime?>("SELECT Cast('2012-12-12 12:12:12.012' as datetime2)").First(), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
-				Assert.That(conn.Query<TimeSpan> ("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
-				Assert.That(conn.Query<TimeSpan?>("SELECT Cast('12:12:12' as time)").First(),                     Is.EqualTo(new TimeSpan(12, 12, 12)));
+			}
+		}
+
+		[Test]
+		public void TestTimeSpan([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Query<TimeSpan> ("SELECT Cast('12:12:12' as time)").First(), Is.EqualTo(new TimeSpan(12, 12, 12)));
+				Assert.That(conn.Query<TimeSpan?>("SELECT Cast('12:12:12' as time)").First(), Is.EqualTo(new TimeSpan(12, 12, 12)));
 			}
 		}
 
@@ -301,7 +309,7 @@ namespace Tests.ProviderSpecific
 				Assert.That(conn.Query<SqlInt64>   ("SELECT Cast(1        as bigint)").   First().Value, Is.EqualTo(1L));
 				Assert.That(conn.Query<SqlMoney>   ("SELECT Cast(1        as money)").    First().Value, Is.EqualTo(1m));
 				Assert.That(conn.Query<SqlSingle>  ("SELECT Cast(1        as real)").     First().Value, Is.EqualTo((float)1));
-				Assert.That(conn.Query<SqlString>  ("SELECT Cast('12345'  as char(6))").  First().Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Query<SqlString>  ("SELECT Cast('12345'  as char(6))").  First().Value, Is.EqualTo("12345"));
 				Assert.That(conn.Query<SqlXml>     ("SELECT Cast('<xml/>' as xml)").      First().Value, Is.EqualTo("<xml />"));
 
 				Assert.That(
@@ -357,8 +365,38 @@ namespace Tests.ProviderSpecific
 			using (var conn = new DataConnection(context))
 			{
 				var id = SqlHierarchyId.Parse("/1/3/");
-				Assert.That(conn.Query<SqlHierarchyId> ("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
-				Assert.That(conn.Query<SqlHierarchyId?>("SELECT Cast('/1/3/' as hierarchyid)"). First(), Is.EqualTo(id));
+				Assert.That(conn.Query<SqlHierarchyId> ("SELECT Cast('/1/3/' as hierarchyid)").First(), Is.EqualTo(id));
+				Assert.That(conn.Query<SqlHierarchyId?>("SELECT Cast('/1/3/' as hierarchyid)").First(), Is.EqualTo(id));
+				Assert.That(conn.Query<SqlHierarchyId> ("SELECT Cast(NULL as hierarchyid)").   First(), Is.EqualTo(SqlHierarchyId.Null));
+				Assert.That(conn.Query<SqlHierarchyId?>("SELECT Cast(NULL as hierarchyid)").   First(), Is.EqualTo(null));
+			}
+		}
+
+		[Test]
+		public void TestGeometry([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
+				Assert.That(conn.Execute<SqlGeometry>("SELECT Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)")
+					.ToString(), Is.EqualTo(id.ToString()));
+
+				Assert.That(conn.Execute<SqlGeometry>("SELECT Cast(NULL as geometry)").ToString(),
+					Is.EqualTo(SqlGeometry.Null.ToString()));
+			}
+		}
+
+		[Test]
+		public void TestGeography([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
+				Assert.That(conn.Execute<SqlGeography>("SELECT Cast(geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656)', 4326) as geography)")
+					.ToString(), Is.EqualTo(id.ToString()));
+
+				Assert.That(conn.Execute<SqlGeography>("SELECT Cast(NULL as geography)").ToString(),
+					Is.EqualTo(SqlGeography.Null.ToString()));
 			}
 		}
 

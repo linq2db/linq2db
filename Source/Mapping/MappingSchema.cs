@@ -125,7 +125,16 @@ namespace LinqToDB.Mapping
 				AddNullCheck(expr) :
 				expr;
 
-			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, null, false));
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, expr, null, false));
+		}
+
+		public void SetConvertExpression<TFrom,TTo>(
+			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> checkNullExpr,
+			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr)
+		{
+			if (expr == null) throw new ArgumentNullException("expr");
+
+			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(checkNullExpr, expr, null, false));
 		}
 
 		public void SetConverter<TFrom,TTo>([JetBrains.Annotations.NotNull] Func<TFrom,TTo> func)

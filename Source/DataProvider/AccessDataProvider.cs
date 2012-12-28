@@ -18,10 +18,13 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
+		static readonly MappingSchema _accessMappingSchema = new AccessMappingSchema();
+
 		#endregion
 
-		public AccessDataProvider() : base(new AccessMappingSchema())
+		public AccessDataProvider() : base(_accessMappingSchema)
 		{
+			//System.Data.OleDb.OleDbLiteral
 		}
 
 		public override string Name         { get { return LinqToDB.ProviderName.Access;      } }
