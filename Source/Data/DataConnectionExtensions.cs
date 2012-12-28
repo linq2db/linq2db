@@ -281,42 +281,9 @@ namespace LinqToDB.Data
 
 			if (!_objectReaders.TryGetValue(key, out func))
 			{
-				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (dataProvider,type,idx,dataReaderExpr) =>
-				{
-					var ex   = dataProvider.GetReaderExpression(dataConnection.MappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
-
-					//if (ex.NodeType == ExpressionType.Lambda)
-					//{
-					//	var l = (LambdaExpression)ex;
-					//	ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
-					//}
-
-					var conv = dataConnection.MappingSchema.GetConvertExpression(ex.Type, type, false);
-
-					ex = ReplaceParameter(conv, ex);
-
-					// Add check null expression.
-					//
-					if (dataProvider.IsDBNullAllowed(dataReader, idx) ?? true)
-					{
-						ex = Expression.Condition(
-							Expression.Call(dataReaderExpr, _isDBNullInfo, Expression.Constant(idx)),
-							Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(type), type),
-							ex);
-					}
-
-					/*
-					ex = Expression.Condition(
-						Expression.Equal(
-							Expression.Call(dataReaderExpr, MemberHelper.MethodOf<IDataReader>(rd => rd.GetFieldType(0)), Expression.Constant(idx)),
-							Expression.Constant(dataReader.GetFieldType(idx))
-						),
-						ex,
-						ex);
-					*/
-
-					return ex;
-				});
+				return GetObjectReader2<T>(dataConnection, dataReader);
+				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
+					GetColumnReader(dataConnection.DataProvider, dataConnection.MappingSchema, dataReader, type, idx, dataReaderExpr));
 			}
 
 			return (Func<IDataReader,T>)func;
@@ -325,7 +292,7 @@ namespace LinqToDB.Data
 		static Func<IDataReader,T> CreateObjectReader<T>(
 			DataConnection dataConnection,
 			IDataReader    dataReader,
-			Func<IDataProvider,Type,int,Expression,Expression> getMemberExpression)
+			Func<Type,int,Expression,Expression> getMemberExpression)
 		{
 			var dataProvider   = dataConnection.DataProvider;
 			var parameter      = Expression.Parameter(typeof(IDataReader));
@@ -335,7 +302,7 @@ namespace LinqToDB.Data
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{
-				expr = getMemberExpression(dataProvider, typeof(T), 0, dataReaderExpr);
+				expr = getMemberExpression(typeof(T), 0, dataReaderExpr);
 			}
 			else
 			{
@@ -364,7 +331,7 @@ namespace LinqToDB.Data
 						expr = Expression.New(
 							ctor.c,
 							ctor.ps.Select(p => names.Contains(p.Name) ?
-								getMemberExpression(dataProvider, p.ParameterType, names.IndexOf(p.Name), dataReaderExpr) :
+								getMemberExpression(p.ParameterType, names.IndexOf(p.Name), dataReaderExpr) :
 								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
 					}
 				}
@@ -379,7 +346,7 @@ namespace LinqToDB.Data
 						select new
 						{
 							Member = member,
-							Expr   = getMemberExpression(dataProvider, member.MemberType, n.idx, dataReaderExpr),
+							Expr   = getMemberExpression(member.MemberType, n.idx, dataReaderExpr),
 						}
 					).ToList();
 
@@ -420,19 +387,42 @@ namespace LinqToDB.Data
 
 		class ColumnReader
 		{
-			public ColumnReader(MappingSchema mappingSchema, Type columnType, int columnIndex)
+			public ColumnReader(IDataProvider dataProvider, MappingSchema mappingSchema, Type columnType, int columnIndex)
 			{
+				_dataProvider  = dataProvider;
 				_mappingSchema = mappingSchema;
 				_columnType    = columnType;
 				_columnIndex   = columnIndex;
+				_defaultValue  = mappingSchema.GetDefaultValue(columnType);
 			}
 
 			public object GetValue(IDataReader dataReader)
 			{
+				var fromType = dataReader.GetFieldType(_columnIndex);
+
+				Func<IDataReader,object> func;
+
+				if (!_columnConverters.TryGetValue(fromType, out func))
+				{
+					var parameter      = Expression.Parameter(typeof(IDataReader));
+					var dataReaderExpr = _dataProvider.ConvertDataReader(parameter);
+
+					var expr = GetColumnReader(_dataProvider, _mappingSchema, dataReader, _columnType, _columnIndex, dataReaderExpr);
+
+					var lex  = Expression.Lambda<Func<IDataReader, object>>(
+						expr.Type == typeof(object) ? expr : Expression.Convert(expr, typeof(object)),
+						parameter);
+
+					_columnConverters[fromType] = func = lex.Compile();
+				}
+
+				return func(dataReader);
+
+				/*
 				var value = dataReader.GetValue(_columnIndex);
 
 				if (value is DBNull || value == null)
-					return null;
+					return _defaultValue;
 
 				var fromType = value.GetType();
 
@@ -453,24 +443,31 @@ namespace LinqToDB.Data
 					_columnConverters[fromType] = func = lex.Compile();
 				}
 
-				return func(dataReader);
+				return func(value);
+				*/
 			}
 
-			readonly ConcurrentDictionary<Type,Func<object,object>> _columnConverters = new ConcurrentDictionary<Type,Func<object,object>>();
+			readonly ConcurrentDictionary<Type,Func<IDataReader,object>> _columnConverters = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
 
+			readonly IDataProvider _dataProvider;
 			readonly MappingSchema _mappingSchema;
 			readonly Type          _columnType;
 			readonly int           _columnIndex;
-
+			readonly object        _defaultValue;
 		}
 
 		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
 
 		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader)
 		{
-			return CreateObjectReader<T>(dataConnection, dataReader, (dataProvider,type,idx,dataReaderExpr) =>
+			var key = new QueryKey(
+				typeof(T),
+				dataConnection.ConfigurationString ?? dataConnection.ConnectionString ?? dataConnection.Connection.ConnectionString,
+				dataConnection.Command.CommandText);
+
+			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
 			{
-				var columnReader = new ColumnReader(dataConnection.MappingSchema, type, idx);
+				var columnReader = new ColumnReader(dataConnection.DataProvider, dataConnection.MappingSchema, type, idx);
 
 				return Expression.Convert(
 					Expression.Call(
@@ -479,6 +476,48 @@ namespace LinqToDB.Data
 						dataReaderExpr),
 					type);
 			});
+
+			_objectReaders[key] = func;
+
+			return func;
+		}
+
+		static Expression GetColumnReader(
+			IDataProvider dataProvider, MappingSchema mappingSchema, IDataReader dataReader, Type type, int idx, Expression dataReaderExpr)
+		{
+			var ex   = dataProvider.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
+
+			//if (ex.NodeType == ExpressionType.Lambda)
+			//{
+			//	var l = (LambdaExpression)ex;
+			//	ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
+			//}
+
+			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false);
+
+			ex = ReplaceParameter(conv, ex);
+
+			// Add check null expression.
+			//
+			if (dataProvider.IsDBNullAllowed(dataReader, idx) ?? true)
+			{
+				ex = Expression.Condition(
+					Expression.Call(dataReaderExpr, _isDBNullInfo, Expression.Constant(idx)),
+					Expression.Constant(mappingSchema.GetDefaultValue(type), type),
+					ex);
+			}
+
+			/*
+			ex = Expression.Condition(
+				Expression.Equal(
+					Expression.Call(dataReaderExpr, MemberHelper.MethodOf<IDataReader>(rd => rd.GetFieldType(0)), Expression.Constant(idx)),
+					Expression.Constant(dataReader.GetFieldType(idx))
+				),
+				ex,
+				ex);
+			*/
+
+			return ex;
 		}
 
 		#endregion

@@ -64,12 +64,12 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		#endregion
-
 		static readonly MappingSchema _sqlServerMappingSchema     = new SqlServerMappingSchema();
 		static readonly MappingSchema _sqlServerMappingSchema2005 = new MappingSchema(LinqToDB.ProviderName.SqlServer2005, _sqlServerMappingSchema);
 		static readonly MappingSchema _sqlServerMappingSchema2008 = new MappingSchema(LinqToDB.ProviderName.SqlServer2008, _sqlServerMappingSchema);
 		static readonly MappingSchema _sqlServerMappingSchema2012 = new MappingSchema(LinqToDB.ProviderName.SqlServer2012, _sqlServerMappingSchema);
+
+		#endregion
 
 		public SqlServerDataProvider() : this(SqlServerVersion.v2008)
 		{
