@@ -230,15 +230,15 @@ namespace LinqToDB.Data
 
 		public struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, string configString, string sql)
+			public QueryKey(Type type, int configID, string sql)
 			{
-				_type         = type;
-				_configString = configString;
-				_sql          = sql;
+				_type     = type;
+				_configID = configID;
+				_sql      = sql;
 
 				unchecked
 				{
-					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configString.GetHashCode()) + _sql.GetHashCode();
+					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode()) + _sql.GetHashCode();
 				}
 			}
 
@@ -249,7 +249,7 @@ namespace LinqToDB.Data
 
 			readonly int    _hashCode;
 			readonly Type   _type;
-			readonly string _configString;
+			readonly int    _configID;
 			readonly string _sql;
 
 			public override int GetHashCode()
@@ -260,9 +260,9 @@ namespace LinqToDB.Data
 			public bool Equals(QueryKey other)
 			{
 				return
-					_type         == other._type &&
-					_sql          == other._sql  &&
-					_configString == other._configString
+					_type     == other._type &&
+					_sql      == other._sql  &&
+					_configID == other._configID
 					;
 			}
 		}
@@ -274,7 +274,7 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(
 				typeof(T),
-				dataConnection.ConfigurationString ?? dataConnection.ConnectionString ?? dataConnection.Connection.ConnectionString,
+				dataConnection.ID,
 				dataConnection.Command.CommandText);
 
 			Delegate func;
@@ -464,7 +464,7 @@ namespace LinqToDB.Data
 		{
 			var key = new QueryKey(
 				typeof(T),
-				dataConnection.ConfigurationString ?? dataConnection.ConnectionString ?? dataConnection.Connection.ConnectionString,
+				dataConnection.ID,
 				dataConnection.Command.CommandText);
 
 			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>

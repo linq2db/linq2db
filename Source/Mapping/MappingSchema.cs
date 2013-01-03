@@ -456,6 +456,12 @@ namespace LinqToDB.Mapping
 
 		#region Configuration
 
+		private string _configurationID;
+		public  string  ConfigurationID
+		{
+			get { return _configurationID ?? (_configurationID = string.Join(".", ConfigurationList)); }
+		}
+
 		private string[] _configurationList;
 		public  string[]  ConfigurationList
 		{

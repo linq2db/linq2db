@@ -5,6 +5,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace LinqToDB.Data
 {
@@ -79,6 +80,29 @@ namespace LinqToDB.Data
 		public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
+
+		static readonly ConcurrentDictionary<string,int> _configurationIDs = new ConcurrentDictionary<string,int>();
+		static int _maxID;
+
+		private int? _id;
+		public  int   ID
+		{
+			get
+			{
+				if (!_id.HasValue)
+				{
+					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
+					int id;
+
+					if (!_configurationIDs.TryGetValue(key, out id))
+						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
+
+					_id = id;
+				}
+
+				return _id.Value;
+			}
+		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
@@ -406,6 +430,8 @@ namespace LinqToDB.Data
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
 			_mappingSchema = new MappingSchema(mappingSchema, _mappingSchema);
+			_id            = null;
+
 			return this;
 		}
 
