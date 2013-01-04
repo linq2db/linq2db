@@ -148,5 +148,21 @@ namespace Tests.Data
 				Assert.That(list.Count, Is.EqualTo(1));
 			}
 		}
+
+		[Test]
+		public void TestDataReader([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		{
+			using (var conn   = new DataConnection(context))
+			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
+			{
+				var n = reader.Execute<int>();
+
+				Assert.AreEqual(1, n);
+
+				var s = reader.Query<string>();
+
+				Assert.AreEqual("2", s.First());
+			}
+		}
 	}
 }

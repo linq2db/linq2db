@@ -76,6 +76,7 @@
     <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Data\DataConnectionExtensions.cs" />
     <Compile Include="Data\DataParameter.cs" />
+    <Compile Include="Data\DataReader.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />

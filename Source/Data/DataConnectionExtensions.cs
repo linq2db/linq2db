@@ -5,13 +5,13 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.Data
 {
 	using Expressions;
-	using Mapping;
 	using Extensions;
+	using DataProvider;
+	using Mapping;
 
 	public static class DataConnectionExtensions
 	{
@@ -57,7 +57,9 @@ namespace LinqToDB.Data
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
 			connection.Command.CommandText = sql;
-			return ExecuteQuery<T>(connection);
+
+			using (var rd = connection.Command.ExecuteReader())
+				return ExecuteQuery<T>(connection, rd);
 		}
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -66,7 +68,8 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			return ExecuteQuery<T>(connection);
+			using (var rd = connection.Command.ExecuteReader())
+				return ExecuteQuery<T>(connection, rd);
 		}
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, DataParameter parameter)
@@ -82,40 +85,38 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
-			return ExecuteQuery<T>(connection);
+			using (var rd = connection.Command.ExecuteReader())
+				return ExecuteQuery<T>(connection, rd);
 		}
 
-		static IEnumerable<T> ExecuteQuery<T>(this DataConnection connection)
+		static IEnumerable<T> ExecuteQuery<T>(DataConnection connection, IDataReader rd)
 		{
-			using (var rd = connection.Command.ExecuteReader())
+			if (rd.Read())
 			{
-				if (rd.Read())
+				var objectReader = GetObjectReader<T>(connection, rd);
+				var isFaulted    = false;
+
+				do
 				{
-					var objectReader = GetObjectReader<T>(connection, rd);
-					var isFaulted    = false;
+					T result;
 
-					do
+					try
 					{
-						T result;
+						result = objectReader(rd);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
 
-						try
-						{
-							result = objectReader(rd);
-						}
-						catch (InvalidCastException)
-						{
-							if (isFaulted)
-								throw;
+						isFaulted    = true;
+						objectReader = GetObjectReader2<T>(connection, rd);
+						result       = objectReader(rd);
+					}
 
-							isFaulted    = true;
-							objectReader = GetObjectReader2<T>(connection, rd);
-							result       = objectReader(rd);
-						}
+					yield return result;
 
-						yield return result;
-
-					} while (rd.Read());
-				}
+				} while (rd.Read());
 			}
 		}
 
@@ -223,6 +224,104 @@ namespace LinqToDB.Data
 
 			return default(T);
 		}
+
+		#endregion
+
+		#region ExecuteReader
+
+		public static DataReader ExecuteReader(this DataConnection connection, string sql)
+		{
+			connection.Command.CommandText = sql;
+			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+		}
+
+		public static DataReader ExecuteReader(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			SetParameters(connection, parameters);
+
+			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+		}
+
+		public static DataReader ExecuteReader(this DataConnection connection, string sql, DataParameter parameter)
+		{
+			return ExecuteReader(connection, sql, new[] { parameter });
+		}
+
+		public static DataReader ExecuteReader(this DataConnection connection, string sql, object parameters)
+		{
+			connection.Command.CommandText = sql;
+
+			var dps = GetDataParameters(connection.MappingSchema, parameters);
+
+			SetParameters(connection, dps);
+
+			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+		}
+
+		#region Query with object reader
+
+		public static IEnumerable<T> Query<T>(this DataReader reader, Func<IDataReader,T> objectReader)
+		{
+			while (reader.Reader.Read())
+				yield return objectReader(reader.Reader);
+		}
+
+		#endregion
+
+		#region Query
+
+		public static IEnumerable<T> Query<T>(this DataReader reader)
+		{
+			if (reader.ReadNumber != 0)
+				if (!reader.Reader.NextResult())
+					return Enumerable.Empty<T>();
+
+			reader.ReadNumber++;
+
+			return ExecuteQuery<T>(reader.Connection, reader.Reader);
+		}
+
+		#endregion
+
+		#region Query with template
+
+		public static IEnumerable<T> Query<T>(this DataReader reader, T template)
+		{
+			return Query<T>(reader);
+		}
+
+		#endregion
+
+		#region Execute scalar
+
+		public static T Execute<T>(this DataReader reader)
+		{
+			if (reader.ReadNumber != 0)
+				if (!reader.Reader.NextResult())
+					return default(T);
+
+			reader.ReadNumber++;
+
+			if (reader.Reader.Read())
+			{
+				var objectReader = GetObjectReader<T>(reader.Connection, reader.Reader);
+
+				try
+				{
+					return objectReader(reader.Reader);
+				}
+				catch (InvalidCastException)
+				{
+					return GetObjectReader2<T>(reader.Connection, reader.Reader)(reader.Reader);
+				}
+			}
+
+			return default(T);
+		}
+
+		#endregion
 
 		#endregion
 
