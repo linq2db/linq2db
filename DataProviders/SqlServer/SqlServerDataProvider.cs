@@ -90,9 +90,22 @@ namespace LinqToDB.DataProvider
 			{ typeof(SqlHierarchyId), "hierarchyid" },
 		});
 
-		public static void AddUdtType(Type type, string udtName)
+		public void AddUdtType(Type type, string udtName)
 		{
+			MappingSchema.SetScalarType(type);
+
 			_udtTypes[type] = udtName;
+		}
+
+		public void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
+		{
+			MappingSchema.SetDefaultValue(nullValue);
+			MappingSchema.SetScalarType(typeof(T));
+
+			if (dataType != DataType.Undefined)
+				MappingSchema.SetDataType(typeof(T), dataType);
+
+			_udtTypes[typeof(T)] = udtName;
 		}
 
 		#endregion

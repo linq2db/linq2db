@@ -276,9 +276,6 @@
     <Content Include="..\..\Data\Create Scripts\Informix.sql">
       <Link>Database\Create Scripts\Informix.sql</Link>
     </Content>
-    <Content Include="..\..\Data\Create Scripts\MsSql.sql">
-      <Link>Database\Create Scripts\MsSql.sql</Link>
-    </Content>
     <Content Include="..\..\Data\Create Scripts\MySql.sql">
       <Link>Database\Create Scripts\MySql.sql</Link>
     </Content>
@@ -293,6 +290,9 @@
     </Content>
     <Content Include="..\..\Data\Create Scripts\SQLite.sql">
       <Link>Database\Create Scripts\SQLite.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\SqlServer.sql">
+      <Link>Database\Create Scripts\SqlServer.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
       <Link>Database\Create Scripts\Sybase.sql</Link>
