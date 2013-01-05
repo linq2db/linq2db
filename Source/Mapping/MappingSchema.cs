@@ -259,7 +259,14 @@ namespace LinqToDB.Mapping
 				var d = ConvertInfo.Default.Get(from, to);
 
 				if (d == null || d.IsSchemaSpecific)
+				{
 					d = ConvertInfo.Default.Create(this, from, to);
+
+					if (d.IsSchemaSpecific)
+					{
+						//_schemas[0].Set(_expressions, from, to , ret);
+					}
+				}
 
 				return new ConvertInfo.LambdaInfo(d.CheckNullLambda, d.Lambda, null, d.IsSchemaSpecific);
 			}
@@ -510,6 +517,28 @@ namespace LinqToDB.Mapping
 				SetScalarType(typeof(object));
 				SetScalarType(typeof(XmlDocument));
 				SetScalarType(typeof(XDocument));
+
+				SetDataType(typeof(char),           DataType.NChar);
+				SetDataType(typeof(string),         DataType.NVarChar);
+				SetDataType(typeof(byte[]),         DataType.Binary);
+				SetDataType(typeof(Binary),         DataType.Binary);
+				SetDataType(typeof(bool),           DataType.Boolean);
+				SetDataType(typeof(Guid),           DataType.Guid);
+				SetDataType(typeof(sbyte),          DataType.SByte);
+				SetDataType(typeof(short),          DataType.Int16);
+				SetDataType(typeof(int),            DataType.Int32);
+				SetDataType(typeof(long),           DataType.Int64);
+				SetDataType(typeof(byte),           DataType.Byte);
+				SetDataType(typeof(ushort),         DataType.UInt16);
+				SetDataType(typeof(uint),           DataType.UInt32);
+				SetDataType(typeof(ulong),          DataType.UInt64);
+				SetDataType(typeof(float),          DataType.Single);
+				SetDataType(typeof(double),         DataType.Double);
+				SetDataType(typeof(decimal),        DataType.Decimal);
+				SetDataType(typeof(DateTime),       DataType.DateTime2);
+				SetDataType(typeof(DateTimeOffset), DataType.DateTimeOffset);
+				SetDataType(typeof(XmlDocument),    DataType.Xml);
+				SetDataType(typeof(XDocument),      DataType.Xml);
 			}
 		}
 
@@ -549,6 +578,27 @@ namespace LinqToDB.Mapping
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			_schemas[0].SetScalarType(type, isScalarType);
+		}
+
+		#endregion
+
+		#region DataTypes
+
+		public DataType GetDataType(Type type)
+		{
+			foreach (var info in _schemas)
+			{
+				var o = info.GetDataType(type);
+				if (o.IsSome)
+					return o.Value;
+			}
+
+			return DataType.Undefined;
+		}
+
+		public void SetDataType(Type type, DataType dataType)
+		{
+			_schemas[0].SetDataType(type, dataType);
 		}
 
 		#endregion

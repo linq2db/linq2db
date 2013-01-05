@@ -58,7 +58,7 @@ namespace LinqToDB.Common
 
 		public LambdaInfo Create(MappingSchema mappingSchema, Type from, Type to)
 		{
-			var ex  = ConverterMaker.GetConverter(mappingSchema, from, to);
+			var ex  = ConvertBuilder.GetConverter(mappingSchema, from, to);
 			var lm  = ex.Item1.Compile();
 			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 

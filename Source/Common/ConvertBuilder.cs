@@ -10,7 +10,7 @@ namespace LinqToDB.Common
 	using Extensions;
 	using Mapping;
 
-	static class ConverterMaker
+	static class ConvertBuilder
 	{
 		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
 
@@ -505,5 +505,46 @@ namespace LinqToDB.Common
 				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
 			}
 		}
+
+		#region Default Enum Mapping Type
+
+		public static Type GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
+		{
+			var type = enumType.ToNullableUnderlying();
+
+			if (!type.IsEnum)
+				return null;
+
+			var fields =
+			(
+				from f in type.GetFields()
+				where (f.Attributes & EnumField) == EnumField
+				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration)
+				select
+				(
+					from a in attrs
+					where a.Configuration == attrs[0].Configuration
+					orderby !a.IsDefault
+					select a
+				).ToList()
+			).ToList();
+
+			if (fields.All(attrs => attrs.Count != 0))
+			{
+				var attr = fields.FirstOrDefault(attrs => attrs[0].Value != null);
+
+				if (attr != null)
+				{
+					var valueType = attr[0].Value.GetType();
+
+					if (fields.All(attrs => attrs[0].Value == null || attrs[0].Value.GetType() == valueType))
+						return valueType;
+				}
+			}
+
+			return Enum.GetUnderlyingType(type);
+		}
+
+		#endregion
 	}
 }

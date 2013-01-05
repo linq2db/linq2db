@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 namespace LinqToDB.Mapping
 {
 	using Common;
-	using Extensions;
 	using Metadata;
 
 	class MappingSchemaInfo
@@ -90,6 +89,34 @@ namespace LinqToDB.Mapping
 						_scalarTypes = new ConcurrentDictionary<Type,bool>();
 
 			_scalarTypes[type] = isScalarType;
+		}
+
+		#endregion
+
+		#region DataTypes
+
+		volatile ConcurrentDictionary<Type,DataType> _dataTypes;
+
+		public Option<DataType> GetDataType(Type type)
+		{
+			if (_dataTypes != null)
+			{
+				DataType dataType;
+				if (_dataTypes.TryGetValue(type, out dataType))
+					return Option<DataType>.Some(dataType);
+			}
+
+			return Option<DataType>.None;
+		}
+
+		public void SetDataType(Type type, DataType dataType)
+		{
+			if (_dataTypes == null)
+				lock (this)
+					if (_dataTypes == null)
+						_dataTypes = new ConcurrentDictionary<Type,DataType>();
+
+			_dataTypes[type] = dataType;
 		}
 
 		#endregion

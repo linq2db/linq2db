@@ -2,9 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Xml;
+using System.Xml.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.Data
 {
@@ -41,7 +45,7 @@ namespace LinqToDB.Data
 		{
 			connection.Command.CommandText = sql;
 
-			var dps = GetDataParameters(connection.MappingSchema, parameters);
+			var dps = GetDataParameters(connection, parameters);
 
 			SetParameters(connection, dps);
 
@@ -78,7 +82,7 @@ namespace LinqToDB.Data
 		{
 			connection.Command.CommandText = sql;
 
-			var dps = GetDataParameters(connection.MappingSchema, parameters);
+			var dps = GetDataParameters(connection, parameters);
 
 			SetParameters(connection, dps);
 
@@ -156,7 +160,7 @@ namespace LinqToDB.Data
 		{
 			connection.Command.CommandText = sql;
 
-			var dps = GetDataParameters(connection.MappingSchema, parameters);
+			var dps = GetDataParameters(connection, parameters);
 
 			SetParameters(connection, dps);
 
@@ -195,7 +199,7 @@ namespace LinqToDB.Data
 		{
 			connection.Command.CommandText = sql;
 
-			var dps = GetDataParameters(connection.MappingSchema, parameters);
+			var dps = GetDataParameters(connection, parameters);
 
 			SetParameters(connection, dps);
 
@@ -252,7 +256,7 @@ namespace LinqToDB.Data
 		{
 			connection.Command.CommandText = sql;
 
-			var dps = GetDataParameters(connection.MappingSchema, parameters);
+			var dps = GetDataParameters(connection, parameters);
 
 			SetParameters(connection, dps);
 
@@ -684,14 +688,50 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConcurrentDictionary<Type, Func<object,DataParameter[]>> _parameterReaders =
-			new ConcurrentDictionary<Type,Func<object,DataParameter[]>>();
+		public struct ParamKey : IEquatable<ParamKey>
+		{
+			public ParamKey(Type type, int configID)
+			{
+				_type     = type;
+				_configID = configID;
+
+				unchecked
+				{
+					_hashCode = -1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode();
+				}
+			}
+
+			public override bool Equals(object obj)
+			{
+				return Equals((QueryKey)obj);
+			}
+
+			readonly int    _hashCode;
+			readonly Type   _type;
+			readonly int    _configID;
+
+			public override int GetHashCode()
+			{
+				return _hashCode;
+			}
+
+			public bool Equals(ParamKey other)
+			{
+				return
+					_type     == other._type &&
+					_configID == other._configID
+					;
+			}
+		}
+
+		static readonly ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>> _parameterReaders =
+			new ConcurrentDictionary<ParamKey,Func<object,DataParameter[]>>();
 
 		static readonly PropertyInfo _dataParameterName     = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DataType);
 		static readonly PropertyInfo _dataParameterValue    = MemberHelper.PropertyOf<DataParameter>(p => p.Value);
 
-		static DataParameter[] GetDataParameters(MappingSchema mappingSchema, object parameters)
+		static DataParameter[] GetDataParameters(DataConnection dataConnection, object parameters)
 		{
 			if (parameters == null)
 				return null;
@@ -704,10 +744,11 @@ namespace LinqToDB.Data
 
 			Func<object,DataParameter[]> func;
 			var type = parameters.GetType();
+			var key  = new ParamKey(type, dataConnection.ID);
 
-			if (!_parameterReaders.TryGetValue(type, out func))
+			if (!_parameterReaders.TryGetValue(key, out func))
 			{
-				var td  = new TypeDescriptor(mappingSchema, type);
+				var td  = new TypeDescriptor(dataConnection.MappingSchema, type);
 				var p   = Expression.Parameter(typeof(object), "p");
 				var obj = Expression.Parameter(parameters.GetType(), "obj");
 
@@ -748,7 +789,17 @@ namespace LinqToDB.Data
 											});
 									}
 
-									var memberType = m.MemberType.ToNullableUnderlying();
+									var memberType  = m.MemberType.ToNullableUnderlying();
+									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
+
+									if (memberType.IsEnum)
+									{
+										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
+										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);
+
+										memberType  = mapType;
+										valueGetter = convExpr.Body.Transform(e => e == convExpr.Parameters[0] ? valueGetter : e);
+									}
 
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),
@@ -757,22 +808,16 @@ namespace LinqToDB.Data
 											Expression.Constant(m.ColumnName)),
 										Expression.Bind(
 											_dataParameterDataType,
-											Expression.Constant(
-												memberType == typeof(int)      ? DataType.Int32    :
-												//memberType == typeof(DateTime) ? DataType.NVarChar    :
-												memberType == typeof(string)   ? DataType.NVarChar :
-												                                 DataType.Undefined)),
+											Expression.Constant(dataConnection.MappingSchema.GetDataType(memberType))),
 										Expression.Bind(
 											_dataParameterValue,
-											Expression.Convert(
-												Expression.PropertyOrField(obj, m.MemberName),
-												typeof(object))));
+											Expression.Convert(valueGetter, typeof(object))));
 								}))
 						}
 					),
 					p);
 
-				_parameterReaders[parameters.GetType()] = func = expr.Compile();
+				_parameterReaders[key] = func = expr.Compile();
 			}
 
 			return func(parameters);

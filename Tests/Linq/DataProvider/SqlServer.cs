@@ -15,7 +15,7 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
-namespace Tests.ProviderSpecific
+namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class SqlServer : TestBase
