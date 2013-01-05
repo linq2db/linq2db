@@ -1,5 +1,7 @@
 ﻿using System;
-
+using System.Data.Linq;
+using System.Xml;
+using System.Xml.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
@@ -7,6 +9,23 @@ namespace LinqToDB.Data
 	[ScalarType]
 	public class DataParameter
 	{
+		public DataParameter()
+		{
+		}
+
+		public DataParameter(string name, object value)
+		{
+			Name  = name;
+			Value = value;
+		}
+
+		public DataParameter(string name, object value, DataType dataType)
+		{
+			Name     = name;
+			Value    = value;
+			DataType = dataType;
+		}
+
 		/// <summary>
 		/// Gets or sets the <see cref="T:LinqToDB.DataType"/> of the parameter.
 		/// </summary>
@@ -84,80 +103,79 @@ namespace LinqToDB.Data
 		/// </returns>
 		public object Value { get; set; }
 
-		public static DataParameter Char(string name, char value)
-		{
-			return new DataParameter { DataType = DataType.Char, Name = name, Value = value, };
-		}
+		public static DataParameter Char          (string name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
+		public static DataParameter Char          (string name, string         value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
+		public static DataParameter VarChar       (string name, char           value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }
+		public static DataParameter VarChar       (string name, string         value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }
+		public static DataParameter Text          (string name, string         value) { return new DataParameter { DataType = DataType.Text,           Name = name, Value = value, }; }
+		public static DataParameter NChar         (string name, char           value) { return new DataParameter { DataType = DataType.NChar,          Name = name, Value = value, }; }
+		public static DataParameter NChar         (string name, string         value) { return new DataParameter { DataType = DataType.NChar,          Name = name, Value = value, }; }
+		public static DataParameter NVarChar      (string name, char           value) { return new DataParameter { DataType = DataType.NVarChar,       Name = name, Value = value, }; }
+		public static DataParameter NVarChar      (string name, string         value) { return new DataParameter { DataType = DataType.NVarChar,       Name = name, Value = value, }; }
+		public static DataParameter NText         (string name, string         value) { return new DataParameter { DataType = DataType.NText,          Name = name, Value = value, }; }
+		public static DataParameter Binary        (string name, byte[]         value) { return new DataParameter { DataType = DataType.Binary,         Name = name, Value = value, }; }
+		public static DataParameter Binary        (string name, Binary         value) { return new DataParameter { DataType = DataType.Binary,         Name = name, Value = value, }; }
+		public static DataParameter VarBinary     (string name, byte[]         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
+		public static DataParameter VarBinary     (string name, Binary         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
+		public static DataParameter Image         (string name, byte[]         value) { return new DataParameter { DataType = DataType.Image,          Name = name, Value = value, }; }
+		public static DataParameter Boolean       (string name, bool           value) { return new DataParameter { DataType = DataType.Boolean,        Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter SByte         (string name, sbyte          value) { return new DataParameter { DataType = DataType.SByte,          Name = name, Value = value, }; }
+		public static DataParameter Int16         (string name, Int16          value) { return new DataParameter { DataType = DataType.Int16,          Name = name, Value = value, }; }
+		public static DataParameter Int32         (string name, Int32          value) { return new DataParameter { DataType = DataType.Int32,          Name = name, Value = value, }; }
+		public static DataParameter Int64         (string name, Int64          value) { return new DataParameter { DataType = DataType.Int64,          Name = name, Value = value, }; }
+		public static DataParameter Byte          (string name, Byte           value) { return new DataParameter { DataType = DataType.Byte,           Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter UInt16        (string name, UInt16         value) { return new DataParameter { DataType = DataType.UInt16,         Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter UInt32        (string name, UInt32         value) { return new DataParameter { DataType = DataType.UInt32,         Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter UInt64        (string name, UInt64         value) { return new DataParameter { DataType = DataType.UInt64,         Name = name, Value = value, }; }
+		public static DataParameter Single        (string name, Single         value) { return new DataParameter { DataType = DataType.Single,         Name = name, Value = value, }; }
+		public static DataParameter Double        (string name, Double         value) { return new DataParameter { DataType = DataType.Double,         Name = name, Value = value, }; }
+		public static DataParameter Decimal       (string name, Decimal        value) { return new DataParameter { DataType = DataType.Decimal,        Name = name, Value = value, }; }
+		public static DataParameter Money         (string name, decimal        value) { return new DataParameter { DataType = DataType.Money,          Name = name, Value = value, }; }
+		public static DataParameter SmallMoney    (string name, decimal        value) { return new DataParameter { DataType = DataType.SmallMoney,     Name = name, Value = value, }; }
+		public static DataParameter Guid          (string name, Guid           value) { return new DataParameter { DataType = DataType.Guid,           Name = name, Value = value, }; }
+		public static DataParameter Date          (string name, DateTime       value) { return new DataParameter { DataType = DataType.Date,           Name = name, Value = value, }; }
+		public static DataParameter Time          (string name, TimeSpan       value) { return new DataParameter { DataType = DataType.Time,           Name = name, Value = value, }; }
+		public static DataParameter DateTime      (string name, DateTime       value) { return new DataParameter { DataType = DataType.DateTime,       Name = name, Value = value, }; }
+		public static DataParameter DateTime2     (string name, DateTime       value) { return new DataParameter { DataType = DataType.DateTime2,      Name = name, Value = value, }; }
+		public static DataParameter SmallDateTime (string name, DateTime       value) { return new DataParameter { DataType = DataType.SmallDateTime,  Name = name, Value = value, }; }
+		public static DataParameter DateTimeOffset(string name, DateTimeOffset value) { return new DataParameter { DataType = DataType.DateTimeOffset, Name = name, Value = value, }; }
+		public static DataParameter Timestamp     (string name, byte[]         value) { return new DataParameter { DataType = DataType.Timestamp,      Name = name, Value = value, }; }
+		public static DataParameter Xml           (string name, string         value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
+		public static DataParameter Xml           (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
+		public static DataParameter Xml           (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
+		public static DataParameter Variant       (string name, object         value) { return new DataParameter { DataType = DataType.Variant,        Name = name, Value = value, }; }
+		public static DataParameter VarNumeric    (string name, decimal        value) { return new DataParameter { DataType = DataType.VarNumeric,     Name = name, Value = value, }; }
+		public static DataParameter Udt           (string name, object         value) { return new DataParameter { DataType = DataType.Udt,            Name = name, Value = value, }; }
 
-		public static DataParameter Char(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.Char, Name = name, Value = value, };
-		}
-
-		public static DataParameter VarChar(string name, char value)
-		{
-			return new DataParameter { DataType = DataType.VarChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter VarChar(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.VarChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter Text(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.Text, Name = name, Value = value, };
-		}
-
-		public static DataParameter NChar(string name, char value)
-		{
-			return new DataParameter { DataType = DataType.NChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter NChar(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.NChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter NVarChar(string name, char value)
-		{
-			return new DataParameter { DataType = DataType.NVarChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter NVarChar(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.NVarChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter NText(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.NText, Name = name, Value = value, };
-		}
-
-		public static DataParameter Binary(string name, byte[] value)
-		{
-			return new DataParameter { DataType = DataType.Binary, Name = name, Value = value, };
-		}
-
-		public static DataParameter VarBinary(string name, byte[] value)
-		{
-			return new DataParameter { DataType = DataType.VarBinary, Name = name, Value = value, };
-		}
-
-
-		public static DataParameter Create(string name, char value)
-		{
-			return new DataParameter { DataType = DataType.NChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter Create(string name, string value)
-		{
-			return new DataParameter { DataType = DataType.NVarChar, Name = name, Value = value, };
-		}
-
-		public static DataParameter Create(string name, byte[] value)
-		{
-			return new DataParameter { DataType = DataType.VarBinary, Name = name, Value = value, };
-		}
+		public static DataParameter Create        (string name, char           value) { return new DataParameter { DataType = DataType.NChar,          Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, string         value) { return new DataParameter { DataType = DataType.NVarChar,       Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, byte[]         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Binary         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, bool           value) { return new DataParameter { DataType = DataType.Boolean,        Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter Create        (string name, sbyte          value) { return new DataParameter { DataType = DataType.SByte,          Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Int16          value) { return new DataParameter { DataType = DataType.Int16,          Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Int32          value) { return new DataParameter { DataType = DataType.Int32,          Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Int64          value) { return new DataParameter { DataType = DataType.Int64,          Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Byte           value) { return new DataParameter { DataType = DataType.Byte,           Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter Create        (string name, UInt16         value) { return new DataParameter { DataType = DataType.UInt16,         Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter Create        (string name, UInt32         value) { return new DataParameter { DataType = DataType.UInt32,         Name = name, Value = value, }; }
+		[CLSCompliant(false)]
+		public static DataParameter Create        (string name, UInt64         value) { return new DataParameter { DataType = DataType.UInt64,         Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Single         value) { return new DataParameter { DataType = DataType.Single,         Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Double         value) { return new DataParameter { DataType = DataType.Double,         Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Decimal        value) { return new DataParameter { DataType = DataType.Decimal,        Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Guid           value) { return new DataParameter { DataType = DataType.Guid,           Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, TimeSpan       value) { return new DataParameter { DataType = DataType.Time,           Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, DateTime       value) { return new DataParameter { DataType = DataType.DateTime2,      Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, DateTimeOffset value) { return new DataParameter { DataType = DataType.DateTimeOffset, Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 	}
 }

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.IO;
@@ -8,6 +11,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 
 using Microsoft.SqlServer.Types;
 
@@ -74,6 +78,22 @@ namespace LinqToDB.DataProvider
 		static readonly MappingSchema _sqlServerMappingSchema2005 = new MappingSchema(LinqToDB.ProviderName.SqlServer2005, _sqlServerMappingSchema);
 		static readonly MappingSchema _sqlServerMappingSchema2008 = new MappingSchema(LinqToDB.ProviderName.SqlServer2008, _sqlServerMappingSchema);
 		static readonly MappingSchema _sqlServerMappingSchema2012 = new MappingSchema(LinqToDB.ProviderName.SqlServer2012, _sqlServerMappingSchema);
+
+		#endregion
+
+		#region Udt support
+
+		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>(new Dictionary<Type,string>
+		{
+			{ typeof(SqlGeography),   "geography"   },
+			{ typeof(SqlGeometry),    "geometry"    },
+			{ typeof(SqlHierarchyId), "hierarchyid" },
+		});
+
+		public static void AddUdtType(Type type, string udtName)
+		{
+			_udtTypes[type] = udtName;
+		}
 
 		#endregion
 
@@ -194,24 +214,64 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
-				case DataType.SByte     : dataType = DataType.Int16;   break;
-				case DataType.UInt16    : dataType = DataType.Int32;   break;
-				case DataType.UInt32    : dataType = DataType.Int64;   break;
-				case DataType.UInt64    : dataType = DataType.Decimal; break;
-				case DataType.Undefined :
-					if (value is sbyte)
-						dataType = DataType.Int16;
+				case DataType.SByte      : dataType = DataType.Int16;   break;
+				case DataType.UInt16     : dataType = DataType.Int32;   break;
+				case DataType.UInt32     : dataType = DataType.Int64;   break;
+				case DataType.UInt64     : dataType = DataType.Decimal; break;
+				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					break;
+				case DataType.Xml        :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					break;
+				case DataType.Udt        :
+					if (value != null)
+					{
+						string s;
+						if (_udtTypes.TryGetValue(value.GetType(), out s))
+							((SqlParameter)parameter).UdtTypeName = s;
+					}
+					break;
+				case DataType.Undefined  :
+					     if (value is sbyte)        dataType = DataType.Int16;
+					else if (value is ushort)       dataType = DataType.Int32;
+					else if (value is uint)         dataType = DataType.Int64;
+					else if (value is ulong)        dataType = DataType.Decimal;
+					else if (value is Binary)       value = ((Binary)value).ToArray();
+					else if (value is XDocument)    value = value.ToString();
+					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
+					else
+					{
+						string s;
+						if (_udtTypes.TryGetValue(value.GetType(), out s))
+							((SqlParameter)parameter).UdtTypeName = s;
+					}
+
 					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+		}
 
+		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		{
 			switch (dataType)
 			{
-				case DataType.Text      : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;      break;
-				case DataType.NText     : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;     break;
-				case DataType.Binary    : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;    break;
-				case DataType.VarBinary : ((SqlParameter)parameter).SqlDbType = SqlDbType.VarBinary; break;
+				case DataType.Text          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;          break;
+				case DataType.NText         : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;         break;
+				case DataType.Binary        : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;        break;
+				case DataType.VarBinary     : ((SqlParameter)parameter).SqlDbType = SqlDbType.VarBinary;     break;
+				case DataType.Image         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Image;         break;
+				case DataType.Money         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Money;         break;
+				case DataType.SmallMoney    : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallMoney;    break;
+				case DataType.Date          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Date;          break;
+				case DataType.Time          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Time;          break;
+				case DataType.SmallDateTime : ((SqlParameter)parameter).SqlDbType = SqlDbType.SmallDateTime; break;
+				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
+				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
 	}

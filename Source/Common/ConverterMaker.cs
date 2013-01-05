@@ -39,6 +39,7 @@ namespace LinqToDB.Common
 
 				if (fi != null && fi.FieldType == to)
 					return Expression.Field(p, fi);
+
 				return null;
 			}
 

@@ -7,7 +7,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Undefined data type.
 		/// </summary>
-		Undefined,
+		Undefined = 0,
 
 		/// <summary>
 		/// A fixed-length stream of non-Unicode characters ranging between 1 and 8,000 characters.
@@ -52,24 +52,20 @@ namespace LinqToDB
 		/// </summary>
 		VarBinary,
 
-		/*
 		/// <summary>
 		/// A variable-length stream of binary data ranging from 0 to 2 31 -1 (or 2,147,483,647) bytes.
 		/// </summary>
 		Image,
-		*/
 
 		/// <summary>
 		/// A simple type representing Boolean values of true or false.
 		/// </summary>
 		Boolean,
 
-		/*
 		/// <summary>
 		/// A globally unique identifier (or GUID).
 		/// </summary>
 		Guid,
-		*/
 
 		/// <summary>
 		/// An integral type representing signed 8-bit integers with values between -128 and 127.
@@ -127,7 +123,6 @@ namespace LinqToDB
 		/// </summary>
 		Decimal,
 
-		/*
 		/// <summary>
 		/// A currency value ranging from -2 63 (or -9,223,372,036,854,775,808) to 2 63 -1 (or +9,223,372,036,854,775,807)
 		/// with an accuracy to a ten-thousandth of a currency unit.
@@ -197,12 +192,12 @@ namespace LinqToDB
 		/// </summary>
 		VarNumeric,
 
-		Geography,
-		Geometry,
-		 */
+		/// <summary>
+		/// A SQL Server 2005 user-defined type (UDT).
+		/// </summary>
+		Udt,
 
 		/*
-		Udt	A SQL Server 2005 user-defined type (UDT).
 		Structured	A special data type for specifying structured data contained in table-valued parameters.
 		*/
 	}

@@ -6,7 +6,6 @@ using System.Reflection;
 namespace LinqToDB.DataProvider
 {
 	using Expressions;
-	using Extensions;
 	using Mapping;
 
 	public abstract class DataProviderBase : IDataProvider
@@ -82,36 +81,47 @@ namespace LinqToDB.DataProvider
 			if (parameter.ParameterName != name)
 				parameter.ParameterName = name;
 
+			SetParameterType(parameter, dataType);
+
+			parameter.Value = value ?? DBNull.Value;
+		}
+
+		public virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		{
 			DbType dbType;
 
 			switch (dataType)
 			{
-				case DataType.Char      : dbType = DbType.AnsiStringFixedLength; break;
-				case DataType.VarChar   : dbType = DbType.AnsiString;            break;
-				case DataType.NChar     : dbType = DbType.StringFixedLength;     break;
-				case DataType.NVarChar  : dbType = DbType.String;                break;
-				case DataType.VarBinary : dbType = DbType.Binary;                break;
-				case DataType.Boolean   : dbType = DbType.Boolean;               break;
-				case DataType.SByte     : dbType = DbType.SByte;                 break;
-				case DataType.Int16     : dbType = DbType.Int16;                 break;
-				case DataType.Int32     : dbType = DbType.Int32;                 break;
-				case DataType.Int64     : dbType = DbType.Int64;                 break;
-				case DataType.Byte      : dbType = DbType.Byte;                  break;
-				case DataType.UInt16    : dbType = DbType.UInt16;                break;
-				case DataType.UInt32    : dbType = DbType.UInt32;                break;
-				case DataType.UInt64    : dbType = DbType.UInt64;                break;
-				case DataType.Single    : dbType = DbType.Single;                break;
-				case DataType.Double    : dbType = DbType.Double;                break;
-				case DataType.Decimal   : dbType = DbType.Decimal;               break;
-				default:
-					parameter.Value = value ?? DBNull.Value;
-					return;
+				case DataType.Char           : dbType = DbType.AnsiStringFixedLength; break;
+				case DataType.VarChar        : dbType = DbType.AnsiString;            break;
+				case DataType.NChar          : dbType = DbType.StringFixedLength;     break;
+				case DataType.NVarChar       : dbType = DbType.String;                break;
+				case DataType.VarBinary      : dbType = DbType.Binary;                break;
+				case DataType.Boolean        : dbType = DbType.Boolean;               break;
+				case DataType.SByte          : dbType = DbType.SByte;                 break;
+				case DataType.Int16          : dbType = DbType.Int16;                 break;
+				case DataType.Int32          : dbType = DbType.Int32;                 break;
+				case DataType.Int64          : dbType = DbType.Int64;                 break;
+				case DataType.Byte           : dbType = DbType.Byte;                  break;
+				case DataType.UInt16         : dbType = DbType.UInt16;                break;
+				case DataType.UInt32         : dbType = DbType.UInt32;                break;
+				case DataType.UInt64         : dbType = DbType.UInt64;                break;
+				case DataType.Single         : dbType = DbType.Single;                break;
+				case DataType.Double         : dbType = DbType.Double;                break;
+				case DataType.Decimal        : dbType = DbType.Decimal;               break;
+				case DataType.Guid           : dbType = DbType.Guid;                  break;
+				case DataType.Date           : dbType = DbType.Date;                  break;
+				case DataType.Time           : dbType = DbType.Time;                  break;
+				case DataType.DateTime       : dbType = DbType.DateTime;              break;
+				case DataType.DateTime2      : dbType = DbType.DateTime2;             break;
+				case DataType.DateTimeOffset : dbType = DbType.DateTimeOffset;        break;
+				case DataType.Variant        : dbType = DbType.Object;                break;
+				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
+				default                      : return;
 			}
 
 			if (parameter.DbType != dbType)
 				parameter.DbType = dbType;
-
-			parameter.Value = value ?? DBNull.Value;
 		}
 	}
 }
