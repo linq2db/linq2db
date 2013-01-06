@@ -1,7 +1,3 @@
-DROP TABLE DataTypeTest
-GO
-DROP TABLE BinaryData
-GO
 DROP TABLE Patient
 GO
 DROP TABLE Doctor
@@ -60,64 +56,6 @@ GO
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 GO
 
--- BinaryData Table
-
-CREATE TABLE BinaryData
-(
-	BinaryDataID int             NOT NULL IDENTITY(1,1) CONSTRAINT PK_BinaryData PRIMARY KEY,
-	Data         varbinary(1024) NOT NULL)
-GO
-
-CREATE TABLE DataTypeTest
-(
-	DataTypeID      int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_DataType PRIMARY KEY,
-	Binary_         binary(50)       NULL,
-	Boolean_        bit              NULL,
-	Byte_           tinyint          NULL,
-	Bytes_          varbinary(50)    NULL,
-	Char_           nchar(1)         NULL,
-	DateTime_       datetime         NULL,
-	Decimal_        numeric(20,2)    NULL,
-	Double_         float            NULL,
-	Guid_           uniqueidentifier NULL,
-	Int16_          smallint         NULL,
-	Int32_          int              NULL,
-	Int64_          bigint           NULL,
-	Money_          money            NULL,
-	SByte_          tinyint          NULL,
-	Single_         real             NULL,
-	Stream_         varbinary(50)    NULL,
-	String_         nvarchar(50)     NULL,
-	UInt16_         smallint         NULL,
-	UInt32_         int              NULL,
-	UInt64_         bigint           NULL,
-	Xml_            ntext            NULL
-)
-GO
-
-INSERT INTO DataTypeTest
-	(Binary_, Boolean_,   Byte_,  Bytes_,  Char_,  DateTime_, Decimal_,
-	 Double_,    Guid_,  Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,     Xml_)
-VALUES
-	(   NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL)
-GO
-
-INSERT INTO DataTypeTest
-	(Binary_, Boolean_,   Byte_,  Bytes_,  Char_,  DateTime_, Decimal_,
-	 Double_,    Guid_,  Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,
-	 Xml_)
-VALUES
-	(NewID(),        1,     255, NewID(),     'B', GetDate(), 12345.67,
-	1234.567,  NewID(),   32767,   32768, 1000000,   12.3456,      127,
-	1234.123,  NewID(), 'string',  32767,   32768, 200000000,
-	'<root><element strattr="strvalue" intattr="12345"/></root>')
-GO
-
-
 
 DROP TABLE Parent
 GO
@@ -159,4 +97,64 @@ GO
 CREATE TABLE TestIdentity (
 	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY
 )
+GO
+
+
+CREATE TABLE AllTypes
+(
+	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY,
+
+	bigintDataType           bigint           NULL,
+	numericDataType          numeric          NULL,
+	bitDataType              bit              NULL,
+	smallintDataType         smallint         NULL,
+	decimalDataType          decimal          NULL,
+	intDataType              int              NULL,
+	tinyintDataType          tinyint          NULL,
+	moneyDataType            money            NULL,
+	floatDataType            float            NULL,
+	realDataType             real             NULL,
+
+	datetimeDataType         datetime         NULL,
+
+	ncharDataType            nchar(20)        NULL,
+	nvarcharDataType         nvarchar(20)     NULL,
+	ntextDataType            ntext            NULL,
+
+	binaryDataType           binary           NULL,
+	varbinaryDataType        varbinary        NULL,
+	imageDataType            image            NULL,
+
+	timestampDataType        timestamp        NULL,
+	uniqueidentifierDataType uniqueidentifier NULL
+)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType,
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+
+	datetimeDataType,
+
+	ncharDataType, nvarcharDataType, ntextDataType,
+
+	binaryDataType, varbinaryDataType, imageDataType,
+
+	uniqueidentifierDataType
+)
+SELECT
+	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL, NULL,   NULL,  NULL,  NULL,
+	     NULL,
+	     NULL,      NULL,  NULL,
+	     NULL,      NULL,  NULL,
+	     NULL
+UNION ALL
+SELECT
+	  1000000,   9999999,     1,   25555, 2222222, 7777777,  100, 100000, 20.31, 16.2,
+	Cast('2012-12-12 12:12:12' as datetime),
+	  '23233',    '3323', '111',
+	        1,         2, Cast(3 as varbinary),
+	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)
+
 GO

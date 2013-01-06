@@ -1,5 +1,3 @@
-DROP TABLE BinaryData
-GO
 DROP TABLE Doctor
 GO
 DROP TABLE Patient
@@ -42,14 +40,6 @@ ALTER TABLE Patient
 	ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE;
 GO
 
-CREATE TABLE BinaryData (
-	BinaryDataID            AutoIncrement,
-	Data                    Image NOT NULL,
-
-	CONSTRAINT PrimaryKey PRIMARY KEY (BinaryDataID)
-);
-GO
-
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("John",   "Pupkin",    "M")
 GO
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ("Tester", "Testerson", "M")
@@ -73,6 +63,8 @@ CREATE TABLE Child      (ParentID int, ChildID int)
 GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int)
 GO
+
+
 DROP TABLE LinqDataTypes
 GO
 
@@ -90,6 +82,7 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    long      NULL
 )
 GO
+
 
 DROP TABLE TestIdentity
 GO
