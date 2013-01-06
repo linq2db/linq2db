@@ -237,7 +237,7 @@
     <Compile Include="Linq\MathFunctions.cs" />
     <Compile Include="Exceptions\Inheritance.cs" />
     <Compile Include="Linq\Inheritance.cs" />
-    <Compile Include="ProviderSpecific\Access.cs" />
+    <Compile Include="DataProvider\AccessTest.cs" />
     <Compile Include="ProviderSpecific\SqlCe.cs" />
     <Compile Include="Linq\SetTest.cs" />
     <Compile Include="Linq\SubQuery.cs" />
@@ -314,6 +314,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\DataProviders\Access\LinqToDB.Access.csproj">
+      <Project>{e8687813-3aa8-415f-b749-8a11b1a70d88}</Project>
+      <Name>LinqToDB.Access</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\DataProviders\Firebird\LinqToDB.Firebird.csproj">
       <Project>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</Project>
       <Name>LinqToDB.Firebird</Name>

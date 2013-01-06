@@ -108,12 +108,13 @@ CREATE TABLE AllTypes
 (
 	ID                       counter          NOT NULL,
 
-	binaryDataType           binary           NULL,
+	binaryDataType           binary(10)       NULL,
+	varbinaryDataType        varbinary        NULL,
 	imageDataType            image            NULL
 )
 GO
 
-INSERT INTO AllTypes (binaryDataType, imageDataType)
-VALUES (NULL, NULL)
+INSERT INTO AllTypes (binaryDataType, varbinaryDataType, imageDataType)
+VALUES (NULL, NULL, NULL)
 
 GO

@@ -157,18 +157,20 @@ namespace Tests.Create
 		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access", AccessAction); }
 		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access", AccessAction); }
 
-		void AccessAction(IDbConnection connection)
+		static void AccessAction(IDbConnection connection)
 		{
-			//using (var conn = new DataConnection(DataConnection.get connection))
-			//{
-			//	
-/*			INSERT INTO AllTypes
-VALUES (
-	1,
-	 Cast(3 as varbinary)
-)*/
-
-			//}
+			using (var conn = LinqToDB.DataProvider.Access.CreateDataConnection(connection))
+			{
+				conn.Execute(@"
+					INSERT INTO AllTypes (binaryDataType, varbinaryDataType, imageDataType)
+					VALUES (@binaryDataType, @varbinaryDataType, @imageDataType)",
+					new
+					{
+						binaryDataType    = new byte[] { 1, 2, 3, 4 },
+						varbinaryDataType = new byte[] { 1, 2, 3, 5 },
+						imageDataType     = new byte[] { 3, 4, 5, 6 },
+					});
+			}
 		}
 	}
 }

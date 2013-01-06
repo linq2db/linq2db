@@ -5,24 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Mapping;
-
 	public class AccessDataProvider : DataProviderBase
 	{
-		#region AccessMappingSchema
-
-		class AccessMappingSchema : MappingSchema
-		{
-			public AccessMappingSchema() : base(LinqToDB.ProviderName.Access)
-			{
-			}
-		}
-
-		static readonly MappingSchema _accessMappingSchema = new AccessMappingSchema();
-
-		#endregion
-
-		public AccessDataProvider() : base(_accessMappingSchema)
+		public AccessDataProvider() : base(new AccessMappingSchema())
 		{
 		}
 

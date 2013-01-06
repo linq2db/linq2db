@@ -5,27 +5,77 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.ProviderSpecific
+namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class Access : TestBase
+	public class AccessTest : TestBase
 	{
-		[Test]
-		public void SqlTest([IncludeDataContexts(ProviderName.Access)] string context)
+		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
-			using (var db = new DataConnection(context))
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
+				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
+
+			connection.Command.Parameters.Clear();
+
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object expectedValue = value;
+
+			if (convertToString)
 			{
-				var res = db.Execute(@"
-					UPDATE
-						[Child] [c]
-							LEFT JOIN [Parent] [t1] ON [c].[ParentID] = [t1].[ParentID]
-					SET
-						[ChildID] = @id
-					WHERE
-						[c].[ChildID] = @id1 AND [t1].[Value1] = 1",
-					new { id1 = 1001, id = 1002 });
+				actualValue   = actualValue.  ToString();
+				expectedValue = expectedValue.ToString();
+			}
+
+			Assert.That(actualValue, Is.EqualTo(expectedValue));
+		}
+
+		[Test]
+		public void TestDataTypes([IncludeDataContexts(ProviderName.Access)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+//				TestType(conn, "bigintDataType",           1000000L);
+//				TestType(conn, "numericDataType",          9999999m);
+//				TestType(conn, "bitDataType",              true);
+//				TestType(conn, "smallintDataType",         (short)25555);
+//				TestType(conn, "decimalDataType",          2222222m);
+//				TestType(conn, "smallmoneyDataType",       100000m);
+//				TestType(conn, "intDataType",              7777777);
+//				TestType(conn, "tinyintDataType",          (sbyte)100);
+//				TestType(conn, "moneyDataType",            100000m);
+//				TestType(conn, "floatDataType",            20.31d);
+//				TestType(conn, "realDataType",             16.2f);
+//
+//				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
+//				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
+//
+//				TestType(conn, "charDataType",             '1');
+//				TestType(conn, "varcharDataType",          "234");
+//				TestType(conn, "textDataType",             "567");
+//				TestType(conn, "ncharDataType",            "23233");
+//				TestType(conn, "nvarcharDataType",         "3323");
+//				TestType(conn, "ntextDataType",            "111");
+
+				TestType(conn, "binaryDataType",           new byte[] { 1, 2, 3, 4, 0, 0, 0, 0, 0, 0 });
+				TestType(conn, "varbinaryDataType",        new byte[] { 1, 2, 3, 5 });
+				TestType(conn, "imageDataType",            new byte[] { 3, 4, 5, 6 });
+
+//				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
+//				TestType(conn, "sql_variantDataType",      (object)10);
+//
+//				TestType(conn, "nvarchar_max_DataType",    "22322");
+//				TestType(conn, "varchar_max_DataType",     "3333");
+//				TestType(conn, "varbinary_max_DataType",   new byte[] { 0, 0, 9, 41 });
+//
+//				TestType(conn, "xmlDataType",              "<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>");
+//
+//				conn.Command.Parameters.Clear();
+//				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
 			}
 		}
+
+
 
 		/*
 CREATE TABLE AllTypes

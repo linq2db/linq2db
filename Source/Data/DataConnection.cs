@@ -139,8 +139,6 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			AddDataProvider(new AccessDataProvider());
-
 			var section = LinqToDBSection.Instance;
 
 			if (section != null)
