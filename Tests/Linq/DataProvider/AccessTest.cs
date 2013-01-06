@@ -37,17 +37,17 @@ namespace Tests.DataProvider
 			{
 //				TestType(conn, "bigintDataType",           1000000L);
 //				TestType(conn, "numericDataType",          9999999m);
-//				TestType(conn, "bitDataType",              true);
+				TestType(conn, "bitDataType",              true);
 //				TestType(conn, "smallintDataType",         (short)25555);
 //				TestType(conn, "decimalDataType",          2222222m);
 //				TestType(conn, "smallmoneyDataType",       100000m);
 //				TestType(conn, "intDataType",              7777777);
-//				TestType(conn, "tinyintDataType",          (sbyte)100);
-//				TestType(conn, "moneyDataType",            100000m);
-//				TestType(conn, "floatDataType",            20.31d);
-//				TestType(conn, "realDataType",             16.2f);
+				TestType(conn, "tinyintDataType",          (sbyte)100);
+				TestType(conn, "moneyDataType",            100000m);
+				TestType(conn, "floatDataType",            20.31d);
+				TestType(conn, "realDataType",             16.2f);
 //
-//				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
 //				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
 //
 //				TestType(conn, "charDataType",             '1');
@@ -84,7 +84,6 @@ CREATE TABLE AllTypes
 
 --	bigintDataType           bigint           NULL,
 --	numericDataType          numeric          NULL,
---	bitDataType              bit              NULL,
 --	smallintDataType         smallint         NULL,
 --	decimalDataType          decimal          NULL,
 --	smallmoneyDataType       smallmoney       NULL,

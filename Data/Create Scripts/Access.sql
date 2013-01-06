@@ -106,7 +106,15 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       counter          NOT NULL,
+	ID                       counter      NOT NULL,
+
+	bitDataType              bit              NULL,
+	tinyintDataType          tinyint          NULL,
+	moneyDataType            money            NULL,
+	floatDataType            float            NULL,
+	realDataType             real             NULL,
+
+	datetimeDataType         datetime         NULL,
 
 	binaryDataType           binary(10)       NULL,
 	varbinaryDataType        varbinary        NULL,
@@ -114,7 +122,7 @@ CREATE TABLE AllTypes
 )
 GO
 
-INSERT INTO AllTypes (binaryDataType, varbinaryDataType, imageDataType)
-VALUES (NULL, NULL, NULL)
+INSERT INTO AllTypes (binaryDataType)
+VALUES (NULL)
 
 GO

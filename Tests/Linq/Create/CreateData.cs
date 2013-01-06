@@ -162,10 +162,22 @@ namespace Tests.Create
 			using (var conn = LinqToDB.DataProvider.Access.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
-					INSERT INTO AllTypes (binaryDataType, varbinaryDataType, imageDataType)
-					VALUES (@binaryDataType, @varbinaryDataType, @imageDataType)",
+					INSERT INTO AllTypes
+					(
+						bitDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
+						datetimeDataType,
+						binaryDataType, varbinaryDataType, imageDataType
+					)
+					VALUES
+					(
+						1, 100, 100000, 20.31, 16.2,
+						@datetimeDataType,
+						@binaryDataType, @varbinaryDataType, @imageDataType
+					)",
 					new
 					{
+						datetimeDataType  = new DateTime(2012, 12, 12, 12, 12, 12),
+
 						binaryDataType    = new byte[] { 1, 2, 3, 4 },
 						varbinaryDataType = new byte[] { 1, 2, 3, 5 },
 						imageDataType     = new byte[] { 3, 4, 5, 6 },

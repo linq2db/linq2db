@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider
 	{
 		public AccessMappingSchema() : base(ProviderName.Access)
 		{
+			SetDataType(typeof(DateTime), DataType.DateTime);
 		}
 	}
 }
