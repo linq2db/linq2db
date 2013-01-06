@@ -129,8 +129,6 @@
     <Compile Include="PostgreSQLSpecific.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ITestDataContext.cs" />
-    <Compile Include="BinaryData.cs" />
-    <Compile Include="DataTypeTest.cs" />
     <Compile Include="Doctor.cs" />
     <Compile Include="FirebirdSpecific.cs" />
     <Compile Include="Gender.cs" />

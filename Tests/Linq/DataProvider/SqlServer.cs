@@ -647,5 +647,69 @@ namespace Tests.DataProvider
 				Assert.That(conn.Query<string>("SELECT @p", new { p = "1" }).First(), Is.EqualTo("1"));
 			}
 		}
+
+		static void TestStruct<T>(DataConnection connection, string dataTypeName, T value)
+			where T : struct
+		{
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T?>(string.Format("SELECT {0} FROM AllTypes WHERE ID = 1", dataTypeName)), Is.Null);
+
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM AllTypes WHERE ID = 2", dataTypeName)), Is.EqualTo(value));
+		}
+
+		static void TestClass<T>(DataConnection connection, string dataTypeName, T value)
+		{
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM AllTypes WHERE ID = 1", dataTypeName)), Is.Null);
+
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM AllTypes WHERE ID = 2", dataTypeName)), Is.EqualTo(value));
+		}
+
+		[Test]
+		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestStruct(conn, "bigintDataType",           1000000L);
+				TestStruct(conn, "numericDataType",          9999999m);
+				TestStruct(conn, "bitDataType",              true);
+				TestStruct(conn, "smallintDataType",         (short)25555);
+				TestStruct(conn, "decimalDataType",          2222222m);
+				TestStruct(conn, "smallmoneyDataType",       100000m);
+				TestStruct(conn, "intDataType",              7777777);
+				TestStruct(conn, "tinyintDataType",          (sbyte)100);
+				TestStruct(conn, "moneyDataType",            100000m);
+				TestStruct(conn, "floatDataType",            20.31d);
+				TestStruct(conn, "realDataType",             16.2f);
+
+				TestStruct(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
+				TestStruct(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
+
+				TestStruct(conn, "charDataType",             '1');
+				TestClass (conn, "varcharDataType",          "234");
+				TestClass (conn, "textDataType",             "567");
+				TestClass (conn, "ncharDataType",            "23233");
+				TestClass (conn, "nvarcharDataType",         "3323");
+				TestClass (conn, "ntextDataType",            "111");
+
+				TestClass (conn, "binaryDataType",           new byte[] { 1 });
+				TestClass (conn, "varbinaryDataType",        new byte[] { 2 });
+				TestClass (conn, "imageDataType",            new byte[] { 0, 0, 0, 3 });
+
+				TestStruct(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
+				TestClass (conn, "sql_variantDataType",      (object)10);
+
+				TestClass (conn, "nvarchar_max_DataType",    "22322");
+				TestClass (conn, "varchar_max_DataType",     "3333");
+				TestClass (conn, "varbinary_max_DataType",   new byte[] { 0, 0, 9, 41 });
+
+				TestClass (conn, "xmlDataType",              "<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>");
+
+				conn.Command.Parameters.Clear();
+				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
+			}
+		}
 	}
 }
