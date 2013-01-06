@@ -241,7 +241,7 @@
     <Compile Include="Exceptions\Inheritance.cs" />
     <Compile Include="Linq\Inheritance.cs" />
     <Compile Include="DataProvider\AccessTest.cs" />
-    <Compile Include="ProviderSpecific\SqlCe.cs" />
+    <Compile Include="DataProvider\SqlCeTest.cs" />
     <Compile Include="Linq\SetTest.cs" />
     <Compile Include="Linq\SubQuery.cs" />
     <Compile Include="Linq\Types.cs" />
@@ -306,6 +306,10 @@
     </Content>
     <Content Include="..\..\Data\TestData.mdb">
       <Link>Database\TestData.mdb</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Data\TestData.sdf">
+      <Link>Database\TestData.sdf</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DefaultDataProviders.txt" />
@@ -394,6 +398,11 @@
       <ProductName>SQL Server Compact 3.5 SP2</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.SQL.Server.Compact.4.0">
+      <Visible>False</Visible>
+      <ProductName>SQL Server Compact 4.0 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
       <Visible>False</Visible>
       <ProductName>Windows Installer 3.1</ProductName>
@@ -401,12 +410,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="..\..\Data\BLToolkitData.sdf">
-      <Link>Database\BLToolkitData.sdf</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>if not exist "$(TargetDir)x86" md "$(TargetDir)x86"

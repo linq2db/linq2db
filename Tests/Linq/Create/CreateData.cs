@@ -160,7 +160,7 @@ namespace Tests.Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.Access.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SqlCe.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes

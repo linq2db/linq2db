@@ -139,7 +139,7 @@ namespace Tests
 		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
 		{
 			new ProviderInfo(ProviderName.SqlServer2008, null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
-			new ProviderInfo(ProviderName.SqlCe,         "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProvider"),
+			new ProviderInfo(ProviderName.SqlCe,         "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProviderOld"),
 			new ProviderInfo(ProviderName.SQLite,        "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
 			new ProviderInfo(ProviderName.Access,        null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
 			new ProviderInfo(ProviderName.SqlServer2005, null,                 "LinqToDB.DataProvider.SqlDataProvider"),

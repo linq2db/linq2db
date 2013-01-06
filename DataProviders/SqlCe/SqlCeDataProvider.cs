@@ -1,115 +1,111 @@
-using System;
+﻿using System;
 using System.Data;
-using System.Data.Common;
-
-// System.Data.SqlServerCe.dll must be referenced.
-// http://www.microsoft.com/sql/editions/compact/default.mspx
-//
+using System.Data.Linq;
 using System.Data.SqlServerCe;
+using System.Data.SqlTypes;
+using System.Linq.Expressions;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using SqlProvider;
+	using Expressions;
+	using Mapping;
 
-	/// <summary>
-	/// Implements access to the Data Provider for Microsoft SQL Server 2005 Everywhere Edition
-	/// </summary>
-	/// <remarks>
-	/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-	/// </remarks>
-	/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-	public sealed class SqlCeDataProvider: DataProviderBaseOld
+	class SqlCeDataProvider : DataProviderBase
 	{
-		/// <summary>
-		/// Creates the database connection object.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <returns>The database connection object.</returns>
-		public override IDbConnection CreateConnectionObject()
+		public SqlCeDataProvider() : base(new SqlCeMappingSchema())
 		{
-			return new SqlCeConnection();
 		}
 
-		/// <summary>
-		/// Creates the data adapter object.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <returns>A data adapter object.</returns>
-		public override DbDataAdapter CreateDataAdapterObject()
+		public override string Name           { get { return ProviderName.SqlCe;     } }
+		public override Type   ConnectionType { get { return typeof(SqlCeConnection); } }
+
+		#region Overrides
+
+		public override IDbConnection CreateConnection(string connectionString)
 		{
-			return new SqlCeDataAdapter();
+			return new SqlCeConnection(connectionString);
 		}
 
-		/// <summary>
-		/// Populates the specified IDbCommand object's Parameters collection with 
-		/// parameter information for the stored procedure specified in the IDbCommand.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <param name="command">The IDbCommand referencing the stored procedure for which the parameter information is to be derived. The derived parameters will be populated into the Parameters of this command.</param>
-		public override bool DeriveParameters(IDbCommand command)
+		public override Expression ConvertDataReader(Expression reader)
 		{
-			// SqlCeCommandBuilder does not implement DeriveParameters.
-			// This is not surprising, since SQL/e has no support for stored procs.
-			//
-			return false;
+			return Expression.Convert(reader, typeof(SqlCeDataReader));
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
-			switch (convertType)
+			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+			var name = ((SqlCeDataReader)reader).GetDataTypeName(idx);
+
+			if (expr.Type == typeof(string) && name == "NChar")
+				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+
+			return expr;
+		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			var st = ((SqlCeDataReader)reader).GetSchemaTable();
+			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+		}
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			switch (dataType)
 			{
-				case ConvertType.ExceptionToErrorNumber:
-					if (value is SqlCeException)
-						return ((SqlCeException)value).NativeError;
+				case DataType.SByte      : dataType = DataType.Int16;    break;
+				case DataType.UInt16     : dataType = DataType.Int32;    break;
+				case DataType.UInt32     : dataType = DataType.Int64;    break;
+				case DataType.UInt64     : dataType = DataType.Decimal;  break;
+				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
+				case DataType.Char       : dataType = DataType.NChar;    break;
+				case DataType.VarChar    : dataType = DataType.NVarChar; break;
+				case DataType.Text       : dataType = DataType.NText;    break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					break;
+				case DataType.Xml        :
+					dataType = DataType.NVarChar;
+
+					if (value is SqlXml)
+					{
+						var xml = (SqlXml)value;
+						value = xml.IsNull ? null : xml.Value;
+					}
+					else if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+
+					break;
+				case DataType.Undefined  :
+					     if (value is char)         dataType = DataType.NChar;
+					else if (value is long)         dataType = DataType.Int64;
+					else if (value is ulong)        dataType = DataType.Decimal;
+					else if (value is decimal)      dataType = DataType.Decimal;
+					else if (value is Binary)       value = ((Binary)value).ToArray();
+					else if (value is SqlXml)       goto case DataType.Xml;
+					else if (value is XDocument)    goto case DataType.Xml;
+					else if (value is XmlDocument)  goto case DataType.Xml;
+
 					break;
 			}
 
-			return SqlProvider.Convert(value, convertType);
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		/// <summary>
-		/// Returns connection type.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataManager Method</seealso>
-		/// <value>An instance of the <see cref="Type"/> class.</value>
-		public override Type ConnectionType
+		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-			get { return typeof(SqlCeConnection); }
+			switch (dataType)
+			{
+				case DataType.NText     : ((SqlCeParameter)parameter).SqlDbType = SqlDbType.NText;     break;
+				case DataType.NChar     : ((SqlCeParameter)parameter).SqlDbType = SqlDbType.NChar;     break;
+				case DataType.NVarChar  : ((SqlCeParameter)parameter).SqlDbType = SqlDbType.NVarChar;  break;
+				case DataType.Timestamp : ((SqlCeParameter)parameter).SqlDbType = SqlDbType.Timestamp; break;
+				default                 : base.SetParameterType(parameter, dataType);                  break;
+			}
 		}
 
-		/// <summary>
-		/// Returns the data provider name.
-		/// </summary>
-		/// <remarks>
-		/// See the <see cref="DbManager.AddDataProvider(DataProviderBase)"/> method to find an example.
-		/// </remarks>
-		/// <seealso cref="DbManager.AddDataProvider(DataProviderBase)">AddDataProvider Method</seealso>
-		/// <value>Data provider name.</value>
-		public override string Name
-		{
-			get { return LinqToDB.ProviderName.SqlCe; }
-		}
-
-		public override int MaxBatchSize
-		{
-			get { return 0; }
-		}
-
-		public override ISqlProvider CreateSqlProvider()
-		{
-			return new SqlCeSqlProvider();
-		}
+		#endregion
 	}
 }
