@@ -68,6 +68,7 @@ namespace LinqToDB.DataProvider
 				SetScalarType(typeof(SqlSingle));
 				SetScalarType(typeof(SqlString));
 				SetScalarType(typeof(SqlXml));
+
 				SetScalarType(typeof(SqlHierarchyId));
 				SetScalarType(typeof(SqlGeography));
 				SetScalarType(typeof(SqlGeometry));

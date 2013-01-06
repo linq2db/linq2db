@@ -155,26 +155,32 @@ GO
 
 CREATE TABLE AllTypes2
 (
-	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes2 PRIMARY KEY CLUSTERED,
+	ID                     int        NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes2 PRIMARY KEY CLUSTERED,
 
-	dateDataType             date             NULL,
-	datetimeoffsetDataType   datetimeoffset   NULL,
-	datetime2DataType        datetime2        NULL,
-	timeDataType             time             NULL,
-	hierarchyidDataType      hierarchyid      NULL
+	dateDataType           date           NULL,
+	datetimeoffsetDataType datetimeoffset NULL,
+	datetime2DataType      datetime2      NULL,
+	timeDataType           time           NULL,
+	hierarchyidDataType    hierarchyid    NULL,
+	geographyDataType      geography      NULL,
+	geometryDataType       geometry       NULL
+
 ) ON [PRIMARY]
 GO
 
 INSERT INTO AllTypes2
 SELECT
-	NULL, NULL, NULL, NULL, NULL
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL
 UNION ALL
 SELECT
 	Cast('2012-12-12'                    as date),
 	Cast('2012-12-12 12:12:12.012 +5:00' as datetimeoffset),
 	Cast('2012-12-12 12:12:12.012'       as datetime2),
 	Cast('12:12:12.012'                  as time),
-	Cast('/1/3/'                         as hierarchyid)
+	Cast('/1/3/'                         as hierarchyid),
+	Cast(geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656)', 4326) as geography),
+	Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)
+
 GO
 -- SKIP SqlServer.2005 END
 
