@@ -259,14 +259,7 @@ namespace LinqToDB.Mapping
 				var d = ConvertInfo.Default.Get(from, to);
 
 				if (d == null || d.IsSchemaSpecific)
-				{
 					d = ConvertInfo.Default.Create(this, from, to);
-
-					if (d.IsSchemaSpecific)
-					{
-						//_schemas[0].Set(_expressions, from, to , ret);
-					}
-				}
 
 				return new ConvertInfo.LambdaInfo(d.CheckNullLambda, d.Lambda, null, d.IsSchemaSpecific);
 			}

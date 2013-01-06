@@ -20,6 +20,87 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTest : TestBase
 	{
+		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		{
+			connection.Command.Parameters.Clear();
+			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
+				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
+
+			connection.Command.Parameters.Clear();
+
+			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
+			object expectedValue = value;
+
+			if (convertToString)
+			{
+				actualValue   = actualValue.  ToString();
+				expectedValue = expectedValue.ToString();
+			}
+
+			Assert.That(actualValue, Is.EqualTo(expectedValue));
+		}
+
+		[Test]
+		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestType(conn, "bigintDataType",           1000000L);
+				TestType(conn, "numericDataType",          9999999m);
+				TestType(conn, "bitDataType",              true);
+				TestType(conn, "smallintDataType",         (short)25555);
+				TestType(conn, "decimalDataType",          2222222m);
+				TestType(conn, "smallmoneyDataType",       100000m);
+				TestType(conn, "intDataType",              7777777);
+				TestType(conn, "tinyintDataType",          (sbyte)100);
+				TestType(conn, "moneyDataType",            100000m);
+				TestType(conn, "floatDataType",            20.31d);
+				TestType(conn, "realDataType",             16.2f);
+
+				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
+
+				TestType(conn, "charDataType",             '1');
+				TestType(conn, "varcharDataType",          "234");
+				TestType(conn, "textDataType",             "567");
+				TestType(conn, "ncharDataType",            "23233");
+				TestType(conn, "nvarcharDataType",         "3323");
+				TestType(conn, "ntextDataType",            "111");
+
+				TestType(conn, "binaryDataType",           new byte[] { 1 });
+				TestType(conn, "varbinaryDataType",        new byte[] { 2 });
+				TestType(conn, "imageDataType",            new byte[] { 0, 0, 0, 3 });
+
+				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
+				TestType(conn, "sql_variantDataType",      (object)10);
+
+				TestType(conn, "nvarchar_max_DataType",    "22322");
+				TestType(conn, "varchar_max_DataType",     "3333");
+				TestType(conn, "varbinary_max_DataType",   new byte[] { 0, 0, 9, 41 });
+
+				TestType(conn, "xmlDataType",              "<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>");
+
+				conn.Command.Parameters.Clear();
+				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
+			}
+		}
+
+		[Test]
+		public void TestDataTypes2([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				TestType(conn, "dateDataType",           new DateTime(2012, 12, 12),                                              "AllTypes2");
+				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0)), "AllTypes2");
+				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 12),                              "AllTypes2");
+				TestType(conn, "timeDataType",           new TimeSpan(0, 12, 12, 12, 12),                                         "AllTypes2");
+
+				TestType(conn, "hierarchyidDataType",    SqlHierarchyId.Parse("/1/3/"),                                           "AllTypes2");
+				TestType(conn, "geographyDataType",      SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),      "AllTypes2", true);
+				TestType(conn, "geometryDataType",       SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),              "AllTypes2", true);
+			}
+		}
+
 		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
@@ -645,87 +726,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Query<string>("SELECT @p", new { p =  1  }).First(), Is.EqualTo("1"));
 				conn.Command.Parameters.Clear();
 				Assert.That(conn.Query<string>("SELECT @p", new { p = "1" }).First(), Is.EqualTo("1"));
-			}
-		}
-
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
-		{
-			connection.Command.Parameters.Clear();
-			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
-				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
-
-			connection.Command.Parameters.Clear();
-
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
-			object expectedValue = value;
-
-			if (convertToString)
-			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
-			}
-
-			Assert.That(actualValue, Is.EqualTo(expectedValue));
-		}
-
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				TestType(conn, "bigintDataType",           1000000L);
-				TestType(conn, "numericDataType",          9999999m);
-				TestType(conn, "bitDataType",              true);
-				TestType(conn, "smallintDataType",         (short)25555);
-				TestType(conn, "decimalDataType",          2222222m);
-				TestType(conn, "smallmoneyDataType",       100000m);
-				TestType(conn, "intDataType",              7777777);
-				TestType(conn, "tinyintDataType",          (sbyte)100);
-				TestType(conn, "moneyDataType",            100000m);
-				TestType(conn, "floatDataType",            20.31d);
-				TestType(conn, "realDataType",             16.2f);
-
-				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
-				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
-
-				TestType(conn, "charDataType",             '1');
-				TestType(conn, "varcharDataType",          "234");
-				TestType(conn, "textDataType",             "567");
-				TestType(conn, "ncharDataType",            "23233");
-				TestType(conn, "nvarcharDataType",         "3323");
-				TestType(conn, "ntextDataType",            "111");
-
-				TestType(conn, "binaryDataType",           new byte[] { 1 });
-				TestType(conn, "varbinaryDataType",        new byte[] { 2 });
-				TestType(conn, "imageDataType",            new byte[] { 0, 0, 0, 3 });
-
-				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
-				TestType(conn, "sql_variantDataType",      (object)10);
-
-				TestType(conn, "nvarchar_max_DataType",    "22322");
-				TestType(conn, "varchar_max_DataType",     "3333");
-				TestType(conn, "varbinary_max_DataType",   new byte[] { 0, 0, 9, 41 });
-
-				TestType(conn, "xmlDataType",              "<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>");
-
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
-			}
-		}
-
-		[Test]
-		public void TestDataTypes2([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				TestType(conn, "dateDataType",           new DateTime(2012, 12, 12),                                              "AllTypes2");
-				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0)), "AllTypes2");
-				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 12),                              "AllTypes2");
-				TestType(conn, "timeDataType",           new TimeSpan(0, 12, 12, 12, 12),                                         "AllTypes2");
-
-				TestType(conn, "hierarchyidDataType",    SqlHierarchyId.Parse("/1/3/"),                                           "AllTypes2");
-				TestType(conn, "geographyDataType",      SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),      "AllTypes2", true);
-				TestType(conn, "geometryDataType",       SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),              "AllTypes2", true);
 			}
 		}
 	}

@@ -164,23 +164,30 @@ namespace Tests.Create
 				conn.Execute(@"
 					INSERT INTO AllTypes
 					(
-						bitDataType, tinyintDataType, moneyDataType, floatDataType, realDataType,
+						bitDataType, decimalDataType, smallintDataType, intDataType,tinyintDataType, moneyDataType, floatDataType, realDataType,
 						datetimeDataType,
-						binaryDataType, varbinaryDataType, imageDataType
+						charDataType, varcharDataType, textDataType, ncharDataType, nvarcharDataType, ntextDataType,
+						binaryDataType, varbinaryDataType, imageDataType, oleobjectDataType,
+						uniqueidentifierDataType
 					)
 					VALUES
 					(
-						1, 100, 100000, 20.31, 16.2,
+						1, 2222222, 25555, 7777777, 100, 100000, 20.31, 16.2,
 						@datetimeDataType,
-						@binaryDataType, @varbinaryDataType, @imageDataType
+						'1', '234', '567', '23233', '3323', '111',
+						@binaryDataType, @varbinaryDataType, @imageDataType, @oleobjectDataType,
+						@uniqueidentifierDataType
 					)",
 					new
 					{
-						datetimeDataType  = new DateTime(2012, 12, 12, 12, 12, 12),
+						datetimeDataType         = new DateTime(2012, 12, 12, 12, 12, 12),
 
-						binaryDataType    = new byte[] { 1, 2, 3, 4 },
-						varbinaryDataType = new byte[] { 1, 2, 3, 5 },
-						imageDataType     = new byte[] { 3, 4, 5, 6 },
+						binaryDataType           = new byte[] { 1, 2, 3, 4 },
+						varbinaryDataType        = new byte[] { 1, 2, 3, 5 },
+						imageDataType            = new byte[] { 3, 4, 5, 6 },
+						oleobjectDataType        = new byte[] { 5, 6, 7, 8 },
+
+						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});
 			}
 		}

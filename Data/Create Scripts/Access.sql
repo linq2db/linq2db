@@ -109,6 +109,9 @@ CREATE TABLE AllTypes
 	ID                       counter      NOT NULL,
 
 	bitDataType              bit              NULL,
+	smallintDataType         smallint         NULL,
+	decimalDataType          decimal          NULL,
+	intDataType              int              NULL,
 	tinyintDataType          tinyint          NULL,
 	moneyDataType            money            NULL,
 	floatDataType            float            NULL,
@@ -116,9 +119,19 @@ CREATE TABLE AllTypes
 
 	datetimeDataType         datetime         NULL,
 
+	charDataType             char(1)          NULL,
+	varcharDataType          varchar(20)      NULL,
+	textDataType             text             NULL,
+	ncharDataType            nchar(20)        NULL,
+	nvarcharDataType         nvarchar(20)     NULL,
+	ntextDataType            ntext            NULL,
+
 	binaryDataType           binary(10)       NULL,
 	varbinaryDataType        varbinary        NULL,
-	imageDataType            image            NULL
+	imageDataType            image            NULL,
+	oleObjectDataType        oleobject        NULL,
+
+	uniqueidentifierDataType uniqueidentifier NULL
 )
 GO
 

@@ -2,16 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
-using LinqToDB.Common;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using DataProvider;
@@ -213,6 +210,8 @@ namespace LinqToDB.Data
 				if (rd.Read())
 				{
 					var objectReader = GetObjectReader<T>(connection, rd, sql);
+
+					//var value = rd.GetValue(0);
 
 					try
 					{
