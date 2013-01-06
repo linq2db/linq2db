@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Data;
 
 namespace LinqToDB.DataProvider
 {
@@ -13,8 +14,7 @@ namespace LinqToDB.DataProvider
 
 		static SqlServer()
 		{
-			DataConnection.AddDataProvider(     _sqlServerDataProvider2008);
-			//DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(ProviderName.SqlServer2012, _sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(ProviderName.SqlServer2008, _sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(ProviderName.SqlServer2005, _sqlServerDataProvider2005);
@@ -29,7 +29,6 @@ namespace LinqToDB.DataProvider
 					switch (attributes.Get(i))
 					{
 						case "2005" : return _sqlServerDataProvider2005;
-						case "2008" : return _sqlServerDataProvider2008;
 						case "2012" : return _sqlServerDataProvider2012;
 					}
 				}
@@ -43,11 +42,61 @@ namespace LinqToDB.DataProvider
 			switch (version)
 			{
 				case SqlServerVersion.v2005 : return _sqlServerDataProvider2005;
-				case SqlServerVersion.v2008 : return _sqlServerDataProvider2008;
 				case SqlServerVersion.v2012 : return _sqlServerDataProvider2012;
 			}
 
-			throw new ArgumentException("Invalid argument 'version'.", "version");
+			return _sqlServerDataProvider2008;
 		}
+
+		public static void AddUdtType(Type type, string udtName)
+		{
+			_sqlServerDataProvider2005.AddUdtType(type, udtName);
+			_sqlServerDataProvider2008.AddUdtType(type, udtName);
+			_sqlServerDataProvider2012.AddUdtType(type, udtName);
+		}
+
+		public static void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
+		{
+			_sqlServerDataProvider2005.AddUdtType(udtName, nullValue, dataType);
+			_sqlServerDataProvider2008.AddUdtType(udtName, nullValue, dataType);
+			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
+		}
+
+		#region CreateDataConnection
+
+		public static DataConnection CreateDataConnection(string connectionString, SqlServerVersion version = SqlServerVersion.v2008)
+		{
+			switch (version)
+			{
+				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connectionString);
+				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connectionString);
+			}
+
+			return new DataConnection(_sqlServerDataProvider2008, connectionString);
+		}
+
+		public static DataConnection CreateDataConnection(IDbConnection connection, SqlServerVersion version = SqlServerVersion.v2008)
+		{
+			switch (version)
+			{
+				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connection);
+				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connection);
+			}
+
+			return new DataConnection(_sqlServerDataProvider2008, connection);
+		}
+
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, SqlServerVersion version = SqlServerVersion.v2008)
+		{
+			switch (version)
+			{
+				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, transaction);
+				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, transaction);
+			}
+
+			return new DataConnection(_sqlServerDataProvider2008, transaction);
+		}
+
+		#endregion
 	}
 }
