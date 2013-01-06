@@ -170,10 +170,13 @@ namespace Tests
 			{
 				if (Include != null)
 				{
-					return Include.Intersect(
+					var list = Include.Intersect(
 						IncludeLinqService ? 
 							UserProviders.Concat(UserProviders.Select(p => p + ".LinqService")) :
-							UserProviders);
+							UserProviders).
+						ToArray();
+
+					return list;
 				}
 
 				var providers = new List<string>();

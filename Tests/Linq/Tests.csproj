@@ -207,7 +207,7 @@
     <Compile Include="Metadata\XmlReaderTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProviderSpecific\PostgreSQL.cs" />
-    <Compile Include="DataProvider\SqlServer.cs" />
+    <Compile Include="DataProvider\SqlServerTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
     <Compile Include="Linq\ConvertTest.cs" />

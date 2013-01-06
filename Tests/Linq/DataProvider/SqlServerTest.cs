@@ -18,7 +18,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class SqlServer : TestBase
+	public class SqlServerTest : TestBase
 	{
 		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{

@@ -15,7 +15,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(new SqlServerDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(SqlServer.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				conn.Command.CommandText = "SELECT 1";
 

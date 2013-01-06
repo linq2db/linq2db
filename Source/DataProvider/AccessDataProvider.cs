@@ -24,11 +24,10 @@ namespace LinqToDB.DataProvider
 
 		public AccessDataProvider() : base(_accessMappingSchema)
 		{
-			//System.Data.OleDb.OleDbLiteral
 		}
 
-		public override string Name         { get { return LinqToDB.ProviderName.Access;      } }
-		public override string ProviderName { get { return typeof(OleDbConnection).Namespace; } }
+		public override string Name           { get { return ProviderName.Access;     } }
+		public override Type   ConnectionType { get { return typeof(OleDbConnection); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{

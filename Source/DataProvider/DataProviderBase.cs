@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract string        Name          { get; }
-		public abstract string        ProviderName  { get; }
+		public abstract Type         ConnectionType { get; }
 		public virtual  MappingSchema MappingSchema { get; private set; }
 
 		public abstract IDbConnection CreateConnection (string connectionString);

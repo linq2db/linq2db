@@ -25,6 +25,8 @@ namespace LinqToDB.Data
 		{
 			if (configurationString == null) throw new ArgumentNullException("configurationString");
 
+			InitConfig();
+
 			ConfigurationString = configurationString;
 
 			ConfigurationInfo ci;
@@ -46,6 +48,8 @@ namespace LinqToDB.Data
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
 
+			InitConfig();
+
 			DataProvider     = dataProvider;
 			_mappingSchema   = DataProvider.MappingSchema;
 			ConnectionString = connectionString;
@@ -55,6 +59,8 @@ namespace LinqToDB.Data
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (connection   == null) throw new ArgumentNullException("connection");
+			
+			InitConfig();
 
 			DataProvider   = dataProvider;
 			_mappingSchema = DataProvider.MappingSchema;
@@ -65,6 +71,8 @@ namespace LinqToDB.Data
 		{
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 			if (transaction  == null) throw new ArgumentNullException("transaction");
+			
+			InitConfig();
 
 			DataProvider      = dataProvider;
 			_mappingSchema    = DataProvider.MappingSchema;
@@ -131,28 +139,7 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			try
-			{
-				//foreach (var attr in typeof(DataConnection).Assembly.GetCustomAttributes())
-				//{
-				//	if (type.BaseType == typeof(DataProviderBase))
-				//	{
-				//		
-				//	}
-				//}
-
-				//var name = typeof(DataConnection).Assembly.GetName(true);
-				//name.ToString();
-			}
-			catch (Exception)
-			{
-			}
-
-			//AddDataProvider(                            new SqlServerDataProvider(SqlServerVersion.v2008));
-			//AddDataProvider(ProviderName.SqlServer2012, new SqlServerDataProvider(SqlServerVersion.v2012));
-			//AddDataProvider(ProviderName.SqlServer2008, new SqlServerDataProvider(SqlServerVersion.v2008));
-			//AddDataProvider(ProviderName.SqlServer2005, new SqlServerDataProvider(SqlServerVersion.v2005));
-			AddDataProvider(                            new AccessDataProvider());
+			AddDataProvider(new AccessDataProvider());
 
 			var section = LinqToDBSection.Instance;
 
@@ -164,18 +151,17 @@ namespace LinqToDB.Data
 				foreach (DataProviderElement provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true);
-					var providerInstance = (IDataProvider)Activator.CreateInstance(dataProviderType);
-					var providerName     = string.IsNullOrEmpty(provider.Name) ? providerInstance.Name : provider.Name;
+					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType);
 
-					for (var i = 0; i < provider.Attributes.Count; i++)
-						providerInstance.Configure(provider.Attributes.GetKey(i), provider.Attributes.Get(i));
-
-					AddDataProvider(providerName, providerInstance);
+					if (!string.IsNullOrEmpty(provider.Name))
+						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));
 				}
 			}
+		}
 
-			if (string.IsNullOrEmpty(DefaultDataProvider))
-				DefaultDataProvider = ProviderName.Access;
+		static void InitConnectionStrings()
+		{
+			var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
 
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{
@@ -186,32 +172,49 @@ namespace LinqToDB.Data
 				IDataProvider dataProvider;
 
 				if (string.IsNullOrEmpty(providerName))
-					dataProvider = FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]);
+					dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
 				else if (_dataProviders.ContainsKey(providerName))
 					dataProvider = _dataProviders[providerName];
 				else if (_dataProviders.ContainsKey(configuration))
 					dataProvider = _dataProviders[configuration];
 				else
 				{
-					var providers = _dataProviders.Where(dp => dp.Value.ProviderName == providerName).ToList();
+					var providers = _dataProviders.Where(dp => dp.Value.ConnectionType.Namespace == providerName).ToList();
 
 					switch (providers.Count)
 					{
-						case 0  : dataProvider = _dataProviders[DefaultDataProvider];                        break;
+						case 0  : dataProvider = defaultDataProvider;                                        break;
 						case 1  : dataProvider = providers[0].Value;                                         break;
 						default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
 					}
 				}
 
-				AddConfiguration(configuration, connectionString, dataProvider);
-					
-				if (DefaultConfiguration == null &&
-					css.ElementInformation.Source != null &&
-					!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+				if (dataProvider != null)
 				{
-					DefaultConfiguration = css.Name;
+					AddConfiguration(configuration, connectionString, dataProvider);
+
+					if (DefaultConfiguration == null &&
+						css.ElementInformation.Source != null &&
+						!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+					{
+						DefaultConfiguration = css.Name;
+					}
 				}
 			}
+		}
+
+		static          bool   _isInitialized;
+		static readonly object _initSync = new object();
+
+		static void InitConfig()
+		{
+			if (!_isInitialized)
+				lock (_initSync)
+					if (!_isInitialized)
+					{
+						InitConnectionStrings();
+						_isInitialized = true;
+					}
 		}
 
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
@@ -233,6 +236,13 @@ namespace LinqToDB.Data
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 
 			AddDataProvider(dataProvider.Name, dataProvider);
+		}
+
+		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string dataProviderName)
+		{
+			if (dataProviderName == null) throw new ArgumentNullException("dataProviderName");
+
+			return _dataProviders[dataProviderName];
 		}
 
 		class ConfigurationInfo

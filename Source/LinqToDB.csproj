@@ -72,6 +72,7 @@
     <Compile Include="DataProvider\DataProviderBase.cs" />
     <Compile Include="DataProvider\FirebirdMappingSchema.cs" />
     <Compile Include="DataProvider\IDataProvider.cs" />
+    <Compile Include="DataProvider\IDataProviderFactory.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Data\DataConnectionExtensions.cs" />

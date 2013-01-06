@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 
 using LinqToDB;
-
+using LinqToDB.Data;
 using NUnit.Framework;
 
 namespace Tests.Create
@@ -12,7 +13,7 @@ namespace Tests.Create
 	[TestFixture]
 	public class CreateData : TestBase
 	{
-		static void RunScript(string configString, string divider, string name)
+		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null)
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
@@ -133,6 +134,9 @@ namespace Tests.Create
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 423 },
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 },
 				});
+
+				if (action != null)
+					action(db.Connection);
 			}
 		}
 
@@ -150,7 +154,21 @@ namespace Tests.Create
 		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");      }
 		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite");     }
 		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite");     }
-		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access");     }
-		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access");     }
+		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access", AccessAction); }
+		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access", AccessAction); }
+
+		void AccessAction(IDbConnection connection)
+		{
+			//using (var conn = new DataConnection(DataConnection.get connection))
+			//{
+			//	
+/*			INSERT INTO AllTypes
+VALUES (
+	1,
+	 Cast(3 as varbinary)
+)*/
+
+			//}
+		}
 	}
 }

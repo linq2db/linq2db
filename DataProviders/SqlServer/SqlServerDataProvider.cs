@@ -5,11 +5,8 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
-using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -17,71 +14,11 @@ using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Expressions;
 	using Mapping;
 
-	public class SqlServerDataProvider : DataProviderBase
+	abstract class SqlServerDataProvider : DataProviderBase
 	{
-		#region SqlServerMappingSchema
-
-		class SqlServerMappingSchema : MappingSchema
-		{
-			public SqlServerMappingSchema()
-				: base(LinqToDB.ProviderName.SqlServer)
-			{
-				SetConvertExpression<SqlXml,XmlReader>(
-					s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),
-					s => s.CreateReader());
-
-				SetConvertExpression<string,SqlXml>(s => new SqlXml(new MemoryStream(Encoding.UTF8.GetBytes(s))));
-
-				SetDefaultValue(SqlBinary.     Null);
-				SetDefaultValue(SqlBoolean.    Null);
-				SetDefaultValue(SqlByte.       Null);
-				SetDefaultValue(SqlDateTime.   Null);
-				SetDefaultValue(SqlDecimal.    Null);
-				SetDefaultValue(SqlDouble.     Null);
-				SetDefaultValue(SqlGuid.       Null);
-				SetDefaultValue(SqlInt16.      Null);
-				SetDefaultValue(SqlInt32.      Null);
-				SetDefaultValue(SqlInt64.      Null);
-				SetDefaultValue(SqlMoney.      Null);
-				SetDefaultValue(SqlSingle.     Null);
-				SetDefaultValue(SqlString.     Null);
-				SetDefaultValue(SqlXml.        Null);
-				SetDefaultValue(SqlHierarchyId.Null);
-				SetDefaultValue(SqlGeography.  Null);
-				SetDefaultValue(SqlGeometry.   Null);
-
-				SetScalarType(typeof(SqlBinary));
-				SetScalarType(typeof(SqlBoolean));
-				SetScalarType(typeof(SqlByte));
-				SetScalarType(typeof(SqlDateTime));
-				SetScalarType(typeof(SqlDecimal));
-				SetScalarType(typeof(SqlDouble));
-				SetScalarType(typeof(SqlGuid));
-				SetScalarType(typeof(SqlInt16));
-				SetScalarType(typeof(SqlInt32));
-				SetScalarType(typeof(SqlInt64));
-				SetScalarType(typeof(SqlMoney));
-				SetScalarType(typeof(SqlSingle));
-				SetScalarType(typeof(SqlString));
-				SetScalarType(typeof(SqlXml));
-
-				SetScalarType(typeof(SqlHierarchyId));
-				SetScalarType(typeof(SqlGeography));
-				SetScalarType(typeof(SqlGeometry));
-			}
-		}
-
-		static readonly MappingSchema _sqlServerMappingSchema     = new SqlServerMappingSchema();
-		static readonly MappingSchema _sqlServerMappingSchema2005 = new MappingSchema(LinqToDB.ProviderName.SqlServer2005, _sqlServerMappingSchema);
-		static readonly MappingSchema _sqlServerMappingSchema2008 = new MappingSchema(LinqToDB.ProviderName.SqlServer2008, _sqlServerMappingSchema);
-		static readonly MappingSchema _sqlServerMappingSchema2012 = new MappingSchema(LinqToDB.ProviderName.SqlServer2012, _sqlServerMappingSchema);
-
-		#endregion
-
 		#region Udt support
 
 		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>(new Dictionary<Type,string>
@@ -111,39 +48,26 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		public SqlServerDataProvider() : this(SqlServerVersion.v2008)
-		{
-		}
+		#region Init
 
-		public SqlServerDataProvider(SqlServerVersion version)
-			: base(_sqlServerMappingSchema)
+		protected SqlServerDataProvider(SqlServerVersion version, MappingSchema mappingSchema)
+			: base(mappingSchema)
 		{
 			Version = version;
 		}
 
-		public override string Name         { get { return LinqToDB.ProviderName.SqlServer; } }
-		public override string ProviderName { get { return typeof(SqlConnection).Namespace; } }
+		#endregion
 
-		private         MappingSchema _mappingSchema = _sqlServerMappingSchema;
-		public override MappingSchema  MappingSchema
-		{
-			get { return _mappingSchema; }
-		}
+		#region Public Properties
 
-		private SqlServerVersion _version;
-		public  SqlServerVersion  Version
-		{
-			get { return _version;  }
-			set
-			{
-				switch (_version = value)
-				{
-					case SqlServerVersion.v2005 : _mappingSchema = _sqlServerMappingSchema2005; break;
-					case SqlServerVersion.v2008 : _mappingSchema = _sqlServerMappingSchema2008; break;
-					case SqlServerVersion.v2012 : _mappingSchema = _sqlServerMappingSchema2012; break;
-				}
-			}
-		}
+		public override string Name           { get { return ProviderName.SqlServer; } }
+		public override Type   ConnectionType { get { return typeof(SqlConnection);  } }
+
+		public SqlServerVersion Version { get; private set; }
+
+		#endregion
+
+		#region Overrides
 
 		public override IDbConnection CreateConnection(string connectionString)
 		{
@@ -288,5 +212,7 @@ namespace LinqToDB.DataProvider
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
 		}
+
+		#endregion
 	}
 }
