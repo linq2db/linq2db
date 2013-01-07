@@ -55,7 +55,8 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
-				case DataType.UInt32     : dataType = DataType.Int64; break;
+				case DataType.UInt32     : dataType = DataType.Int64;   break;
+				case DataType.UInt64     : dataType = DataType.Decimal; break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
@@ -65,7 +66,9 @@ namespace LinqToDB.DataProvider
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 				case DataType.Undefined  :
-					     if (value is Binary)       value = ((Binary)value).ToArray();
+					     if (value is uint)         dataType = DataType.Int64;
+					else if (value is ulong)        dataType = DataType.Decimal;
+					else if (value is Binary)       value = ((Binary)value).ToArray();
 					else if (value is XDocument)    value = value.ToString();
 					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
 					break;
