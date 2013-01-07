@@ -406,10 +406,7 @@ namespace LinqToDB.Data
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
 		{
-			var key = new QueryKey(
-				typeof(T),
-				dataConnection.ID,
-				sql);
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
 
 			Delegate func;
 

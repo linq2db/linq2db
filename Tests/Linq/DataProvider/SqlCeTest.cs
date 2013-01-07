@@ -20,11 +20,8 @@ namespace Tests.DataProvider
 	{
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
-			connection.Command.Parameters.Clear();
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
-
-			connection.Command.Parameters.Clear();
 
 			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
 			object expectedValue = value;
@@ -66,7 +63,6 @@ namespace Tests.DataProvider
 
 				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
 			}
 		}
@@ -101,11 +97,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			conn.Command.Parameters.Clear();
-			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "@p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			conn.Command.Parameters.Clear();
-			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "@p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			conn.Command.Parameters.Clear();
+			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
 			Assert.That(conn.Execute<T>("SELECT @p + 0", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
@@ -185,9 +178,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                 Is.EqualTo(dateTime));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT DateAdd(day, 0, @p)", DataParameter.DateTime("p", dateTime)),               Is.EqualTo(dateTime));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime)),                    Is.EqualTo(dateTime));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
 			}
 		}
@@ -207,38 +198,23 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)",            DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)",            DataParameter.NChar("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as nchar)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as nchar)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as nchar(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as nchar(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)",            DataParameter.Char ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)",            DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as nchar)",    DataParameter.Char ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as nchar)",    DataParameter.Char ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as nchar(1))", DataParameter.Char ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as nchar(1))", DataParameter.Char ("p", '1')), Is.EqualTo('1'));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p + ''",   DataParameter.VarChar ("p", 'A')), Is.EqualTo('A'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT RTRIM(@p)", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 			}
 		}
@@ -260,22 +236,14 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),         Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT RTRIM(@p)",         DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as ntext)", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nchar)", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as ntext)", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           DataParameter.Create("p", (string)null)), Is.EqualTo(null));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p + ''",           new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -297,25 +265,15 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),           Is.EqualTo(null));
 
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(2))",    DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)",    DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))",    DataParameter.Binary   ("p", new byte[0])), Is.EqualTo(new byte[] {0}));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary)",       DataParameter.Binary   ("p", new byte[0])), Is.EqualTo(new byte[8000]));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)",    DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as image)",        DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)",    new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)",    DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)",    new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
 			}
 		}
@@ -348,21 +306,15 @@ namespace Tests.DataProvider
 					conn.Execute<SqlGuid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)").Value,
 					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlBinary> ("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr))).                    Value, Is.EqualTo(arr));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlBinary> ("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)",       new DataParameter("p", true)).                  Value, Is.EqualTo(true));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)",       new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
 
 				var conv = conn.MappingSchema.GetConverter<string,SqlXml>();
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)",      new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)",      new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
 			}
 		}
@@ -383,7 +335,6 @@ namespace Tests.DataProvider
 				var guid = Guid.NewGuid();
 
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as uniqueidentifier)", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as uniqueidentifier)", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
@@ -399,7 +350,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(1 as rowversion)"), Is.EqualTo(arr));
 
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as timestamp)", DataParameter.Timestamp("p", arr)),               Is.EqualTo(arr));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as timestamp)", new DataParameter("p", arr, DataType.Timestamp)), Is.EqualTo(arr));
 			}
 		}
@@ -417,13 +367,9 @@ namespace Tests.DataProvider
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
 				Assert.That(conn.Execute<string>     ("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XmlDocument>("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast(@p as nvarchar)", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast(@p as nvarchar)", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
 			}
 		}
@@ -452,14 +398,10 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = TestEnum.AA }), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
@@ -470,8 +412,8 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as int)",      new { p =  1  }), Is.EqualTo("1"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT Cast(@p as int)",      new { p =  new DataParameter { Value = 1 } }), Is.EqualTo(1));
 			}
 		}
 	}

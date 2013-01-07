@@ -19,7 +19,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.SetDefaultValue(-1);
+			ms.SetDefaultValue(typeof(int), -1);
 
 			var c = ms.GetConverter<int?,int>();
 
@@ -33,7 +33,7 @@ namespace Tests.Mapping
 			var ms2 = new MappingSchema(ms1);
 
 			ms1.SetConvertExpression<int?,int>(i => i.HasValue ? i.Value * 2 : DefaultValue<int>.Value, false);
-			ms2.SetDefaultValue(-1);
+			ms2.SetDefaultValue(typeof(int), -1);
 
 			var c1 = ms1.GetConverter<int?,int>();
 			var c2 = ms2.GetConverter<int?,int>();
@@ -51,7 +51,7 @@ namespace Tests.Mapping
 			var ms2 = new MappingSchema(ms1);
 
 			ms1.SetConvertExpression<int?,int>(i => i.Value * 2);
-			ms2.SetDefaultValue(-1);
+			ms2.SetDefaultValue(typeof(int), -1);
 
 			var c1 = ms1.GetConverter<int?,int>();
 			var c2 = ms2.GetConverter<int?,int>();
@@ -68,8 +68,8 @@ namespace Tests.Mapping
 			var ms1 = new MappingSchema();
 			var ms2 = new MappingSchema(ms1);
 
-			ms1.SetDefaultValue(-1);
-			ms2.SetDefaultValue(-2);
+			ms1.SetDefaultValue(typeof(int), -1);
+			ms2.SetDefaultValue(typeof(int), -2);
 
 			var c1 = ms1.GetConverter<int?,int>();
 			var c2 = ms2.GetConverter<int?,int>();

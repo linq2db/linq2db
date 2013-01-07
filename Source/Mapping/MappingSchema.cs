@@ -72,9 +72,9 @@ namespace LinqToDB.Mapping
 			return DefaultValue.GetValue(type);
 		}
 
-		public void SetDefaultValue<T>(T value)
+		public void SetDefaultValue(Type type, object value)
 		{
-			_schemas[0].SetDefaultValue(typeof(T), value);
+			_schemas[0].SetDefaultValue(type, value);
 		}
 
 		#endregion
@@ -499,39 +499,29 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				SetScalarType(typeof(string));
-				SetScalarType(typeof(decimal));
-				SetScalarType(typeof(DateTime));
-				SetScalarType(typeof(DateTimeOffset));
-				SetScalarType(typeof(TimeSpan));
-				SetScalarType(typeof(byte[]));
-				SetScalarType(typeof(Binary));
-				SetScalarType(typeof(Guid));
-				SetScalarType(typeof(object));
-				SetScalarType(typeof(XmlDocument));
-				SetScalarType(typeof(XDocument));
-
-				SetDataType(typeof(char),           DataType.NChar);
-				SetDataType(typeof(string),         DataType.NVarChar);
-				SetDataType(typeof(byte[]),         DataType.Binary);
-				SetDataType(typeof(Binary),         DataType.Binary);
-				SetDataType(typeof(bool),           DataType.Boolean);
-				SetDataType(typeof(Guid),           DataType.Guid);
-				SetDataType(typeof(sbyte),          DataType.SByte);
-				SetDataType(typeof(short),          DataType.Int16);
-				SetDataType(typeof(int),            DataType.Int32);
-				SetDataType(typeof(long),           DataType.Int64);
-				SetDataType(typeof(byte),           DataType.Byte);
-				SetDataType(typeof(ushort),         DataType.UInt16);
-				SetDataType(typeof(uint),           DataType.UInt32);
-				SetDataType(typeof(ulong),          DataType.UInt64);
-				SetDataType(typeof(float),          DataType.Single);
-				SetDataType(typeof(double),         DataType.Double);
-				SetDataType(typeof(decimal),        DataType.Decimal);
-				SetDataType(typeof(DateTime),       DataType.DateTime2);
-				SetDataType(typeof(DateTimeOffset), DataType.DateTimeOffset);
-				SetDataType(typeof(XmlDocument),    DataType.Xml);
-				SetDataType(typeof(XDocument),      DataType.Xml);
+				AddScalarType(typeof(char),           DataType.NChar);
+				AddScalarType(typeof(string),         DataType.NVarChar);
+				AddScalarType(typeof(decimal),        DataType.Decimal);
+				AddScalarType(typeof(DateTime),       DataType.DateTime2);
+				AddScalarType(typeof(DateTimeOffset), DataType.DateTimeOffset);
+				AddScalarType(typeof(TimeSpan),       DataType.Time);
+				AddScalarType(typeof(byte[]),         DataType.VarBinary);
+				AddScalarType(typeof(Binary),         DataType.VarBinary);
+				AddScalarType(typeof(Guid),           DataType.Guid);
+				AddScalarType(typeof(object),         DataType.Variant);
+				AddScalarType(typeof(XmlDocument),    DataType.Xml);
+				AddScalarType(typeof(XDocument),      DataType.Xml);
+				AddScalarType(typeof(bool),           DataType.Boolean);
+				AddScalarType(typeof(sbyte),          DataType.SByte);
+				AddScalarType(typeof(short),          DataType.Int16);
+				AddScalarType(typeof(int),            DataType.Int32);
+				AddScalarType(typeof(long),           DataType.Int64);
+				AddScalarType(typeof(byte),           DataType.Byte);
+				AddScalarType(typeof(ushort),         DataType.UInt16);
+				AddScalarType(typeof(uint),           DataType.UInt32);
+				AddScalarType(typeof(ulong),          DataType.UInt64);
+				AddScalarType(typeof(float),          DataType.Single);
+				AddScalarType(typeof(double),         DataType.Double);
 			}
 		}
 
@@ -571,6 +561,23 @@ namespace LinqToDB.Mapping
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			_schemas[0].SetScalarType(type, isScalarType);
+		}
+
+		public void AddScalarType(Type type, object defaultValue, DataType dataType = DataType.Undefined)
+		{
+			SetScalarType  (type);
+			SetDefaultValue(type, defaultValue);
+
+			if (dataType != DataType.Undefined)
+				SetDataType(type, dataType);
+		}
+
+		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
+		{
+			SetScalarType  (type);
+
+			if (dataType != DataType.Undefined)
+				SetDataType(type, dataType);
 		}
 
 		#endregion

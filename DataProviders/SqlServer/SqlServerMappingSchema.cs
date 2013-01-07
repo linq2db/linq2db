@@ -22,42 +22,23 @@ namespace LinqToDB.DataProvider
 
 			SetConvertExpression<string,SqlXml>(s => new SqlXml(new MemoryStream(Encoding.UTF8.GetBytes(s))));
 
-			SetDefaultValue(SqlBinary.     Null);
-			SetDefaultValue(SqlBoolean.    Null);
-			SetDefaultValue(SqlByte.       Null);
-			SetDefaultValue(SqlDateTime.   Null);
-			SetDefaultValue(SqlDecimal.    Null);
-			SetDefaultValue(SqlDouble.     Null);
-			SetDefaultValue(SqlGuid.       Null);
-			SetDefaultValue(SqlInt16.      Null);
-			SetDefaultValue(SqlInt32.      Null);
-			SetDefaultValue(SqlInt64.      Null);
-			SetDefaultValue(SqlMoney.      Null);
-			SetDefaultValue(SqlSingle.     Null);
-			SetDefaultValue(SqlString.     Null);
-			SetDefaultValue(SqlXml.        Null);
-			SetDefaultValue(SqlHierarchyId.Null);
-			SetDefaultValue(SqlGeography.  Null);
-			SetDefaultValue(SqlGeometry.   Null);
-
-			SetScalarType(typeof(SqlBinary));
-			SetScalarType(typeof(SqlBoolean));
-			SetScalarType(typeof(SqlByte));
-			SetScalarType(typeof(SqlDateTime));
-			SetScalarType(typeof(SqlDecimal));
-			SetScalarType(typeof(SqlDouble));
-			SetScalarType(typeof(SqlGuid));
-			SetScalarType(typeof(SqlInt16));
-			SetScalarType(typeof(SqlInt32));
-			SetScalarType(typeof(SqlInt64));
-			SetScalarType(typeof(SqlMoney));
-			SetScalarType(typeof(SqlSingle));
-			SetScalarType(typeof(SqlString));
-			SetScalarType(typeof(SqlXml));
-
-			SetScalarType(typeof(SqlHierarchyId));
-			SetScalarType(typeof(SqlGeography));
-			SetScalarType(typeof(SqlGeometry));
+			AddScalarType(typeof(SqlBinary),      SqlBinary.     Null, DataType.VarBinary);
+			AddScalarType(typeof(SqlBoolean),     SqlBoolean.    Null, DataType.Boolean);
+			AddScalarType(typeof(SqlByte),        SqlByte.       Null, DataType.Byte);
+			AddScalarType(typeof(SqlDateTime),    SqlDateTime.   Null, DataType.DateTime);
+			AddScalarType(typeof(SqlDecimal),     SqlDecimal.    Null, DataType.Decimal);
+			AddScalarType(typeof(SqlDouble),      SqlDouble.     Null, DataType.Double);
+			AddScalarType(typeof(SqlGuid),        SqlGuid.       Null, DataType.Guid);
+			AddScalarType(typeof(SqlInt16),       SqlInt16.      Null, DataType.Int16);
+			AddScalarType(typeof(SqlInt32),       SqlInt32.      Null, DataType.Int32);
+			AddScalarType(typeof(SqlInt64),       SqlInt64.      Null, DataType.Int64);
+			AddScalarType(typeof(SqlMoney),       SqlMoney.      Null, DataType.Money);
+			AddScalarType(typeof(SqlSingle),      SqlSingle.     Null, DataType.Single);
+			AddScalarType(typeof(SqlString),      SqlString.     Null, DataType.NVarChar);
+			AddScalarType(typeof(SqlXml),         SqlXml.        Null, DataType.Xml);
+			AddScalarType(typeof(SqlHierarchyId), SqlHierarchyId.Null, DataType.Udt);
+			AddScalarType(typeof(SqlGeography),   SqlGeography.  Null, DataType.Udt);
+			AddScalarType(typeof(SqlGeometry),    SqlGeometry.   Null, DataType.Udt);
 		}
 
 		public static SqlServerMappingSchema Instance = new SqlServerMappingSchema();

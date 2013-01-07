@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -117,7 +118,11 @@ namespace LinqToDB.DataProvider
 				case DataType.DateTimeOffset : dbType = DbType.DateTimeOffset;        break;
 				case DataType.Variant        : dbType = DbType.Object;                break;
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
-				default                      : return;
+				default                      :
+					var p = parameter as DbParameter;
+					if (p != null)
+						p.ResetDbType();
+					return;
 			}
 
 			if (parameter.DbType != dbType)

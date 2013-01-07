@@ -35,13 +35,9 @@ namespace LinqToDB.DataProvider
 			_udtTypes[type] = udtName;
 		}
 
-		public void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
+		public void AddUdtType<T>(string udtName, T defaultValue, DataType dataType = DataType.Undefined)
 		{
-			MappingSchema.SetDefaultValue(nullValue);
-			MappingSchema.SetScalarType(typeof(T));
-
-			if (dataType != DataType.Undefined)
-				MappingSchema.SetDataType(typeof(T), dataType);
+			MappingSchema.AddScalarType(typeof(T), defaultValue, dataType);
 
 			_udtTypes[typeof(T)] = udtName;
 		}
@@ -174,13 +170,25 @@ namespace LinqToDB.DataProvider
 					}
 					break;
 				case DataType.Undefined  :
-					     if (value is sbyte)        dataType = DataType.Int16;
-					else if (value is ushort)       dataType = DataType.Int32;
-					else if (value is uint)         dataType = DataType.Int64;
-					else if (value is ulong)        dataType = DataType.Decimal;
-					else if (value is Binary)       value = ((Binary)value).ToArray();
-					else if (value is XDocument)    value = value.ToString();
-					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
+					     if (value is sbyte)  dataType = DataType.Int16;
+					else if (value is ushort) dataType = DataType.Int32;
+					else if (value is uint)   dataType = DataType.Int64;
+					else if (value is ulong)  dataType = DataType.Decimal;
+					else if (value is Binary)
+					{
+						dataType = DataType.VarBinary;
+						value = ((Binary)value).ToArray();
+					}
+					else if (value is XDocument)
+					{
+						dataType = DataType.Xml;
+						value = value.ToString();
+					}
+					else if (value is XmlDocument)
+					{
+						dataType = DataType.Xml;
+						value = ((XmlDocument)value).InnerXml;
+					}
 					else
 					{
 						string s;
