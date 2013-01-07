@@ -11,14 +11,12 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-using Microsoft.SqlServer.Types;
-
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class SqlServerTest : TestBase
+	public class SQLiteTest : TestBase
 	{
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
@@ -38,7 +36,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestDataTypes([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -47,7 +45,6 @@ namespace Tests.DataProvider
 				TestType(conn, "bitDataType",              true);
 				TestType(conn, "smallintDataType",         (short)25555);
 				TestType(conn, "decimalDataType",          2222222m);
-				TestType(conn, "smallmoneyDataType",       100000m);
 				TestType(conn, "intDataType",              7777777);
 				TestType(conn, "tinyintDataType",          (sbyte)100);
 				TestType(conn, "moneyDataType",            100000m);
@@ -55,7 +52,6 @@ namespace Tests.DataProvider
 				TestType(conn, "realDataType",             16.2f);
 
 				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
-				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
 
 				TestType(conn, "charDataType",             '1');
 				TestType(conn, "varcharDataType",          "234");
@@ -69,31 +65,7 @@ namespace Tests.DataProvider
 				TestType(conn, "imageDataType",            new byte[] { 0, 0, 0, 3 });
 
 				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
-				TestType(conn, "sql_variantDataType",      (object)10);
-
-				TestType(conn, "nvarchar_max_DataType",    "22322");
-				TestType(conn, "varchar_max_DataType",     "3333");
-				TestType(conn, "varbinary_max_DataType",   new byte[] { 0, 0, 9, 41 });
-
-				TestType(conn, "xmlDataType",              "<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>");
-
-				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
-			}
-		}
-
-		[Test]
-		public void TestDataTypes2([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				TestType(conn, "dateDataType",           new DateTime(2012, 12, 12),                                              "AllTypes2");
-				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0)), "AllTypes2");
-				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 12),                              "AllTypes2");
-				TestType(conn, "timeDataType",           new TimeSpan(0, 12, 12, 12, 12),                                         "AllTypes2");
-
-				TestType(conn, "hierarchyidDataType",    SqlHierarchyId.Parse("/1/3/"),                                           "AllTypes2");
-				TestType(conn, "geographyDataType",      SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)"),      "AllTypes2", true);
-				TestType(conn, "geometryDataType",       SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)"),              "AllTypes2", true);
+				TestType(conn, "objectDataType",           (object)10);
 			}
 		}
 
@@ -134,42 +106,42 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestNumerics([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)    true,    DataType.Boolean);
-				TestNumerics(conn, (bool?)   true,    DataType.Boolean);
-
-				TestNumerics(conn, (sbyte)   1,       DataType.SByte);
-				TestNumerics(conn, (sbyte?)  1,       DataType.SByte);
-				TestNumerics(conn, sbyte.MinValue,    DataType.SByte,   "bit tinyint");
-				TestNumerics(conn, sbyte.MaxValue,    DataType.SByte,   "bit");
-				TestNumerics(conn, (short)   1,       DataType.Int16);
-				TestNumerics(conn, (short?)  1,       DataType.Int16);
-				TestNumerics(conn, short.MinValue,    DataType.Int16,   "bit tinyint");
-				TestNumerics(conn, short.MaxValue,    DataType.Int16,   "bit tinyint");
-				TestNumerics(conn, (int)     1,       DataType.Int32);
-				TestNumerics(conn, (int?)    1,       DataType.Int32);
-				TestNumerics(conn, int.MinValue,      DataType.Int32,   "bit smallint smallmoney tinyint");
-				TestNumerics(conn, int.MaxValue,      DataType.Int32,   "bit smallint smallmoney tinyint real");
-				TestNumerics(conn, (long)    1L,      DataType.Int64);
-				TestNumerics(conn, (long?)   1L,      DataType.Int64);
-				TestNumerics(conn, long.MinValue,     DataType.Int64,   "bit decimal int money numeric smallint smallmoney tinyint");
-				TestNumerics(conn, long.MaxValue,     DataType.Int64,   "bit decimal int money numeric smallint smallmoney tinyint float real");
-
-				TestNumerics(conn, (byte)    1,       DataType.Byte);
-				TestNumerics(conn, (byte?)   1,       DataType.Byte);
-				TestNumerics(conn, byte.MaxValue,     DataType.Byte,    "bit");
-				TestNumerics(conn, (ushort)  1,       DataType.UInt16);
-				TestNumerics(conn, (ushort?) 1,       DataType.UInt16);
-				TestNumerics(conn, ushort.MaxValue,   DataType.UInt16,  "bit smallint tinyint");
-				TestNumerics(conn, (uint)    1u,      DataType.UInt32);
-				TestNumerics(conn, (uint?)   1u,      DataType.UInt32);
-				TestNumerics(conn, uint.MaxValue,     DataType.UInt32,  "bit int smallint smallmoney tinyint real");
+//				TestNumerics(conn, (bool)    true,    DataType.Boolean);
+//				TestNumerics(conn, (bool?)   true,    DataType.Boolean);
+//
+//				TestNumerics(conn, (sbyte)   1,       DataType.SByte);
+//				TestNumerics(conn, (sbyte?)  1,       DataType.SByte);
+//				TestNumerics(conn, sbyte.MinValue,    DataType.SByte);
+//				TestNumerics(conn, sbyte.MaxValue,    DataType.SByte);
+//				TestNumerics(conn, (short)   1,       DataType.Int16);
+//				TestNumerics(conn, (short?)  1,       DataType.Int16);
+//				TestNumerics(conn, short.MinValue,    DataType.Int16);
+//				TestNumerics(conn, short.MaxValue,    DataType.Int16);
+//				TestNumerics(conn, (int)     1,       DataType.Int32);
+//				TestNumerics(conn, (int?)    1,       DataType.Int32);
+//				TestNumerics(conn, int.MinValue,      DataType.Int32);
+//				TestNumerics(conn, int.MaxValue,      DataType.Int32);
+//				TestNumerics(conn, (long)    1L,      DataType.Int64);
+//				TestNumerics(conn, (long?)   1L,      DataType.Int64);
+//				TestNumerics(conn, long.MinValue,     DataType.Int64);
+//				TestNumerics(conn, long.MaxValue,     DataType.Int64,   "float real");
+//
+//				TestNumerics(conn, (byte)    1,       DataType.Byte);
+//				TestNumerics(conn, (byte?)   1,       DataType.Byte);
+//				TestNumerics(conn, byte.MaxValue,     DataType.Byte);
+//				TestNumerics(conn, (ushort)  1,       DataType.UInt16);
+//				TestNumerics(conn, (ushort?) 1,       DataType.UInt16);
+//				TestNumerics(conn, ushort.MaxValue,   DataType.UInt16);
+//				TestNumerics(conn, (uint)    1u,      DataType.UInt32);
+//				TestNumerics(conn, (uint?)   1u,      DataType.UInt32);
+				TestNumerics(conn, uint.MaxValue,     DataType.UInt32);
 				TestNumerics(conn, (ulong)   1ul,     DataType.UInt64);
 				TestNumerics(conn, (ulong?)  1ul,     DataType.UInt64);
-				TestNumerics(conn, ulong.MaxValue,    DataType.UInt64,  "bigint bit decimal int money numeric smallint smallmoney tinyint float real");
+				TestNumerics(conn, ulong.MaxValue,    DataType.UInt64);
 
 				TestNumerics(conn, (float)   1,       DataType.Single);
 				TestNumerics(conn, (float?)  1,       DataType.Single);
@@ -199,7 +171,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDate([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestDate([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -213,7 +185,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSmallDateTime([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestSmallDateTime([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -228,7 +200,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestDateTime([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -244,7 +216,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTime2([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestDateTime2([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -260,7 +232,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestDateTimeOffset([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestDateTimeOffset([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -306,7 +278,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimeSpan([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestTimeSpan([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -323,7 +295,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestChar([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -369,7 +341,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestString([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -415,7 +387,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestBinary([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -446,7 +418,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSqlTypes([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestSqlTypes([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -487,7 +459,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestGuid([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -507,7 +479,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestTimestamp([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestTimestamp([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -522,7 +494,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestSqlVariant([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestSqlVariant([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -536,61 +508,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestHierarchyID([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				var id = SqlHierarchyId.Parse("/1/3/");
-
-				Assert.That(conn.Execute<SqlHierarchyId> ("SELECT Cast('/1/3/' as hierarchyid)"), Is.EqualTo(id));
-				Assert.That(conn.Execute<SqlHierarchyId?>("SELECT Cast('/1/3/' as hierarchyid)"), Is.EqualTo(id));
-				Assert.That(conn.Execute<SqlHierarchyId> ("SELECT Cast(NULL as hierarchyid)"),    Is.EqualTo(SqlHierarchyId.Null));
-				Assert.That(conn.Execute<SqlHierarchyId?>("SELECT Cast(NULL as hierarchyid)"),    Is.EqualTo(null));
-
-				Assert.That(conn.Execute<SqlHierarchyId>("SELECT @p", new DataParameter("p", id)), Is.EqualTo(id));
-			}
-		}
-
-		[Test]
-		public void TestGeometry([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				var id = SqlGeometry.Parse("LINESTRING (100 100, 20 180, 180 180)");
-
-				Assert.That(conn.Execute<SqlGeometry>("SELECT Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)")
-					.ToString(), Is.EqualTo(id.ToString()));
-
-				Assert.That(conn.Execute<SqlGeometry>("SELECT Cast(NULL as geometry)").ToString(),
-					Is.EqualTo(SqlGeometry.Null.ToString()));
-
-				Assert.That(conn.Execute<SqlGeometry>("SELECT @p", new DataParameter("p", id)).ToString(),               Is.EqualTo(id.ToString()));
-				Assert.That(conn.Execute<SqlGeometry>("SELECT @p", new DataParameter("p", id, DataType.Udt)).ToString(), Is.EqualTo(id.ToString()));
-				Assert.That(conn.Execute<SqlGeometry>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
-			}
-		}
-
-		[Test]
-		public void TestGeography([IncludeDataContexts(ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				var id = SqlGeography.Parse("LINESTRING (-122.36 47.656, -122.343 47.656)");
-
-				Assert.That(conn.Execute<SqlGeography>("SELECT Cast(geography::STGeomFromText('LINESTRING(-122.360 47.656, -122.343 47.656)', 4326) as geography)")
-					.ToString(), Is.EqualTo(id.ToString()));
-
-				Assert.That(conn.Execute<SqlGeography>("SELECT Cast(NULL as geography)").ToString(),
-					Is.EqualTo(SqlGeography.Null.ToString()));
-
-				Assert.That(conn.Execute<SqlGeography>("SELECT @p", new DataParameter("p", id)).ToString(),               Is.EqualTo(id.ToString()));
-				Assert.That(conn.Execute<SqlGeography>("SELECT @p", new DataParameter("p", id, DataType.Udt)).ToString(), Is.EqualTo(id.ToString()));
-				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
-			}
-		}
-
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestXml([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -612,33 +530,28 @@ namespace Tests.DataProvider
 		enum TestEnum
 		{
 			[MapValue("A")] AA,
-			[MapValue(ProviderName.SqlServer2008, "C")] 
 			[MapValue("B")] BB,
 		}
 
 		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestEnum1([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-
-				var sql = context == ProviderName.SqlServer2008 ? "SELECT 'C'" : "SELECT 'B'";
-
-				Assert.That(conn.Execute<TestEnum> (sql), Is.EqualTo(TestEnum.BB));
-				Assert.That(conn.Execute<TestEnum?>(sql), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum> ("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 			}
 		}
 
 		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestEnum2([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }),
-					Is.EqualTo(context == ProviderName.SqlServer2008 ? "C" : "B"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }),            Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
@@ -647,7 +560,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TestCast([IncludeDataContexts(ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)] string context)
+		public void TestCast([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

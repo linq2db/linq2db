@@ -4,6 +4,7 @@ using System.IO;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 
 using NUnit.Framework;
 
@@ -153,14 +154,14 @@ namespace Tests.Create
 		[Test] public void Sql2012   ([IncludeDataContexts(ProviderName.SqlServer2012)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");  }
 		[Test] public void SqlCe     ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");      }
 		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");      }
-		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite");     }
-		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite");     }
+		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite", SQLiteAction); }
+		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite", SQLiteAction); }
 		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access", AccessAction); }
 		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access", AccessAction); }
 
 		static void AccessAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SqlCe.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.Access.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes
@@ -188,6 +189,28 @@ namespace Tests.Create
 						imageDataType            = new byte[] { 3, 4, 5, 6 },
 						oleobjectDataType        = new byte[] { 5, 6, 7, 8 },
 
+						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
+					});
+			}
+		}
+
+		static void SQLiteAction(IDbConnection connection)
+		{
+			using (var conn = LinqToDB.DataProvider.SQLite.CreateDataConnection(connection))
+			{
+				conn.Execute(@"
+					UPDATE AllTypes
+					SET
+						binaryDataType           = @binaryDataType,
+						varbinaryDataType        = @varbinaryDataType,
+						imageDataType            = @imageDataType,
+						uniqueidentifierDataType = @uniqueidentifierDataType
+					WHERE ID = 2",
+					new
+					{
+						binaryDataType           = new byte[] { 1 },
+						varbinaryDataType        = new byte[] { 2 },
+						imageDataType            = new byte[] { 0, 0, 0, 3 },
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});
 			}

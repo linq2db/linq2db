@@ -18,11 +18,8 @@ namespace Tests.DataProvider
 	{
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
-			connection.Command.Parameters.Clear();
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
-
-			connection.Command.Parameters.Clear();
 
 			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
 			object expectedValue = value;
@@ -93,11 +90,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			conn.Command.Parameters.Clear();
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			conn.Command.Parameters.Clear();
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			conn.Command.Parameters.Clear();
 			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
@@ -174,9 +168,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<DateTime?>("SELECT CDate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT @p", DataParameter.DateTime("p", dateTime)),               Is.EqualTo(dateTime));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime)),                    Is.EqualTo(dateTime));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<DateTime?>("SELECT @p", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
 			}
 		}
@@ -190,32 +182,19 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char?>("SELECT CStr('1')"), Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> ("SELECT @p",       DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p",       DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT CStr(@p)", DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char> ("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 			}
 		}
@@ -229,22 +208,14 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT NULL"),          Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p & 1", DataParameter.Char    ("p", "123")), Is.EqualTo("1231"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Text    ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NChar   ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText   ("p", "123")), Is.EqualTo("123"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create  ("p", "123")), Is.EqualTo("123"));
 
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string)null)), Is.EqualTo(null));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
@@ -257,21 +228,13 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
 			}
 		}
@@ -284,7 +247,6 @@ namespace Tests.DataProvider
 				var guid = Guid.NewGuid();
 
 				Assert.That(conn.Execute<Guid>("SELECT @p", DataParameter.Create("p", guid)),                Is.EqualTo(guid));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<Guid>("SELECT @p", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
@@ -316,13 +278,9 @@ namespace Tests.DataProvider
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
 				Assert.That(conn.Execute<string>     ("SELECT @p", DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XmlDocument>("SELECT @p", DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Execute<XDocument>  ("SELECT @p", new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
 			}
 		}
@@ -351,14 +309,21 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Query<string>("SELECT @p", new { p = TestEnum.AA }).           First(), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Query<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }).First(), Is.EqualTo("B"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }).First(), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
-				conn.Command.Parameters.Clear();
 				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
+			}
+		}
+
+		[Test]
+		public void TestCast([IncludeDataContexts(ProviderName.Access)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Execute<string>("SELECT @p", new { p =  1  }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p", new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT @p", new { p =  new DataParameter { Value = 1 } }), Is.EqualTo(1));
 			}
 		}
 	}

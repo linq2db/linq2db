@@ -71,10 +71,68 @@ CREATE TABLE LinqDataTypes
 );
 
 
-DROP TABLE TestIdentity
+DROP TABLE IF EXISTS TestIdentity
 GO
 
 CREATE TABLE TestIdentity (
 	ID integer NOT NULL CONSTRAINT PK_TestIdentity PRIMARY KEY AUTOINCREMENT
 )
+GO
+
+DROP TABLE IF EXISTS AllTypes
+GO
+
+CREATE TABLE AllTypes
+(
+	ID                       integer          NOT NULL CONSTRAINT PK_AllTypes PRIMARY KEY AUTOINCREMENT,
+
+	bigintDataType           bigint           NULL,
+	numericDataType          numeric          NULL,
+	bitDataType              bit              NULL,
+	smallintDataType         smallint         NULL,
+	decimalDataType          decimal          NULL,
+	intDataType              int              NULL,
+	tinyintDataType          tinyint          NULL,
+	moneyDataType            money            NULL,
+	floatDataType            float            NULL,
+	realDataType             real             NULL,
+
+	datetimeDataType         datetime         NULL,
+
+	charDataType             char(1)          NULL,
+	varcharDataType          varchar(20)      NULL,
+	textDataType             text             NULL,
+	ncharDataType            nchar(20)        NULL,
+	nvarcharDataType         nvarchar(20)     NULL,
+	ntextDataType            ntext            NULL,
+
+	binaryDataType           binary           NULL,
+	varbinaryDataType        varbinary        NULL,
+	imageDataType            image            NULL,
+
+	uniqueidentifierDataType uniqueidentifier NULL,
+	objectDataType           Object           NULL
+)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType, numericDataType, bitDataType, smallintDataType, decimalDataType,
+	intDataType, tinyintDataType, moneyDataType, floatDataType, realDataType, 
+	datetimeDataType,
+	charDataType, varcharDataType, textDataType, ncharDataType, nvarcharDataType, ntextDataType,
+	objectDataType
+)
+SELECT
+	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,  NULL,   NULL,  NULL, NULL,
+	     NULL,
+	     NULL,      NULL,  NULL,    NULL,    NULL,   NULL,
+	     NULL
+UNION ALL
+SELECT
+	 1000000,    9999999,     1,   25555, 2222222, 7777777,  100, 100000, 20.31, 16.2,
+	'2012-12-12 12:12:12',
+	      '1',     '234', '567', '23233',  '3323',  '111',
+	       10
+
 GO

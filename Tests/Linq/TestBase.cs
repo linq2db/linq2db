@@ -140,7 +140,7 @@ namespace Tests
 		{
 			new ProviderInfo(ProviderName.SqlServer2008, null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
 			new ProviderInfo(ProviderName.SqlCe,         "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProviderOld"),
-			new ProviderInfo(ProviderName.SQLite,        "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProvider"),
+			new ProviderInfo(ProviderName.SQLite,        "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProviderOld"),
 			new ProviderInfo(ProviderName.Access,        null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
 			new ProviderInfo(ProviderName.SqlServer2005, null,                 "LinqToDB.DataProvider.SqlDataProvider"),
 			new ProviderInfo(ProviderName.DB2,           "linq2db.DB2",        "LinqToDB.DataProvider.DB2DataProvider"),
