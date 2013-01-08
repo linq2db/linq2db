@@ -149,7 +149,7 @@ namespace Tests
 			new ProviderInfo(ProviderName.Oracle,        "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProvider"),
 			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
 			new ProviderInfo(ProviderName.MySql,         "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
-			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProvider"),
+			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProviderOld"),
 		};
 
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]

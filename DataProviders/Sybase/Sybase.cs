@@ -6,40 +6,40 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 
-	public class SQLite: IDataProviderFactory
+	public class Sybase : IDataProviderFactory
 	{
-		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
+		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
 
-		static SQLite()
+		static Sybase()
 		{
-			DataConnection.AddDataProvider(ProviderName.SQLite, _SQLiteDataProvider);
+			DataConnection.AddDataProvider(_sybaseDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
 		{
-			return _SQLiteDataProvider;
+			return _sybaseDataProvider;
 		}
 
 		public static IDataProvider GetDataProvider()
 		{
-			return _SQLiteDataProvider;
+			return _sybaseDataProvider;
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_SQLiteDataProvider, connectionString);
+			return new DataConnection(_sybaseDataProvider, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_SQLiteDataProvider, connection);
+			return new DataConnection(_sybaseDataProvider, connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_SQLiteDataProvider, transaction);
+			return new DataConnection(_sybaseDataProvider, transaction);
 		}
 
 		#endregion

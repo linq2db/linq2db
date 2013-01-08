@@ -18,6 +18,20 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SQLiteTest : TestBase
 	{
+		[Test]
+		public void TestParameters([IncludeDataContexts(ProviderName.SQLite)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT @p",        new { p =  new DataParameter { Value = 1   } }), Is.EqualTo(1));
+				Assert.That(conn.Execute<string>("SELECT @p1",       new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT @p1 + @p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
+				Assert.That(conn.Execute<int>   ("SELECT @p2 + @p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+			}
+		}
+
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
@@ -69,7 +83,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -90,16 +104,27 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue, sqlType);
+				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
+			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> auto", typeof(T));
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> new",  typeof(T));
 			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+		}
+
+		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+			where T : struct
+		{
+			TestNumeric<T> (conn, expectedValue, dataType);
+			TestNumeric<T?>(conn, expectedValue, dataType);
+			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
 		[Test]
@@ -107,63 +132,48 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)    true,    DataType.Boolean);
-				TestNumerics(conn, (bool?)   true,    DataType.Boolean);
+				TestSimple<bool>   (conn, true, DataType.Boolean);
+				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
+				TestSimple<short>  (conn, 1,    DataType.Int16);
+				TestSimple<int>    (conn, 1,    DataType.Int32);
+				TestSimple<long>   (conn, 1L,   DataType.Int64);
+				TestSimple<byte>   (conn, 1,    DataType.Byte);
+				TestSimple<ushort> (conn, 1,    DataType.UInt16);
+				TestSimple<uint>   (conn, 1u,   DataType.UInt32);
+				TestSimple<ulong>  (conn, 1ul,  DataType.UInt64);
+				TestSimple<float>  (conn, 1,    DataType.Single);
+				TestSimple<double> (conn, 1d,   DataType.Double);
+				TestSimple<decimal>(conn, 1m,   DataType.Decimal);
+				TestSimple<decimal>(conn, 1m,   DataType.VarNumeric);
+				TestSimple<decimal>(conn, 1m,   DataType.Money);
+				TestSimple<decimal>(conn, 1m,   DataType.SmallMoney);
 
-				TestNumerics(conn, (sbyte)   1,       DataType.SByte);
-				TestNumerics(conn, (sbyte?)  1,       DataType.SByte);
-				TestNumerics(conn, sbyte.MinValue,    DataType.SByte);
-				TestNumerics(conn, sbyte.MaxValue,    DataType.SByte);
-				TestNumerics(conn, (short)   1,       DataType.Int16);
-				TestNumerics(conn, (short?)  1,       DataType.Int16);
-				TestNumerics(conn, short.MinValue,    DataType.Int16);
-				TestNumerics(conn, short.MaxValue,    DataType.Int16);
-				TestNumerics(conn, (int)     1,       DataType.Int32);
-				TestNumerics(conn, (int?)    1,       DataType.Int32);
-				TestNumerics(conn, int.MinValue,      DataType.Int32);
-				TestNumerics(conn, int.MaxValue,      DataType.Int32);
-				TestNumerics(conn, (long)    1L,      DataType.Int64);
-				TestNumerics(conn, (long?)   1L,      DataType.Int64);
-				TestNumerics(conn, long.MinValue,     DataType.Int64);
-				TestNumerics(conn, long.MaxValue,     DataType.Int64,     "float real");
+				TestNumeric(conn, sbyte.MinValue,    DataType.SByte);
+				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
+				TestNumeric(conn, short.MinValue,    DataType.Int16);
+				TestNumeric(conn, short.MaxValue,    DataType.Int16);
+				TestNumeric(conn, int.MinValue,      DataType.Int32);
+				TestNumeric(conn, int.MaxValue,      DataType.Int32);
+				TestNumeric(conn, long.MinValue,     DataType.Int64);
+				TestNumeric(conn, long.MaxValue,     DataType.Int64,     "float real");
 
-				TestNumerics(conn, (byte)    1,       DataType.Byte);
-				TestNumerics(conn, (byte?)   1,       DataType.Byte);
-				TestNumerics(conn, byte.MaxValue,     DataType.Byte);
-				TestNumerics(conn, (ushort)  1,       DataType.UInt16);
-				TestNumerics(conn, (ushort?) 1,       DataType.UInt16);
-				TestNumerics(conn, ushort.MaxValue,   DataType.UInt16);
-				TestNumerics(conn, (uint)    1u,      DataType.UInt32);
-				TestNumerics(conn, (uint?)   1u,      DataType.UInt32);
-				TestNumerics(conn, uint.MaxValue,     DataType.UInt32);
-				TestNumerics(conn, (ulong)   1ul,     DataType.UInt64);
-				TestNumerics(conn, (ulong?)  1ul,     DataType.UInt64);
-				TestNumerics(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
+				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
+				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
+				TestNumeric(conn, uint.MaxValue,     DataType.UInt32);
+				TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
 
-				TestNumerics(conn, (float)   1,       DataType.Single);
-				TestNumerics(conn, (float?)  1,       DataType.Single);
-				TestNumerics(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumerics(conn, 3.40282306E+38f,   DataType.Single,     "bigint int smallint tinyint");
-				TestNumerics(conn, (double)  1d,      DataType.Double);
-				TestNumerics(conn, (double?) 1d,      DataType.Double);
-				TestNumerics(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumerics(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
-				TestNumerics(conn, (decimal) 1m,      DataType.Decimal);
-				TestNumerics(conn, (decimal?)1m,      DataType.Decimal);
-				TestNumerics(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
-				TestNumerics(conn, decimal.MaxValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
-				TestNumerics(conn, (decimal) 1m,      DataType.VarNumeric);
-				TestNumerics(conn, (decimal?)1m,      DataType.VarNumeric);
-				TestNumerics(conn, decimal.MinValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
-				TestNumerics(conn, decimal.MaxValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
-				TestNumerics(conn, (decimal) 1m,      DataType.Money);
-				TestNumerics(conn, (decimal?)1m,      DataType.Money);
-				TestNumerics(conn, -922337203685477m, DataType.Money);
-				TestNumerics(conn, +922337203685477m, DataType.Money);
-				TestNumerics(conn, (decimal) 1m,      DataType.SmallMoney);
-				TestNumerics(conn, (decimal?)1m,      DataType.SmallMoney);
-				TestNumerics(conn, -214748m,          DataType.SmallMoney);
-				TestNumerics(conn, +214748m,          DataType.SmallMoney);
+				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
+				TestNumeric(conn, 3.40282306E+38f,   DataType.Single,     "bigint int smallint tinyint");
+				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
+				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
+				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
+				TestNumeric(conn, decimal.MinValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
+				TestNumeric(conn, decimal.MaxValue,  DataType.VarNumeric, "bigint bit decimal int money numeric smallint tinyint float real");
+				TestNumeric(conn, -922337203685477m, DataType.Money);
+				TestNumeric(conn, +922337203685477m, DataType.Money);
+				TestNumeric(conn, -214748m,          DataType.SmallMoney);
+				TestNumeric(conn, +214748m,          DataType.SmallMoney);
 			}
 		}
 
@@ -380,17 +390,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
-			}
-		}
-
-		[Test]
-		public void TestCast([IncludeDataContexts(ProviderName.SQLite)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				Assert.That(conn.Execute<string>("SELECT @p", new { p =  1  }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = "1" }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>   ("SELECT @p", new { p =  new DataParameter { Value = 1 } }), Is.EqualTo(1));
 			}
 		}
 	}

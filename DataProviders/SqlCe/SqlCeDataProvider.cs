@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined)
+			if (dataType == DataType.Undefined && value != null)
 				dataType = MappingSchema.GetDataType(value.GetType());
 
 			switch (dataType)

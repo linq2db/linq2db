@@ -23,10 +23,6 @@ namespace LinqToDB.DataProvider
 		public abstract IDbConnection CreateConnection (string connectionString);
 		public abstract Expression    ConvertDataReader(Expression reader);
 
-		public virtual void Configure(string name, string value)
-		{
-		}
-
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var mi = GetReaderMethodInfo(reader, idx, toType);
@@ -79,11 +75,8 @@ namespace LinqToDB.DataProvider
 
 		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (parameter.ParameterName != name)
-				parameter.ParameterName = name;
-
+			parameter.ParameterName = name;
 			SetParameterType(parameter, dataType);
-
 			parameter.Value = value ?? DBNull.Value;
 		}
 
@@ -119,14 +112,13 @@ namespace LinqToDB.DataProvider
 				case DataType.Variant        : dbType = DbType.Object;                break;
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
 				default                      :
-					var p = parameter as DbParameter;
-					if (p != null)
-						p.ResetDbType();
+//					var p = parameter as DbParameter;
+//					if (p != null)
+//						p.ResetDbType();
 					return;
 			}
 
-			if (parameter.DbType != dbType)
-				parameter.DbType = dbType;
+			parameter.DbType = dbType;
 		}
 	}
 }

@@ -12,7 +12,6 @@ namespace LinqToDB.DataProvider
 		Type          ConnectionType { get; }
 		MappingSchema MappingSchema  { get; }
 
-		void          Configure          (string name, string value);
 		IDbConnection CreateConnection   (string connectionString);
 
 		Expression    ConvertDataReader  (Expression reader);

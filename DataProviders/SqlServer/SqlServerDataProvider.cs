@@ -70,16 +70,6 @@ namespace LinqToDB.DataProvider
 			return new SqlConnection(connectionString);
 		}
 
-		public override void Configure(string name, string value)
-		{
-			if (name == "version") switch (value)
-			{
-				case "2005" : Version = SqlServerVersion.v2005; break;
-				case "2008" : Version = SqlServerVersion.v2008; break;
-				case "2012" : Version = SqlServerVersion.v2012; break;
-			}
-		}
-
 		public override Expression ConvertDataReader(Expression reader)
 		{
 			return Expression.Convert(reader, typeof(SqlDataReader));
@@ -92,15 +82,16 @@ namespace LinqToDB.DataProvider
 			if (expr.Type == typeof(object))
 			{
 				var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-
 				if (type == typeof(SqlHierarchyId))
 					expr = Expression.Convert(expr, type);
 			}
 
-			var name = ((SqlDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) && (name == "char" || name == "nchar"))
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+			if (expr.Type == typeof(string))
+			{
+				var name = ((SqlDataReader)reader).GetDataTypeName(idx);
+				if (name == "char" || name == "nchar")
+					expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+			}
 
 			return expr;
 		}
@@ -162,10 +153,9 @@ namespace LinqToDB.DataProvider
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 				case DataType.Udt        :
-					if (value != null)
 					{
 						string s;
-						if (_udtTypes.TryGetValue(value.GetType(), out s))
+						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							((SqlParameter)parameter).UdtTypeName = s;
 					}
 					break;
@@ -192,7 +182,7 @@ namespace LinqToDB.DataProvider
 					else
 					{
 						string s;
-						if (_udtTypes.TryGetValue(value.GetType(), out s))
+						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							((SqlParameter)parameter).UdtTypeName = s;
 					}
 

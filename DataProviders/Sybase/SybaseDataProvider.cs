@@ -1,215 +1,136 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Data;
-using System.Data.Common;
-using System.Text;
+using System.Data.Linq;
+using System.Linq.Expressions;
+using System.Xml;
+using System.Xml.Linq;
 
 using Sybase.Data.AseClient;
 
 namespace LinqToDB.DataProvider
 {
+	using Expressions;
 	using Mapping;
-	using SqlProvider;
 
-	public class SybaseDataProvider : DataProviderBaseOld
+	class SybaseDataProvider : DataProviderBase
 	{
-		public override IDbConnection CreateConnectionObject()
+		#region Init
+
+		public SybaseDataProvider() : base(new SybaseMappingSchema())
 		{
-			return new AseConnection();
 		}
 
-		public override DbDataAdapter CreateDataAdapterObject()
+		#endregion
+
+		#region Public Properties
+
+		public override string Name           { get { return ProviderName.Sybase;    } }
+		public override Type   ConnectionType { get { return typeof(AseConnection);  } }
+
+		#endregion
+
+		#region Overrides
+
+		public override IDbConnection CreateConnection(string connectionString)
 		{
-			return new AseDataAdapter();
+			return new AseConnection(connectionString);
 		}
 
-		public override bool DeriveParameters(IDbCommand command)
+		public override Expression ConvertDataReader(Expression reader)
 		{
-			AseCommandBuilder.DeriveParameters((AseCommand)command);
-			return true;
+			return Expression.Convert(reader, typeof(AseDataReader));
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		static DateTime GetDateTime(IDataReader dr, int idx)
 		{
-			switch (convertType)
+			var value = dr.GetDateTime(idx);
+
+			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
+				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
+
+			return value;
+		}
+
+		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			var type = ((AseDataReader)reader).GetProviderSpecificFieldType(idx);
+
+			if (type == typeof(DateTime))
 			{
-				case ConvertType.ExceptionToErrorNumber:
-					if (value is AseException)
-					{
-						var ex = (AseException)value;
+				if (toType == typeof(TimeSpan))
+					return (Expression<Func<IDataReader,int,TimeSpan>>)((dr,i) => dr.GetDateTime(i) - new DateTime(1900, 1, 1));
 
-						foreach (AseError error in ex.Errors)
-							if (error.IsError)
-								return error.MessageNumber;
+				if (toType == typeof(DateTime))
+					return (Expression<Func<IDataReader,int,DateTime>>)((dr,i) => GetDateTime(dr, i));
+			}
 
-						foreach (AseError error in ex.Errors)
-							if (error.MessageNumber != 0)
-								return error.MessageNumber;
+			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 
-						return 0;
-					}
+			if (expr.Type == typeof(string))
+			{
+				var name = ((AseDataReader)reader).GetDataTypeName(idx);
+				if (name == "char" || name == "nchar")
+					expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+			}
 
+			return expr;
+		}
+
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			var st = ((AseDataReader)reader).GetSchemaTable();
+			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+		}
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			if (dataType == DataType.Undefined && value != null)
+				dataType = MappingSchema.GetDataType(value.GetType());
+
+			switch (dataType)
+			{
+				case DataType.SByte      : 
+					dataType = DataType.Int16;
+					if (value != null)
+						value = (short)(sbyte)value;
 					break;
-
-				case ConvertType.ExceptionToErrorMessage:
-					if (value is AseException)
-					{
-						try
-						{
-							var ex = (AseException)value;
-							var sb = new StringBuilder();
-
-							foreach (AseError error in ex.Errors)
-								if (error.IsError)
-									sb.AppendFormat("{0} Ln: {1}{2}",
-										error.Message.TrimEnd('\n', '\r'), error.LineNum, Environment.NewLine);
-
-							foreach (AseError error in ex.Errors)
-								if (!error.IsError)
-									sb.AppendFormat("* {0}{1}", error.Message, Environment.NewLine);
-
-							return sb.Length == 0 ? ex.Message : sb.ToString();
-						}
-						catch
-						{
-						}
-					}
-
+				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					break;
+				case DataType.Xml        :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					break;
+				case DataType.Undefined  :
+					if (value == null)
+						dataType = DataType.Char;
 					break;
 			}
 
-			return SqlProvider.Convert(value, convertType);
+			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		public override void AttachParameter(IDbCommand command, IDbDataParameter parameter)
+		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-			if (parameter.Value is string && parameter.DbType == DbType.Guid)
-				parameter.DbType = DbType.AnsiString;
-
-			base.AttachParameter(command, parameter);
-			
-			var p = (AseParameter)parameter;
-
-			if (p.AseDbType == AseDbType.Unsupported && p.Value is DBNull)
-				parameter.DbType = DbType.AnsiString;
-		}
-
-		public override Type ConnectionType
-		{
-			get { return typeof(AseConnection); }
-		}
-
-		public override string Name
-		{
-			get { return LinqToDB.ProviderName.Sybase; }
-		}
-
-		public override ISqlProvider CreateSqlProvider()
-		{
-			return new SybaseSqlProvider();
-		}
-
-		public override bool InitParameter(IDbDataParameter parameter)
-		{
-			if (parameter.Value is Guid)
+			switch (dataType)
 			{
-				parameter.Value  = parameter.Value.ToString();
-				parameter.DbType = DbType.StringFixedLength;
-				parameter.Size   = 36;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		public override void PrepareCommand(ref CommandType commandType, ref string commandText, ref IDbDataParameter[] commandParameters)
-		{
-			base.PrepareCommand(ref commandType, ref commandText, ref commandParameters);
-
-			List<IDbDataParameter> list = null;
-
-			if (commandParameters != null) for (var i = 0; i < commandParameters.Length; i++)
-			{
-				var p = commandParameters[i];
-
-				if (p.Value is Guid)
-				{
-					p.Value  = p.Value.ToString();
-					p.DbType = DbType.StringFixedLength;
-					p.Size   = 36;
-				}
-
-				if (commandType == CommandType.Text)
-				{
-					if (commandText.IndexOf(p.ParameterName) < 0)
-					{
-						if (list == null)
-						{
-							list = new List<IDbDataParameter>(commandParameters.Length);
-
-							for (var j = 0; j < i; j++)
-								list.Add(commandParameters[j]);
-						}
-					}
-					else
-					{
-						if (list != null)
-							list.Add(p);
-					}
-				}
-			}
-
-			if (list != null)
-				commandParameters = list.ToArray();
-		}
-
-		public override DbType GetDbType(Type systemType)
-		{
-			if (systemType == typeof(byte[]))
-				return DbType.Object;
-
-			return base.GetDbType(systemType);
-		}
-
-		#region DataReaderEx
-
-		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
-		{
-			return dataReader is AseDataReader?
-				new DataReaderEx((AseDataReader)dataReader):
-				base.GetDataReader(schema, dataReader);
-		}
-
-		class DataReaderEx : DataReaderBase<AseDataReader>, IDataReader
-		{
-			public DataReaderEx(AseDataReader rd): base(rd)
-			{
-			}
-
-			public new object GetValue(int i)
-			{
-				var value = DataReader.GetValue(i);
-
-				if (value is DateTime)
-				{
-					var dt = (DateTime)value;
-
-					if (dt.Year == 1900 && dt.Month == 1 && dt.Day == 1)
-						return new DateTime(1, 1, 1, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
-				}
-
-				return value;
-			}
-
-			public new DateTime GetDateTime(int i)
-			{
-				var dt = DataReader.GetDateTime(i);
-
-				if (dt.Year == 1900 && dt.Month == 1 && dt.Day == 1)
-					return new DateTime(1, 1, 1, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
-
-				return dt;
+				case DataType.UInt16        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedSmallInt; break;
+				case DataType.UInt32        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedInt;      break;
+				case DataType.UInt64        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedBigInt;   break;
+				case DataType.Text          : ((AseParameter)parameter).AseDbType = AseDbType.Text;             break;
+				case DataType.NText         : ((AseParameter)parameter).AseDbType = AseDbType.Unitext;          break;
+				case DataType.Binary        : ((AseParameter)parameter).AseDbType = AseDbType.Binary;           break;
+				case DataType.VarBinary     : ((AseParameter)parameter).AseDbType = AseDbType.VarBinary;        break;
+				case DataType.Image         : ((AseParameter)parameter).AseDbType = AseDbType.Image;            break;
+				case DataType.Money         : ((AseParameter)parameter).AseDbType = AseDbType.Money;            break;
+				case DataType.SmallMoney    : ((AseParameter)parameter).AseDbType = AseDbType.SmallMoney;       break;
+				case DataType.Date          : ((AseParameter)parameter).AseDbType = AseDbType.Date;             break;
+				case DataType.Time          : ((AseParameter)parameter).AseDbType = AseDbType.Time;             break;
+				case DataType.SmallDateTime : ((AseParameter)parameter).AseDbType = AseDbType.SmallDateTime;    break;
+				case DataType.Timestamp     : ((AseParameter)parameter).AseDbType = AseDbType.TimeStamp;        break;
+				default                     : base.SetParameterType(parameter, dataType);                       break;
 			}
 		}
 

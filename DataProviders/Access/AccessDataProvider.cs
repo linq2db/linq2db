@@ -53,6 +53,7 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
+				case DataType.VarNumeric : dataType = DataType.Decimal; break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();

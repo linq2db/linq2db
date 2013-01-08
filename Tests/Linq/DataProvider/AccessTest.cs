@@ -16,6 +16,20 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class AccessTest : TestBase
 	{
+		[Test]
+		public void TestParameters([IncludeDataContexts(ProviderName.Access)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT @p",        new { p =  new DataParameter { Value = 1   } }), Is.EqualTo(1));
+				Assert.That(conn.Execute<string>("SELECT @p1",       new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>   ("SELECT @p1 + @p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
+				Assert.That(conn.Execute<int>   ("SELECT @p2 + @p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+			}
+		}
+
 		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
@@ -65,34 +79,46 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestNumerics<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "cbool")
+		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "cbool")
 		{
 			var skipTypes = skip.Split(' ');
 
-			foreach (var sqlType in new[]
+			if (expectedValue != null)
+				foreach (var sqlType in new[]
+					{
+						"cbool",
+						//"cdec",
+						"cbyte",
+						"clng",
+						"cint",
+						"ccur",
+						"cdbl",
+						"csng",
+					}.Except(skipTypes))
 				{
-					"cbool",
-					//"cdec",
-					"cbyte",
-					"clng",
-					"cint",
-					"ccur",
-					"cdbl",
-					"csng",
-				}.Except(skipTypes))
-			{
-				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
+					var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT {0}({1})", sqlType, sqlValue);
+					var sql = string.Format("SELECT {0}({1})", sqlType, sqlValue ?? "NULL");
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
+					Debug.WriteLine(sql + " -> " + typeof(T));
 
-				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
-			}
+					Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
+				}
 
+			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> auto", typeof(T));
 			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+			Debug.WriteLine("{0} -> new",  typeof(T));
 			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+		}
+
+		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+			where T : struct
+		{
+			TestNumeric<T> (conn, expectedValue, dataType);
+			TestNumeric<T?>(conn, expectedValue, dataType);
+			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
 		[Test]
@@ -100,60 +126,46 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestNumerics(conn, (bool)    false,   DataType.Boolean, "");
-				TestNumerics(conn, (bool)    true,    DataType.Boolean, "");
-				TestNumerics(conn, (bool?)   true,    DataType.Boolean, "");
+				TestSimple<bool>   (conn, true, DataType.Boolean);
+				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
+				TestSimple<short>  (conn, 1,    DataType.Int16);
+				TestSimple<int>    (conn, 1,    DataType.Int32);
+				TestSimple<long>   (conn, 1L,   DataType.Int64);
+				TestSimple<byte>   (conn, 1,    DataType.Byte);
+				TestSimple<ushort> (conn, 1,    DataType.UInt16);
+				TestSimple<uint>   (conn, 1u,   DataType.UInt32);
+				TestSimple<ulong>  (conn, 1ul,  DataType.UInt64);
+				TestSimple<float>  (conn, 1,    DataType.Single);
+				TestSimple<double> (conn, 1d,   DataType.Double);
+				TestSimple<decimal>(conn, 1m,   DataType.Decimal);
+				TestSimple<decimal>(conn, 1m,   DataType.VarNumeric);
+				TestSimple<decimal>(conn, 1m,   DataType.Money);
+				TestSimple<decimal>(conn, 1m,   DataType.SmallMoney);
 
-				TestNumerics(conn, (sbyte)   1,       DataType.SByte);
-				TestNumerics(conn, (sbyte?)  1,       DataType.SByte);
-				TestNumerics(conn, sbyte.MinValue,    DataType.SByte,   "cbool cbyte");
-				TestNumerics(conn, sbyte.MaxValue,    DataType.SByte);
-				TestNumerics(conn, (short)   1,       DataType.Int16);
-				TestNumerics(conn, (short?)  1,       DataType.Int16);
-				TestNumerics(conn, short.MinValue,    DataType.Int16,   "cbool cbyte");
-				TestNumerics(conn, short.MaxValue,    DataType.Int16,   "cbool cbyte");
-				TestNumerics(conn, (int)     1,       DataType.Int32);
-				TestNumerics(conn, (int?)    1,       DataType.Int32);
-				TestNumerics(conn, int.MinValue,      DataType.Int32,   "cbool cbyte cint");
-				TestNumerics(conn, int.MaxValue,      DataType.Int32,   "cbool cbyte cint csng");
-				TestNumerics(conn, (long)    1L,      DataType.Int64);
-				TestNumerics(conn, (long?)   1L,      DataType.Int64);
-				TestNumerics(conn, long.MinValue,     DataType.Int64,   "cbool cbyte cint clng ccur");
-				TestNumerics(conn, long.MaxValue,     DataType.Int64,   "cbool cbyte cint clng ccur cdbl csng");
+				TestNumeric(conn, sbyte.MinValue,    DataType.SByte,      "cbool cbyte");
+				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
+				TestNumeric(conn, short.MinValue,    DataType.Int16,      "cbool cbyte");
+				TestNumeric(conn, short.MaxValue,    DataType.Int16,      "cbool cbyte");
+				TestNumeric(conn, int.MinValue,      DataType.Int32,      "cbool cbyte cint");
+				TestNumeric(conn, int.MaxValue,      DataType.Int32,      "cbool cbyte cint csng");
+				TestNumeric(conn, long.MinValue,     DataType.Int64,      "cbool cbyte cint clng ccur");
+				TestNumeric(conn, long.MaxValue,     DataType.Int64,      "cbool cbyte cint clng ccur cdbl csng");
 
-				TestNumerics(conn, (byte)    1,       DataType.Byte);
-				TestNumerics(conn, (byte?)   1,       DataType.Byte);
-				TestNumerics(conn, byte.MaxValue,     DataType.Byte);
-				TestNumerics(conn, (ushort)  1,       DataType.UInt16);
-				TestNumerics(conn, (ushort?) 1,       DataType.UInt16);
-				TestNumerics(conn, ushort.MaxValue,   DataType.UInt16,  "cbool cbyte cint");
-				TestNumerics(conn, (uint)    1u,      DataType.UInt32);
-				TestNumerics(conn, (uint?)   1u,      DataType.UInt32);
-				TestNumerics(conn, uint.MaxValue,     DataType.UInt32,  "cbool cbyte cint clng csng");
-				TestNumerics(conn, (ulong)   1ul,     DataType.UInt64);
-				TestNumerics(conn, (ulong?)  1ul,     DataType.UInt64);
-				TestNumerics(conn, ulong.MaxValue,    DataType.UInt64,  "cbool cbyte cint clng csng ccur cdbl");
+				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
+				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16,     "cbool cbyte cint");
+				TestNumeric(conn, uint.MaxValue,     DataType.UInt32,     "cbool cbyte cint clng csng");
+				TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "cbool cbyte cint clng csng ccur cdbl");
 
-				TestNumerics(conn, (float)   1,       DataType.Single);
-				TestNumerics(conn, (float?)  1,       DataType.Single);
-				TestNumerics(conn, -3.40282306E+38f,  DataType.Single,  "cbool cbyte clng cint ccur");
-				TestNumerics(conn, 3.40282306E+38f,   DataType.Single,  "cbool cbyte clng cint ccur");
-				TestNumerics(conn, (double)  1d,      DataType.Double);
-				TestNumerics(conn, (double?) 1d,      DataType.Double);
-				TestNumerics(conn, -1.79E+308d,       DataType.Double,  "cbool cbyte clng cint ccur csng");
-				TestNumerics(conn,  1.79E+308d,       DataType.Double,  "cbool cbyte clng cint ccur csng");
-				TestNumerics(conn, (decimal) 1m,      DataType.Decimal);
-				TestNumerics(conn, (decimal?)1m,      DataType.Decimal);
-				TestNumerics(conn, decimal.MinValue,  DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumerics(conn, decimal.MaxValue,  DataType.Decimal, "cbool cbyte clng cint ccur cdbl csng");
-				TestNumerics(conn, (decimal) 1m,      DataType.Money);
-				TestNumerics(conn, (decimal?)1m,      DataType.Money);
-				TestNumerics(conn, -922337203685477m, DataType.Money,   "cbool cbyte clng cint csng");
-				TestNumerics(conn, +922337203685477m, DataType.Money,   "cbool cbyte clng cint csng");
-				TestNumerics(conn, (decimal) 1m,      DataType.SmallMoney);
-				TestNumerics(conn, (decimal?)1m,      DataType.SmallMoney);
-				TestNumerics(conn, -214748m,          DataType.SmallMoney, "cbool cbyte cint");
-				TestNumerics(conn, +214748m,          DataType.SmallMoney, "cbool cbyte cint");
+				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "cbool cbyte clng cint ccur");
+				TestNumeric(conn, 3.40282306E+38f,   DataType.Single,     "cbool cbyte clng cint ccur");
+				TestNumeric(conn, -1.79E+308d,       DataType.Double,     "cbool cbyte clng cint ccur csng");
+				TestNumeric(conn,  1.79E+308d,       DataType.Double,     "cbool cbyte clng cint ccur csng");
+				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, decimal.MaxValue,  DataType.Decimal,    "cbool cbyte clng cint ccur cdbl csng");
+				TestNumeric(conn, -922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
+				TestNumeric(conn, +922337203685477m, DataType.Money,      "cbool cbyte clng cint csng");
+				TestNumeric(conn, -214748m,          DataType.SmallMoney, "cbool cbyte cint");
+				TestNumeric(conn, +214748m,          DataType.SmallMoney, "cbool cbyte cint");
 			}
 		}
 
@@ -313,17 +325,6 @@ namespace Tests.DataProvider
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }).First(), Is.EqualTo("A"));
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
 				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
-			}
-		}
-
-		[Test]
-		public void TestCast([IncludeDataContexts(ProviderName.Access)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				Assert.That(conn.Execute<string>("SELECT @p", new { p =  1  }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>("SELECT @p", new { p = "1" }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<int>   ("SELECT @p", new { p =  new DataParameter { Value = 1 } }), Is.EqualTo(1));
 			}
 		}
 	}
