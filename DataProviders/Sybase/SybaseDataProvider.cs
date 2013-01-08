@@ -94,15 +94,31 @@ namespace LinqToDB.DataProvider
 					if (value != null)
 						value = (short)(sbyte)value;
 					break;
+
+				case DataType.Time       :
+					if (value is TimeSpan) value = new DateTime(1900, 1, 1) + (TimeSpan)value;
+					break;
+
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
+
 				case DataType.Xml        :
+					dataType = DataType.NVarChar;
 					     if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
+
+				case DataType.Guid       :
+					if (value != null)
+						value = value.ToString();
+					dataType = DataType.Char;
+					parameter.Size = 36;
+					break;
+
 				case DataType.Undefined  :
 					if (value == null)
 						dataType = DataType.Char;
