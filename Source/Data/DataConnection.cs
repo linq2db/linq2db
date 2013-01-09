@@ -338,6 +338,7 @@ namespace LinqToDB.Data
 		public  IDbCommand  Command
 		{
 			get { return _command ?? (_command = CreateCommand()); }
+			set { _command = value; }
 		}
 
 		public IDbCommand CreateCommand()

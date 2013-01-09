@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider
 
 		static Oracle()
 		{
-			DataConnection.AddDataProvider(ProviderName.Access, _oracleDataProvider);
+			DataConnection.AddDataProvider(ProviderName.Oracle, _oracleDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		public override string Name           { get { return ProviderName.Access;     } }
+		public override string Name           { get { return ProviderName.Oracle;     } }
 		public override Type   ConnectionType { get { return typeof(OracleConnection); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
@@ -145,6 +145,9 @@ namespace LinqToDB.DataProvider
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
+				case DataType.Guid       :
+					if (value is Guid) value = ((Guid)value).ToByteArray();
+					break;
 				case DataType.Xml        :
 					     if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
@@ -162,12 +165,14 @@ namespace LinqToDB.DataProvider
 				case DataType.Double         : ((OracleParameter)parameter).OracleDbType = OracleDbType.BinaryDouble; break;
 				case DataType.Text           : ((OracleParameter)parameter).OracleDbType = OracleDbType.Clob;         break;
 				case DataType.NText          : ((OracleParameter)parameter).OracleDbType = OracleDbType.NClob;        break;
+				case DataType.Image          : ((OracleParameter)parameter).OracleDbType = OracleDbType.Blob;         break;
 				case DataType.Binary         : ((OracleParameter)parameter).OracleDbType = OracleDbType.Blob;         break;
 				case DataType.VarBinary      : ((OracleParameter)parameter).OracleDbType = OracleDbType.Blob;         break;
 				case DataType.Date           : ((OracleParameter)parameter).OracleDbType = OracleDbType.Date;         break;
 				case DataType.SmallDateTime  : ((OracleParameter)parameter).OracleDbType = OracleDbType.Date;         break;
 				case DataType.DateTime2      : ((OracleParameter)parameter).OracleDbType = OracleDbType.TimeStamp;    break;
 				case DataType.DateTimeOffset : ((OracleParameter)parameter).OracleDbType = OracleDbType.TimeStampTZ;  break;
+				case DataType.Guid           : ((OracleParameter)parameter).OracleDbType = OracleDbType.Raw;          break;
 				default                      : base.SetParameterType(parameter, dataType);                            break;
 			}
 		}

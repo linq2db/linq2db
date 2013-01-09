@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 
@@ -22,13 +23,25 @@ namespace Tests.DataProvider
 	public class OracleTest : TestBase
 	{
 		const string CurrentProvider = ProviderName.Oracle;
-		const string PathThroughSql  = "SELECT :p FROM sys.dual";
+
+		string _pathThroughSql  = "SELECT :p FROM sys.dual";
+		string  PathThroughSql
+		{
+			get
+			{
+				_pathThroughSql += " ";
+				return _pathThroughSql;
+			}
+		}
 
 		[Test]
 		public void TestParameters([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+				Assert.That(conn.Execute<char>  (PathThroughSql, DataParameter.Char     ("p", '1')),  Is.EqualTo('1'));
+
 				Assert.That(conn.Execute<string>(PathThroughSql,                   new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>(PathThroughSql,                   new { p = "1" }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<int>   ("SELECT :p FROM sys.dual",        new { p =  new DataParameter { Value = 1   } }), Is.EqualTo(1));
@@ -92,7 +105,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -122,7 +135,7 @@ namespace Tests.DataProvider
 			Assert.That(conn.Execute<T>(PathThroughSql, new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
-		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+		void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
 			where T : struct
 		{
 			TestNumeric<T> (conn, expectedValue, dataType);
@@ -265,13 +278,8 @@ namespace Tests.DataProvider
 					"SELECT timestamp '2012-12-12 12:12:12.012 +05:00' FROM sys.dual"),
 					Is.EqualTo(dto));
 
-				Assert.That(conn.Execute<DateTime>(
-					"SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"),
-					Is.EqualTo(default(DateTime)));
-
-				Assert.That(conn.Execute<DateTime?>(
-					"SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"),
-					Is.EqualTo(default(DateTime?)));
+				Assert.That(conn.Execute<DateTime> ("SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(default(DateTime)));
+				Assert.That(conn.Execute<DateTime?>("SELECT datetimeoffsetDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
 
 				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).                         ToString(), Is.EqualTo(dto.ToString()));
 				Assert.That(conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ToString(), Is.EqualTo(dto.ToString()));
@@ -299,8 +307,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar2(20)) FROM sys.dual"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar2(20)) FROM sys.dual"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> (PathThroughSql,                             DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql,                             DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
@@ -355,26 +363,18 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestBinary([IncludeDataContexts(CurrentProvider)] string context)
 		{
-			var arr1 = new byte[] {       48, 57 };
-			var arr2 = new byte[] { 0, 0, 48, 57 };
+			var arr1 = new byte[] {       0x30, 0x39 };
+			var arr2 = new byte[] { 0, 0, 0x30, 0x39 };
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),      Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),      Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT to_blob('3039')     FROM sys.dual"), Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT to_blob('00003039') FROM sys.dual"), Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"),   Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"),   Is.EqualTo(new Binary(arr2)));
-
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),           Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(max))"), Is.EqualTo(           arr2));
-
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", null)), Is.EqualTo(null));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", new byte[0])), Is.EqualTo(new byte[] {0}));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Binary   ("p", new byte[0])), Is.EqualTo(new byte[8000]));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
@@ -388,36 +388,17 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var arr = new byte[] { 48, 57 };
+				var arr = new byte[] { 0x30, 0x39 };
 
-//				Assert.That(conn.Execute<OracleBinary> ("SELECT Cast(12345    as binary(2))").Value, Is.EqualTo(arr));
-//				Assert.That(conn.Execute<OracleBoolean>("SELECT Cast(1        as bit)").      Value, Is.EqualTo(true));
-//				Assert.That(conn.Execute<OracleByte>   ("SELECT Cast(1        as tinyint)").  Value, Is.EqualTo((byte)1));
-				Assert.That(conn.Execute<OracleDecimal>("SELECT Cast(1        as decimal) FROM sys.dual").  Value, Is.EqualTo(1));
-//				Assert.That(conn.Execute<OracleDouble> ("SELECT Cast(1        as float)").    Value, Is.EqualTo(1.0));
-//				Assert.That(conn.Execute<OracleInt16>  ("SELECT Cast(1        as smallint)"). Value, Is.EqualTo((short)1));
-//				Assert.That(conn.Execute<OracleInt32>  ("SELECT Cast(1        as int)").      Value, Is.EqualTo((int)1));
-//				Assert.That(conn.Execute<OracleInt64>  ("SELECT Cast(1        as bigint)").   Value, Is.EqualTo(1L));
-//				Assert.That(conn.Execute<OracleMoney>  ("SELECT Cast(1        as money)").    Value, Is.EqualTo(1m));
-//				Assert.That(conn.Execute<OracleSingle> ("SELECT Cast(1        as real)").     Value, Is.EqualTo((float)1));
-				Assert.That(conn.Execute<OracleString> ("SELECT Cast('12345' as char(6))  FROM sys.dual").  Value, Is.EqualTo("12345 "));
-				Assert.That(conn.Execute<OracleClob>   ("SELECT ntextDataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
-				Assert.That(conn.Execute<OracleXmlType>("SELECT XMLTYPE('<xml/>')         FROM sys.dual").  Value, Is.EqualTo("<xml/>\n"));
-//
-//				Assert.That(
-//					conn.Execute<SqlDateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").Value,
-//					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-//
-//				Assert.That(
-//					conn.Execute<SqlGuid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)").Value,
-//					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-//
-//				Assert.That(conn.Execute<SqlBinary> (PathThroughSql, new DataParameter("p", new SqlBinary(arr))).                    Value, Is.EqualTo(arr));
-//				Assert.That(conn.Execute<SqlBinary> (PathThroughSql, new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
-//
-//				Assert.That(conn.Execute<SqlBoolean>(PathThroughSql, new DataParameter("p", true)).                  Value, Is.EqualTo(true));
-//				Assert.That(conn.Execute<SqlBoolean>(PathThroughSql, new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
-//
+				Assert.That(conn.Execute<OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").Value, Is.EqualTo(1));
+				Assert.That(conn.Execute<OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Execute<OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
+				Assert.That(conn.Execute<OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+				Assert.That(conn.Execute<OracleXmlType>  ("SELECT XMLTYPE('<xml/>')         FROM sys.dual").Value, Is.EqualTo("<xml/>\n"));
+
 				var xmlType = new OracleXmlType((OracleConnection)conn.Connection, "<xml/>");
 
 				Assert.That(conn.Execute<OracleXmlType>(PathThroughSql, new DataParameter("p", xmlType)).              Value, Is.EqualTo("<xml/>\n"));
@@ -430,47 +411,13 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(
-					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
-					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+				var guid = conn.Execute<Guid>("SELECT guidDataType FROM AllTypes WHERE ID = 2");
 
-				Assert.That(
-					conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
-					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-
-				var guid = Guid.NewGuid();
+				Assert.That(conn.Execute<Guid?>("SELECT guidDataType FROM AllTypes WHERE ID = 1"), Is.EqualTo(null));
+				Assert.That(conn.Execute<Guid?>("SELECT guidDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(guid));
 
 				Assert.That(conn.Execute<Guid>(PathThroughSql, DataParameter.Create("p", guid)),                Is.EqualTo(guid));
 				Assert.That(conn.Execute<Guid>(PathThroughSql, new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-			}
-		}
-
-		[Test]
-		public void TestTimestamp([IncludeDataContexts(CurrentProvider)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
-
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(1 as timestamp)"),  Is.EqualTo(arr));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(1 as rowversion)"), Is.EqualTo(arr));
-
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Timestamp("p", arr)),               Is.EqualTo(arr));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter("p", arr, DataType.Timestamp)), Is.EqualTo(arr));
-			}
-		}
-
-		[Test]
-		public void TestSqlVariant([IncludeDataContexts(CurrentProvider)] string context)
-		{
-			using (var conn = new DataConnection(context))
-			{
-				Assert.That(conn.Execute<object>("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
-				Assert.That(conn.Execute<int>   ("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
-				Assert.That(conn.Execute<int?>  ("SELECT Cast(1 as sql_variant)"), Is.EqualTo(1));
-				Assert.That(conn.Execute<string>("SELECT Cast(1 as sql_variant)"), Is.EqualTo("1"));
-
-				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Variant("p", 1)), Is.EqualTo("1"));
 			}
 		}
 
@@ -479,9 +426,9 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as xml)").InnerXml,   Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<string>     ("SELECT XMLTYPE('<xml/>') FROM sys.dual"),            Is.EqualTo("<xml/>\n"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT XMLTYPE('<xml/>') FROM sys.dual").ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT XMLTYPE('<xml/>') FROM sys.dual").InnerXml,   Is.EqualTo("<xml />"));
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
@@ -497,7 +444,6 @@ namespace Tests.DataProvider
 		enum TestEnum
 		{
 			[MapValue("A")] AA,
-			[MapValue(ProviderName.SqlServer2008, "C")] 
 			[MapValue("B")] BB,
 		}
 
@@ -506,13 +452,10 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
-
-				var sql = context == ProviderName.SqlServer2008 ? "SELECT 'C'" : "SELECT 'B'";
-
-				Assert.That(conn.Execute<TestEnum> (sql), Is.EqualTo(TestEnum.BB));
-				Assert.That(conn.Execute<TestEnum?>(sql), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum> ("SELECT 'A' FROM sys.dual"), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Execute<TestEnum?>("SELECT 'A' FROM sys.dual"), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Execute<TestEnum> ("SELECT 'B' FROM sys.dual"), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum?>("SELECT 'B' FROM sys.dual"), Is.EqualTo(TestEnum.BB));
 			}
 		}
 
@@ -521,9 +464,8 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>(PathThroughSql, new { p = TestEnum.AA }), Is.EqualTo("A"));
-				Assert.That(conn.Execute<string>(PathThroughSql, new { p = (TestEnum?)TestEnum.BB }),
-					Is.EqualTo(context == ProviderName.SqlServer2008 ? "C" : "B"));
+				Assert.That(conn.Execute<string>(PathThroughSql, new { p = TestEnum.AA }),            Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>(PathThroughSql, new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));

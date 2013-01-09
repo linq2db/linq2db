@@ -8,10 +8,6 @@ DROP TABLE Patient
 /
 DROP TABLE Person
 /
-DROP SEQUENCE DataTypeTestSeq
-/
-DROP TABLE DataTypeTest
-/
 DROP TABLE GrandChild
 /
 DROP TABLE Child
@@ -100,78 +96,6 @@ INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatr
 /
 INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
-
-
--- Data Types test
-
-CREATE SEQUENCE DataTypeTestSeq
-/
-
-CREATE TABLE DataTypeTest
-(
-	DataTypeID      INTEGER      NOT NULL PRIMARY KEY,
-	Binary_         RAW(50)          NULL,
-	Boolean_        NUMBER(1,0)      NULL,
-	Byte_           NUMBER(3,0)      NULL,
-	Bytes_          BLOB             NULL,
-	Char_           NCHAR            NULL,
-	DateTime_       DATE             NULL,
-	Decimal_        NUMBER(19,5)     NULL,
-	Double_         DOUBLE PRECISION NULL,
-	Guid_           RAW(16)          NULL,
-	Int16_          NUMBER(5,0)      NULL,
-	Int32_          NUMBER(10,0)     NULL,
-	Int64_          NUMBER(20,0)     NULL,
-	Money_          NUMBER           NULL,
-	SByte_          NUMBER(3,0)      NULL,
-	Single_         FLOAT            NULL,
-	Stream_         BLOB             NULL,
-	String_         NVARCHAR2(50)    NULL,
-	UInt16_         NUMBER(5,0)      NULL,
-	UInt32_         NUMBER(10,0)     NULL,
-	UInt64_         NUMBER(20,0)     NULL,
-	Xml_            XMLTYPE          NULL
-)
-/
-
--- Insert Trigger for DataTypeTest
-
-CREATE OR REPLACE TRIGGER DataTypeTest_Add
-BEFORE INSERT
-ON DataTypeTest
-FOR EACH ROW
-BEGIN
-SELECT
-	DataTypeTestSeq.NEXTVAL
-INTO
-	:NEW.DataTypeID
-FROM
-	dual;
-END;
-/
-
-INSERT INTO DataTypeTest
-	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
-	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
-VALUES
-	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
-	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
-/
-
-INSERT INTO DataTypeTest
-	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
-	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,
-	 Xml_)
-VALUES
-	(SYS_GUID(),          1,      255, SYS_GUID(),     'B',   SYSDATE, 12345.67,
-	   1234.567, SYS_GUID(),    32767,      32768, 1000000,   12.3456,      127,
-	   1234.123, SYS_GUID(), 'string',      32767,   32768, 200000000,
-	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>'))
-/
-
 
 
 CREATE TABLE Parent      (ParentID int, Value1 int)
@@ -308,6 +232,7 @@ CREATE TABLE AllTypes
 
 	binaryDataType           blob                           NULL,
 	bfileDataType            bfile                          NULL,
+	guidDataType             raw(16)                        NULL,
 
 	uriDataType              UriType                        NULL,
 	xmlDataType              XmlType                        NULL
@@ -359,6 +284,7 @@ INSERT INTO AllTypes
 
 	binaryDataType,
 	bfileDataType,
+	guidDataType,
 
 	uriDataType,
 	xmlDataType
@@ -390,6 +316,7 @@ SELECT
 
 	NULL binaryDataType,
 	NULL bfileDataType,
+	NULL guidDataType,
 
 	NULL uriDataType,
 	NULL xmlDataType
@@ -408,7 +335,7 @@ SELECT
 	20.31,
 	16.2,
 
-	to_date     ('2012-12-12 12:12:12', 'YYYY-MM-DD HH:MI:SS'),
+	to_date  ('2012-12-12 12:12:12', 'YYYY-MM-DD HH:MI:SS'),
 	timestamp '2012-12-12 12:12:12.012',
 	timestamp '2012-12-12 12:12:12.012 -5:00',
 	timestamp '2012-12-12 12:12:12.012',
@@ -422,6 +349,7 @@ SELECT
 
 	to_blob('00AA'),
 	bfilename('DATA_DIR', 'bfile.txt'),
+	sys_guid(),
 
 	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')

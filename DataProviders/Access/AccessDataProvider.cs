@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider
 		public override string Name           { get { return ProviderName.Access;     } }
 		public override Type   ConnectionType { get { return typeof(OleDbConnection); } }
 		
-		public override IDbConnection CreateConnection(string connectionString )
+		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
 		}
