@@ -8,10 +8,6 @@ DROP TABLE Patient
 /
 DROP TABLE Person
 /
-DROP SEQUENCE BinaryDataSeq
-/
-DROP TABLE BinaryData
-/
 DROP SEQUENCE DataTypeTestSeq
 /
 DROP TABLE DataTypeTest
@@ -105,387 +101,6 @@ INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatr
 INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
--- Person_Delete
-
-CREATE OR REPLACE 
-PROCEDURE Person_Delete(pPersonID IN NUMBER) IS
-BEGIN
-DELETE FROM
-	Person
-WHERE
-	PersonID = pPersonID;
-END;
-/
-
--- Person_Insert
-
-CREATE OR REPLACE 
-PROCEDURE Person_Insert_OutputParameter
-	( pFirstName  IN NVARCHAR2
-	, pLastName   IN NVARCHAR2
-	, pMiddleName IN NVARCHAR2
-	, pGender     IN CHAR
-	, pPersonID   OUT NUMBER
-	) IS
-BEGIN
-INSERT INTO Person
-	( LastName,  FirstName,  MiddleName,  Gender)
-VALUES
-	(pLastName, pFirstName, pMiddleName, pGender)
-RETURNING
-	PersonID
-INTO
-	pPersonID;
-END;
-/
-
-CREATE OR REPLACE 
-FUNCTION Person_Insert
-	( pFirstName  IN NVARCHAR2
-	, pLastName   IN NVARCHAR2
-	, pMiddleName IN NVARCHAR2
-	, pGender     IN CHAR
-	)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-	lPersonID NUMBER;
-BEGIN
-INSERT INTO Person
-	( LastName,  FirstName,  MiddleName,  Gender)
-VALUES
-	(pLastName, pFirstName, pMiddleName, pGender)
-RETURNING
-	PersonID
-INTO
-	lPersonID;
-
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person
-	WHERE
-		PersonID = lPersonID;
-RETURN
-	retCursor;
-END;
-/
-
--- Person_SelectAll
-
-CREATE OR REPLACE 
-FUNCTION Person_SelectAll
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person;
-RETURN
-	retCursor;
-END;
-/
-
--- Person_SelectAllByGender
-
-CREATE OR REPLACE 
-FUNCTION Person_SelectAllByGender(pGender IN CHAR)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person
-	WHERE
-		Gender = pGender;
-RETURN
-	retCursor;
-END;
-/
-
--- Person_SelectByKey
-
-CREATE OR REPLACE 
-FUNCTION Person_SelectByKey(pID IN NUMBER)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person
-	WHERE
-		PersonID = pID;
-RETURN
-	retCursor;
-END;
-/
-
--- Person_SelectByName
-
-CREATE OR REPLACE 
-FUNCTION Person_SelectByName
-	( pFirstName IN NVARCHAR2
-	, pLastName  IN NVARCHAR2
-	)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person
-	WHERE
-		FirstName = pFirstName AND LastName = pLastName;
-RETURN
-	retCursor;
-END;
-/
-
--- Person_SelectListByName
-
-CREATE OR REPLACE 
-FUNCTION Person_SelectListByName
-	( pFirstName IN NVARCHAR2
-	, pLastName  IN NVARCHAR2
-	)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		PersonID, Firstname, Lastname, Middlename, Gender     
-	FROM
-		Person
-	WHERE
-		FirstName LIKE pFirstName AND LastName LIKE pLastName;
-RETURN
-	retCursor;
-END;
-/
-
-CREATE OR REPLACE 
-PROCEDURE Person_Update
-	( pPersonID   IN NUMBER
-	, pFirstName  IN NVARCHAR2
-	, pLastName   IN NVARCHAR2
-	, pMiddleName IN NVARCHAR2
-	, pGender     IN CHAR
-	) IS
-BEGIN
-UPDATE
-	Person
-SET
-	LastName   = pLastName,
-	FirstName  = pFirstName,
-	MiddleName = pMiddleName,
-	Gender     = pGender
-WHERE
-	PersonID   = pPersonID;
-END;
-/
-
--- Patient_SelectAll
-
-CREATE OR REPLACE 
-FUNCTION Patient_SelectAll
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-SELECT
-	Person.*, Patient.Diagnosis
-FROM
-	Patient, Person
-WHERE
-	Patient.PersonID = Person.PersonID;
-RETURN
-	retCursor;
-END;
-/
-
-
--- Patient_SelectByName
-
-CREATE OR REPLACE 
-FUNCTION Patient_SelectByName
-	( pFirstName IN NVARCHAR2
-	, pLastName  IN NVARCHAR2
-	)
-RETURN SYS_REFCURSOR IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-SELECT
-	Person.*, Patient.Diagnosis
-FROM
-	Patient, Person
-WHERE
-	Patient.PersonID = Person.PersonID
-	AND FirstName = pFirstName AND LastName = pLastName;
-RETURN
-	retCursor;
-END;
-/
-
--- BinaryData Table
-
-CREATE SEQUENCE BinaryDataSeq
-/
-
-CREATE TABLE BinaryData
-	( BinaryDataID                 NUMBER NOT NULL PRIMARY KEY
-	, Stamp                        TIMESTAMP DEFAULT SYSDATE NOT NULL
-	, Data                         BLOB NOT NULL
-	)
-/
-
--- Insert Trigger for Binarydata
-
-CREATE OR REPLACE TRIGGER BinaryData_Add
-BEFORE INSERT
-ON BinaryData
-FOR EACH ROW
-BEGIN
-SELECT
-	BinaryDataSeq.NEXTVAL
-INTO
-	:NEW.BinaryDataID
-FROM
-	dual;
-END;
-/
-
--- OutRefTest
-
-CREATE OR REPLACE 
-PROCEDURE OutRefTest
-	( pID             IN     NUMBER
-	, pOutputID       OUT    NUMBER
-	, pInputOutputID  IN OUT NUMBER
-	, pStr            IN     NVARCHAR2
-	, pOutputStr      OUT    NVARCHAR2
-	, pInputOutputStr IN OUT NVARCHAR2
-	) IS
-BEGIN
-	pOutputID       := pID;
-	pInputOutputID  := pID + pInputOutputID;
-	pOutputStr      := pStr;
-	pInputOutputStr := pStr || pInputOutputStr;
-END;
-/
-
-CREATE OR REPLACE 
-PROCEDURE OutRefEnumTest
-	( pStr            IN     NVARCHAR2
-	, pOutputStr      OUT    NVARCHAR2
-	, pInputOutputStr IN OUT NVARCHAR2
-	) IS
-BEGIN
-	pOutputStr      := pStr;
-	pInputOutputStr := pStr || pInputOutputStr;
-END;
-/
-
--- ArrayTest
-
-CREATE OR REPLACE 
-PROCEDURE ArrayTest
-	( pIntArray            IN     DBMS_UTILITY.NUMBER_ARRAY
-	, pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
-	, pInputOutputIntArray IN OUT DBMS_UTILITY.NUMBER_ARRAY
-	, pStrArray            IN     DBMS_UTILITY.NAME_ARRAY
-	, pOutputStrArray      OUT    DBMS_UTILITY.NAME_ARRAY
-	, pInputOutputStrArray IN OUT DBMS_UTILITY.NAME_ARRAY
-	) IS
-BEGIN
-pOutputIntArray := pIntArray;
-
-FOR i IN pIntArray.FIRST..pIntArray.LAST LOOP
-	pInputOutputIntArray(i) := pInputOutputIntArray(i) + pIntArray(i);
-END LOOP;
-
-pOutputStrArray := pStrArray;
-
-FOR i IN pStrArray.FIRST..pStrArray.LAST LOOP
-	pInputOutputStrArray(i) := pInputOutputStrArray(i) || pStrArray(i);
-END LOOP;
-END;
-/
-
-CREATE OR REPLACE 
-PROCEDURE ScalarArray
-	( pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
-	) IS
-BEGIN
-FOR i IN 1..5 LOOP
-	pOutputIntArray(i) := i;
-END LOOP;
-END;
-/
-
--- ResultSetTest
-
-CREATE OR REPLACE 
-PROCEDURE RESULTSETTEST
-	( mr OUT SYS_REFCURSOR
-	, sr OUT SYS_REFCURSOR
-	) IS
-BEGIN
-OPEN mr FOR
-	SELECT       1 as MasterID FROM dual
-	UNION SELECT 2 as MasterID FROM dual;
-OPEN sr FOR
-	SELECT       4 SlaveID, 1 as MasterID FROM dual
-	UNION SELECT 5 SlaveID, 2 as MasterID FROM dual
-	UNION SELECT 6 SlaveID, 2 as MasterID FROM dual
-	UNION SELECT 7 SlaveID, 1 as MasterID FROM dual;
-END;
-/
-
--- ExecuteScalarTest
-
-CREATE OR REPLACE
-FUNCTION Scalar_DataReader
-RETURN SYS_REFCURSOR
-IS
-	retCursor SYS_REFCURSOR;
-BEGIN
-OPEN retCursor FOR
-	SELECT
-		12345 intField, '54321' stringField 
-	FROM
-		DUAL;
-RETURN
-	retCursor;
-END;
-/
-
-CREATE OR REPLACE 
-PROCEDURE Scalar_OutputParameter
-	( pOutputInt    OUT BINARY_INTEGER
-	, pOutputString OUT NVARCHAR2
-	) IS
-BEGIN
-	pOutputInt := 12345;
-	pOutputString := '54321';
-END;
-/
-
-CREATE OR REPLACE 
-FUNCTION Scalar_ReturnParameter
-RETURN BINARY_INTEGER IS
-BEGIN
-RETURN
-	12345;
-END;
-/
 
 -- Data Types test
 
@@ -659,3 +274,156 @@ FROM
 END;
 /
 
+
+DROP TABLE AllTypes
+/
+
+CREATE TABLE AllTypes
+(
+	ID                       int                        NOT NULL PRIMARY KEY,
+
+	bigintDataType           number(20,0)                   NULL,
+	numericDataType          numeric                        NULL,
+	bitDataType              number(1,0)                    NULL,
+	smallintDataType         number(5,0)                    NULL,
+	decimalDataType          number(*,6)                    NULL,
+	smallmoneyDataType       number(10,4)                   NULL,
+	intDataType              number(10,0)                   NULL,
+	tinyintDataType          number(3,0)                    NULL,
+	moneyDataType            number                         NULL,
+	floatDataType            binary_double                  NULL,
+	realDataType             binary_float                   NULL,
+
+	datetimeDataType         date                           NULL,
+	datetime2DataType        timestamp                      NULL,
+	datetimeoffsetDataType   timestamp with time zone       NULL,
+	localZoneDataType        timestamp with local time zone NULL,
+
+	charDataType             char(1)                        NULL,
+	varcharDataType          varchar2(20)                   NULL,
+	textDataType             clob                           NULL,
+	ncharDataType            nchar(20)                      NULL,
+	nvarcharDataType         nvarchar2(20)                  NULL,
+	ntextDataType            nclob                          NULL,
+
+	binaryDataType           blob                           NULL,
+	bfileDataType            bfile                          NULL,
+
+	uriDataType              UriType                        NULL,
+	xmlDataType              XmlType                        NULL
+) 
+/
+
+DROP SEQUENCE AllTypesSeq
+/
+CREATE SEQUENCE AllTypesSeq
+/
+
+CREATE OR REPLACE TRIGGER AllTypes_Add
+BEFORE INSERT
+ON AllTypes
+FOR EACH ROW
+BEGIN
+	SELECT AllTypesSeq.NEXTVAL INTO :NEW.ID FROM dual;
+END;
+/
+
+CREATE OR REPLACE DIRECTORY DATA_DIR AS 'C:\DataFiles'
+/
+
+INSERT INTO AllTypes
+(
+	bigintDataType,
+	numericDataType,
+	bitDataType,
+	smallintDataType,
+	decimalDataType,
+	smallmoneyDataType,
+	intDataType,
+	tinyintDataType,
+	moneyDataType,
+	floatDataType,
+	realDataType,
+
+	datetimeDataType,
+	datetime2DataType,
+	datetimeoffsetDataType,
+	localZoneDataType,
+
+	charDataType,
+	varcharDataType,
+	textDataType,
+	ncharDataType,
+	nvarcharDataType,
+	ntextDataType,
+
+	binaryDataType,
+	bfileDataType,
+
+	uriDataType,
+	xmlDataType
+)
+SELECT
+	NULL bigintDataType,
+	NULL numericDataType,
+	NULL bitDataType,
+	NULL smallintDataType,
+	NULL decimalDataType,
+	NULL smallmoneyDataType,
+	NULL intDataType,
+	NULL tinyintDataType,
+	NULL moneyDataType,
+	NULL floatDataType,
+	NULL realDataType,
+
+	NULL datetimeDataType,
+	NULL datetime2DataType,
+	NULL datetimeoffsetDataType,
+	NULL localZoneDataType,
+
+	NULL charDataType,
+	NULL varcharDataType,
+	NULL textDataType,
+	NULL ncharDataType,
+	NULL nvarcharDataType,
+	NULL ntextDataType,
+
+	NULL binaryDataType,
+	NULL bfileDataType,
+
+	NULL uriDataType,
+	NULL xmlDataType
+FROM dual
+UNION ALL
+SELECT
+	1000000,
+	9999999,
+	1,
+	25555,
+	2222222,
+	100000,
+	7777777,
+	100,
+	100000,
+	20.31,
+	16.2,
+
+	to_date     ('2012-12-12 12:12:12', 'YYYY-MM-DD HH:MI:SS'),
+	timestamp '2012-12-12 12:12:12.012',
+	timestamp '2012-12-12 12:12:12.012 -5:00',
+	timestamp '2012-12-12 12:12:12.012',
+
+	'1',
+	'234',
+	'567',
+	'23233',
+	'3323',
+	'111',
+
+	to_blob('00AA'),
+	bfilename('DATA_DIR', 'bfile.txt'),
+
+	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
+	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')
+FROM dual
+/

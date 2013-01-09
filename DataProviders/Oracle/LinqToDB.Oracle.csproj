@@ -98,9 +98,13 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Oracle.cs" />
     <Compile Include="OracleDataProvider.cs" />
+    <Compile Include="OracleMappingSchema.cs" />
+    <Compile Include="OracleDataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

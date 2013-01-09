@@ -234,7 +234,7 @@
     <Compile Include="Linq\L2SAttributes.cs" />
     <Compile Include="Linq\ParserTest.cs" />
     <Compile Include="ProviderSpecific\Firebird.cs" />
-    <Compile Include="ProviderSpecific\Oracle.cs" />
+    <Compile Include="DataProvider\OracleTest.cs" />
     <Compile Include="Linq\TableFunctionTest.cs" />
     <Compile Include="Linq\VisualBasicTest.cs" />
     <Compile Include="Update\DmlTest.cs" />
