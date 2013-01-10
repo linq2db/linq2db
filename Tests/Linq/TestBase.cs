@@ -147,7 +147,7 @@ namespace Tests
 			new ProviderInfo(ProviderName.Informix,      "linq2db.Informix",   "LinqToDB.DataProvider.InformixDataProvider"),
 			new ProviderInfo(ProviderName.Firebird,      "linq2db.Firebird",   "LinqToDB.DataProvider.FirebirdDataProvider"),
 			new ProviderInfo(ProviderName.Oracle,        "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProviderOld"),
-			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProvider"),
+			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProviderOld"),
 			new ProviderInfo(ProviderName.MySql,         "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProvider"),
 			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProviderOld"),
 		};

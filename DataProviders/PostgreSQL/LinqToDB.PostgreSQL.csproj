@@ -104,9 +104,13 @@
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PostgreSQL.cs" />
     <Compile Include="PostgreSQLDataProvider.cs" />
+    <Compile Include="PostgreSQLMappingSchema.cs" />
+    <Compile Include="PostgreSQLDataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

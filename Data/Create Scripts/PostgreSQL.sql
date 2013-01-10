@@ -180,3 +180,145 @@ CREATE TABLE "TestIdentity" (
 	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('"TestIdentity_ID_seq"')
 )
 GO
+
+
+DROP TABLE AllTypes
+GO
+
+DROP TYPE color
+GO
+
+CREATE TYPE color AS ENUM ('Red', 'Green', 'Blue');
+GO
+
+CREATE TABLE AllTypes
+(
+	ID                       serial               NOT NULL PRIMARY KEY,
+
+	bigintDataType           bigint                   NULL,
+	numericDataType          numeric                  NULL,
+	smallintDataType         smallint                 NULL,
+	intDataType              int                      NULL,
+	moneyDataType            money                    NULL,
+	doubleDataType           double precision         NULL,
+	realDataType             real                     NULL,
+
+	timestampDataType        timestamp                NULL,
+	timestampTZDataType      timestamp with time zone NULL,
+	dateDataType             date                     NULL,
+	timeDataType             time                     NULL,
+	timeTZDataType           time with time zone      NULL,
+	intervalDataType         interval                 NULL,
+
+	charDataType             char(1)                  NULL,
+	varcharDataType          varchar(20)              NULL,
+	textDataType             text                     NULL,
+
+	binaryDataType           bytea                    NULL,
+
+	uniqueidentifierDataType uuid                     NULL,
+	bitDataType              bit(3)                   NULL,
+	booleanDataType          boolean                  NULL,
+	colorDataType            color                    NULL,
+
+	pointDataType            point                    NULL,
+
+	xmlDataType              xml                      NULL
+)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType,
+	numericDataType,
+	smallintDataType,
+	intDataType,
+	moneyDataType,
+	doubleDataType,
+	realDataType,
+
+	timestampDataType,
+	timestampTZDataType,
+	dateDataType,
+	timeDataType,
+	timeTZDataType,
+	intervalDataType,
+
+	charDataType,
+	varcharDataType,
+	textDataType,
+
+	binaryDataType,
+
+	uniqueidentifierDataType,
+	bitDataType,
+	booleanDataType,
+	colorDataType,
+
+	pointDataType,
+
+	xmlDataType
+)
+SELECT
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+
+	NULL
+UNION ALL
+SELECT
+	1000000,
+	9999999,
+	25555,
+	7777777,
+	100000,
+	20.31,
+	16.2,
+
+	Cast('2012-12-12 12:12:12' as timestamp),
+	Cast('2012-12-12 12:12:12' as timestamp with time zone),
+	Cast('2012-12-12 12:12:12' as date),
+	Cast('2012-12-12 12:12:12' as time),
+	Cast('2012-12-12 12:12:12' as time with time zone),
+	Cast('1 3:05:20' as interval),
+
+	'1',
+	'234',
+	'567',
+
+	E'\\052'::bytea,
+
+	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid),
+	B'101',
+	true,
+	'Green'::color,
+
+	'(1,2)'::point,
+
+	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>')
+
+GO

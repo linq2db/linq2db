@@ -198,6 +198,7 @@
     <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
+    <Compile Include="DataProvider\PostgreSQLTest.cs" />
     <Compile Include="DataProvider\SybaseTest.cs" />
     <Compile Include="DataProvider\SQLiteTest.cs" />
     <Compile Include="DataProvider\ExpressionTest.cs" />

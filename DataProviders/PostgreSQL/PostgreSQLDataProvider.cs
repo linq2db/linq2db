@@ -1,333 +1,116 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Data.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Xml;
+using System.Xml.Linq;
 
 using Npgsql;
+using NpgsqlTypes;
 
 namespace LinqToDB.DataProvider
 {
+	using Expressions;
 	using Mapping;
-	using SqlProvider;
 
-	public class PostgreSQLDataProvider : DataProviderBaseOld
+	public class PostgreSQLDataProvider : DataProviderBase
 	{
-		#region Configurable
-
-		public enum CaseConvert
+		public PostgreSQLDataProvider() : base(new PostgreSQLMappingSchema())
 		{
-			None,
-			Lower,
-			Upper
 		}
 
-		public static CaseConvert QueryCaseConvert = CaseConvert.None;
-
-		public static bool QuoteIdentifiers
+		public override string Name           { get { return ProviderName.PostgreSQL; } }
+		public override Type   ConnectionType { get { return typeof(NpgsqlConnection); } }
+		
+		public override IDbConnection CreateConnection(string connectionString)
 		{
-			get { return PostgreSQLSqlProvider.QuoteIdentifiers; }
-			set { PostgreSQLSqlProvider.QuoteIdentifiers = value; }
+			return new NpgsqlConnection(connectionString);
 		}
 
-		public override void Configure(System.Collections.Specialized.NameValueCollection attributes)
+		public override Expression ConvertDataReader(Expression reader)
 		{
-			var quoteIdentifiers = attributes["QuoteIdentifiers"];
+			return Expression.Convert(reader, typeof(NpgsqlDataReader));
+		}
 
-			if (quoteIdentifiers != null)
-				QuoteIdentifiers = Common.ConvertOld.ToBoolean(quoteIdentifiers);
+		#region Overrides
 
-			var queryCaseConcert = attributes["QueryCaseConvert"];
-			if (queryCaseConcert != null)
+		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+#if DEBUG
+			var specificFieldType = ((NpgsqlDataReader)reader).GetProviderSpecificFieldType(idx);
+			var fieldType         = ((NpgsqlDataReader)reader).GetFieldType(idx);
+			var typeName          = ((NpgsqlDataReader)reader).GetDataTypeName(idx);
+			var npgsqlDbType      = ((NpgsqlDataReader)reader).GetFieldNpgsqlDbType(idx);
+#endif
+
+			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+			var name = ((NpgsqlDataReader)reader).GetDataTypeName(idx);
+
+			if (expr.Type == typeof(string) && (name == "char"))
+				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+
+			return expr;
+		}
+
+		protected override MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
+		{
+			var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
+
+			if (toType == type)
 			{
-				try
-				{
-					QueryCaseConvert = (CaseConvert)Enum.Parse(typeof(CaseConvert), queryCaseConcert, true);
-				}
-				catch { }
+				if (type == typeof(BitString))         return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetBitString  (0));
+				if (type == typeof(NpgsqlInterval))    return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetInterval   (0));
+				if (type == typeof(NpgsqlTime))        return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTime       (0));
+				if (type == typeof(NpgsqlTimeTZ))      return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeTZ     (0));
+				if (type == typeof(NpgsqlTimeStamp))   return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStamp  (0));
+				if (type == typeof(NpgsqlTimeStampTZ)) return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStampTZ(0));
+				if (type == typeof(NpgsqlDate))        return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetDate       (0));
 			}
 
-			base.Configure(attributes);
+			return base.GetReaderMethodInfo(reader, idx, toType);
 		}
 
-		#endregion
 
-		public override IDbConnection CreateConnectionObject()
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-			return new NpgsqlConnection();
+			var st = ((NpgsqlDataReader)reader).GetSchemaTable();
+			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
-		public override DbDataAdapter CreateDataAdapterObject()
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			return new NpgsqlDataAdapter();
-		}
-
-		public override bool DeriveParameters(IDbCommand command)
-		{
-			NpgsqlCommandBuilder.DeriveParameters((NpgsqlCommand)command);
-			return true;
-		}
-
-		public override void SetParameterValue(IDbDataParameter parameter, object value)
-		{
-			if(value is Enum)
+			switch (dataType)
 			{
-				var type = Enum.GetUnderlyingType(value.GetType());
-				value = (MappingSchema ?? Map.DefaultSchema).ConvertChangeType(value, type);
-
-			}
-			base.SetParameterValue(parameter, value);
-		}
-
-		public override object Convert(object value, ConvertType convertType)
-		{
-			switch (convertType)
-			{
-				case ConvertType.ExceptionToErrorNumber:
-					if (value is NpgsqlException)
-					{
-						var ex = (NpgsqlException)value;
-
-						foreach (NpgsqlError error in ex.Errors)
-							return error.Code;
-
-						return 0;
-					}
-
+				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					break;
+				case DataType.Xml        :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					break;
+				case DataType.Undefined  :
+					     if (value is Binary)       value = ((Binary)value).ToArray();
+					else if (value is XDocument)    value = value.ToString();
+					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
 					break;
 			}
 
-			return SqlProvider.Convert(value, convertType);
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override Type ConnectionType
+		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-			get { return typeof(NpgsqlConnection); }
+			switch (dataType)
+			{
+				case DataType.Xml : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Xml; break;
+				default           : base.SetParameterType(parameter, dataType);                   break;
+			}
 		}
 
-		public override string Name
-		{
-			get { return LinqToDB.ProviderName.PostgreSQL; }
-		}
-
-		public override int MaxBatchSize
-		{
-			get { return 0; }
-		}
-
-		public override ISqlProvider CreateSqlProvider()
-		{
-			return new PostgreSQLSqlProvider();
-		}
-
-		public override void PrepareCommand(ref CommandType commandType, ref string commandText, ref IDbDataParameter[] commandParameters)
-		{
-			if (QueryCaseConvert == CaseConvert.Lower)
-				commandText = commandText.ToLower();
-			else if (QueryCaseConvert == CaseConvert.Upper)
-				commandText = commandText.ToUpper();
-
-			base.PrepareCommand(ref commandType, ref commandText, ref commandParameters);
-		}
-
-		public override bool CanReuseCommand(IDbCommand command, CommandType newCommandType)
-		{
-			return command.CommandType == newCommandType;
-		}
-
-		public override IDataReader GetDataReader(MappingSchemaOld schema, IDataReader dataReader)
-		{
-			return
-				dataReader is NpgsqlDataReader
-					? new NpgsqlDataReaderEx(schema, (NpgsqlDataReader)dataReader)
-					: base.GetDataReader(schema, dataReader);
-		}
-
-		class NpgsqlDataReaderEx : IDataReader
-		{
-			private readonly NpgsqlDataReader _reader;
-			private readonly MappingSchemaOld _schema;
-
-			public NpgsqlDataReaderEx(MappingSchemaOld schema, NpgsqlDataReader reader)
-			{
-				_reader = reader;
-				_schema = schema;
-			}
-
-			#region IDataReader Members
-
-			public void Close()
-			{
-				_reader.Close();
-			}
-
-			public int Depth
-			{
-				get { return _reader.Depth; }
-			}
-
-			public DataTable GetSchemaTable()
-			{
-				return _reader.GetSchemaTable();
-			}
-
-			public bool IsClosed
-			{
-				get { return _reader.IsClosed; }
-			}
-
-			public bool NextResult()
-			{
-				return _reader.NextResult();
-			}
-
-			public bool Read()
-			{
-				return _reader.Read();
-			}
-
-			public int RecordsAffected
-			{
-				get { return _reader.RecordsAffected; }
-			}
-
-			#endregion
-
-			#region IDisposable Members
-
-			public void Dispose()
-			{
-				_reader.Dispose();
-			}
-
-			#endregion
-
-			#region IDataRecord Members
-
-			public int FieldCount
-			{
-				get { return _reader.FieldCount; }
-			}
-
-			public bool GetBoolean(int i)
-			{
-				return _reader.GetBoolean(i);
-			}
-
-			public byte GetByte(int i)
-			{
-				return _schema.ConvertToByte(_reader.GetValue(i));
-			}
-
-			public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-			{
-				return _reader.GetBytes(i, fieldOffset, buffer, bufferoffset, length);
-			}
-
-			public char GetChar(int i)
-			{
-				return _reader.GetChar(i);
-			}
-
-			public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-			{
-				return _reader.GetChars(i, fieldoffset, buffer, bufferoffset, length);
-			}
-
-			public IDataReader GetData(int i)
-			{
-				return _reader.GetData(i);
-			}
-
-			public string GetDataTypeName(int i)
-			{
-				return _reader.GetDataTypeName(i);
-			}
-
-			public DateTime GetDateTime(int i)
-			{
-				return _reader.GetDateTime(i);
-			}
-
-			public decimal GetDecimal(int i)
-			{
-				return _reader.GetDecimal(i);
-			}
-
-			public double GetDouble(int i)
-			{
-				return _reader.GetDouble(i);
-			}
-
-			public Type GetFieldType(int i)
-			{
-				return _reader.GetFieldType(i);
-			}
-
-			public float GetFloat(int i)
-			{
-				return _reader.GetFloat(i);
-			}
-
-			public Guid GetGuid(int i)
-			{
-				return _reader.GetGuid(i);
-			}
-
-			public short GetInt16(int i)
-			{
-				return _reader.GetInt16(i);
-			}
-
-			public int GetInt32(int i)
-			{
-				return _reader.GetInt32(i);
-			}
-
-			public long GetInt64(int i)
-			{
-				return _reader.GetInt64(i);
-			}
-
-			public string GetName(int i)
-			{
-				return _reader.GetName(i);
-			}
-
-			public int GetOrdinal(string name)
-			{
-				return _reader.GetOrdinal(name);
-			}
-
-			public string GetString(int i)
-			{
-				return _reader.GetString(i);
-			}
-
-			public object GetValue(int i)
-			{
-				return _reader.GetValue(i);
-			}
-
-			public int GetValues(object[] values)
-			{
-				return _reader.GetValues(values);
-			}
-
-			public bool IsDBNull(int i)
-			{
-				return _reader.IsDBNull(i);
-			}
-
-			public object this[string name]
-			{
-				get { return _reader[name]; }
-			}
-
-			public object this[int i]
-			{
-				get { return _reader[i]; }
-			}
-
-			#endregion
-		}
+		#endregion
 	}
 }
