@@ -48,8 +48,8 @@ namespace LinqToDB.DataProvider
 			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 			var name = ((NpgsqlDataReader)reader).GetDataTypeName(idx);
 
-			if (expr.Type == typeof(string) && (name == "char"))
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
+//			if (expr.Type == typeof(string) && name == "bpchar")
+//				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
 
 			return expr;
 		}
@@ -106,8 +106,13 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
-				case DataType.Xml : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Xml; break;
-				default           : base.SetParameterType(parameter, dataType);                   break;
+				case DataType.Binary    :
+				case DataType.VarBinary : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Bytea;   break;
+				case DataType.Boolean   : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Boolean; break;
+				case DataType.Xml       : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Xml;     break;
+				case DataType.Text      :
+				case DataType.NText     : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Text;    break;
+				default                 : base.SetParameterType(parameter, dataType);                       break;
 			}
 		}
 

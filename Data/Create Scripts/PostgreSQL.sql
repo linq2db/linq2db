@@ -193,37 +193,37 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       serial               NOT NULL PRIMARY KEY,
+	ID                  serial               NOT NULL PRIMARY KEY,
 
-	bigintDataType           bigint                   NULL,
-	numericDataType          numeric                  NULL,
-	smallintDataType         smallint                 NULL,
-	intDataType              int                      NULL,
-	moneyDataType            money                    NULL,
-	doubleDataType           double precision         NULL,
-	realDataType             real                     NULL,
+	bigintDataType      bigint                   NULL,
+	numericDataType     numeric                  NULL,
+	smallintDataType    smallint                 NULL,
+	intDataType         int                      NULL,
+	moneyDataType       money                    NULL,
+	doubleDataType      double precision         NULL,
+	realDataType        real                     NULL,
 
-	timestampDataType        timestamp                NULL,
-	timestampTZDataType      timestamp with time zone NULL,
-	dateDataType             date                     NULL,
-	timeDataType             time                     NULL,
-	timeTZDataType           time with time zone      NULL,
-	intervalDataType         interval                 NULL,
+	timestampDataType   timestamp                NULL,
+	timestampTZDataType timestamp with time zone NULL,
+	dateDataType        date                     NULL,
+	timeDataType        time                     NULL,
+	timeTZDataType      time with time zone      NULL,
+	intervalDataType    interval                 NULL,
 
-	charDataType             char(1)                  NULL,
-	varcharDataType          varchar(20)              NULL,
-	textDataType             text                     NULL,
+	charDataType        char(1)                  NULL,
+	varcharDataType     varchar(20)              NULL,
+	textDataType        text                     NULL,
 
-	binaryDataType           bytea                    NULL,
+	binaryDataType      bytea                    NULL,
 
-	uniqueidentifierDataType uuid                     NULL,
-	bitDataType              bit(3)                   NULL,
-	booleanDataType          boolean                  NULL,
-	colorDataType            color                    NULL,
+	uuidDataType        uuid                     NULL,
+	bitDataType         bit(3)                   NULL,
+	booleanDataType     boolean                  NULL,
+	colorDataType       color                    NULL,
 
-	pointDataType            point                    NULL,
+	pointDataType       point                    NULL,
 
-	xmlDataType              xml                      NULL
+	xmlDataType         xml                      NULL
 )
 GO
 
@@ -250,7 +250,7 @@ INSERT INTO AllTypes
 
 	binaryDataType,
 
-	uniqueidentifierDataType,
+	uuidDataType,
 	bitDataType,
 	booleanDataType,
 	colorDataType,
@@ -303,7 +303,7 @@ SELECT
 	Cast('2012-12-12 12:12:12' as timestamp with time zone),
 	Cast('2012-12-12 12:12:12' as date),
 	Cast('2012-12-12 12:12:12' as time),
-	Cast('2012-12-12 12:12:12' as time with time zone),
+	Cast('12:12:12' as time with time zone),
 	Cast('1 3:05:20' as interval),
 
 	'1',

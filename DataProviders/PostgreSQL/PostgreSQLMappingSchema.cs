@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider
 //			AddScalarType(typeof(NpgsqlCircle));
 			AddScalarType(typeof(NpgsqlDate));
 //			AddScalarType(typeof(NpgsqlInet));
-//			AddScalarType(typeof(NpgsqlInterval));
+			AddScalarType(typeof(NpgsqlInterval));
 //			AddScalarType(typeof(NpgsqlLSeg));
 //			AddScalarType(typeof(NpgsqlMacAddress));
 //			AddScalarType(typeof(NpgsqlPath));
@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 //			AddScalarType(typeof(NpgsqlTime));
 //			AddScalarType(typeof(NpgsqlTimeStamp));
 //			AddScalarType(typeof(NpgsqlTimeStampTZ));
-//			AddScalarType(typeof(NpgsqlTimeTZ));
+			AddScalarType(typeof(NpgsqlTimeTZ));
 //			AddScalarType(typeof(NpgsqlTimeZone));
 		}
 	}

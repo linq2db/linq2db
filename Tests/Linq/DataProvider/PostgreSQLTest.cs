@@ -445,11 +445,16 @@ namespace Tests.DataProvider
 			}
 		}
 
-		T TestType<T>(DataConnection conn, string fieldName, 
+		T TestType<T>(DataConnection conn, string fieldName,
 			DataType dataType = DataType.Undefined,
-			bool skipNull = false,
+			bool skipNull          = false,
+			bool skipDefinedNull   = false,
+			bool skipDefaultNull   = false,
 			bool skipUndefinedNull = false,
-			bool skipParam = false)
+			bool skipNotNull       = false,
+			bool skipDefined       = false,
+			bool skipDefault       = false,
+			bool skipUndefined     = false)
 		{
 			string sql;
 			T      value;
@@ -458,69 +463,81 @@ namespace Tests.DataProvider
 			var type = typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) ?
 				typeof(T).GetGenericArguments()[0] : typeof(T);
 
+			// Get NULL value.
+			//
+			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, (object)type.Name, dataType);
+			sql   = string.Format("SELECT {0} FROM AllTypes WHERE ID = 1",  fieldName);
+			value = conn.Execute<T>(sql);
+			Assert.That(value, Is.Null);
+
 			if (!skipNull)
 			{
-				// Get NULL value.
-				//
-				Debug.WriteLine("{0} -> NULL", (object)type.Name);
-				sql   = string.Format("SELECT {0} FROM AllTypes WHERE ID = 1",  fieldName);
-				value = conn.Execute<T>(sql);
-				Assert.That(value, Is.Null);
+				sql = string.Format("SELECT ID FROM AllTypes WHERE :p IS NULL AND {0} IS NULL OR :p IS NOT NULL AND {0} = :p", fieldName);
 
-				if (!skipParam)
+				if (!skipDefinedNull)
 				{
-					sql = string.Format("SELECT ID FROM AllTypes WHERE :p IS NULL AND {0} IS NULL OR :p IS NOT NULL AND {0} = :p", fieldName);
-
 					// Get NULL ID with dataType.
 					//
-					Debug.WriteLine("{0} -> NULL ID with dataType", (object)type.Name);
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID with dataType", fieldName, (object)type.Name, dataType);
 					id = conn.Execute<int?>(sql, new DataParameter("p", value, dataType));
 					Assert.That(id, Is.EqualTo(1));
+				}
 
+				if (!skipDefaultNull)
+				{
 					// Get NULL ID with default dataType.
 					//
-					Debug.WriteLine("{0} -> NULL ID with default dataType", (object)type.Name);
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID with default dataType", fieldName, (object)type.Name, dataType);
 					id = conn.Execute<int?>(sql, new { p = value });
 					Assert.That(id, Is.EqualTo(1));
+				}
 
-					if (!skipUndefinedNull)
-					{
-						// Get NULL ID without dataType.
-						//
-						Debug.WriteLine("{0} -> NULL ID without dataType", (object)type.Name);
-						id = conn.Execute<int?>(sql, new DataParameter("p", value));
-						Assert.That(id, Is.EqualTo(1));
-					}
+				if (!skipUndefinedNull)
+				{
+					// Get NULL ID without dataType.
+					//
+					Debug.WriteLine("{0} {1}:{2} -> NULL ID without dataType", fieldName, (object)type.Name, dataType);
+					id = conn.Execute<int?>(sql, new DataParameter("p", value));
+					Assert.That(id, Is.EqualTo(1));
 				}
 			}
 
 			// Get value.
 			//
-			Debug.WriteLine("{0} -> value", (object)type.Name);
+			Debug.WriteLine("{0} {1}:{2} -> value", fieldName, (object)type.Name, dataType);
 			sql   = string.Format("SELECT {0} FROM AllTypes WHERE ID = 2",  fieldName);
 			value = conn.Execute<T>(sql);
 
-			if (!skipParam)
+			sql = string.Format("SELECT ID FROM AllTypes WHERE {0} = :p", fieldName);
+
+			if (!skipNotNull)
 			{
-				sql = string.Format("SELECT ID FROM AllTypes WHERE {0} = :p", fieldName);
+				if (!skipDefined)
+				{
+					// Get value ID with dataType.
+					//
+					Debug.WriteLine("{0} {1}:{2} -> value ID with dataType", fieldName, (object)type.Name, dataType);
+					id = conn.Execute<int?>(sql, new DataParameter("p", value, dataType));
+					Assert.That(id, Is.EqualTo(2));
+				}
 
-				// Get value ID with dataType.
-				//
-				Debug.WriteLine("{0} -> value ID with dataType", (object)type.Name);
-				id = conn.Execute<int?>(sql, new DataParameter("p", value, dataType));
-				Assert.That(id, Is.EqualTo(2));
+				if (!skipDefault)
+				{
+					// Get value ID with default dataType.
+					//
+					Debug.WriteLine("{0} {1}:{2} -> value ID with default dataType", fieldName, (object)type.Name, dataType);
+					id = conn.Execute<int?>(sql, new { p = value });
+					Assert.That(id, Is.EqualTo(2));
+				}
 
-				// Get value ID with default dataType.
-				//
-				Debug.WriteLine("{0} -> value ID with default dataType", (object)type.Name);
-				id = conn.Execute<int?>(sql, new { p = value });
-				Assert.That(id, Is.EqualTo(2));
-
-				// Get value ID without dataType.
-				//
-				Debug.WriteLine("{0} -> value ID without dataType", (object)type.Name);
-				id = conn.Execute<int?>(sql, new DataParameter("p", value));
-				Assert.That(id, Is.EqualTo(2));
+				if (!skipUndefined)
+				{
+					// Get value ID without dataType.
+					//
+					Debug.WriteLine("{0} {1}:{2} -> value ID without dataType", fieldName, (object)type.Name, dataType);
+					id = conn.Execute<int?>(sql, new DataParameter("p", value));
+					Assert.That(id, Is.EqualTo(2));
+				}
 			}
 
 			return value;
@@ -544,59 +561,36 @@ namespace Tests.DataProvider
 //	timestampDataType,
 //	timestampTZDataType,
 //	dateDataType,
+//				Assert.That(TestType<NpgsqlDate?> (conn, "dateDataType"),   Is.EqualTo(new NpgsqlDate(2012, 12, 12)));
 //	timeDataType,
 //	timeTZDataType,
-//	intervalDataType,
-//
-//	charDataType,
-//	varcharDataType,
-//	textDataType,
-//
-//	binaryDataType,
-//
-//	uniqueidentifierDataType,
-//	bitDataType,
-//	booleanDataType,
-//	colorDataType,
-//
-				Assert.That(TestType<NpgsqlPoint?>(conn, "pointDataType", skipUndefinedNull : true), Is.EqualTo(new NpgsqlPoint(1, 2)));
+				Assert.That(TestType<NpgsqlTimeTZ?>  (conn, "timeTZDataType"),                                          Is.EqualTo(new NpgsqlTimeTZ(12, 12, 12)));
+				Assert.That(TestType<NpgsqlInterval?>(conn, "intervalDataType"),                                        Is.EqualTo(new NpgsqlInterval(1, 3, 5, 20)));
 
-				Assert.That(TestType<string> (conn, "xmlDataType", DataType.Xml, skipParam : true),
+				Assert.That(TestType<char?>          (conn, "charDataType",    DataType.Char),                          Is.EqualTo('1'));
+				Assert.That(TestType<string>         (conn, "charDataType",    DataType.Char),                          Is.EqualTo("1"));
+				Assert.That(TestType<string>         (conn, "charDataType",    DataType.NChar),                         Is.EqualTo("1"));
+				Assert.That(TestType<string>         (conn, "varcharDataType", DataType.VarChar),                       Is.EqualTo("234"));
+				Assert.That(TestType<string>         (conn, "varcharDataType", DataType.NVarChar),                      Is.EqualTo("234"));
+				Assert.That(TestType<string>         (conn, "textDataType",    DataType.Text),                          Is.EqualTo("567"));
+
+				Assert.That(TestType<byte[]>         (conn, "binaryDataType",  DataType.Binary),                        Is.EqualTo(new byte[] { 42 }));
+				Assert.That(TestType<byte[]>         (conn, "binaryDataType",  DataType.VarBinary),                     Is.EqualTo(new byte[] { 42 }));
+				Assert.That(TestType<Binary>         (conn, "binaryDataType",  DataType.VarBinary).ToArray(),           Is.EqualTo(new byte[] { 42 }));
+
+				Assert.That(TestType<Guid?>          (conn, "uuidDataType",    DataType.Guid),                          Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+				Assert.That(TestType<BitString?>     (conn, "bitDataType"),                                             Is.EqualTo(new BitString(new[] { true, false, true })));
+				Assert.That(TestType<bool?>          (conn, "booleanDataType", DataType.Boolean),                       Is.EqualTo(true));
+				Assert.That(TestType<string>         (conn, "colorDataType",   skipDefaultNull:true, skipDefault:true), Is.EqualTo("Green"));
+
+				Assert.That(TestType<NpgsqlPoint?>   (conn, "pointDataType",   skipNull:true, skipNotNull:true), Is.EqualTo(new NpgsqlPoint(1, 2)));
+
+				Assert.That(TestType<string>         (conn, "xmlDataType",     DataType.Xml, skipNull:true, skipNotNull:true),
 					Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));
-
-//				Assert.That(TestType<BitString?> (conn, "bitDataType"),  Is.EqualTo(new BitString(new[] { true, false, true })));
-				Assert.That(TestType<NpgsqlDate?>(conn, "dateDataType"), Is.EqualTo(new NpgsqlDate(2012, 12, 12)));
-
-//				Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").      Value, Is.EqualTo(true));
-//				Assert.That(conn.Execute<SqlByte>   ("SELECT Cast(1        as tinyint)").  Value, Is.EqualTo((byte)1));
-//				Assert.That(conn.Execute<SqlDecimal>("SELECT Cast(1        as decimal)").  Value, Is.EqualTo(1));
-//				Assert.That(conn.Execute<SqlDouble> ("SELECT Cast(1        as float)").    Value, Is.EqualTo(1.0));
-//				Assert.That(conn.Execute<SqlInt16>  ("SELECT Cast(1        as smallint)"). Value, Is.EqualTo((short)1));
-//				Assert.That(conn.Execute<SqlInt32>  ("SELECT Cast(1        as int)").      Value, Is.EqualTo((int)1));
-//				Assert.That(conn.Execute<SqlInt64>  ("SELECT Cast(1        as bigint)").   Value, Is.EqualTo(1L));
-//				Assert.That(conn.Execute<SqlMoney>  ("SELECT Cast(1        as money)").    Value, Is.EqualTo(1m));
-//				Assert.That(conn.Execute<SqlSingle> ("SELECT Cast(1        as real)").     Value, Is.EqualTo((float)1));
-//				Assert.That(conn.Execute<SqlString> ("SELECT Cast('12345'  as char(6))").  Value, Is.EqualTo("12345"));
-//				Assert.That(conn.Execute<SqlXml>    ("SELECT Cast('<xml/>' as xml)").      Value, Is.EqualTo("<xml />"));
-//
-//				Assert.That(
-//					conn.Execute<SqlDateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").Value,
-//					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-//
-//				Assert.That(
-//					conn.Execute<SqlGuid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)").Value,
-//					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-//
-//				Assert.That(conn.Execute<SqlBinary> ("SELECT @p", new DataParameter("p", new SqlBinary(arr))).                    Value, Is.EqualTo(arr));
-//				Assert.That(conn.Execute<SqlBinary> ("SELECT @p", new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
-//
-//				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true)).                  Value, Is.EqualTo(true));
-//				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
-//
-//				var conv = conn.MappingSchema.GetConverter<string,SqlXml>();
-//
-//				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
-//				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
+				Assert.That(TestType<XDocument>      (conn, "xmlDataType",     DataType.Xml, skipNull:true, skipNotNull:true).ToString(),
+					Is.EqualTo(XDocument.Parse("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>").ToString()));
+				Assert.That(TestType<XmlDocument>    (conn, "xmlDataType",     DataType.Xml, skipNull:true, skipNotNull:true).InnerXml,
+					Is.EqualTo(ConvertTo<XmlDocument>.From("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>").InnerXml));
 			}
 		}
 
