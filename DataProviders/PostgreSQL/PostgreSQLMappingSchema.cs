@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 	{
 		public PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
+			SetConvertExpression<NpgsqlTimeStampTZ,DateTimeOffset>(
+				d => new DateTimeOffset(d.Year, d.Month, d.Day, d.Hours, d.Minutes, d.Seconds, d.Milliseconds,
+					new TimeSpan(d.TimeZone.Hours, d.TimeZone.Minutes, d.TimeZone.Seconds)));
+
 //			AddScalarType(typeof(Fastpath));
 //			AddScalarType(typeof(LargeObject));
 
@@ -24,11 +28,10 @@ namespace LinqToDB.DataProvider
 //			AddScalarType(typeof(NpgsqlPath));
 			AddScalarType(typeof(NpgsqlPoint));
 //			AddScalarType(typeof(NpgsqlPolygon));
-//			AddScalarType(typeof(NpgsqlTime));
-//			AddScalarType(typeof(NpgsqlTimeStamp));
-//			AddScalarType(typeof(NpgsqlTimeStampTZ));
+			AddScalarType(typeof(NpgsqlTime));
+			AddScalarType(typeof(NpgsqlTimeStamp));
+			AddScalarType(typeof(NpgsqlTimeStampTZ));
 			AddScalarType(typeof(NpgsqlTimeTZ));
-//			AddScalarType(typeof(NpgsqlTimeZone));
 		}
 	}
 }

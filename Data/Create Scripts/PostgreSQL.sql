@@ -300,7 +300,7 @@ SELECT
 	16.2,
 
 	Cast('2012-12-12 12:12:12' as timestamp),
-	Cast('2012-12-12 12:12:12' as timestamp with time zone),
+	Cast('2012-12-12 12:12:12-04' as timestamp with time zone),
 	Cast('2012-12-12 12:12:12' as date),
 	Cast('2012-12-12 12:12:12' as time),
 	Cast('12:12:12' as time with time zone),

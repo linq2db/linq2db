@@ -14,7 +14,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class AccessTest : TestBase
+	public class AccessTest : DataProviderTestBase
 	{
 		[Test]
 		public void TestParameters([IncludeDataContexts(ProviderName.Access)] string context)
@@ -30,52 +30,35 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
-		{
-			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
-				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
-
-			object actualValue   = connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 2", dataTypeName, tableName));
-			object expectedValue = value;
-
-			if (convertToString)
-			{
-				actualValue   = actualValue.  ToString();
-				expectedValue = expectedValue.ToString();
-			}
-
-			Assert.That(actualValue, Is.EqualTo(expectedValue));
-		}
-
 		[Test]
 		public void TestDataTypes([IncludeDataContexts(ProviderName.Access)] string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestType(conn, "bitDataType",              true);
-				TestType(conn, "smallintDataType",         (short)25555);
-				TestType(conn, "decimalDataType",          2222222m);
-				TestType(conn, "intDataType",              7777777);
-				TestType(conn, "tinyintDataType",          (sbyte)100);
-				TestType(conn, "moneyDataType",            100000m);
-				TestType(conn, "floatDataType",            20.31d);
-				TestType(conn, "realDataType",             16.2f);
+				Assert.That(TestType<bool>     (conn, "bitDataType",              DataType.Boolean),   Is.EqualTo(true));
+				Assert.That(TestType<short?>   (conn, "smallintDataType",         DataType.Int16),     Is.EqualTo(25555));
+				Assert.That(TestType<decimal?> (conn, "decimalDataType",          DataType.Decimal),   Is.EqualTo(2222222m));
+				Assert.That(TestType<int?>     (conn, "intDataType",              DataType.Int32),     Is.EqualTo(7777777));
+				Assert.That(TestType<sbyte?>   (conn, "tinyintDataType",          DataType.SByte),     Is.EqualTo(100));
+				Assert.That(TestType<decimal?> (conn, "moneyDataType",            DataType.Money),     Is.EqualTo(100000m));
+				Assert.That(TestType<double?>  (conn, "floatDataType",            DataType.Double),    Is.EqualTo(20.31d));
+				Assert.That(TestType<float?>   (conn, "realDataType",             DataType.Single),    Is.EqualTo(16.2f));
 
-				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
+				Assert.That(TestType<DateTime?>(conn, "datetimeDataType",         DataType.DateTime),  Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 
-				TestType(conn, "charDataType",             '1');
-				TestType(conn, "varcharDataType",          "234");
-				TestType(conn, "textDataType",             "567");
-				TestType(conn, "ncharDataType",            "23233");
-				TestType(conn, "nvarcharDataType",         "3323");
-				TestType(conn, "ntextDataType",            "111");
+				Assert.That(TestType<char?>    (conn, "charDataType",             DataType.Char),      Is.EqualTo('1'));
+				Assert.That(TestType<string>   (conn, "varcharDataType",          DataType.VarChar),   Is.EqualTo("234"));
+				Assert.That(TestType<string>   (conn, "textDataType",             DataType.Text),      Is.EqualTo("567"));
+				Assert.That(TestType<string>   (conn, "ncharDataType",            DataType.NChar),     Is.EqualTo("23233"));
+				Assert.That(TestType<string>   (conn, "nvarcharDataType",         DataType.NVarChar),  Is.EqualTo("3323"));
+				Assert.That(TestType<string>   (conn, "ntextDataType",            DataType.NText),     Is.EqualTo("111"));
 
-				TestType(conn, "binaryDataType",           new byte[] { 1, 2, 3, 4, 0, 0, 0, 0, 0, 0 });
-				TestType(conn, "varbinaryDataType",        new byte[] { 1, 2, 3, 5 });
-				TestType(conn, "imageDataType",            new byte[] { 3, 4, 5, 6 });
-				TestType(conn, "oleobjectDataType",        new byte[] { 5, 6, 7, 8 });
+				Assert.That(TestType<byte[]>   (conn, "binaryDataType",           DataType.Binary),    Is.EqualTo(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0, 0, 0 }));
+				Assert.That(TestType<byte[]>   (conn, "varbinaryDataType",        DataType.VarBinary), Is.EqualTo(new byte[] { 1, 2, 3, 5 }));
+				Assert.That(TestType<byte[]>   (conn, "imageDataType",            DataType.Image),     Is.EqualTo(new byte[] { 3, 4, 5, 6 }));
+				Assert.That(TestType<byte[]>   (conn, "oleobjectDataType",        DataType.Variant, skipDefined:true), Is.EqualTo(new byte[] { 5, 6, 7, 8 }));
 
-				TestType(conn, "uniqueidentifierDataType", new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"));
+				Assert.That(TestType<Guid?>    (conn, "uniqueidentifierDataType", DataType.Guid),      Is.EqualTo(new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}")));
 			}
 		}
 
@@ -87,7 +70,6 @@ namespace Tests.DataProvider
 				foreach (var sqlType in new[]
 					{
 						"cbool",
-						//"cdec",
 						"cbyte",
 						"clng",
 						"cint",
