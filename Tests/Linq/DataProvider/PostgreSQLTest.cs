@@ -81,6 +81,10 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>            (conn, "colorDataType", skipDefaultNull:true, skipDefault:true),    Is.EqualTo("Green"));
 
 				Assert.That(TestType<NpgsqlPoint?>      (conn, "pointDataType", skipNull:true, skipNotNull:true),           Is.EqualTo(new NpgsqlPoint(1, 2)));
+				Assert.That(TestType<NpgsqlLSeg?>       (conn, "lsegDataType"),                                             Is.EqualTo(new NpgsqlLSeg(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))));
+				Assert.That(TestType<NpgsqlBox?>        (conn, "boxDataType").ToString(),                                   Is.EqualTo(new NpgsqlBox(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4)).ToString()));
+				Assert.That(TestType<NpgsqlPath?>       (conn, "pathDataType"),                                             Is.EqualTo(new NpgsqlPath(new[] { new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4) })));
+				Assert.That(TestType<NpgsqlPolygon?>    (conn, "polygonDataType", skipNull:true, skipNotNull:true),         Is.EqualTo(new NpgsqlPolygon(new[] { new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4) })));
 
 				Assert.That(TestType<string>            (conn, "xmlDataType",         DataType.Xml, skipNull:true, skipNotNull:true),
 					Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>"));

@@ -222,6 +222,10 @@ CREATE TABLE AllTypes
 	colorDataType       color                    NULL,
 
 	pointDataType       point                    NULL,
+	lsegDataType        lseg                     NULL,
+	boxDataType         box                      NULL,
+	pathDataType        path                     NULL,
+	polygonDataType     polygon                  NULL,
 
 	xmlDataType         xml                      NULL
 )
@@ -256,6 +260,10 @@ INSERT INTO AllTypes
 	colorDataType,
 
 	pointDataType,
+	lsegDataType,
+	boxDataType,
+	pathDataType,
+	polygonDataType,
 
 	xmlDataType
 )
@@ -286,6 +294,10 @@ SELECT
 	NULL,
 	NULL,
 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 	NULL,
 
 	NULL
@@ -318,6 +330,10 @@ SELECT
 	'Green'::color,
 
 	'(1,2)'::point,
+	'((1,2),(3,4))'::lseg,
+	'((1,2),(3,4))'::box,
+	'((1,2),(3,4))'::path,
+	'((1,2),(3,4))'::polygon,
 
 	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>')
 

@@ -18,16 +18,16 @@ namespace LinqToDB.DataProvider
 //			AddScalarType(typeof(LargeObject));
 
 			AddScalarType(typeof(BitString));
-//			AddScalarType(typeof(NpgsqlBox));
+			AddScalarType(typeof(NpgsqlBox));
 //			AddScalarType(typeof(NpgsqlCircle));
 			AddScalarType(typeof(NpgsqlDate));
 //			AddScalarType(typeof(NpgsqlInet));
 			AddScalarType(typeof(NpgsqlInterval));
-//			AddScalarType(typeof(NpgsqlLSeg));
+			AddScalarType(typeof(NpgsqlLSeg));
 //			AddScalarType(typeof(NpgsqlMacAddress));
-//			AddScalarType(typeof(NpgsqlPath));
+			AddScalarType(typeof(NpgsqlPath));
 			AddScalarType(typeof(NpgsqlPoint));
-//			AddScalarType(typeof(NpgsqlPolygon));
+			AddScalarType(typeof(NpgsqlPolygon));
 			AddScalarType(typeof(NpgsqlTime));
 			AddScalarType(typeof(NpgsqlTimeStamp));
 			AddScalarType(typeof(NpgsqlTimeStampTZ));

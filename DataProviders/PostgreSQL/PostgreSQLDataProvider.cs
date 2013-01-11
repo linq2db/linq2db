@@ -109,9 +109,9 @@ namespace LinqToDB.DataProvider
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 				case DataType.Undefined  :
-					     if (value is Binary)       value = ((Binary)value).ToArray();
-					else if (value is XDocument)    value = value.ToString();
-					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
+					     if (value is Binary)      value = ((Binary)value).ToArray();
+					else if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 			}
 
