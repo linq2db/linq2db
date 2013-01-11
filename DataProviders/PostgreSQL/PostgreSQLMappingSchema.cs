@@ -14,17 +14,14 @@ namespace LinqToDB.DataProvider
 				d => new DateTimeOffset(d.Year, d.Month, d.Day, d.Hours, d.Minutes, d.Seconds, d.Milliseconds,
 					new TimeSpan(d.TimeZone.Hours, d.TimeZone.Minutes, d.TimeZone.Seconds)));
 
-//			AddScalarType(typeof(Fastpath));
-//			AddScalarType(typeof(LargeObject));
-
 			AddScalarType(typeof(BitString));
 			AddScalarType(typeof(NpgsqlBox));
-//			AddScalarType(typeof(NpgsqlCircle));
+			AddScalarType(typeof(NpgsqlCircle));
 			AddScalarType(typeof(NpgsqlDate));
-//			AddScalarType(typeof(NpgsqlInet));
+			AddScalarType(typeof(NpgsqlInet));
 			AddScalarType(typeof(NpgsqlInterval));
 			AddScalarType(typeof(NpgsqlLSeg));
-//			AddScalarType(typeof(NpgsqlMacAddress));
+			AddScalarType(typeof(NpgsqlMacAddress));
 			AddScalarType(typeof(NpgsqlPath));
 			AddScalarType(typeof(NpgsqlPoint));
 			AddScalarType(typeof(NpgsqlPolygon));

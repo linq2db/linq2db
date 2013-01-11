@@ -226,6 +226,10 @@ CREATE TABLE AllTypes
 	boxDataType         box                      NULL,
 	pathDataType        path                     NULL,
 	polygonDataType     polygon                  NULL,
+	circleDataType      circle                   NULL,
+
+	inetDataType        inet                     NULL,
+	macaddrDataType     macaddr                  NULL,
 
 	xmlDataType         xml                      NULL
 )
@@ -264,6 +268,10 @@ INSERT INTO AllTypes
 	boxDataType,
 	pathDataType,
 	polygonDataType,
+	circleDataType,
+
+	inetDataType,
+	macaddrDataType,
 
 	xmlDataType
 )
@@ -297,6 +305,10 @@ SELECT
 	NULL,
 	NULL,
 	NULL,
+	NULL,
+	NULL,
+	NULL,
+
 	NULL,
 	NULL,
 
@@ -334,6 +346,10 @@ SELECT
 	'((1,2),(3,4))'::box,
 	'((1,2),(3,4))'::path,
 	'((1,2),(3,4))'::polygon,
+	'((1,2),3)'::circle,
+
+	'192.168.1.1'::inet,
+	'01:02:03:04:05:06'::macaddr,
 
 	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>')
 

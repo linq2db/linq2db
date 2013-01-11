@@ -72,6 +72,9 @@ namespace LinqToDB.DataProvider
 				if (type == typeof(NpgsqlTimeTZ))      return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeTZ     (0));
 				if (type == typeof(NpgsqlTimeStamp))   return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStamp  (0));
 				if (type == typeof(NpgsqlDate))        return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetDate       (0));
+
+				if (type == typeof(NpgsqlInet) ||
+				    type == typeof(NpgsqlMacAddress)) return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetProviderSpecificValue(0));
 			}
 
 			return base.GetReaderMethodInfo(reader, idx, toType);
