@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -13,17 +15,67 @@ namespace LinqToDB.DataProvider
 		protected DataProviderBase(MappingSchema mappingSchema)
 		{
 			MappingSchema = mappingSchema;
+
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(bool)     }] = (Expression<Func<IDataReader,int,bool>>)    ((r,i) => r.GetBoolean (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(byte)     }] = (Expression<Func<IDataReader,int,byte>>)    ((r,i) => r.GetByte    (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(char)     }] = (Expression<Func<IDataReader,int,char>>)    ((r,i) => r.GetChar    (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(short)    }] = (Expression<Func<IDataReader,int,short>>)   ((r,i) => r.GetInt16   (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(int)      }] = (Expression<Func<IDataReader,int,int>>)     ((r,i) => r.GetInt32   (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(long)     }] = (Expression<Func<IDataReader,int,long>>)    ((r,i) => r.GetInt64   (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(float)    }] = (Expression<Func<IDataReader,int,float>>)   ((r,i) => r.GetFloat   (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(double)   }] = (Expression<Func<IDataReader,int,double>>)  ((r,i) => r.GetDouble  (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(string)   }] = (Expression<Func<IDataReader,int,string>>)  ((r,i) => r.GetString  (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal)  }] = (Expression<Func<IDataReader,int,decimal>>) ((r,i) => r.GetDecimal (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(DateTime) }] = (Expression<Func<IDataReader,int,DateTime>>)((r,i) => r.GetDateTime(i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(Guid)     }] = (Expression<Func<IDataReader,int,Guid>>)    ((r,i) => r.GetGuid    (i));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(byte[])   }] = (Expression<Func<IDataReader,int,byte[]>>)  ((r,i) => (byte[])r.GetValue(i));
 		}
 
-		public abstract string        Name          { get; }
-		public abstract Type         ConnectionType { get; }
-		public virtual  MappingSchema MappingSchema { get; private set; }
+		public abstract string        Name           { get; }
+		public abstract Type          ConnectionType { get; }
+		public virtual  MappingSchema MappingSchema  { get; private set; }
 
 		public abstract IDbConnection CreateConnection (string connectionString);
 		public abstract Expression    ConvertDataReader(Expression reader);
 
+		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
+
+		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
+		}
+
+		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(T) }] = expr;
+		}
+
+		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
+		}
+
+		protected void SetProviderField2<TP,T,TS>(Expression<Func<TP,int,TS>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
+		}
+
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
+			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
+			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
+
+			Expression expr;
+
+			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { FieldType = fieldType, DataTypeName = typeName    }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { FieldType = fieldType                             }, out expr))
+				return expr;
+
+			return (Expression<Func<IDataReader,int,object>>)((r,i) => r.GetValue(i));
+
+/*
 			var mi = GetReaderMethodInfo(reader, idx, toType);
 
 			if (mi == null)
@@ -40,6 +92,7 @@ namespace LinqToDB.DataProvider
 			}
 
 			return expr;
+*/
 		}
 
 		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
@@ -69,7 +122,8 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-			return null;
+			var st = ((DbDataReader)reader).GetSchemaTable();
+			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
 		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

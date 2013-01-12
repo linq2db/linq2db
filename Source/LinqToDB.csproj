@@ -69,6 +69,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DataProvider\DataProviderBase.cs" />
+    <Compile Include="DataProvider\ReaderInfo.cs" />
     <Compile Include="DataProvider\FirebirdMappingSchema.cs" />
     <Compile Include="DataProvider\IDataProvider.cs" />
     <Compile Include="DataProvider\IDataProviderFactory.cs" />

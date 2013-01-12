@@ -8,13 +8,12 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	public class SQLiteDataProvider : DataProviderBase
 	{
 		public SQLiteDataProvider() : base(new SQLiteMappingSchema())
 		{
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
 		public override string Name           { get { return ProviderName.SQLite;     } }
@@ -31,25 +30,6 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region Overrides
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var name = ((SQLiteDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) &&
-				(string.Compare(name, "char",  StringComparison.OrdinalIgnoreCase) == 0 ||
-				 string.Compare(name, "nchar", StringComparison.OrdinalIgnoreCase) == 0))
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-
-			return expr;
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((SQLiteDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
-		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{

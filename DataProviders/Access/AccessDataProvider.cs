@@ -8,13 +8,12 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	public class AccessDataProvider : DataProviderBase
 	{
 		public AccessDataProvider() : base(new AccessMappingSchema())
 		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = "DBTYPE_WCHAR" }] =
+				(Expression<Func<IDataReader,int,string>>)((r,i) => r.GetString(i).TrimEnd());
 		}
 
 		public override string Name           { get { return ProviderName.Access;     } }
@@ -31,23 +30,6 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region Overrides
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var name = ((OleDbDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) && (name == "DBTYPE_WCHAR"))
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-
-			return expr;
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((OleDbDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
-		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{

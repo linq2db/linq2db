@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
 using System.Data.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -12,29 +10,31 @@ using Oracle.DataAccess.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	public class OracleDataProvider : DataProviderBase
 	{
 		public OracleDataProvider() : base(new OracleMappingSchema())
 		{
-		}
+			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 
-		public override string Name           { get { return ProviderName.Oracle;     } }
-		public override Type   ConnectionType { get { return typeof(OracleConnection); } }
-		
-		public override IDbConnection CreateConnection(string connectionString )
-		{
-			return new OracleConnection(connectionString);
-		}
+			SetProviderField<OracleDataReader,OracleBFile       >((r,i) => r.GetOracleBFile       (i));
+			SetProviderField<OracleDataReader,OracleBinary      >((r,i) => r.GetOracleBinary      (i));
+			SetProviderField<OracleDataReader,OracleBlob        >((r,i) => r.GetOracleBlob        (i));
+			SetProviderField<OracleDataReader,OracleClob        >((r,i) => r.GetOracleClob        (i));
+			SetProviderField<OracleDataReader,OracleDate        >((r,i) => r.GetOracleDate        (i));
+			SetProviderField<OracleDataReader,OracleDecimal     >((r,i) => r.GetOracleDecimal     (i));
+			SetProviderField<OracleDataReader,OracleIntervalDS  >((r,i) => r.GetOracleIntervalDS  (i));
+			SetProviderField<OracleDataReader,OracleIntervalYM  >((r,i) => r.GetOracleIntervalYM  (i));
+			SetProviderField<OracleDataReader,OracleRef         >((r,i) => r.GetOracleRef         (i));
+			SetProviderField<OracleDataReader,OracleString      >((r,i) => r.GetOracleString      (i));
+			SetProviderField<OracleDataReader,OracleTimeStamp   >((r,i) => r.GetOracleTimeStamp   (i));
+			SetProviderField<OracleDataReader,OracleTimeStampLTZ>((r,i) => r.GetOracleTimeStampLTZ(i));
+			SetProviderField<OracleDataReader,OracleTimeStampTZ >((r,i) => r.GetOracleTimeStampTZ (i));
+			SetProviderField<OracleDataReader,OracleXmlType     >((r,i) => r.GetOracleXmlType     (i));
 
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(OracleDataReader));
+			SetProviderField<OracleDataReader,DateTimeOffset,OracleTimeStampTZ> ((r,i) => GetOracleTimeStampTZ (r, i));
+			SetProviderField<OracleDataReader,DateTimeOffset,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
 		}
-
-		#region Overrides
 
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
 		{
@@ -54,64 +54,20 @@ namespace LinqToDB.DataProvider
 				TimeSpan.Parse(tstz.TimeZone.TrimStart('+')));
 		}
 
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public override string Name           { get { return ProviderName.Oracle;     } }
+		public override Type   ConnectionType { get { return typeof(OracleConnection); } }
+		
+		public override IDbConnection CreateConnection(string connectionString )
 		{
-#if DEBUG
-			var specificFieldType = ((OracleDataReader)reader).GetProviderSpecificFieldType(idx);
-			var fieldType         = ((OracleDataReader)reader).GetFieldType(idx);
-			var typeName          = ((OracleDataReader)reader).GetDataTypeName(idx);
-			var oracleDbType      = (OracleDbType)((OracleDataReader)reader).GetSchemaTable().Rows[idx]["ProviderType"];
-#endif
-
-			if (toType == typeof(DateTimeOffset))
-			{
-				var providerFieldType = ((OracleDataReader)reader).GetProviderSpecificFieldType(idx);
-
-				if (providerFieldType == typeof(OracleTimeStampTZ))
-					return (Expression<Func<OracleDataReader, int, DateTimeOffset>>)((rd, i) => GetOracleTimeStampTZ(rd, i));
-				if (providerFieldType == typeof(OracleTimeStampLTZ))
-					return (Expression<Func<OracleDataReader, int, DateTimeOffset>>)((rd, i) => GetOracleTimeStampLTZ(rd, i));
-			}
-
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var name = ((OracleDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) && (name == "Char" || name == "NChar"))
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-
-			return expr;
+			return new OracleConnection(connectionString);
 		}
 
-		protected override MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
+		public override Expression ConvertDataReader(Expression reader)
 		{
-			var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-
-			if (toType == type)
-			{
-				if (type == typeof(OracleBFile))        return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleBFile       (0));
-				if (type == typeof(OracleBinary))       return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleBinary      (0));
-				if (type == typeof(OracleBlob))         return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleBlob        (0));
-				if (type == typeof(OracleClob))         return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleClob        (0));
-				if (type == typeof(OracleDate))         return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleDate        (0));
-				if (type == typeof(OracleDecimal))      return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleDecimal     (0));
-				if (type == typeof(OracleIntervalDS))   return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleIntervalDS  (0));
-				if (type == typeof(OracleIntervalYM))   return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleIntervalYM  (0));
-				if (type == typeof(OracleRef))          return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleRef         (0));
-				if (type == typeof(OracleString))       return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleString      (0));
-				if (type == typeof(OracleTimeStamp))    return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleTimeStamp   (0));
-				if (type == typeof(OracleTimeStampLTZ)) return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleTimeStampLTZ(0));
-				if (type == typeof(OracleTimeStampTZ))  return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleTimeStampTZ (0));
-				if (type == typeof(OracleXmlType))      return MemberHelper.MethodOf<OracleDataReader>(r => r.GetOracleXmlType     (0));
-			}
-
-			return base.GetReaderMethodInfo(reader, idx, toType);
+			return Expression.Convert(reader, typeof(OracleDataReader));
 		}
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((OracleDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
-		}
+		#region Overrides
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{

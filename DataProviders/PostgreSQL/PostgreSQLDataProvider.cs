@@ -12,13 +12,23 @@ using NpgsqlTypes;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	public class PostgreSQLDataProvider : DataProviderBase
 	{
 		public PostgreSQLDataProvider() : base(new PostgreSQLMappingSchema())
 		{
+			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
+
+			SetProviderField<NpgsqlDataReader,BitString>        ((r,i) => r.GetBitString  (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlInterval>   ((r,i) => r.GetInterval   (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTime>       ((r,i) => r.GetTime       (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeTZ>     ((r,i) => r.GetTimeTZ     (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeStamp>  ((r,i) => r.GetTimeStamp  (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeStampTZ>((r,i) => r.GetTimeStampTZ(i));
+			SetProviderField<NpgsqlDataReader,NpgsqlDate>       ((r,i) => r.GetDate       (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlInet>       ((r,i) => (NpgsqlInet)      r.GetProviderSpecificValue(i));
+			SetProviderField<NpgsqlDataReader,NpgsqlMacAddress> ((r,i) => (NpgsqlMacAddress)r.GetProviderSpecificValue(i));
+
+			SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 		}
 
 		public override string Name           { get { return ProviderName.PostgreSQL; } }
@@ -35,57 +45,6 @@ namespace LinqToDB.DataProvider
 		}
 
 		#region Overrides
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-#if DEBUG
-			var specificFieldType = ((NpgsqlDataReader)reader).GetProviderSpecificFieldType(idx);
-			var fieldType         = ((NpgsqlDataReader)reader).GetFieldType(idx);
-			var typeName          = ((NpgsqlDataReader)reader).GetDataTypeName(idx);
-			var npgsqlDbType      = ((NpgsqlDataReader)reader).GetFieldNpgsqlDbType(idx);
-#endif
-
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var name = ((NpgsqlDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) && name == "bpchar")
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-
-			return expr;
-		}
-
-		protected override MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
-		{
-			var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-
-			if (type == typeof(NpgsqlTimeStampTZ))
-			{
-				if (toType == typeof(NpgsqlTimeStampTZ)) return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStampTZ(0));
-				if (toType == typeof(DateTimeOffset))    return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStampTZ(0));
-			}
-
-			if (toType == type)
-			{
-				if (type == typeof(BitString))         return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetBitString  (0));
-				if (type == typeof(NpgsqlInterval))    return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetInterval   (0));
-				if (type == typeof(NpgsqlTime))        return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTime       (0));
-				if (type == typeof(NpgsqlTimeTZ))      return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeTZ     (0));
-				if (type == typeof(NpgsqlTimeStamp))   return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetTimeStamp  (0));
-				if (type == typeof(NpgsqlDate))        return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetDate       (0));
-
-				if (type == typeof(NpgsqlInet) ||
-				    type == typeof(NpgsqlMacAddress)) return MemberHelper.MethodOf<NpgsqlDataReader>(r => r.GetProviderSpecificValue(0));
-			}
-
-			return base.GetReaderMethodInfo(reader, idx, toType);
-		}
-
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((NpgsqlDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
-		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{

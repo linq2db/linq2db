@@ -23,18 +23,15 @@ namespace Tests.DataProvider
 
 				if (rd.Read())
 				{
-					var dp = conn.DataProvider;
-					var p  = Expression.Parameter(typeof(IDataReader));
-					var dr = dp.ConvertDataReader(p);
-
-					var ex = dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
-
-					var expr = Expression.Lambda<Func<IDataReader,int>>(ex, p);
-					var func = expr.Compile();
+					var dp   = conn.DataProvider;
+					var p    = Expression.Parameter(typeof(IDataReader));
+					var dr   = dp.ConvertDataReader(p);
+					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(conn.MappingSchema, rd, 0, dr, typeof(int));
+					var func = ex.Compile();
 
 					do
 					{
-						var value = func(rd);
+						var value = func(rd, 0);
 						Assert.AreEqual(1, value);
 					} while (rd.Read());
 				}

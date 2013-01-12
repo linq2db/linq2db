@@ -9,13 +9,11 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	class SqlCeDataProvider : DataProviderBase
 	{
 		public SqlCeDataProvider() : base(new SqlCeMappingSchema())
 		{
+			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
 		public override string Name           { get { return ProviderName.SqlCe;     } }
@@ -31,23 +29,6 @@ namespace LinqToDB.DataProvider
 		public override Expression ConvertDataReader(Expression reader)
 		{
 			return Expression.Convert(reader, typeof(SqlCeDataReader));
-		}
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-			var name = ((SqlCeDataReader)reader).GetDataTypeName(idx);
-
-			if (expr.Type == typeof(string) && name == "NChar")
-				expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-
-			return expr;
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((SqlCeDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

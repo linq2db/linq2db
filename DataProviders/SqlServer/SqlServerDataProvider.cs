@@ -51,6 +51,28 @@ namespace LinqToDB.DataProvider
 			: base(mappingSchema)
 		{
 			Version = version;
+
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+
+			SetProviderField<SqlDataReader,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
+			SetProviderField<SqlDataReader,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
+			SetProviderField<SqlDataReader,SqlByte    >((r,i) => r.GetSqlByte    (i));
+			SetProviderField<SqlDataReader,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
+			SetProviderField<SqlDataReader,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
+			SetProviderField<SqlDataReader,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
+			SetProviderField<SqlDataReader,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
+			SetProviderField<SqlDataReader,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
+			SetProviderField<SqlDataReader,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
+			SetProviderField<SqlDataReader,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
+			SetProviderField<SqlDataReader,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
+			SetProviderField<SqlDataReader,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
+			SetProviderField<SqlDataReader,SqlString  >((r,i) => r.GetSqlString  (i));
+			SetProviderField<SqlDataReader,SqlXml     >((r,i) => r.GetSqlXml     (i));
+
+			SetProviderField<SqlDataReader,DateTimeOffset,OracleTimeStampTZ> ((r,i) => GetOracleTimeStampTZ (r, i));
+			SetProviderField<SqlDataReader,DateTimeOffset,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
+
 		}
 
 		#endregion
