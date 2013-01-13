@@ -139,171 +139,132 @@ CREATE TABLE AllTypes
 (
 	ID                  int AUTO_INCREMENT       NOT NULL,
 
-	bigintDataType      bigint                   NULL,
---	numericDataType     numeric                  NULL,
-	smallintDataType    smallint                 NULL,
-	intDataType         int                      NULL,
-	tinyintDataType     tinyint                  NULL,
-	mediumintDataType   mediumint                NULL,
-	intDataType         int                      NULL,
---	moneyDataType       money                    NULL,
---	doubleDataType      double precision         NULL,
---	realDataType        real                     NULL,
---
---	timestampDataType   timestamp                NULL,
---	timestampTZDataType timestamp with time zone NULL,
---	dateDataType        date                     NULL,
---	timeDataType        time                     NULL,
---	timeTZDataType      time with time zone      NULL,
---	intervalDataType    interval                 NULL,
---
---	charDataType        char(1)                  NULL,
---	varcharDataType     varchar(20)              NULL,
---	textDataType        text                     NULL,
---
---	binaryDataType      bytea                    NULL,
---
---	uuidDataType        uuid                     NULL,
---	bitDataType         bit(3)                   NULL,
---	booleanDataType     boolean                  NULL,
---	colorDataType       color                    NULL,
---
---	pointDataType       point                    NULL,
---	lsegDataType        lseg                     NULL,
---	boxDataType         box                      NULL,
---	pathDataType        path                     NULL,
---	polygonDataType     polygon                  NULL,
---	circleDataType      circle                   NULL,
---
---	inetDataType        inet                     NULL,
---	macaddrDataType     macaddr                  NULL,
+	bigintDataType      bigint                       NULL,
+	smallintDataType    smallint                     NULL,
+	tinyintDataType     tinyint                      NULL,
+	mediumintDataType   mediumint                    NULL,
+	intDataType         int                          NULL,
+	numericDataType     numeric                      NULL,
+	decimalDataType     decimal                      NULL,
+	doubleDataType      double                       NULL,
+	floatDataType       float                        NULL,
 
-	xmlDataType         xml                      NULL
+	dateDataType        date                         NULL,
+	datetimeDataType    datetime                     NULL,
+	timestampDataType   timestamp                    NULL,
+	timeDataType        time                         NULL,
+	yearDataType        year                         NULL,
+	year2DataType       year(2)                      NULL,
+	year4DataType       year(4)                      NULL,
+
+	charDataType        char(1)                      NULL,
+	varcharDataType     varchar(20)                  NULL,
+	textDataType        text                         NULL,
+
+	binaryDataType      binary(3)                    NULL,
+	varbinaryDataType   varbinary(5)                 NULL,
+	blobDataType        blob                         NULL,
+
+	bitDataType         bit(3)                       NULL,
+	enumDataType        enum('Green', 'Red', 'Blue') NULL,
+	setDataType         set('one', 'two')            NULL,
+
+	CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED (ID)
 )
 GO
 
 INSERT INTO AllTypes
 (
 	bigintDataType,
---	numericDataType,
 	smallintDataType,
 	tinyintDataType,
 	mediumintDataType,
 	intDataType,
---	moneyDataType,
---	doubleDataType,
---	realDataType,
---
---	timestampDataType,
---	timestampTZDataType,
---	dateDataType,
---	timeDataType,
---	timeTZDataType,
---	intervalDataType,
---
---	charDataType,
---	varcharDataType,
---	textDataType,
---
---	binaryDataType,
---
---	uuidDataType,
---	bitDataType,
---	booleanDataType,
---	colorDataType,
---
---	pointDataType,
---	lsegDataType,
---	boxDataType,
---	pathDataType,
---	polygonDataType,
---	circleDataType,
---
---	inetDataType,
---	macaddrDataType,
+	numericDataType,
+	decimalDataType,
+	doubleDataType,
+	floatDataType,
 
-	xmlDataType
+	dateDataType,
+	datetimeDataType,
+	timestampDataType,
+	timeDataType,
+	yearDataType,
+	year2DataType,
+	year4DataType,
+
+	charDataType,
+	varcharDataType,
+	textDataType,
+
+	binaryDataType,
+	varbinaryDataType,
+	blobDataType,
+
+	bitDataType,
+	enumDataType,
+	setDataType
 )
 SELECT
 	NULL,
---	NULL,
 	NULL,
 	NULL,
 	NULL,
 	NULL,
---	NULL,
---	NULL,
---	NULL,
---
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---
---	NULL,
---	NULL,
---	NULL,
---
---	NULL,
---
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---	NULL,
---
---	NULL,
---	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
 
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+	NULL,
+	NULL,
+
+	NULL,
+	NULL,
 	NULL
 UNION ALL
 SELECT
 	1000000,
---	9999999,
 	25555,
 	111,
 	5555,
 	7777777,
---	100000,
---	20.31,
---	16.2,
---
---	Cast('2012-12-12 12:12:12' as timestamp),
---	Cast('2012-12-12 12:12:12-04' as timestamp with time zone),
---	Cast('2012-12-12 12:12:12' as date),
---	Cast('2012-12-12 12:12:12' as time),
---	Cast('12:12:12' as time with time zone),
---	Cast('1 3:05:20' as interval),
---
---	'1',
---	'234',
---	'567',
---
---	E'\\052'::bytea,
---
---	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid),
---	B'101',
---	true,
---	'Green'::color,
---
---	'(1,2)'::point,
---	'((1,2),(3,4))'::lseg,
---	'((1,2),(3,4))'::box,
---	'((1,2),(3,4))'::path,
---	'((1,2),(3,4))'::polygon,
---	'((1,2),3)'::circle,
---
---	'192.168.1.1'::inet,
---	'01:02:03:04:05:06'::macaddr,
+	9999999,
+	8888888,
+	20.31,
+	16.0,
 
-	'<root><element strattr="strvalue" intattr="12345"/></root>'
+	'2012-12-12',
+	'2012-12-12 12:12:12',
+	'2012-12-12 12:12:12',
+	'12:12:12',
+	98,
+	'97',
+	'2012',
+
+	'1',
+	'234',
+	'567',
+
+	'abc',
+	'cde',
+	'def',
+
+	B'101',
+	'Green',
+	'one'
 
 GO

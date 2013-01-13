@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider
 
 		static MySql()
 		{
-			DataConnection.AddDataProvider(ProviderName.Access, _mySqlDataProvider);
+			DataConnection.AddDataProvider(ProviderName.MySql, _mySqlDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

@@ -65,6 +65,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		}
 
+		protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
+		}
+
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
@@ -82,6 +87,7 @@ namespace LinqToDB.DataProvider
 			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
 			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
 			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 

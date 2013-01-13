@@ -1,5 +1,7 @@
 ﻿using System;
 
+using MySql.Data.Types;
+
 namespace LinqToDB.DataProvider
 {
 	using Mapping;
@@ -8,7 +10,8 @@ namespace LinqToDB.DataProvider
 	{
 		public MySqlMappingSchema() : base(ProviderName.MySql)
 		{
-			//SetDataType(typeof(DateTime), DataType.DateTime);
+			SetDataType(typeof(MySqlDecimal),  DataType.Decimal);
+			SetDataType(typeof(MySqlDateTime), DataType.DateTime2);
 		}
 	}
 }

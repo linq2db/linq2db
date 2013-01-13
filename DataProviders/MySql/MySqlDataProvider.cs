@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
-using System.Data.OleDb;
 using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
+
+using MySql.Data.MySqlClient;
+using MySql.Data.Types;
 
 namespace LinqToDB.DataProvider
 {
@@ -13,19 +15,24 @@ namespace LinqToDB.DataProvider
 		public MySqlDataProvider() : base(new MySqlMappingSchema())
 		{
 			//SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
+
+			SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
+			SetProviderField<MySqlDataReader,MySqlDateTime>((r,i) => r.GetMySqlDateTime(i));
+			SetToTypeField  <MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
+			SetToTypeField  <MySqlDataReader,MySqlDateTime>((r,i) => r.GetMySqlDateTime(i));
 		}
 
-		public override string Name           { get { return ProviderName.MySql;     } }
-		public override Type   ConnectionType { get { return typeof(OleDbConnection); } }
+		public override string Name           { get { return ProviderName.MySql;      } }
+		public override Type   ConnectionType { get { return typeof(MySqlConnection); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{
-			return new OleDbConnection(connectionString);
+			return new MySqlConnection(connectionString);
 		}
 
 		public override Expression ConvertDataReader(Expression reader)
 		{
-			return Expression.Convert(reader, typeof(OleDbDataReader));
+			return Expression.Convert(reader, typeof(MySqlDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
@@ -36,6 +43,7 @@ namespace LinqToDB.DataProvider
 			switch (dataType)
 			{
 				//case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.DateTime2  : dataType = DataType.DateTime; break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
@@ -45,6 +53,9 @@ namespace LinqToDB.DataProvider
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 			}
+
+			if (value is MySqlDecimal)
+				value = ((MySqlDecimal)value).Value;
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
