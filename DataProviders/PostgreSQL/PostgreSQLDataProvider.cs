@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
 using System.Data.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -18,15 +16,15 @@ namespace LinqToDB.DataProvider
 		{
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<NpgsqlDataReader,BitString>        ((r,i) => r.GetBitString  (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlInterval>   ((r,i) => r.GetInterval   (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlTime>       ((r,i) => r.GetTime       (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlTimeTZ>     ((r,i) => r.GetTimeTZ     (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlTimeStamp>  ((r,i) => r.GetTimeStamp  (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlTimeStampTZ>((r,i) => r.GetTimeStampTZ(i));
-			SetProviderField<NpgsqlDataReader,NpgsqlDate>       ((r,i) => r.GetDate       (i));
-			SetProviderField<NpgsqlDataReader,NpgsqlInet>       ((r,i) => (NpgsqlInet)      r.GetProviderSpecificValue(i));
-			SetProviderField<NpgsqlDataReader,NpgsqlMacAddress> ((r,i) => (NpgsqlMacAddress)r.GetProviderSpecificValue(i));
+			SetProviderField<NpgsqlDataReader,BitString        ,BitString>        ((r,i) => r.GetBitString  (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlInterval   ,NpgsqlInterval>   ((r,i) => r.GetInterval   (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTime       ,NpgsqlTime>       ((r,i) => r.GetTime       (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeTZ     ,NpgsqlTimeTZ>     ((r,i) => r.GetTimeTZ     (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeStamp  ,NpgsqlTimeStamp>  ((r,i) => r.GetTimeStamp  (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlTimeStampTZ,NpgsqlTimeStampTZ>((r,i) => r.GetTimeStampTZ(i));
+			SetProviderField<NpgsqlDataReader,NpgsqlDate       ,NpgsqlDate>       ((r,i) => r.GetDate       (i));
+			SetProviderField<NpgsqlDataReader,NpgsqlInet       ,NpgsqlInet>       ((r,i) => (NpgsqlInet)      r.GetProviderSpecificValue(i));
+			SetProviderField<NpgsqlDataReader,NpgsqlMacAddress ,NpgsqlMacAddress> ((r,i) => (NpgsqlMacAddress)r.GetProviderSpecificValue(i));
 
 			SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 		}

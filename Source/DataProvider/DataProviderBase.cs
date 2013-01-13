@@ -16,19 +16,19 @@ namespace LinqToDB.DataProvider
 		{
 			MappingSchema = mappingSchema;
 
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(bool)     }] = (Expression<Func<IDataReader,int,bool>>)    ((r,i) => r.GetBoolean (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(byte)     }] = (Expression<Func<IDataReader,int,byte>>)    ((r,i) => r.GetByte    (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(char)     }] = (Expression<Func<IDataReader,int,char>>)    ((r,i) => r.GetChar    (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(short)    }] = (Expression<Func<IDataReader,int,short>>)   ((r,i) => r.GetInt16   (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(int)      }] = (Expression<Func<IDataReader,int,int>>)     ((r,i) => r.GetInt32   (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(long)     }] = (Expression<Func<IDataReader,int,long>>)    ((r,i) => r.GetInt64   (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(float)    }] = (Expression<Func<IDataReader,int,float>>)   ((r,i) => r.GetFloat   (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(double)   }] = (Expression<Func<IDataReader,int,double>>)  ((r,i) => r.GetDouble  (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(string)   }] = (Expression<Func<IDataReader,int,string>>)  ((r,i) => r.GetString  (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal)  }] = (Expression<Func<IDataReader,int,decimal>>) ((r,i) => r.GetDecimal (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(DateTime) }] = (Expression<Func<IDataReader,int,DateTime>>)((r,i) => r.GetDateTime(i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(Guid)     }] = (Expression<Func<IDataReader,int,Guid>>)    ((r,i) => r.GetGuid    (i));
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(byte[])   }] = (Expression<Func<IDataReader,int,byte[]>>)  ((r,i) => (byte[])r.GetValue(i));
+			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
+			SetField<IDataReader,byte>    ((r,i) => r.GetByte    (i));
+			SetField<IDataReader,char>    ((r,i) => r.GetChar    (i));
+			SetField<IDataReader,short>   ((r,i) => r.GetInt16   (i));
+			SetField<IDataReader,int>     ((r,i) => r.GetInt32   (i));
+			SetField<IDataReader,long>    ((r,i) => r.GetInt64   (i));
+			SetField<IDataReader,float>   ((r,i) => r.GetFloat   (i));
+			SetField<IDataReader,double>  ((r,i) => r.GetDouble  (i));
+			SetField<IDataReader,string>  ((r,i) => r.GetString  (i));
+			SetField<IDataReader,decimal> ((r,i) => r.GetDecimal (i));
+			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
+			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
+			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
 		}
 
 		public abstract string        Name           { get; }
@@ -45,9 +45,14 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
 
+		protected void SetField<TP,T>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
+		}
+
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(T) }] = expr;
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
 		}
 
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
@@ -68,31 +73,19 @@ namespace LinqToDB.DataProvider
 
 			Expression expr;
 
-			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { FieldType = fieldType, DataTypeName = typeName    }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { FieldType = fieldType                             }, out expr))
+			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
 			return (Expression<Func<IDataReader,int,object>>)((r,i) => r.GetValue(i));
-
-/*
-			var mi = GetReaderMethodInfo(reader, idx, toType);
-
-			if (mi == null)
-				mi = MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
-
-			var expr = Expression.Call(readerExpression, mi, Expression.Constant(idx)) as Expression;
-
-			if (expr.Type == typeof(object))
-			{
-				var type = reader.GetFieldType(idx);
-
-				if (type == typeof(byte[]))
-					expr = Expression.Convert(expr, type);
-			}
-
-			return expr;
-*/
 		}
 
 		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)

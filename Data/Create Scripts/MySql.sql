@@ -56,328 +56,6 @@ INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoi
 GO
 
 
--- GetPersonById
-
-DROP Procedure GetPersonById
-GO
-
-CREATE Procedure GetPersonById(_ID INT)
-BEGIN
-
-	SELECT * FROM Person WHERE PersonID = _ID;
-
-END
-GO
-
--- GetPersonByName
-
-DROP Procedure GetPersonByName
-GO
-
-CREATE Procedure GetPersonByName
-(
-	_firstName varchar(50),
-	_lastName  varchar(50)
-)
-BEGIN
-
-	SELECT * FROM Person WHERE FirstName = _firstName AND LastName = _lastName;
-
-END
-GO
-
--- Person_SelectByKey
-
-DROP Procedure Person_SelectByKey
-GO
-
-CREATE Procedure Person_SelectByKey(id int)
-BEGIN
-
-	SELECT * FROM Person WHERE PersonID = id;
-
-END
-GO
-
--- Person_SelectAll
-
-DROP Procedure Person_SelectAll
-GO
-
-CREATE Procedure Person_SelectAll()
-BEGIN
-
-	SELECT * FROM Person;
-
-END
-GO
-
--- Person_SelectByName
-
-DROP Procedure Person_SelectByName
-GO
-
-CREATE Procedure Person_SelectByName
-(
-	firstName varchar(50),
-	lastName  varchar(50)
-)
-BEGIN
-
-	SELECT
-		*
-	FROM
-		Person
-	WHERE
-		FirstName = firstName AND LastName = lastName;
-
-END
-GO
-
--- Person_SelectListByName
-
-DROP Procedure Person_SelectListByName
-GO
-
-CREATE Procedure Person_SelectListByName
-(
-	firstName varchar(50),
-	lastName  varchar(50)
-)
-BEGIN
-
-	SELECT
-		*
-	FROM
-		Person
-	WHERE
-		FirstName like firstName AND LastName like lastName;
-
-END
-GO
-
--- Person_Insert
-
-DROP Procedure Person_Insert
-GO
-
-CREATE Procedure Person_Insert
-(
-	FirstName  varchar(50),
-	LastName   varchar(50),
-	MiddleName varchar(50),
-	Gender     char(1)
-)
-BEGIN
-
-	INSERT INTO Person
-		(LastName, FirstName, MiddleName, Gender)
-	VALUES
-		(LastName, FirstName, MiddleName, Gender);
-
-	SELECT LAST_INSERT_ID() AS PersonID;
-
-END
-GO
-
--- Person_Insert_OutputParameter
-
-DROP Procedure Person_Insert_OutputParameter
-GO
-
-CREATE Procedure Person_Insert_OutputParameter
-(
-	FirstName  varchar(50),
-	LastName   varchar(50),
-	MiddleName varchar(50),
-	Gender     char(1),
-	OUT PersonID int
-)
-BEGIN
-
-	INSERT INTO Person
-		(LastName, FirstName, MiddleName, Gender)
-	VALUES
-		(LastName, FirstName, MiddleName, Gender);
-
-	SET PersonID = LAST_INSERT_ID();
-
-END
-GO
-
--- Person_Update
-
-DROP Procedure Person_Update
-GO
-
-CREATE Procedure Person_Update
-(
-	PersonID   int,
-	FirstName  varchar(50),
-	LastName   varchar(50),
-	MiddleName varchar(50),
-	Gender     char(1)
-)
-BEGIN
-
-	UPDATE
-		Person
-	SET
-		LastName   = LastName,
-		FirstName  = FirstName,
-		MiddleName = MiddleName,
-		Gender     = Gender
-	WHERE
-		PersonID = PersonID;
-
-END
-GO
-
--- Person_Delete
-
-DROP Procedure Person_Delete
-GO
-
-CREATE Procedure Person_Delete
-(
-	PersonID int
-)
-BEGIN
-
-	DELETE FROM Person WHERE PersonID = PersonID;
-
-END
-GO
-
--- Patient_SelectAll
-
-DROP Procedure Patient_SelectAll
-GO
-
-CREATE Procedure Patient_SelectAll()
-BEGIN
-
-	SELECT
-		Person.*, Patient.Diagnosis
-	FROM
-		Patient, Person
-	WHERE
-		Patient.PersonID = Person.PersonID;
-
-END
-GO
-
--- Patient_SelectByName
-
-DROP Procedure Patient_SelectByName
-GO
-
-CREATE Procedure Patient_SelectByName
-(
-	firstName varchar(50),
-	lastName  varchar(50)
-)
-BEGIN
-
-	SELECT
-		Person.*, Patient.Diagnosis
-	FROM
-		Patient, Person
-	WHERE
-		Patient.PersonID = Person.PersonID
-		AND FirstName = firstName AND LastName = lastName;
-
-END
-GO
-
--- BinaryData Table
-
-DROP TABLE BinaryData
-GO
-
-CREATE TABLE BinaryData
-(
-	BinaryDataID int             AUTO_INCREMENT NOT NULL,
-	Stamp        timestamp       NOT NULL,
-	Data         varbinary(1024) NOT NULL,
-	CONSTRAINT PK_BinaryData PRIMARY KEY CLUSTERED (BinaryDataID)
-)
-GO
-
--- OutRefTest
-
-DROP Procedure OutRefTest
-GO
-
-CREATE Procedure OutRefTest
-(
-	    ID             int,
-	OUT outputID       int,
-	OUT inputOutputID  int,
-	    str            varchar(50),
-	OUT outputStr      varchar(50),
-	OUT inputOutputStr varchar(50)
-)
-BEGIN
-
-	SET outputID       = ID;
-	SET inputOutputID  = ID + inputOutputID;
-	SET outputStr      = str;
-	SET inputOutputStr = str + inputOutputStr;
-
-END
-GO
-
--- OutRefEnumTest
-
-DROP Procedure OutRefEnumTest
-GO
-
-CREATE Procedure OutRefEnumTest
-(
-	    str            varchar(50),
-	OUT outputStr      varchar(50),
-	OUT inputOutputStr varchar(50)
-)
-BEGIN
-
-	SET outputStr      = str;
-	SET inputOutputStr = str + inputOutputStr;
-
-END
-GO
-
--- ExecuteScalarTest
-
-DROP Procedure Scalar_DataReader
-GO
-
-CREATE Procedure Scalar_DataReader()
-BEGIN
-
-	SELECT
-		12345   AS intField,
-		'54321' AS stringField;
-
-END
-GO
-
-DROP Procedure Scalar_OutputParameter
-GO
-
-CREATE Procedure Scalar_OutputParameter
-(
-	OUT outputInt    int,
-	OUT outputString varchar(50)
-)
-BEGIN
-
-	SET outputInt    = 12345;
-	SET outputString = '54321';
-
-END
-GO
-
 -- Data Types test
 
 DROP TABLE DataTypeTest
@@ -410,30 +88,6 @@ CREATE TABLE DataTypeTest
 	CONSTRAINT PK_DataType PRIMARY KEY CLUSTERED (DataTypeID)
 )
 GO
-
-INSERT INTO DataTypeTest
-	(Binary_, Boolean_,   Byte_,  Bytes_,  Char_,  DateTime_, Decimal_,
-	 Double_,    Guid_,  Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,     Xml_)
-VALUES
-	(   NULL,        0,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL)
-GO
-
-INSERT INTO DataTypeTest
-	(Binary_, Boolean_,   Byte_,  Bytes_,  Char_,  DateTime_, Decimal_,
-	 Double_,    Guid_,  Int16_,  Int32_,  Int64_,    Money_,   SByte_,
-	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,
-	 Xml_)
-VALUES
-	( UUID(),       1,     127,  UUID(),     'B', CurDate(), 12345.67,
-	1234.567,  UUID(),   32767,   32768, 1000000,   12.3456,      127,
-	1234.123,  UUID(), 'string',  32767,   32768, 200000000,
-	'<root><element strattr="strvalue" intattr="12345"/></root>')
-GO
-
-
 
 DROP TABLE Parent
 GO
@@ -475,4 +129,181 @@ CREATE TABLE TestIdentity (
 	ID int AUTO_INCREMENT NOT NULL,
 	CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED (ID)
 )
+GO
+
+
+DROP TABLE AllTypes
+GO
+
+CREATE TABLE AllTypes
+(
+	ID                  int AUTO_INCREMENT       NOT NULL,
+
+	bigintDataType      bigint                   NULL,
+--	numericDataType     numeric                  NULL,
+	smallintDataType    smallint                 NULL,
+	intDataType         int                      NULL,
+	tinyintDataType     tinyint                  NULL,
+	mediumintDataType   mediumint                NULL,
+	intDataType         int                      NULL,
+--	moneyDataType       money                    NULL,
+--	doubleDataType      double precision         NULL,
+--	realDataType        real                     NULL,
+--
+--	timestampDataType   timestamp                NULL,
+--	timestampTZDataType timestamp with time zone NULL,
+--	dateDataType        date                     NULL,
+--	timeDataType        time                     NULL,
+--	timeTZDataType      time with time zone      NULL,
+--	intervalDataType    interval                 NULL,
+--
+--	charDataType        char(1)                  NULL,
+--	varcharDataType     varchar(20)              NULL,
+--	textDataType        text                     NULL,
+--
+--	binaryDataType      bytea                    NULL,
+--
+--	uuidDataType        uuid                     NULL,
+--	bitDataType         bit(3)                   NULL,
+--	booleanDataType     boolean                  NULL,
+--	colorDataType       color                    NULL,
+--
+--	pointDataType       point                    NULL,
+--	lsegDataType        lseg                     NULL,
+--	boxDataType         box                      NULL,
+--	pathDataType        path                     NULL,
+--	polygonDataType     polygon                  NULL,
+--	circleDataType      circle                   NULL,
+--
+--	inetDataType        inet                     NULL,
+--	macaddrDataType     macaddr                  NULL,
+
+	xmlDataType         xml                      NULL
+)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType,
+--	numericDataType,
+	smallintDataType,
+	tinyintDataType,
+	mediumintDataType,
+	intDataType,
+--	moneyDataType,
+--	doubleDataType,
+--	realDataType,
+--
+--	timestampDataType,
+--	timestampTZDataType,
+--	dateDataType,
+--	timeDataType,
+--	timeTZDataType,
+--	intervalDataType,
+--
+--	charDataType,
+--	varcharDataType,
+--	textDataType,
+--
+--	binaryDataType,
+--
+--	uuidDataType,
+--	bitDataType,
+--	booleanDataType,
+--	colorDataType,
+--
+--	pointDataType,
+--	lsegDataType,
+--	boxDataType,
+--	pathDataType,
+--	polygonDataType,
+--	circleDataType,
+--
+--	inetDataType,
+--	macaddrDataType,
+
+	xmlDataType
+)
+SELECT
+	NULL,
+--	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--
+--	NULL,
+--	NULL,
+--	NULL,
+--
+--	NULL,
+--
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--	NULL,
+--
+--	NULL,
+--	NULL,
+
+	NULL
+UNION ALL
+SELECT
+	1000000,
+--	9999999,
+	25555,
+	111,
+	5555,
+	7777777,
+--	100000,
+--	20.31,
+--	16.2,
+--
+--	Cast('2012-12-12 12:12:12' as timestamp),
+--	Cast('2012-12-12 12:12:12-04' as timestamp with time zone),
+--	Cast('2012-12-12 12:12:12' as date),
+--	Cast('2012-12-12 12:12:12' as time),
+--	Cast('12:12:12' as time with time zone),
+--	Cast('1 3:05:20' as interval),
+--
+--	'1',
+--	'234',
+--	'567',
+--
+--	E'\\052'::bytea,
+--
+--	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid),
+--	B'101',
+--	true,
+--	'Green'::color,
+--
+--	'(1,2)'::point,
+--	'((1,2),(3,4))'::lseg,
+--	'((1,2),(3,4))'::box,
+--	'((1,2),(3,4))'::path,
+--	'((1,2),(3,4))'::polygon,
+--	'((1,2),3)'::circle,
+--
+--	'192.168.1.1'::inet,
+--	'01:02:03:04:05:06'::macaddr,
+
+	'<root><element strattr="strvalue" intattr="12345"/></root>'
+
 GO

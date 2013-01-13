@@ -2,12 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -15,7 +13,6 @@ using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
 	using Mapping;
 
 	abstract class SqlServerDataProvider : DataProviderBase
@@ -55,24 +52,23 @@ namespace LinqToDB.DataProvider
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<SqlDataReader,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
-			SetProviderField<SqlDataReader,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
-			SetProviderField<SqlDataReader,SqlByte    >((r,i) => r.GetSqlByte    (i));
-			SetProviderField<SqlDataReader,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
-			SetProviderField<SqlDataReader,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
-			SetProviderField<SqlDataReader,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
-			SetProviderField<SqlDataReader,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
-			SetProviderField<SqlDataReader,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
-			SetProviderField<SqlDataReader,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
-			SetProviderField<SqlDataReader,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
-			SetProviderField<SqlDataReader,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
-			SetProviderField<SqlDataReader,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
-			SetProviderField<SqlDataReader,SqlString  >((r,i) => r.GetSqlString  (i));
-			SetProviderField<SqlDataReader,SqlXml     >((r,i) => r.GetSqlXml     (i));
+			SetProviderField<SqlDataReader,SqlBinary  ,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
+			SetProviderField<SqlDataReader,SqlBoolean ,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
+			SetProviderField<SqlDataReader,SqlByte    ,SqlByte    >((r,i) => r.GetSqlByte    (i));
+			SetProviderField<SqlDataReader,SqlDateTime,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
+			SetProviderField<SqlDataReader,SqlDecimal ,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
+			SetProviderField<SqlDataReader,SqlDouble  ,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
+			SetProviderField<SqlDataReader,SqlGuid    ,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
+			SetProviderField<SqlDataReader,SqlInt16   ,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
+			SetProviderField<SqlDataReader,SqlInt32   ,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
+			SetProviderField<SqlDataReader,SqlInt64   ,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
+			SetProviderField<SqlDataReader,SqlMoney   ,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
+			SetProviderField<SqlDataReader,SqlSingle  ,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
+			SetProviderField<SqlDataReader,SqlString  ,SqlString  >((r,i) => r.GetSqlString  (i));
+			SetProviderField<SqlDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
 
-			SetProviderField<SqlDataReader,DateTimeOffset,OracleTimeStampTZ> ((r,i) => GetOracleTimeStampTZ (r, i));
-			SetProviderField<SqlDataReader,DateTimeOffset,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
-
+			SetProviderField<SqlDataReader,DateTimeOffset>((r,i) => r.GetDateTimeOffset(i));
+			SetProviderField<SqlDataReader,TimeSpan>      ((r,i) => r.GetTimeSpan      (i));
 		}
 
 		#endregion
@@ -96,66 +92,6 @@ namespace LinqToDB.DataProvider
 		public override Expression ConvertDataReader(Expression reader)
 		{
 			return Expression.Convert(reader, typeof(SqlDataReader));
-		}
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-
-			if (expr.Type == typeof(object))
-			{
-				var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-				if (type == typeof(SqlHierarchyId))
-					expr = Expression.Convert(expr, type);
-			}
-
-			if (expr.Type == typeof(string))
-			{
-				var name = ((SqlDataReader)reader).GetDataTypeName(idx);
-				if (name == "char" || name == "nchar")
-					expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-			}
-
-			return expr;
-		}
-
-		protected override MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
-		{
-			var type = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-
-			if (toType == type)
-			{
-				if (type == typeof(SqlBinary))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBinary  (0));
-				if (type == typeof(SqlBoolean))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlBoolean (0));
-				if (type == typeof(SqlByte))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlByte    (0));
-				if (type == typeof(SqlDateTime)) return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDateTime(0));
-				if (type == typeof(SqlDecimal))  return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDecimal (0));
-				if (type == typeof(SqlDouble))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlDouble  (0));
-				if (type == typeof(SqlGuid))     return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlGuid    (0));
-				if (type == typeof(SqlInt16))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt16   (0));
-				if (type == typeof(SqlInt32))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt32   (0));
-				if (type == typeof(SqlInt64))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlInt64   (0));
-				if (type == typeof(SqlMoney))    return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlMoney   (0));
-				if (type == typeof(SqlSingle))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlSingle  (0));
-				if (type == typeof(SqlString))   return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlString  (0));
-				if (type == typeof(SqlXml))      return MemberHelper.MethodOf<SqlDataReader>(r => r.GetSqlXml     (0));
-			}
-
-			var mi = base.GetReaderMethodInfo(reader, idx, toType);
-
-			if (mi != null)
-				return mi;
-
-			if (type == typeof(DateTimeOffset)) return MemberHelper.MethodOf<SqlDataReader>(r => r.GetDateTimeOffset(0));
-			if (type == typeof(TimeSpan))       return MemberHelper.MethodOf<SqlDataReader>(r => r.GetTimeSpan      (0));
-
-			return null;
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((SqlDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["allowDBNull"];
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

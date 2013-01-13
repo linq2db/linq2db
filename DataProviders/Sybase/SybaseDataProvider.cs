@@ -9,15 +9,27 @@ using Sybase.Data.AseClient;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Mapping;
-
 	class SybaseDataProvider : DataProviderBase
 	{
 		#region Init
 
 		public SybaseDataProvider() : base(new SybaseMappingSchema())
 		{
+			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+
+			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
+			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+		}
+
+		static DateTime GetDateTime(IDataReader dr, int idx)
+		{
+			var value = dr.GetDateTime(idx);
+
+			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
+				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
+
+			return value;
 		}
 
 		#endregion
@@ -39,47 +51,6 @@ namespace LinqToDB.DataProvider
 		public override Expression ConvertDataReader(Expression reader)
 		{
 			return Expression.Convert(reader, typeof(AseDataReader));
-		}
-
-		static DateTime GetDateTime(IDataReader dr, int idx)
-		{
-			var value = dr.GetDateTime(idx);
-
-			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
-				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
-
-			return value;
-		}
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var type = ((AseDataReader)reader).GetProviderSpecificFieldType(idx);
-
-			if (type == typeof(DateTime))
-			{
-				if (toType == typeof(TimeSpan))
-					return (Expression<Func<IDataReader,int,TimeSpan>>)((dr,i) => dr.GetDateTime(i) - new DateTime(1900, 1, 1));
-
-				if (toType == typeof(DateTime))
-					return (Expression<Func<IDataReader,int,DateTime>>)((dr,i) => GetDateTime(dr, i));
-			}
-
-			var expr = base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-
-			if (expr.Type == typeof(string))
-			{
-				var name = ((AseDataReader)reader).GetDataTypeName(idx);
-				if (name == "char" || name == "nchar")
-					expr = Expression.Call(expr, MemberHelper.MethodOf<string>(s => s.Trim()));
-			}
-
-			return expr;
-		}
-
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
-		{
-			var st = ((AseDataReader)reader).GetSchemaTable();
-			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

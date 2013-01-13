@@ -17,23 +17,22 @@ namespace LinqToDB.DataProvider
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<OracleDataReader,OracleBFile       >((r,i) => r.GetOracleBFile       (i));
-			SetProviderField<OracleDataReader,OracleBinary      >((r,i) => r.GetOracleBinary      (i));
-			SetProviderField<OracleDataReader,OracleBlob        >((r,i) => r.GetOracleBlob        (i));
-			SetProviderField<OracleDataReader,OracleClob        >((r,i) => r.GetOracleClob        (i));
-			SetProviderField<OracleDataReader,OracleDate        >((r,i) => r.GetOracleDate        (i));
-			SetProviderField<OracleDataReader,OracleDecimal     >((r,i) => r.GetOracleDecimal     (i));
-			SetProviderField<OracleDataReader,OracleIntervalDS  >((r,i) => r.GetOracleIntervalDS  (i));
-			SetProviderField<OracleDataReader,OracleIntervalYM  >((r,i) => r.GetOracleIntervalYM  (i));
-			SetProviderField<OracleDataReader,OracleRef         >((r,i) => r.GetOracleRef         (i));
-			SetProviderField<OracleDataReader,OracleString      >((r,i) => r.GetOracleString      (i));
-			SetProviderField<OracleDataReader,OracleTimeStamp   >((r,i) => r.GetOracleTimeStamp   (i));
-			SetProviderField<OracleDataReader,OracleTimeStampLTZ>((r,i) => r.GetOracleTimeStampLTZ(i));
-			SetProviderField<OracleDataReader,OracleTimeStampTZ >((r,i) => r.GetOracleTimeStampTZ (i));
-			SetProviderField<OracleDataReader,OracleXmlType     >((r,i) => r.GetOracleXmlType     (i));
-
-			SetProviderField<OracleDataReader,DateTimeOffset,OracleTimeStampTZ> ((r,i) => GetOracleTimeStampTZ (r, i));
-			SetProviderField<OracleDataReader,DateTimeOffset,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
+			SetProviderField<OracleDataReader,OracleBFile       ,OracleBFile       >((r,i) => r.GetOracleBFile       (i));
+			SetProviderField<OracleDataReader,OracleBinary      ,OracleBinary      >((r,i) => r.GetOracleBinary      (i));
+			SetProviderField<OracleDataReader,OracleBlob        ,OracleBlob        >((r,i) => r.GetOracleBlob        (i));
+			SetProviderField<OracleDataReader,OracleClob        ,OracleClob        >((r,i) => r.GetOracleClob        (i));
+			SetProviderField<OracleDataReader,OracleDate        ,OracleDate        >((r,i) => r.GetOracleDate        (i));
+			SetProviderField<OracleDataReader,OracleDecimal     ,OracleDecimal     >((r,i) => r.GetOracleDecimal     (i));
+			SetProviderField<OracleDataReader,OracleIntervalDS  ,OracleIntervalDS  >((r,i) => r.GetOracleIntervalDS  (i));
+			SetProviderField<OracleDataReader,OracleIntervalYM  ,OracleIntervalYM  >((r,i) => r.GetOracleIntervalYM  (i));
+			SetProviderField<OracleDataReader,OracleRef         ,OracleRef         >((r,i) => r.GetOracleRef         (i));
+			SetProviderField<OracleDataReader,OracleString      ,OracleString      >((r,i) => r.GetOracleString      (i));
+			SetProviderField<OracleDataReader,OracleTimeStamp   ,OracleTimeStamp   >((r,i) => r.GetOracleTimeStamp   (i));
+			SetProviderField<OracleDataReader,OracleTimeStampLTZ,OracleTimeStampLTZ>((r,i) => r.GetOracleTimeStampLTZ(i));
+			SetProviderField<OracleDataReader,OracleTimeStampTZ ,OracleTimeStampTZ >((r,i) => r.GetOracleTimeStampTZ (i));
+			SetProviderField<OracleDataReader,OracleXmlType     ,OracleXmlType     >((r,i) => r.GetOracleXmlType     (i));
+			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampTZ >((r,i) => GetOracleTimeStampTZ (r, i));
+			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
 		}
 
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)

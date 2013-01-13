@@ -12,8 +12,7 @@ namespace LinqToDB.DataProvider
 	{
 		public AccessDataProvider() : base(new AccessMappingSchema())
 		{
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = "DBTYPE_WCHAR" }] =
-				(Expression<Func<IDataReader,int,string>>)((r,i) => r.GetString(i).TrimEnd());
+			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 		}
 
 		public override string Name           { get { return ProviderName.Access;     } }
@@ -29,10 +28,11 @@ namespace LinqToDB.DataProvider
 			return Expression.Convert(reader, typeof(OleDbDataReader));
 		}
 
-		#region Overrides
-
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
+			if (dataType == DataType.Undefined && value != null)
+				dataType = MappingSchema.GetDataType(value.GetType());
+
 			switch (dataType)
 			{
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
@@ -44,16 +44,9 @@ namespace LinqToDB.DataProvider
 					     if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
-				case DataType.Undefined  :
-					     if (value is Binary)       value = ((Binary)value).ToArray();
-					else if (value is XDocument)    value = value.ToString();
-					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
-					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
-
-		#endregion
 	}
 }
