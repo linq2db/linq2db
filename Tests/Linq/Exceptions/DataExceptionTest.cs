@@ -18,7 +18,7 @@ namespace Tests.Exceptions
 		{
 			try
 			{
-				using (var db = new DbManager(new MySqlDataProvider(), "Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
+				using (var db = new DbManager(new MySqlDataProviderOld(), "Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
 				{
 					db.GetTable<Person>().ToList();
 				}
