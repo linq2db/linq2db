@@ -261,7 +261,7 @@ namespace LinqToDB.SqlProvider
 
 		#region IMappingSchemaProvider Members
 
-		readonly FirebirdMappingSchema _mappingSchema = new FirebirdMappingSchema();
+		readonly FirebirdMappingSchemaOld _mappingSchema = new FirebirdMappingSchemaOld();
 
 		MappingSchemaOld IMappingSchemaProvider.MappingSchema
 		{

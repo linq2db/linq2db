@@ -429,7 +429,7 @@ namespace LinqToDB.Data
 		{
 			var dataProvider   = dataConnection.DataProvider;
 			var parameter      = Expression.Parameter(typeof(IDataReader));
-			var dataReaderExpr = dataProvider.ConvertDataReader(parameter);
+			var dataReaderExpr = Expression.Convert(parameter, dataProvider.DataReaderType);
 
 			Expression expr;
 
@@ -531,7 +531,7 @@ namespace LinqToDB.Data
 
 			public object GetValue(IDataReader dataReader)
 			{
-				var value = dataReader.GetValue(_columnIndex);
+				//var value = dataReader.GetValue(_columnIndex);
 
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
@@ -540,7 +540,7 @@ namespace LinqToDB.Data
 				if (!_columnConverters.TryGetValue(fromType, out func))
 				{
 					var parameter      = Expression.Parameter(typeof(IDataReader));
-					var dataReaderExpr = _dataProvider.ConvertDataReader(parameter);
+					var dataReaderExpr = Expression.Convert(parameter, _dataProvider.DataReaderType);
 
 					var expr = GetColumnReader(_dataProvider, _mappingSchema, dataReader, _columnType, _columnIndex, dataReaderExpr);
 

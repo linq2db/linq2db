@@ -33,10 +33,10 @@ namespace LinqToDB.DataProvider
 
 		public abstract string        Name           { get; }
 		public abstract Type          ConnectionType { get; }
+		public abstract Type          DataReaderType { get; }
 		public virtual  MappingSchema MappingSchema  { get; private set; }
 
 		public abstract IDbConnection CreateConnection (string connectionString);
-		public abstract Expression    ConvertDataReader(Expression reader);
 
 		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
 

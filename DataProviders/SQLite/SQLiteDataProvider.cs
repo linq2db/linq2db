@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Linq;
 using System.Data.SQLite;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -16,17 +15,13 @@ namespace LinqToDB.DataProvider
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
-		public override string Name           { get { return ProviderName.SQLite;     } }
+		public override string Name           { get { return ProviderName.SQLite;      } }
 		public override Type   ConnectionType { get { return typeof(SQLiteConnection); } }
+		public override Type   DataReaderType { get { return typeof(SQLiteDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{
 			return new SQLiteConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(SQLiteDataReader));
 		}
 
 		#region Overrides

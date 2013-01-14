@@ -198,6 +198,7 @@
     <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
+    <Compile Include="DataProvider\FirebirdTest.cs" />
     <Compile Include="DataProvider\MySqlTest.cs" />
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
@@ -278,8 +279,8 @@
     <Content Include="..\..\Data\Create Scripts\DB2.sql">
       <Link>Database\Create Scripts\DB2.sql</Link>
     </Content>
-    <Content Include="..\..\Data\Create Scripts\Firebird2.sql">
-      <Link>Database\Create Scripts\Firebird2.sql</Link>
+    <Content Include="..\..\Data\Create Scripts\Firebird.sql">
+      <Link>Database\Create Scripts\Firebird.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Informix.sql">
       <Link>Database\Create Scripts\Informix.sql</Link>

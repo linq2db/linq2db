@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 
-	public class FirebirdDataProvider : DataProviderBaseOld
+	public class FirebirdDataProviderOld : DataProviderBaseOld
 	{
 		#region InOut & ReturnValue emulation
 		public static string InOutInputParameterPrefix = "in_";

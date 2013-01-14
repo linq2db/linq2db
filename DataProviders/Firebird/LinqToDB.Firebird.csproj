@@ -99,9 +99,13 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FdpDataProvider.cs" />
+    <Compile Include="Firebird.cs" />
+    <Compile Include="FirebirdDataProvider.cs" />
+    <Compile Include="FirebirdMappingSchema.cs" />
+    <Compile Include="FdpDataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

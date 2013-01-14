@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -53,17 +52,13 @@ namespace LinqToDB.DataProvider
 				TimeSpan.Parse(tstz.TimeZone.TrimStart('+')));
 		}
 
-		public override string Name           { get { return ProviderName.Oracle;     } }
+		public override string Name           { get { return ProviderName.Oracle;      } }
 		public override Type   ConnectionType { get { return typeof(OracleConnection); } }
+		public override Type   DataReaderType { get { return typeof(OracleDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{
 			return new OracleConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(OracleDataReader));
 		}
 
 		#region Overrides

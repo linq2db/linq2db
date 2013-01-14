@@ -29,17 +29,13 @@ namespace LinqToDB.DataProvider
 			SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 		}
 
-		public override string Name           { get { return ProviderName.PostgreSQL; } }
+		public override string Name           { get { return ProviderName.PostgreSQL;  } }
 		public override Type   ConnectionType { get { return typeof(NpgsqlConnection); } }
+		public override Type   DataReaderType { get { return typeof(NpgsqlDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new NpgsqlConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(NpgsqlDataReader));
 		}
 
 		#region Overrides

@@ -5,7 +5,6 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -77,6 +76,7 @@ namespace LinqToDB.DataProvider
 
 		public override string Name           { get { return ProviderName.SqlServer; } }
 		public override Type   ConnectionType { get { return typeof(SqlConnection);  } }
+		public override Type   DataReaderType { get { return typeof(SqlDataReader);  } }
 
 		public SqlServerVersion Version { get; private set; }
 
@@ -87,11 +87,6 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new SqlConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(SqlDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

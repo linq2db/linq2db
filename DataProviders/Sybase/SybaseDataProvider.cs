@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -36,8 +35,9 @@ namespace LinqToDB.DataProvider
 
 		#region Public Properties
 
-		public override string Name           { get { return ProviderName.Sybase;    } }
-		public override Type   ConnectionType { get { return typeof(AseConnection);  } }
+		public override string Name           { get { return ProviderName.Sybase;   } }
+		public override Type   ConnectionType { get { return typeof(AseConnection); } }
+		public override Type   DataReaderType { get { return typeof(AseDataReader); } }
 
 		#endregion
 
@@ -46,11 +46,6 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new AseConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(AseDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

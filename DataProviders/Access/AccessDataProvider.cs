@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Linq;
 using System.Data.OleDb;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -17,15 +16,11 @@ namespace LinqToDB.DataProvider
 
 		public override string Name           { get { return ProviderName.Access;     } }
 		public override Type   ConnectionType { get { return typeof(OleDbConnection); } }
+		public override Type   DataReaderType { get { return typeof(OleDbDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(OleDbDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

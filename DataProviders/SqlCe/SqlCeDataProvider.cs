@@ -16,19 +16,15 @@ namespace LinqToDB.DataProvider
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
-		public override string Name           { get { return ProviderName.SqlCe;     } }
+		public override string Name           { get { return ProviderName.SqlCe;      } }
 		public override Type   ConnectionType { get { return typeof(SqlCeConnection); } }
+		public override Type   DataReaderType { get { return typeof(SqlCeDataReader); } }
 
 		#region Overrides
 
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new SqlCeConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(SqlCeDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

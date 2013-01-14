@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -24,15 +23,11 @@ namespace LinqToDB.DataProvider
 
 		public override string Name           { get { return ProviderName.MySql;      } }
 		public override Type   ConnectionType { get { return typeof(MySqlConnection); } }
+		public override Type   DataReaderType { get { return typeof(MySqlDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new MySqlConnection(connectionString);
-		}
-
-		public override Expression ConvertDataReader(Expression reader)
-		{
-			return Expression.Convert(reader, typeof(MySqlDataReader));
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
