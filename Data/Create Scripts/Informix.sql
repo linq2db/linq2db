@@ -90,3 +90,15 @@ CREATE TABLE TestIdentity (
 	PRIMARY KEY(ID)
 )
 GO
+
+
+DROP TABLE AllTypes
+GO
+
+CREATE TABLE AllTypes
+(
+	ID   SERIAL       NOT NULL,
+
+	PRIMARY KEY(ID)
+)
+GO

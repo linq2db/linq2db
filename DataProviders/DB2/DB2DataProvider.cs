@@ -66,9 +66,23 @@ namespace LinqToDB.DataProvider
 				case DataType.UInt64     : dataType = DataType.Decimal;  break;
 				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
 				case DataType.DateTime2  : dataType = DataType.DateTime; break;
+				case DataType.Char       :
+				case DataType.VarChar    :
+				case DataType.NChar      :
+				case DataType.NVarChar   :
+					if (value is Guid) value = ((Guid)value).ToString();
+					break;
+				case DataType.Guid       :
+					if (value is Guid)
+					{
+						value    = ((Guid)value).ToByteArray();
+						dataType = DataType.VarBinary;
+					}
+					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
+					if (value is Guid)   value = ((Guid)value).ToByteArray();
 					break;
 				case DataType.Xml        :
 					     if (value is XDocument)   value = value.ToString();
