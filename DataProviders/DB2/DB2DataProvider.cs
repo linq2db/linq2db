@@ -1,71 +1,74 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
+using System.Data.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 using IBM.Data.DB2;
+using IBM.Data.DB2Types;
 
 namespace LinqToDB.DataProvider
 {
-	using SqlProvider;
-
-	class DB2DataProvider : DataProviderBaseOld
+	public class DB2DataProvider : DataProviderBase
 	{
-		public override IDbConnection CreateConnectionObject () { return new DB2Connection (); }
-		public override DbDataAdapter CreateDataAdapterObject() { return new DB2DataAdapter(); }
-		public override ISqlProvider  CreateSqlProvider      () { return new DB2SqlProvider(); }
-
-		public override Type   ConnectionType { get { return typeof(DB2Connection);     } }
-		public override string Name           { get { return LinqToDB.ProviderName.DB2; } }
-		public override string EndOfSql       { get { return ";"; } }
-
-		public override bool DeriveParameters(IDbCommand command)
+		public DB2DataProvider() : base(new DB2MappingSchema())
 		{
-			if (command is DB2Command)
-			{
-				DB2CommandBuilder.DeriveParameters((DB2Command)command);
-				return true;
-			}
+			//SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			return false;
+			SetProviderField<DB2DataReader,DB2Int64,        Int64>    ((r,i) => r.GetDB2Int64       (i));
+			SetProviderField<DB2DataReader,DB2Int32,        Int32>    ((r,i) => r.GetDB2Int32       (i));
+			SetProviderField<DB2DataReader,DB2Int16,        Int16>    ((r,i) => r.GetDB2Int16       (i));
+			SetProviderField<DB2DataReader,DB2Decimal,      Decimal>  ((r,i) => r.GetDB2Decimal     (i));
+			SetProviderField<DB2DataReader,DB2DecimalFloat, Decimal>  ((r,i) => r.GetDB2DecimalFloat(i));
+			SetProviderField<DB2DataReader,DB2Real,         Single>   ((r,i) => r.GetDB2Real        (i));
+			SetProviderField<DB2DataReader,DB2Real370,      Single>   ((r,i) => r.GetDB2Real370     (i));
+			SetProviderField<DB2DataReader,DB2Double,       Double>   ((r,i) => r.GetDB2Double      (i));
+
+			SetProviderField<DB2DataReader,DB2Binary,DB2Binary>((r,i) => r.GetDB2Binary(i));
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Name           { get { return ProviderName.DB2;      } }
+		public override Type   ConnectionType { get { return typeof(DB2Connection); } }
+		public override Type   DataReaderType { get { return typeof(DB2DataReader); } }
+		
+		public override IDbConnection CreateConnection(string connectionString)
 		{
-			switch (convertType)
+			return new DB2Connection(connectionString);
+		}
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			if (value is sbyte)
 			{
-				case ConvertType.ExceptionToErrorNumber:
-					if (value is DB2Exception)
-					{
-						var ex = (DB2Exception)value;
+				value    = (short)(sbyte)value;
+				dataType = DataType.Int16;
+			}
+			else if (value is byte)
+			{
+				value    = (short)(byte)value;
+				dataType = DataType.Int16;
+			}
 
-						foreach (DB2Error error in ex.Errors)
-							return error.RowNumber;
+			if (dataType == DataType.Undefined && value != null)
+				dataType = MappingSchema.GetDataType(value.GetType());
 
-						return 0;
-					}
-
+			switch (dataType)
+			{
+				case DataType.UInt16     : dataType = DataType.Int32;   break;
+				case DataType.UInt32     : dataType = DataType.Int64;   break;
+				case DataType.UInt64     : dataType = DataType.Decimal; break;
+				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
-				 
+				case DataType.Xml        :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					break;
 			}
 
-			return SqlProvider.Convert(value, convertType);
-		}
-
-		public override void PrepareCommand(ref CommandType commandType, ref string commandText, ref IDbDataParameter[] commandParameters)
-		{
-			base.PrepareCommand(ref commandType, ref commandText, ref commandParameters);
-
-			if (commandParameters != null) foreach (var p in commandParameters)
-			{
-				if (p.Value is bool)
-					p.Value = (bool)p.Value ? 1 : 0;
-				else if (p.Value is Guid)
-				{
-					p.Value  = ((Guid)p.Value).ToByteArray();
-					p.DbType = DbType.Binary;
-					p.Size   = 16;
-				}
-			}
+			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 	}
 }

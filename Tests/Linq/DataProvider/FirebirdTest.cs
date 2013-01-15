@@ -60,7 +60,7 @@ namespace Tests.DataProvider
 
 		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
 		{
-			var skipTypes = skip.Split(' ').Select(s => s.Replace("u.", "unsigned "));
+			var skipTypes = skip.Split(' ');
 
 			foreach (var sqlType in new[]
 				{

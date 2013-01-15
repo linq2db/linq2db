@@ -87,3 +87,60 @@ CREATE TABLE "TestIdentity" (
 	"ID"   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL
 )
 GO
+
+
+DROP TABLE AllTypes
+GO
+
+CREATE TABLE AllTypes
+(
+	ID INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
+
+	bigintDataType           bigint           NULL,
+	intDataType              int              NULL,
+	smallintDataType         smallint         NULL,
+	decimalDataType          decimal(30)      NULL,
+	decfloatDataType         decfloat         NULL,
+	realDataType             real             NULL,
+	doubleDataType           double           NULL,
+
+	xmlDataType              xml              NULL
+)
+GO
+
+
+INSERT INTO AllTypes (xmlDataType) VALUES (NULL)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType,
+	intDataType,
+	smallintDataType,
+	decimalDataType,
+	decfloatDataType,
+	realDataType,
+	doubleDataType,
+
+	xmlDataType
+)
+VALUES
+(
+	1000000,
+	7777777,
+	100,
+	9999999,
+	8888888,
+	20.31,
+	16.2,
+
+--	Cast('2012-12-12 12:12:12' as datetime),
+--	           Cast('2012-12-12 12:12:12' as smalldatetime),
+--	      '1',     '234', '567', '23233',  '3323',  '111',
+--	        1,         2, Cast(3 as varbinary),
+--	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier),
+--	                  10,
+--	  '22322',    '3333',  2345,
+	'<root><element strattr="strvalue" intattr="12345"/></root>'
+)
+GO
