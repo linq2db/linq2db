@@ -104,6 +104,10 @@ CREATE TABLE AllTypes
 	realDataType             real             NULL,
 	doubleDataType           double           NULL,
 
+	charDataType             char(1)          NULL,
+	varcharDataType          varchar(20)      NULL,
+	clobDataType             clob             NULL,
+
 	xmlDataType              xml              NULL
 )
 GO
@@ -122,6 +126,10 @@ INSERT INTO AllTypes
 	realDataType,
 	doubleDataType,
 
+	charDataType,
+	varcharDataType,
+	clobDataType,
+
 	xmlDataType
 )
 VALUES
@@ -133,6 +141,10 @@ VALUES
 	8888888,
 	20.31,
 	16.2,
+
+	'1',
+	'234',
+	'55645',
 
 --	Cast('2012-12-12 12:12:12' as datetime),
 --	           Cast('2012-12-12 12:12:12' as smalldatetime),

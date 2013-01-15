@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
+using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -13,7 +14,7 @@ namespace LinqToDB.DataProvider
 	{
 		public DB2DataProvider() : base(new DB2MappingSchema())
 		{
-			//SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			SetProviderField<DB2DataReader,DB2Int64,        Int64>    ((r,i) => r.GetDB2Int64       (i));
 			SetProviderField<DB2DataReader,DB2Int32,        Int32>    ((r,i) => r.GetDB2Int32       (i));
@@ -23,6 +24,9 @@ namespace LinqToDB.DataProvider
 			SetProviderField<DB2DataReader,DB2Real,         Single>   ((r,i) => r.GetDB2Real        (i));
 			SetProviderField<DB2DataReader,DB2Real370,      Single>   ((r,i) => r.GetDB2Real370     (i));
 			SetProviderField<DB2DataReader,DB2Double,       Double>   ((r,i) => r.GetDB2Double      (i));
+
+			SetProviderField<DB2DataReader,DB2String,       String>   ((r,i) => r.GetDB2String      (i));
+			SetProviderField<DB2DataReader,DB2Clob,         String>   ((r,i) => r.GetDB2Clob        (i));
 
 			SetProviderField<DB2DataReader,DB2Binary,DB2Binary>((r,i) => r.GetDB2Binary(i));
 		}

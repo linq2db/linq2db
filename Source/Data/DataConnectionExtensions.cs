@@ -212,7 +212,7 @@ namespace LinqToDB.Data
 					var objectReader = GetObjectReader<T>(connection, rd, sql);
 
 #if DEBUG
-					var value = rd.GetValue(0);
+					//var value = rd.GetValue(0);
 #endif
 
 					try

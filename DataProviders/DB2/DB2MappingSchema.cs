@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(DB2Real),         DB2Real.        Null, DataType.Single);
 			AddScalarType(typeof(DB2Real370),      DB2Real370.     Null, DataType.Single);
 			AddScalarType(typeof(DB2Double),       DB2Double.      Null, DataType.Double);
+			AddScalarType(typeof(DB2String),       DB2String.      Null, DataType.NVarChar);
+			AddScalarType(typeof(DB2Clob),         DB2Clob.        Null, DataType.NText);
 
 			AddScalarType(typeof(DB2Binary),       DB2Binary.      Null, DataType.VarBinary);
 		}
