@@ -96,19 +96,29 @@ CREATE TABLE AllTypes
 (
 	ID INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
 
-	bigintDataType           bigint           NULL,
-	intDataType              int              NULL,
-	smallintDataType         smallint         NULL,
-	decimalDataType          decimal(30)      NULL,
-	decfloatDataType         decfloat         NULL,
-	realDataType             real             NULL,
-	doubleDataType           double           NULL,
+	bigintDataType           bigint                NULL,
+	intDataType              int                   NULL,
+	smallintDataType         smallint              NULL,
+	decimalDataType          decimal(30)           NULL,
+	decfloatDataType         decfloat              NULL,
+	realDataType             real                  NULL,
+	doubleDataType           double                NULL,
 
-	charDataType             char(1)          NULL,
-	varcharDataType          varchar(20)      NULL,
-	clobDataType             clob             NULL,
+	charDataType             char(1)               NULL,
+	varcharDataType          varchar(20)           NULL,
+	clobDataType             clob                  NULL,
+	dbclobDataType           dbclob(100)           NULL,
 
-	xmlDataType              xml              NULL
+	binaryDataType           char(5) for bit data,
+	varbinaryDataType        varchar(5) for bit data,
+	blobDataType             blob(10)              NULL,
+	graphicDataType          graphic(10)           NULL,
+
+	dateDataType             date                  NULL,
+	timeDataType             time                  NULL,
+	timestampDataType        timestamp             NULL,
+
+	xmlDataType              xml                   NULL
 )
 GO
 
@@ -129,6 +139,16 @@ INSERT INTO AllTypes
 	charDataType,
 	varcharDataType,
 	clobDataType,
+	dbclobDataType,
+
+	binaryDataType,
+	varbinaryDataType,
+	blobDataType,
+	graphicDataType,
+
+	dateDataType,
+	timeDataType,
+	timestampDataType,
 
 	xmlDataType
 )
@@ -145,14 +165,17 @@ VALUES
 	'1',
 	'234',
 	'55645',
+	'6687',
 
---	Cast('2012-12-12 12:12:12' as datetime),
---	           Cast('2012-12-12 12:12:12' as smalldatetime),
---	      '1',     '234', '567', '23233',  '3323',  '111',
---	        1,         2, Cast(3 as varbinary),
---	Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier),
---	                  10,
---	  '22322',    '3333',  2345,
+	'123',
+	'1234',
+	Cast('234' as blob),
+	'23',
+
+	Cast('2012-12-12' as date),
+	Cast('12:12:12' as time),
+	Cast('2012-12-12 12:12:12.012' as timestamp),
+
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 )
 GO

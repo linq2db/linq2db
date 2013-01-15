@@ -20,8 +20,13 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(DB2Double),       DB2Double.      Null, DataType.Double);
 			AddScalarType(typeof(DB2String),       DB2String.      Null, DataType.NVarChar);
 			AddScalarType(typeof(DB2Clob),         DB2Clob.        Null, DataType.NText);
-
 			AddScalarType(typeof(DB2Binary),       DB2Binary.      Null, DataType.VarBinary);
+			AddScalarType(typeof(DB2Blob),         DB2Blob.        Null, DataType.VarBinary);
+			AddScalarType(typeof(DB2Date),         DB2Date.        Null, DataType.Date);
+			AddScalarType(typeof(DB2Time),         DB2Time.        Null, DataType.Time);
+			AddScalarType(typeof(DB2TimeStamp),    DB2TimeStamp.   Null, DataType.DateTime2);
+			AddScalarType(typeof(DB2Xml),          DB2Xml.         Null, DataType.Xml);
+			AddScalarType(typeof(DB2RowId),        DB2RowId.       Null, DataType.VarBinary);
 		}
 	}
 }
