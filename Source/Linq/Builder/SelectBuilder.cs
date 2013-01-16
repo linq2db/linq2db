@@ -94,10 +94,9 @@ namespace LinqToDB.Linq.Builder
 						ExpressionBuilder.ParametersParam,
 					});
 
-				var func    = mapper.Compile();
-				var counter = 0;
+				var func = mapper.Compile();
 
-				Func<QueryContext,IDataContext,IDataReader,Expression,object[],T> map = (ctx,db,rd,e,ps) => func(counter++, ctx, db, rd, e, ps);
+				Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T> map = (ctx,db,rd,e,ps,i) => func(i, ctx, db, rd, e, ps);
 
 				query.SetQuery(map);
 			}

@@ -458,6 +458,18 @@ namespace Tests.Linq
 							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
 
 				Assert.AreEqual("7.77.True.0", lines[0]);
+
+				q =
+					db.Child
+						.OrderByDescending(m => m.ChildID)
+						.Where(m => m.Parent != null && m.ParentID > 0);
+
+				lines =
+					q.Select(
+						(m, i) =>
+							ConvertString(m.Parent.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+
+				Assert.AreEqual("7.77.True.0", lines[0]);
 			}
 		}
 
