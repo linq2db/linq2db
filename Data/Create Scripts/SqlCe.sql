@@ -100,6 +100,9 @@ CREATE TABLE TestIdentity (
 GO
 
 
+DROP TABLE AllTypes
+GO
+
 CREATE TABLE AllTypes
 (
 	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY,

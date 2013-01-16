@@ -97,8 +97,85 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID   SERIAL       NOT NULL,
+	ID   SERIAL                          NOT NULL,
+
+	bigintDataType   bigint                  NULL,
+	int8DataType     Int8                    NULL,
+	intDataType      int                     NULL,
+	smallintDataType smallint                NULL,
+	decimalDataType  decimal                 NULL,
+	moneyDataType    money                   NULL,
+	realDataType     real                    NULL,
+	floatDataType    float                   NULL,
+
+	boolDataType     boolean                 NULL,
+
+	charDataType     char(1)                 NULL,
+	varcharDataType  varchar(10)             NULL,
+	ncharDataType    nchar(10)               NULL,
+	nvarcharDataType nvarchar(10)            NULL,
+	lvarcharDataType lvarchar(10)            NULL,
+	textDataType     text                    NULL,
+
+	dateDataType     date                    NULL,
+	datetimeDataType datetime year to second NULL,
+	intervalDataType interval hour to second NULL,
+
+    byteDataType     byte                    NULL,
 
 	PRIMARY KEY(ID)
+)
+GO
+
+INSERT INTO AllTypes (bigintDataType) VALUES (NULL)
+GO
+
+INSERT INTO AllTypes
+(
+	bigintDataType,
+	int8DataType,
+	intDataType,
+	smallintDataType,
+	decimalDataType,
+	moneyDataType,
+	realDataType,
+	floatDataType,
+
+	boolDataType,
+
+	charDataType,
+	varcharDataType,
+	ncharDataType,
+	nvarcharDataType,
+	lvarcharDataType,
+	textDataType,
+
+	dateDataType,
+	datetimeDataType,
+	intervalDataType
+)
+VALUES
+(
+	1000000,
+	1000001,
+	7777777,
+	100,
+	9999999,
+	8888888,
+	20.31,
+	16.2,
+
+	't',
+
+	'1',
+	'234',
+	'55645',
+	'6687',
+	'AAAAA',
+	'BBBBB',
+
+	datetime(2012-12-12) year to day,
+	datetime(2012-12-12 12:12:12) year to second,
+	interval(12:12:12) hour to second
 )
 GO

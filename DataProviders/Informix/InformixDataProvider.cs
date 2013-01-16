@@ -1,144 +1,98 @@
 ﻿using System;
 using System.Data;
-using System.Data.Common;
-using System.Globalization;
-using System.Threading;
+using System.Data.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 using IBM.Data.Informix;
 
 namespace LinqToDB.DataProvider
 {
-	using SqlProvider;
-
-	class InformixDataProvider :  DataProviderBaseOld
+	public class InformixDataProvider : DataProviderBase
 	{
-		public override IDbConnection CreateConnectionObject () { return new IfxConnection      (); }
-		public override DbDataAdapter CreateDataAdapterObject() { return new IfxDataAdapter     (); }
-		public override ISqlProvider  CreateSqlProvider      () { return new InformixSqlProvider(); }
-
-		public override Type   ConnectionType { get { return typeof(IfxConnection);          } }
-		public override string Name           { get { return LinqToDB.ProviderName.Informix; } }
-		public override string EndOfSql       { get { return ";"; } }
-
-		public override bool DeriveParameters(IDbCommand command)
+		public InformixDataProvider() : base(new InformixMappingSchema())
 		{
-			if (command is IfxCommand)
-			{
-				IfxCommandBuilder.DeriveParameters((IfxCommand)command);
-				return true;
-			}
+			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
+			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			return false;
+			SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
+
+			SetProviderField<IfxDataReader,IfxDecimal, decimal> ((r,i) => r.GetIfxDecimal (i));
+			SetProviderField<IfxDataReader,IfxDateTime,DateTime>((r,i) => r.GetIfxDateTime(i));
+			SetProviderField<IfxDataReader,IfxTimeSpan,TimeSpan>((r,i) => r.GetIfxTimeSpan(i));
 		}
 
-		public override object Convert(object value, ConvertType convertType)
+		public override string Name           { get { return ProviderName.DB2;      } }
+		public override Type   ConnectionType { get { return typeof(IfxConnection); } }
+		public override Type   DataReaderType { get { return typeof(IfxDataReader); } }
+		
+		public override IDbConnection CreateConnection(string connectionString)
 		{
-			switch (convertType)
+			return new IfxConnection(connectionString);
+		}
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+//			if (value is sbyte)
+//			{
+//				value    = (short)(sbyte)value;
+//				dataType = DataType.Int16;
+//			}
+//			else if (value is byte)
+//			{
+//				value    = (short)(byte)value;
+//				dataType = DataType.Int16;
+//			}
+
+			if (dataType == DataType.Undefined && value != null)
+				dataType = MappingSchema.GetDataType(value.GetType());
+
+			switch (dataType)
 			{
-				case ConvertType.ExceptionToErrorNumber:
-					if (value is IfxException)
-					{
-						var ex = (IfxException)value;
-
-						foreach (IfxError error in ex.Errors)
-							return error.NativeError;
-
-						return 0;
-					}
-
+				case DataType.UInt16     : dataType = DataType.Int32;    break;
+				case DataType.UInt32     : dataType = DataType.Int64;    break;
+				case DataType.UInt64     : dataType = DataType.Decimal;  break;
+				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
+				case DataType.DateTime2  : dataType = DataType.DateTime; break;
+				case DataType.Time       :
+					if (value is TimeSpan)
+						value = new IfxTimeSpan((TimeSpan)value);
+					break;
+//				case DataType.Char       :
+//				case DataType.VarChar    :
+//				case DataType.NChar      :
+//				case DataType.NVarChar   :
+//					if (value is Guid) value = ((Guid)value).ToString();
+//					break;
+//				case DataType.Guid       :
+//					if (value is Guid)
+//					{
+//						value    = ((Guid)value).ToByteArray();
+//						dataType = DataType.VarBinary;
+//					}
+//					break;
+				case DataType.Binary     :
+				case DataType.VarBinary  :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					if (value is Guid)   value = ((Guid)value).ToByteArray();
+					break;
+				case DataType.Xml        :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 			}
 
-			return SqlProvider.Convert(value, convertType);
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void PrepareCommand(ref CommandType commandType, ref string commandText, ref IDbDataParameter[] commandParameters)
+		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-			base.PrepareCommand(ref commandType, ref commandText, ref commandParameters);
-
-			if (commandParameters != null) foreach (var p in commandParameters)
+			switch (dataType)
 			{
-				if (p.Value is Guid)
-				{
-					var value = p.Value.ToString();
-					p.DbType = DbType.AnsiStringFixedLength;
-					p.Value  = value;
-					p.Size   = value.Length;
-				}
-				else if (p.Value is bool)
-				{
-					p.Value = ((InformixSqlProvider)SqlProvider).ConvertBooleanValue((bool)p.Value);
-				}
-				//else if (p.DbType == DbType.Binary)
-				//{
-				//	var ip = (IfxParameter)p;
-
-				//	ip.IfxType = IfxType.Blob;
-				//}
+				case DataType.Text  : ((IfxParameter)parameter).IfxType = IfxType.Clob; break;
+				case DataType.NText : ((IfxParameter)parameter).IfxType = IfxType.Clob; break;
+				default             : base.SetParameterType(parameter, dataType);       break;
 			}
 		}
-
-		#region GetDataReader
-
-		public override IDataReader GetDataReader(Mapping.MappingSchemaOld schema, IDataReader dataReader)
-		{
-			return dataReader is IfxDataReader?
-				new InformixDataReaderEx((IfxDataReader)dataReader):
-				base.GetDataReader(schema, dataReader);
-		}
-
-		class InformixDataReaderEx : DataReaderBase<IfxDataReader>, IDataReader
-		{
-			public InformixDataReaderEx(IfxDataReader rd): base(rd)
-			{
-			}
-
-			public new float GetFloat(int i)
-			{
-				var current = Thread.CurrentThread.CurrentCulture;
-
-				if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-				var value = DataReader.GetFloat(i);
-
-				if (current != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = current;
-
-				return value;
-			}
-
-			public new double GetDouble(int i)
-			{
-				var current = Thread.CurrentThread.CurrentCulture;
-
-				if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-				var value = DataReader.GetDouble(i);
-
-				if (current != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = current;
-
-				return value;
-			}
-
-			public new decimal GetDecimal(int i)
-			{
-				var current = Thread.CurrentThread.CurrentCulture;
-
-				if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-				var value = DataReader.GetDecimal     (i);
-
-				if (current != CultureInfo.InvariantCulture)
-					Thread.CurrentThread.CurrentCulture = current;
-
-				return value;
-			}
-		}
-
-		#endregion
 	}
 }

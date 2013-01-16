@@ -43,7 +43,7 @@ namespace Tests.DataProvider
 			conn.Command = null;
 			Assert.That(value, Is.EqualTo(conn.MappingSchema.GetDefaultValue(typeof(T))));
 
-			if (!skipNull && !skipPass)
+			if (!skipNull && !skipPass && PassNullSql != null)
 			{
 				sql = string.Format(PassNullSql, fieldName, tableName);
 

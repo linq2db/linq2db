@@ -50,6 +50,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
 		}
 
+		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;

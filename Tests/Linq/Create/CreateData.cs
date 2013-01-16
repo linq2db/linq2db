@@ -4,10 +4,8 @@ using System.IO;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 
 using NUnit.Framework;
-using NpgsqlTypes;
 
 namespace Tests.Create
 {
@@ -144,7 +142,7 @@ namespace Tests.Create
 		}
 
 		[Test] public void DB2       ([IncludeDataContexts(ProviderName.DB2)]           string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");        }
-		[Test] public void Informix  ([IncludeDataContexts(ProviderName.Informix)]      string ctx) { RunScript(ctx,          "\nGO\n",  "Informix");   }
+		[Test] public void Informix  ([IncludeDataContexts(ProviderName.Informix)]      string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
 		[Test] public void Oracle    ([IncludeDataContexts(ProviderName.Oracle)]        string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");     }
 		[Test] public void Firebird  ([IncludeDataContexts(ProviderName.Firebird)]      string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");   }
 		[Test] public void PostgreSQL([IncludeDataContexts(ProviderName.PostgreSQL)]    string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL"); }
@@ -155,10 +153,10 @@ namespace Tests.Create
 		[Test] public void Sql2012   ([IncludeDataContexts(ProviderName.SqlServer2012)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");  }
 		[Test] public void SqlCe     ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");      }
 		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");      }
-		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite", SQLiteAction); }
-		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite", SQLiteAction); }
-		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access", AccessAction); }
-		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access", AccessAction); }
+		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
+		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
 
 		static void AccessAction(IDbConnection connection)
 		{
@@ -213,6 +211,22 @@ namespace Tests.Create
 						varbinaryDataType        = new byte[] { 2 },
 						imageDataType            = new byte[] { 0, 0, 0, 3 },
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
+					});
+			}
+		}
+
+		static void InformixAction(IDbConnection connection)
+		{
+			using (var conn = LinqToDB.DataProvider.SQLite.CreateDataConnection(connection))
+			{
+				conn.Execute(@"
+					UPDATE AllTypes
+					SET
+						byteDataType = ?
+					WHERE ID = 2",
+					new
+					{
+						blob = new byte[] { 1, 2, },
 					});
 			}
 		}
