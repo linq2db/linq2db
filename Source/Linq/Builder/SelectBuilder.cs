@@ -23,7 +23,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					case 1 :
 					case 2 : return true;
-					default: break;
 				}
 			}
 
