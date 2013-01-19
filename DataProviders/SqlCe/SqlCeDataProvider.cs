@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
 using System.Data.SqlServerCe;
 using System.Data.SqlTypes;
 using System.Xml;
@@ -35,9 +34,6 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
 			switch (dataType)
 			{
 				case DataType.Xml :

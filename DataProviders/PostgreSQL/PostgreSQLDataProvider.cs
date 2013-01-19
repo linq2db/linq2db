@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using Npgsql;
 using NpgsqlTypes;
@@ -44,51 +41,26 @@ namespace LinqToDB.DataProvider
 			return new PostgreSQLSqlProvider();
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
-		{
-			if (dataType == DataType.Undefined && value != null && !(value is string))
-				dataType = MappingSchema.GetDataType(value.GetType());
-
-			switch (dataType)
-			{
-				case DataType.SByte      : dataType = DataType.Int16;     break;
-				case DataType.UInt16     : dataType = DataType.Int32;     break;
-				case DataType.UInt32     : dataType = DataType.Int64;     break;
-				case DataType.UInt64     : dataType = DataType.Decimal;   break;
-				case DataType.DateTime2  : dataType = DataType.DateTime;  break;
-				case DataType.VarNumeric : dataType = DataType.Decimal;   break;
-				case DataType.Decimal    :
-				case DataType.Money      : dataType = DataType.Undefined; break;
-				case DataType.Image      : dataType = DataType.VarBinary; goto case DataType.VarBinary;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
-				case DataType.Undefined  :
-					     if (value is Binary)      value = ((Binary)value).ToArray();
-					else if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
-			}
-
-			base.SetParameter(parameter, name, dataType, value);
-		}
-
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
-				case DataType.Binary    :
-				case DataType.VarBinary : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Bytea;   break;
-				case DataType.Boolean   : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Boolean; break;
-				case DataType.Xml       : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Xml;     break;
-				case DataType.Text      :
-				case DataType.NText     : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Text;    break;
-				default                 : base.SetParameterType(parameter, dataType);                       break;
+				case DataType.SByte      : parameter.DbType = DbType.Int16;                                  break;
+				case DataType.UInt16     : parameter.DbType = DbType.Int32;                                  break;
+				case DataType.UInt32     : parameter.DbType = DbType.Int64;                                  break;
+				case DataType.UInt64     : parameter.DbType = DbType.Decimal;                                break;
+				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;                               break;
+				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;                                break;
+				case DataType.Decimal    :
+				case DataType.Money      : break;
+				case DataType.Image      :
+				case DataType.Binary     :
+				case DataType.VarBinary  : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Bytea;   break;
+				case DataType.Boolean    : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Boolean; break;
+				case DataType.Xml        : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Xml;     break;
+				case DataType.Text       :
+				case DataType.NText      : ((NpgsqlParameter)parameter).NpgsqlDbType = NpgsqlDbType.Text;    break;
+				default                  : base.SetParameterType(parameter, dataType);                       break;
 			}
 		}
 	}

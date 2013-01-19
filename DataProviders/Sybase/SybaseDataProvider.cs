@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -57,26 +56,16 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
 			switch (dataType)
 			{
 				case DataType.SByte      : 
 					dataType = DataType.Int16;
-					if (value != null)
+					if (value is sbyte)
 						value = (short)(sbyte)value;
 					break;
 
 				case DataType.Time       :
 					if (value is TimeSpan) value = new DateTime(1900, 1, 1) + (TimeSpan)value;
-					break;
-
-				case DataType.VarNumeric : dataType = DataType.Decimal; break;
-
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
 
 				case DataType.Xml        :
@@ -105,6 +94,7 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;                                break;
 				case DataType.UInt16        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedSmallInt; break;
 				case DataType.UInt32        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedInt;      break;
 				case DataType.UInt64        : ((AseParameter)parameter).AseDbType = AseDbType.UnsignedBigInt;   break;

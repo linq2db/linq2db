@@ -47,39 +47,39 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-//				Assert.That(TestType<long?>             (conn, "bigintDataType",      DataType.Int64),                   Is.EqualTo(1000000));
-//				Assert.That(TestType<decimal?>          (conn, "numericDataType",     DataType.Decimal),                 Is.EqualTo(9999999m));
-//				Assert.That(TestType<short?>            (conn, "smallintDataType",    DataType.Int16),                   Is.EqualTo(25555));
-//				Assert.That(TestType<int?>              (conn, "intDataType",         DataType.Int32),                   Is.EqualTo(7777777));
-//				Assert.That(TestType<decimal?>          (conn, "moneyDataType",       DataType.Money),                   Is.EqualTo(100000m));
-//				Assert.That(TestType<double?>           (conn, "doubleDataType",      DataType.Double),                  Is.EqualTo(20.31d));
-//				Assert.That(TestType<float?>            (conn, "realDataType",        DataType.Single),                  Is.EqualTo(16.2f));
-//
-//				Assert.That(TestType<NpgsqlTimeStamp?>  (conn, "timestampDataType"),                                     Is.EqualTo(new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)));
-//				Assert.That(TestType<DateTime?>         (conn, "timestampDataType",   DataType.DateTime2),               Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-//				Assert.That(TestType<NpgsqlTimeStampTZ?>(conn, "timestampTZDataType"),                                   Is.EqualTo(new NpgsqlTimeStampTZ(2012, 12, 12, 11, 12, 12, new NpgsqlTimeZone(-5, 0))));
-//				Assert.That(TestType<DateTimeOffset?>   (conn, "timestampTZDataType", DataType.DateTimeOffset),          Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, new TimeSpan(-5, 0, 0))));
-//				Assert.That(TestType<NpgsqlDate?>       (conn, "dateDataType"),                                          Is.EqualTo(new NpgsqlDate(2012, 12, 12)));
-//				Assert.That(TestType<DateTime?>         (conn, "dateDataType",        DataType.Date),                    Is.EqualTo(new DateTime(2012, 12, 12)));
-//				Assert.That(TestType<NpgsqlTime?>       (conn, "timeDataType"),                                          Is.EqualTo(new NpgsqlTime(12, 12, 12)));
-//				Assert.That(TestType<NpgsqlTimeTZ?>     (conn, "timeTZDataType"),                                        Is.EqualTo(new NpgsqlTimeTZ(12, 12, 12)));
-//				Assert.That(TestType<NpgsqlInterval?>   (conn, "intervalDataType"),                                      Is.EqualTo(new NpgsqlInterval(1, 3, 5, 20)));
-//
-//				Assert.That(TestType<char?>             (conn, "charDataType",        DataType.Char),                    Is.EqualTo('1'));
-//				Assert.That(TestType<string>            (conn, "charDataType",        DataType.Char),                    Is.EqualTo("1"));
-//				Assert.That(TestType<string>            (conn, "charDataType",        DataType.NChar),                   Is.EqualTo("1"));
-//				Assert.That(TestType<string>            (conn, "varcharDataType",     DataType.VarChar),                 Is.EqualTo("234"));
-//				Assert.That(TestType<string>            (conn, "varcharDataType",     DataType.NVarChar),                Is.EqualTo("234"));
-//				Assert.That(TestType<string>            (conn, "textDataType",        DataType.Text),                    Is.EqualTo("567"));
-//
-//				Assert.That(TestType<byte[]>            (conn, "binaryDataType",      DataType.Binary),                  Is.EqualTo(new byte[] { 42 }));
-//				Assert.That(TestType<byte[]>            (conn, "binaryDataType",      DataType.VarBinary),               Is.EqualTo(new byte[] { 42 }));
-//				Assert.That(TestType<Binary>            (conn, "binaryDataType",      DataType.VarBinary).ToArray(),     Is.EqualTo(new byte[] { 42 }));
-//
-//				Assert.That(TestType<Guid?>             (conn, "uuidDataType",        DataType.Guid),                    Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-//				Assert.That(TestType<BitString?>        (conn, "bitDataType"),                                           Is.EqualTo(new BitString(new[] { true, false, true })));
-//				Assert.That(TestType<bool?>             (conn, "booleanDataType",     DataType.Boolean),                 Is.EqualTo(true));
-				Assert.That(TestType<string>            (conn, "colorDataType", skipDefaultNull:true, skipDefault:true), Is.EqualTo("Green"));
+				Assert.That(TestType<long?>             (conn, "bigintDataType",      DataType.Int64),                   Is.EqualTo(1000000));
+				Assert.That(TestType<decimal?>          (conn, "numericDataType",     DataType.Decimal),                 Is.EqualTo(9999999m));
+				Assert.That(TestType<short?>            (conn, "smallintDataType",    DataType.Int16),                   Is.EqualTo(25555));
+				Assert.That(TestType<int?>              (conn, "intDataType",         DataType.Int32),                   Is.EqualTo(7777777));
+				Assert.That(TestType<decimal?>          (conn, "moneyDataType",       DataType.Money),                   Is.EqualTo(100000m));
+				Assert.That(TestType<double?>           (conn, "doubleDataType",      DataType.Double),                  Is.EqualTo(20.31d));
+				Assert.That(TestType<float?>            (conn, "realDataType",        DataType.Single),                  Is.EqualTo(16.2f));
+
+				Assert.That(TestType<NpgsqlTimeStamp?>  (conn, "timestampDataType"),                                     Is.EqualTo(new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DateTime?>         (conn, "timestampDataType",   DataType.DateTime2),               Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<NpgsqlTimeStampTZ?>(conn, "timestampTZDataType"),                                   Is.EqualTo(new NpgsqlTimeStampTZ(2012, 12, 12, 11, 12, 12, new NpgsqlTimeZone(-5, 0))));
+				Assert.That(TestType<DateTimeOffset?>   (conn, "timestampTZDataType", DataType.DateTimeOffset),          Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, new TimeSpan(-5, 0, 0))));
+				Assert.That(TestType<NpgsqlDate?>       (conn, "dateDataType"),                                          Is.EqualTo(new NpgsqlDate(2012, 12, 12)));
+				Assert.That(TestType<DateTime?>         (conn, "dateDataType",        DataType.Date),                    Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<NpgsqlTime?>       (conn, "timeDataType"),                                          Is.EqualTo(new NpgsqlTime(12, 12, 12)));
+				Assert.That(TestType<NpgsqlTimeTZ?>     (conn, "timeTZDataType"),                                        Is.EqualTo(new NpgsqlTimeTZ(12, 12, 12)));
+				Assert.That(TestType<NpgsqlInterval?>   (conn, "intervalDataType"),                                      Is.EqualTo(new NpgsqlInterval(1, 3, 5, 20)));
+
+				Assert.That(TestType<char?>             (conn, "charDataType",        DataType.Char),                    Is.EqualTo('1'));
+				Assert.That(TestType<string>            (conn, "charDataType",        DataType.Char),                    Is.EqualTo("1"));
+				Assert.That(TestType<string>            (conn, "charDataType",        DataType.NChar),                   Is.EqualTo("1"));
+				Assert.That(TestType<string>            (conn, "varcharDataType",     DataType.VarChar),                 Is.EqualTo("234"));
+				Assert.That(TestType<string>            (conn, "varcharDataType",     DataType.NVarChar),                Is.EqualTo("234"));
+				Assert.That(TestType<string>            (conn, "textDataType",        DataType.Text),                    Is.EqualTo("567"));
+
+				Assert.That(TestType<byte[]>            (conn, "binaryDataType",      DataType.Binary),                  Is.EqualTo(new byte[] { 42 }));
+				Assert.That(TestType<byte[]>            (conn, "binaryDataType",      DataType.VarBinary),               Is.EqualTo(new byte[] { 42 }));
+				Assert.That(TestType<Binary>            (conn, "binaryDataType",      DataType.VarBinary).ToArray(),     Is.EqualTo(new byte[] { 42 }));
+
+				Assert.That(TestType<Guid?>             (conn, "uuidDataType",        DataType.Guid),                    Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+				Assert.That(TestType<BitString?>        (conn, "bitDataType"),                                           Is.EqualTo(new BitString(new[] { true, false, true })));
+				Assert.That(TestType<bool?>             (conn, "booleanDataType",     DataType.Boolean),                 Is.EqualTo(true));
+				Assert.That(TestType<string>            (conn, "colorDataType"),                                         Is.EqualTo("Green"));
 
 				Assert.That(TestType<NpgsqlPoint?>      (conn, "pointDataType", skipNull:true, skipNotNull:true),        Is.EqualTo(new NpgsqlPoint(1, 2)));
 				Assert.That(TestType<NpgsqlLSeg?>       (conn, "lsegDataType"),                                          Is.EqualTo(new NpgsqlLSeg(new NpgsqlPoint(1, 2), new NpgsqlPoint(3, 4))));

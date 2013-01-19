@@ -127,15 +127,7 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
-				case DataType.SByte      : dataType = DataType.Int16;   break;
-				case DataType.UInt16     : dataType = DataType.Int32;   break;
-				case DataType.UInt32     : dataType = DataType.Int64;   break;
-				case DataType.UInt64     : dataType = DataType.Decimal; break;
-				case DataType.VarNumeric : dataType = DataType.Decimal; break;
-				case DataType.DateTime2  :
-					if (Version == SqlServerVersion.v2005)
-						dataType = DataType.DateTime;
-					break;
+				case DataType.Image      :
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
@@ -151,34 +143,25 @@ namespace LinqToDB.DataProvider
 							((SqlParameter)parameter).UdtTypeName = s;
 					}
 					break;
-				case DataType.Undefined  :
-					if (dataType == DataType.Undefined && value != null)
-					{
-						dataType = MappingSchema.GetDataType(value.GetType());
-
-						if (dataType != DataType.Undefined)
-						{
-							SetParameter(parameter, name, dataType, value);
-							return;
-						}
-					}
-
-					{
-						string s;
-						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
-							((SqlParameter)parameter).UdtTypeName = s;
-					}
-
-					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			parameter.ParameterName = name;
+			SetParameterType(parameter, dataType);
+			parameter.Value = value ?? DBNull.Value;
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
+				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;
+				case DataType.UInt16        : parameter.DbType = DbType.Int32;   break;
+				case DataType.UInt32        : parameter.DbType = DbType.Int64;   break;
+				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
+				case DataType.DateTime2     :
+					parameter.DbType = Version == SqlServerVersion.v2005 ? DbType.DateTime : DbType.DateTime2;
+					break;
 				case DataType.Text          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;          break;
 				case DataType.NText         : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;         break;
 				case DataType.Binary        : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;        break;

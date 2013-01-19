@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
 using System.Data.SQLite;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
@@ -31,34 +28,15 @@ namespace LinqToDB.DataProvider
 			return new SQLiteSqlProvider();
 		}
 
-		#region Overrides
-
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
-				case DataType.UInt32     : dataType = DataType.Int64;   break;
-				case DataType.UInt64     : dataType = DataType.Decimal; break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
-				case DataType.Undefined  :
-					     if (value is uint)         dataType = DataType.Int64;
-					else if (value is ulong)        dataType = DataType.Decimal;
-					else if (value is Binary)       value = ((Binary)value).ToArray();
-					else if (value is XDocument)    value = value.ToString();
-					else if (value is XmlDocument)  value = ((XmlDocument)value).InnerXml;
-					break;
+				case DataType.UInt32 : dataType = DataType.Int64;   break;
+				case DataType.UInt64 : dataType = DataType.Decimal; break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameterType(parameter, dataType);
 		}
-
-		#endregion
 	}
 }
