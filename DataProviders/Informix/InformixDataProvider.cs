@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using IBM.Data.Informix;
 
@@ -42,42 +39,26 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
-			switch (dataType)
-			{
-				case DataType.UInt16     : dataType = DataType.Int32;    break;
-				case DataType.UInt32     : dataType = DataType.Int64;    break;
-				case DataType.UInt64     : dataType = DataType.Decimal;  break;
-				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
-				case DataType.DateTime2  : dataType = DataType.DateTime; break;
-				case DataType.Time       :
-					if (value is TimeSpan)
-						value = new IfxTimeSpan((TimeSpan)value);
-					break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					if (value is Guid)   value = ((Guid)value).ToByteArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
-			}
+			if (value is TimeSpan)
+				value = new IfxTimeSpan((TimeSpan)value);
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
-				case DataType.Text  : ((IfxParameter)parameter).IfxType = IfxType.Clob; break;
-				case DataType.NText : ((IfxParameter)parameter).IfxType = IfxType.Clob; break;
-				default             : base.SetParameterType(parameter, dataType);       break;
+				case DataType.UInt16    : dataType = DataType.Int32;    break;
+				case DataType.UInt32    : dataType = DataType.Int64;    break;
+				case DataType.UInt64    : dataType = DataType.Decimal;  break;
+				case DataType.VarNumeric: dataType = DataType.Decimal;  break;
+				case DataType.DateTime2 : dataType = DataType.DateTime; break;
+				case DataType.Text      : ((IfxParameter)parameter).IfxType = IfxType.Clob; return;
+				case DataType.NText     : ((IfxParameter)parameter).IfxType = IfxType.Clob; return;
 			}
+
+			base.SetParameterType(parameter, dataType);
 		}
 	}
 }

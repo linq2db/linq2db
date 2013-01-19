@@ -676,56 +676,16 @@ namespace LinqToDB.Data
 
 			foreach (var parameter in parameters)
 			{
-				var p = dataConnection.Command.CreateParameter();
+				var p        = dataConnection.Command.CreateParameter();
+				var dataType = parameter.DataType;
+				var value    = parameter.Value;
 
-				dataConnection.DataProvider.SetParameter(
-					p,
-					parameter.Name,
-					parameter.DataType,
-					parameter.Value);
+				if (dataType == DataType.Undefined && value != null)
+					dataType = dataConnection.MappingSchema.GetDataType(value.GetType());
 
+				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
 				dataConnection.Command.Parameters.Add(p);
 			}
-
-			/*
-			if (parameters == null)
-			{
-				if (dataConnection.Command.Parameters.Count != 0)
-					dataConnection.Command.Parameters.Clear();
-				return;
-			}
-
-			var n = Math.Min(parameters.Length, dataConnection.Command.Parameters.Count);
-
-			for (var i = 0; i < n; i++)
-			{
-				var parameter = parameters[i];
-
-				dataConnection.DataProvider.SetParameter(
-					(IDbDataParameter)dataConnection.Command.Parameters[i],
-					parameter.Name,
-					parameter.DataType,
-					parameter.Value);
-			}
-
-			for (var i = dataConnection.Command.Parameters.Count; i < parameters.Length; i++)
-			{
-				var p = dataConnection.Command.CreateParameter();
-
-				var parameter = parameters[i];
-
-				dataConnection.DataProvider.SetParameter(
-					p,
-					parameter.Name,
-					parameter.DataType,
-					parameter.Value);
-
-				dataConnection.Command.Parameters.Add(p);
-			}
-
-			for (var i = parameters.Length; i < dataConnection.Command.Parameters.Count; i++)
-				dataConnection.Command.Parameters.RemoveAt(i);
-			*/
 		}
 
 		public struct ParamKey : IEquatable<ParamKey>

@@ -44,8 +44,6 @@ namespace LinqToDB.DataProvider
 			return new PostgreSQLSqlProvider();
 		}
 
-		#region Overrides
-
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			if (dataType == DataType.Undefined && value != null && !(value is string))
@@ -80,7 +78,7 @@ namespace LinqToDB.DataProvider
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
@@ -93,7 +91,5 @@ namespace LinqToDB.DataProvider
 				default                 : base.SetParameterType(parameter, dataType);                       break;
 			}
 		}
-
-		#endregion
 	}
 }

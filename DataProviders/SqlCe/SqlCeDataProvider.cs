@@ -40,19 +40,7 @@ namespace LinqToDB.DataProvider
 
 			switch (dataType)
 			{
-				case DataType.SByte      : dataType = DataType.Int16;    break;
-				case DataType.UInt16     : dataType = DataType.Int32;    break;
-				case DataType.UInt32     : dataType = DataType.Int64;    break;
-				case DataType.UInt64     : dataType = DataType.Decimal;  break;
-				case DataType.VarNumeric : dataType = DataType.Decimal;  break;
-				case DataType.Char       : dataType = DataType.NChar;    break;
-				case DataType.VarChar    : dataType = DataType.NVarChar; break;
-				case DataType.Text       : dataType = DataType.NText;    break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
+				case DataType.Xml :
 					dataType = DataType.NVarChar;
 
 					if (value is SqlXml)
@@ -69,27 +57,32 @@ namespace LinqToDB.DataProvider
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			var p = (SqlCeParameter)parameter;
 
 			switch (dataType)
 			{
-				case DataType.Text      :
-				case DataType.NText     : p.SqlDbType = SqlDbType.NText;     break;
-				case DataType.Char      :
-				case DataType.NChar     : p.SqlDbType = SqlDbType.NChar;     break;
-				case DataType.VarChar   :
-				case DataType.NVarChar  : p.SqlDbType = SqlDbType.NVarChar;  break;
-				case DataType.Timestamp : p.SqlDbType = SqlDbType.Timestamp; break;
-				case DataType.Binary    : p.SqlDbType = SqlDbType.Binary;    break;
-				case DataType.VarBinary : p.SqlDbType = SqlDbType.VarBinary; break;
-				case DataType.Image     : p.SqlDbType = SqlDbType.Image;     break;
-				case DataType.DateTime  :
-				case DataType.DateTime2 : p.SqlDbType = SqlDbType.DateTime;  break;
-				case DataType.Money     : p.SqlDbType = SqlDbType.Money;     break;
-				case DataType.Boolean   : p.SqlDbType = SqlDbType.Money;     break;
-				default                 :
+				case DataType.SByte      : p.DbType    = DbType.Int16;        break;
+				case DataType.UInt16     : p.DbType    = DbType.Int32;        break;
+				case DataType.UInt32     : p.DbType    = DbType.Int64;        break;
+				case DataType.UInt64     : p.DbType    = DbType.Decimal;      break;
+				case DataType.VarNumeric : p.DbType    = DbType.Decimal;      break;
+				case DataType.Text       :
+				case DataType.NText      : p.SqlDbType = SqlDbType.NText;     break;
+				case DataType.Char       :
+				case DataType.NChar      : p.SqlDbType = SqlDbType.NChar;     break;
+				case DataType.VarChar    :
+				case DataType.NVarChar   : p.SqlDbType = SqlDbType.NVarChar;  break;
+				case DataType.Timestamp  : p.SqlDbType = SqlDbType.Timestamp; break;
+				case DataType.Binary     : p.SqlDbType = SqlDbType.Binary;    break;
+				case DataType.VarBinary  : p.SqlDbType = SqlDbType.VarBinary; break;
+				case DataType.Image      : p.SqlDbType = SqlDbType.Image;     break;
+				case DataType.DateTime   :
+				case DataType.DateTime2  : p.SqlDbType = SqlDbType.DateTime;  break;
+				case DataType.Money      : p.SqlDbType = SqlDbType.Money;     break;
+				case DataType.Boolean    : p.SqlDbType = SqlDbType.Money;     break;
+				default                  :
 					base.SetParameterType(parameter, dataType);
 					break;
 			}

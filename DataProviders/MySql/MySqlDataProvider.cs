@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using MySql.Data.MySqlClient;
 using MySql.Data.Types;
@@ -15,8 +12,6 @@ namespace LinqToDB.DataProvider
 	{
 		public MySqlDataProvider() : base(new MySqlMappingSchema())
 		{
-			//SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
-
 			SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
 			SetProviderField<MySqlDataReader,MySqlDateTime>((r,i) => r.GetMySqlDateTime(i));
 			SetToTypeField  <MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
@@ -39,27 +34,20 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
-			switch (dataType)
-			{
-				//case DataType.VarNumeric : dataType = DataType.Decimal; break;
-				case DataType.DateTime2  : dataType = DataType.DateTime; break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
-			}
-
 			if (value is MySqlDecimal)
 				value = ((MySqlDecimal)value).Value;
 
 			base.SetParameter(parameter, name, dataType, value);
+		}
+
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		{
+			switch (dataType)
+			{
+				case DataType.DateTime2 : dataType = DataType.DateTime; break;
+			}
+
+			base.SetParameterType(parameter, dataType);
 		}
 	}
 }

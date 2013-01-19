@@ -4,12 +4,12 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
+	using Mapping;
 	using SqlBuilder;
 	using SqlProvider;
 
@@ -185,11 +185,7 @@ namespace LinqToDB.Data
 					break;
 			}
 
-			DataProvider.SetParameter(
-					p,
-					name,
-					dataType,
-					parm.Value);
+			DataProvider.SetParameter(p, name, dataType, parm.Value);
 
 			parms.Add(p);
 		}
@@ -402,7 +398,7 @@ namespace LinqToDB.Data
 		MappingSchemaOld _mappingSchemaOld;
 		MappingSchemaOld IMappingSchemaProvider.MappingSchema
 		{
-			get { return _mappingSchemaOld ?? (_mappingSchemaOld = new MappingSchemaOld()); }
+			get { return _mappingSchemaOld ?? (_mappingSchemaOld = new MappingSchemaOld { NewSchema = MappingSchema }); }
 		}
 
 		#endregion

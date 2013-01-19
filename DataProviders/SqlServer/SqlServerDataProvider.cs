@@ -8,7 +8,9 @@ using System.Data.SqlTypes;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+
 using LinqToDB.Data;
+
 using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
@@ -173,7 +175,7 @@ namespace LinqToDB.DataProvider
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{

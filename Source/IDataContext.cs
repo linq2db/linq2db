@@ -12,14 +12,14 @@ namespace LinqToDB
 		string             ContextID         { get; }
 		Func<ISqlProvider> CreateSqlProvider { get; }
 
-		object             SetQuery        (IQueryContext queryContext);
-		int                ExecuteNonQuery (object query);
-		object             ExecuteScalar   (object query);
-		IDataReader        ExecuteReader   (object query);
-		void               ReleaseQuery    (object query);
+		object             SetQuery       (IQueryContext queryContext);
+		int                ExecuteNonQuery(object query);
+		object             ExecuteScalar  (object query);
+		IDataReader        ExecuteReader  (object query);
+		void               ReleaseQuery   (object query);
 
-		string             GetSqlText      (object query);
-		IDataContext       Clone           (bool forNestedQuery);
+		string             GetSqlText     (object query);
+		IDataContext       Clone          (bool forNestedQuery);
 
 		event EventHandler OnClosing;
 	}

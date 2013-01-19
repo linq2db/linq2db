@@ -276,9 +276,9 @@ namespace LinqToDB.Linq.Builder
 			class MappingData
 			{
 				public MappingSchemaOld  MappingSchema;
-				public ObjectMapper   ObjectMapper;
-				public int[]          Index;
-				public IValueMapper[] ValueMappers;
+				public ObjectMapper      ObjectMapper;
+				public int[]             Index;
+				public IValueMapper[]    ValueMappers;
 			}
 
 			static object MapDataReaderToObject(IDataReader dataReader, MappingData data)

@@ -96,13 +96,10 @@
     </Reference>
     <Reference Include="System.Core">
     </Reference>
-    <Reference Include="System.Data.Linq">
-    </Reference>
     <Reference Include="System.Data">
     </Reference>
-    <Reference Include="System.Xml">
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MySql.cs" />

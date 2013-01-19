@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using IBM.Data.DB2;
 using IBM.Data.DB2Types;
@@ -63,9 +60,6 @@ namespace LinqToDB.DataProvider
 				dataType = DataType.Int16;
 			}
 
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
 			switch (dataType)
 			{
 				case DataType.UInt16     : dataType = DataType.Int32;    break;
@@ -88,12 +82,7 @@ namespace LinqToDB.DataProvider
 					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					if (value is Guid)   value = ((Guid)value).ToByteArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					if (value is Guid) value = ((Guid)value).ToByteArray();
 					break;
 			}
 

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using FirebirdSql.Data.FirebirdClient;
 
@@ -15,8 +12,6 @@ namespace LinqToDB.DataProvider
 		public FirebirdDataProvider() : base(new FirebirdMappingSchema())
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
-
-			//SetProviderField<FbDataReader,string>((r,i) => r.Get(i));
 		}
 
 		public override string Name           { get { return ProviderName.Firebird; } }
@@ -38,14 +33,8 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-//			if (value is ulong)
-//				value = (decimal)(ulong)value;
-
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
 			switch (dataType)
 			{
 				case DataType.SByte      : dataType = DataType.Int16;   break;
@@ -53,17 +42,9 @@ namespace LinqToDB.DataProvider
 				case DataType.UInt32     : dataType = DataType.Int64;   break;
 				case DataType.UInt64     : dataType = DataType.Decimal; break;
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
 			}
 
-			base.SetParameter(parameter, name, dataType, value);
+			base.SetParameterType(parameter, dataType);
 		}
 	}
 }

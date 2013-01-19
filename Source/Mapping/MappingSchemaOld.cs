@@ -38,6 +38,8 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		public MappingSchema NewSchema = MappingSchema.Default;
+
 		#region ObjectMapper Support
 
 		private readonly Dictionary<Type,ObjectMapper> _mappers        = new Dictionary<Type,ObjectMapper>();

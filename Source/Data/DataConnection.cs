@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Mapping;
 
-	public partial class DataConnection : ICloneable, IDisposable
+	public partial class DataConnection : ICloneable
 	{
 		#region .ctor
 

@@ -2,13 +2,15 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
+using System.Data.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
-using LinqToDB.Data;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
@@ -143,12 +145,25 @@ namespace LinqToDB.DataProvider
 
 		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
+			switch (dataType)
+			{
+				case DataType.Image     :
+				case DataType.Binary    :
+				case DataType.VarBinary :
+					if (value is Binary) value = ((Binary)value).ToArray();
+					break;
+				case DataType.Xml       :
+					     if (value is XDocument)   value = value.ToString();
+					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
+					break;
+			}
+
 			parameter.ParameterName = name;
 			SetParameterType(parameter, dataType);
 			parameter.Value = value ?? DBNull.Value;
 		}
 
-		public virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			DbType dbType;
 

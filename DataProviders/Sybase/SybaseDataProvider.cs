@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{

@@ -19,35 +19,13 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		private SqlQuery _sqlQuery;
-		public  SqlQuery  SqlQuery
-		{
-			get { return _sqlQuery;  }
-			set { _sqlQuery = value; }
-		}
+		public SqlQuery SqlQuery  { get; set; }
+		public int      Indent    { get; set; }
+		public int      Nesting   { get; private set; }
+		public Step     BuildStep { get; set; }
 
-		private int _indent;
-		public  int  Indent
-		{
-			get { return _indent;  }
-			set { _indent = value; }
-		}
-
-		private int _nextNesting = 1;
-		private int _nesting;
-		public  int  Nesting
-		{
-			get { return _nesting; }
-		}
-
+		int  _nextNesting = 1;
 		bool _skipAlias;
-
-		private Step _buildStep;
-		public  Step  BuildStep
-		{
-			get { return _buildStep;  }
-			set { _buildStep = value; }
-		}
 
 		#endregion
 
@@ -88,10 +66,10 @@ namespace LinqToDB.SqlProvider
 
 		public virtual int BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
-			_sqlQuery    = sqlQuery;
-			_indent      = indent;
-			_nesting     = nesting;
-			_nextNesting = _nesting + 1;
+			SqlQuery    = sqlQuery;
+			Indent      = indent;
+			Nesting     = nesting;
+			_nextNesting = Nesting + 1;
 			_skipAlias   = skipAlias;
 
 			if (commandNumber == 0)
@@ -147,7 +125,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSql(StringBuilder sb)
 		{
-			switch (_sqlQuery.QueryType)
+			switch (SqlQuery.QueryType)
 			{
 				case QueryType.Select         : BuildSelectQuery        (sb); break;
 				case QueryType.Delete         : BuildDeleteQuery        (sb); break;
@@ -160,50 +138,50 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDeleteQuery(StringBuilder sb)
 		{
-			_buildStep = Step.DeleteClause;  BuildDeleteClause (sb);
-			_buildStep = Step.FromClause;    BuildFromClause   (sb);
-			_buildStep = Step.WhereClause;   BuildWhereClause  (sb);
-			_buildStep = Step.GroupByClause; BuildGroupByClause(sb);
-			_buildStep = Step.HavingClause;  BuildHavingClause (sb);
-			_buildStep = Step.OrderByClause; BuildOrderByClause(sb);
-			_buildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
+			BuildStep = Step.DeleteClause;  BuildDeleteClause (sb);
+			BuildStep = Step.FromClause;    BuildFromClause   (sb);
+			BuildStep = Step.WhereClause;   BuildWhereClause  (sb);
+			BuildStep = Step.GroupByClause; BuildGroupByClause(sb);
+			BuildStep = Step.HavingClause;  BuildHavingClause (sb);
+			BuildStep = Step.OrderByClause; BuildOrderByClause(sb);
+			BuildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
 		}
 
 		protected virtual void BuildUpdateQuery(StringBuilder sb)
 		{
-			_buildStep = Step.UpdateClause;  BuildUpdateClause (sb);
-			_buildStep = Step.FromClause;    BuildFromClause   (sb);
-			_buildStep = Step.WhereClause;   BuildWhereClause  (sb);
-			_buildStep = Step.GroupByClause; BuildGroupByClause(sb);
-			_buildStep = Step.HavingClause;  BuildHavingClause (sb);
-			_buildStep = Step.OrderByClause; BuildOrderByClause(sb);
-			_buildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
+			BuildStep = Step.UpdateClause;  BuildUpdateClause (sb);
+			BuildStep = Step.FromClause;    BuildFromClause   (sb);
+			BuildStep = Step.WhereClause;   BuildWhereClause  (sb);
+			BuildStep = Step.GroupByClause; BuildGroupByClause(sb);
+			BuildStep = Step.HavingClause;  BuildHavingClause (sb);
+			BuildStep = Step.OrderByClause; BuildOrderByClause(sb);
+			BuildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
 		}
 
 		protected virtual void BuildSelectQuery(StringBuilder sb)
 		{
-			_buildStep = Step.SelectClause;  BuildSelectClause (sb);
-			_buildStep = Step.FromClause;    BuildFromClause   (sb);
-			_buildStep = Step.WhereClause;   BuildWhereClause  (sb);
-			_buildStep = Step.GroupByClause; BuildGroupByClause(sb);
-			_buildStep = Step.HavingClause;  BuildHavingClause (sb);
-			_buildStep = Step.OrderByClause; BuildOrderByClause(sb);
-			_buildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
+			BuildStep = Step.SelectClause;  BuildSelectClause (sb);
+			BuildStep = Step.FromClause;    BuildFromClause   (sb);
+			BuildStep = Step.WhereClause;   BuildWhereClause  (sb);
+			BuildStep = Step.GroupByClause; BuildGroupByClause(sb);
+			BuildStep = Step.HavingClause;  BuildHavingClause (sb);
+			BuildStep = Step.OrderByClause; BuildOrderByClause(sb);
+			BuildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
 		}
 
 		protected virtual void BuildInsertQuery(StringBuilder sb)
 		{
-			_buildStep = Step.InsertClause; BuildInsertClause(sb);
+			BuildStep = Step.InsertClause; BuildInsertClause(sb);
 
-			if (_sqlQuery.QueryType == QueryType.Insert && _sqlQuery.From.Tables.Count != 0)
+			if (SqlQuery.QueryType == QueryType.Insert && SqlQuery.From.Tables.Count != 0)
 			{
-				_buildStep = Step.SelectClause;  BuildSelectClause (sb);
-				_buildStep = Step.FromClause;    BuildFromClause   (sb);
-				_buildStep = Step.WhereClause;   BuildWhereClause  (sb);
-				_buildStep = Step.GroupByClause; BuildGroupByClause(sb);
-				_buildStep = Step.HavingClause;  BuildHavingClause (sb);
-				_buildStep = Step.OrderByClause; BuildOrderByClause(sb);
-				_buildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
+				BuildStep = Step.SelectClause;  BuildSelectClause (sb);
+				BuildStep = Step.FromClause;    BuildFromClause   (sb);
+				BuildStep = Step.WhereClause;   BuildWhereClause  (sb);
+				BuildStep = Step.GroupByClause; BuildGroupByClause(sb);
+				BuildStep = Step.HavingClause;  BuildHavingClause (sb);
+				BuildStep = Step.OrderByClause; BuildOrderByClause(sb);
+				BuildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
 			}
 
 			if (SqlQuery.Insert.WithIdentity)
@@ -212,7 +190,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUnknownQuery(StringBuilder sb)
 		{
-			throw new SqlException("Unknown query type '{0}'.", _sqlQuery.QueryType);
+			throw new SqlException("Unknown query type '{0}'.", SqlQuery.QueryType);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
@@ -252,12 +230,12 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual IEnumerable<SqlQuery.Column> GetSelectedColumns()
 		{
-			return _sqlQuery.Select.Columns;
+			return SqlQuery.Select.Columns;
 		}
 
 		protected virtual void BuildColumns(StringBuilder sb)
 		{
-			_indent++;
+			Indent++;
 
 			var first = true;
 
@@ -279,7 +257,7 @@ namespace LinqToDB.SqlProvider
 			if (first)
 				AppendIndent(sb).Append("*");
 
-			_indent--;
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -331,11 +309,11 @@ namespace LinqToDB.SqlProvider
 			AppendIndent(sb)
 				.AppendLine("SET");
 
-			_indent++;
+			Indent++;
 
 			var first = true;
 
-			foreach (var expr in _sqlQuery.Update.Items)
+			foreach (var expr in SqlQuery.Update.Items)
 			{
 				if (!first)
 					sb.Append(',').AppendLine();
@@ -347,7 +325,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(sb, expr.Expression);
 			}
 
-			_indent--;
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -373,7 +351,7 @@ namespace LinqToDB.SqlProvider
 			if (appendTableName)
 				BuildPhysicalTable(sb, SqlQuery.Insert.Into, null);
 
-			if (_sqlQuery.Insert.Items.Count == 0)
+			if (SqlQuery.Insert.Items.Count == 0)
 			{
 				sb.Append(' ');
 				BuildEmptyInsert(sb);
@@ -384,11 +362,11 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent(sb).AppendLine("(");
 
-				_indent++;
+				Indent++;
 
 				var first = true;
 
-				foreach (var expr in _sqlQuery.Insert.Items)
+				foreach (var expr in SqlQuery.Insert.Items)
 				{
 					if (!first)
 						sb.Append(',').AppendLine();
@@ -398,21 +376,21 @@ namespace LinqToDB.SqlProvider
 					BuildExpression(sb, expr.Column, false, true);
 				}
 
-				_indent--;
+				Indent--;
 
 				sb.AppendLine();
 				AppendIndent(sb).AppendLine(")");
 
-				if (_sqlQuery.QueryType == QueryType.InsertOrUpdate || _sqlQuery.From.Tables.Count == 0)
+				if (SqlQuery.QueryType == QueryType.InsertOrUpdate || SqlQuery.From.Tables.Count == 0)
 				{
 					AppendIndent(sb).AppendLine("VALUES");
 					AppendIndent(sb).AppendLine("(");
 
-					_indent++;
+					Indent++;
 
 					first = true;
 
-					foreach (var expr in _sqlQuery.Insert.Items)
+					foreach (var expr in SqlQuery.Insert.Items)
 					{
 						if (!first)
 							sb.Append(',').AppendLine();
@@ -422,7 +400,7 @@ namespace LinqToDB.SqlProvider
 						BuildExpression(sb, expr.Expression);
 					}
 
-					_indent--;
+					Indent--;
 
 					sb.AppendLine();
 					AppendIndent(sb).AppendLine(")");
@@ -571,19 +549,19 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildFromClause(StringBuilder sb)
 		{
-			if (_sqlQuery.From.Tables.Count == 0)
+			if (SqlQuery.From.Tables.Count == 0)
 				return;
 
 			AppendIndent(sb);
 
 			sb.Append("FROM").AppendLine();
 
-			_indent++;
+			Indent++;
 			AppendIndent(sb);
 
 			var first = true;
 
-			foreach (var ts in _sqlQuery.From.Tables)
+			foreach (var ts in SqlQuery.From.Tables)
 			{
 				if (!first)
 				{
@@ -608,7 +586,7 @@ namespace LinqToDB.SqlProvider
 					BuildJoinTable(sb, jt, ref jn);
 			}
 
-			_indent--;
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -624,7 +602,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlQuery    :
 					sb.Append("(").AppendLine();
-					_nextNesting = BuildSqlBuilder((SqlQuery)table, sb, _indent + 1, _nextNesting, false);
+					_nextNesting = BuildSqlBuilder((SqlQuery)table, sb, Indent + 1, _nextNesting, false);
 					AppendIndent(sb).Append(")");
 
 					break;
@@ -662,7 +640,7 @@ namespace LinqToDB.SqlProvider
 		void BuildJoinTable(StringBuilder sb, SqlQuery.JoinedTable join, ref int joinCounter)
 		{
 			sb.AppendLine();
-			_indent++;
+			Indent++;
 			AppendIndent(sb);
 
 			var buildOn = BuildJoinType(sb, join);
@@ -708,7 +686,7 @@ namespace LinqToDB.SqlProvider
 				foreach (var jt in join.Table.Joins)
 					BuildJoinTable(sb, jt, ref joinCounter);
 
-			_indent--;
+			Indent--;
 		}
 
 		protected virtual bool BuildJoinType(StringBuilder sb, SqlQuery.JoinedTable join)
@@ -729,7 +707,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool BuildWhere()
 		{
-			return _sqlQuery.Where.SearchCondition.Conditions.Count != 0;
+			return SqlQuery.Where.SearchCondition.Conditions.Count != 0;
 		}
 
 		protected virtual void BuildWhereClause(StringBuilder sb)
@@ -741,10 +719,10 @@ namespace LinqToDB.SqlProvider
 
 			sb.Append("WHERE").AppendLine();
 
-			_indent++;
+			Indent++;
 			AppendIndent(sb);
-			BuildWhereSearchCondition(sb, _sqlQuery.Where.SearchCondition);
-			_indent--;
+			BuildWhereSearchCondition(sb, SqlQuery.Where.SearchCondition);
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -755,28 +733,28 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildGroupByClause(StringBuilder sb)
 		{
-			if (_sqlQuery.GroupBy.Items.Count == 0)
+			if (SqlQuery.GroupBy.Items.Count == 0)
 				return;
 
 			AppendIndent(sb);
 
 			sb.Append("GROUP BY").AppendLine();
 
-			_indent++;
+			Indent++;
 
-			for (var i = 0; i < _sqlQuery.GroupBy.Items.Count; i++)
+			for (var i = 0; i < SqlQuery.GroupBy.Items.Count; i++)
 			{
 				AppendIndent(sb);
 
-				BuildExpression(sb, _sqlQuery.GroupBy.Items[i]);
+				BuildExpression(sb, SqlQuery.GroupBy.Items[i]);
 
-				if (i + 1 < _sqlQuery.GroupBy.Items.Count)
+				if (i + 1 < SqlQuery.GroupBy.Items.Count)
 					sb.Append(',');
 
 				sb.AppendLine();
 			}
 
-			_indent--;
+			Indent--;
 		}
 
 		#endregion
@@ -785,17 +763,17 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(StringBuilder sb)
 		{
-			if (_sqlQuery.Having.SearchCondition.Conditions.Count == 0)
+			if (SqlQuery.Having.SearchCondition.Conditions.Count == 0)
 				return;
 
 			AppendIndent(sb);
 
 			sb.Append("HAVING").AppendLine();
 
-			_indent++;
+			Indent++;
 			AppendIndent(sb);
-			BuildWhereSearchCondition(sb, _sqlQuery.Having.SearchCondition);
-			_indent--;
+			BuildWhereSearchCondition(sb, SqlQuery.Having.SearchCondition);
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -806,33 +784,33 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOrderByClause(StringBuilder sb)
 		{
-			if (_sqlQuery.OrderBy.Items.Count == 0)
+			if (SqlQuery.OrderBy.Items.Count == 0)
 				return;
 
 			AppendIndent(sb);
 
 			sb.Append("ORDER BY").AppendLine();
 
-			_indent++;
+			Indent++;
 
-			for (var i = 0; i < _sqlQuery.OrderBy.Items.Count; i++)
+			for (var i = 0; i < SqlQuery.OrderBy.Items.Count; i++)
 			{
 				AppendIndent(sb);
 
-				var item = _sqlQuery.OrderBy.Items[i];
+				var item = SqlQuery.OrderBy.Items[i];
 
 				BuildExpression(sb, item.Expression);
 
 				if (item.IsDescending)
 					sb.Append(" DESC");
 
-				if (i + 1 < _sqlQuery.OrderBy.Items.Count)
+				if (i + 1 < SqlQuery.OrderBy.Items.Count)
 					sb.Append(',');
 
 				sb.AppendLine();
 			}
 
-			_indent--;
+			Indent--;
 		}
 
 		#endregion
@@ -916,7 +894,7 @@ namespace LinqToDB.SqlProvider
 				{
 					sb.Append(isOr.Value ? " OR" : " AND");
 
-					if (condition.Conditions.Count < 4 && sb.Length - len < 50 || condition != _sqlQuery.Where.SearchCondition)
+					if (condition.Conditions.Count < 4 && sb.Length - len < 50 || condition != SqlQuery.Where.SearchCondition)
 					{
 						sb.Append(' ');
 					}
@@ -1201,7 +1179,7 @@ namespace LinqToDB.SqlProvider
 										AppendIndent(sb);
 										sb.Append(' ');
 										len = sb.Length;
-										rem = 5 + _indent;
+										rem = 5 + Indent;
 									}
 								}
 
@@ -1310,12 +1288,12 @@ namespace LinqToDB.SqlProvider
 						{
 							if (buildTableName)
 							{
-								var ts = _sqlQuery.GetTableSource(field.Table);
+								var ts = SqlQuery.GetTableSource(field.Table);
 
 								if (ts == null)
 								{
 #if DEBUG
-									_sqlQuery.GetTableSource(field.Table);
+									SqlQuery.GetTableSource(field.Table);
 #endif
 
 									throw new SqlException(string.Format("Table {0} not found.", field.Table));
@@ -1353,15 +1331,15 @@ namespace LinqToDB.SqlProvider
 						//    column.ToString();
 						//}
 
-						var sql = _sqlQuery.SqlText;
+						var sql = SqlQuery.SqlText;
 #endif
 
-						var table = _sqlQuery.GetTableSource(column.Parent);
+						var table = SqlQuery.GetTableSource(column.Parent);
 
 						if (table == null)
 						{
 #if DEBUG
-							table = _sqlQuery.GetTableSource(column.Parent);
+							table = SqlQuery.GetTableSource(column.Parent);
 #endif
 
 							throw new SqlException(string.Format("Table not found for '{0}'.", column));
@@ -1390,7 +1368,7 @@ namespace LinqToDB.SqlProvider
 							sb.Append("(");
 						sb.AppendLine();
 
-						_nextNesting = BuildSqlBuilder((SqlQuery)expr, sb, _indent + 1, _nextNesting, _buildStep != Step.FromClause);
+						_nextNesting = BuildSqlBuilder((SqlQuery)expr, sb, Indent + 1, _nextNesting, BuildStep != Step.FromClause);
 
 						AppendIndent(sb);
 
@@ -1671,7 +1649,7 @@ namespace LinqToDB.SqlProvider
 			{
 				sb.Append(func.Name).AppendLine();
 
-				_indent++;
+				Indent++;
 
 				var i = 0;
 
@@ -1708,7 +1686,7 @@ namespace LinqToDB.SqlProvider
 					sb.AppendLine();
 				}
 
-				_indent--;
+				Indent--;
 
 				AppendIndent(sb).Append("END");
 			}
@@ -1790,7 +1768,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildAliases(StringBuilder sb, string table, List<SqlQuery.Column> columns, string postfix)
 		{
-			_indent++;
+			Indent++;
 
 			var first = true;
 
@@ -1806,7 +1784,7 @@ namespace LinqToDB.SqlProvider
 					sb.Append(postfix);
 			}
 
-			_indent--;
+			Indent--;
 
 			sb.AppendLine();
 		}
@@ -1821,11 +1799,11 @@ namespace LinqToDB.SqlProvider
 				AppendIndent(sb).Append("SELECT *").AppendLine();
 				AppendIndent(sb).Append("FROM").    AppendLine();
 				AppendIndent(sb).Append("(").       AppendLine();
-				_indent++;
+				Indent++;
 
 				AppendIndent(sb).Append("SELECT").AppendLine();
 
-				_indent++;
+				Indent++;
 				AppendIndent(sb).AppendFormat("{0}.*,", aliases[0]).AppendLine();
 				AppendIndent(sb).Append("ROW_NUMBER() OVER");
 
@@ -1836,7 +1814,7 @@ namespace LinqToDB.SqlProvider
 					sb.AppendLine();
 					AppendIndent(sb).Append("(").AppendLine();
 
-					_indent++;
+					Indent++;
 
 					if (SqlQuery.OrderBy.IsEmpty)
 					{
@@ -1846,28 +1824,28 @@ namespace LinqToDB.SqlProvider
 					else
 						BuildAlternativeOrderBy(sb, true);
 
-					_indent--;
+					Indent--;
 					AppendIndent(sb).Append(")");
 				}
 
 				sb.Append(" as ").Append(rnaliase).AppendLine();
-				_indent--;
+				Indent--;
 
 				AppendIndent(sb).Append("FROM").AppendLine();
 				AppendIndent(sb).Append("(").AppendLine();
 
-				_indent++;
+				Indent++;
 				buildSql(sb);
-				_indent--;
+				Indent--;
 
 				AppendIndent(sb).AppendFormat(") {0}", aliases[0]).AppendLine();
 
-				_indent--;
+				Indent--;
 
 				AppendIndent(sb).AppendFormat(") {0}", aliases[1]).AppendLine();
 				AppendIndent(sb).Append("WHERE").AppendLine();
 
-				_indent++;
+				Indent++;
 
 				if (NeedTake)
 				{
@@ -1894,7 +1872,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				sb.AppendLine();
-				_indent--;
+				Indent--;
 			}
 			else
 				buildSql(sb);
@@ -1907,14 +1885,14 @@ namespace LinqToDB.SqlProvider
 			AppendIndent(sb).Append("SELECT *").AppendLine();
 			AppendIndent(sb).Append("FROM")    .AppendLine();
 			AppendIndent(sb).Append("(")       .AppendLine();
-			_indent++;
+			Indent++;
 
 			AppendIndent(sb).Append("SELECT TOP ");
 			BuildExpression(sb, SqlQuery.Select.TakeValue);
 			sb.Append(" *").AppendLine();
 			AppendIndent(sb).Append("FROM").AppendLine();
 			AppendIndent(sb).Append("(")   .AppendLine();
-			_indent++;
+			Indent++;
 
 			if (SqlQuery.OrderBy.IsEmpty)
 			{
@@ -1930,20 +1908,20 @@ namespace LinqToDB.SqlProvider
 				sb.Append(" *").AppendLine();
 				AppendIndent(sb).Append("FROM").AppendLine();
 				AppendIndent(sb).Append("(")   .AppendLine();
-				_indent++;
+				Indent++;
 			}
 
 			buildSql(sb);
 
 			if (SqlQuery.OrderBy.IsEmpty)
 			{
-				_indent--;
+				Indent--;
 				AppendIndent(sb).AppendFormat(") {0}", aliases[2]).AppendLine();
 				AppendIndent(sb).Append("ORDER BY").AppendLine();
 				BuildAliases(sb, aliases[2], SqlQuery.Select.Columns, null);
 			}
 
-			_indent--;
+			Indent--;
 			AppendIndent(sb).AppendFormat(") {0}", aliases[1]).AppendLine();
 
 			if (SqlQuery.OrderBy.IsEmpty)
@@ -1956,7 +1934,7 @@ namespace LinqToDB.SqlProvider
 				BuildAlternativeOrderBy(sb, false);
 			}
 
-			_indent--;
+			Indent--;
 			AppendIndent(sb).AppendFormat(") {0}", aliases[0]).AppendLine();
 
 			if (SqlQuery.OrderBy.IsEmpty)
@@ -1976,7 +1954,7 @@ namespace LinqToDB.SqlProvider
 
 			var obys = GetTempAliases(SqlQuery.OrderBy.Items.Count, "oby");
 
-			_indent++;
+			Indent++;
 
 			for (var i = 0; i < obys.Length; i++)
 			{
@@ -1992,7 +1970,7 @@ namespace LinqToDB.SqlProvider
 				sb.AppendLine();
 			}
 
-			_indent--;
+			Indent--;
 		}
 
 		protected delegate IEnumerable<SqlQuery.Column> ColumnSelector();
@@ -2340,8 +2318,8 @@ namespace LinqToDB.SqlProvider
 
 		protected StringBuilder AppendIndent(StringBuilder sb)
 		{
-			if (_indent > 0)
-				sb.Append('\t', _indent);
+			if (Indent > 0)
+				sb.Append('\t', Indent);
 
 			return sb;
 		}

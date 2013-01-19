@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
@@ -32,8 +29,8 @@ namespace LinqToDB.DataProvider
 			SetProviderField<OracleDataReader,OracleTimeStampLTZ,OracleTimeStampLTZ>((r,i) => r.GetOracleTimeStampLTZ(i));
 			SetProviderField<OracleDataReader,OracleTimeStampTZ ,OracleTimeStampTZ >((r,i) => r.GetOracleTimeStampTZ (i));
 			SetProviderField<OracleDataReader,OracleXmlType     ,OracleXmlType     >((r,i) => r.GetOracleXmlType     (i));
-			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampTZ >((r,i) => GetOracleTimeStampTZ (r, i));
-			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r, i));
+			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampTZ >((r,i) => GetOracleTimeStampTZ (r,i));
+			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r,i));
 		}
 
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
@@ -68,13 +65,8 @@ namespace LinqToDB.DataProvider
 			return new OracleSqlProvider();
 		}
 
-		#region Overrides
-
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (dataType == DataType.Undefined && value != null)
-				dataType = MappingSchema.GetDataType(value.GetType());
-
 			switch (dataType)
 			{
 				case DataType.DateTimeOffset  :
@@ -92,32 +84,24 @@ namespace LinqToDB.DataProvider
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
-				case DataType.Byte       : dataType = DataType.Int16;   break;
-				case DataType.SByte      : dataType = DataType.Int16;   break;
-				case DataType.UInt16     : dataType = DataType.Int32;   break;
-				case DataType.UInt32     : dataType = DataType.Int64;   break;
-				case DataType.UInt64     : dataType = DataType.Decimal; break;
-				case DataType.VarNumeric : dataType = DataType.Decimal; break;
-				case DataType.Binary     :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
 				case DataType.Guid       :
 					if (value is Guid) value = ((Guid)value).ToByteArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
 					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
-		public override void SetParameterType(IDbDataParameter parameter, DataType dataType)
+		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
+				case DataType.Byte           : parameter.DbType = DbType.Int16;                                       break;
+				case DataType.SByte          : parameter.DbType = DbType.Int16;                                       break;
+				case DataType.UInt16         : parameter.DbType = DbType.Int32;                                       break;
+				case DataType.UInt32         : parameter.DbType = DbType.Int64;                                       break;
+				case DataType.UInt64         : parameter.DbType = DbType.Decimal;                                     break;
+				case DataType.VarNumeric     : parameter.DbType = DbType.Decimal;                                     break;
 				case DataType.Single         : ((OracleParameter)parameter).OracleDbType = OracleDbType.BinaryFloat;  break;
 				case DataType.Double         : ((OracleParameter)parameter).OracleDbType = OracleDbType.BinaryDouble; break;
 				case DataType.Text           : ((OracleParameter)parameter).OracleDbType = OracleDbType.Clob;         break;
@@ -133,7 +117,5 @@ namespace LinqToDB.DataProvider
 				default                      : base.SetParameterType(parameter, dataType);                            break;
 			}
 		}
-
-		#endregion
 	}
 }
