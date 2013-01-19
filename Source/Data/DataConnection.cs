@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Mapping;
 
-	public class DataConnection : ICloneable, IDisposable
+	public partial class DataConnection : ICloneable, IDisposable
 	{
 		#region .ctor
 
@@ -112,10 +112,41 @@ namespace LinqToDB.Data
 			}
 		}
 
-		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
+		private bool? _isMarsEnabled;
+		public  bool   IsMarsEnabled
+		{
+			get
+			{
+				if (_isMarsEnabled == null)
+					_isMarsEnabled = (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
+
+				return _isMarsEnabled.Value;
+			}
+			set { _isMarsEnabled = value; }
+		}
 
 		public static string DefaultConfiguration { get; set; }
 		public static string DefaultDataProvider  { get; set; }
+
+		private static TraceSwitch _traceSwitch;
+		public  static TraceSwitch  TraceSwitch
+		{
+			get { return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DbManager", "DbManager trace switch",
+#if DEBUG
+				"Warning"
+#else
+				"Off"
+#endif
+				)); }
+			set { _traceSwitch = value; }
+		}
+
+		public static void TurnTraceSwitchOn()
+		{
+			TraceSwitch = new TraceSwitch("DbManager", "DbManager trace switch", "Info");
+		}
+
+		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
 
 		#endregion
 
@@ -450,12 +481,13 @@ namespace LinqToDB.Data
 
 		#region ICloneable Members
 
- DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection)
+		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
 			ConfigurationString = configurationString;
 			DataProvider        = dataProvider;
 			ConnectionString    = connectionString;
 			_connection         = connection;
+			_mappingSchema      = mappingSchema;
 		}
 
 		public object Clone()
@@ -465,7 +497,7 @@ namespace LinqToDB.Data
 				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
 				                            DataProvider.CreateConnection(ConnectionString);
 
-			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection);
+			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
 		#endregion

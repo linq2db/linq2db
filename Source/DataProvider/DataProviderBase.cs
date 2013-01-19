@@ -4,11 +4,13 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider
 {
 	using Expressions;
 	using Mapping;
+	using SqlProvider;
 
 	public abstract class DataProviderBase : IDataProvider
 	{
@@ -31,12 +33,19 @@ namespace LinqToDB.DataProvider
 			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
 		}
 
-		public abstract string        Name           { get; }
-		public abstract Type          ConnectionType { get; }
-		public abstract Type          DataReaderType { get; }
-		public virtual  MappingSchema MappingSchema  { get; private set; }
+		public abstract string           Name           { get; }
+		public abstract Type             ConnectionType { get; }
+		public abstract Type             DataReaderType { get; }
+		public virtual  MappingSchema    MappingSchema  { get; private set; }
 
-		public abstract IDbConnection CreateConnection (string connectionString);
+		public abstract IDbConnection    CreateConnection (string connectionString);
+		public abstract ISqlProvider     CreateSqlProvider();
+		public abstract SqlProviderFlags GetSqlProviderFlags();
+
+		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
+		{
+			return null;
+		}
 
 		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
 

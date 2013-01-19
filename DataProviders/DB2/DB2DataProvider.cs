@@ -9,29 +9,31 @@ using IBM.Data.DB2Types;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class DB2DataProvider : DataProviderBase
 	{
 		public DB2DataProvider() : base(new DB2MappingSchema())
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<DB2DataReader,DB2Int64,        Int64>    ((r,i) => r.GetDB2Int64       (i));
-			SetProviderField<DB2DataReader,DB2Int32,        Int32>    ((r,i) => r.GetDB2Int32       (i));
-			SetProviderField<DB2DataReader,DB2Int16,        Int16>    ((r,i) => r.GetDB2Int16       (i));
-			SetProviderField<DB2DataReader,DB2Decimal,      Decimal>  ((r,i) => r.GetDB2Decimal     (i));
-			SetProviderField<DB2DataReader,DB2DecimalFloat, Decimal>  ((r,i) => r.GetDB2DecimalFloat(i));
-			SetProviderField<DB2DataReader,DB2Real,         Single>   ((r,i) => r.GetDB2Real        (i));
-			SetProviderField<DB2DataReader,DB2Real370,      Single>   ((r,i) => r.GetDB2Real370     (i));
-			SetProviderField<DB2DataReader,DB2Double,       Double>   ((r,i) => r.GetDB2Double      (i));
-			SetProviderField<DB2DataReader,DB2String,       String>   ((r,i) => r.GetDB2String      (i));
-			SetProviderField<DB2DataReader,DB2Clob,         String>   ((r,i) => r.GetDB2Clob        (i));
-			SetProviderField<DB2DataReader,DB2Binary,       byte[]>   ((r,i) => r.GetDB2Binary      (i));
-			SetProviderField<DB2DataReader,DB2Blob,         byte[]>   ((r,i) => r.GetDB2Blob        (i));
-			SetProviderField<DB2DataReader,DB2Date,         DateTime> ((r,i) => r.GetDB2Date        (i));
-			SetProviderField<DB2DataReader,DB2Time,         TimeSpan> ((r,i) => r.GetDB2Time        (i));
-			SetProviderField<DB2DataReader,DB2TimeStamp,    DateTime> ((r,i) => r.GetDB2TimeStamp   (i));
-			SetProviderField<DB2DataReader,DB2Xml,          string>   ((r,i) => r.GetDB2Xml         (i));
-			SetProviderField<DB2DataReader,DB2RowId,        byte[]>   ((r,i) => r.GetDB2RowId       (i));
+			SetProviderField<DB2DataReader,DB2Int64,       Int64>    ((r,i) => r.GetDB2Int64       (i));
+			SetProviderField<DB2DataReader,DB2Int32,       Int32>    ((r,i) => r.GetDB2Int32       (i));
+			SetProviderField<DB2DataReader,DB2Int16,       Int16>    ((r,i) => r.GetDB2Int16       (i));
+			SetProviderField<DB2DataReader,DB2Decimal,     Decimal>  ((r,i) => r.GetDB2Decimal     (i));
+			SetProviderField<DB2DataReader,DB2DecimalFloat,Decimal>  ((r,i) => r.GetDB2DecimalFloat(i));
+			SetProviderField<DB2DataReader,DB2Real,        Single>   ((r,i) => r.GetDB2Real        (i));
+			SetProviderField<DB2DataReader,DB2Real370,     Single>   ((r,i) => r.GetDB2Real370     (i));
+			SetProviderField<DB2DataReader,DB2Double,      Double>   ((r,i) => r.GetDB2Double      (i));
+			SetProviderField<DB2DataReader,DB2String,      String>   ((r,i) => r.GetDB2String      (i));
+			SetProviderField<DB2DataReader,DB2Clob,        String>   ((r,i) => r.GetDB2Clob        (i));
+			SetProviderField<DB2DataReader,DB2Binary,      byte[]>   ((r,i) => r.GetDB2Binary      (i));
+			SetProviderField<DB2DataReader,DB2Blob,        byte[]>   ((r,i) => r.GetDB2Blob        (i));
+			SetProviderField<DB2DataReader,DB2Date,        DateTime> ((r,i) => r.GetDB2Date        (i));
+			SetProviderField<DB2DataReader,DB2Time,        TimeSpan> ((r,i) => r.GetDB2Time        (i));
+			SetProviderField<DB2DataReader,DB2TimeStamp,   DateTime> ((r,i) => r.GetDB2TimeStamp   (i));
+			SetProviderField<DB2DataReader,DB2Xml,         string>   ((r,i) => r.GetDB2Xml         (i));
+			SetProviderField<DB2DataReader,DB2RowId,       byte[]>   ((r,i) => r.GetDB2RowId       (i));
 		}
 
 		public override string Name           { get { return ProviderName.DB2;      } }
@@ -41,6 +43,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new DB2Connection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new DB2SqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

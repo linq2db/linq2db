@@ -3,12 +3,13 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlServerCe;
 using System.Data.SqlTypes;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	class SqlCeDataProvider : DataProviderBase
 	{
 		public SqlCeDataProvider() : base(new SqlCeMappingSchema())
@@ -25,6 +26,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new SqlCeConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new SqlCeSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

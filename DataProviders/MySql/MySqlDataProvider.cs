@@ -9,6 +9,8 @@ using MySql.Data.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class MySqlDataProvider : DataProviderBase
 	{
 		public MySqlDataProvider() : base(new MySqlMappingSchema())
@@ -28,6 +30,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new MySqlConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new MySqlSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

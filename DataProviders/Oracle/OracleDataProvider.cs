@@ -9,6 +9,8 @@ using Oracle.DataAccess.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class OracleDataProvider : DataProviderBase
 	{
 		public OracleDataProvider() : base(new OracleMappingSchema())
@@ -59,6 +61,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString )
 		{
 			return new OracleConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new OracleSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		#region Overrides

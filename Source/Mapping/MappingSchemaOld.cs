@@ -736,13 +736,6 @@ namespace LinqToDB.Mapping
 			return default(T);
 		}
 
-		public virtual T ConvertTo<T,TP>(TP value)
-		{
-			return Equals(value, default(TP))?
-				GetDefaultNullValue<T>():
-				LinqToDB.Common.ConvertOld<T,TP>.From(value);
-		}
-
 		public virtual object ConvertChangeType(object value, Type conversionType)
 		{
 			return ConvertChangeType(value, conversionType, conversionType.IsNullable());
@@ -988,43 +981,6 @@ namespace LinqToDB.Mapping
 		internal readonly Dictionary<KeyValue,IValueMapper> DifferentTypeMappers = new Dictionary<KeyValue,IValueMapper>();
 
 		[CLSCompliant(false)]
-		public void SetValueMapper(
-			Type         sourceType,
-			Type         destType,
-			IValueMapper mapper)
-		{
-			if (sourceType == null) sourceType = typeof(object);
-			if (destType   == null) destType   = typeof(object);
-
-			if (sourceType == destType)
-			{
-				lock (SameTypeMappers)
-				{
-					if (mapper == null)
-						SameTypeMappers.Remove(sourceType);
-					else if (SameTypeMappers.ContainsKey(sourceType))
-						SameTypeMappers[sourceType] = mapper;
-					else
-						SameTypeMappers.Add(sourceType, mapper);
-				}
-			}
-			else
-			{
-				KeyValue key = new KeyValue(sourceType, destType);
-
-				lock (DifferentTypeMappers)
-				{
-					if (mapper == null)
-						DifferentTypeMappers.Remove(key);
-					else if (DifferentTypeMappers.ContainsKey(key))
-						DifferentTypeMappers[key] = mapper;
-					else
-						DifferentTypeMappers.Add(key, mapper);
-				}
-			}
-		}
-
-		[CLSCompliant(false)]
 		protected internal virtual IValueMapper GetValueMapper(
 			Type sourceType,
 			Type destType)
@@ -1080,41 +1036,6 @@ namespace LinqToDB.Mapping
 			}
 
 			return mappers;
-		}
-
-		#endregion
-
-		#region Base Mapping
-
-		[CLSCompliant(false)]
-		protected static int[] GetIndex(IMapDataSource source, IMapDataDestination dest)
-		{
-			int   count = source.Count;
-			int[] index = new int[count];
-
-			for (int i = 0; i < count; i++)
-				index[i] = dest.GetOrdinal(source.GetName(i));
-
-			return index;
-		}
-
-		[CLSCompliant(false)]
-		protected virtual void MapInternal(
-			IMapDataSource      source,
-			object              sourceObject,
-			IMapDataDestination dest,
-			object              destObject)
-		{
-			int[]          index   = GetIndex       (source, dest);
-			IValueMapper[] mappers = GetValueMappers(source, dest, index);
-
-			for (int i = 0; i < index.Length; i++)
-			{
-				int n = index[i];
-
-				if (n >= 0)
-					mappers[i].Map(source, sourceObject, i, dest, destObject, n);
-			}
 		}
 
 		#endregion
@@ -1237,11 +1158,6 @@ namespace LinqToDB.Mapping
 		public object MapEnumToValue(object value)
 		{
 			return MapEnumToValue(value, false);
-		}
-
-		public virtual object MapEnumToValue(object value, Type type)
-		{
-			return MapEnumToValue(value, type, false);
 		}
 
 		public T MapValueToEnum<T>(object value)

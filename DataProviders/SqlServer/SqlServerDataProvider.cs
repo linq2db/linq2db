@@ -5,9 +5,10 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-
+using LinqToDB.Data;
 using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
@@ -87,6 +88,37 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new SqlConnection(connectionString);
+		}
+
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
+
+		public override object GetConnectionInfo(DataConnection dataConnection, string parameterName)
+		{
+			switch (parameterName)
+			{
+				case "IsMarsEnabled" :
+					if (dataConnection.ConnectionString != null)
+					{
+						bool flag;
+
+						if (!_marsFlags.TryGetValue(dataConnection.Connection.ConnectionString, out flag))
+						{
+							flag = dataConnection.Connection.ConnectionString.Split(';')
+								.Select(s => s.Split('='))
+								.Where (s => s.Length == 2 && s[0].Trim().ToLower() == "multipleactiveresultsets")
+								.Select(s => s[1].Trim().ToLower())
+								.Any   (s => s == "true" || s == "1" || s == "yes");
+
+							_marsFlags[dataConnection.Connection.ConnectionString] = flag;
+						}
+
+						return flag;
+					}
+
+					return false;
+			}
+
+			return null;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

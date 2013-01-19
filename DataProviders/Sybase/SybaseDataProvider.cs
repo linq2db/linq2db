@@ -8,6 +8,8 @@ using Sybase.Data.AseClient;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	class SybaseDataProvider : DataProviderBase
 	{
 		#region Init
@@ -46,6 +48,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new AseConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new SybaseSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

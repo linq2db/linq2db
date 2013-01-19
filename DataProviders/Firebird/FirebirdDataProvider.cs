@@ -8,6 +8,8 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class FirebirdDataProvider : DataProviderBase
 	{
 		public FirebirdDataProvider() : base(new FirebirdMappingSchema())
@@ -24,6 +26,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new FbConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new FirebirdSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)

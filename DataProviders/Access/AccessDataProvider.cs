@@ -7,6 +7,8 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class AccessDataProvider : DataProviderBase
 	{
 		public AccessDataProvider() : base(new AccessMappingSchema())
@@ -21,6 +23,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new AccessSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

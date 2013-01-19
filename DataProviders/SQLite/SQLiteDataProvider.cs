@@ -7,6 +7,8 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class SQLiteDataProvider : DataProviderBase
 	{
 		public SQLiteDataProvider() : base(new SQLiteMappingSchema())
@@ -22,6 +24,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString )
 		{
 			return new SQLiteConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new SQLiteSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		#region Overrides

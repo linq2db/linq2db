@@ -74,6 +74,7 @@
     <Compile Include="DataProvider\IDataProvider.cs" />
     <Compile Include="DataProvider\IDataProviderFactory.cs" />
     <Compile Include="DataType.cs" />
+    <Compile Include="Data\DataConnection.Linq.cs" />
     <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Data\DataConnectionExtensions.cs" />
     <Compile Include="Data\DataParameter.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="DataAccess\SqlQueryT.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="TableAttribute.cs" />
     <Compile Include="TableNameAttribute.cs">
       <SubType>Code</SubType>

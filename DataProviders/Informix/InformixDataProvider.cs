@@ -8,6 +8,8 @@ using IBM.Data.Informix;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class InformixDataProvider : DataProviderBase
 	{
 		public InformixDataProvider() : base(new InformixMappingSchema())
@@ -29,6 +31,21 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new IfxConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new InformixSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags
+		{
+			IsParameterOrderDependent = true
+		};
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

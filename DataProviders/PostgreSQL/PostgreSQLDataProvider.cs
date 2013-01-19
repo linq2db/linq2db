@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -10,6 +9,8 @@ using NpgsqlTypes;
 
 namespace LinqToDB.DataProvider
 {
+	using SqlProvider;
+
 	public class PostgreSQLDataProvider : DataProviderBase
 	{
 		public PostgreSQLDataProvider() : base(new PostgreSQLMappingSchema())
@@ -36,6 +37,18 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new NpgsqlConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return new PostgreSQLSqlProvider();
+		}
+
+		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
+
+		public override SqlProviderFlags GetSqlProviderFlags()
+		{
+			return _sqlProviderFlags;
 		}
 
 		#region Overrides
