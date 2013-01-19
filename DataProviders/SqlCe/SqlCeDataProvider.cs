@@ -33,13 +33,6 @@ namespace LinqToDB.DataProvider
 			return new SqlCeSqlProvider();
 		}
 
-		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
-
-		public override SqlProviderFlags GetSqlProviderFlags()
-		{
-			return _sqlProviderFlags;
-		}
-
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			if (dataType == DataType.Undefined && value != null)

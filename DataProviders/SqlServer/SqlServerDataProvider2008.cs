@@ -16,12 +16,5 @@ namespace LinqToDB.DataProvider
 		{
 			return new MsSql2008SqlProvider();
 		}
-
-		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
-
-		public override SqlProviderFlags GetSqlProviderFlags()
-		{
-			return _sqlProviderFlags;
-		}
 	}
 }

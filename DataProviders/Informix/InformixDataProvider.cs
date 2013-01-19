@@ -14,6 +14,8 @@ namespace LinqToDB.DataProvider
 	{
 		public InformixDataProvider() : base(new InformixMappingSchema())
 		{
+			SqlProviderFlags.IsParameterOrderDependent = true;
+
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
 
@@ -38,29 +40,8 @@ namespace LinqToDB.DataProvider
 			return new InformixSqlProvider();
 		}
 
-		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags
-		{
-			IsParameterOrderDependent = true
-		};
-
-		public override SqlProviderFlags GetSqlProviderFlags()
-		{
-			return _sqlProviderFlags;
-		}
-
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-//			if (value is sbyte)
-//			{
-//				value    = (short)(sbyte)value;
-//				dataType = DataType.Int16;
-//			}
-//			else if (value is byte)
-//			{
-//				value    = (short)(byte)value;
-//				dataType = DataType.Int16;
-//			}
-
 			if (dataType == DataType.Undefined && value != null)
 				dataType = MappingSchema.GetDataType(value.GetType());
 
@@ -75,19 +56,6 @@ namespace LinqToDB.DataProvider
 					if (value is TimeSpan)
 						value = new IfxTimeSpan((TimeSpan)value);
 					break;
-//				case DataType.Char       :
-//				case DataType.VarChar    :
-//				case DataType.NChar      :
-//				case DataType.NVarChar   :
-//					if (value is Guid) value = ((Guid)value).ToString();
-//					break;
-//				case DataType.Guid       :
-//					if (value is Guid)
-//					{
-//						value    = ((Guid)value).ToByteArray();
-//						dataType = DataType.VarBinary;
-//					}
-//					break;
 				case DataType.Binary     :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();

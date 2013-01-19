@@ -68,13 +68,6 @@ namespace LinqToDB.DataProvider
 			return new OracleSqlProvider();
 		}
 
-		static readonly SqlProviderFlags _sqlProviderFlags = new SqlProviderFlags();
-
-		public override SqlProviderFlags GetSqlProviderFlags()
-		{
-			return _sqlProviderFlags;
-		}
-
 		#region Overrides
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

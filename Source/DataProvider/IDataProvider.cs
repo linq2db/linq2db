@@ -10,14 +10,14 @@ namespace LinqToDB.DataProvider
 
 	public interface IDataProvider
 	{
-		string           Name           { get; }
-		Type             ConnectionType { get; }
-		Type             DataReaderType { get; }
-		MappingSchema    MappingSchema  { get; }
+		string           Name             { get; }
+		Type             ConnectionType   { get; }
+		Type             DataReaderType   { get; }
+		MappingSchema    MappingSchema    { get; }
+		SqlProviderFlags SqlProviderFlags { get; }
 
 		IDbConnection    CreateConnection   (string connectionString);
 		ISqlProvider     CreateSqlProvider  ();
-		SqlProviderFlags GetSqlProviderFlags();
 		object           GetConnectionInfo  (DataConnection dataConnection, string parameterName);
 		Expression       GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
