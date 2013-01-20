@@ -13,7 +13,7 @@ using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
-	public class NorthwindDB : DbManager
+	public class NorthwindDB : DataConnection
 	{
 		public NorthwindDB() : base("Northwind")
 		{

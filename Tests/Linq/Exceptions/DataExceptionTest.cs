@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -18,12 +17,12 @@ namespace Tests.Exceptions
 		{
 			try
 			{
-				using (var db = new DbManager(new MySqlDataProviderOld(), "Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
+				using (var db = LinqToDB.DataProvider.MySql.CreateDataConnection("Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
 				{
 					db.GetTable<Person>().ToList();
 				}
 			}
-			catch (DataException ex)
+			catch (MySqlException ex)
 			{
 				var number = ex.Number;
 			}

@@ -36,7 +36,8 @@ namespace Tests
 					.Select(s => s.Trim())
 					.Where (s => s.Length > 0 && !s.StartsWith("--")));
 
-			DbManager.TurnTraceSwitchOn();
+			DataConnection.TurnTraceSwitchOn();
+			DbManager.     TurnTraceSwitchOn();
 
 			PostgreSQLSqlProvider.QuoteIdentifiers = true;
 
@@ -229,7 +230,8 @@ namespace Tests
 
 			Debug.WriteLine(configuration, "Provider ");
 
-			return new TestDbManager(configuration);
+			return new TestDataConnection(configuration);
+			//return new TestDbManager(configuration);
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)

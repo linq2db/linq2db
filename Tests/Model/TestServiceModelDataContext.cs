@@ -44,5 +44,10 @@ namespace Tests.Model
 		public Table<LinqDataTypes>          Types                  { get { return this.GetTable<LinqDataTypes>();          } }
 		public Table<LinqDataTypes2>         Types2                 { get { return this.GetTable<LinqDataTypes2>();         } }
 		public Table<TestIdentity>           TestIdentity           { get { return this.GetTable<TestIdentity>();           } }
+
+		public Table<Parent> GetParentByID(int? id)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

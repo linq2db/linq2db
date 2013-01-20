@@ -11,6 +11,8 @@ namespace Tests.Model
 		{
 			if (context is DbManager)
 				((DbManager)context).BeginTransaction();
+			else if (context is DataConnection)
+				((DataConnection)context).BeginTransaction();
 			//else if (context is ServiceModelDataContext)
 			//	((ServiceModelDataContext)context).BeginBatch();
 		}

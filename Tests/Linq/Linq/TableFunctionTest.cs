@@ -16,10 +16,10 @@ namespace Tests.Linq
 		[Test]
 		public void Func1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in new Tests.Model.Functions(db).GetParentByID(1)
+					from p in new Model.Functions(db).GetParentByID(1)
 					select p;
 
 				q.ToList();
@@ -29,7 +29,7 @@ namespace Tests.Linq
 		[Test]
 		public void Func2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from c in db.Child
@@ -43,7 +43,7 @@ namespace Tests.Linq
 		[Test]
 		public void Func3([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from c in db.Child
@@ -54,26 +54,26 @@ namespace Tests.Linq
 			}
 		}
 
-		readonly Func<DbManager,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
-			(DbManager db, int id) => from p in new Tests.Model.Functions(db).GetParentByID(id) select p);
+		readonly Func<DataConnection,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
+			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
 		[Test]
 		public void CompiledFunc1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var q = _f1(db, 1);
 				q.ToList();
 			}
 		}
 
-		readonly Func<TestDbManager,int,IQueryable<Parent>> _f2 = CompiledQuery.Compile(
-			(TestDbManager db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
+		readonly Func<TestDataConnection,int,IQueryable<Parent>> _f2 = CompiledQuery.Compile(
+			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
 		[Test]
 		public void CompiledFunc2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var q = _f2(db, 1);
 				q.ToList();
@@ -83,7 +83,7 @@ namespace Tests.Linq
 		[Test]
 		public void WithTabLock([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in new Tests.Model.Functions(db).WithTabLock<Parent>()

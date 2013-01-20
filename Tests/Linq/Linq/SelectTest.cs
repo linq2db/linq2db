@@ -337,25 +337,24 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyMapSchema : MappingSchemaOld
+		class MyMapSchema : MappingSchema
 		{
-			public override void InitNullValues()
+			public MyMapSchema()
 			{
-				base.InitNullValues();
-				DefaultStringNullValue = null;
+				SetDefaultValue(typeof(string), null);
 			}
 		}
 
 		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
 
 		[Test]
-		public void Coalesce3([DataContexts] string context)
+		public void Coalesce3([DataContexts(ExcludeLinqService = true)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				if (db is DbManager)
+				if (db is DataConnection)
 				{
-					((DbManager)db).MappingSchema = _myMapSchema;
+					((DataConnection)db).AddMappingSchema(_myMapSchema);
 
 					var q = (
 

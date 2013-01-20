@@ -10,7 +10,7 @@ namespace LinqToDB.Linq
 	class DefaultDataContextInfo : IDataContextInfo
 	{
 		private IDataContext _dataContext;
-		public  IDataContext  DataContext    { get { return _dataContext ?? (_dataContext = new DbManager()); } }
+		public  IDataContext  DataContext    { get { return _dataContext ?? (_dataContext = new DataConnection()); } }
 
 		public MappingSchemaOld  MappingSchema  { get { return Map.DefaultSchema; } }
 		public bool           DisposeContext { get { return true; } }

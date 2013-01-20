@@ -200,8 +200,9 @@ namespace LinqToDB.Data
 
 			Command.CommandText = pq.Commands[0];
 
-			foreach (var p in pq.Parameters)
-				Command.Parameters.Add(p);
+			if (pq.Parameters != null)
+				foreach (var p in pq.Parameters)
+					Command.Parameters.Add(p);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -237,8 +238,9 @@ namespace LinqToDB.Data
 
 			Command.CommandText = pq.Commands[0];
 
-			foreach (var p in pq.Parameters)
-				Command.Parameters.Add(p);
+			if (pq.Parameters != null)
+				foreach (var p in pq.Parameters)
+					Command.Parameters.Add(p);
 
 			IDbDataParameter idparam = null;
 
@@ -283,9 +285,11 @@ namespace LinqToDB.Data
 			var pq = (PreparedQuery)query;
 
 			Command.CommandText = pq.Commands[0];
+			Command.Parameters.Clear();
 
-			foreach (var p in pq.Parameters)
-				Command.Parameters.Add(p);
+			if (pq.Parameters != null)
+				foreach (var p in pq.Parameters)
+					Command.Parameters.Add(p);
 
 			if (TraceSwitch.TraceInfo)
 			{

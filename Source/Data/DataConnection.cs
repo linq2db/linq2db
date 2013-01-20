@@ -131,7 +131,7 @@ namespace LinqToDB.Data
 		private static TraceSwitch _traceSwitch;
 		public  static TraceSwitch  TraceSwitch
 		{
-			get { return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DbManager", "DbManager trace switch",
+			get { return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch",
 #if DEBUG
 				"Warning"
 #else
@@ -143,7 +143,7 @@ namespace LinqToDB.Data
 
 		public static void TurnTraceSwitchOn()
 		{
-			TraceSwitch = new TraceSwitch("DbManager", "DbManager trace switch", "Info");
+			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", "Info");
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);

@@ -225,7 +225,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		public Table<Person> People2(DbManager db)
+		public Table<Person> People2(TestDataConnection db)
 		{
 			return db.GetTable<Person>();
 		}
@@ -233,7 +233,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableAsMethod()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from d in db.Patient
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableAsExtensionMethod()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from d in db.Patient
@@ -449,7 +449,7 @@ namespace Tests.Linq
 
 	static class Extender
 	{
-		public static Table<Person> People(this DbManager db)
+		public static Table<Person> People(this DataConnection db)
 		{
 			return db.GetTable<Person>();
 		}
