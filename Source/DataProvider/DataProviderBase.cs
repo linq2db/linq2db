@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -17,6 +18,8 @@ namespace LinqToDB.DataProvider
 
 	public abstract class DataProviderBase : IDataProvider
 	{
+		#region .ctor
+
 		protected DataProviderBase(MappingSchema mappingSchema)
 		{
 			MappingSchema    = mappingSchema;
@@ -37,6 +40,10 @@ namespace LinqToDB.DataProvider
 			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
 		}
 
+		#endregion
+
+		#region Public Members
+
 		public abstract string           Name             { get; }
 		public abstract Type             ConnectionType   { get; }
 		public abstract Type             DataReaderType   { get; }
@@ -46,10 +53,20 @@ namespace LinqToDB.DataProvider
 		public abstract IDbConnection    CreateConnection (string connectionString);
 		public abstract ISqlProvider     CreateSqlProvider();
 
+		public virtual void InitCommand(DataConnection dataConnection)
+		{
+			if (dataConnection.Command.Parameters.Count != 0)
+				dataConnection.Command.Parameters.Clear();
+		}
+
 		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
 		}
+
+		#endregion
+
+		#region GetReaderExpression
 
 		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
 
@@ -143,6 +160,10 @@ namespace LinqToDB.DataProvider
 			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
+		#endregion
+
+		#region SetParameter
+
 		public virtual void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)
@@ -199,5 +220,24 @@ namespace LinqToDB.DataProvider
 
 			parameter.DbType = dbType;
 		}
+
+		#endregion
+
+		#region BulkCopy
+
+		public virtual int BulkCopy<T>(DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		{
+			var n = 0;
+
+			foreach (var item in source)
+			{
+				dataConnection.Insert(item);
+				n++;
+			}
+
+			return n;
+		}
+
+		#endregion
 	}
 }

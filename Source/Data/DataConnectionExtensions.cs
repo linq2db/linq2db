@@ -20,7 +20,7 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			using (var rd = connection.Command.ExecuteReader())
 				while (rd.Read())
@@ -29,7 +29,7 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, parameters);
 
@@ -40,7 +40,7 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			var dps = GetDataParameters(connection, parameters);
 
@@ -57,13 +57,13 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 			return ExecuteQuery<T>(connection);
 		}
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, parameters);
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Data
 
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			var dps = GetDataParameters(connection, parameters);
 
@@ -140,13 +140,13 @@ namespace LinqToDB.Data
 
 		public static int Execute(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 			return connection.Command.ExecuteNonQuery();
 		}
 
 		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, parameters);
 
@@ -155,7 +155,7 @@ namespace LinqToDB.Data
 
 		public static int Execute(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			var dps = GetDataParameters(connection, parameters);
 
@@ -170,13 +170,13 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 			return ExecuteScalar<T>(connection, sql);
 		}
 
 		public static T Execute<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, parameters);
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql, DataParameter parameter)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, new[] { parameter });
 
@@ -194,7 +194,7 @@ namespace LinqToDB.Data
 
 		public static T Execute<T>(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			var dps = GetDataParameters(connection, parameters);
 
@@ -235,13 +235,13 @@ namespace LinqToDB.Data
 
 		public static DataReader ExecuteReader(this DataConnection connection, string sql)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
 		}
 
 		public static DataReader ExecuteReader(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			SetParameters(connection, parameters);
 
@@ -255,7 +255,7 @@ namespace LinqToDB.Data
 
 		public static DataReader ExecuteReader(this DataConnection connection, string sql, object parameters)
 		{
-			connection.Command.CommandText = sql;
+			connection.SetCommand(sql);
 
 			var dps = GetDataParameters(connection, parameters);
 
@@ -668,9 +668,6 @@ namespace LinqToDB.Data
 
 		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
-			if (dataConnection.Command.Parameters.Count != 0)
-				dataConnection.Command.Parameters.Clear();
-
 			if (parameters == null)
 				return;
 
@@ -821,6 +818,30 @@ namespace LinqToDB.Data
 			}
 
 			return func(parameters);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		public static int BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		{
+			return dataConnection.DataProvider.BulkCopy(dataConnection, maxBatchSize, source);
+		}
+
+		public static int BulkCopy<T>(this DataConnection dataConnection, IEnumerable<T> source)
+		{
+			return BulkCopy(dataConnection, 0, source);
+		}
+
+		public static int BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, params T[] source)
+		{
+			return BulkCopy(dataConnection, maxBatchSize, (IEnumerable<T>)source);
+		}
+
+		public static int BulkCopy<T>(this DataConnection dataConnection, params T[] source)
+		{
+			return BulkCopy(dataConnection, 0, (IEnumerable<T>)source);
 		}
 
 		#endregion

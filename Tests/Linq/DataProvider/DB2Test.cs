@@ -40,29 +40,29 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(1000000L));
-				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(new DB2Int64(1000000L)));
-				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32),     Is.EqualTo(7777777));
-				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32),     Is.EqualTo(new DB2Int32(7777777)));
-				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(100));
-				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(new DB2Int16(100)));
-				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal),   Is.EqualTo(9999999m));
-				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal),   Is.EqualTo(8888888m));
-				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single),    Is.EqualTo(20.31f));
-				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single),    Is.EqualTo(new DB2Real(20.31f)));
-				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(16.2d));
-				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(new DB2Double(16.2d)));
-
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char),      Is.EqualTo("1"));
-				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar),     Is.EqualTo("1"));
-				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char),      Is.EqualTo(new DB2String("1")));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar),   Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar),  Is.EqualTo("234"));
-				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text),      Is.EqualTo("55645"));
-				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText),     Is.EqualTo("6687"));
-
-				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary),    Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
-				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
+//				Assert.That(TestType<long?>        (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(1000000L));
+//				Assert.That(TestType<DB2Int64?>    (conn, "bigintDataType",    DataType.Int64),     Is.EqualTo(new DB2Int64(1000000L)));
+//				Assert.That(TestType<int?>         (conn, "intDataType",       DataType.Int32),     Is.EqualTo(7777777));
+//				Assert.That(TestType<DB2Int32?>    (conn, "intDataType",       DataType.Int32),     Is.EqualTo(new DB2Int32(7777777)));
+//				Assert.That(TestType<short?>       (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(100));
+//				Assert.That(TestType<DB2Int16?>    (conn, "smallintDataType",  DataType.Int16),     Is.EqualTo(new DB2Int16(100)));
+//				Assert.That(TestType<decimal?>     (conn, "decimalDataType",   DataType.Decimal),   Is.EqualTo(9999999m));
+//				Assert.That(TestType<decimal?>     (conn, "decfloatDataType",  DataType.Decimal),   Is.EqualTo(8888888m));
+//				Assert.That(TestType<float?>       (conn, "realDataType",      DataType.Single),    Is.EqualTo(20.31f));
+//				Assert.That(TestType<DB2Real?>     (conn, "realDataType",      DataType.Single),    Is.EqualTo(new DB2Real(20.31f)));
+//				Assert.That(TestType<double?>      (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(16.2d));
+//				Assert.That(TestType<DB2Double?>   (conn, "doubleDataType",    DataType.Double),    Is.EqualTo(new DB2Double(16.2d)));
+//
+//				Assert.That(TestType<string>       (conn, "charDataType",      DataType.Char),      Is.EqualTo("1"));
+//				Assert.That(TestType<string>       (conn, "charDataType",      DataType.NChar),     Is.EqualTo("1"));
+//				Assert.That(TestType<DB2String?>   (conn, "charDataType",      DataType.Char),      Is.EqualTo(new DB2String("1")));
+//				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.VarChar),   Is.EqualTo("234"));
+//				Assert.That(TestType<string>       (conn, "varcharDataType",   DataType.NVarChar),  Is.EqualTo("234"));
+//				Assert.That(TestType<string>       (conn, "clobDataType",      DataType.Text),      Is.EqualTo("55645"));
+//				Assert.That(TestType<string>       (conn, "dbclobDataType",    DataType.NText),     Is.EqualTo("6687"));
+//
+//				Assert.That(TestType<byte[]>       (conn, "binaryDataType",    DataType.Binary),    Is.EqualTo(new byte[] { 49, 50, 51, 32, 32 }));
+//				Assert.That(TestType<byte[]>       (conn, "varbinaryDataType", DataType.VarBinary), Is.EqualTo(new byte[] { 49, 50, 51, 52 }));
 				Assert.That(TestType<byte[]>       (conn, "blobDataType",      DataType.VarBinary, skipUndefinedNull:true), Is.EqualTo(new byte[] { 50, 51, 52 }));
 				Assert.That(TestType<string>       (conn, "graphicDataType",   DataType.VarChar),   Is.EqualTo("23        "));
 

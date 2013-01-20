@@ -17,7 +17,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(SqlServer.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
-				conn.Command.CommandText = "SELECT 1";
+				conn.SetCommand("SELECT 1");
 
 				var rd = conn.Command.ExecuteReader();
 

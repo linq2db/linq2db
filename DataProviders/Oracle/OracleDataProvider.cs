@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Data;
+using System.IO;
+using System.Reflection;
+using System.Xml;
+
+using LinqToDB.Data;
 
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
@@ -33,6 +39,89 @@ namespace LinqToDB.DataProvider
 			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r,i));
 		}
 
+		static OracleDataProvider()
+		{
+			// Fix Oracle.Net bug #1: Array types are not handled.
+			//
+			var oraDbDbTypeTableType = typeof(OracleParameter).Assembly.GetType("Oracle.DataAccess.Client.OraDb_DbTypeTable");
+
+			if (oraDbDbTypeTableType != null)
+			{
+				var typeTable = (Hashtable)oraDbDbTypeTableType.InvokeMember(
+					"s_table", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.GetField,
+					null, null, Type.EmptyTypes);
+
+				if (typeTable != null)
+				{
+					typeTable[typeof(DateTime[])]          = OracleDbType.TimeStamp;
+					typeTable[typeof(Int16[])]             = OracleDbType.Int16;
+					typeTable[typeof(Int32[])]             = OracleDbType.Int32;
+					typeTable[typeof(Int64[])]             = OracleDbType.Int64;
+					typeTable[typeof(Single[])]            = OracleDbType.Single;
+					typeTable[typeof(Double[])]            = OracleDbType.Double;
+					typeTable[typeof(Decimal[])]           = OracleDbType.Decimal;
+					typeTable[typeof(TimeSpan[])]          = OracleDbType.IntervalDS;
+					typeTable[typeof(String[])]            = OracleDbType.Varchar2;
+					typeTable[typeof(OracleBFile[])]       = OracleDbType.BFile;
+					typeTable[typeof(OracleBinary[])]      = OracleDbType.Raw;
+					typeTable[typeof(OracleBlob[])]        = OracleDbType.Blob;
+					typeTable[typeof(OracleClob[])]        = OracleDbType.Clob;
+					typeTable[typeof(OracleDate[])]        = OracleDbType.Date;
+					typeTable[typeof(OracleDecimal[])]     = OracleDbType.Decimal;
+					typeTable[typeof(OracleIntervalDS[])]  = OracleDbType.IntervalDS;
+					typeTable[typeof(OracleIntervalYM[])]  = OracleDbType.IntervalYM;
+					typeTable[typeof(OracleRefCursor[])]   = OracleDbType.RefCursor;
+					typeTable[typeof(OracleString[])]      = OracleDbType.Varchar2;
+					typeTable[typeof(OracleTimeStamp[])]   = OracleDbType.TimeStamp;
+					typeTable[typeof(OracleTimeStampLTZ[])]= OracleDbType.TimeStampLTZ;
+					typeTable[typeof(OracleTimeStampTZ[])] = OracleDbType.TimeStampTZ;
+					typeTable[typeof(OracleXmlType[])]     = OracleDbType.XmlType;
+
+					typeTable[typeof(Boolean)]             = OracleDbType.Byte;
+					typeTable[typeof(Guid)]                = OracleDbType.Raw;
+					typeTable[typeof(SByte)]               = OracleDbType.Decimal;
+					typeTable[typeof(UInt16)]              = OracleDbType.Decimal;
+					typeTable[typeof(UInt32)]              = OracleDbType.Decimal;
+					typeTable[typeof(UInt64)]              = OracleDbType.Decimal;
+
+					typeTable[typeof(Boolean[])]           = OracleDbType.Byte;
+					typeTable[typeof(Guid[])]              = OracleDbType.Raw;
+					typeTable[typeof(SByte[])]             = OracleDbType.Decimal;
+					typeTable[typeof(UInt16[])]            = OracleDbType.Decimal;
+					typeTable[typeof(UInt32[])]            = OracleDbType.Decimal;
+					typeTable[typeof(UInt64[])]            = OracleDbType.Decimal;
+
+					typeTable[typeof(Boolean?)]            = OracleDbType.Byte;
+					typeTable[typeof(Guid?)]               = OracleDbType.Raw;
+					typeTable[typeof(SByte?)]              = OracleDbType.Decimal;
+					typeTable[typeof(UInt16?)]             = OracleDbType.Decimal;
+					typeTable[typeof(UInt32?)]             = OracleDbType.Decimal;
+					typeTable[typeof(UInt64?)]             = OracleDbType.Decimal;
+					typeTable[typeof(DateTime?[])]         = OracleDbType.TimeStamp;
+					typeTable[typeof(Int16?[])]            = OracleDbType.Int16;
+					typeTable[typeof(Int32?[])]            = OracleDbType.Int32;
+					typeTable[typeof(Int64?[])]            = OracleDbType.Int64;
+					typeTable[typeof(Single?[])]           = OracleDbType.Single;
+					typeTable[typeof(Double?[])]           = OracleDbType.Double;
+					typeTable[typeof(Decimal?[])]          = OracleDbType.Decimal;
+					typeTable[typeof(TimeSpan?[])]         = OracleDbType.IntervalDS;
+					typeTable[typeof(Boolean?[])]          = OracleDbType.Byte;
+					typeTable[typeof(Guid?[])]             = OracleDbType.Raw;
+					typeTable[typeof(SByte?[])]            = OracleDbType.Decimal;
+					typeTable[typeof(UInt16?[])]           = OracleDbType.Decimal;
+					typeTable[typeof(UInt32?[])]           = OracleDbType.Decimal;
+					typeTable[typeof(UInt64?[])]           = OracleDbType.Decimal;
+
+					typeTable[typeof(XmlReader)]           = OracleDbType.XmlType;
+					typeTable[typeof(XmlDocument)]         = OracleDbType.XmlType;
+					typeTable[typeof(MemoryStream)]        = OracleDbType.Blob;
+					typeTable[typeof(XmlReader[])]         = OracleDbType.XmlType;
+					typeTable[typeof(XmlDocument[])]       = OracleDbType.XmlType;
+					typeTable[typeof(MemoryStream[])]      = OracleDbType.Blob;
+				}
+			}
+		}
+
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
 		{
 			var tstz = rd.GetOracleTimeStampTZ(idx);
@@ -63,6 +152,12 @@ namespace LinqToDB.DataProvider
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new OracleSqlProvider();
+		}
+
+		public override void InitCommand(DataConnection dataConnection)
+		{
+			dataConnection.Command = null;
+			base.InitCommand(dataConnection);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

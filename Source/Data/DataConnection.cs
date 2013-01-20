@@ -358,6 +358,12 @@ namespace LinqToDB.Data
 
 		#region Command
 
+		public void SetCommand(string sql)
+		{
+			DataProvider.InitCommand(this);
+			Command.CommandText = sql;
+		}
+
 		private int? _commandTimeout;
 		public  int   CommandTimeout
 		{

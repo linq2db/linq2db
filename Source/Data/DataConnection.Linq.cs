@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Data
 {
@@ -198,7 +199,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			Command.CommandText = pq.Commands[0];
+			SetCommand(pq.Commands[0]);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -236,7 +237,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			Command.CommandText = pq.Commands[0];
+			SetCommand(pq.Commands[0]);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -275,7 +276,7 @@ namespace LinqToDB.Data
 
 			Command.ExecuteNonQuery();
 
-			Command.CommandText = pq.Commands[1];
+			SetCommand(pq.Commands[1]);
 
 			return Command.ExecuteScalar();
 		}
@@ -284,8 +285,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			Command.CommandText = pq.Commands[0];
-			Command.Parameters.Clear();
+			SetCommand(pq.Commands[0]);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)

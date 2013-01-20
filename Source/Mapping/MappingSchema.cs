@@ -499,29 +499,46 @@ namespace LinqToDB.Mapping
 			public DefaultMappingSchema()
 				: base(new MappingSchemaInfo("") { MetadataReader = Metadata.MetadataReader.Default })
 			{
-				AddScalarType(typeof(char),           DataType.NChar);
-				AddScalarType(typeof(string),         DataType.NVarChar);
-				AddScalarType(typeof(decimal),        DataType.Decimal);
-				AddScalarType(typeof(DateTime),       DataType.DateTime2);
-				AddScalarType(typeof(DateTimeOffset), DataType.DateTimeOffset);
-				AddScalarType(typeof(TimeSpan),       DataType.Time);
-				AddScalarType(typeof(byte[]),         DataType.VarBinary);
-				AddScalarType(typeof(Binary),         DataType.VarBinary);
-				AddScalarType(typeof(Guid),           DataType.Guid);
-				AddScalarType(typeof(object),         DataType.Variant);
-				AddScalarType(typeof(XmlDocument),    DataType.Xml);
-				AddScalarType(typeof(XDocument),      DataType.Xml);
-				AddScalarType(typeof(bool),           DataType.Boolean);
-				AddScalarType(typeof(sbyte),          DataType.SByte);
-				AddScalarType(typeof(short),          DataType.Int16);
-				AddScalarType(typeof(int),            DataType.Int32);
-				AddScalarType(typeof(long),           DataType.Int64);
-				AddScalarType(typeof(byte),           DataType.Byte);
-				AddScalarType(typeof(ushort),         DataType.UInt16);
-				AddScalarType(typeof(uint),           DataType.UInt32);
-				AddScalarType(typeof(ulong),          DataType.UInt64);
-				AddScalarType(typeof(float),          DataType.Single);
-				AddScalarType(typeof(double),         DataType.Double);
+				AddScalarType(typeof(char),            DataType.NChar);
+				AddScalarType(typeof(char?),           DataType.NChar);
+				AddScalarType(typeof(string),          DataType.NVarChar);
+				AddScalarType(typeof(decimal),         DataType.Decimal);
+				AddScalarType(typeof(decimal?),        DataType.Decimal);
+				AddScalarType(typeof(DateTime),        DataType.DateTime2);
+				AddScalarType(typeof(DateTime?),       DataType.DateTime2);
+				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
+				AddScalarType(typeof(DateTimeOffset?), DataType.DateTimeOffset);
+				AddScalarType(typeof(TimeSpan),        DataType.Time);
+				AddScalarType(typeof(TimeSpan?),       DataType.Time);
+				AddScalarType(typeof(byte[]),          DataType.VarBinary);
+				AddScalarType(typeof(Binary),          DataType.VarBinary);
+				AddScalarType(typeof(Guid),            DataType.Guid);
+				AddScalarType(typeof(Guid?),           DataType.Guid);
+				AddScalarType(typeof(object),          DataType.Variant);
+				AddScalarType(typeof(XmlDocument),     DataType.Xml);
+				AddScalarType(typeof(XDocument),       DataType.Xml);
+				AddScalarType(typeof(bool),            DataType.Boolean);
+				AddScalarType(typeof(bool?),           DataType.Boolean);
+				AddScalarType(typeof(sbyte),           DataType.SByte);
+				AddScalarType(typeof(sbyte?),          DataType.SByte);
+				AddScalarType(typeof(short),           DataType.Int16);
+				AddScalarType(typeof(short?),          DataType.Int16);
+				AddScalarType(typeof(int),             DataType.Int32);
+				AddScalarType(typeof(int?),            DataType.Int32);
+				AddScalarType(typeof(long),            DataType.Int64);
+				AddScalarType(typeof(long?),           DataType.Int64);
+				AddScalarType(typeof(byte),            DataType.Byte);
+				AddScalarType(typeof(byte?),           DataType.Byte);
+				AddScalarType(typeof(ushort),          DataType.UInt16);
+				AddScalarType(typeof(ushort?),         DataType.UInt16);
+				AddScalarType(typeof(uint),            DataType.UInt32);
+				AddScalarType(typeof(uint?),           DataType.UInt32);
+				AddScalarType(typeof(ulong),           DataType.UInt64);
+				AddScalarType(typeof(ulong?),          DataType.UInt64);
+				AddScalarType(typeof(float),           DataType.Single);
+				AddScalarType(typeof(float?),          DataType.Single);
+				AddScalarType(typeof(double),          DataType.Double);
+				AddScalarType(typeof(double?),         DataType.Double);
 			}
 		}
 
@@ -574,7 +591,7 @@ namespace LinqToDB.Mapping
 
 		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
 		{
-			SetScalarType  (type);
+			SetScalarType(type);
 
 			if (dataType != DataType.Undefined)
 				SetDataType(type, dataType);
