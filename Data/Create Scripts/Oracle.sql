@@ -8,6 +8,14 @@ DROP TABLE Patient
 /
 DROP TABLE Person
 /
+DROP SEQUENCE BinaryDataSeq
+/
+DROP TABLE BinaryData
+/
+DROP SEQUENCE DataTypeTestSeq
+/
+DROP TABLE DataTypeTest
+/
 DROP TABLE GrandChild
 /
 DROP TABLE Child

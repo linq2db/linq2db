@@ -1,3 +1,20 @@
+DROP PROCEDURE Person_SelectByKey;            COMMIT;
+DROP PROCEDURE Person_SelectAll;              COMMIT;
+DROP PROCEDURE Person_SelectByName;           COMMIT;
+DROP PROCEDURE Person_Insert;                 COMMIT;
+DROP PROCEDURE Person_Insert_OutputParameter; COMMIT;
+DROP PROCEDURE Person_Update;                 COMMIT;
+DROP PROCEDURE Person_Delete;                 COMMIT;
+DROP PROCEDURE Patient_SelectAll;             COMMIT;
+DROP PROCEDURE Patient_SelectByName;          COMMIT;
+DROP PROCEDURE OutRefTest;                    COMMIT;
+DROP PROCEDURE OutRefEnumTest;                COMMIT;
+DROP PROCEDURE Scalar_DataReader;             COMMIT;
+DROP PROCEDURE Scalar_OutputParameter;        COMMIT;
+DROP PROCEDURE Scalar_ReturnParameter;        COMMIT;
+
+DROP TRIGGER CREATE_BinaryDataID;             COMMIT;
+DROP TRIGGER CHANGE_BinaryData;               COMMIT;
 DROP TRIGGER CREATE_PersonID;                 COMMIT;
 DROP TRIGGER CREATE_DataTypeTest;             COMMIT;
 
