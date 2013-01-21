@@ -29,9 +29,20 @@ namespace LinqToDB.DataProvider
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			// Do some magic to workaround 'Data type mismatch in criteria expression' error
+			// in JET for some european locales.
+			//
 			switch (dataType)
 			{
-				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				// OleDbType.Decimal is locale aware, OleDbType.Currency is locale neutral.
+				//
+				case DataType.Decimal    :
+				case DataType.VarNumeric : ((OleDbParameter)parameter).OleDbType = OleDbType.Currency; return;
+
+				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
+				//
+				case DataType.DateTime   :
+				case DataType.DateTime2  : ((OleDbParameter)parameter).OleDbType = OleDbType.Date; return;
 			}
 
 			base.SetParameterType(parameter, dataType);

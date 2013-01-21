@@ -24,7 +24,7 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.Oracle;
 
-		string _pathThroughSql  = "SELECT :p FROM sys.dual";
+		string _pathThroughSql = "SELECT :p FROM sys.dual";
 		string  PathThroughSql
 		{
 			get

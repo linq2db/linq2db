@@ -3,6 +3,7 @@ using System.Data;
 
 using IBM.Data.DB2;
 using IBM.Data.DB2Types;
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider
 {
@@ -45,6 +46,12 @@ namespace LinqToDB.DataProvider
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new DB2SqlProvider();
+		}
+
+		public override void InitCommand(DataConnection dataConnection)
+		{
+			dataConnection.Command = null;
+			base.InitCommand(dataConnection);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

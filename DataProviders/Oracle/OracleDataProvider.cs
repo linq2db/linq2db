@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider
 			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r,i));
 		}
 
+		/*
 		static OracleDataProvider()
 		{
 			// Fix Oracle.Net bug #1: Array types are not handled.
@@ -121,6 +122,7 @@ namespace LinqToDB.DataProvider
 				}
 			}
 		}
+		*/
 
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
 		{

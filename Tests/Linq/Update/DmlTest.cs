@@ -1289,8 +1289,8 @@ namespace Tests.Update
 			}
 		}
 
-		static readonly Func<TestDbManager,int,string,int> _updateQuery =
-			CompiledQuery.Compile   <TestDbManager,int,string,int>((ctx,key,value) =>
+		static readonly Func<TestDataConnection,int,string,int> _updateQuery =
+			CompiledQuery.Compile<TestDataConnection,int,string,int>((ctx,key,value) =>
 				ctx.Person
 					.Where(_ => _.ID == key)
 					.Set(_ => _.FirstName, value)
@@ -1299,7 +1299,7 @@ namespace Tests.Update
 		[Test]
 		public void CompiledUpdate()
 		{
-			using (var ctx = new TestDbManager())
+			using (var ctx = new TestDataConnection())
 			{
 				_updateQuery(ctx, 12345, "54321");
 			}

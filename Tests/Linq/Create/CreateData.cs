@@ -34,7 +34,7 @@ namespace Tests.Create
 
 			Exception exception = null;
 
-			using (var db = new TestDbManager(configString))
+			using (var db = new TestDataConnection(configString))
 			{
 				foreach (var cmd in cmds)
 				{
@@ -46,7 +46,7 @@ namespace Tests.Create
 					try 
 					{
 						Console.WriteLine(command);
-						db.SetCommand(command).ExecuteNonQuery();
+						db.Execute(command);
 						Console.WriteLine("\nOK\n");
 					}
 					catch (Exception ex)
@@ -67,8 +67,7 @@ namespace Tests.Create
 				if (exception != null)
 					throw exception;
 
-				db.InsertBatch(new[]
-				{
+				db.BulkCopy(
 					new LinqDataTypes { ID =  1, MoneyValue =  1.11m, DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100), BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  1 },
 					new LinqDataTypes { ID =  2, MoneyValue =  2.49m, DateTimeValue = new DateTime(2005,  5,  15,  5, 15, 25, 500), BoolValue = false, GuidValue = new Guid("bc663a61-7b40-4681-ac38-f9aaf55b706b"), SmallIntValue =  2 },
 					new LinqDataTypes { ID =  3, MoneyValue =  3.99m, DateTimeValue = new DateTime(2009,  9,  19,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d2f970c0-35ac-4987-9cd5-5badb1757436"), SmallIntValue =  3 },
@@ -80,22 +79,18 @@ namespace Tests.Create
 					new LinqDataTypes { ID =  9, MoneyValue =  9.63m, DateTimeValue = new DateTime(2009,  9,  25,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("46c5c512-3d4b-4cf7-b4e7-1de080789e5d"), SmallIntValue =  9 },
 					new LinqDataTypes { ID = 10, MoneyValue = 10.77m, DateTimeValue = new DateTime(2009,  9,  26,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("61b2bc55-147f-4b40-93ed-a4aa83602fee"), SmallIntValue = 10 },
 					new LinqDataTypes { ID = 11, MoneyValue = 11.45m, DateTimeValue = new DateTime(2009,  9,  27,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d3021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 11 },
-					new LinqDataTypes { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12 },
-				});
+					new LinqDataTypes { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12 });
 
-				db.InsertBatch(new[]
-				{
+				db.BulkCopy(
 					new Parent { ParentID = 1, Value1 = 1    },
 					new Parent { ParentID = 2, Value1 = null },
 					new Parent { ParentID = 3, Value1 = 3    },
 					new Parent { ParentID = 4, Value1 = null },
 					new Parent { ParentID = 5, Value1 = 5    },
 					new Parent { ParentID = 6, Value1 = 6    },
-					new Parent { ParentID = 7, Value1 = 1    },
-				});
+					new Parent { ParentID = 7, Value1 = 1    });
 
-				db.InsertBatch(new[]
-				{
+				db.BulkCopy(
 					new Child { ParentID = 1, ChildID = 11 },
 					new Child { ParentID = 2, ChildID = 21 },
 					new Child { ParentID = 2, ChildID = 22 },
@@ -112,11 +107,9 @@ namespace Tests.Create
 					new Child { ParentID = 6, ChildID = 64 },
 					new Child { ParentID = 6, ChildID = 65 },
 					new Child { ParentID = 6, ChildID = 66 },
-					new Child { ParentID = 7, ChildID = 77 },
-				});
+					new Child { ParentID = 7, ChildID = 77 });
 
-				db.InsertBatch(new[]
-				{
+				db.BulkCopy(
 					new GrandChild { ParentID = 1, ChildID = 11, GrandChildID = 111 },
 					new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 211 },
 					new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 212 },
@@ -138,8 +131,7 @@ namespace Tests.Create
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 421 },
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 422 },
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 423 },
-					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 },
-				});
+					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 });
 
 				if (action != null)
 					action(db.Connection);
