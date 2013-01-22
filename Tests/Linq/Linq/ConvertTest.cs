@@ -401,7 +401,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataContexts(ProviderName.SQLite)] string context)
+		public void ToSqlTime([DataContexts(ProviderName.SQLite
+			, ProviderName.Access, ProviderName.Sybase ///////// TODO
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

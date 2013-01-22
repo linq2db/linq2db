@@ -28,12 +28,18 @@ namespace LinqToDB.DataProvider
 			return new SQLiteSqlProvider();
 		}
 
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			base.SetParameter(parameter, "@" + name, dataType, value);
+		}
+
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
 			{
-				case DataType.UInt32 : dataType = DataType.Int64;   break;
-				case DataType.UInt64 : dataType = DataType.Decimal; break;
+				case DataType.UInt32    : dataType = DataType.Int64;    break;
+				case DataType.UInt64    : dataType = DataType.Decimal;  break;
+				case DataType.DateTime2 : dataType = DataType.DateTime; break;
 			}
 
 			base.SetParameterType(parameter, dataType);

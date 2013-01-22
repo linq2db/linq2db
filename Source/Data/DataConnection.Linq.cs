@@ -182,7 +182,10 @@ namespace LinqToDB.Data
 				case DbType.DateTime2             : dataType = DataType.DateTime2;      break;
 				case DbType.DateTimeOffset        : dataType = DataType.DateTimeOffset; break;
 				default :
-					dataType = MappingSchema.GetDataType(parm.SystemType);
+					dataType = MappingSchema.GetDataType(
+						parm.SystemType == typeof(object) && parm.Value != null ?
+							parm.Value.GetType() :
+							parm.SystemType);
 					break;
 			}
 

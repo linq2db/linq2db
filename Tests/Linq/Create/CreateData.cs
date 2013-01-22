@@ -67,6 +67,8 @@ namespace Tests.Create
 				if (exception != null)
 					throw exception;
 
+				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
+
 				db.BulkCopy(
 					new LinqDataTypes { ID =  1, MoneyValue =  1.11m, DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100), BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  1 },
 					new LinqDataTypes { ID =  2, MoneyValue =  2.49m, DateTimeValue = new DateTime(2005,  5,  15,  5, 15, 25, 500), BoolValue = false, GuidValue = new Guid("bc663a61-7b40-4681-ac38-f9aaf55b706b"), SmallIntValue =  2 },
@@ -81,6 +83,8 @@ namespace Tests.Create
 					new LinqDataTypes { ID = 11, MoneyValue = 11.45m, DateTimeValue = new DateTime(2009,  9,  27,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d3021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 11 },
 					new LinqDataTypes { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12 });
 
+				Console.WriteLine("\nBulkCopy Parent\n");
+
 				db.BulkCopy(
 					new Parent { ParentID = 1, Value1 = 1    },
 					new Parent { ParentID = 2, Value1 = null },
@@ -89,6 +93,8 @@ namespace Tests.Create
 					new Parent { ParentID = 5, Value1 = 5    },
 					new Parent { ParentID = 6, Value1 = 6    },
 					new Parent { ParentID = 7, Value1 = 1    });
+
+				Console.WriteLine("\nBulkCopy Child\n");
 
 				db.BulkCopy(
 					new Child { ParentID = 1, ChildID = 11 },
@@ -108,6 +114,8 @@ namespace Tests.Create
 					new Child { ParentID = 6, ChildID = 65 },
 					new Child { ParentID = 6, ChildID = 66 },
 					new Child { ParentID = 7, ChildID = 77 });
+
+				Console.WriteLine("\nBulkCopy GrandChild\n");
 
 				db.BulkCopy(
 					new GrandChild { ParentID = 1, ChildID = 11, GrandChildID = 111 },

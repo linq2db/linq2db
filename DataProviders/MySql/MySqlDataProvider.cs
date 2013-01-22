@@ -34,20 +34,31 @@ namespace LinqToDB.DataProvider
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
-			if (value is MySqlDecimal)
-				value = ((MySqlDecimal)value).Value;
+			switch (dataType)
+			{
+				case DataType.Decimal    :
+				case DataType.VarNumeric :
+					if (value is MySqlDecimal)
+						value = ((MySqlDecimal)value).Value;
+					break;
+				case DataType.Date       :
+				case DataType.DateTime   :
+				case DataType.DateTime2  :
+					if (value is MySqlDateTime)
+						value = ((MySqlDateTime)value).Value;
+					break;
+				case DataType.Char       :
+				case DataType.NChar      :
+					if (value is char)
+						value = value.ToString();
+					break;
+			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
-			switch (dataType)
-			{
-				case DataType.DateTime2 : dataType = DataType.DateTime; break;
-			}
-
-			base.SetParameterType(parameter, dataType);
 		}
 	}
 }
