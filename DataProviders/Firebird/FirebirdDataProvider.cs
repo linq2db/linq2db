@@ -33,6 +33,22 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			if (value is bool)
+			{
+				value = (bool)value ? "1" : "0";
+				dataType = DataType.Char;
+			}
+			else if (value is Guid)
+			{
+				value = value.ToString();
+				dataType = DataType.Char;
+			}
+
+			base.SetParameter(parameter, name, dataType, value);
+		}
+
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)

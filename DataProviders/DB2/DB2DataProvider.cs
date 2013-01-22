@@ -3,10 +3,10 @@ using System.Data;
 
 using IBM.Data.DB2;
 using IBM.Data.DB2Types;
-using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
 	using SqlProvider;
 
 	public class DB2DataProvider : DataProviderBase
@@ -78,7 +78,17 @@ namespace LinqToDB.DataProvider
 				case DataType.VarChar    :
 				case DataType.NChar      :
 				case DataType.NVarChar   :
-					if (value is Guid) value = ((Guid)value).ToString();
+					     if (value is Guid) value = ((Guid)value).ToString();
+					else if (value is bool)
+						value = Common.ConvertTo<char>.From((bool)value);
+					break;
+				case DataType.Boolean    :
+				case DataType.Int16      :
+					if (value is bool)
+					{
+						value    = (bool)value ? 1 : 0;
+						dataType = DataType.Int16;
+					}
 					break;
 				case DataType.Guid       :
 					if (value is Guid)

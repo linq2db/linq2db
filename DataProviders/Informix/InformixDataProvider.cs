@@ -41,6 +41,16 @@ namespace LinqToDB.DataProvider
 		{
 			if (value is TimeSpan)
 				value = new IfxTimeSpan((TimeSpan)value);
+			else if (value is Guid)
+			{
+				value    = value.ToString();
+				dataType = DataType.Char;
+			}
+			else if (value is bool)
+			{
+				value = (bool)value ? 't' : 'f';
+				dataType = DataType.Char;
+			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
