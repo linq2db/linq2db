@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data;
 using LinqToDB.SqlBuilder;
 
 using NUnit.Framework;
@@ -15,9 +14,9 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class Common : TestBase
 	{
-		class MyDbManager : TestDbManager
+		class MyDataConnection : TestDataConnection
 		{
-			public MyDbManager(string context) : base(context)
+			public MyDataConnection(string context) : base(context)
 			{
 			}
 
@@ -74,10 +73,10 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, ExpectedException(typeof(DataException), ExpectedMessage = "Invalid object name 'Parent1'.")]
+		[Test, ExpectedException(typeof(System.Data.SqlClient.SqlException), ExpectedMessage = "Invalid object name 'Parent1'.")]
 		public void ReplaceTableTest([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new MyDbManager(context))
+			using (var db = new MyDataConnection(context))
 			{
 				db.BeginTransaction();
 
