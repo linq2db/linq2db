@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider
 		{
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
+			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
 		}
 

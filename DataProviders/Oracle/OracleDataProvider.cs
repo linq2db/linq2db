@@ -159,7 +159,8 @@ namespace LinqToDB.DataProvider
 		public override void InitCommand(DataConnection dataConnection)
 		{
 			dataConnection.Command = null;
-			base.InitCommand(dataConnection);
+			((OracleCommand)dataConnection.Command).BindByName = true;
+			//base.InitCommand(dataConnection);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

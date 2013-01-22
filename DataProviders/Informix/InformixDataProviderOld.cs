@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider
 				if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
 					Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-				var value = DataReader.GetDecimal     (i);
+				var value = DataReader.GetDecimal(i);
 
 				if (current != CultureInfo.InvariantCulture)
 					Thread.CurrentThread.CurrentCulture = current;

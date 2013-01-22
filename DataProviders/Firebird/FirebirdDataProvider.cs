@@ -12,6 +12,19 @@ namespace LinqToDB.DataProvider
 		public FirebirdDataProvider() : base(new FirebirdMappingSchema())
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+
+			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
+			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+		}
+
+		static DateTime GetDateTime(IDataReader dr, int idx)
+		{
+			var value = dr.GetDateTime(idx);
+
+			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
+				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
+
+			return value;
 		}
 
 		public override string Name           { get { return ProviderName.Firebird; } }
@@ -58,6 +71,8 @@ namespace LinqToDB.DataProvider
 				case DataType.UInt32     : dataType = DataType.Int64;   break;
 				case DataType.UInt64     : dataType = DataType.Decimal; break;
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
+				case DataType.DateTime   :
+				case DataType.DateTime2  : ((FbParameter)parameter).FbDbType = FbDbType.TimeStamp; return;
 			}
 
 			base.SetParameterType(parameter, dataType);

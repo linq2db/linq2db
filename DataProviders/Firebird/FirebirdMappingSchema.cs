@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider
 	{
 		public FirebirdMappingSchema() : base(ProviderName.Firebird)
 		{
-			SetDataType(typeof(DateTime), DataType.DateTime);
 		}
 	}
 }

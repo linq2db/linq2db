@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
-
+using System.Globalization;
+using System.Threading;
 using IBM.Data.Informix;
 
 namespace LinqToDB.DataProvider
@@ -21,6 +22,55 @@ namespace LinqToDB.DataProvider
 			SetProviderField<IfxDataReader,IfxDecimal, decimal> ((r,i) => r.GetIfxDecimal (i));
 			SetProviderField<IfxDataReader,IfxDateTime,DateTime>((r,i) => r.GetIfxDateTime(i));
 			SetProviderField<IfxDataReader,IfxTimeSpan,TimeSpan>((r,i) => r.GetIfxTimeSpan(i));
+
+			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+		}
+
+		static float GetFloat(IDataReader dr, int idx)
+		{
+			var current = Thread.CurrentThread.CurrentCulture;
+
+			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+			var value = dr.GetFloat(idx);
+
+			if (current != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = current;
+
+			return value;
+		}
+
+		static double GetDouble(IDataReader dr, int idx)
+		{
+			var current = Thread.CurrentThread.CurrentCulture;
+
+			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+			var value = dr.GetDouble(idx);
+
+			if (current != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = current;
+
+			return value;
+		}
+
+		static decimal GetDecimal(IDataReader dr, int idx)
+		{
+			var current = Thread.CurrentThread.CurrentCulture;
+
+			if (Thread.CurrentThread.CurrentCulture != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+			var value = dr.GetDecimal(idx);
+
+			if (current != CultureInfo.InvariantCulture)
+				Thread.CurrentThread.CurrentCulture = current;
+
+			return value;
 		}
 
 		public override string Name           { get { return ProviderName.DB2;      } }

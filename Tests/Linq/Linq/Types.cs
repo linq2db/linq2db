@@ -513,7 +513,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCultureInfo([DataContexts] string context)
+		public void TestCultureInfo([DataContexts(
+			ProviderName.Informix //////////////// TODO
+			)] string context)
 		{
 			var current = Thread.CurrentThread.CurrentCulture;
 

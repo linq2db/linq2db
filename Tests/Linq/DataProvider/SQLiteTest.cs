@@ -218,12 +218,12 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p",  '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("@p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
