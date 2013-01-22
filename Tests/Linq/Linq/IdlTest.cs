@@ -156,7 +156,7 @@ namespace Tests.Linq
         {
             // failed with LinqToDB.Data.Linq.LinqException : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}' 
             //   cannot be converted to SQL.
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var source = from child in db.GrandChild
                                 select
@@ -179,7 +179,7 @@ namespace Tests.Linq
             // failed with System.ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than 
             //   the size of the collection.
             // Parameter name: index
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var source = from p1 in db.Person
                                 join p2 in db.Person on p1.ID equals p2.ID
@@ -197,7 +197,7 @@ namespace Tests.Linq
         public void TestNullableExpression([IncludeDataContexts(ProviderName.MySql)] string context)
         {
             // failed with System.NullReferenceException : Object reference not set to an instance of an object.
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var source = from obj in db.Person select new { Id = obj.ID, };
 
@@ -214,7 +214,7 @@ namespace Tests.Linq
         [Test]
         public void TestLookupWithInterfaceProperty([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var r = GetById<PersonWithId>(db, 1).SingleOrDefault();
                 Assert.That(r, Is.Not.Null);
@@ -238,7 +238,7 @@ namespace Tests.Linq
         [Test]
         public void TestForObjectExt([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var r = from p in db.Parent
                             select new ParentEx
@@ -265,7 +265,7 @@ namespace Tests.Linq
         [Test]
         public void TestForGroupBy([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 /* no error in first call */
                 getData(db, new List<int?> { 2 }, new List<int?> { 211, 212, 221, 222 });
@@ -288,7 +288,7 @@ namespace Tests.Linq
         [Test]
         public void TestLinqMax([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
                 Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
@@ -302,7 +302,7 @@ namespace Tests.Linq
         [Test]
         public void TestConvertFunction([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var ds = new IdlPatientSource(db);
                 var r1 = ds.Patients().ToList();
@@ -320,7 +320,7 @@ namespace Tests.Linq
         [Test]
         public void TestJoinOrder([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = GetDataContext(context))
             {
                 var source = new IdlPatientSource(db);
 
@@ -357,7 +357,7 @@ namespace Tests.Linq
         [Test]
         public void TestDistinctWithGroupBy([IncludeDataContexts(ProviderName.MySql, ProviderName.SQLite)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var source = db.Parent.ToList();
                 // Ensure that the data source has duplicate values.
@@ -391,7 +391,7 @@ namespace Tests.Linq
         [Test]
         public void ImplicitCastTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var people =
                     from p in db.Person
@@ -411,7 +411,7 @@ namespace Tests.Linq
         [Test]
         public void ListvsArrayTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var st = "John";
 
@@ -432,7 +432,7 @@ namespace Tests.Linq
         [Test]
         public void ConcatJoinOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var query = from y in
                                 ((from pat in db.Patient
@@ -456,7 +456,7 @@ namespace Tests.Linq
         {
             var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
 
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
                     .ToList();
@@ -468,7 +468,7 @@ namespace Tests.Linq
         [Test]
         public void TestQueryWithInterface([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var persons =
                     from x in db.Person
@@ -510,7 +510,7 @@ namespace Tests.Linq
         [Test]
         public void TestComparePropertyOfEnumTypeToVaribleInSubquery([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var gender = Gender.Other;
                 var q = from x in db.Patient
@@ -525,7 +525,7 @@ namespace Tests.Linq
         [Test]
         public void ConcatOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var q = from p in db.Person
                             where p.ID < 0
@@ -605,7 +605,7 @@ namespace Tests.Linq
         [Test]
         public void TestMono01([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t = "A";
@@ -625,7 +625,7 @@ namespace Tests.Linq
         [Test]
         public void TestMono03([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
                 Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
         }
 
@@ -641,7 +641,7 @@ namespace Tests.Linq
         [Test]
         public void TestMonoConcat([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t  = "A";
@@ -656,7 +656,7 @@ namespace Tests.Linq
         [Test]
         public void TestMonoConcat2([IncludeDataContexts(ProviderName.MySql)] string context)
         {
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t = "A";
@@ -667,7 +667,7 @@ namespace Tests.Linq
                 Assert.That(query1.ToList(), Is.Not.Null);
             }
 
-            using (var db = new TestDbManager(context))
+            using (var db = new TestDataConnection(context))
             {
                 var ds = new IdlPatientSource(db);
                 var t = "A";

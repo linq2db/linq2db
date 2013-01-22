@@ -15,7 +15,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsert([IncludeDataContexts(ProviderName.Firebird)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new FirebirdSpecific.SequenceTest { Value = "SeqValue" });
@@ -31,7 +31,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.Firebird)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 

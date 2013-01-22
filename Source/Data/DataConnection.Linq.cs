@@ -4,7 +4,6 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Data
 {
@@ -407,6 +406,13 @@ namespace LinqToDB.Data
 		{
 			get { return _mappingSchemaOld ?? (_mappingSchemaOld = new MappingSchemaOld { NewSchema = MappingSchema }); }
 		}
+
+		public MappingSchemaOld MappingSchemaOld
+		{
+			get { return _mappingSchemaOld;  }
+			set { _mappingSchemaOld = value; }
+		}
+
 
 		#endregion
 	}

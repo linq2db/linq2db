@@ -71,22 +71,21 @@ namespace LinqToDB.SqlBuilder
 			var typeExt = TypeExtension.GetTypeExtension(objectType, mappingSchema.Extensions);
 
 			foreach (MemberMapper mm in mappingSchema.GetObjectMapper(objectType))
-				if (mm.MapMemberInfo.SqlIgnore == false)
-				{
-					var ua =
-						mappingSchema.MetadataProvider.GetNonUpdatableAttribute(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
+			{
+				var ua =
+					mappingSchema.MetadataProvider.GetNonUpdatableAttribute(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
 
-					var order = mappingSchema.MetadataProvider.GetPrimaryKeyOrder(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
+				var order = mappingSchema.MetadataProvider.GetPrimaryKeyOrder(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
 
-					Fields.Add(new SqlField(
-						mm.Type,
-						mm.MemberName,
-						mm.Name,
-						mm.MapMemberInfo.Nullable,
-						isSet ? order : int.MinValue,
-						ua,
-						mm));
-				}
+				Fields.Add(new SqlField(
+					mm.Type,
+					mm.MemberName,
+					mm.Name,
+					mm.MapMemberInfo.Nullable,
+					isSet ? order : int.MinValue,
+					ua,
+					mm));
+			}
 
 			var identityField = GetIdentityField();
 

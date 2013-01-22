@@ -103,7 +103,6 @@
     <Compile Include="Sybase.cs" />
     <Compile Include="SybaseDataProvider.cs" />
     <Compile Include="SybaseMappingSchema.cs" />
-    <Compile Include="SybaseDataProviderOld.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

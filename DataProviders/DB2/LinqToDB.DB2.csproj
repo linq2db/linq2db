@@ -99,7 +99,6 @@
     <Compile Include="DB2.cs" />
     <Compile Include="DB2DataProvider.cs" />
     <Compile Include="DB2MappingSchema.cs" />
-    <Compile Include="DB2DataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

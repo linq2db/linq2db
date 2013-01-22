@@ -54,7 +54,7 @@ namespace Tests.Linq
 		[Test]
 		public void UserInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 				db.Insert(new User { Name = "user" });
@@ -64,7 +64,7 @@ namespace Tests.Linq
 		[Test]
 		public void UserInsertWithIdentity([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 				db.InsertWithIdentity(new User { Name = "user" });
@@ -74,7 +74,7 @@ namespace Tests.Linq
 		[Test]
 		public void UserLinqInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 				db.GetTable<User>().Insert(() => new User { Name = "user" });
@@ -84,7 +84,7 @@ namespace Tests.Linq
 		[Test]
 		public void UserLinqInsertWithIdentity([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 				db.GetTable<User>().InsertWithIdentity(() => new User { Name = "user" });
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContractInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -108,7 +108,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContractInsertWithIdentity([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -125,7 +125,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContractLinqInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -145,7 +145,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContractLinqInsertWithIdentity([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -159,7 +159,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContractLinqManyInsert([IncludeDataContexts(ProviderName.Oracle)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -173,7 +173,7 @@ namespace Tests.Linq
 		//[Test]
 		public void ContractLinqManyInsertWithIdentity()
 		{
-			using (var db = new TestDbManager("Oracle"))
+			using (var db = GetDataContext("Oracle"))
 			{
 				db.BeginTransaction();
 

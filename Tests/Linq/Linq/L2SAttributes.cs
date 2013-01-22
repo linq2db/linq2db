@@ -40,7 +40,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsDbGeneratedTest()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				db.BeginTransaction();
 

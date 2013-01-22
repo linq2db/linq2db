@@ -275,7 +275,6 @@ namespace LinqToDB.Mapping
 					mi.Storage                    = GetFieldStorage(ma);
 					mi.IsInheritanceDiscriminator = GetInheritanceDiscriminator(ma);
 					mi.Trimmable                  = GetTrimmable   (ma);
-					mi.SqlIgnore                  = GetSqlIgnore   (ma);
 					mi.MapValues                  = GetMapValues   (ma);
 					mi.Nullable                   = GetNullable    (ma);
 					mi.NullValue                  = GetNullValue   (ma, mi.Nullable);
@@ -443,12 +442,6 @@ namespace LinqToDB.Mapping
 		{
 			bool isSet;
 			return MetadataProvider.GetMapIgnore(Extension, memberAccessor, out isSet);
-		}
-
-		protected virtual bool GetSqlIgnore(MemberAccessor memberAccessor)
-		{
-			bool isSet;
-			return MetadataProvider.GetSqlIgnore(Extension, memberAccessor, out isSet);
 		}
 
 		protected virtual string GetFieldName(MemberAccessor memberAccessor)

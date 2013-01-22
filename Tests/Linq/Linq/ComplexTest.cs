@@ -308,7 +308,7 @@ namespace Tests.Linq
 					Expression.Invoke(pred2, param)
 				), param);
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				Assert.AreEqual(1, db.Parent.Count(final));
 			}
@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void IEnumerableTest1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var res =
 					from rc in db.GetTable<TestEntity>()
@@ -416,7 +416,7 @@ namespace Tests.Linq
 		[Test]
 		public void IEnumerableTest2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var zones =
 					from z in db.GetTable<TestEntity2>()

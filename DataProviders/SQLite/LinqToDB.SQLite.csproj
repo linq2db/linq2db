@@ -106,7 +106,6 @@
     <Compile Include="SQLiteDataProvider.cs" />
     <Compile Include="SQLiteMappingSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SQLiteDataProviderOld.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

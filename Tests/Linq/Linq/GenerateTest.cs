@@ -22,7 +22,7 @@ namespace Tests.Linq
 			var bBody     = b.Body.Transform(e => e == b.Parameters[0] ? a.Parameters[0] : e);
 			var predicate = Expression.Lambda<Func<Person,bool>>(Expression.AndAlso(a.Body, bBody), a.Parameters[0]);
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q = db.Person.Where(predicate);
 				var p = q.First();

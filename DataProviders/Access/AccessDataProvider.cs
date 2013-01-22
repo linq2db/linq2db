@@ -59,6 +59,8 @@ namespace LinqToDB.DataProvider
 				//
 				case DataType.DateTime   :
 				case DataType.DateTime2  : ((OleDbParameter)parameter).OleDbType = OleDbType.Date; return;
+
+				//case DataType.Int32      : ((OleDbParameter)parameter).OleDbType = OleDbType.Integer; return;
 			}
 
 			base.SetParameterType(parameter, dataType);

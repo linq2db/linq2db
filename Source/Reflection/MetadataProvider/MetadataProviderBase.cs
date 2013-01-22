@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 
 using LinqToDB.Common;
-using LinqToDB.DataAccess;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Reflection.MetadataProvider
@@ -194,16 +193,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 		{
 			isSet = false;
 			return null;
-		}
-
-		#endregion
-
-		#region GetSqlIgnore
-
-		public virtual bool GetSqlIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			isSet = false;
-			return false;
 		}
 
 		#endregion

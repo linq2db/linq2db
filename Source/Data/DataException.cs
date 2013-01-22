@@ -85,45 +85,6 @@ namespace LinqToDB.Data
 		}
 
 		#endregion
-
-		#region Internal
-
-		private readonly DbManager _dbManager;
-
-		static string GetMessage(DbManager dbManager, Exception innerException)
-		{
-			var obj = dbManager.DataProvider.Convert(
-				innerException, ConvertType.ExceptionToErrorMessage);
-
-			return obj is Exception ? ((Exception)obj).Message : obj.ToString();
-		}
-
-		internal DataException(DbManager dbManager, Exception innerException)
-			: this(GetMessage(dbManager, innerException), innerException)
-		{
-			_dbManager = dbManager;
-		}
-
-		#endregion
-
-		#region Public Properties
-
-		/// <summary>
-		/// Gets a number that identifies the type of error.
-		/// </summary>
-		public int? Number
-		{
-			get
-			{
-				var innerException = InnerException as DataException;
-				if (innerException != null)
-					return innerException.Number;
-				if (_dbManager == null) return null;
-				return _dbManager.DataProvider.Convert(InnerException, ConvertType.ExceptionToErrorNumber) as int?;
-			}
-		}
-
-		#endregion
 	}
 }
 

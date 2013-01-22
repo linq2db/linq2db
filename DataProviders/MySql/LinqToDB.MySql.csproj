@@ -105,7 +105,6 @@
     <Compile Include="MySql.cs" />
     <Compile Include="MySqlDataProvider.cs" />
     <Compile Include="MySqlMappingSchema.cs" />
-    <Compile Include="MySqlDataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -26,6 +26,6 @@ namespace LinqToDB.Linq
 			return new DataContextInfo(DataContext.Clone(forNestedQuery));
 		}
 
-		static readonly DataProviderBaseOld _dataProvider = DbManager.GetDataProvider(DbManager.DefaultConfiguration);
+		static readonly IDataProvider _dataProvider = DataConnection.GetDataProvider(DataConnection.DefaultConfiguration);
 	}
 }

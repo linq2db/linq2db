@@ -15,7 +15,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsert1([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
@@ -31,7 +31,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsert2([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest2>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
@@ -47,7 +47,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsert3([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" });
@@ -63,7 +63,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsertWithIdentity1([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -81,7 +81,7 @@ namespace Tests.ProviderSpecific
 			[Test]
 		public void SequenceInsertWithIdentity2([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest2>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -99,7 +99,7 @@ namespace Tests.ProviderSpecific
 		[Test]
 		public void SequenceInsertWithIdentity3([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 

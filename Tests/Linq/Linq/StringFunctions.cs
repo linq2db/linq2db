@@ -74,7 +74,7 @@ namespace Tests.Linq
 		{
 			var str = "o";
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from d in db.Doctor

@@ -22,7 +22,6 @@ namespace LinqToDB.Mapping
 		public string          Storage                    { get; set; }
 		public bool            IsInheritanceDiscriminator { get; set; }
 		public bool            Trimmable                  { get; set; }
-		public bool            SqlIgnore                  { get; set; }
 		public bool            Nullable                   { get; set; }
 		public object          NullValue                  { get; set; }
 		public Type            Type                       { get; set; }

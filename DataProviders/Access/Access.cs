@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 
-	public class Access: IDataProviderFactory
+	public class Access : IDataProviderFactory
 	{
 		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider();
 

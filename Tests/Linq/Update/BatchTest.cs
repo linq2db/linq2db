@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -14,7 +15,7 @@ namespace Tests.Update
 		[Test]
 		public void Transaction([DataContexts(ExcludeLinqService=true)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var list = new[]
 				{
@@ -28,7 +29,7 @@ namespace Tests.Update
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
 				db.BeginTransaction();
-				db.InsertBatch(list);
+				db.BulkCopy(list);
 				db.CommitTransaction();
 
 				foreach (var parent in list)
@@ -39,7 +40,7 @@ namespace Tests.Update
 		[Test]
 		public void NoTransaction([DataContexts(ExcludeLinqService=true)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var list = new[]
 				{
@@ -52,7 +53,7 @@ namespace Tests.Update
 				foreach (var parent in list)
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
-				db.InsertBatch(list);
+				db.BulkCopy(list);
 
 				foreach (var parent in list)
 					db.Parent.Delete(p => p.ParentID == parent.ParentID);

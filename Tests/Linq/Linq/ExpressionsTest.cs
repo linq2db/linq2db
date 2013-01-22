@@ -178,7 +178,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression9()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				AreEqual(
 					from ch in Child
 					from p in
@@ -189,7 +189,7 @@ namespace Tests.Linq
 					select ch
 					,
 					from ch in db.Child
-					from p in TestDbManager.GetParent9(db, ch)
+					from p in TestDataConnection.GetParent9(db, ch)
 					where ch.ParentID == p.ParentID
 					select ch);
 		}
@@ -197,7 +197,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression10()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				AreEqual(
 					from ch in Child
 					from p in

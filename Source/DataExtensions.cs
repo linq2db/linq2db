@@ -7,8 +7,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Data;
-	using DataAccess;
 	using Linq;
 
 	public static class DataExtensions
@@ -209,29 +207,6 @@ namespace LinqToDB
 
 		#endregion
 
-		#region InsertBatch
-
-#if !SILVERLIGHT
-
-		public static int InsertBatch<T>(this DbManager dataContext, int maxBatchSize, IEnumerable<T> list)
-		{
-			return new SqlQuery<T>().Insert(dataContext, maxBatchSize, list);
-		}
-
-		public static int InsertBatch<T>(this DbManager dataContext, IEnumerable<T> list)
-		{
-			return InsertBatch(dataContext, int.MaxValue, list);
-		}
-
-		public static int InsertBatch<T>(this DbManager dataContext, T[] list)
-		{
-			return InsertBatch(dataContext, int.MaxValue, list);
-		}
-
-#endif
-
-		#endregion
-
 		#region InsertWithIdentity
 
 		public static object InsertWithIdentity<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
@@ -260,20 +235,6 @@ namespace LinqToDB
 			return Query<T>.Update(DataContextInfo.Create(dataContext), obj);
 		}
 
-#if !SILVERLIGHT
-
-		public static int Update<T>(this DbManager dataContext, int maxBatchSize, IEnumerable<T> list)
-		{
-			return new SqlQuery<T>().Update(dataContext, maxBatchSize, list);
-		}
-
-		public static int Update<T>(this DbManager dataContext, IEnumerable<T> list)
-		{
-			return Update(dataContext, int.MaxValue, list);
-		}
-
-#endif
-
 		#endregion
 
 		#region Delete
@@ -288,20 +249,6 @@ namespace LinqToDB
 		{
 			return Query<T>.Delete(DataContextInfo.Create(dataContext), obj);
 		}
-
-#if !SILVERLIGHT
-
-		public static int Delete<T>(this DbManager dataContext, int maxBatchSize, IEnumerable<T> list)
-		{
-			return new SqlQuery<T>().Delete(dataContext, maxBatchSize, list);
-		}
-
-		public static int Delete<T>(this DbManager dataContext, IEnumerable<T> list)
-		{
-			return Delete(dataContext, int.MaxValue, list);
-		}
-
-#endif
 
 		#endregion
 

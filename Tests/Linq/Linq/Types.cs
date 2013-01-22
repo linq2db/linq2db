@@ -558,7 +558,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -572,7 +572,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -597,7 +597,7 @@ namespace Tests.Linq
 		{
 			List<PersonBoolTest> list;
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				list = db.GetTable<PersonBoolTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -611,7 +611,7 @@ namespace Tests.Linq
 		{
 			List<PersonBoolTest> list;
 
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				list = db.GetTable<PersonBoolTest>().ToList();
 
 			using (var db = GetDataContext(context))

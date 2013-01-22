@@ -244,7 +244,7 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (MemberMapper mm in builder.MappingSchema.GetObjectMapper(mapping.Type))
 					{
-						if (mm.MapMemberInfo.SqlIgnore == false && !sqlTable.Fields.Any(f => f.Value.Name == mm.MemberName))
+						if (!sqlTable.Fields.Any(f => f.Value.Name == mm.MemberName))
 						{
 							var field = new SqlField(mm.Type, mm.MemberName, mm.Name, mm.MapMemberInfo.Nullable, int.MinValue, null, mm);
 							sqlTable.Fields.Add(field);
@@ -404,8 +404,7 @@ namespace LinqToDB.Linq.Builder
 				var n     = 0;
 
 				foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(objectType))
-					if (mm.MapMemberInfo.SqlIgnore == false)
-						names.Add(mm.MemberName, n++);
+					names.Add(mm.MemberName, n++);
 
 				var q =
 					from r in SqlTable.Fields.Values.Select((f,i) => new { f, i })

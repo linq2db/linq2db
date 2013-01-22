@@ -134,9 +134,9 @@ namespace LinqToDB.Linq
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 #if !SILVERLIGHT
-							DbManager.WriteTraceLine(
+							DataConnection.WriteTraceLine(
 								"Expression test code generated: '" + testFile + "'.", 
-								DbManager.TraceSwitch.DisplayName);
+								DataConnection.TraceSwitch.DisplayName);
 #endif
 						}
 
@@ -149,9 +149,9 @@ namespace LinqToDB.Linq
 							if (!Configuration.Linq.GenerateExpressionTest)
 							{
 #if !SILVERLIGHT
-								DbManager.WriteTraceLine(
+								DataConnection.WriteTraceLine(
 									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
-									DbManager.TraceSwitch.DisplayName);
+									DataConnection.TraceSwitch.DisplayName);
 #endif
 							}
 

@@ -37,38 +37,8 @@ namespace Tests
 					.Where (s => s.Length > 0 && !s.StartsWith("--")));
 
 			DataConnection.TurnTraceSwitchOn();
-			DbManager.     TurnTraceSwitchOn();
 
 			PostgreSQLSqlProvider.QuoteIdentifiers = true;
-
-			var path = Path.GetDirectoryName(typeof(DbManager).Assembly.CodeBase.Replace("file:///", ""));
-
-			foreach (var info in Providers)
-			{
-				try
-				{
-					Type type;
-
-					if (info.Assembly == null)
-					{
-						type = typeof(DbManager).Assembly.GetType(info.Type, true);
-					}
-					else
-					{
-						var assembly = Assembly.LoadFile(Path.Combine(path, info.Assembly + ".dll"));
-
-						type = assembly.GetType(info.Type, true);
-					}
-
-					DbManager.AddDataProvider(type);
-
-					info.Loaded = true;
-				}
-				catch (Exception)
-				{
-					info.Loaded = false;
-				}
-			}
 
 			LinqService.TypeResolver = str =>
 			{
@@ -119,38 +89,22 @@ namespace Tests
 			return _lastIP;
 		}
 
-		public class ProviderInfo
+		public static readonly List<string> UserProviders = new List<string>();
+		public static readonly List<string> Providers     = new List<string>
 		{
-			public ProviderInfo(string name, string assembly, string type)
-			{
-				Name     = name;
-				Assembly = assembly;
-				Type     = type;
-			}
-
-			public readonly string Name;
-			public readonly string Assembly;
-			public readonly string Type;
-			public          bool   Loaded;
-			public          int    IP;
-			public          bool   Skip;
-		}
-
-		public static readonly List<string>       UserProviders = new List<string>();
-		public static readonly List<ProviderInfo> Providers = new List<ProviderInfo>
-		{
-			new ProviderInfo(ProviderName.SqlServer2008, null,                 "LinqToDB.DataProvider.Sql2008DataProvider"),
-			new ProviderInfo(ProviderName.SqlCe,         "linq2db.SqlCe",      "LinqToDB.DataProvider.SqlCeDataProviderOld"),
-			new ProviderInfo(ProviderName.SQLite,        "linq2db.SQLite",     "LinqToDB.DataProvider.SQLiteDataProviderOld"),
-			new ProviderInfo(ProviderName.Access,        null,                 "LinqToDB.DataProvider.AccessDataProviderOld"),
-			new ProviderInfo(ProviderName.SqlServer2005, null,                 "LinqToDB.DataProvider.SqlDataProvider"),
-			new ProviderInfo(ProviderName.DB2,           "linq2db.DB2",        "LinqToDB.DataProvider.DB2DataProviderOld"),
-			new ProviderInfo(ProviderName.Informix,      "linq2db.Informix",   "LinqToDB.DataProvider.InformixDataProviderOld"),
-			new ProviderInfo(ProviderName.Firebird,      "linq2db.Firebird",   "LinqToDB.DataProvider.FirebirdDataProviderOld"),
-			new ProviderInfo(ProviderName.Oracle,        "linq2db.Oracle",     "LinqToDB.DataProvider.OracleDataProviderOld"),
-			new ProviderInfo(ProviderName.PostgreSQL,    "linq2db.PostgreSQL", "LinqToDB.DataProvider.PostgreSQLDataProviderOld"),
-			new ProviderInfo(ProviderName.MySql,         "linq2db.MySql",      "LinqToDB.DataProvider.MySqlDataProviderOld"),
-			new ProviderInfo(ProviderName.Sybase,        "linq2db.Sybase",     "LinqToDB.DataProvider.SybaseDataProviderOld"),
+			ProviderName.SqlServer2008,
+			ProviderName.SqlServer2012,
+			ProviderName.SqlCe,
+			ProviderName.SQLite,
+			ProviderName.Access,
+			ProviderName.SqlServer2005,
+			ProviderName.DB2,
+			ProviderName.Informix,
+			ProviderName.Firebird,
+			ProviderName.Oracle,
+			ProviderName.PostgreSQL,
+			ProviderName.MySql,
+			ProviderName.Sybase,
 		};
 
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
@@ -182,22 +136,19 @@ namespace Tests
 
 				var providers = new List<string>();
 
-				foreach (var info in Providers)
+				foreach (var providerName in Providers)
 				{
-					if (info.Skip && Include == null)
+					if (Except != null && Except.Contains(providerName))
 						continue;
 
-					if (Except != null && Except.Contains(info.Name))
+					if (!UserProviders.Contains(providerName))
 						continue;
 
-					if (!UserProviders.Contains(info.Name))
-						continue;
-
-					providers.Add(info.Name);
+					providers.Add(providerName);
 
 					if (IncludeLinqService && !ExcludeLinqService)
 					{
-						providers.Add(info.Name + ".LinqService");
+						providers.Add(providerName + ".LinqService");
 					}
 				}
 
@@ -270,7 +221,7 @@ namespace Tests
 			get
 			{
 				if (_types == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
 				return _types;
@@ -283,7 +234,7 @@ namespace Tests
 			get
 			{
 				if (_types2 == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
 				return _types2;
@@ -297,7 +248,7 @@ namespace Tests
 			{
 				if (_person == null)
 				{
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
 					foreach (var p in _person)
@@ -315,7 +266,7 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
 					foreach (var p in _patient)
@@ -334,7 +285,7 @@ namespace Tests
 			get
 			{
 				if (_parent == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 					{
 						_parent = db.Parent.ToList();
 						db.Close();
@@ -445,7 +396,7 @@ namespace Tests
 			get
 			{
 				if (_child == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 					{
 						_child = db.Child.ToList();
 						db.Clone();
@@ -469,7 +420,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
 						db.Close();
@@ -488,7 +439,7 @@ namespace Tests
 			get
 			{
 				if (_grandChild1 == null)
-					using (var db = new TestDbManager())
+					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
 

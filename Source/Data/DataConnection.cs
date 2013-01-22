@@ -299,6 +299,16 @@ namespace LinqToDB.Data
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
 		}
 
+		public static string GetConnectionString(string configurationString)
+		{
+			ConfigurationInfo ci;
+
+			if (_configurations.TryGetValue(configurationString, out ci))
+				return ci.ConnectionString;
+
+			throw new LinqToDBException(string.Format("Configuration '{0}' is not defined.", configurationString));
+		}
+
 		#endregion
 
 		#region Connection
@@ -358,10 +368,12 @@ namespace LinqToDB.Data
 
 		#region Command
 
+		public string LastQuery;
+
 		public void SetCommand(string sql)
 		{
 			DataProvider.InitCommand(this);
-			Command.CommandText = sql;
+			Command.CommandText = LastQuery = sql;
 		}
 
 		private int? _commandTimeout;

@@ -110,7 +110,6 @@
     <Compile Include="PostgreSQL.cs" />
     <Compile Include="PostgreSQLDataProvider.cs" />
     <Compile Include="PostgreSQLMappingSchema.cs" />
-    <Compile Include="PostgreSQLDataProviderOld.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

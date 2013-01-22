@@ -97,7 +97,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurentTest1()
+		public void ConcurentTest1([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Parent>().Where(p => p.ParentID == n).First().ParentID);
@@ -113,7 +113,7 @@ namespace Tests.Linq
 
 				threads[i] = new Thread(() =>
 				{
-					using (var db = new TestDbManager())
+					using (var db = GetDataContext(context))
 					{
 						var id = (n % 6) + 1;
 						results[n,0] = id;
@@ -133,7 +133,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurentTest2()
+		public void ConcurentTest2([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			var threads = new Thread[100];
 			var results = new int   [100,2];
@@ -144,7 +144,7 @@ namespace Tests.Linq
 
 				threads[i] = new Thread(() =>
 				{
-					using (var db = new TestDbManager())
+					using (var db = GetDataContext(context))
 					{
 						var id = (n % 6) + 1;
 						results[n,0] = id;

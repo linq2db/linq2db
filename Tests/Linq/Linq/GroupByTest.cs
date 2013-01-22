@@ -1418,7 +1418,7 @@ namespace Tests.Linq
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
 
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var q =
 					from d in db.Doctor

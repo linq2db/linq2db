@@ -4,7 +4,6 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {
-	using DataAccess;
 	using Extension;
 	using Extensions;
 	using Mapping;
@@ -510,23 +509,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 			}
 
 			return base.GetNonUpdatableAttribute(type, typeExt, member, out isSet);
-		}
-
-		#endregion
-
-		#region GetSqlIgnore
-
-		public override bool GetSqlIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			var attr = member.GetAttribute<SqlIgnoreAttribute>() ?? member.Type.GetFirstAttribute<SqlIgnoreAttribute>();
-
-			if (attr != null)
-			{
-				isSet = true;
-				return attr.Ignore;
-			}
-
-			return base.GetSqlIgnore(typeExtension, member, out isSet);
 		}
 
 		#endregion

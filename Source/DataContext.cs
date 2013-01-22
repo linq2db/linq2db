@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Text;
 
 namespace LinqToDB
 {
@@ -12,24 +11,24 @@ namespace LinqToDB
 
 	public class DataContext : IDataContext
 	{
-		public DataContext() : this(DbManager.DefaultConfiguration)
+		public DataContext() : this(DataConnection.DefaultConfiguration)
 		{
 		}
 
 		public DataContext(string configurationString)
 		{
 			ConfigurationString = configurationString;
-			DataProvider        = DbManager.GetDataProvider(configurationString);
+			DataProvider        = DataConnection.GetDataProvider(configurationString);
 			ContextID           = DataProvider.Name;
 
-			MappingSchema = DataProvider.MappingSchema ?? Map.DefaultSchema;
+			MappingSchema = /*DataProvider.MappingSchema ??*/ Map.DefaultSchema; //////////// TODO
 		}
 
-		public string              ConfigurationString { get; private set; }
-		public DataProviderBaseOld DataProvider        { get; private set; }
-		public string              ContextID           { get; set;         }
-		public MappingSchemaOld    MappingSchema       { get; set;         }
-		public string              LastQuery           { get; set;         }
+		public string           ConfigurationString { get; private set; }
+		public IDataProvider    DataProvider        { get; private set; }
+		public string           ContextID           { get; set;         }
+		public MappingSchemaOld MappingSchema       { get; set;         }
+		public string           LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
 		public  bool  KeepConnectionAlive
@@ -51,9 +50,9 @@ namespace LinqToDB
 			{
 				if (_isMarsEnabled == null)
 				{
-					if (_dbManager == null)
+					if (_dataConnection == null)
 						return false;
-					_isMarsEnabled = _dbManager.IsMarsEnabled;
+					_isMarsEnabled = _dataConnection.IsMarsEnabled;
 				}
 
 				return _isMarsEnabled.Value;
@@ -63,30 +62,30 @@ namespace LinqToDB
 
 		internal int LockDbManagerCounter;
 
-		string    _connectionString;
-		DbManager _dbManager;
+		string         _connectionString;
+		DataConnection _dataConnection;
 
-		internal DbManager GetDBManager()
+		internal DataConnection GetDBManager()
 		{
-			if (_dbManager == null)
+			if (_dataConnection == null)
 			{
 				if (_connectionString == null)
-					_connectionString = DbManager.GetConnectionString(ConfigurationString);
+					_connectionString = DataConnection.GetConnectionString(ConfigurationString);
 
-				_dbManager = new DbManager(DataProvider, _connectionString) { MappingSchema = MappingSchema };
+				_dataConnection = new DataConnection(DataProvider, _connectionString) { MappingSchemaOld = MappingSchema };
 			}
 
-			return _dbManager;
+			return _dataConnection;
 		}
 
 		internal void ReleaseQuery()
 		{
-			LastQuery = _dbManager.LastQuery;
+			LastQuery = _dataConnection.LastQuery;
 
-			if (_dbManager != null && LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+			if (_dataConnection != null && LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 			{
-				_dbManager.Dispose();
-				_dbManager = null;
+				_dataConnection.Dispose();
+				_dataConnection = null;
 			}
 		}
 
@@ -126,8 +125,8 @@ namespace LinqToDB
 
 		string IDataContext.GetSqlText(object query)
 		{
-			if (_dbManager != null)
-				return ((IDataContext)_dbManager).GetSqlText(query);
+			if (_dataConnection != null)
+				return ((IDataContext)_dataConnection).GetSqlText(query);
 
 			var ctx = GetDBManager() as IDataContext;
 			var str = ctx.GetSqlText(query);
@@ -150,10 +149,10 @@ namespace LinqToDB
 				MappingSchema       = MappingSchema,
 			};
 
-			if (forNestedQuery && _dbManager != null && _dbManager.IsMarsEnabled)
-				dc._dbManager = _dbManager.Transaction != null ?
-					new DbManager(DataProvider, _dbManager.Transaction) { MappingSchema = MappingSchema } :
-					new DbManager(DataProvider, _dbManager.Connection)  { MappingSchema = MappingSchema };
+			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
+				dc._dataConnection = _dataConnection.Transaction != null ?
+					new DataConnection(DataProvider, _dataConnection.Transaction) { MappingSchemaOld = MappingSchema } :
+					new DataConnection(DataProvider, _dataConnection.Connection)  { MappingSchemaOld = MappingSchema };
 
 			return dc;
 		}
@@ -162,13 +161,13 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
-			if (_dbManager != null)
+			if (_dataConnection != null)
 			{
 				if (OnClosing != null)
 					OnClosing(this, EventArgs.Empty);
 
-				_dbManager.Dispose();
-				_dbManager = null;
+				_dataConnection.Dispose();
+				_dataConnection = null;
 			}
 		}
 	}

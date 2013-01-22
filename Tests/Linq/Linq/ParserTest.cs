@@ -27,7 +27,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionTable1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
@@ -44,7 +44,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionTable2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
@@ -61,7 +61,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionTable3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1)
@@ -82,7 +82,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
@@ -100,7 +100,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
@@ -118,7 +118,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1)
@@ -136,7 +136,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
@@ -155,7 +155,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar5()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1)
@@ -173,7 +173,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar6()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => p.Parent)
@@ -191,7 +191,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar7()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => p)
@@ -210,7 +210,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar8()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p  => p)
@@ -229,7 +229,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar9()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p  => p)
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar10()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => p)
@@ -268,7 +268,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionScalar11()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => p)
@@ -291,7 +291,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p1.ParentID })
@@ -308,7 +308,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
@@ -325,7 +325,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
@@ -342,7 +342,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
@@ -360,7 +360,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect42()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
@@ -378,7 +378,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect5()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
@@ -395,7 +395,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect6()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p => new { p })
@@ -412,7 +412,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect7()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => new { p, p.Parent })
@@ -430,7 +430,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect8()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => new { p, p.Parent })
@@ -448,7 +448,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect9()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.GrandChild
 					.Select    (p => new { p, p.Child })
@@ -466,7 +466,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsExpressionSelect10()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p => p.Children.Max(c => (int?)c.ChildID) ?? p.Value1)
@@ -487,7 +487,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexTable1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent1
 					.Select    (t => t)
@@ -501,7 +501,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexTable2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (t => t)
@@ -515,7 +515,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexTable3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (t => t.ParentID)
@@ -528,7 +528,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexTable4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (t => t.Value1)
@@ -541,7 +541,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexTable5()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (t => new { t = new { t } })
@@ -560,7 +560,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexScalar1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
@@ -574,7 +574,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexScalar2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
@@ -588,7 +588,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexScalar3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
@@ -603,7 +603,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexScalar4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = new { p = p1.ParentID } })
@@ -617,7 +617,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexJoin1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q2 =
 					from gc1 in db.GrandChild
@@ -645,7 +645,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToIndexJoin2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var result =
 					from ch in db.Child
@@ -671,7 +671,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToSql1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p1.ParentID })
@@ -689,7 +689,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToSql2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
@@ -706,7 +706,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToSql3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
@@ -724,7 +724,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToSql4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
@@ -742,7 +742,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertToSql5()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var ctx = db.Child
 					.Select    (p => new { p, p.Parent })
@@ -765,7 +765,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join1()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from t in
@@ -785,7 +785,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join2()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from t in
@@ -810,7 +810,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join3()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from p in db.Parent
@@ -827,7 +827,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join4()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from p in db.Parent
@@ -850,7 +850,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join5()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from p in db.Parent
@@ -869,7 +869,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join6([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = new TestDataConnection(context))
 			{
 				var q =
 					from g in db.GrandChild

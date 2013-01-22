@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 using LinqToDB.Common;
-using LinqToDB.DataAccess;
 using LinqToDB.Extensions;
 using Convert=System.Convert;
 
@@ -333,20 +331,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 			}
 
 			return base.GetNonUpdatableAttribute(type, typeExt, member, out isSet);
-		}
-
-		#endregion
-
-		#region GetSqlIgnore
-
-		public override bool GetSqlIgnore(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			var value = GetValue(typeExtension, member, "SqlIgnore", out isSet);
-
-			if (value != null)
-				return TypeExtension.ToBoolean(value);
-
-			return base.GetSqlIgnore(typeExtension, member, out isSet);
 		}
 
 		#endregion

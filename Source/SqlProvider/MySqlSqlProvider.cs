@@ -10,6 +10,11 @@ namespace LinqToDB.SqlProvider
 
 	public class MySqlSqlProvider : BasicSqlProvider
 	{
+		static MySqlSqlProvider()
+		{
+			ParameterSymbol = '@';
+		}
+
 		public override int CommandCount(SqlQuery sqlQuery)
 		{
 			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;

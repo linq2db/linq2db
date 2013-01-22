@@ -777,7 +777,7 @@ namespace Tests.Linq
 		[Test]
 		public void StackOverflow([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from c in db.Child

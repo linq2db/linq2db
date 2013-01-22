@@ -62,17 +62,11 @@
     <Compile Include="Configuration\DataProviderElementCollection.cs" />
     <Compile Include="Configuration\ElementBase.cs" />
     <Compile Include="Configuration\ElementCollectionBase.cs" />
-    <Compile Include="DataAccess\DataAccessException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataAccess\DataAccessorBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="DataProvider\DataProviderBase.cs" />
-    <Compile Include="DataProvider\ReaderInfo.cs" />
     <Compile Include="DataProvider\FirebirdMappingSchemaOld.cs" />
     <Compile Include="DataProvider\IDataProvider.cs" />
     <Compile Include="DataProvider\IDataProviderFactory.cs" />
+    <Compile Include="DataProvider\ReaderInfo.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataConnection.Linq.cs" />
     <Compile Include="Data\DataConnection.cs" />
@@ -112,40 +106,14 @@
     <Compile Include="PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAccess\SqlIgnoreAttribute.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataAccess\SqlQueryBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataAccess\SqlQueryInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataAccess\SqlQueryParameterInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DataAccess\SqlQueryT.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="TableAttribute.cs" />
     <Compile Include="TableNameAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Data\DataException.cs" />
-    <Compile Include="DataProvider\AccessDataProviderOld.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
-    <Compile Include="DataProvider\DataProviderBaseOld.cs" />
-    <None Include="DataProvider\MonoSqliteDataProvider.cs" />
-    <Compile Include="DataProvider\OdbcDataProvider.cs" />
-    <Compile Include="DataProvider\OleDbDataProvider.cs" />
     <Compile Include="ProviderName.cs" />
-    <Compile Include="DataProvider\Sql2008DataProvider.cs" />
-    <Compile Include="DataProvider\SqlDataProvider.cs" />
-    <Compile Include="DataProvider\SqlDataProviderBase.cs" />
-    <Compile Include="Data\DbManager.Config.cs" />
-    <Compile Include="Data\DbManager.cs" />
-    <Compile Include="Data\DbManager.Linq.cs" />
     <Compile Include="Data\IDataReaderEx.cs" />
     <Compile Include="Data\InitCommandEventArgs.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />

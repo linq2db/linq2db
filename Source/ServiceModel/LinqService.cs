@@ -247,7 +247,7 @@ namespace LinqToDB.ServiceModel
 
 				using (var db = CreateDataContext())
 				{
-					if (db is DbManager) ((DbManager)db).BeginTransaction();
+					if (db is DataConnection) ((DataConnection)db).BeginTransaction();
 
 					foreach (var query in queries)
 					{
@@ -255,7 +255,7 @@ namespace LinqToDB.ServiceModel
 						db.ExecuteNonQuery(obj);
 					}
 
-					if (db is DbManager) ((DbManager)db).CommitTransaction();
+					if (db is DataConnection) ((DataConnection)db).CommitTransaction();
 
 					return queryData.Length;
 				}

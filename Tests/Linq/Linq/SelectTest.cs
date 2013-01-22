@@ -210,7 +210,7 @@ namespace Tests.Linq
 		{
 			var dt = DateTime.Now;
 
-			using (var db = new TestDbManager(context))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p in db.Parent
@@ -559,7 +559,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectField()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from p in db.GetTable<TestParent>()

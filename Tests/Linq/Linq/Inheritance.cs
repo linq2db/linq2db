@@ -225,7 +225,7 @@ namespace Tests.Linq
 		[Test]
 		public void SimplTest()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 				Assert.AreEqual(1, db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 
@@ -252,7 +252,7 @@ namespace Tests.Linq
 		[Test]
 		public void InheritanceMappingIssueTest()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
@@ -450,7 +450,7 @@ namespace Tests.Linq
 		[Test]
 		public void GuidTest()
 		{
-			using (var db = new TestDbManager())
+			using (var db = new TestDataConnection())
 			{
 				var list = db.GetTable<InheritanceA>().Where(a => a.Bs.Any()).ToList();
 			}
@@ -486,16 +486,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test17([DataContexts] string data)
+		public void Test17([DataContexts(ExcludeLinqService=true)] string data)
 		{
 			using (var context = GetDataContext(data))
 			{
-				if (context is TestDbManager)
-				{
-					var db = (TestDbManager)context;
-					db.GetTable<Test17Person>().OfType<Test17John>().ToList();
-					Assert.False(db.LastQuery.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
-				}
+				var db = (TestDataConnection)context;
+				db.GetTable<Test17Person>().OfType<Test17John>().ToList();
+				Assert.False(db.LastQuery.ToLowerInvariant().Contains("lastname"), "Why select LastName field??");
 			}
 		}
 
