@@ -57,7 +57,7 @@ namespace LinqToDB.Mapping
 							Storage    = ca.Storage,
 						});
 				}
-				else if (!ta.IsColumnAttributeRequired && _mappingSchema.IsScalarType(memberType))
+				else if ((ta == null || !ta.IsColumnAttributeRequired) && _mappingSchema.IsScalarType(memberType))
 					Columns.Add(new ColumnDescriptior(memberInfo));
 			}
 		}

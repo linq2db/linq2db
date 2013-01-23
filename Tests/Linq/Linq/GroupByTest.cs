@@ -1510,5 +1510,16 @@ namespace Tests.Linq
 						Sum = g.Sum(t => t.Max)
 					});
 		}
+
+		[Test]
+		public void InnerQuery([DataContexts(ProviderName.SqlCe)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					   Doctor.GroupBy(s => s.PersonID).Select(s => s.Select(d => d.Taxonomy).First()),
+					db.Doctor.GroupBy(s => s.PersonID).Select(s => s.Select(d => d.Taxonomy).First()));
+			}
+		}
 	}
 }

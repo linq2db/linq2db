@@ -291,6 +291,21 @@ namespace Tests
 			}
 		}
 
+		private   List<Doctor> _doctor;
+		protected List<Doctor>  Doctor
+		{
+			get
+			{
+				if (_doctor == null)
+				{
+					using (var db = new TestDataConnection())
+						_doctor = db.Doctor.ToList();
+				}
+
+				return _doctor;
+			}
+		}
+
 		#region Parent/Child Model
 
 		private          List<Parent> _parent;
