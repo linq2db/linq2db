@@ -50,13 +50,13 @@ namespace Tests.Data
 				if (context.EndsWith(".2005"))
 				{
 					var sdp = conn.DataProvider;
-					Assert.That(sdp.GetType().Name, Is.EqualTo("SqlServerDataProvider2005"));
+					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2005"));
 				}
 
 				if (context.EndsWith(".2008"))
 				{
 					var sdp = conn.DataProvider;
-					Assert.That(sdp.GetType().Name, Is.EqualTo("SqlServerDataProvider2008"));
+					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 				}
 			}
 		}

@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider
 	using Common;
 	using Mapping;
 
-	class SqlServerMappingSchema : MappingSchema
+	public class SqlServerMappingSchema : MappingSchema
 	{
 		public SqlServerMappingSchema()
 			: base(ProviderName.SqlServer)
@@ -41,6 +41,6 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(SqlGeometry),    SqlGeometry.   Null, DataType.Udt);
 		}
 
-		public static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
+		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
 	}
 }

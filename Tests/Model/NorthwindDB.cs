@@ -7,6 +7,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Linq;
 using LinqToDB.SqlBuilder;
 using LinqToDB.SqlProvider;
@@ -53,7 +54,7 @@ namespace Tests.Model
 				var aargs  = sqlArgs.ToArray();
 				var arr    = ConvertArgs(member, aargs).ToList();
 				var method = (MethodInfo)member;
-				var sp     = new MsSql2008SqlProvider();
+				var sp     = new SqlServer2008SqlProvider();
 
 				{
 					var ttype  = method.GetGenericArguments()[0];

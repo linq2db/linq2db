@@ -103,6 +103,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlCeDataProvider.cs" />
     <Compile Include="SqlCeMappingSchema.cs" />
+    <Compile Include="SqlCeSqlProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

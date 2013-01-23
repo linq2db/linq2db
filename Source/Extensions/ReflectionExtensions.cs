@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
-	static class ReflectionExtensions
+	public static class ReflectionExtensions
 	{
 		#region Type extensions
 

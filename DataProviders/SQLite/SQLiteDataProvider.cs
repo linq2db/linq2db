@@ -1,22 +1,29 @@
 ﻿using System;
 using System.Data;
+
 using System.Data.SQLite;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class SQLiteDataProvider : DataProviderBase
 	{
-		public SQLiteDataProvider() : base(new SQLiteMappingSchema())
+		public SQLiteDataProvider(string name)
+			: this(name, new SQLiteMappingSchema(name))
+		{
+		}
+
+		public SQLiteDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
-		public override string Name           { get { return ProviderName.SQLite;      } }
-		public override Type   ConnectionType { get { return typeof(SQLiteConnection); } }
-		public override Type   DataReaderType { get { return typeof(SQLiteDataReader); } }
+		public override Type ConnectionType { get { return typeof(SQLiteConnection); } }
+		public override Type DataReaderType { get { return typeof(SQLiteDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{

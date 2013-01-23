@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Data;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
 	using Extensions;
 	using SqlBuilder;
+	using SqlProvider;
 
-	public class MsSql2005SqlProvider : MsSqlSqlProvider
+	public class SqlServer2005SqlProvider : SqlServerSqlProvider
 	{
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
@@ -57,7 +58,7 @@ namespace LinqToDB.SqlProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new MsSql2005SqlProvider();
+			return new SqlServer2005SqlProvider();
 		}
 
 		protected override void BuildDataType(System.Text.StringBuilder sb, SqlDataType type)

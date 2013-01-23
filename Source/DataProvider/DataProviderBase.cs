@@ -20,8 +20,9 @@ namespace LinqToDB.DataProvider
 	{
 		#region .ctor
 
-		protected DataProviderBase(MappingSchema mappingSchema)
+		protected DataProviderBase(string name, MappingSchema mappingSchema)
 		{
+			Name             = name;
 			MappingSchema    = mappingSchema;
 			SqlProviderFlags = new SqlProviderFlags();
 
@@ -44,7 +45,7 @@ namespace LinqToDB.DataProvider
 
 		#region Public Members
 
-		public abstract string           Name             { get; }
+		public          string           Name             { get; private set; }
 		public abstract Type             ConnectionType   { get; }
 		public abstract Type             DataReaderType   { get; }
 		public virtual  MappingSchema    MappingSchema    { get; private set; }

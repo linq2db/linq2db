@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class Access : IDataProviderFactory
 	{
-		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider();
+		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider(ProviderName.Access);
 
 		static Access()
 		{
-			DataConnection.AddDataProvider(ProviderName.Access, _accessDataProvider);
+			DataConnection.AddDataProvider(_accessDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

@@ -45,12 +45,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SqlServerDataProvider2012.cs" />
-    <Compile Include="SqlServerDataProvider2008.cs" />
+    <Compile Include="SqlServer2005SqlProvider.cs" />
+    <Compile Include="SqlServer2008SqlProvider.cs" />
+    <Compile Include="SqlServerSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlServer.cs" />
     <Compile Include="SqlServerDataProvider.cs" />
-    <Compile Include="SqlServerDataProvider2005.cs" />
     <Compile Include="SqlServerMappingSchema.cs" />
     <Compile Include="SqlServerVersion.cs" />
   </ItemGroup>

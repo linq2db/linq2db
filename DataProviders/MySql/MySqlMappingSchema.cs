@@ -6,9 +6,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class MySqlMappingSchema : MappingSchema
+	public class MySqlMappingSchema : MappingSchema
 	{
-		public MySqlMappingSchema() : base(ProviderName.MySql)
+		public MySqlMappingSchema(string configuration) : base(configuration)
 		{
 			SetDataType(typeof(MySqlDecimal),  DataType.Decimal);
 			SetDataType(typeof(MySqlDateTime), DataType.DateTime2);

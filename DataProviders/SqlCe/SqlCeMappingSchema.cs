@@ -9,9 +9,9 @@ namespace LinqToDB.DataProvider
 	using Common;
 	using Mapping;
 
-	class SqlCeMappingSchema : MappingSchema
+	public class SqlCeMappingSchema : MappingSchema
 	{
-		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
+		public SqlCeMappingSchema(string configuration) : base(configuration)
 		{
 			SetConvertExpression<SqlXml,XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),

@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class Informix : IDataProviderFactory
 	{
-		static readonly InformixDataProvider _informixDataProvider = new InformixDataProvider();
+		static readonly InformixDataProvider _informixDataProvider = new InformixDataProvider(ProviderName.Informix);
 
 		static Informix()
 		{
-			DataConnection.AddDataProvider(ProviderName.Informix, _informixDataProvider);
+			DataConnection.AddDataProvider(_informixDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

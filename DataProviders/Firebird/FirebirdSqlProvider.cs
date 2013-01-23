@@ -7,12 +7,12 @@ using System.Text;
 // ReSharper disable SuggestUseVarKeywordEvident
 #endregion
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
-	using DataProvider;
 	using Extensions;
 	using Mapping;
 	using SqlBuilder;
+	using SqlProvider;
 
 	public class FirebirdSqlProvider : BasicSqlProvider, IMappingSchemaProvider
 	{

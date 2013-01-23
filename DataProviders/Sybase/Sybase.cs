@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 
 	public class Sybase : IDataProviderFactory
 	{
-		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
+		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider(ProviderName.Sybase);
 
 		static Sybase()
 		{

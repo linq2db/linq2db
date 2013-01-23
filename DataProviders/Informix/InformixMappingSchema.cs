@@ -6,9 +6,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class InformixMappingSchema : MappingSchema
+	public class InformixMappingSchema : MappingSchema
 	{
-		public InformixMappingSchema() : base(ProviderName.Informix)
+		public InformixMappingSchema(string configuration) : base(configuration)
 		{
 			AddScalarType(typeof(IfxBlob),        IfxBlob.       Null, DataType.VarBinary);
 			AddScalarType(typeof(IfxClob),        IfxClob.       Null, DataType.Text);

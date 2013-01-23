@@ -5,18 +5,24 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-using LinqToDB.Data;
-
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
+	using Mapping;
 	using SqlProvider;
 
 	public class OracleDataProvider : DataProviderBase
 	{
-		public OracleDataProvider() : base(new OracleMappingSchema())
+		public OracleDataProvider(string name)
+			: this(name, new OracleMappingSchema(name))
+		{
+		}
+
+		public OracleDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
@@ -142,9 +148,8 @@ namespace LinqToDB.DataProvider
 				TimeSpan.Parse(tstz.TimeZone.TrimStart('+')));
 		}
 
-		public override string Name           { get { return ProviderName.Oracle;      } }
-		public override Type   ConnectionType { get { return typeof(OracleConnection); } }
-		public override Type   DataReaderType { get { return typeof(OracleDataReader); } }
+		public override Type ConnectionType { get { return typeof(OracleConnection); } }
+		public override Type DataReaderType { get { return typeof(OracleDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{

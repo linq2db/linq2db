@@ -102,6 +102,8 @@
     <Compile Include="Firebird.cs" />
     <Compile Include="FirebirdDataProvider.cs" />
     <Compile Include="FirebirdMappingSchema.cs" />
+    <Compile Include="FirebirdMappingSchemaOld.cs" />
+    <Compile Include="FirebirdSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

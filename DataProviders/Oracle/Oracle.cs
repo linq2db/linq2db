@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class Oracle: IDataProviderFactory
 	{
-		static readonly OracleDataProvider _oracleDataProvider = new OracleDataProvider();
+		static readonly OracleDataProvider _oracleDataProvider = new OracleDataProvider(ProviderName.Oracle);
 
 		static Oracle()
 		{
-			DataConnection.AddDataProvider(ProviderName.Oracle, _oracleDataProvider);
+			DataConnection.AddDataProvider(_oracleDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

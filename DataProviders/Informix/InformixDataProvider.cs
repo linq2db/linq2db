@@ -2,15 +2,23 @@
 using System.Data;
 using System.Globalization;
 using System.Threading;
+
 using IBM.Data.Informix;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class InformixDataProvider : DataProviderBase
 	{
-		public InformixDataProvider() : base(new InformixMappingSchema())
+		public InformixDataProvider(string name)
+			: this(name, new InformixMappingSchema(name))
+		{
+		}
+
+		public InformixDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -73,9 +81,8 @@ namespace LinqToDB.DataProvider
 			return value;
 		}
 
-		public override string Name           { get { return ProviderName.DB2;      } }
-		public override Type   ConnectionType { get { return typeof(IfxConnection); } }
-		public override Type   DataReaderType { get { return typeof(IfxDataReader); } }
+		public override Type ConnectionType { get { return typeof(IfxConnection); } }
+		public override Type DataReaderType { get { return typeof(IfxDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

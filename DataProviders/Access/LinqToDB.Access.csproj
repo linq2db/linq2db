@@ -38,6 +38,7 @@
     <Compile Include="Access.cs" />
     <Compile Include="AccessDataProvider.cs" />
     <Compile Include="AccessMappingSchema.cs" />
+    <Compile Include="AccessSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

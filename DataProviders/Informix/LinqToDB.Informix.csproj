@@ -101,6 +101,7 @@
     <Compile Include="Informix.cs" />
     <Compile Include="InformixDataProvider.cs" />
     <Compile Include="InformixMappingSchema.cs" />
+    <Compile Include="InformixSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -7,13 +7,20 @@ using Sybase.Data.AseClient;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
-	class SybaseDataProvider : DataProviderBase
+	public class SybaseDataProvider : DataProviderBase
 	{
 		#region Init
 
-		public SybaseDataProvider() : base(new SybaseMappingSchema())
+		public SybaseDataProvider(string name)
+			: this(name, new SybaseMappingSchema(name))
+		{
+		}
+
+		public SybaseDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
@@ -36,9 +43,8 @@ namespace LinqToDB.DataProvider
 
 		#region Public Properties
 
-		public override string Name           { get { return ProviderName.Sybase;   } }
-		public override Type   ConnectionType { get { return typeof(AseConnection); } }
-		public override Type   DataReaderType { get { return typeof(AseDataReader); } }
+		public override Type ConnectionType { get { return typeof(AseConnection); } }
+		public override Type DataReaderType { get { return typeof(AseDataReader); } }
 
 		#endregion
 

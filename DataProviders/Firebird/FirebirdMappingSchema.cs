@@ -4,9 +4,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class FirebirdMappingSchema : MappingSchema
+	public class FirebirdMappingSchema : MappingSchema
 	{
-		public FirebirdMappingSchema() : base(ProviderName.Firebird)
+		public FirebirdMappingSchema(string configuration) : base(configuration)
 		{
 		}
 	}

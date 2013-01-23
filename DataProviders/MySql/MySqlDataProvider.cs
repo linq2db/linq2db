@@ -6,11 +6,18 @@ using MySql.Data.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class MySqlDataProvider : DataProviderBase
 	{
-		public MySqlDataProvider() : base(new MySqlMappingSchema())
+		public MySqlDataProvider(string name)
+			: this(name, new MySqlMappingSchema(name))
+		{
+		}
+
+		public MySqlDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
 			SetProviderField<MySqlDataReader,MySqlDateTime>((r,i) => r.GetMySqlDateTime(i));
@@ -18,9 +25,8 @@ namespace LinqToDB.DataProvider
 			SetToTypeField  <MySqlDataReader,MySqlDateTime>((r,i) => r.GetMySqlDateTime(i));
 		}
 
-		public override string Name           { get { return ProviderName.MySql;      } }
-		public override Type   ConnectionType { get { return typeof(MySqlConnection); } }
-		public override Type   DataReaderType { get { return typeof(MySqlDataReader); } }
+		public override Type ConnectionType { get { return typeof(MySqlConnection); } }
+		public override Type DataReaderType { get { return typeof(MySqlDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

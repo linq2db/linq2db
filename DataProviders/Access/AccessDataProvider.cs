@@ -4,11 +4,18 @@ using System.Data.OleDb;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class AccessDataProvider : DataProviderBase
 	{
-		public AccessDataProvider() : base(new AccessMappingSchema())
+		public AccessDataProvider(string name)
+			: this(name, new AccessMappingSchema(name))
+		{
+		}
+
+		public AccessDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
@@ -26,10 +33,8 @@ namespace LinqToDB.DataProvider
 			return value;
 		}
 
-
-		public override string Name           { get { return ProviderName.Access;     } }
-		public override Type   ConnectionType { get { return typeof(OleDbConnection); } }
-		public override Type   DataReaderType { get { return typeof(OleDbDataReader); } }
+		public override Type ConnectionType { get { return typeof(OleDbConnection); } }
+		public override Type DataReaderType { get { return typeof(OleDbDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

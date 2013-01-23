@@ -7,11 +7,18 @@ using IBM.Data.DB2Types;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Mapping;
 	using SqlProvider;
 
 	public class DB2DataProvider : DataProviderBase
 	{
-		public DB2DataProvider() : base(new DB2MappingSchema())
+		public DB2DataProvider(string name)
+			: this(name, new DB2MappingSchema(name))
+		{
+		}
+
+		public DB2DataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
@@ -34,9 +41,8 @@ namespace LinqToDB.DataProvider
 			SetProviderField<DB2DataReader,DB2RowId,       byte[]>   ((r,i) => r.GetDB2RowId       (i));
 		}
 
-		public override string Name           { get { return ProviderName.DB2;      } }
-		public override Type   ConnectionType { get { return typeof(DB2Connection); } }
-		public override Type   DataReaderType { get { return typeof(DB2DataReader); } }
+		public override Type ConnectionType { get { return typeof(DB2Connection); } }
+		public override Type DataReaderType { get { return typeof(DB2DataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class SQLite: IDataProviderFactory
 	{
-		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
+		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider(ProviderName.SQLite);
 
 		static SQLite()
 		{
-			DataConnection.AddDataProvider(ProviderName.SQLite, _SQLiteDataProvider);
+			DataConnection.AddDataProvider(_SQLiteDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

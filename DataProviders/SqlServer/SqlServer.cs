@@ -5,19 +5,23 @@ using System.Data;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Mapping;
 
 	public class SqlServer : IDataProviderFactory
 	{
-		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider2005();
-		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider2008();
-		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider2012();
+		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(
+			ProviderName.SqlServer2005, SqlServerVersion.v2005, new MappingSchema(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance));
+		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(
+			ProviderName.SqlServer2008, SqlServerVersion.v2008, new MappingSchema(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance));
+		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(
+			ProviderName.SqlServer2012, SqlServerVersion.v2012, new MappingSchema(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance));
 
 		static SqlServer()
 		{
-			DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
-			DataConnection.AddDataProvider(ProviderName.SqlServer2012, _sqlServerDataProvider2012);
-			DataConnection.AddDataProvider(ProviderName.SqlServer2008, _sqlServerDataProvider2008);
-			DataConnection.AddDataProvider(ProviderName.SqlServer2005, _sqlServerDataProvider2005);
+			DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
+			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

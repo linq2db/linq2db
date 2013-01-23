@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class PostgreSQL: IDataProviderFactory
 	{
-		static readonly PostgreSQLDataProvider _postgreSQLDataProvider = new PostgreSQLDataProvider();
+		static readonly PostgreSQLDataProvider _postgreSQLDataProvider = new PostgreSQLDataProvider(ProviderName.PostgreSQL);
 
 		static PostgreSQL()
 		{
-			DataConnection.AddDataProvider(ProviderName.PostgreSQL, _postgreSQLDataProvider);
+			DataConnection.AddDataProvider(_postgreSQLDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

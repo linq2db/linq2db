@@ -6,9 +6,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class OracleMappingSchema : MappingSchema
+	public class OracleMappingSchema : MappingSchema
 	{
-		public OracleMappingSchema() : base(ProviderName.Oracle)
+		public OracleMappingSchema(string configuration) : base(configuration)
 		{
 			AddScalarType(typeof(OracleBFile),        OracleBFile.       Null, DataType.VarChar);    // ?
 			AddScalarType(typeof(OracleBinary),       OracleBinary.      Null, DataType.VarBinary);

@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
-	public class MsSql2008SqlProvider : MsSqlSqlProvider
+	using SqlProvider;
+
+	public class SqlServer2008SqlProvider : SqlServerSqlProvider
 	{
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new MsSql2008SqlProvider();
+			return new SqlServer2008SqlProvider();
 		}
 
 		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
 	using Extensions;
 	using SqlBuilder;
+	using SqlProvider;
 
 	public class MySqlSqlProvider : BasicSqlProvider
 	{

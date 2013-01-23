@@ -6,11 +6,18 @@ using NpgsqlTypes;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class PostgreSQLDataProvider : DataProviderBase
 	{
-		public PostgreSQLDataProvider() : base(new PostgreSQLMappingSchema())
+		public PostgreSQLDataProvider(string name)
+			: this(name, new PostgreSQLMappingSchema(name))
+		{
+		}
+
+		public PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
 
@@ -27,9 +34,8 @@ namespace LinqToDB.DataProvider
 			SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 		}
 
-		public override string Name           { get { return ProviderName.PostgreSQL;  } }
-		public override Type   ConnectionType { get { return typeof(NpgsqlConnection); } }
-		public override Type   DataReaderType { get { return typeof(NpgsqlDataReader); } }
+		public override Type ConnectionType { get { return typeof(NpgsqlConnection); } }
+		public override Type DataReaderType { get { return typeof(NpgsqlDataReader); } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

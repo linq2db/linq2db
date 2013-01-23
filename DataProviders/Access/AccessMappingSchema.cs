@@ -4,9 +4,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class AccessMappingSchema : MappingSchema
+	public class AccessMappingSchema : MappingSchema
 	{
-		public AccessMappingSchema() : base(ProviderName.Access)
+		public AccessMappingSchema(string configuation) : base(configuation)
 		{
 			SetDataType(typeof(DateTime), DataType.DateTime);
 		}

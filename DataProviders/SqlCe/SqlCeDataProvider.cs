@@ -7,18 +7,24 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
-	class SqlCeDataProvider : DataProviderBase
+	public class SqlCeDataProvider : DataProviderBase
 	{
-		public SqlCeDataProvider() : base(new SqlCeMappingSchema())
+		public SqlCeDataProvider(string name)
+			: this(name, new SqlCeMappingSchema(name))
+		{
+		}
+
+		public SqlCeDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
-		public override string Name           { get { return ProviderName.SqlCe;      } }
-		public override Type   ConnectionType { get { return typeof(SqlCeConnection); } }
-		public override Type   DataReaderType { get { return typeof(SqlCeDataReader); } }
+		public override Type ConnectionType { get { return typeof(SqlCeConnection); } }
+		public override Type DataReaderType { get { return typeof(SqlCeDataReader); } }
 
 		#region Overrides
 

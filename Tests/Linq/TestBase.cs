@@ -10,6 +10,7 @@ using System.ServiceModel.Description;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
 using LinqToDB.SqlProvider;
@@ -172,7 +173,20 @@ namespace Tests
 			{
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var ip  = GetIP(str);
-				var dx  = new TestServiceModelDataContext(ip);
+				var dx  = new TestServiceModelDataContext(ip,
+					configuration == ProviderName.SqlServer2008 ? typeof(SqlServer2008SqlProvider)  :
+					configuration == ProviderName.SqlServer2012 ? typeof(SqlServer2008SqlProvider)  :
+					configuration == ProviderName.SqlCe         ? typeof(SqlCeSqlProvider)      :
+					configuration == ProviderName.SQLite        ? typeof(SQLiteSqlProvider)     :
+					configuration == ProviderName.Access        ? typeof(AccessSqlProvider)     :
+					configuration == ProviderName.SqlServer2005 ? typeof(SqlServer2005SqlProvider)  :
+					configuration == ProviderName.DB2           ? typeof(DB2SqlProvider)        :
+					configuration == ProviderName.Informix      ? typeof(InformixSqlProvider)   :
+					configuration == ProviderName.Firebird      ? typeof(FirebirdSqlProvider)   :
+					configuration == ProviderName.Oracle        ? typeof(OracleSqlProvider)     :
+					configuration == ProviderName.PostgreSQL    ? typeof(PostgreSQLSqlProvider) :
+					configuration == ProviderName.MySql         ? typeof(MySqlSqlProvider)      :
+					configuration == ProviderName.Sybase        ? typeof(SybaseSqlProvider)     : null);
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 

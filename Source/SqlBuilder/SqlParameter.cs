@@ -126,7 +126,7 @@ namespace LinqToDB.SqlBuilder
 				_valueConverter = v => v == null ? null : (object) ((int) conv(v) + take);
 		}
 
-		internal void SetLikeConverter(string start, string end)
+		public void SetLikeConverter(string start, string end)
 		{
 			LikeStart = start;
 			LikeEnd   = end;

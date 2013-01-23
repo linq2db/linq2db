@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
 	using Extensions;
 	using SqlBuilder;
+	using SqlProvider;
 
-	public abstract class MsSqlSqlProvider : BasicSqlProvider
+	public abstract class SqlServerSqlProvider : BasicSqlProvider
 	{
 		public override bool IsApplyJoinSupported { get { return true; } }
 

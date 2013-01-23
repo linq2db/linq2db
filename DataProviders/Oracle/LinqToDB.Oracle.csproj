@@ -103,6 +103,7 @@
     <Compile Include="Oracle.cs" />
     <Compile Include="OracleDataProvider.cs" />
     <Compile Include="OracleMappingSchema.cs" />
+    <Compile Include="OracleSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

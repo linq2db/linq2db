@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class DB2 : IDataProviderFactory
 	{
-		static readonly DB2DataProvider _db2DataProvider = new DB2DataProvider();
+		static readonly DB2DataProvider _db2DataProvider = new DB2DataProvider(ProviderName.DB2);
 
 		static DB2()
 		{
-			DataConnection.AddDataProvider(ProviderName.DB2, _db2DataProvider);
+			DataConnection.AddDataProvider(_db2DataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

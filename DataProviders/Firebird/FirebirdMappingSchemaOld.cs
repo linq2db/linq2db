@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	public class FirebirdMappingSchemaOld : MappingSchemaOld
+	class FirebirdMappingSchemaOld : MappingSchemaOld
 	{
 		public byte[] ConvertToByteArray(string value)
 		{

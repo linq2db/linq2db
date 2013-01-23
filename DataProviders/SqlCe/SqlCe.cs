@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class SqlCe: IDataProviderFactory
 	{
-		static readonly SqlCeDataProvider _sqlCeDataProvider = new SqlCeDataProvider();
+		static readonly SqlCeDataProvider _sqlCeDataProvider = new SqlCeDataProvider(ProviderName.SqlCe);
 
 		static SqlCe()
 		{
-			DataConnection.AddDataProvider(ProviderName.SqlCe, _sqlCeDataProvider);
+			DataConnection.AddDataProvider(_sqlCeDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

@@ -5,11 +5,18 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace LinqToDB.DataProvider
 {
+	using Mapping;
 	using SqlProvider;
 
 	public class FirebirdDataProvider : DataProviderBase
 	{
-		public FirebirdDataProvider() : base(new FirebirdMappingSchema())
+		public FirebirdDataProvider(string name)
+			: this(name, new FirebirdMappingSchema(name))
+		{
+		}
+
+		public FirebirdDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
@@ -27,9 +34,8 @@ namespace LinqToDB.DataProvider
 			return value;
 		}
 
-		public override string Name           { get { return ProviderName.Firebird; } }
-		public override Type   ConnectionType { get { return typeof(FbConnection);  } }
-		public override Type   DataReaderType { get { return typeof(FbDataReader);  } }
+		public override Type ConnectionType { get { return typeof(FbConnection);  } }
+		public override Type DataReaderType { get { return typeof(FbDataReader);  } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

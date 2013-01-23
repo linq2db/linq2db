@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
 	using Extensions;
 	using SqlBuilder;
+	using SqlProvider;
 
 	public class DB2SqlProvider : BasicSqlProvider
 	{

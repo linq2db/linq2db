@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class Firebird: IDataProviderFactory
 	{
-		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider();
+		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider(ProviderName.Firebird);
 
 		static Firebird()
 		{
-			DataConnection.AddDataProvider(ProviderName.Firebird, _firebirdDataProvider);
+			DataConnection.AddDataProvider(_firebirdDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

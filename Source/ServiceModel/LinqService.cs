@@ -58,7 +58,8 @@ namespace LinqToDB.ServiceModel
 					using (var ctx = CreateDataContext())
 						SqlProviderType = ctx.CreateSqlProvider().GetType();
 
-				return SqlProviderType.FullName;
+				return SqlProviderType.AssemblyQualifiedName;
+				//return SqlProviderType.FullName;
 			}
 			catch (Exception exception)
 			{

@@ -9,45 +9,20 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-using LinqToDB.Data;
-
 using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
 	using Mapping;
+	using SqlProvider;
 
-	abstract class SqlServerDataProvider : DataProviderBase
+	public class SqlServerDataProvider : DataProviderBase
 	{
-		#region Udt support
-
-		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>(new Dictionary<Type,string>
-		{
-			{ typeof(SqlGeography),   "geography"   },
-			{ typeof(SqlGeometry),    "geometry"    },
-			{ typeof(SqlHierarchyId), "hierarchyid" },
-		});
-
-		public void AddUdtType(Type type, string udtName)
-		{
-			MappingSchema.SetScalarType(type);
-
-			_udtTypes[type] = udtName;
-		}
-
-		public void AddUdtType<T>(string udtName, T defaultValue, DataType dataType = DataType.Undefined)
-		{
-			MappingSchema.AddScalarType(typeof(T), defaultValue, dataType);
-
-			_udtTypes[typeof(T)] = udtName;
-		}
-
-		#endregion
-
 		#region Init
 
-		protected SqlServerDataProvider(SqlServerVersion version, MappingSchema mappingSchema)
-			: base(mappingSchema)
+		public SqlServerDataProvider(string name, SqlServerVersion version, MappingSchema mappingSchema)
+			: base(name, mappingSchema)
 		{
 			Version = version;
 
@@ -77,9 +52,8 @@ namespace LinqToDB.DataProvider
 
 		#region Public Properties
 
-		public override string Name           { get { return ProviderName.SqlServer; } }
-		public override Type   ConnectionType { get { return typeof(SqlConnection);  } }
-		public override Type   DataReaderType { get { return typeof(SqlDataReader);  } }
+		public override Type ConnectionType { get { return typeof(SqlConnection);  } }
+		public override Type DataReaderType { get { return typeof(SqlDataReader);  } }
 
 		public SqlServerVersion Version { get; private set; }
 
@@ -90,6 +64,11 @@ namespace LinqToDB.DataProvider
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new SqlConnection(connectionString);
+		}
+
+		public override ISqlProvider CreateSqlProvider()
+		{
+			return Version == SqlServerVersion.v2005 ? (ISqlProvider)new SqlServer2005SqlProvider() : new SqlServer2008SqlProvider();
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
@@ -175,6 +154,31 @@ namespace LinqToDB.DataProvider
 				case DataType.Timestamp     : ((SqlParameter)parameter).SqlDbType = SqlDbType.Timestamp;     break;
 				default                     : base.SetParameterType(parameter, dataType);                    break;
 			}
+		}
+
+		#endregion
+
+		#region Udt support
+
+		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>(new Dictionary<Type,string>
+		{
+			{ typeof(SqlGeography),   "geography"   },
+			{ typeof(SqlGeometry),    "geometry"    },
+			{ typeof(SqlHierarchyId), "hierarchyid" },
+		});
+
+		public void AddUdtType(Type type, string udtName)
+		{
+			MappingSchema.SetScalarType(type);
+
+			_udtTypes[type] = udtName;
+		}
+
+		public void AddUdtType<T>(string udtName, T defaultValue, DataType dataType = DataType.Undefined)
+		{
+			MappingSchema.AddScalarType(typeof(T), defaultValue, dataType);
+
+			_udtTypes[typeof(T)] = udtName;
 		}
 
 		#endregion

@@ -4,9 +4,9 @@ namespace LinqToDB.DataProvider
 {
 	using Mapping;
 
-	class SQLiteMappingSchema : MappingSchema
+	public class SQLiteMappingSchema : MappingSchema
 	{
-		public SQLiteMappingSchema() : base(ProviderName.SQLite)
+		public SQLiteMappingSchema(string configuration) : base(configuration)
 		{
 		}
 	}

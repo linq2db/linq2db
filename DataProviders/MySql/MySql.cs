@@ -8,11 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class MySql : IDataProviderFactory
 	{
-		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
+		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider(ProviderName.MySql);
 
 		static MySql()
 		{
-			DataConnection.AddDataProvider(ProviderName.MySql, _mySqlDataProvider);
+			DataConnection.AddDataProvider(_mySqlDataProvider);
 		}
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)

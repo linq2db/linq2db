@@ -2,9 +2,10 @@
 using System.Data;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.DataProvider
 {
 	using SqlBuilder;
+	using SqlProvider;
 
 	public class SybaseSqlProvider : BasicSqlProvider
 	{
