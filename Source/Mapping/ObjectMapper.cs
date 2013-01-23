@@ -89,8 +89,8 @@ namespace LinqToDB.Mapping
 			get { return _members[index]; }
 		}
 
-		readonly List<Association> _associations = new List<Association>();
-		public   List<Association>  Associations
+		readonly List<AssociationDescriptor> _associations = new List<AssociationDescriptor>();
+		public   List<AssociationDescriptor>  Associations
 		{
 			get { return _associations; }
 		}
@@ -207,17 +207,9 @@ namespace LinqToDB.Mapping
 			return GetOrdinal(name);
 		}
 
-		private TypeAccessor _typeAccessor;
-		public  TypeAccessor  TypeAccessor
-		{
-			get { return _typeAccessor; }
-		}
-
-		private MappingSchemaOld _mappingSchema;
-		public  MappingSchemaOld  MappingSchema
-		{
-			get { return _mappingSchema; }
-		}
+		internal EntityDescriptor EntityDescriptor { get; private set; }
+		public   TypeAccessor     TypeAccessor     { get; private set; }
+		public   MappingSchemaOld MappingSchema    { get; private set; }
 
 		#endregion
 
@@ -227,19 +219,20 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException("type");
 
-			_typeAccessor  = TypeAccessor.GetAccessor(type);
-			_mappingSchema = mappingSchema;
-			_extension     = TypeExtension.GetTypeExtension(_typeAccessor.Type, mappingSchema.Extensions);
+			TypeAccessor     = TypeAccessor.GetAccessor(type);
+			MappingSchema    = mappingSchema;
+			EntityDescriptor = new EntityDescriptor(mappingSchema.NewSchema, type);
+			_extension       = TypeExtension.GetTypeExtension(TypeAccessor.Type, mappingSchema.Extensions);
 
 			_inheritanceMapping.AddRange(GetInheritanceMapping());
 
-			foreach (var ma in _typeAccessor.Members)
+			foreach (var ma in TypeAccessor.Members)
 			{
-				var a = GetAssociation(ma);
+				var aa = mappingSchema.NewSchema.GetAttribute<AssociationAttribute>(ma.MemberInfo, attr => attr.Configuration);
 
-				if (a != null)
+				if (aa != null)
 				{
-					_associations.Add(a);
+					_associations.Add(new AssociationDescriptor(type, ma.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
 					continue;
 				}
 
@@ -287,7 +280,7 @@ namespace LinqToDB.Mapping
 				}
 				else //if (mapFieldAttr.Format != null)
 				{
-					foreach (MemberMapper inner in _mappingSchema.GetObjectMapper(ma.Type))
+					foreach (MemberMapper inner in MappingSchema.GetObjectMapper(ma.Type))
 						EnsureMapper(string.Format(mapFieldAttr.Format, inner.Name), ma.Name + "." + inner.MemberName);
 				}
 			}
@@ -429,7 +422,7 @@ namespace LinqToDB.Mapping
 
 			var values = MetadataProvider.GetMapValues(Extension, member, out isSet);
 
-			return isSet? values: _mappingSchema.GetMapValues(member.Type);
+			return isSet? values: MappingSchema.GetMapValues(member.Type);
 		}
 
 		protected virtual bool GetNullable(MemberAccessor memberAccessor)
@@ -479,14 +472,9 @@ namespace LinqToDB.Mapping
 			return MappingSchema.GetNullValue(memberAccessor.Type);
 		}
 
-		protected virtual Association GetAssociation(MemberAccessor memberAccessor)
-		{
-			return MetadataProvider.GetAssociation(Extension, memberAccessor);
-		}
-
 		protected virtual InheritanceMappingAttribute[] GetInheritanceMapping()
 		{
-			return MetadataProvider.GetInheritanceMapping(_typeAccessor.Type, Extension);
+			return MetadataProvider.GetInheritanceMapping(TypeAccessor.Type, Extension);
 		}
 
 		#endregion
@@ -495,7 +483,7 @@ namespace LinqToDB.Mapping
 
 		public virtual object CreateInstance()
 		{
-			return _typeAccessor.CreateInstanceEx();
+			return TypeAccessor.CreateInstanceEx();
 		}
 
 		#endregion

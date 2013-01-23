@@ -1015,7 +1015,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var q =
 								from a in objectMapper.Associations.Concat(inheritance.SelectMany(om => om.Associations))
-								where a.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
+								where a.MemberInfo.EqualsTo(memberExpression.Member)
 								select new AssociatedTableContext(Builder, this, a) { Parent = Parent };
 
 							tableAssociation = q.FirstOrDefault();
@@ -1054,7 +1054,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			public readonly TableContext          ParentAssociation;
 			public readonly SqlQuery.JoinedTable  ParentAssociationJoin;
-			public readonly Association           Association;
+			public readonly AssociationDescriptor Association;
 			public readonly bool                  IsList;
 
 			public override IBuildContext Parent
@@ -1063,10 +1063,10 @@ namespace LinqToDB.Linq.Builder
 				set { }
 			}
 
-			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, Association association)
+			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association)
 				: base(builder, parent.SqlQuery)
 			{
-				var type = association.MemberAccessor.MemberInfo.GetMemberType();
+				var type = association.MemberInfo.GetMemberType();
 				var left = association.CanBeNull;
 
 				if (typeof(IEnumerable).IsSameOrParentOf(type))

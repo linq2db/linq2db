@@ -439,7 +439,7 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td    = new TypeDescriptor(dataConnection.MappingSchema, typeof(T));
+				var td    = new EntityDescriptor(dataConnection.MappingSchema, typeof(T));
 				var names = new List<string>(dataReader.FieldCount);
 
 				for (var i = 0; i < dataReader.FieldCount; i++)
@@ -474,7 +474,7 @@ namespace LinqToDB.Data
 					var members =
 					(
 						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Members.FirstOrDefault(m => m.ColumnName == n.name)
+						let   member = td.Columns.FirstOrDefault(m => m.ColumnName == n.name)
 						where member != null
 						select new
 						{
@@ -745,7 +745,7 @@ namespace LinqToDB.Data
 
 			if (!_parameterReaders.TryGetValue(key, out func))
 			{
-				var td  = new TypeDescriptor(dataConnection.MappingSchema, type);
+				var td  = new EntityDescriptor(dataConnection.MappingSchema, type);
 				var p   = Expression.Parameter(typeof(object), "p");
 				var obj = Expression.Parameter(parameters.GetType(), "obj");
 
@@ -757,7 +757,7 @@ namespace LinqToDB.Data
 							Expression.Assign(obj, Expression.Convert(p, type)),
 							Expression.NewArrayInit(
 								typeof(DataParameter),
-								td.Members.Select(m =>
+								td.Columns.Select(m =>
 								{
 									if (m.MemberType == typeof(DataParameter))
 									{

@@ -78,7 +78,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			if (value != null)
 				return TypeExtension.ToBoolean(value);
 
-			return base.GetMapIgnore(typeExtension, member, out isSet) || GetAssociation(typeExtension, member) != null;
+			return base.GetMapIgnore(typeExtension, member, out isSet);
 		}
 
 		#endregion
@@ -331,33 +331,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 			}
 
 			return base.GetNonUpdatableAttribute(type, typeExt, member, out isSet);
-		}
-
-		#endregion
-
-		#region GetAssociation
-
-		public override Association GetAssociation(TypeExtension typeExtension, MemberAccessor member)
-		{
-			if (typeExtension == TypeExtension.Null)
-				return null;
-
-			var mex = typeExtension[member.Name];
-
-			if (mex == MemberExtension.Null)
-				return null;
-
-			var attrs = mex.Attributes[TypeExtension.NodeName.Association];
-
-			if (attrs == AttributeExtensionCollection.Null)
-				return null;
-
-			return new Association(
-				member,
-				Association.ParseKeys(attrs[0]["ThisKey",  string.Empty].ToString()),
-				Association.ParseKeys(attrs[0]["OtherKey", string.Empty].ToString()),
-				attrs[0]["Storage", string.Empty].ToString(),
-				TypeExtension.ToBoolean(attrs[0]["Storage", "True"], true));
 		}
 
 		#endregion

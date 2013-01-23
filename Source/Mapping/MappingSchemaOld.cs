@@ -29,14 +29,6 @@ namespace LinqToDB.Mapping
 
 	public class MappingSchemaOld
 	{
-		#region Constructors
-
-		public MappingSchemaOld()
-		{
-		}
-
-		#endregion
-
 		public MappingSchema NewSchema = MappingSchema.Default;
 
 		#region ObjectMapper Support

@@ -513,25 +513,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetAssociation
-
-		public override Association GetAssociation(TypeExtension typeExtension, MemberAccessor member)
-		{
-			var aa = member.GetAttribute<AssociationAttribute>();
-
-			if (aa == null)
-				return base.GetAssociation(typeExtension, member);
-
-			return new Association(
-				member,
-				aa.GetThisKeys(),
-				aa.GetOtherKeys(),
-				aa.Storage,
-				aa.CanBeNull);
-		}
-
-		#endregion
-
 		#region GetInheritanceMapping
 
 		public override InheritanceMappingAttribute[] GetInheritanceMapping(Type type, TypeExtension typeExtension)

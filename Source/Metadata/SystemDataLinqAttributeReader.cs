@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Metadata
@@ -74,9 +75,22 @@ namespace LinqToDB.Metadata
 						Name      = c.Name,
 						DbType    = c.DbType,
 						CanBeNull = c.CanBeNull,
+						Storage   = c.Storage,
 					};
 
 					return new[] { (T)(Attribute)attr };
+				}
+			}
+			else if (typeof(T) == typeof(AssociationAttribute))
+			{
+				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(memberInfo.DeclaringType);
+
+				if (ta.Length == 1)
+				{
+					return _reader
+						.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>(memberInfo)
+						.Select(a => (T)(Attribute)new AssociationAttribute { ThisKey = a.ThisKey, OtherKey = a.OtherKey, Storage = a.Storage })
+						.ToArray();
 				}
 			}
 

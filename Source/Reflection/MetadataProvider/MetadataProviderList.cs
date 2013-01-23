@@ -289,23 +289,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetAssociation
-
-		public override Association GetAssociation(TypeExtension typeExtension, MemberAccessor member)
-		{
-			foreach (var p in _list)
-			{
-				var attr = p.GetAssociation(typeExtension, member);
-
-				if (attr != null)
-					return attr;
-			}
-
-			return base.GetAssociation(typeExtension, member);
-		}
-
-		#endregion
-
 		#region GetInheritanceMapping
 
 		public override InheritanceMappingAttribute[] GetInheritanceMapping(Type type, TypeExtension typeExtension)

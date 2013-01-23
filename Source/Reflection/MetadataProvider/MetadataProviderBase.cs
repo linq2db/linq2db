@@ -222,15 +222,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetAssociation
-
-		public virtual Association GetAssociation(TypeExtension typeExtension, MemberAccessor member)
-		{
-			return null;
-		}
-
-		#endregion
-
 		#region GetInheritanceMapping
 
 		public virtual InheritanceMappingAttribute[] GetInheritanceMapping(Type type, TypeExtension typeExtension)
