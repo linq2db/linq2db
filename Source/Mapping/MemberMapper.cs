@@ -380,24 +380,24 @@ namespace LinqToDB.Mapping
 
 			// Simple type getters.
 			//
-			public override SByte    GetSByte   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultSByteNullValue:    _mapper.GetSByte   (obj); }
-			public override Int16    GetInt16   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultInt16NullValue:    _mapper.GetInt16   (obj); }
-			public override Int32    GetInt32   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultInt32NullValue:    _mapper.GetInt32   (obj); }
-			public override Int64    GetInt64   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultInt64NullValue:    _mapper.GetInt64   (obj); }
+			public override SByte    GetSByte   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (SByte)MappingSchema.NewSchema.GetDefaultValue(typeof(SByte)):    _mapper.GetSByte   (obj); }
+			public override Int16    GetInt16   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int16)MappingSchema.NewSchema.GetDefaultValue(typeof(Int16)):    _mapper.GetInt16   (obj); }
+			public override Int32    GetInt32   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int32)MappingSchema.NewSchema.GetDefaultValue(typeof(Int32)):    _mapper.GetInt32   (obj); }
+			public override Int64    GetInt64   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int64)MappingSchema.NewSchema.GetDefaultValue(typeof(Int64)):    _mapper.GetInt64   (obj); }
 
-			public override Byte     GetByte    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultByteNullValue:     _mapper.GetByte    (obj); }
-			public override UInt16   GetUInt16  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultUInt16NullValue:   _mapper.GetUInt16  (obj); }
-			public override UInt32   GetUInt32  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultUInt32NullValue:   _mapper.GetUInt32  (obj); }
-			public override UInt64   GetUInt64  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultUInt64NullValue:   _mapper.GetUInt64  (obj); }
+			public override Byte     GetByte    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Byte)  MappingSchema.NewSchema.GetDefaultValue(typeof(Byte)):     _mapper.GetByte    (obj); }
+			public override UInt16   GetUInt16  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt16)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt16)):   _mapper.GetUInt16  (obj); }
+			public override UInt32   GetUInt32  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt32)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt32)):   _mapper.GetUInt32  (obj); }
+			public override UInt64   GetUInt64  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt64)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt64)):   _mapper.GetUInt64  (obj); }
 
-			public override Boolean  GetBoolean (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultBooleanNullValue:  _mapper.GetBoolean (obj); }
-			public override Char     GetChar    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultCharNullValue:     _mapper.GetChar    (obj); }
-			public override Single   GetSingle  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultSingleNullValue:   _mapper.GetSingle  (obj); }
-			public override Double   GetDouble  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultDoubleNullValue:   _mapper.GetDouble  (obj); }
-			public override Decimal  GetDecimal (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultDecimalNullValue:  _mapper.GetDecimal (obj); }
-			public override Guid     GetGuid    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultGuidNullValue:     _mapper.GetGuid    (obj); }
-			public override DateTime GetDateTime(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultDateTimeNullValue: _mapper.GetDateTime(obj); }
-			public override DateTimeOffset GetDateTimeOffset(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? MappingSchema.DefaultDateTimeOffsetNullValue: _mapper.GetDateTimeOffset(obj); }
+			public override Boolean  GetBoolean (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Boolean) MappingSchema.NewSchema.GetDefaultValue(typeof(Boolean)):  _mapper.GetBoolean (obj); }
+			public override Char     GetChar    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Char)    MappingSchema.NewSchema.GetDefaultValue(typeof(Char)):     _mapper.GetChar    (obj); }
+			public override Single   GetSingle  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Single)  MappingSchema.NewSchema.GetDefaultValue(typeof(Single)):   _mapper.GetSingle  (obj); }
+			public override Double   GetDouble  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Double)  MappingSchema.NewSchema.GetDefaultValue(typeof(Double)):   _mapper.GetDouble  (obj); }
+			public override Decimal  GetDecimal (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Decimal) MappingSchema.NewSchema.GetDefaultValue(typeof(Decimal)):  _mapper.GetDecimal (obj); }
+			public override Guid     GetGuid    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Guid)    MappingSchema.NewSchema.GetDefaultValue(typeof(Guid)):     _mapper.GetGuid    (obj); }
+			public override DateTime GetDateTime(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (DateTime)MappingSchema.NewSchema.GetDefaultValue(typeof(DateTime)): _mapper.GetDateTime(obj); }
+			public override DateTimeOffset GetDateTimeOffset(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (DateTimeOffset)MappingSchema.NewSchema.GetDefaultValue(typeof(DateTimeOffset)): _mapper.GetDateTimeOffset(obj); }
 
 			// Nullable type getters.
 			//

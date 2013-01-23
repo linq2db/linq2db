@@ -5,10 +5,10 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 
 	partial class ExpressionBuilder
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Coalesce:
 
-						if (expr.Type == typeof(string) && MappingSchema.GetDefaultNullValue<string>() != null)
+						if (expr.Type == typeof(string) && MappingSchema.NewSchema.GetDefaultValue(typeof(string)) != null)
 							return new TransformInfo(BuildSql(context, expr));
 
 						if (CanBeTranslatedToSql(context, ConvertExpression(expr), true))
