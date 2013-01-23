@@ -5,11 +5,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Reflection
 {
+	using Mapping;
+
 	public delegate object NullValueProvider(Type type);
 	public delegate bool   IsNullHandler    (object obj);
 
@@ -85,14 +84,6 @@ namespace LinqToDB.Reflection
 		public MemberAccessor this[int index]
 		{
 			get { return _members[index]; }
-		}
-
-		public MemberAccessor this[NameOrIndexParameter nameOrIndex]
-		{
-			get
-			{
-				return nameOrIndex.ByName ? _memberNames[nameOrIndex.Name] : _members[nameOrIndex.Index];
-			}
 		}
 
 		#endregion

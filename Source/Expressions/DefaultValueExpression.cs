@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Expressions
 {
+	using Common;
+
 	public class DefaultValueExpression : Expression
 	{
 		public DefaultValueExpression(Type type)

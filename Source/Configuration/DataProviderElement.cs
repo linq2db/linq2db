@@ -5,11 +5,11 @@ namespace LinqToDB.Configuration
 {
 	using DataProvider;
 
-	internal class DataProviderElement : ElementBase
+	class DataProviderElement : ElementBase
 	{
-		protected static readonly ConfigurationProperty _propTypeName   = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
-		protected static readonly ConfigurationProperty _propName       = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);
-		protected static readonly ConfigurationProperty _propDefault    = new ConfigurationProperty("default", typeof(bool),   false,        ConfigurationPropertyOptions.None);
+		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+		static readonly ConfigurationProperty _propName     = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);
+		static readonly ConfigurationProperty _propDefault  = new ConfigurationProperty("default", typeof(bool),   false,        ConfigurationPropertyOptions.None);
 
 		public DataProviderElement()
 		{
@@ -28,7 +28,7 @@ namespace LinqToDB.Configuration
 
 		/// <summary>
 		/// Gets or sets a name of this data provider.
-		/// If not set, <see cref="DataProviderBaseOld.Name"/> is used.
+		/// If not set, <see cref="DataProviderBase.Name"/> is used.
 		/// </summary>
 		public string Name
 		{

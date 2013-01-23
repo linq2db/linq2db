@@ -54,8 +54,7 @@
     <Compile Include="Common\ConvertOldT.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
-    <Compile Include="Common\DefaultValueExpression.cs" />
-    <Compile Include="Common\NameOrIndexParameter.cs" />
+    <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
     <Compile Include="Configuration\DataProviderElement.cs" />
@@ -110,11 +109,9 @@
     <Compile Include="TableNameAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Data\DataException.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="ProviderName.cs" />
     <Compile Include="Data\IDataReaderEx.cs" />
-    <Compile Include="Data\InitCommandEventArgs.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
@@ -193,10 +190,6 @@
     <Compile Include="Linq\TableExpressionAttribute.cs" />
     <Compile Include="Linq\TableFunctionAttribute.cs" />
     <Compile Include="TableT.cs" />
-    <Compile Include="Data\OperationExceptionEventArgs.cs" />
-    <Compile Include="Data\OperationType.cs" />
-    <Compile Include="Data\OperationTypeEventArgs.cs" />
-    <Compile Include="Data\ScalarSourceType.cs" />
     <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
     <Compile Include="SqlBuilder\IChild.cs" />
@@ -292,7 +285,6 @@
     <Compile Include="Reflection\MetadataProvider\MetadataProviderList.cs" />
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
-    <Compile Include="Reflection\TypeAccessorT.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
     <Compile Include="ServiceModel\DataService.cs" />
     <Compile Include="ServiceModel\ILinqService.cs" />
