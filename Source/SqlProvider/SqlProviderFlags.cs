@@ -7,9 +7,10 @@ namespace LinqToDB.SqlProvider
 	{
 		public SqlProviderFlags()
 		{
-			AcceptsTakeAsParameter = true;
-			IsTakeSupported        = true;
-			IsSkipSupported        = true;
+			AcceptsTakeAsParameter  = true;
+			IsTakeSupported         = true;
+			IsSkipSupported         = true;
+			IsSubQueryTakeSupported = true;
 		}
 
 		public bool IsParameterOrderDependent    { get; set; }
@@ -18,6 +19,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsTakeSupported              { get; set; }
 		public bool IsSkipSupported              { get; set; }
 		public bool IsSkipSupportedIfTake        { get; set; }
+		public bool IsSubQueryTakeSupported      { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SqlQuery sqlQuery)
 		{

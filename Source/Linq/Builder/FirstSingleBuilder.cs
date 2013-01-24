@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var take     = 0;
 
-			if (!buildInfo.IsSubQuery || builder.SqlProvider.IsSubQueryTakeSupported)
+			if (!buildInfo.IsSubQuery || builder.DataContextInfo.SqlProviderFlags.IsSubQueryTakeSupported)
 				switch (methodCall.Method.Name)
 				{
 					case "First"           :

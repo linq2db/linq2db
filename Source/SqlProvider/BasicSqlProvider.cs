@@ -38,7 +38,6 @@ namespace LinqToDB.SqlProvider
 
 		#region Support Flags
 
-		public virtual bool IsSubQueryTakeSupported         { get { return true;  } }
 		public virtual bool IsSubQueryColumnSupported       { get { return true;  } }
 		public virtual bool IsCountSubQuerySupported        { get { return true;  } }
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }

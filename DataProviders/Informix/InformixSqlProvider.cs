@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider
 	{
 		public InformixSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsSubQueryTakeSupported = false;
 		}
 
 		public override int CommandCount(SqlQuery sqlQuery)
@@ -52,7 +53,6 @@ namespace LinqToDB.DataProvider
 				base.BuildSelectClause(sb);
 		}
 
-		public override bool IsSubQueryTakeSupported      { get { return false; } }
 		public override bool IsInsertOrUpdateSupported    { get { return false; } }
 		public override bool IsGroupByExpressionSupported { get { return false; } }
 

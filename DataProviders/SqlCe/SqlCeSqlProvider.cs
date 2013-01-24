@@ -16,7 +16,6 @@ namespace LinqToDB.DataProvider
 
 		const int Version = 4;
 
-		public override bool IsSubQueryTakeSupported   { get { return Version == 4; } }
 		public override bool IsSubQueryColumnSupported { get { return false; } }
 		public override bool IsCountSubQuerySupported  { get { return false; } }
 		public override bool IsApplyJoinSupported      { get { return true;  } }
