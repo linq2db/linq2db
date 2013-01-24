@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new SqlCeSqlProvider();
+			return new SqlCeSqlProvider(SqlProviderFlags);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

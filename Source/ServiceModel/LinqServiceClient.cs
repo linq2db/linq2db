@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.ServiceModel
 {
@@ -26,6 +27,11 @@ namespace LinqToDB.ServiceModel
 		public string GetSqlProviderType()
 		{
 			return Channel.GetSqlProviderType();
+		}
+
+		public SqlProviderFlags GetSqlProviderFlags()
+		{
+			return Channel.GetSqlProviderFlags();
 		}
 
 		public int ExecuteNonQuery(string queryData)

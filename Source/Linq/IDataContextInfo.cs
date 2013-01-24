@@ -7,10 +7,11 @@ namespace LinqToDB.Linq
 
 	public interface IDataContextInfo
 	{
-		IDataContext  DataContext    { get; }
-		string        ContextID      { get; }
-		MappingSchemaOld MappingSchema  { get; }
-		bool          DisposeContext { get; }
+		IDataContext     DataContext      { get; }
+		string           ContextID        { get; }
+		MappingSchemaOld MappingSchema    { get; }
+		bool             DisposeContext   { get; }
+		SqlProviderFlags SqlProviderFlags { get; }
 
 		ISqlProvider     CreateSqlProvider();
 		IDataContextInfo Clone(bool forNestedQuery);

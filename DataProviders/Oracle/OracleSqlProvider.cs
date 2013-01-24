@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public class OracleSqlProvider : BasicSqlProvider
 	{
+		public OracleSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override bool IsCountSubQuerySupported    { get { return false; } }
 		public override bool IsIdentityParameterRequired { get { return true;  } }
 
@@ -60,7 +64,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new OracleSqlProvider();
+			return new OracleSqlProvider(SqlProviderFlags);
 		}
 
 		protected override void BuildSql(StringBuilder sb)

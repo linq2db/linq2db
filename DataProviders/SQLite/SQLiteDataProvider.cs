@@ -18,6 +18,9 @@ namespace LinqToDB.DataProvider
 		public SQLiteDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsSkipSupported       = false;
+			SqlProviderFlags.IsSkipSupportedIfTake = true;
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 		}
@@ -32,7 +35,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new SQLiteSqlProvider();
+			return new SQLiteSqlProvider(SqlProviderFlags);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

@@ -11,6 +11,10 @@ namespace LinqToDB.DataProvider
 
 	public class MySqlSqlProvider : BasicSqlProvider
 	{
+		public MySqlSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		static MySqlSqlProvider()
 		{
 			ParameterSymbol = '@';
@@ -28,7 +32,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new MySqlSqlProvider();
+			return new MySqlSqlProvider(SqlProviderFlags);
 		}
 
 		protected override string LimitFormat { get { return "LIMIT {0}"; } }

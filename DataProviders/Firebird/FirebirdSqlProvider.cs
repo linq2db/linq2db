@@ -16,9 +16,13 @@ namespace LinqToDB.DataProvider
 
 	public class FirebirdSqlProvider : BasicSqlProvider, IMappingSchemaProvider
 	{
+		public FirebirdSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new FirebirdSqlProvider();
+			return new FirebirdSqlProvider(SqlProviderFlags);
 		}
 
 		protected override void BuildSelectClause(StringBuilder sb)

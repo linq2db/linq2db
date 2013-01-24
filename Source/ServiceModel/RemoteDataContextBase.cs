@@ -65,6 +65,29 @@ namespace LinqToDB.ServiceModel
 			set { _sqlProviderType = value;  }
 		}
 
+		SqlProviderFlags             _sqlProviderFlags;
+		SqlProviderFlags IDataContext.SqlProviderFlags
+		{
+			get
+			{
+				if (_sqlProviderFlags == null)
+				{
+					var client = GetClient();
+
+					try
+					{
+						_sqlProviderFlags = client.GetSqlProviderFlags();
+					}
+					finally
+					{
+						((IDisposable)client).Dispose();
+					}
+				}
+
+				return _sqlProviderFlags;
+			}
+		}
+
 		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();
 
 		Func<ISqlProvider> _createSqlProvider;
@@ -80,7 +103,11 @@ namespace LinqToDB.ServiceModel
 					if (!_sqlProviders.TryGetValue(type, out _createSqlProvider))
 						lock (_sqlProviderType)
 							if (!_sqlProviders.TryGetValue(type, out _createSqlProvider))
-								_sqlProviders.Add(type, _createSqlProvider = Expression.Lambda<Func<ISqlProvider>>(Expression.New(type)).Compile());
+								_sqlProviders.Add(type, _createSqlProvider =
+									Expression.Lambda<Func<ISqlProvider>>(
+										Expression.New(
+											type.GetConstructor(new[] { typeof(SqlProviderFlags) }),
+											new Expression[] { Expression.Constant(new SqlProviderFlags()) })).Compile());
 				}
 
 				return _createSqlProvider;

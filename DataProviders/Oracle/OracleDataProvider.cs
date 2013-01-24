@@ -158,7 +158,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new OracleSqlProvider();
+			return new OracleSqlProvider(SqlProviderFlags);
 		}
 
 		public override void InitCommand(DataConnection dataConnection)

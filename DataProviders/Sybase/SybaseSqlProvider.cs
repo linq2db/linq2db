@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider
 
 	public class SybaseSqlProvider : BasicSqlProvider
 	{
-		public SybaseSqlProvider()
+		public SybaseSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
@@ -22,8 +22,6 @@ namespace LinqToDB.DataProvider
 
 		protected override string FirstFormat              { get { return "TOP {0}"; } }
 
-		public    override bool   IsSkipSupported          { get { return false;     } }
-		public    override bool   TakeAcceptsParameter     { get { return false;     } }
 		public    override bool   IsSubQueryTakeSupported  { get { return false;     } }
 		public    override bool   IsCountSubQuerySupported { get { return false;     } }
 		public    override bool   CanCombineParameters     { get { return false;     } }
@@ -75,7 +73,7 @@ namespace LinqToDB.DataProvider
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlProvider(bool skipAliases)
+		SybaseSqlProvider(bool skipAliases, SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 			_skipAliases = skipAliases;
 		}
@@ -110,7 +108,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SybaseSqlProvider(_isSelect);
+			return new SybaseSqlProvider(_isSelect, SqlProviderFlags);
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)

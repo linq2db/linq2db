@@ -123,6 +123,11 @@ namespace LinqToDB
 			ReleaseQuery();
 		}
 
+		SqlProviderFlags IDataContext.SqlProviderFlags
+		{
+			get { return DataProvider.SqlProviderFlags; }
+		}
+
 		string IDataContext.GetSqlText(object query)
 		{
 			if (_dataConnection != null)

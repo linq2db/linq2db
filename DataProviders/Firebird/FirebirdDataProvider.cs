@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new FirebirdSqlProvider();
+			return new FirebirdSqlProvider(SqlProviderFlags);
 		}
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)

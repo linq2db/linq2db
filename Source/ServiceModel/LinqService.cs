@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.ServiceModel
 {
@@ -66,6 +67,13 @@ namespace LinqToDB.ServiceModel
 				HandleException(exception);
 				throw;
 			}
+		}
+
+		[WebMethod]
+		public SqlProviderFlags GetSqlProviderFlags()
+		{
+			using (var ctx = CreateDataContext())
+				return ctx.SqlProviderFlags;
 		}
 
 		class QueryContext : IQueryContext

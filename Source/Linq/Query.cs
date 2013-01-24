@@ -26,9 +26,10 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		public string        ContextID;
-		public Expression    Expression;
+		public string           ContextID;
+		public Expression       Expression;
 		public MappingSchemaOld MappingSchema;
+		public SqlProviderFlags SqlProviderFlags;
 
 		public bool Compare(string contextID, MappingSchemaOld mappingSchema, Expression expr)
 		{
@@ -83,6 +84,7 @@ namespace LinqToDB.Linq
 
 			ContextID         = parseContext.Builder.DataContextInfo.ContextID;
 			MappingSchema     = parseContext.Builder.MappingSchema;
+			SqlProviderFlags  = parseContext.Builder.DataContextInfo.SqlProviderFlags;
 			CreateSqlProvider = parseContext.Builder.DataContextInfo.CreateSqlProvider;
 			Expression        = parseContext.Builder.OriginalExpression;
 			//Parameters        = parameters;
@@ -982,7 +984,7 @@ namespace LinqToDB.Linq
 
 			var select = Queries[0].SqlQuery.Select;
 
-			if (select.SkipValue != null && !SqlProvider.IsSkipSupported)
+			if (select.SkipValue != null && !SqlProviderFlags.GetIsSkipSupportedFlag(Queries[0].SqlQuery))
 			{
 				var q = query;
 
@@ -1000,7 +1002,7 @@ namespace LinqToDB.Linq
 				}
 			}
 
-			if (select.TakeValue != null && !SqlProvider.IsTakeSupported)
+			if (select.TakeValue != null && !SqlProviderFlags.IsTakeSupported)
 			{
 				var q = query;
 

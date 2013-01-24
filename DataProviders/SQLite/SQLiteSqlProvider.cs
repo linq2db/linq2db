@@ -9,6 +9,10 @@ namespace LinqToDB.DataProvider
 
 	public class SQLiteSqlProvider : BasicSqlProvider
 	{
+		public SQLiteSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override int CommandCount(SqlQuery sqlQuery)
 		{
 			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
@@ -21,13 +25,12 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SQLiteSqlProvider();
+			return new SQLiteSqlProvider(SqlProviderFlags);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";  } }
 		protected override string OffsetFormat { get { return "OFFSET {0}"; } }
 
-		public override bool IsSkipSupported           { get { return SqlQuery.Select.TakeValue != null; } }
 		public override bool IsNestedJoinSupported     { get { return false; } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
 

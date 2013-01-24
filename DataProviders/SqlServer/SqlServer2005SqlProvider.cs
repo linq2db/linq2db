@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Text;
 
 namespace LinqToDB.DataProvider
 {
@@ -9,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public class SqlServer2005SqlProvider : SqlServerSqlProvider
 	{
+		public SqlServer2005SqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);
@@ -58,17 +63,15 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SqlServer2005SqlProvider();
+			return new SqlServer2005SqlProvider(SqlProviderFlags);
 		}
 
-		protected override void BuildDataType(System.Text.StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
 			switch (type.SqlDbType)
 			{
-#if !MONO
 				case SqlDbType.DateTimeOffset :
 				case SqlDbType.DateTime2      :
-#endif
 				case SqlDbType.Time           :
 				case SqlDbType.Date           : sb.Append("DateTime");        break;
 				default                       : base.BuildDataType(sb, type); break;

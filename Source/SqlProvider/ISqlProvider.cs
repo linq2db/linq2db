@@ -23,10 +23,6 @@ namespace LinqToDB.SqlProvider
 		string           Name                        { get; }
 		SqlQuery         SqlQuery                    { get; set; }
 
-		bool             SkipAcceptsParameter        { get; }
-		bool             TakeAcceptsParameter        { get; }
-		bool             IsSkipSupported             { get; }
-		bool             IsTakeSupported             { get; }
 		bool             IsSubQueryTakeSupported     { get; }
 		bool             IsSubQueryColumnSupported   { get; }
 		bool             IsCountSubQuerySupported    { get; }

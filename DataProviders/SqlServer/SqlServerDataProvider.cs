@@ -68,7 +68,9 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return Version == SqlServerVersion.v2005 ? (ISqlProvider)new SqlServer2005SqlProvider() : new SqlServer2008SqlProvider();
+			return Version == SqlServerVersion.v2005 ?
+				new SqlServer2005SqlProvider(SqlProviderFlags) as ISqlProvider:
+				new SqlServer2008SqlProvider(SqlProviderFlags);
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();

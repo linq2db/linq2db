@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public class InformixSqlProvider : BasicSqlProvider
 	{
+		public InformixSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override int CommandCount(SqlQuery sqlQuery)
 		{
 			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
@@ -22,7 +26,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new InformixSqlProvider();
+			return new InformixSqlProvider(SqlProviderFlags);
 		}
 
 		public override int BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)

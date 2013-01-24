@@ -11,6 +11,7 @@ namespace LinqToDB
 	{
 		string             ContextID         { get; }
 		Func<ISqlProvider> CreateSqlProvider { get; }
+		SqlProviderFlags   SqlProviderFlags  { get; }
 
 		object             SetQuery       (IQueryContext queryContext);
 		int                ExecuteNonQuery(object query);

@@ -9,7 +9,9 @@ namespace LinqToDB.DataProvider
 
 	public class DB2SqlProvider : BasicSqlProvider
 	{
-		public override bool TakeAcceptsParameter { get { return SqlQuery.Select.SkipValue != null; } }
+		public DB2SqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
 
 		SqlField _identityField;
 
@@ -56,7 +58,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new DB2SqlProvider();
+			return new DB2SqlProvider(SqlProviderFlags);
 		}
 
 		protected override void BuildSql(StringBuilder sb)

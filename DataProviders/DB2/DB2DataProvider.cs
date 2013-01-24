@@ -20,6 +20,9 @@ namespace LinqToDB.DataProvider
 		public DB2DataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.AcceptsTakeAsParameter       = false;
+			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			SetProviderField<DB2DataReader,DB2Int64,       Int64>    ((r,i) => r.GetDB2Int64       (i));
@@ -51,7 +54,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new DB2SqlProvider();
+			return new DB2SqlProvider(SqlProviderFlags);
 		}
 
 		public override void InitCommand(DataConnection dataConnection)

@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public class PostgreSQLSqlProvider : BasicSqlProvider
 	{
+		public PostgreSQLSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
 
 		public override int CommandCount(SqlQuery sqlQuery)
@@ -36,7 +40,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new PostgreSQLSqlProvider();
+			return new PostgreSQLSqlProvider(SqlProviderFlags);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }

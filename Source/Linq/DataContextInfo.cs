@@ -19,10 +19,11 @@ namespace LinqToDB.Linq
 			DisposeContext = disposeContext;
 		}
 
-		public IDataContext     DataContext    { get; private set; }
-		public bool             DisposeContext { get; private set; }
-		public string           ContextID      { get { return DataContext.ContextID;     } }
-		public MappingSchemaOld MappingSchema  { get { return DataContext.MappingSchema; } }
+		public IDataContext     DataContext      { get; private set; }
+		public bool             DisposeContext   { get; private set; }
+		public string           ContextID        { get { return DataContext.ContextID;        } }
+		public MappingSchemaOld MappingSchema    { get { return DataContext.MappingSchema;    } }
+		public SqlProviderFlags SqlProviderFlags { get { return DataContext.SqlProviderFlags; } }
 
 		public ISqlProvider CreateSqlProvider()
 		{

@@ -19,6 +19,11 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
+		public BasicSqlProvider(SqlProviderFlags sqlProviderFlags)
+		{
+			SqlProviderFlags = sqlProviderFlags;
+		}
+
 		public SqlQuery SqlQuery  { get; set; }
 		public int      Indent    { get; set; }
 		public int      Nesting   { get; private set; }
@@ -27,14 +32,12 @@ namespace LinqToDB.SqlProvider
 		int  _nextNesting = 1;
 		bool _skipAlias;
 
+		public SqlProviderFlags SqlProviderFlags { get; set; }
+
 		#endregion
 
 		#region Support Flags
 
-		public virtual bool SkipAcceptsParameter            { get { return true;  } }
-		public virtual bool TakeAcceptsParameter            { get { return true;  } }
-		public virtual bool IsTakeSupported                 { get { return true;  } }
-		public virtual bool IsSkipSupported                 { get { return true;  } }
 		public virtual bool IsSubQueryTakeSupported         { get { return true;  } }
 		public virtual bool IsSubQueryColumnSupported       { get { return true;  } }
 		public virtual bool IsCountSubQuerySupported        { get { return true;  } }
@@ -107,10 +110,11 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual int BuildSqlBuilder(SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
-			if (!IsSkipSupported && sqlQuery.Select.SkipValue != null)
+			if (!SqlProviderFlags.GetIsSkipSupportedFlag(sqlQuery)
+				&& sqlQuery.Select.SkipValue != null)
 				throw new SqlException("Skip for subqueries is not supported by the '{0}' provider.", Name);
 
-			if (!IsTakeSupported && sqlQuery.Select.TakeValue != null)
+			if (!SqlProviderFlags.IsTakeSupported && sqlQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
 			return CreateSqlProvider().BuildSql(0, sqlQuery, sb, indent, nesting, skipAlias);
@@ -824,8 +828,8 @@ namespace LinqToDB.SqlProvider
 		protected virtual string OffsetFormat { get { return null;  } }
 		protected virtual bool   OffsetFirst  { get { return false; } }
 
-		protected bool NeedSkip { get { return SqlQuery.Select.SkipValue != null && IsSkipSupported; } }
-		protected bool NeedTake { get { return SqlQuery.Select.TakeValue != null && IsTakeSupported; } }
+		protected bool NeedSkip { get { return SqlQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(SqlQuery); } }
+		protected bool NeedTake { get { return SqlQuery.Select.TakeValue != null && SqlProviderFlags.IsTakeSupported; } }
 
 		protected virtual void BuildSkipFirst(StringBuilder sb)
 		{

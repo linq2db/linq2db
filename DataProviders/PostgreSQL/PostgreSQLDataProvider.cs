@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new PostgreSQLSqlProvider();
+			return new PostgreSQLSqlProvider(SqlProviderFlags);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

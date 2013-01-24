@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new InformixSqlProvider();
+			return new InformixSqlProvider(SqlProviderFlags);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

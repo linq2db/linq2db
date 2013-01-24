@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public abstract class SqlServerSqlProvider : BasicSqlProvider
 	{
+		protected SqlServerSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override bool IsApplyJoinSupported { get { return true; } }
 
 		protected override string FirstFormat

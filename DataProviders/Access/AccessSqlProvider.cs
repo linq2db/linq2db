@@ -10,6 +10,10 @@ namespace LinqToDB.DataProvider
 
 	public class AccessSqlProvider : BasicSqlProvider
 	{
+		public AccessSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override int CommandCount(SqlQuery sqlQuery)
 		{
 			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
@@ -20,9 +24,6 @@ namespace LinqToDB.DataProvider
 			sb.AppendLine("SELECT @@IDENTITY");
 		}
 
-		//public override bool IsSkipSupported           { get { return SqlQuery.Select.TakeValue != null; } }
-		public override bool IsSkipSupported           { get { return false; } }
-		public override bool TakeAcceptsParameter      { get { return false; } }
 		public override bool IsCountSubQuerySupported  { get { return false; } }
 		public override bool IsNestedJoinSupported     { get { return false; } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
@@ -145,7 +146,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new AccessSqlProvider();
+			return new AccessSqlProvider(SqlProviderFlags);
 		}
 
 		protected override bool ParenthesizeJoin()

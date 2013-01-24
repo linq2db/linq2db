@@ -10,10 +10,12 @@ namespace LinqToDB.DataProvider
 
 	public class SqlCeSqlProvider : BasicSqlProvider
 	{
+		public SqlCeSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		const int Version = 4;
 
-		public override bool IsSkipSupported           { get { return Version == 4; } }
-		public override bool IsTakeSupported           { get { return Version == 4; } }
 		public override bool IsSubQueryTakeSupported   { get { return Version == 4; } }
 		public override bool IsSubQueryColumnSupported { get { return false; } }
 		public override bool IsCountSubQuerySupported  { get { return false; } }
@@ -37,7 +39,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SqlCeSqlProvider();
+			return new SqlCeSqlProvider(SqlProviderFlags);
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)

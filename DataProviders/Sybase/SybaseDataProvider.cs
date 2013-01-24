@@ -22,6 +22,9 @@ namespace LinqToDB.DataProvider
 		public SybaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.AcceptsTakeAsParameter = false;
+			SqlProviderFlags.IsSkipSupported        = false;
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
@@ -57,7 +60,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new SybaseSqlProvider();
+			return new SybaseSqlProvider(SqlProviderFlags);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

@@ -9,12 +9,13 @@ namespace LinqToDB.Linq
 
 	class DefaultDataContextInfo : IDataContextInfo
 	{
-		private IDataContext _dataContext;
-		public  IDataContext  DataContext    { get { return _dataContext ?? (_dataContext = new DataConnection()); } }
+		private IDataContext    _dataContext;
+		public  IDataContext     DataContext      { get { return _dataContext ?? (_dataContext = new DataConnection()); } }
 
-		public MappingSchemaOld  MappingSchema  { get { return Map.DefaultSchema; } }
-		public bool           DisposeContext { get { return true; } }
-		public string         ContextID      { get { return _dataProvider.Name; } }
+		public MappingSchemaOld  MappingSchema    { get { return Map.DefaultSchema; } }
+		public bool              DisposeContext   { get { return true; } }
+		public SqlProviderFlags  SqlProviderFlags { get { return _dataProvider.SqlProviderFlags; } }
+		public string            ContextID        { get { return _dataProvider.Name; } }
 
 		public ISqlProvider CreateSqlProvider()
 		{

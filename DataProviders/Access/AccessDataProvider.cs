@@ -17,6 +17,9 @@ namespace LinqToDB.DataProvider
 		public AccessDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.AcceptsTakeAsParameter = false;
+			SqlProviderFlags.IsSkipSupported        = false;
+
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
@@ -43,7 +46,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return new AccessSqlProvider();
+			return new AccessSqlProvider(SqlProviderFlags);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

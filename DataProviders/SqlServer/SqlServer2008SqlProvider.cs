@@ -7,9 +7,13 @@ namespace LinqToDB.DataProvider
 
 	public class SqlServer2008SqlProvider : SqlServerSqlProvider
 	{
+		public SqlServer2008SqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SqlServer2008SqlProvider();
+			return new SqlServer2008SqlProvider(SqlProviderFlags);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
