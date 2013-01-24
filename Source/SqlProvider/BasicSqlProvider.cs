@@ -38,7 +38,6 @@ namespace LinqToDB.SqlProvider
 
 		#region Support Flags
 
-		public virtual bool IsSubQueryColumnSupported       { get { return true;  } }
 		public virtual bool IsCountSubQuerySupported        { get { return true;  } }
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
@@ -3110,9 +3109,9 @@ namespace LinqToDB.SqlProvider
 			sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
 
 			if (!IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
-			if (!IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
+			if (!SqlProviderFlags.IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
 
-			if (!IsCountSubQuerySupported || !IsSubQueryColumnSupported)
+			if (!IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 				sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
 
 			return sqlQuery;
@@ -3320,7 +3319,7 @@ namespace LinqToDB.SqlProvider
 								levelTables.Add((ISqlTableSource)e);
 						});
 
-						if (IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
 							continue;
 
 						var join = SqlQuery.LeftJoin(subQuery);
@@ -3349,7 +3348,7 @@ namespace LinqToDB.SqlProvider
 							}
 						}
 
-						if (IsSubQueryColumnSupported && !isCount)
+						if (SqlProviderFlags.IsSubQueryColumnSupported && !isCount)
 							continue;
 
 						var allAnd = true;

@@ -14,9 +14,6 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		const int Version = 4;
-
-		public override bool IsSubQueryColumnSupported { get { return false; } }
 		public override bool IsCountSubQuerySupported  { get { return false; } }
 		public override bool IsApplyJoinSupported      { get { return true;  } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }

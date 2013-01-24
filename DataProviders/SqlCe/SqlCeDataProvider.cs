@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider
 		public SqlCeDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsSubQueryColumnSupported = false;
+
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
