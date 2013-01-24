@@ -499,8 +499,26 @@ namespace LinqToDB.Linq.Builder
 
 			if (attr != null)
 			{
-				var call = Expression.Lambda<Func<LambdaExpression>>(
-					Expression.Convert(Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty), typeof(LambdaExpression)));
+				Expression expr;
+
+				if (mi is MethodInfo && ((MethodInfo)mi).IsGenericMethod)
+				{
+					var method = (MethodInfo)mi;
+					var args   = method.GetGenericArguments();
+					var names  = args.Select(t => t.Name).ToList();
+					var name   = string.Format(attr.MethodName, names);
+
+					if (name != attr.MethodName)
+						expr = Expression.Call(mi.DeclaringType, name, Array<Type>.Empty);
+					else
+						expr = Expression.Call(mi.DeclaringType, name, args);
+				}
+				else
+				{
+					expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+				}
+
+				var call = Expression.Lambda<Func<LambdaExpression>>(Expression.Convert(expr, typeof(LambdaExpression)));
 
 				return call.Compile()();
 			}

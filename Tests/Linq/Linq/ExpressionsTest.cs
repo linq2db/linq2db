@@ -142,6 +142,7 @@ namespace Tests.Linq
 					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
 					db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
+
 		[MethodExpression("Expression8")]
 		static IQueryable<Parent> GetParent(ITestDataContext db, Child ch)
 		{
@@ -211,6 +212,110 @@ namespace Tests.Linq
 					from p in db.GetParent10(ch)
 					where ch.ParentID == p.ParentID
 					select ch);
+		}
+
+		[MethodExpression("GetBoolExpression1")]
+		static bool GetBool1<T>(T obj)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<Parent,bool>> GetBoolExpression1()
+		{
+			return obj => obj != null;
+		}
+
+		[Test]
+		public void TestGenerics1()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var q =
+					from ch in db.Child
+					where GetBool1(ch.Parent)
+					select ch;
+
+				q.ToList();
+			}
+		}
+
+		[MethodExpression("GetBoolExpression2")]
+		static bool GetBool2<T>(T obj)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<T,bool>> GetBoolExpression2<T>()
+			where T : class
+		{
+			return obj => obj != null;
+		}
+
+		[Test]
+		public void TestGenerics2()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var q =
+					from ch in db.Child
+					where GetBool2(ch.Parent)
+					select ch;
+
+				q.ToList();
+			}
+		}
+
+		[MethodExpression("GetBoolExpression3_{0}")]
+		static bool GetBool3<T>(T obj)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<Parent,bool>> GetBoolExpression3_Parent()
+		{
+			return obj => obj != null;
+		}
+
+		[Test]
+		public void TestGenerics3()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var q =
+					from ch in db.Child
+					where GetBool2(ch.Parent)
+					select ch;
+
+				q.ToList();
+			}
+		}
+
+		class TestClass<T>
+		{
+			[MethodExpression("GetBoolExpression4")]
+			public static bool GetBool4(Parent obj)
+			{
+				throw new InvalidOperationException();
+			}
+
+			static Expression<Func<Parent,bool>> GetBoolExpression4()
+			{
+				return obj => obj != null;
+			}
+		}
+
+		[Test]
+		public void TestGenerics4()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var q =
+					from ch in db.Child
+					where TestClass<int>.GetBool4(ch.Parent)
+					select ch;
+
+				q.ToList();
+			}
 		}
 	}
 }
