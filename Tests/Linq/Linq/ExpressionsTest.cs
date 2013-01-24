@@ -220,7 +220,8 @@ namespace Tests.Linq
 			throw new InvalidOperationException();
 		}
 
-		static Expression<Func<Parent,bool>> GetBoolExpression1()
+		static Expression<Func<T,bool>> GetBoolExpression1<T>()
+			where T : class
 		{
 			return obj => obj != null;
 		}
@@ -239,14 +240,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[MethodExpression("GetBoolExpression2")]
+		[MethodExpression("GetBoolExpression2_{0}")]
 		static bool GetBool2<T>(T obj)
 		{
 			throw new InvalidOperationException();
 		}
 
-		static Expression<Func<T,bool>> GetBoolExpression2<T>()
-			where T : class
+		static Expression<Func<Parent,bool>> GetBoolExpression2_Parent()
 		{
 			return obj => obj != null;
 		}
@@ -265,15 +265,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[MethodExpression("GetBoolExpression3_{0}")]
-		static bool GetBool3<T>(T obj)
+		class TestClass<T>
 		{
-			throw new InvalidOperationException();
-		}
+			[MethodExpression("GetBoolExpression3")]
+			public static bool GetBool3(Parent obj)
+			{
+				throw new InvalidOperationException();
+			}
 
-		static Expression<Func<Parent,bool>> GetBoolExpression3_Parent()
-		{
-			return obj => obj != null;
+			static Expression<Func<Parent,bool>> GetBoolExpression3()
+			{
+				return obj => obj != null;
+			}
 		}
 
 		[Test]
@@ -283,35 +286,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from ch in db.Child
-					where GetBool2(ch.Parent)
-					select ch;
-
-				q.ToList();
-			}
-		}
-
-		class TestClass<T>
-		{
-			[MethodExpression("GetBoolExpression4")]
-			public static bool GetBool4(Parent obj)
-			{
-				throw new InvalidOperationException();
-			}
-
-			static Expression<Func<Parent,bool>> GetBoolExpression4()
-			{
-				return obj => obj != null;
-			}
-		}
-
-		[Test]
-		public void TestGenerics4()
-		{
-			using (var db = new TestDataConnection())
-			{
-				var q =
-					from ch in db.Child
-					where TestClass<int>.GetBool4(ch.Parent)
+					where TestClass<int>.GetBool3(ch.Parent)
 					select ch;
 
 				q.ToList();

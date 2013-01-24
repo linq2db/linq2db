@@ -505,7 +505,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var method = (MethodInfo)mi;
 					var args   = method.GetGenericArguments();
-					var names  = args.Select(t => t.Name).ToList();
+					var names  = args.Select(t => t.Name).ToArray();
 					var name   = string.Format(attr.MethodName, names);
 
 					if (name != attr.MethodName)
