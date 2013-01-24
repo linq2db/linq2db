@@ -249,7 +249,7 @@ namespace LinqToDB.Data
 
 			IDbDataParameter idparam = null;
 
-			if ((pq.SqlProvider ?? DataProvider.CreateSqlProvider()).IsIdentityParameterRequired)
+			if (DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 			{
 				var sql = pq.SqlQuery;
 

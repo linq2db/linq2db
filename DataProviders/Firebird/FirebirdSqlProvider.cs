@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider
 	{
 		public FirebirdSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsIdentityParameterRequired = true;
 		}
 
 		protected override ISqlProvider CreateSqlProvider()
@@ -42,8 +43,6 @@ namespace LinqToDB.DataProvider
 		protected override bool   SkipFirst   { get { return false;       } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
 		protected override string FirstFormat { get { return "FIRST {0}"; } }
-
-		public override bool IsIdentityParameterRequired { get { return true; } }
 
 		protected override void BuildGetIdentity(StringBuilder sb)
 		{

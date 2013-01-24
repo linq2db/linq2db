@@ -20,12 +20,11 @@ namespace LinqToDB.SqlProvider
 		LambdaExpression ConvertMember        (MemberInfo mi);
 		ISqlExpression   GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning);
 
-		string           Name                        { get; }
-		SqlQuery         SqlQuery                    { get; set; }
+		string           Name     { get; }
+		SqlQuery         SqlQuery { get; set; }
 
-		bool             IsIdentityParameterRequired { get; }
-		bool             IsApplyJoinSupported        { get; }
-		bool             IsInsertOrUpdateSupported   { get; }
-		bool             CanCombineParameters        { get; }
+		bool             IsApplyJoinSupported      { get; }
+		bool             IsInsertOrUpdateSupported { get; }
+		bool             CanCombineParameters      { get; }
 	}
 }

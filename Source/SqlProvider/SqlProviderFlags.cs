@@ -24,6 +24,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsSubQueryTakeSupported      { get; set; }
 		public bool IsSubQueryColumnSupported    { get; set; }
 		public bool IsCountSubQuerySupported     { get; set; }
+		public bool IsIdentityParameterRequired  { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SqlQuery sqlQuery)
 		{

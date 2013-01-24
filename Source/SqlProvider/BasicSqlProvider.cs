@@ -19,7 +19,7 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		public BasicSqlProvider(SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlProvider(SqlProviderFlags sqlProviderFlags)
 		{
 			SqlProviderFlags = sqlProviderFlags;
 		}
@@ -40,7 +40,6 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
-		public virtual bool IsIdentityParameterRequired     { get { return false; } }
 		public virtual bool IsApplyJoinSupported            { get { return false; } }
 		public virtual bool IsInsertOrUpdateSupported       { get { return true;  } }
 		public virtual bool CanCombineParameters            { get { return true;  } }
