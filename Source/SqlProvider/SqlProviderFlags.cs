@@ -14,6 +14,7 @@ namespace LinqToDB.SqlProvider
 			IsSubQueryTakeSupported   = true;
 			IsSubQueryColumnSupported = true;
 			IsCountSubQuerySupported  = true;
+			IsInsertOrUpdateSupported = true;
 		}
 
 		public bool IsParameterOrderDependent    { get; set; }
@@ -27,6 +28,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsCountSubQuerySupported     { get; set; }
 		public bool IsIdentityParameterRequired  { get; set; }
 		public bool IsApplyJoinSupported         { get; set; }
+		public bool IsInsertOrUpdateSupported    { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SqlQuery sqlQuery)
 		{

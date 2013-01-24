@@ -12,11 +12,10 @@ namespace LinqToDB.DataProvider
 	{
 		public SqlCeSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsCountSubQuerySupported = false;
-			SqlProviderFlags.IsApplyJoinSupported     = true;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.IsApplyJoinSupported      = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
-
-		public override bool IsInsertOrUpdateSupported { get { return false; } }
 
 		protected override string FirstFormat  { get { return SqlQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }
 		protected override string LimitFormat  { get { return SqlQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }

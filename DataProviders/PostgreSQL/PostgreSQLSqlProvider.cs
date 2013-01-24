@@ -12,9 +12,8 @@ namespace LinqToDB.DataProvider
 	{
 		public PostgreSQLSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
-
-		public override bool IsInsertOrUpdateSupported { get { return false; } }
 
 		public override int CommandCount(SqlQuery sqlQuery)
 		{

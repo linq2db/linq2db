@@ -12,7 +12,8 @@ namespace LinqToDB.DataProvider
 	{
 		public InformixSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsSubQueryTakeSupported = false;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
 		public override int CommandCount(SqlQuery sqlQuery)
@@ -53,7 +54,6 @@ namespace LinqToDB.DataProvider
 				base.BuildSelectClause(sb);
 		}
 
-		public override bool IsInsertOrUpdateSupported    { get { return false; } }
 		public override bool IsGroupByExpressionSupported { get { return false; } }
 
 		protected override string FirstFormat { get { return "FIRST {0}"; } }

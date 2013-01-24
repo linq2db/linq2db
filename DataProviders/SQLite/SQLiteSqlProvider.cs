@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider
 	{
 		public SQLiteSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
 		public override int CommandCount(SqlQuery sqlQuery)
@@ -31,8 +32,7 @@ namespace LinqToDB.DataProvider
 		protected override string LimitFormat  { get { return "LIMIT {0}";  } }
 		protected override string OffsetFormat { get { return "OFFSET {0}"; } }
 
-		public override bool IsNestedJoinSupported     { get { return false; } }
-		public override bool IsInsertOrUpdateSupported { get { return false; } }
+		public override bool IsNestedJoinSupported { get { return false; } }
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
