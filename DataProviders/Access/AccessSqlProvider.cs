@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider
 	{
 		public AccessSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsCountSubQuerySupported = false;
 		}
 
 		public override int CommandCount(SqlQuery sqlQuery)
@@ -24,7 +25,6 @@ namespace LinqToDB.DataProvider
 			sb.AppendLine("SELECT @@IDENTITY");
 		}
 
-		public override bool IsCountSubQuerySupported  { get { return false; } }
 		public override bool IsNestedJoinSupported     { get { return false; } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
 

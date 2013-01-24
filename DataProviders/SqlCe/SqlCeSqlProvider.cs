@@ -12,9 +12,9 @@ namespace LinqToDB.DataProvider
 	{
 		public SqlCeSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsCountSubQuerySupported = false;
 		}
 
-		public override bool IsCountSubQuerySupported  { get { return false; } }
 		public override bool IsApplyJoinSupported      { get { return true;  } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
 

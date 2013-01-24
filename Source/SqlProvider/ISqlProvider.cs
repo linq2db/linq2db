@@ -23,7 +23,6 @@ namespace LinqToDB.SqlProvider
 		string           Name                        { get; }
 		SqlQuery         SqlQuery                    { get; set; }
 
-		bool             IsCountSubQuerySupported    { get; }
 		bool             IsIdentityParameterRequired { get; }
 		bool             IsApplyJoinSupported        { get; }
 		bool             IsInsertOrUpdateSupported   { get; }

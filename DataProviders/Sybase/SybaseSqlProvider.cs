@@ -11,7 +11,8 @@ namespace LinqToDB.DataProvider
 	{
 		public SybaseSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsSubQueryTakeSupported = false;
+			SqlProviderFlags.IsSubQueryTakeSupported  = false;
+			SqlProviderFlags.IsCountSubQuerySupported = false;
 		}
 
 		protected override void BuildGetIdentity(StringBuilder sb)
@@ -21,10 +22,9 @@ namespace LinqToDB.DataProvider
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
-		protected override string FirstFormat              { get { return "TOP {0}"; } }
+		protected override string FirstFormat { get { return "TOP {0}"; } }
 
-		public override bool IsCountSubQuerySupported { get { return false; } }
-		public override bool CanCombineParameters     { get { return false; } }
+		public override bool CanCombineParameters { get { return false; } }
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{

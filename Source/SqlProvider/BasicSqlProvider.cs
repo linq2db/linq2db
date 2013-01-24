@@ -38,7 +38,6 @@ namespace LinqToDB.SqlProvider
 
 		#region Support Flags
 
-		public virtual bool IsCountSubQuerySupported        { get { return true;  } }
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
 		public virtual bool IsIdentityParameterRequired     { get { return false; } }
@@ -3108,10 +3107,10 @@ namespace LinqToDB.SqlProvider
 		{
 			sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
 
-			if (!IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
+			if (!SqlProviderFlags.IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
 
-			if (!IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 				sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
 
 			return sqlQuery;
