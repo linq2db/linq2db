@@ -13,9 +13,9 @@ namespace LinqToDB.DataProvider
 		public SqlCeSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 			SqlProviderFlags.IsCountSubQuerySupported = false;
+			SqlProviderFlags.IsApplyJoinSupported     = true;
 		}
 
-		public override bool IsApplyJoinSupported      { get { return true;  } }
 		public override bool IsInsertOrUpdateSupported { get { return false; } }
 
 		protected override string FirstFormat  { get { return SqlQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }

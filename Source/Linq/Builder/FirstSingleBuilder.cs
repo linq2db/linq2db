@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null)
 				{
-					if (Builder.SqlProvider.IsApplyJoinSupported && Parent.SqlQuery.GroupBy.IsEmpty)
+					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported && Parent.SqlQuery.GroupBy.IsEmpty)
 					{
 						var join = SqlQuery.OuterApply(SqlQuery);
 

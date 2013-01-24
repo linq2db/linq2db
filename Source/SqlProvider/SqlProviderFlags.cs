@@ -1,8 +1,9 @@
 ﻿using System;
-using LinqToDB.SqlBuilder;
 
 namespace LinqToDB.SqlProvider
 {
+	using SqlBuilder;
+
 	public class SqlProviderFlags
 	{
 		public SqlProviderFlags()
@@ -25,6 +26,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsSubQueryColumnSupported    { get; set; }
 		public bool IsCountSubQuerySupported     { get; set; }
 		public bool IsIdentityParameterRequired  { get; set; }
+		public bool IsApplyJoinSupported         { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SqlQuery sqlQuery)
 		{

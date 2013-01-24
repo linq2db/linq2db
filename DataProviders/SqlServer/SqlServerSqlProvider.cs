@@ -12,9 +12,8 @@ namespace LinqToDB.DataProvider
 	{
 		protected SqlServerSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+			SqlProviderFlags.IsApplyJoinSupported = true;
 		}
-
-		public override bool IsApplyJoinSupported { get { return true; } }
 
 		protected override string FirstFormat
 		{

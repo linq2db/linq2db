@@ -40,7 +40,6 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
-		public virtual bool IsApplyJoinSupported            { get { return false; } }
 		public virtual bool IsInsertOrUpdateSupported       { get { return true;  } }
 		public virtual bool CanCombineParameters            { get { return true;  } }
 		public virtual bool IsGroupByExpressionSupported    { get { return true;  } }
@@ -3104,13 +3103,13 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
+			sqlQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				sqlQuery.FinalizeAndValidate(IsApplyJoinSupported, IsGroupByExpressionSupported);
+				sqlQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
 
 			return sqlQuery;
 		}
