@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider
 		{
 			SqlProviderFlags.IsSubQueryTakeSupported  = false;
 			SqlProviderFlags.IsCountSubQuerySupported = false;
+			SqlProviderFlags.CanCombineParameters     = false;
 		}
 
 		protected override void BuildGetIdentity(StringBuilder sb)
@@ -23,8 +24,6 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected override string FirstFormat { get { return "TOP {0}"; } }
-
-		public override bool CanCombineParameters { get { return false; } }
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{

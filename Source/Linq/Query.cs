@@ -678,7 +678,7 @@ namespace LinqToDB.Linq
 							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
 						};
 
-						var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProvider.CanCombineParameters;
+						var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
 
 						// Insert.
 						//

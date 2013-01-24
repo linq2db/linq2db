@@ -22,7 +22,5 @@ namespace LinqToDB.SqlProvider
 
 		string           Name     { get; }
 		SqlQuery         SqlQuery { get; set; }
-
-		bool             CanCombineParameters      { get; }
 	}
 }

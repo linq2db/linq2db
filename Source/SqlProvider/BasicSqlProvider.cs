@@ -40,7 +40,6 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
-		public virtual bool CanCombineParameters            { get { return true;  } }
 		public virtual bool IsGroupByExpressionSupported    { get { return true;  } }
 
 		public virtual bool ConvertCountSubQuery(SqlQuery subQuery)
