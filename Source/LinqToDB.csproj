@@ -104,6 +104,7 @@
     <Compile Include="PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="TableAttribute.cs" />
     <Compile Include="TableNameAttribute.cs">
@@ -181,7 +182,6 @@
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
-    <Compile Include="Linq\Settings.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="Linq\SqlEnumAttribute.cs" />
     <Compile Include="Linq\SqlExpressionAttribute.cs" />

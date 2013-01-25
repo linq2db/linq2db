@@ -50,21 +50,15 @@ namespace Tests
 					default                   : return null;
 				}
 			};
+
+			OpenHost();
 		}
 
-		const  int StartIP = 22654;
-		static int _lastIP = StartIP;
+		const int IP = 22654;
 
-		static int GetIP(string config)
+		static void OpenHost()
 		{
-			int ip;
-
-			if (_ips.TryGetValue(config, out ip))
-				return ip;
-
-			_lastIP++;
-
-			var host = new ServiceHost(new LinqService(config) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + _lastIP));
+			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
@@ -84,10 +78,6 @@ namespace Tests
 				"LinqOverWCF");
 
 			host.Open();
-
-			_ips.Add(config, _lastIP);
-
-			return _lastIP;
 		}
 
 		public static readonly List<string> UserProviders = new List<string>();
@@ -165,28 +155,12 @@ namespace Tests
 			}
 		}
 
-		static readonly Dictionary<string,int> _ips = new Dictionary<string,int>();
-
 		protected ITestDataContext GetDataContext(string configuration)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-				var ip  = GetIP(str);
-				var dx  = new TestServiceModelDataContext(ip,
-					configuration == ProviderName.SqlServer2008 ? typeof(SqlServer2008SqlProvider)  :
-					configuration == ProviderName.SqlServer2012 ? typeof(SqlServer2008SqlProvider)  :
-					configuration == ProviderName.SqlCe         ? typeof(SqlCeSqlProvider)      :
-					configuration == ProviderName.SQLite        ? typeof(SQLiteSqlProvider)     :
-					configuration == ProviderName.Access        ? typeof(AccessSqlProvider)     :
-					configuration == ProviderName.SqlServer2005 ? typeof(SqlServer2005SqlProvider)  :
-					configuration == ProviderName.DB2           ? typeof(DB2SqlProvider)        :
-					configuration == ProviderName.Informix      ? typeof(InformixSqlProvider)   :
-					configuration == ProviderName.Firebird      ? typeof(FirebirdSqlProvider)   :
-					configuration == ProviderName.Oracle        ? typeof(OracleSqlProvider)     :
-					configuration == ProviderName.PostgreSQL    ? typeof(PostgreSQLSqlProvider) :
-					configuration == ProviderName.MySql         ? typeof(MySqlSqlProvider)      :
-					configuration == ProviderName.Sybase        ? typeof(SybaseSqlProvider)     : null);
+				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -196,7 +170,6 @@ namespace Tests
 			Debug.WriteLine(configuration, "Provider ");
 
 			return new TestDataConnection(configuration);
-			//return new TestDbManager(configuration);
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)

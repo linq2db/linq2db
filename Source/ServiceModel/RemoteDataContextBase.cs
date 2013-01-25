@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -12,6 +14,50 @@ namespace LinqToDB.ServiceModel
 
 	public abstract class RemoteDataContextBase : IDataContext
 	{
+		public string Configuration { get; set; }
+
+		class ConfigurationInfo
+		{
+			public LinqServiceInfo  LinqServiceInfo;
+			public MappingSchema    MappingSchema;
+			public MappingSchemaOld MappingSchemaOld;
+		}
+
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
+
+		ConfigurationInfo _configurationInfo;
+
+		ConfigurationInfo GetConfigurationInfo()
+		{
+			if (_configurationInfo == null && !_configurations.TryGetValue(Configuration ?? "", out _configurationInfo))
+			{
+				var client = GetClient();
+
+				try
+				{
+					var info = client.GetInfo(Configuration);
+
+					_configurationInfo = new ConfigurationInfo
+					{
+						LinqServiceInfo = info,
+						MappingSchema   = new MappingSchema(
+							info.ConfigurationList
+								.Select(c => ContextIDPrefix + "." + c).Concat(new[] { ContextIDPrefix }).Concat(info.ConfigurationList)
+								.Select(c => new MappingSchema(c)).     Concat(new[] { Mapping.MappingSchema.Default })
+								.ToArray())
+					};
+
+					_configurationInfo.MappingSchemaOld = new MappingSchemaOld { NewSchema = _configurationInfo.MappingSchema };
+				}
+				finally
+				{
+					((IDisposable)client).Dispose();
+				}
+			}
+
+			return _configurationInfo;
+		}
+
 		protected abstract ILinqService GetClient();
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
@@ -19,23 +65,13 @@ namespace LinqToDB.ServiceModel
 		string             _contextID;
 		string IDataContext.ContextID
 		{
-			get { return _contextID ?? (_contextID = ContextIDPrefix + SqlProviderType.Name.Replace("SqlProvider", "")); }
+			get { return _contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]); }
 		}
 
 		private MappingSchemaOld _mappingSchema;
 		public  MappingSchemaOld  MappingSchema
 		{
-			get
-			{
-				if (_mappingSchema == null)
-				{
-					var sp = ((IDataContext)this).CreateSqlProvider();
-					_mappingSchema = sp is IMappingSchemaProvider ? ((IMappingSchemaProvider)sp).MappingSchema : Map.DefaultSchema;
-				}
-
-				return _mappingSchema;
-			}
-
+			get { return _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchemaOld); }
 			set { _mappingSchema = value; }
 		}
 
@@ -46,17 +82,8 @@ namespace LinqToDB.ServiceModel
 			{
 				if (_sqlProviderType == null)
 				{
-					var client = GetClient();
-
-					try
-					{
-						var type = client.GetSqlProviderType();
-						_sqlProviderType = Type.GetType(type);
-					}
-					finally
-					{
-						((IDisposable)client).Dispose();
-					}
+					var type = GetConfigurationInfo().LinqServiceInfo.SqlProviderType;
+					_sqlProviderType = Type.GetType(type);
 				}
 
 				return _sqlProviderType;
@@ -65,27 +92,9 @@ namespace LinqToDB.ServiceModel
 			set { _sqlProviderType = value;  }
 		}
 
-		SqlProviderFlags             _sqlProviderFlags;
 		SqlProviderFlags IDataContext.SqlProviderFlags
 		{
-			get
-			{
-				if (_sqlProviderFlags == null)
-				{
-					var client = GetClient();
-
-					try
-					{
-						_sqlProviderFlags = client.GetSqlProviderFlags();
-					}
-					finally
-					{
-						((IDisposable)client).Dispose();
-					}
-				}
-
-				return _sqlProviderFlags;
-			}
+			get { return GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags; }
 		}
 
 		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();
@@ -139,7 +148,7 @@ namespace LinqToDB.ServiceModel
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(_queryBatch.ToArray());
-					client.ExecuteBatch(data);
+					client.ExecuteBatch(Configuration, data);
 				}
 				finally
 				{
@@ -174,7 +183,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			return ctx.Client.ExecuteNonQuery(data);
+			return ctx.Client.ExecuteNonQuery(Configuration, data);
 		}
 
 		object IDataContext.ExecuteScalar(object query)
@@ -189,6 +198,7 @@ namespace LinqToDB.ServiceModel
 			var q = ctx.Query.SqlQuery.ProcessParameters();
 
 			return ctx.Client.ExecuteScalar(
+				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
 		}
 
@@ -203,6 +213,7 @@ namespace LinqToDB.ServiceModel
 
 			var q      = ctx.Query.SqlQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
+				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
 			var result = LinqServiceSerializer.DeserializeResult(ret);
 

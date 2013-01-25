@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.ServiceModel
 {
@@ -17,23 +16,13 @@ namespace LinqToDB.ServiceModel
 	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 	public class LinqService : ILinqService
 	{
-		public LinqService()
-		{
-		}
-
-		public LinqService(string configuration)
-		{
-			Configuration = configuration;
-		}
-
-		public string Configuration { get; set; }
-		public bool   AllowUpdates  { get; set; }
+		public bool AllowUpdates { get; set; }
 
 		public static Func<string,Type> TypeResolver = _ => null;
 
-		public virtual IDataContext CreateDataContext()
+		public virtual DataConnection CreateDataContext(string configuration)
 		{
-			return Settings.CreateDefaultDataContext(Configuration);
+			return new DataConnection(configuration);
 		}
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
@@ -48,32 +37,18 @@ namespace LinqToDB.ServiceModel
 
 		#region ILinqService Members
 
-		public Type SqlProviderType { get; set; }
-
 		[WebMethod]
-		public virtual string GetSqlProviderType()
+		public virtual LinqServiceInfo GetInfo(string configuration)
 		{
-			try
+			using (var ctx = CreateDataContext(configuration))
 			{
-				if (SqlProviderType == null)
-					using (var ctx = CreateDataContext())
-						SqlProviderType = ctx.CreateSqlProvider().GetType();
-
-				return SqlProviderType.AssemblyQualifiedName;
-				//return SqlProviderType.FullName;
+				return new LinqServiceInfo
+				{
+					SqlProviderType   = ctx.DataProvider.CreateSqlProvider().GetType().AssemblyQualifiedName,
+					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
+					ConfigurationList = ctx.MappingSchema.ConfigurationList,
+				};
 			}
-			catch (Exception exception)
-			{
-				HandleException(exception);
-				throw;
-			}
-		}
-
-		[WebMethod]
-		public SqlProviderFlags GetSqlProviderFlags()
-		{
-			using (var ctx = CreateDataContext())
-				return ctx.SqlProviderFlags;
 		}
 
 		class QueryContext : IQueryContext
@@ -89,7 +64,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteNonQuery(string queryData)
+		public int ExecuteNonQuery(string configuration, string queryData)
 		{
 			try
 			{
@@ -97,7 +72,7 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (var db = CreateDataContext())
+				using (IDataContext db = CreateDataContext(configuration))
 				{
 					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
 					return db.ExecuteNonQuery(obj);
@@ -111,7 +86,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public object ExecuteScalar(string queryData)
+		public object ExecuteScalar(string configuration, string queryData)
 		{
 			try
 			{
@@ -119,7 +94,7 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (var db = CreateDataContext())
+				using (IDataContext db = CreateDataContext(configuration))
 				{
 					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
 					return db.ExecuteScalar(obj);
@@ -133,7 +108,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public string ExecuteReader(string queryData)
+		public string ExecuteReader(string configuration, string queryData)
 		{
 			try
 			{
@@ -141,7 +116,7 @@ namespace LinqToDB.ServiceModel
 
 				ValidateQuery(query);
 
-				using (var db = CreateDataContext())
+				using (IDataContext db = CreateDataContext(configuration))
 				{
 					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
 
@@ -244,27 +219,27 @@ namespace LinqToDB.ServiceModel
 		}
 
 		[WebMethod]
-		public int ExecuteBatch(string queryData)
+		public int ExecuteBatch(string configuration, string queryData)
 		{
 			try
 			{
 				var data    = LinqServiceSerializer.DeserializeStringArray(queryData);
-				var queries = data.Select<string,LinqServiceQuery>(LinqServiceSerializer.Deserialize).ToArray();
+				var queries = data.Select(LinqServiceSerializer.Deserialize).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using (var db = CreateDataContext())
+				using (var db = CreateDataContext(configuration))
 				{
-					if (db is DataConnection) ((DataConnection)db).BeginTransaction();
+					db.BeginTransaction();
 
 					foreach (var query in queries)
 					{
-						var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
-						db.ExecuteNonQuery(obj);
+						var obj = ((IDataContext)db).SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+						((IDataContext)db).ExecuteNonQuery(obj);
 					}
 
-					if (db is DataConnection) ((DataConnection)db).CommitTransaction();
+					db.CommitTransaction();
 
 					return queryData.Length;
 				}

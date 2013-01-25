@@ -26,20 +26,20 @@ namespace LinqToDB.Linq
 			ArgIndices  = argIndices;
 		}
 
-		public SqlFunctionAttribute(string sqlProvider, string name)
+		public SqlFunctionAttribute(string configuration, string name)
 		{
-			SqlProvider = sqlProvider;
-			Name        = name;
+			Configuration = configuration;
+			Name          = name;
 		}
 
-		public SqlFunctionAttribute(string sqlProvider, string name, params int[] argIndices)
+		public SqlFunctionAttribute(string configuration, string name, params int[] argIndices)
 		{
-			SqlProvider = sqlProvider;
-			Name        = name;
-			ArgIndices  = argIndices;
+			Configuration = configuration;
+			Name          = name;
+			ArgIndices    = argIndices;
 		}
 
-		public string SqlProvider      { get; set; }
+		public string Configuration    { get; set; }
 		public string Name             { get; set; }
 		public bool   ServerSideOnly   { get; set; }
 		public bool   PreferServerSide { get; set; }

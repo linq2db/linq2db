@@ -168,6 +168,7 @@ namespace LinqToDB
 
 		[SqlProperty(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[SqlProperty(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[SqlProperty(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[SqlProperty(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[SqlProperty(                  "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
 
@@ -209,13 +210,12 @@ namespace LinqToDB
 
 		#region String Functions
 
-		[SqlFunction(                                 PreferServerSide = true)]
-		[SqlFunction(PN.Access,        "Len",         PreferServerSide = true)]
-		[SqlFunction(PN.Firebird,      "Char_Length", PreferServerSide = true)]
-		[SqlFunction(PN.SqlServer2005, "Len",         PreferServerSide = true)]
-		[SqlFunction(PN.SqlServer2008, "Len",         PreferServerSide = true)]
-		[SqlFunction(PN.SqlCe,         "Len",         PreferServerSide = true)]
-		[SqlFunction(PN.Sybase,        "Len",         PreferServerSide = true)]
+		[SqlFunction(                             PreferServerSide = true)]
+		[SqlFunction(PN.Access,    "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.Firebird,  "Char_Length", PreferServerSide = true)]
+		[SqlFunction(PN.SqlServer, "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.SqlCe,     "Len",         PreferServerSide = true)]
+		[SqlFunction(PN.Sybase,    "Len",         PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;
@@ -431,13 +431,12 @@ namespace LinqToDB
 
 		#region Binary Functions
 
-		[SqlFunction(                                  PreferServerSide = true)]
-		[SqlFunction(PN.Access,        "Len",          PreferServerSide = true)]
-		[SqlFunction(PN.Firebird,      "Octet_Length", PreferServerSide = true)]
-		[SqlFunction(PN.SqlServer2005, "DataLength",   PreferServerSide = true)]
-		[SqlFunction(PN.SqlServer2008, "DataLength",   PreferServerSide = true)]
-		[SqlFunction(PN.SqlCe,         "DataLength",   PreferServerSide = true)]
-		[SqlFunction(PN.Sybase,        "DataLength",   PreferServerSide = true)]
+		[SqlFunction(                              PreferServerSide = true)]
+		[SqlFunction(PN.Access,    "Len",          PreferServerSide = true)]
+		[SqlFunction(PN.Firebird,  "Octet_Length", PreferServerSide = true)]
+		[SqlFunction(PN.SqlServer, "DataLength",   PreferServerSide = true)]
+		[SqlFunction(PN.SqlCe,     "DataLength",   PreferServerSide = true)]
+		[SqlFunction(PN.Sybase,    "DataLength",   PreferServerSide = true)]
 		public static int? Length(Binary value)
 		{
 			return value == null ? null : (int?)value.Length;
@@ -686,11 +685,10 @@ namespace LinqToDB
 		[SqlFunction] public static Double?  Atan   (Double?  value) { return value == null ? null : (Double?) Math.Atan   (value.Value); }
 
 		[CLSCompliant(false)]
-		[SqlFunction(PN.SqlServer2008, "Atn2")]
-		[SqlFunction(PN.SqlServer2005, "Atn2")]
-		[SqlFunction(PN.DB2,           "Atan2", 1, 0)]
-		[SqlFunction(PN.SqlCe,         "Atn2")]
-		[SqlFunction(PN.Sybase,        "Atn2")]
+		[SqlFunction(PN.SqlServer, "Atn2")]
+		[SqlFunction(PN.DB2,       "Atan2", 1, 0)]
+		[SqlFunction(PN.SqlCe,     "Atn2")]
+		[SqlFunction(PN.Sybase,    "Atn2")]
 		[SqlFunction] public static Double?  Atan2  (Double? x, Double? y) { return x == null || y == null? null : (Double?)Math.Atan2(x.Value, y.Value); }
 
 		[SqlFunction(PN.Informix, "Ceil")]
@@ -720,6 +718,7 @@ namespace LinqToDB
 
 		[SqlFunction(PN.Access, "Int")]
 		[SqlFunction] public static Decimal? Floor  (Decimal? value) { return value == null ? null : (Decimal?)decimal.Floor(value.Value); }
+
 		[SqlFunction(PN.Access, "Int")]
 		[SqlFunction] public static Double?  Floor  (Double?  value) { return value == null ? null : (Double?) Math.   Floor(value.Value); }
 
@@ -728,6 +727,7 @@ namespace LinqToDB
 		[SqlFunction(PN.Firebird,   "Ln")]
 		[SqlFunction(PN.PostgreSQL, "Ln")]
 		[SqlFunction] public static Decimal? Log    (Decimal? value) { return value == null ? null : (Decimal?)Math.Log     ((Double)value.Value); }
+
 		[SqlFunction(PN.Informix,   "LogN")]
 		[SqlFunction(PN.Oracle,     "Ln")]
 		[SqlFunction(PN.Firebird,   "Ln")]
@@ -835,15 +835,14 @@ namespace LinqToDB
 		[SqlFunction] public static Double?  Tan     (Double?  value) { return value == null ? null : (Double?)Math.Tan (value.Value); }
 		[SqlFunction] public static Double?  Tanh    (Double?  value) { return value == null ? null : (Double?)Math.Tanh(value.Value); }
 
-		[SqlExpression(PN.SqlServer2008, "Round({0}, 0, 1)")]
-		[SqlExpression(PN.SqlServer2005,     "Round({0}, 0, 1)")]
-		[SqlExpression(PN.DB2,           "Truncate({0}, 0)")]
-		[SqlExpression(PN.Informix,      "Trunc({0}, 0)")]
-		[SqlExpression(PN.Oracle,        "Trunc({0}, 0)")]
-		[SqlExpression(PN.Firebird,      "Trunc({0}, 0)")]
-		[SqlExpression(PN.PostgreSQL,    "Trunc({0}, 0)")]
-		[SqlExpression(PN.MySql,         "Truncate({0}, 0)")]
-		[SqlExpression(PN.SqlCe,         "Round({0}, 0, 1)")]
+		[SqlExpression(PN.SqlServer,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.DB2,        "Truncate({0}, 0)")]
+		[SqlExpression(PN.Informix,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.Oracle,     "Trunc({0}, 0)")]
+		[SqlExpression(PN.Firebird,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.PostgreSQL, "Trunc({0}, 0)")]
+		[SqlExpression(PN.MySql,      "Truncate({0}, 0)")]
+		[SqlExpression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[SqlFunction]
 		public static Decimal? Truncate(Decimal? value)
 		{
@@ -854,15 +853,14 @@ namespace LinqToDB
 #endif
 		}
 
-		[SqlExpression(PN.SqlServer2008, "Round({0}, 0, 1)")]
-		[SqlExpression(PN.SqlServer2005,     "Round({0}, 0, 1)")]
-		[SqlExpression(PN.DB2,           "Truncate({0}, 0)")]
-		[SqlExpression(PN.Informix,      "Trunc({0}, 0)")]
-		[SqlExpression(PN.Oracle,        "Trunc({0}, 0)")]
-		[SqlExpression(PN.Firebird,      "Trunc({0}, 0)")]
-		[SqlExpression(PN.PostgreSQL,    "Trunc({0}, 0)")]
-		[SqlExpression(PN.MySql,         "Truncate({0}, 0)")]
-		[SqlExpression(PN.SqlCe,         "Round({0}, 0, 1)")]
+		[SqlExpression(PN.SqlServer,  "Round({0}, 0, 1)")]
+		[SqlExpression(PN.DB2,        "Truncate({0}, 0)")]
+		[SqlExpression(PN.Informix,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.Oracle,     "Trunc({0}, 0)")]
+		[SqlExpression(PN.Firebird,   "Trunc({0}, 0)")]
+		[SqlExpression(PN.PostgreSQL, "Trunc({0}, 0)")]
+		[SqlExpression(PN.MySql,      "Truncate({0}, 0)")]
+		[SqlExpression(PN.SqlCe,      "Round({0}, 0, 1)")]
 		[SqlFunction]
 		public static Double? Truncate(Double? value)
 		{

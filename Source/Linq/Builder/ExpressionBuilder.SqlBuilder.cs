@@ -2214,12 +2214,12 @@ namespace LinqToDB.Linq.Builder
 
 		SqlFunctionAttribute GetFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.NewSchema.GetAttribute<SqlFunctionAttribute>(member);
+			return MappingSchema.NewSchema.GetAttribute<SqlFunctionAttribute>(member, a => a.Configuration);
 		}
 
 		internal TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.NewSchema.GetAttribute<TableFunctionAttribute>(member);
+			return MappingSchema.NewSchema.GetAttribute<TableFunctionAttribute>(member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

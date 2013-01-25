@@ -8,7 +8,7 @@ namespace Tests.Model
 {
 	public class TestServiceModelDataContext : ServiceModelDataContext, ITestDataContext
 	{
-		public TestServiceModelDataContext(int ip, Type sqlProviderType) : base(
+		public TestServiceModelDataContext(int ip) : base(
 			new NetTcpBinding(SecurityMode.None)
 			{
 				MaxReceivedMessageSize = 10000000,
@@ -21,7 +21,6 @@ namespace Tests.Model
 			},
 			new EndpointAddress("net.tcp://localhost:" + ip + "/LinqOverWCF"))
 		{
-			_sqlProviderType = sqlProviderType;
 			((NetTcpBinding)Binding).ReaderQuotas.MaxStringContentLength = 1000000;
 		}
 
@@ -50,12 +49,5 @@ namespace Tests.Model
 		{
 			throw new NotImplementedException();
 		}
-
-		private         Type _sqlProviderType;
-//		public override Type  SqlProviderType
-//		{
-//			get { return _sqlProviderType;  }
-//			set { _sqlProviderType = value; }
-//		}
 	}
 }

@@ -81,6 +81,7 @@ namespace LinqToDB.ServiceModel
 			return new ServiceModelDataContext
 			{
 				MappingSchema              = MappingSchema,
+				Configuration              = Configuration,
 				Binding                    = Binding,
 				_endpointConfigurationName = _endpointConfigurationName,
 				_remoteAddress             = _remoteAddress,
@@ -90,7 +91,7 @@ namespace LinqToDB.ServiceModel
 
 		protected override string ContextIDPrefix
 		{
-			get { return "LinqService_"; }
+			get { return "LinqService"; }
 		}
 
 		#endregion

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.ServiceModel
 {
@@ -9,43 +8,38 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Init
 
-		public LinqSoapServiceClient(string endpointConfigurationName)                                                                  : base(endpointConfigurationName) { }
-		public LinqSoapServiceClient(string endpointConfigurationName, string remoteAddress)                                            : base(endpointConfigurationName, remoteAddress) { }
-		public LinqSoapServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress)                                   : base(endpointConfigurationName, remoteAddress) { }
-		public LinqSoapServiceClient(Binding binding, EndpointAddress remoteAddress)                                                    : base(binding, remoteAddress) { }
+		public LinqSoapServiceClient(string endpointConfigurationName)                                : base(endpointConfigurationName) { }
+		public LinqSoapServiceClient(string endpointConfigurationName, string remoteAddress)          : base(endpointConfigurationName, remoteAddress) { }
+		public LinqSoapServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) : base(endpointConfigurationName, remoteAddress) { }
+		public LinqSoapServiceClient(Binding binding, EndpointAddress remoteAddress)                  : base(binding, remoteAddress) { }
 
 		#endregion
 
 		#region ILinqService Members
 
-		public string GetSqlProviderType()
+		public LinqServiceInfo GetInfo(string configuration)
 		{
-			return Channel.GetSqlProviderType();
+			return Channel.GetInfo(configuration);
 		}
 
-		public SqlProviderFlags GetSqlProviderFlags()
+		public int ExecuteNonQuery(string configuration, string queryData)
 		{
-			return Channel.GetSqlProviderFlags();
+			return Channel.ExecuteNonQuery(configuration, queryData);
 		}
 
-		public int ExecuteNonQuery(string queryData)
+		public object ExecuteScalar(string configuration, string queryData)
 		{
-			return Channel.ExecuteNonQuery(queryData);
+			return Channel.ExecuteScalar(configuration, queryData);
 		}
 
-		public object ExecuteScalar(string queryData)
+		public string ExecuteReader(string configuration, string queryData)
 		{
-			return Channel.ExecuteScalar(queryData);
+			return Channel.ExecuteReader(configuration, queryData);
 		}
 
-		public string ExecuteReader(string queryData)
+		public int ExecuteBatch(string configuration, string queryData)
 		{
-			return Channel.ExecuteReader(queryData);
-		}
-
-		public int ExecuteBatch(string queryData)
-		{
-			return Channel.ExecuteBatch(queryData);
+			return Channel.ExecuteBatch(configuration, queryData);
 		}
 
 		#endregion

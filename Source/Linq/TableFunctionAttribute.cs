@@ -27,22 +27,22 @@ namespace LinqToDB.Linq
 			ArgIndices  = argIndices;
 		}
 
-		public TableFunctionAttribute(string sqlProvider, string name)
+		public TableFunctionAttribute(string configuration, string name)
 		{
-			SqlProvider = sqlProvider;
-			Name        = name;
+			Configuration = configuration;
+			Name          = name;
 		}
 
-		public TableFunctionAttribute(string sqlProvider, string name, params int[] argIndices)
+		public TableFunctionAttribute(string configuration, string name, params int[] argIndices)
 		{
-			SqlProvider = sqlProvider;
-			Name        = name;
-			ArgIndices  = argIndices;
+			Configuration = configuration;
+			Name          = name;
+			ArgIndices    = argIndices;
 		}
 
-		public string SqlProvider      { get; set; }
-		public string Name             { get; set; }
-		public int[]  ArgIndices       { get; set; }
+		public string Configuration { get; set; }
+		public string Name          { get; set; }
+		public int[]  ArgIndices    { get; set; }
 
 		protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
 		{
