@@ -24,7 +24,17 @@ namespace LinqToDB.DataProvider
 		{
 			Name             = name;
 			MappingSchema    = mappingSchema;
-			SqlProviderFlags = new SqlProviderFlags();
+			SqlProviderFlags = new SqlProviderFlags
+			{
+				AcceptsTakeAsParameter    = true,
+				IsTakeSupported           = true,
+				IsSkipSupported           = true,
+				IsSubQueryTakeSupported   = true,
+				IsSubQueryColumnSupported = true,
+				IsCountSubQuerySupported  = true,
+				IsInsertOrUpdateSupported = true,
+				CanCombineParameters      = true,
+			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
 			SetField<IDataReader,byte>    ((r,i) => r.GetByte    (i));

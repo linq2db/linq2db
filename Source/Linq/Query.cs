@@ -675,7 +675,8 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
-							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
+							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } },
+							SqlProviderFlags  = dataContextInfo.SqlProviderFlags,
 						};
 
 						var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;

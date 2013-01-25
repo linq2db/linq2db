@@ -6,18 +6,6 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlProviderFlags
 	{
-		public SqlProviderFlags()
-		{
-			AcceptsTakeAsParameter    = true;
-			IsTakeSupported           = true;
-			IsSkipSupported           = true;
-			IsSubQueryTakeSupported   = true;
-			IsSubQueryColumnSupported = true;
-			IsCountSubQuerySupported  = true;
-			IsInsertOrUpdateSupported = true;
-			CanCombineParameters      = true;
-		}
-
 		public bool IsParameterOrderDependent    { get; set; }
 		public bool AcceptsTakeAsParameter       { get; set; }
 		public bool AcceptsTakeAsParameterIfSkip { get; set; }

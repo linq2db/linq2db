@@ -107,7 +107,7 @@ namespace LinqToDB.ServiceModel
 									Expression.Lambda<Func<ISqlProvider>>(
 										Expression.New(
 											type.GetConstructor(new[] { typeof(SqlProviderFlags) }),
-											new Expression[] { Expression.Constant(new SqlProviderFlags()) })).Compile());
+											new Expression[] { Expression.Constant(((IDataContext)this).SqlProviderFlags) })).Compile());
 				}
 
 				return _createSqlProvider;
