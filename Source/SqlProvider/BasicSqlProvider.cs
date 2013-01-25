@@ -3480,9 +3480,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Linq Support
 
-		public virtual LambdaExpression ConvertMember(MemberInfo mi)
+		public virtual LambdaExpression ConvertMember(MappingSchema mappingSchema, MemberInfo mi)
 		{
-			return Expressions.ConvertMember(Name, mi);
+			return Expressions.ConvertMember(mappingSchema, mi);
 		}
 
 		#endregion

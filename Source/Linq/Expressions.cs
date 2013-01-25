@@ -18,6 +18,7 @@ namespace LinqToDB.Linq
 	// FIXME: using B = Boolean;
 
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
 	public static class Expressions
 	{
@@ -75,14 +76,15 @@ namespace LinqToDB.Linq
 
 		#region Public Members
 
-		public static LambdaExpression ConvertMember(string providerName, MemberInfo mi)
+		public static LambdaExpression ConvertMember(MappingSchema mappingSchema, MemberInfo mi)
 		{
 			Dictionary<MemberInfo,LambdaExpression> dic;
 			LambdaExpression                        expr;
 
-			if (Members.TryGetValue(providerName, out dic))
-				if (dic.TryGetValue(mi, out expr))
-					return expr;
+			foreach (var configuration in mappingSchema.ConfigurationList)
+				if (Members.TryGetValue(configuration, out dic))
+					if (dic.TryGetValue(mi, out expr))
+						return expr;
 
 			if (!Members[""].TryGetValue(mi, out expr))
 			{
@@ -719,14 +721,13 @@ namespace LinqToDB.Linq
 
 			}},
 
-			#region MsSql2008
+			#region SqlServer
 
-			{ ProviderName.SqlServer2008, new Dictionary<MemberInfo,LambdaExpression> {
+			{ ProviderName.SqlServer, new Dictionary<MemberInfo,LambdaExpression> {
 				{ M(() => Sql.PadRight("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
 				{ M(() => Sql.PadLeft ("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
-				{ M(() => Sql.Trim    ("")      ),  L<String,String>        ((String p0)            => Sql.TrimLeft(Sql.TrimRight(p0))) },
+				{ M(() => Sql.Trim    ("")      ),  L<String,String>               ((String p0)                   => Sql.TrimLeft(Sql.TrimRight(p0))) },
 				{ M(() => Sql.MakeDateTime(0,0,0)), L<Int32?,Int32?,Int32?,DateTime?>((Int32? y,Int32? m,Int32? d)  => DateAdd(Sql.DateParts.Month, (y.Value - 1900) * 12 + m.Value - 1, d.Value - 1)) },
-
 				{ M(() => Sql.Cosh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) + Sql.Exp(-v)) / 2) },
 				{ M(() => Sql.Log(0m, 0)), L<Decimal?,Decimal?,Decimal?>((m,n) => Sql.Log(n) / Sql.Log(m)) },
 				{ M(() => Sql.Log(0.0,0)), L<Double?,Double?,Double?>((m,n) => Sql.Log(n) / Sql.Log(m)) },
@@ -736,22 +737,12 @@ namespace LinqToDB.Linq
 
 			#endregion
 
-			#region MsSql2005
+			#region SqlServer2005
 
 			{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,LambdaExpression> {
-				{ M(() => Sql.PadRight("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length)) },
-				{ M(() => Sql.PadLeft ("",0,' ')),  L<String,Int32?,Char,String>   ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0) },
-				{ M(() => Sql.Trim    ("")      ),  L<String,String>        ((String p0)            => Sql.TrimLeft(Sql.TrimRight(p0))) },
-				{ M(() => Sql.MakeDateTime(0,0,0)), L<Int32?,Int32?,Int32?,DateTime?>((Int32? y,Int32? m,Int32? d)  => DateAdd(Sql.DateParts.Month, (y.Value - 1900) * 12 + m.Value - 1, d.Value - 1)) },
 				{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), L<Int32?,Int32?,Int32?,Int32?,Int32?,Int32?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
 					y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 					h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120)) },
-				{ M(() => Sql.Cosh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) + Sql.Exp(-v)) / 2) },
-				{ M(() => Sql.Log(0m, 0)), L<Decimal?,Decimal?,Decimal?>((m,n) => Sql.Log(n) / Sql.Log(m)) },
-				{ M(() => Sql.Log(0.0,0)), L<Double?,Double?,Double?>((m,n) => Sql.Log(n) / Sql.Log(m)) },
-				{ M(() => Sql.Sinh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / 2) },
-				{ M(() => Sql.Tanh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v))) },
-
 				{ M(() => DateTime.Parse("")), L<String,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ) },
 			}},
 

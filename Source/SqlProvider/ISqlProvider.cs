@@ -5,6 +5,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using Mapping;
 	using SqlBuilder;
 
 	public interface ISqlProvider
@@ -17,7 +18,7 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    BuildTableName       (StringBuilder sb, string database, string owner, string table);
 		object           Convert              (object value, ConvertType convertType);
-		LambdaExpression ConvertMember        (MemberInfo mi);
+		LambdaExpression ConvertMember        (MappingSchema mappingSchema, MemberInfo mi);
 		ISqlExpression   GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning);
 
 		string           Name     { get; }
