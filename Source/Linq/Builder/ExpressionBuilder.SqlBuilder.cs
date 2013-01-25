@@ -2212,52 +2212,14 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		SqlFunctionAttribute GetFunctionAttribute(ICustomAttributeProvider member)
+		SqlFunctionAttribute GetFunctionAttribute(MemberInfo member)
 		{
-			var attrs = member.GetCustomAttributes(typeof(SqlFunctionAttribute), true);
-
-			if (attrs.Length == 0)
-				return null;
-
-			SqlFunctionAttribute attr = null;
-
-			foreach (SqlFunctionAttribute a in attrs)
-			{
-				if (a.SqlProvider == SqlProvider.Name)
-				{
-					attr = a;
-					break;
-				}
-
-				if (a.SqlProvider == null)
-					attr = a;
-			}
-
-			return attr;
+			return MappingSchema.NewSchema.GetAttribute<SqlFunctionAttribute>(member);
 		}
 
-		internal TableFunctionAttribute GetTableFunctionAttribute(ICustomAttributeProvider member)
+		internal TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			var attrs = member.GetCustomAttributes(typeof(TableFunctionAttribute), true);
-
-			if (attrs.Length == 0)
-				return null;
-
-			TableFunctionAttribute attr = null;
-
-			foreach (TableFunctionAttribute a in attrs)
-			{
-				if (a.SqlProvider == SqlProvider.Name)
-				{
-					attr = a;
-					break;
-				}
-
-				if (a.SqlProvider == null)
-					attr = a;
-			}
-
-			return attr;
+			return MappingSchema.NewSchema.GetAttribute<TableFunctionAttribute>(member);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
