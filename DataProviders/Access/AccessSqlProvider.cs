@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider
 
 				switch (func.Name)
 				{
-					case "Coalesce":
+					case "Coalesce"  :
 
 						if (func.Parameters.Length > 2)
 						{
@@ -277,50 +277,6 @@ namespace LinqToDB.DataProvider
 
 							return func.Parameters[1];
 						}
-
-						/*
-					case "Convert"   :
-						{
-							string name = null;
-
-							switch (((SqlDataType)func.Parameters[0]).DbType)
-							{
-								case SqlDbType.BigInt           : name = "CLng"; break;
-								case SqlDbType.TinyInt          : name = "CByte"; break;
-								case SqlDbType.Int              :
-								case SqlDbType.SmallInt         : name = "CInt"; break;
-								case SqlDbType.Bit              : name = "CBool"; break;
-								case SqlDbType.Char             :
-								case SqlDbType.Text             :
-								case SqlDbType.VarChar          :
-								case SqlDbType.NChar            :
-								case SqlDbType.NText            :
-								case SqlDbType.NVarChar         : name = "CStr"; break;
-								case SqlDbType.DateTime         :
-								case SqlDbType.Date             :
-								case SqlDbType.Time             :
-								case SqlDbType.DateTime2        :
-								case SqlDbType.SmallDateTime    :
-								case SqlDbType.DateTimeOffset   : name = "CDate"; break;
-								case SqlDbType.Decimal          : name = "CDec"; break;
-								case SqlDbType.Float            : name = "CDbl"; break;
-								case SqlDbType.Money            :
-								case SqlDbType.SmallMoney       : name = "CCur"; break;
-								case SqlDbType.Real             : name = "CSng"; break;
-								case SqlDbType.Image            :
-								case SqlDbType.Binary           :
-								case SqlDbType.UniqueIdentifier :
-								case SqlDbType.Timestamp        :
-								case SqlDbType.VarBinary        :
-								case SqlDbType.Variant          :
-								case SqlDbType.Xml              :
-								case SqlDbType.Udt              :
-								case SqlDbType.Structured       : name = "CVar"; break;
-							}
-
-							return new SqlFunction(name, func.Parameters[1]);
-						}
-						*/
 				}
 			}
 
