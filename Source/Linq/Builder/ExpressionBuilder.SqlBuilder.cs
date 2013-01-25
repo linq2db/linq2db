@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 							if (ma.Member.IsNullableValueMember())
 								break;
 
-							if (SqlProvider.ConvertMember(MappingSchema.NewSchema, ma.Member) == null)
+							if (Expressions.ConvertMember(MappingSchema.NewSchema, ma.Member) == null)
 							{
 								var ctx = GetContext(context, expr);
 
@@ -358,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma = (MemberExpression)e;
-							var l  = SqlProvider.ConvertMember(MappingSchema.NewSchema, ma.Member);
+							var l  = Expressions.ConvertMember(MappingSchema.NewSchema, ma.Member);
 
 							if (l != null)
 							{
@@ -427,7 +427,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
-			var l = SqlProvider.ConvertMember(MappingSchema.NewSchema, pi.Method);
+			var l = Expressions.ConvertMember(MappingSchema.NewSchema, pi.Method);
 			return l == null ? null : ConvertMethod(pi, l);
 		}
 
@@ -460,7 +460,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertNew(NewExpression pi)
 		{
-			var lambda = SqlProvider.ConvertMember(MappingSchema.NewSchema, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema.NewSchema, pi.Constructor);
 
 			if (lambda != null)
 			{
@@ -897,7 +897,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var ex = (MemberExpression)expr;
-						var l  = SqlProvider.ConvertMember(MappingSchema.NewSchema, ex.Member);
+						var l  = Expressions.ConvertMember(MappingSchema.NewSchema, ex.Member);
 
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
@@ -926,7 +926,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = SqlProvider.ConvertMember(MappingSchema.NewSchema, e.Method);
+							var l = Expressions.ConvertMember(MappingSchema.NewSchema, e.Method);
 
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;

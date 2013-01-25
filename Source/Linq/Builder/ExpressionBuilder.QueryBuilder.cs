@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 
 							var ma = (MemberExpression)expr;
 
-							if (SqlProvider.ConvertMember(MappingSchema.NewSchema, ma.Member) != null)
+							if (Expressions.ConvertMember(MappingSchema.NewSchema, ma.Member) != null)
 								break;
 
 							var ctx = GetContext(context, expr);
@@ -253,7 +253,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var pi = (MemberExpression)expr;
-						var l  = SqlProvider.ConvertMember(MappingSchema.NewSchema, pi.Member);
+						var l  = Expressions.ConvertMember(MappingSchema.NewSchema, pi.Member);
 
 						if (l != null)
 						{
@@ -273,7 +273,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var pi = (MethodCallExpression)expr;
 						var e  = pi;
-						var l  = SqlProvider.ConvertMember(MappingSchema.NewSchema, e.Method);
+						var l  = Expressions.ConvertMember(MappingSchema.NewSchema, e.Method);
 
 						if (l != null)
 							return l.Body.Unwrap().Find(PreferServerSide) != null;

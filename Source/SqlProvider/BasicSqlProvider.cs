@@ -4,14 +4,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
 	using Extensions;
-	using Linq;
 	using Mapping;
 	using SqlBuilder;
 
@@ -3474,15 +3471,6 @@ namespace LinqToDB.SqlProvider
 		public virtual string  Name
 		{
 			get { return _name ?? (_name = GetType().Name.Replace("SqlProvider", "")); }
-		}
-
-		#endregion
-
-		#region Linq Support
-
-		public virtual LambdaExpression ConvertMember(MappingSchema mappingSchema, MemberInfo mi)
-		{
-			return Expressions.ConvertMember(mappingSchema, mi);
 		}
 
 		#endregion

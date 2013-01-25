@@ -478,24 +478,7 @@ namespace LinqToDB.Linq.Builder
 
 		LambdaExpression ConvertMethodExpression(MemberInfo mi)
 		{
-			var attrs = mi.GetCustomAttributes(typeof(MethodExpressionAttribute), true);
-
-			if (attrs.Length == 0)
-				return null;
-
-			MethodExpressionAttribute attr = null;
-
-			foreach (MethodExpressionAttribute a in attrs)
-			{
-				if (a.SqlProvider == SqlProvider.Name)
-				{
-					attr = a;
-					break;
-				}
-
-				if (a.SqlProvider == null)
-					attr = a;
-			}
+			var attr = MappingSchema.NewSchema.GetAttribute<MethodExpressionAttribute>(mi, a => a.Configuration);
 
 			if (attr != null)
 			{

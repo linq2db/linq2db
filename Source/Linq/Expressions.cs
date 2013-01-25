@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 	// FIXME: using B = Boolean;
 
 	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	public static class Expressions
 	{

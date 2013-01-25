@@ -10,13 +10,13 @@ namespace LinqToDB
 			MethodName = methodName;
 		}
 
-		public MethodExpressionAttribute(string sqlProvider, string methodName)
+		public MethodExpressionAttribute(string configuration, string methodName)
 		{
-			SqlProvider = sqlProvider;
-			MethodName  = methodName;
+			Configuration = configuration;
+			MethodName    = methodName;
 		}
 
-		public string SqlProvider { get; set; }
-		public string MethodName  { get; set; }
+		public string Configuration { get; set; }
+		public string MethodName    { get; set; }
 	}
 }
