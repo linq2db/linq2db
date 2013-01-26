@@ -13,7 +13,6 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 

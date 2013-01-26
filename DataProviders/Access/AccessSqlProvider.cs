@@ -154,36 +154,68 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		public override ISqlPredicate ConvertPredicate(ISqlPredicate predicate)
+		protected override void BuildLikePredicate(StringBuilder sb, SqlQuery.Predicate.Like predicate)
 		{
-			if (predicate is SqlQuery.Predicate.Like)
+			if (predicate.Escape != null)
 			{
-				var l = (SqlQuery.Predicate.Like)predicate;
-
-				if (l.Escape != null)
+				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
 				{
-					if (l.Expr2 is SqlValue && l.Escape is SqlValue)
+					var text = ((SqlValue)predicate.Expr2).Value.ToString();
+					var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+
+					predicate = new SqlQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+				}
+				else if (predicate.Expr2 is SqlParameter)
+				{
+					var p = (SqlParameter)predicate.Expr2;
+
+					if (p.LikeStart != null)
 					{
-						var text = ((SqlValue) l.Expr2).Value.ToString();
-						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)l.Escape).Value));
+						var value = (string)p.Value;
 
-						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, val, null);
-					}
-
-					if (l.Expr2 is SqlParameter)
-					{
-						var p = (SqlParameter)l.Expr2;
-						var v = "";
-						
-						if (p.ValueConverter != null)
-							v = p.ValueConverter(" ") as string;
-
-						p.SetLikeConverter(v.StartsWith("%") ? "%" : "", v.EndsWith("%") ? "%" : "");
-
-						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, p, null);
+						if (value != null)
+						{
+							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
+							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DbType = p.DbType };
+							predicate = new SqlQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, p, null);
+						}
 					}
 				}
 			}
+
+			base.BuildLikePredicate(sb, predicate);
+		}
+
+		public override ISqlPredicate ConvertPredicate(ISqlPredicate predicate)
+		{
+//			if (predicate is SqlQuery.Predicate.Like)
+//			{
+//				var l = (SqlQuery.Predicate.Like)predicate;
+//
+//				if (l.Escape != null)
+//				{
+//					if (l.Expr2 is SqlValue && l.Escape is SqlValue)
+//					{
+//						var text = ((SqlValue) l.Expr2).Value.ToString();
+//						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)l.Escape).Value));
+//
+//						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, val, null);
+//					}
+//
+//					if (l.Expr2 is SqlParameter)
+//					{
+//						var p = (SqlParameter)l.Expr2;
+//						var v = "";
+//						
+//						if (p.ValueConverter != null)
+//							v = p.ValueConverter(" ") as string;
+//
+//						p.SetLikeConverter(v.StartsWith("%") ? "%" : "", v.EndsWith("%") ? "%" : "");
+//
+//						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, p, null);
+//					}
+//				}
+//			}
 
 			return base.ConvertPredicate(predicate);
 		}

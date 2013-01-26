@@ -1107,7 +1107,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression   = expr,
 				Accessor     = mapper.Compile(),
-				SqlParameter = new SqlParameter(expr.Type, name, null, MappingSchema)
+				SqlParameter = new SqlParameter(expr.Type, name, null)
 			};
 
 			_parameters.Add(expr, p);
@@ -1695,7 +1695,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression   = expr,
 				Accessor     = mapper.Compile(),
-				SqlParameter = new SqlParameter(expr.Type, member.Name, null, MappingSchema)
+				SqlParameter = new SqlParameter(expr.Type, member.Name, null)
 			};
 
 			_parameters.Add(expr, p);
@@ -1830,7 +1830,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					Expression   = ep.Expression,
 					Accessor     = ep.Accessor,
-					SqlParameter = new SqlParameter(ep.Expression.Type, p.Name, p.Value, GetLikeEscaper(start, end))
+					SqlParameter = new SqlParameter(ep.Expression.Type, p.Name, p.Value) { LikeStart = start, LikeEnd = end },
 				};
 
 				CurrentSqlParameters.Add(ep);

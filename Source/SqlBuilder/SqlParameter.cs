@@ -9,22 +9,17 @@ namespace LinqToDB.SqlBuilder
 
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
-		public SqlParameter(Type systemType, string name, object value, MappingSchemaOld mappingSchema)
+		public SqlParameter(Type systemType, string name, object value)
 		{
 			IsQueryParameter = true;
 			Name             = name;
 			SystemType       = systemType;
 			_value           = value;
 			DbType           = DbType.Object;
-
-			if (systemType != null && mappingSchema != null && systemType.IsEnum)
-			{
-				
-			}
 		}
 
 		public SqlParameter(Type systemType, string name, object value, Converter<object,object> valueConverter)
-			: this(systemType, name, value, (MappingSchemaOld)null)
+			: this(systemType, name, value)
 		{
 			_valueConverter = valueConverter;
 		}
@@ -34,12 +29,24 @@ namespace LinqToDB.SqlBuilder
 		public bool   IsQueryParameter { get; set; }
 		public DbType DbType           { get; set; }
 		public int    DbSize           { get; set; }
+		public string LikeStart        { get; set; }
+		public string LikeEnd          { get; set; }
 
 		private object _value;
 		public  object  Value
 		{
 			get
 			{
+				if (LikeStart != null)
+				{
+					if (_value != null)
+					{
+						return _value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
+							LikeStart + _value + LikeEnd :
+							LikeStart + EscapeLikeText(_value.ToString()) + LikeEnd;
+					}
+				}
+
 				var valueConverter = ValueConverter;
 				return valueConverter == null? _value: valueConverter(_value);
 			}
@@ -47,11 +54,15 @@ namespace LinqToDB.SqlBuilder
 			set { _value = value; }
 		}
 
+		internal object RawValue
+		{
+			get { return _value; }
+		}
+
 		#region Value Converter
 
 		internal List<Type> EnumTypes;
 		internal List<int>  TakeValues;
-		internal string     LikeStart, LikeEnd;
 
 		private Converter<object,object> _valueConverter;
 		public  Converter<object,object>  ValueConverter
@@ -66,8 +77,6 @@ namespace LinqToDB.SqlBuilder
 					else if (TakeValues != null)
 						foreach (var take in TakeValues.ToArray())
 							SetTakeConverter(take);
-					else if (LikeStart != null)
-						SetLikeConverter(LikeStart, LikeEnd);
 				}
 
 				return _valueConverter;
@@ -126,45 +135,28 @@ namespace LinqToDB.SqlBuilder
 				_valueConverter = v => v == null ? null : (object) ((int) conv(v) + take);
 		}
 
-		public void SetLikeConverter(string start, string end)
+		static string EscapeLikeText(string text)
 		{
-			LikeStart = start;
-			LikeEnd   = end;
-			_valueConverter = GetLikeEscaper(start, end);
-		}
+			if (text.IndexOfAny(new[] { '%', '_' }) < 0)
+				return text;
 
-		static Converter<object,object> GetLikeEscaper(string start, string end)
-		{
-			return (object value) =>
+			var builder = new StringBuilder(text.Length);
+
+			foreach (var ch in text)
 			{
-				if (value == null)
-#if DEBUG
-					value = "";
-#else
-					throw new SqlException("NULL cannot be used as a LIKE predicate parameter.");
-#endif
-
-				var text = value.ToString();
-
-				if (text.IndexOfAny(new[] { '%', '_', '[' }) < 0)
-					return start + text + end;
-
-				var sb = new StringBuilder(start, text.Length + start.Length + end.Length);
-
-				foreach (var c in text)
+				switch (ch)
 				{
-					if (c == '%' || c == '_' || c == '[')
-					{
-						sb.Append('[');
-						sb.Append(c);
-						sb.Append(']');
-					}
-					else
-						sb.Append(c);
+					case '%':
+					case '_':
+					case '~':
+						builder.Append('~');
+						break;
 				}
 
-				return (object)sb.ToString();
-			};
+				builder.Append(ch);
+			}
+
+			return builder.ToString();
 		}
 
 		#endregion
@@ -241,7 +233,14 @@ namespace LinqToDB.SqlBuilder
 
 			if (!objectTree.TryGetValue(this, out clone))
 			{
-				var p = new SqlParameter(SystemType, Name, _value, _valueConverter) { IsQueryParameter = IsQueryParameter, DbType = DbType, DbSize = DbSize };
+				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
+					{
+						IsQueryParameter = IsQueryParameter,
+						DbType           = DbType,
+						DbSize           = DbSize,
+						LikeStart        = LikeStart,
+						LikeEnd          = LikeEnd,
+					};
 
 				objectTree.Add(this, clone = p);
 			}

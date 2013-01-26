@@ -494,9 +494,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)e;
-							var t = p.Value == null ? p.SystemType : p.Value.GetType();
+							var v = p.Value;
+							var t = v == null ? p.SystemType : v.GetType();
 
-							if (p.Value == null || t.IsArray || t == typeof(string) || !(p.Value is IEnumerable))
+							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
 							{
 								GetType(t);
 							}
@@ -568,17 +569,21 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsQueryParameter);
 							Append((int)elem.DbType);
 							Append(elem.DbSize);
+							Append(elem.LikeStart);
+							Append(elem.LikeEnd);
 
-							var type = elem.Value == null ? elem.SystemType : elem.Value.GetType();
+							var value = elem.LikeStart != null ? elem.RawValue : elem.Value;
+							var type  = value == null ? elem.SystemType : value.GetType();
 
-							if (elem.Value == null || type.IsArray || type == typeof(string) || !(elem.Value is IEnumerable))
+							if (value == null || type.IsArray || type == typeof(string) || !(value is IEnumerable))
 							{
-								Append(type, elem.Value);
+								Append(type, value);
 							}
 							else
 							{
 								var elemType = type.GetItemType();
-								var value    = ConvertIEnumerableToArray(elem.Value, elemType);
+
+								value = ConvertIEnumerableToArray(value, elemType);
 
 								Append(GetArrayType(elemType), value);
 							}
@@ -1062,6 +1067,8 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dbType           = (DbType)ReadInt();
 							var dbSize           = ReadInt();
+							var likeStart = ReadString();
+							var likeEnd   = ReadString();
 
 							var systemType       = Read<Type>();
 							var value            = ReadValue(systemType);
@@ -1078,20 +1085,17 @@ namespace LinqToDB.ServiceModel
 								for (var i = 0; i < count; i++)
 									takeValues.Add(ReadInt());
 							}
-
-							var likeStart = ReadString();
-							var likeEnd   = ReadString();
 							*/
 
-							obj = new SqlParameter(systemType, name, value, (MappingSchemaOld)null)
+							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
 								DbType           = dbType,
 								DbSize           = dbSize,
 								//EnumTypes        = enumTypes,
 								//TakeValues       = takeValues,
-								//LikeStart        = likeStart,
-								//LikeEnd          = likeEnd,
+								LikeStart        = likeStart,
+								LikeEnd          = likeEnd,
 							};
 
 							/*
