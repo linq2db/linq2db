@@ -492,6 +492,21 @@ namespace Tests.Linq
             }
         }
 
+        [Test]
+        public void TestBugCountWithOrderBy([IncludeDataContexts(ProviderName.MySql, ProviderName.SqlServer2005, ProviderName.SqlServer2008)] string context)
+        {
+            using (var db = new TestDataConnection(context))
+            {
+                var q1 = db.Person.OrderBy(x => x.ID);
+
+                var q2 = from p in q1
+                         join p2 in db.Person on p.ID equals p2.ID
+                         select p2;
+
+                Assert.DoesNotThrow(() => q2.Max(x => x.ID));
+                Assert.DoesNotThrow(() => q2.Count());
+            }
+        }
         private IQueryable<T> FilterSourceByIdDefinedInBaseClass<T>(IQueryable<T> source, int id) where T : WithObjectIdBase
         {
             return from x in source where x.Id == id select x;

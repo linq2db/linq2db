@@ -3963,9 +3963,10 @@ namespace LinqToDB.SqlBuilder
 				{
 					var sql = From.Tables[i].Source as SqlQuery;
 
-					if (sql != null && sql.OrderBy.Items.Count > 0)
-						foreach (var item in sql.OrderBy.Items)
-							OrderBy.Expr(item.Expression, item.IsDescending);
+					if (!Select.Columns.All(c => IsAggregationFunction(c.Expression)))
+						if (sql != null && sql.OrderBy.Items.Count > 0)
+							foreach (var item in sql.OrderBy.Items)
+								OrderBy.Expr(item.Expression, item.IsDescending);
 
 					From.Tables[i] = table;
 				}
