@@ -186,40 +186,6 @@ namespace LinqToDB.DataProvider
 			base.BuildLikePredicate(sb, predicate);
 		}
 
-		public override ISqlPredicate ConvertPredicate(ISqlPredicate predicate)
-		{
-//			if (predicate is SqlQuery.Predicate.Like)
-//			{
-//				var l = (SqlQuery.Predicate.Like)predicate;
-//
-//				if (l.Escape != null)
-//				{
-//					if (l.Expr2 is SqlValue && l.Escape is SqlValue)
-//					{
-//						var text = ((SqlValue) l.Expr2).Value.ToString();
-//						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)l.Escape).Value));
-//
-//						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, val, null);
-//					}
-//
-//					if (l.Expr2 is SqlParameter)
-//					{
-//						var p = (SqlParameter)l.Expr2;
-//						var v = "";
-//						
-//						if (p.ValueConverter != null)
-//							v = p.ValueConverter(" ") as string;
-//
-//						p.SetLikeConverter(v.StartsWith("%") ? "%" : "", v.EndsWith("%") ? "%" : "");
-//
-//						return new SqlQuery.Predicate.Like(l.Expr1, l.IsNot, p, null);
-//					}
-//				}
-//			}
-
-			return base.ConvertPredicate(predicate);
-		}
-
 		static string ReescapeLikeText(string text, char esc)
 		{
 			var sb = new StringBuilder(text.Length);
@@ -243,76 +209,76 @@ namespace LinqToDB.DataProvider
 			return sb.ToString();
 		}
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
+		protected override void BuildBinaryExpression(StringBuilder sb, SqlBinaryExpression expr)
 		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlBinaryExpression)
+			switch (expr.Operation[0])
 			{
-				var be = (SqlBinaryExpression)expr;
-
-				switch (be.Operation[0])
-				{
-					case '%': return new SqlBinaryExpression(be.SystemType, be.Expr1, "MOD", be.Expr2, Precedence.Additive - 1);
-					case '&':
-					case '|':
-					case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", be.Operation, GetType().Name);
-				}
-			}
-			else if (expr is SqlFunction)
-			{
-				var func = (SqlFunction) expr;
-
-				switch (func.Name)
-				{
-					case "Coalesce"  :
-
-						if (func.Parameters.Length > 2)
-						{
-							var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-							Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-							return new SqlFunction(func.SystemType, func.Name, func.Parameters[0], new SqlFunction(func.SystemType, func.Name, parms));
-						}
-
-						var sc = new SqlQuery.SearchCondition();
-
-						sc.Conditions.Add(new SqlQuery.Condition(false, new SqlQuery.Predicate.IsNull(func.Parameters[0], false)));
-
-						return new SqlFunction(func.SystemType, "Iif", sc, func.Parameters[1], func.Parameters[0]);
-
-					case "CASE"      : return ConvertCase(func.SystemType, func.Parameters, 0);
-					case "CharIndex" :
-						return func.Parameters.Length == 2?
-							new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
-							new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
-
-					case "Convert"   :
-						{
-							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
-							{
-								case TypeCode.String   : return new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]);
-								case TypeCode.DateTime :
-									if (IsDateDataType(func.Parameters[0], "Date"))
-										return new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
-
-									if (IsTimeDataType(func.Parameters[0]))
-										return new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
-
-									return new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
-
-								default:
-									if (func.SystemType == typeof(DateTime))
-										goto case TypeCode.DateTime;
-									break;
-							}
-
-							return func.Parameters[1];
-						}
-				}
+				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
+				case '&':
+				case '|':
+				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
-			return expr;
+			base.BuildBinaryExpression(sb, expr);
+		}
+
+		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case "Coalesce"  :
+
+					if (func.Parameters.Length > 2)
+					{
+						var parms = new ISqlExpression[func.Parameters.Length - 1];
+
+						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
+						BuildFunction(sb, new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
+						                  new SqlFunction(func.SystemType, func.Name, parms)));
+						return;
+					}
+
+					var sc = new SqlQuery.SearchCondition();
+
+					sc.Conditions.Add(new SqlQuery.Condition(false, new SqlQuery.Predicate.IsNull(func.Parameters[0], false)));
+
+					func = new SqlFunction(func.SystemType, "Iif", sc, func.Parameters[1], func.Parameters[0]);
+
+					break;
+
+				case "CASE"      : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
+				case "CharIndex" :
+					func = func.Parameters.Length == 2?
+						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
+						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
+					break;
+
+				case "Convert"   :
+					switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+					{
+						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+						case TypeCode.DateTime :
+							if (IsDateDataType(func.Parameters[0], "Date"))
+								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
+							else if (IsTimeDataType(func.Parameters[0]))
+								func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
+							else
+								func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
+							break;
+
+						default:
+							if (func.SystemType == typeof(DateTime))
+								goto case TypeCode.DateTime;
+
+							BuildExpression(sb, func.Parameters[1]);
+
+							return;
+					}
+
+					break;
+			}
+
+			base.BuildFunction(sb, func);
 		}
 
 		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
