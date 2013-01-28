@@ -1050,6 +1050,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (!Members.TryGetValue(member, out memberExpression))
 			{
+				foreach (var m in Members)
+				{
+					if (m.Key.Name == member.Name)
+					{
+						if (m.Key.EqualsTo(member, IsScalar ? null : Body.Type))
+							return m.Value;
+					}
+				}
+
 				if (add && member.DeclaringType.IsSameOrParentOf(Body.Type))
 				{
 					memberExpression = Expression.Constant(type.GetDefaultValue(), type);

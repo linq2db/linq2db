@@ -15,13 +15,13 @@ namespace Tests.Linq
     [TestFixture]
     public partial class IdlTest : TestBase
     {
-		public class IdlProvidersAttribute : IncludeDataContextsAttribute
-		{
-			public IdlProvidersAttribute()
-				: base(ProviderName.MySql, ProviderName.SQLite, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)
-			{
-			}
-		}
+        public class IdlProvidersAttribute : IncludeDataContextsAttribute
+        {
+            public IdlProvidersAttribute()
+                : base(ProviderName.MySql, ProviderName.SQLite, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)
+            {
+            }
+        }
 
         #region PersonWithId
 
