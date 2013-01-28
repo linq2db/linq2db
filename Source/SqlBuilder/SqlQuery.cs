@@ -3618,7 +3618,7 @@ namespace LinqToDB.SqlBuilder
 				OrderBy.Items.Clear();
 		}
 
-		void ResolveWeakJoins()
+		internal void ResolveWeakJoins()
 		{
 			List<ISqlTableSource> tables = null;
 

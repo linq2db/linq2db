@@ -26,6 +26,21 @@ namespace LinqToDB.Linq.Builder
 			switch (methodCall.Arguments.Count)
 			{
 				case 1 : // int Update<T>(this IUpdateable<T> source)
+					// Check for association.
+					//
+					var ctx = sequence as SelectContext;
+
+					if (ctx != null && ctx.IsScalar)
+					{
+						var res = ctx.IsExpression(null, 0, RequestFor.Association);
+
+						if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+						{
+							var atc = (TableBuilder.AssociatedTableContext)res.Context;
+							sequence.SqlQuery.Update.Table = atc.SqlTable;
+						}
+					}
+
 					break;
 
 				case 2 : // int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
@@ -63,6 +78,10 @@ namespace LinqToDB.Linq.Builder
 							// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 							//
 							var into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SqlQuery()));
+
+							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+							sequence.SqlQuery.ResolveWeakJoins();
+							sequence.SqlQuery.Select.Columns.Clear();
 
 							BuildSetter(
 								builder,
