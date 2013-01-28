@@ -15,6 +15,14 @@ namespace Tests.Linq
     [TestFixture]
     public partial class IdlTest : TestBase
     {
+		public class IdlProvidersAttribute : IncludeDataContextsAttribute
+		{
+			public IdlProvidersAttribute()
+				: base(ProviderName.MySql, ProviderName.SQLite, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)
+			{
+			}
+		}
+
         #region PersonWithId
 
         public interface IHasID
@@ -152,7 +160,7 @@ namespace Tests.Linq
         #endregion
 
         [Test]
-        public void TestComplexExpression([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestComplexExpression([IdlProviders] string context)
         {
             // failed with LinqToDB.Data.Linq.LinqException : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}' 
             //   cannot be converted to SQL.
@@ -174,7 +182,7 @@ namespace Tests.Linq
 
 
         [Test]
-        public void TestJoin([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestJoin([IdlProviders] string context)
         {
             // failed with System.ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than 
             //   the size of the collection.
@@ -194,7 +202,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestNullableExpression([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestNullableExpression([IdlProviders] string context)
         {
             // failed with System.NullReferenceException : Object reference not set to an instance of an object.
             using (var db = GetDataContext(context))
@@ -212,7 +220,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestLookupWithInterfaceProperty([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestLookupWithInterfaceProperty([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -236,7 +244,7 @@ namespace Tests.Linq
         #endregion
 
         [Test]
-        public void TestForObjectExt([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestForObjectExt([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -263,7 +271,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestForGroupBy([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestForGroupBy([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -286,7 +294,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestLinqMax([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestLinqMax([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -300,7 +308,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestConvertFunction([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestConvertFunction([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -318,7 +326,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestJoinOrder([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestJoinOrder([IdlProviders] string context)
         {
             using (var db = GetDataContext(context))
             {
@@ -355,7 +363,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestDistinctWithGroupBy([IncludeDataContexts(ProviderName.MySql, ProviderName.SQLite)] string context)
+        public void TestDistinctWithGroupBy([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -389,7 +397,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void ImplicitCastTest([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void ImplicitCastTest([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -409,7 +417,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void ListvsArrayTest([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void ListvsArrayTest([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -430,7 +438,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void ConcatJoinOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void ConcatJoinOrderByTest([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -452,7 +460,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestIsContainedInArrayOfEnumValues([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestIsContainedInArrayOfEnumValues([IdlProviders] string context)
         {
             var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
 
@@ -466,7 +474,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestQueryWithInterface([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestQueryWithInterface([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -493,7 +501,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestBugCountWithOrderBy([IncludeDataContexts(ProviderName.MySql, ProviderName.SqlServer2005, ProviderName.SqlServer2008)] string context)
+        public void TestBugCountWithOrderBy([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -523,7 +531,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestComparePropertyOfEnumTypeToVaribleInSubquery([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestComparePropertyOfEnumTypeToVaribleInSubquery([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -538,7 +546,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void ConcatOrderByTest([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void ConcatOrderByTest([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -618,7 +626,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMono01([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestMono01([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -638,7 +646,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMono03([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestMono03([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
                 Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
@@ -654,7 +662,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMonoConcat([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestMonoConcat([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
@@ -669,7 +677,7 @@ namespace Tests.Linq
         }
 
         [Test]
-        public void TestMonoConcat2([IncludeDataContexts(ProviderName.MySql)] string context)
+        public void TestMonoConcat2([IdlProviders] string context)
         {
             using (var db = new TestDataConnection(context))
             {
