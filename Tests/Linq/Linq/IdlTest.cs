@@ -527,7 +527,7 @@ namespace Tests.Linq
         {
             TestUpdateByAssociationProperty(context, false);
         }
-        
+
         private void TestUpdateByAssociationProperty(string context, bool useUpdateWithTarget)
         {
             using (var db = new TestDataConnection(context))

@@ -26,25 +26,13 @@ namespace LinqToDB.Linq.Builder
 			switch (methodCall.Arguments.Count)
 			{
 				case 1 : // int Update<T>(this IUpdateable<T> source)
-					// Check for association.
-					//
-					var ctx = sequence as SelectContext;
-
-					if (ctx != null && ctx.IsScalar)
-					{
-						var res = ctx.IsExpression(null, 0, RequestFor.Association);
-
-						if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
-						{
-							var atc = (TableBuilder.AssociatedTableContext)res.Context;
-							sequence.SqlQuery.Update.Table = atc.SqlTable;
-						}
-					}
-
+					CheckAssociation(sequence);
 					break;
 
 				case 2 : // int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
 					{
+						CheckAssociation(sequence);
+
 						BuildSetter(
 							builder,
 							buildInfo,
@@ -61,6 +49,8 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr is LambdaExpression)
 						{
+							CheckAssociation(sequence);
+
 							// int Update<T>(this IQueryable<T> source, Expression<Func<T,bool>> predicate, Expression<Func<T,T>> setter)
 							//
 							sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
@@ -108,6 +98,22 @@ namespace LinqToDB.Linq.Builder
 			sequence.SqlQuery.QueryType = QueryType.Update;
 
 			return new UpdateContext(buildInfo.Parent, sequence);
+		}
+
+		void CheckAssociation(IBuildContext sequence)
+		{
+			var ctx = sequence as SelectContext;
+
+			if (ctx != null && ctx.IsScalar)
+			{
+				var res = ctx.IsExpression(null, 0, RequestFor.Association);
+
+				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				{
+					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					sequence.SqlQuery.Update.Table = atc.SqlTable;
+				}
+			}
 		}
 
 		protected override SequenceConvertInfo Convert(
