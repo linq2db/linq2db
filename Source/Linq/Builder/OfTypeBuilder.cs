@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildExpression(null, 0);
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper.Compile());
+				query.SetQuery(mapper);
 			}
 
 			public override Expression BuildExpression(Expression expression, int level)

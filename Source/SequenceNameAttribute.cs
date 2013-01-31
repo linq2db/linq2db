@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB
 {
-	[AttributeUsageAttribute(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class SequenceNameAttribute : Attribute
 	{
 		public SequenceNameAttribute(string providerName, string sequenceName)

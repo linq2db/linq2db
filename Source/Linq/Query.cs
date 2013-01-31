@@ -1024,10 +1024,17 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		internal void SetQuery(Func<QueryContext,IDataContext,IDataReader,Expression,object[],T> mapper)
+		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> expression)
 		{
-			var query = GetQuery();
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapper);
+			var query   = GetQuery();
+			var mapInfo = new MapInfo { Expression = expression };
+			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
+		}
+
+		class MapInfo
+		{
+			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
+			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
 		}
 
 		static IEnumerable<T> Map(
@@ -1036,19 +1043,35 @@ namespace LinqToDB.Linq
 			IDataContextInfo         dataContextInfo,
 			Expression               expr,
 			object[]                 ps,
-			Func<QueryContext,IDataContext,IDataReader,Expression,object[],T> mapper)
+			MapInfo                  mapInfo)
 		{
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
 
 			foreach (var dr in data)
+			{
+				var mapper = mapInfo.Mapper;
+
+				if (mapper == null)
+				{
+					mapInfo.Mapper = mapper = mapInfo.Expression.Compile();
+				}
+
 				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+			}
 		}
 
-		internal void SetQuery(Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T> mapper)
+		internal void SetQuery(Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>> expression)
 		{
-			var query = GetQuery();
-			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapper);
+			var query   = GetQuery();
+			var mapInfo = new MapInfo2 { Expression = expression };
+			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
+		}
+
+		class MapInfo2
+		{
+			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>> Expression;
+			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>  Mapper;
 		}
 
 		static IEnumerable<T> Map(
@@ -1057,7 +1080,7 @@ namespace LinqToDB.Linq
 			IDataContextInfo         dataContextInfo,
 			Expression               expr,
 			object[]                 ps,
-			Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T> mapper)
+			MapInfo2                 mapInfo)
 		{
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
@@ -1065,7 +1088,16 @@ namespace LinqToDB.Linq
 			var counter = 0;
 
 			foreach (var dr in data)
+			{
+				var mapper = mapInfo.Mapper;
+
+				if (mapper == null)
+				{
+					mapInfo.Mapper = mapper = mapInfo.Expression.Compile();
+				}
+
 				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps, counter++);
+			}
 		}
 
 		#endregion

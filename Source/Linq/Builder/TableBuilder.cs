@@ -513,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 				var expr   = BuildQuery(typeof(T));
 				var mapper = Builder.BuildMapper<T>(expr);
 
-				query.SetQuery(mapper.Compile());
+				query.SetQuery(mapper);
 			}
 
 			#endregion
