@@ -2209,7 +2209,6 @@ namespace LinqToDB.SqlProvider
 					case QueryElementType.SqlField     : ((SqlField)            e).Alias = SetAlias(((SqlField)            e).Alias, maxLen); break;
 					case QueryElementType.SqlParameter : ((SqlParameter)        e).Name  = SetAlias(((SqlParameter)        e).Name,  maxLen); break;
 					case QueryElementType.SqlTable     : ((SqlTable)            e).Alias = SetAlias(((SqlTable)            e).Alias, maxLen); break;
-					case QueryElementType.Join         : ((Join)                e).Alias = SetAlias(((Join)                e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlQuery.Column)     e).Alias = SetAlias(((SqlQuery.Column)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlQuery.TableSource)e).Alias = SetAlias(((SqlQuery.TableSource)e).Alias, maxLen); break;
 				}

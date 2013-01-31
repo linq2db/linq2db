@@ -120,14 +120,11 @@ namespace LinqToDB.SqlBuilder
 			foreach (var field in table.Fields.Values)
 				Fields.Add(new SqlField(field));
 
-			foreach (var join in table.Joins)
-				Joins.Add(join.Clone());
-
 			SqlTableType   = table.SqlTableType;
 			TableArguments = table.TableArguments;
 		}
 
-		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, IEnumerable<Join> joins, ISqlExpression[] tableArguments) : this()
+		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
 		{
 			Alias               = table.Alias;
 			Database            = table.Database;
@@ -138,76 +135,9 @@ namespace LinqToDB.SqlBuilder
 			_sequenceAttributes = table._sequenceAttributes;
 
 			Fields.AddRange(fields);
-			Joins. AddRange(joins);
 
 			SqlTableType   = table.SqlTableType;
 			TableArguments = tableArguments;
-		}
-
-		#endregion
-
-		#region Init from XML
-
-		public SqlTable(ExtensionList extensions, string name)
-			: this(Map.DefaultSchema, extensions, name)
-		{
-		}
-
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchemaOld mappingSchema, ExtensionList extensions, string name) : this()
-		{
-			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
-			if (extensions    == null) throw new ArgumentNullException("extensions");
-			if (name          == null) throw new ArgumentNullException("name");
-
-			var te = extensions[name];
-
-			if (te == TypeExtension.Null)
-				throw new ArgumentException(string.Format("Table '{0}' not found.", name));
-
-			Name         = te.Name;
-			Alias        = (string)te.Attributes["Alias"].       Value;
-			Database     = (string)te.Attributes["Database"].    Value;
-			Owner        = (string)te.Attributes["Owner"].       Value;
-			PhysicalName = (string)te.Attributes["PhysicalName"].Value ?? te.Name;
-
-			foreach (var me in te.Members.Values)
-				Fields.Add(new SqlField(
-					(Type)me["Type"].Value,
-					me.Name,
-					(string)me["MapField"].Value ?? (string)me["PhysicalName"].Value,
-					(bool?)me["Nullable"].Value ?? false,
-					-1,
-					(bool?)me["Identity"].Value == true ? new IdentityAttribute() : null,
-					null));
-
-			foreach (var ae in te.Attributes["Join"])
-				Joins.Add(new Join(ae));
-
-			var baseExtension = (string)te.Attributes["BaseExtension"].Value;
-
-			if (!string.IsNullOrEmpty(baseExtension))
-				InitFromBase(new SqlTable(mappingSchema, extensions, baseExtension));
-
-			var baseTypeName = (string)te.Attributes["BaseType"].Value;
-
-			if (!string.IsNullOrEmpty(baseTypeName))
-				InitFromBase(new SqlTable(mappingSchema, Type.GetType(baseTypeName, true, true)));
-		}
-
-		void InitFromBase(SqlTable baseTable)
-		{
-			if (Alias        == null) Alias        = baseTable.Alias;
-			if (Database     == null) Database     = baseTable.Database;
-			if (Owner        == null) Owner        = baseTable.Owner;
-			if (PhysicalName == null) PhysicalName = baseTable.PhysicalName;
-
-			foreach (var field in baseTable.Fields.Values)
-				if (!Fields.ContainsKey(field.Name))
-					Fields.Add(new SqlField(field));
-
-			foreach (var join in baseTable.Joins)
-				if (Joins.FirstOrDefault(j => j.TableName == join.TableName) == null)
-					Joins.Add(join);
 		}
 
 		#endregion
@@ -251,9 +181,6 @@ namespace LinqToDB.SqlBuilder
 
 		readonly ChildContainer<ISqlTableSource,SqlField> _fields;
 		public   ChildContainer<ISqlTableSource,SqlField>  Fields { get { return _fields; } }
-
-		readonly List<Join> _joins = new List<Join>();
-		public   List<Join>  Joins { get { return _joins; } }
 
 		private SequenceNameAttribute[] _sequenceAttributes;
 		public  SequenceNameAttribute[]  SequenceAttributes
@@ -351,8 +278,6 @@ namespace LinqToDB.SqlBuilder
 					objectTree.   Add(field.Value, fc);
 					table._fields.Add(field.Key,   fc);
 				}
-
-				table._joins.AddRange(_joins.ConvertAll(j => j.Clone()));
 
 				if (TableArguments != null)
 					TableArguments = TableArguments.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();

@@ -193,11 +193,6 @@ namespace LinqToDB.DataProvider
 		{
 			new QueryVisitor().Visit(sqlQuery.Select, SetQueryParameter);
 
-			//if (sqlQuery.QueryType == QueryType.InsertOrUpdate)
-			//	foreach (var key in sqlQuery.Insert.Items)
-			//		if (((SqlField)key.Column).IsPrimaryKey)
-			//			new QueryVisitor().Visit(key.Expression, SetQueryParameter);
-
 			sqlQuery = base.Finalize(sqlQuery);
 
 			switch (sqlQuery.QueryType)

@@ -12,8 +12,6 @@ namespace LinqToDB.SqlBuilder
 		SqlValue,
 		SqlDataType,
 		SqlTable,
-			Join,
-				JoinOn,
 
 		ExprPredicate,
 		NotExprPredicate,

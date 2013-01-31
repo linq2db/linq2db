@@ -62,17 +62,10 @@ namespace LinqToDB.SqlBuilder
 
 						Visit1(table.All);
 						foreach (var field in table.Fields.Values) Visit1(field);
-						foreach (var join  in table.Joins)         Visit1(join);
 
 						if (table.TableArguments != null)
 							foreach (var a in table.TableArguments) Visit1(a);
 
-						break;
-					}
-
-				case QueryElementType.Join:
-					{
-						foreach (var j in ((Join)element).JoinOns) Visit1(j);
 						break;
 					}
 
@@ -362,17 +355,10 @@ namespace LinqToDB.SqlBuilder
 
 						Visit2(table.All);
 						foreach (var field in table.Fields.Values) Visit2(field);
-						foreach (var join  in table.Joins)         Visit2(join);
 
 						if (table.TableArguments != null)
 							foreach (var a in table.TableArguments) Visit2(a);
 
-						break;
-					}
-
-				case QueryElementType.Join:
-					{
-						foreach (var j in ((Join)element).JoinOns) Visit2(j);
 						break;
 					}
 
@@ -670,7 +656,6 @@ namespace LinqToDB.SqlBuilder
 			{
 				case QueryElementType.SqlFunction       : return Find(((SqlFunction)                element).Parameters,      find);
 				case QueryElementType.SqlExpression     : return Find(((SqlExpression)              element).Parameters,      find);
-				case QueryElementType.Join              : return Find(((Join)                       element).JoinOns,         find);
 				case QueryElementType.Column            : return Find(((SqlQuery.Column)            element).Expression,      find);
 				case QueryElementType.SearchCondition   : return Find(((SqlQuery.SearchCondition)   element).Conditions,      find);
 				case QueryElementType.Condition         : return Find(((SqlQuery.Condition)         element).Predicate,       find);
@@ -699,7 +684,6 @@ namespace LinqToDB.SqlBuilder
 						return
 							Find(table.All,            find) ??
 							Find(table.Fields.Values,  find) ??
-							Find(table.Joins,          find) ??
 							Find(table.TableArguments, find);
 					}
 
@@ -877,14 +861,12 @@ namespace LinqToDB.SqlBuilder
 						var table   = (SqlTable)element;
 						var fields1 = ToArray(table.Fields);
 						var fields2 = Convert(fields1,     action, f => new SqlField(f));
-						var joins   = Convert(table.Joins, action, j => j.Clone());
 						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
 
 						var fe = fields2 == null || ReferenceEquals(fields1,     fields2);
-						var je = joins   == null || ReferenceEquals(table.Joins, joins);
 						var ta = ReferenceEquals(table.TableArguments, targs);
 
-						if (!fe || !je || !ta)
+						if (!fe || !ta)
 						{
 							if (fe)
 							{
@@ -900,21 +882,10 @@ namespace LinqToDB.SqlBuilder
 								}
 							}
 
-							newElement = new SqlTable(table, fields2, joins ?? table.Joins, targs ?? table.TableArguments);
+							newElement = new SqlTable(table, fields2, targs ?? table.TableArguments);
 
 							_visitedElements[((SqlTable)newElement).All] = table.All;
 						}
-
-						break;
-					}
-
-				case QueryElementType.Join:
-					{
-						var join = (Join)element;
-						var ons  = Convert(join.JoinOns, action);
-
-						if (ons != null && !ReferenceEquals(join.JoinOns, ons))
-							newElement = new Join(join.TableName, join.Alias, ons);
 
 						break;
 					}

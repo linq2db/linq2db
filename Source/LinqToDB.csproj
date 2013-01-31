@@ -200,8 +200,6 @@
     <Compile Include="SqlBuilder\ISqlPredicate.cs" />
     <Compile Include="SqlBuilder\ISqlTableSource.cs" />
     <Compile Include="SqlBuilder\IValueContainer.cs" />
-    <Compile Include="SqlBuilder\Join.cs" />
-    <Compile Include="SqlBuilder\JoinOn.cs" />
     <Compile Include="SqlBuilder\Precedence.cs" />
     <Compile Include="SqlBuilder\QueryElementType.cs" />
     <Compile Include="SqlBuilder\QueryType.cs" />
