@@ -213,7 +213,7 @@
     <Compile Include="SqlBuilder\SqlParameter.cs" />
     <Compile Include="SqlProvider\BasicSqlProvider.cs" />
     <Compile Include="SqlProvider\ISqlProvider.cs" />
-    <Compile Include="SqlProvider\SequenceNameAttribute.cs" />
+    <Compile Include="SequenceNameAttribute.cs" />
     <Compile Include="SqlBuilder\SqlQuery.cs" />
     <Compile Include="SqlBuilder\SqlTable.cs" />
     <Compile Include="SqlBuilder\SqlTableT.cs" />
