@@ -306,8 +306,14 @@ namespace LinqToDB.Linq.Builder
 					_element.Lambda.Body.Type,
 					_key.Lambda.Parameters[0].Type);
 
+				var isBlockDisable = Builder.IsBlockDisable;
+
+				Builder.IsBlockDisable = true;
+
 				var helper = (IGroupByHelper)Activator.CreateInstance(gtype);
 				var expr   = helper.GetGrouping(this);
+
+				Builder.IsBlockDisable = isBlockDisable;
 
 				return expr;
 			}

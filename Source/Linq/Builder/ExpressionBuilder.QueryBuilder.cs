@@ -253,7 +253,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildBlock(Expression expression)
 		{
-			if (BlockExpressions.Count == 0)
+#if FW4 || SILVERLIGHT
+
+			if (IsBlockDisable || BlockExpressions.Count == 0)
 				return expression;
 
 			BlockExpressions.Add(expression);
@@ -262,6 +264,8 @@ namespace LinqToDB.Linq.Builder
 
 			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
+
+#endif
 
 			return expression;
 		}
