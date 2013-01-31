@@ -168,9 +168,9 @@ namespace LinqToDB.Linq.Builder
 			return field;
 		}
 
-		public Expression BuildSql(Type type, int idx, MethodInfo checkNullFunction, Expression context)
+		public Expression BuildSql(Type type, int idx, MethodInfo checkNullFunction, Expression checkNullParameter)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, context, DataReaderParam, MappingSchema);
+			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, checkNullParameter, DataReaderLocal, MappingSchema);
 		}
 
 		public Expression BuildSql(Type type, int idx)
@@ -260,8 +260,8 @@ namespace LinqToDB.Linq.Builder
 
 			expression = Expression.Block(BlockVariables, BlockExpressions);
 
-			BlockVariables.  Clear();
-			BlockExpressions.Clear();
+			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
+			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 
 			return expression;
 		}

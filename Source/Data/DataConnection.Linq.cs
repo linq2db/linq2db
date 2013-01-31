@@ -45,6 +45,7 @@ namespace LinqToDB.Data
 		#region SetQuery
 
 		public SqlProviderFlags SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
+		public Type             DataReaderType   { get { return DataProvider.DataReaderType;   } }
 
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{

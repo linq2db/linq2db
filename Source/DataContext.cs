@@ -94,6 +94,11 @@ namespace LinqToDB
 			get { return DataProvider.CreateSqlProvider; }
 		}
 
+		public Type DataReaderType
+		{
+			get { return DataProvider.DataReaderType; }
+		}
+
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
 			var ctx = GetDBManager() as IDataContext;

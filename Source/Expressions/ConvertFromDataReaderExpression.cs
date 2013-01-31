@@ -10,19 +10,19 @@ namespace LinqToDB.Expressions
 	class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(
-			Type type, int idx, MethodInfo checkNullFunction, Expression context, Expression dataReaderParam, MappingSchemaOld mappingSchema)
+			Type type, int idx, MethodInfo checkNullFunction, Expression checkNullParameter, Expression dataReaderParam, MappingSchemaOld mappingSchema)
 		{
-			_type              = type;
-			_idx               = idx;
-			_checkNullFunction = checkNullFunction;
-			_context           = context;
-			_dataReaderParam   = dataReaderParam;
-			_mappingSchema     = mappingSchema;
+			_type               = type;
+			_idx                = idx;
+			_checkNullFunction  = checkNullFunction;
+			_checkNullParameter = checkNullParameter;
+			_dataReaderParam    = dataReaderParam;
+			_mappingSchema      = mappingSchema;
 		}
 
 		readonly int              _idx;
 		readonly MethodInfo       _checkNullFunction;
-		readonly Expression       _context;
+		readonly Expression       _checkNullParameter;
 		readonly Expression       _dataReaderParam;
 		readonly MappingSchemaOld _mappingSchema;
 		readonly Type             _type;
@@ -36,7 +36,7 @@ namespace LinqToDB.Expressions
 			var expr = Call(_dataReaderParam, ReflectionHelper.DataReader.GetValue, Constant(_idx));
 
 			if (_checkNullFunction != null)
-				expr = Call(null, _checkNullFunction, expr, _context);
+				expr = Call(null, _checkNullFunction, expr, _checkNullParameter);
 
 			Expression mapper;
 

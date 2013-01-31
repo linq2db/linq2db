@@ -91,6 +91,11 @@ namespace LinqToDB.Linq.Builder
 			_visitedExpressions = new HashSet<Expression>();
 			Expression         = ConvertExpressionTree(expression);
 			_visitedExpressions = null;
+
+			DataReaderLocal = Expression.Parameter(dataContext.DataContext.DataReaderType);
+
+			BlockVariables.  Add(DataReaderLocal);
+			BlockExpressions.Add(Expression.Assign(DataReaderLocal, Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType)));
 		}
 
 		#endregion
@@ -112,6 +117,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ContextParam     = Expression.Parameter(typeof(QueryContext), "context");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
+		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 

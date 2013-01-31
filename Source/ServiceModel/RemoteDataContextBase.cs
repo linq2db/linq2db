@@ -97,6 +97,11 @@ namespace LinqToDB.ServiceModel
 			get { return GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags; }
 		}
 
+		public Type DataReaderType
+		{
+			get { return typeof(ServiceModelDataReader); }
+		}
+
 		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();
 
 		Func<ISqlProvider> _createSqlProvider;
