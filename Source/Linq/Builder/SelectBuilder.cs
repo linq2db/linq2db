@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0);
+				var expr = BuildExpression(null, 0);
 
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));

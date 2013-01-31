@@ -70,16 +70,8 @@ namespace LinqToDB.Linq.Builder
 		private  HashSet<Expression>               _subQueryExpressions;
 
 		readonly public List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
-
-#if FW4 || SILVERLIGHT
-
 		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
 		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
-		         public bool                       IsBlockDisable;
-
-#else
-		         public bool                       IsBlockDisable = true;
-#endif
 
 		readonly HashSet<Expression> _visitedExpressions;
 

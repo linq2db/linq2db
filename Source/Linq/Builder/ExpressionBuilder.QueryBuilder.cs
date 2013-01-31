@@ -170,46 +170,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx, MethodInfo checkNullFunction, Expression context)
 		{
-			var expr = Expression.Call(DataReaderParam, ReflectionHelper.DataReader.GetValue, Expression.Constant(idx));
-
-			if (checkNullFunction != null)
-				expr = Expression.Call(null, checkNullFunction, expr, context);
-
-			Expression mapper;
-
-			if (type.IsEnum)
-			{
-				mapper =
-					Expression.Convert(
-						Expression.Call(
-							Expression.Constant(MappingSchema),
-							ReflectionHelper.MapSchema.MapValueToEnum,
-								expr,
-								Expression.Constant(type)),
-						type);
-			}
-			else
-			{
-				MethodInfo mi;
-
-				if (!ReflectionHelper.MapSchema.Converters.TryGetValue(type, out mi))
-				{
-					mapper =
-						Expression.Convert(
-							Expression.Call(
-								Expression.Constant(MappingSchema),
-								ReflectionHelper.MapSchema.ChangeType,
-									expr,
-									Expression.Constant(type)),
-							type);
-				}
-				else
-				{
-					mapper = Expression.Call(Expression.Constant(MappingSchema), mi, expr);
-				}
-			}
-
-			return mapper;
+			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, context, DataReaderParam, MappingSchema);
 		}
 
 		public Expression BuildSql(Type type, int idx)
@@ -292,9 +253,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildBlock(Expression expression)
 		{
-#if FW4 || SILVERLIGHT
-
-			if (IsBlockDisable || BlockExpressions.Count == 0)
+			if (BlockExpressions.Count == 0)
 				return expression;
 
 			BlockExpressions.Add(expression);
@@ -303,8 +262,6 @@ namespace LinqToDB.Linq.Builder
 
 			BlockVariables.  Clear();
 			BlockExpressions.Clear();
-
-#endif
 
 			return expression;
 		}

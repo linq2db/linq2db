@@ -73,6 +73,7 @@
     <Compile Include="Data\DataReader.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
+    <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
