@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
-		Templates\CustomValidation.ttinclude = Templates\CustomValidation.ttinclude
 		Templates\DataModel.ttinclude = Templates\DataModel.ttinclude
 		Templates\EditableObject.ttinclude = Templates\EditableObject.ttinclude
 		Templates\NotifyPropertyChanged.ttinclude = Templates\NotifyPropertyChanged.ttinclude
 		Templates\T4Model.ttinclude = Templates\T4Model.ttinclude
+		Templates\Validation.ttinclude = Templates\Validation.ttinclude
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Tests", "Tests\T4Model.Tests\T4Model.Tests.csproj", "{61B2E318-9756-468D-B43A-6A96C4BC8D52}"

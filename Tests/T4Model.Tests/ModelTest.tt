@@ -3,7 +3,7 @@
 <#@ include file="..\..\Templates\T4Model.ttinclude"               #>
 <#@ include file="..\..\Templates\EditableObject.ttinclude"        #>
 <#@ include file="..\..\Templates\NotifyPropertyChanged.ttinclude" #>
-<#@ include file="..\..\Templates\CustomValidation.ttinclude"      #>
+<#@ include file="..\..\Templates\Validation.ttinclude"            #>
 <#
 	Model.Namespaces[0].Name = "T4Model.Tests";
 
