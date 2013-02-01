@@ -9,7 +9,6 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 	using SqlBuilder;
 
 	class GroupByBuilder : MethodCallBuilder
