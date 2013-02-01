@@ -37,7 +37,9 @@ namespace T4Model.Wpf
 		partial void BeforeNotifiedProp1Changed(double newValue);
 		partial void AfterNotifiedProp1Changed ();
 
-		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp1");
+		public const string NameOfNotifiedProp1 = "NotifiedProp1";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp1ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp1);
 
 		private void OnNotifiedProp1Changed()
 		{
@@ -73,7 +75,9 @@ namespace T4Model.Wpf
 		partial void BeforeNotifiedProp2Changed(int newValue);
 		partial void AfterNotifiedProp2Changed ();
 
-		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs("NotifiedProp2");
+		public const string NameOfNotifiedProp2 = "NotifiedProp2";
+
+		private static readonly PropertyChangedEventArgs _notifiedProp2ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedProp2);
 
 		private void OnNotifiedProp2Changed()
 		{
@@ -93,7 +97,9 @@ namespace T4Model.Wpf
 
 		#region INotifyPropertyChanged support
 
-		private static readonly PropertyChangedEventArgs _notifiedBrush1ChangedEventArgs = new PropertyChangedEventArgs("NotifiedBrush1");
+		public const string NameOfNotifiedBrush1 = "NotifiedBrush1";
+
+		private static readonly PropertyChangedEventArgs _notifiedBrush1ChangedEventArgs = new PropertyChangedEventArgs(NameOfNotifiedBrush1);
 
 		private void OnNotifiedBrush1Changed()
 		{

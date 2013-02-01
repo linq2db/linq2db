@@ -624,7 +624,7 @@ namespace T4Model.Tests
 
 		#endregion
 
-		#region Custom Validation
+		#region Validation
 
 		public static partial class CustomValidator
 		{
