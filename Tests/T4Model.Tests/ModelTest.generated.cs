@@ -551,32 +551,46 @@ namespace T4Model.Tests
 
 		protected void OnPropertyChanged(string propertyName)
 		{
-			if (PropertyChanged != null)
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+					propertyChanged(this, new PropertyChangedEventArgs(propertyName));
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
+						() =>
+						{
+							var pc = PropertyChanged;
+							if (pc != null)
+								pc(this, new PropertyChangedEventArgs(propertyName));
+						});
 #else
-				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
 #endif
 			}
 		}
 
 		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
 		{
-			if (PropertyChanged != null)
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanged(this, arg);
+					propertyChanged(this, arg);
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanged(this, arg));
+						() =>
+						{
+							var pc = PropertyChanged;
+							if (pc != null)
+								pc(this, arg);
+						});
 #else
-				PropertyChanged(this, arg);
+				propertyChanged(this, arg);
 #endif
 			}
 		}
@@ -592,32 +606,46 @@ namespace T4Model.Tests
 
 		protected void OnPropertyChanging(string propertyName)
 		{
-			if (PropertyChanged != null)
+			var propertyChanging = PropertyChanging;
+
+			if (propertyChanging != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+					propertyChanging(this, new PropertyChangingEventArgs(propertyName));
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanging(this, new PropertyChangingEventArgs(propertyName)));
+						() =>
+						{
+							var pc = PropertyChanging;
+							if (pc != null)
+								pc(this, new PropertyChangingEventArgs(propertyName));
+						});
 #else
-				PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
+				propertyChanging(this, new PropertyChangingEventArgs(propertyName));
 #endif
 			}
 		}
 
 		protected void OnPropertyChanging(PropertyChangingEventArgs arg)
 		{
-			if (PropertyChanged != null)
+			var propertyChanging = PropertyChanging;
+
+			if (propertyChanging != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanging(this, arg);
+					propertyChanging(this, arg);
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanging(this, arg));
+						() =>
+						{
+							var pc = PropertyChanging;
+							if (pc != null)
+								pc(this, arg);
+						});
 #else
-				PropertyChanging(this, arg);
+				propertyChanging(this, arg);
 #endif
 			}
 		}

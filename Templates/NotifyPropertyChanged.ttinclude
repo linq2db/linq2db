@@ -300,9 +300,9 @@ public string[] OnPropertyChangedArgBody = new[]
 
 public string[] OnPropertyChangingBody = new[]
 {
-	"var propertyChanged = PropertyChanged;",
+	"var propertyChanging = PropertyChanging;",
 	"",
-	"if (propertyChanged != null)",
+	"if (propertyChanging != null)",
 	"{",
 	"#if SILVERLIGHT",
 	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
@@ -311,7 +311,7 @@ public string[] OnPropertyChangingBody = new[]
 	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
 	"\t\t\t() =>",
 	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanged;",
+	"\t\t\t\tvar pc = PropertyChanging;",
 	"\t\t\t\tif (pc != null)",
 	"\t\t\t\t\tpc(this, new PropertyChangingEventArgs(propertyName));",
 	"\t\t\t});",
@@ -323,9 +323,9 @@ public string[] OnPropertyChangingBody = new[]
 
 public string[] OnPropertyChangingArgBody = new[]
 {
-	"var propertyChanged = PropertyChanged;",
+	"var propertyChanging = PropertyChanging;",
 	"",
-	"if (propertyChanged != null)",
+	"if (propertyChanging != null)",
 	"{",
 	"#if SILVERLIGHT",
 	"\tif (System.Windows.Deployment.Current.Dispatcher.CheckAccess())",
@@ -334,7 +334,7 @@ public string[] OnPropertyChangingArgBody = new[]
 	"\t\tSystem.Windows.Deployment.Current.Dispatcher.BeginInvoke(",
 	"\t\t\t() =>",
 	"\t\t\t{",
-	"\t\t\t\tvar pc = PropertyChanged;",
+	"\t\t\t\tvar pc = PropertyChanging;",
 	"\t\t\t\tif (pc != null)",
 	"\t\t\t\t\tpc(this, arg);",
 	"\t\t\t});",

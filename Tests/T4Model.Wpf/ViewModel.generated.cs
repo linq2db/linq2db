@@ -119,32 +119,46 @@ namespace T4Model.Wpf
 
 		protected void OnPropertyChanged(string propertyName)
 		{
-			if (PropertyChanged != null)
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+					propertyChanged(this, new PropertyChangedEventArgs(propertyName));
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanged(this, new PropertyChangedEventArgs(propertyName)));
+						() =>
+						{
+							var pc = PropertyChanged;
+							if (pc != null)
+								pc(this, new PropertyChangedEventArgs(propertyName));
+						});
 #else
-				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
 #endif
 			}
 		}
 
 		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
 		{
-			if (PropertyChanged != null)
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
 			{
 #if SILVERLIGHT
 				if (System.Windows.Deployment.Current.Dispatcher.CheckAccess())
-					PropertyChanged(this, arg);
+					propertyChanged(this, arg);
 				else
 					System.Windows.Deployment.Current.Dispatcher.BeginInvoke(
-						() => PropertyChanged(this, arg));
+						() =>
+						{
+							var pc = PropertyChanged;
+							if (pc != null)
+								pc(this, arg);
+						});
 #else
-				PropertyChanged(this, arg);
+				propertyChanged(this, arg);
 #endif
 			}
 		}
