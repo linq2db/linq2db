@@ -787,6 +787,13 @@ namespace LinqToDB.Data
 									}
 
 									var memberType  = m.MemberType.ToNullableUnderlying();
+									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+
+									if (mapper != null)
+									{
+										
+									}
+
 									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
 
 									if (memberType.IsEnum)

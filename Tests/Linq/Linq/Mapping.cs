@@ -278,11 +278,6 @@ namespace Tests.Linq
 
 				return base.ConvertChangeType(value, conversionType, isNullable);
 			}
-
-			public override object ConvertParameterValue(object value, Type systemType)
-			{
-				return value is MyInt ? ((MyInt)value).MyValue : value;
-			}
 		}
 
 		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
