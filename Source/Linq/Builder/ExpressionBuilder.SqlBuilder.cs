@@ -1098,7 +1098,7 @@ namespace LinqToDB.Linq.Builder
 
 			string name = null;
 
-			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => { name = nm; return; });
+			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 			var mapper  = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(newExpr, typeof(object)),
 				new [] { ExpressionParam, ParametersParam });

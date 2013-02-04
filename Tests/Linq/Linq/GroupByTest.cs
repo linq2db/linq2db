@@ -1434,7 +1434,8 @@ namespace Tests.Linq
 				var groupByPos = lastQuery.IndexOf("GROUP BY");
 				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
 				
-				// check that our field does not present in the GROUP BY clause second time
+				// check that our field does not present in the GROUP BY clause second time.
+				//
 				Assert.AreEqual(-1, lastQuery.IndexOf(fieldName, fieldPos + 1));
 			}
 		}

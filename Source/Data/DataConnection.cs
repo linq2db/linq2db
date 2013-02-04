@@ -131,13 +131,16 @@ namespace LinqToDB.Data
 		private static TraceSwitch _traceSwitch;
 		public  static TraceSwitch  TraceSwitch
 		{
-			get { return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch",
+			get
+			{
+				return _traceSwitch ?? (_traceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch",
 #if DEBUG
 				"Warning"
 #else
 				"Off"
 #endif
-				)); }
+				));
+			}
 			set { _traceSwitch = value; }
 		}
 
@@ -152,10 +155,7 @@ namespace LinqToDB.Data
 
 		#region Configuration
 
-		static IDataProvider FindProvider(
-			string configuration,
-			IEnumerable<KeyValuePair<string,IDataProvider>> ps,
-			IDataProvider defp)
+		static IDataProvider FindProvider(string configuration, IEnumerable<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
 		{
 			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
 				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
