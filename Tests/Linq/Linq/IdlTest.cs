@@ -615,6 +615,75 @@ namespace Tests.Linq
             }
         }
 
+        [Test]
+        public void TestContainsForNullableDateTimeWithOnlyNullValue1([IdlProviders] string context)
+        {
+            using (var db = new TestDataConnection(context))
+            {
+                var dates = new DateTime?[] { null };
+
+                // Ensures that  the query works properly in memory
+                // ReSharper disable RemoveToList.2
+                var resultCount = db.Types2.ToList().Count(x => dates.Contains(x.DateTimeValue2));
+                // ReSharper restore RemoveToList.2
+                Assert.That(resultCount, Is.GreaterThan(0));
+
+                var result = db.Types2.Count(x => dates.Contains(x.DateTimeValue2));
+                Assert.That(result, Is.EqualTo(resultCount));
+            }
+        }
+
+        [Test]
+        public void TestContainsForNullableDateTimeWithOnlyNullValue2([IdlProviders] string context)
+        {
+            using (var db = new TestDataConnection(context))
+            {
+                // Ensures that  the query works properly in memory
+                // ReSharper disable RemoveToList.2
+                var resultCount = db.Types2.ToList().Count(x => new DateTime?[] { null }.Contains(x.DateTimeValue2));
+                // ReSharper restore RemoveToList.2
+                Assert.That(resultCount, Is.GreaterThan(0));
+
+                var result = db.Types2.Count(x => new DateTime?[] { null }.Contains(x.DateTimeValue2));
+                Assert.That(result, Is.EqualTo(resultCount));
+            }
+        }
+
+        [Test]
+        public void TestContainsForNullableDateTimeWithNullAndNotNullValues1([IdlProviders] string context)
+        {
+            using (var db = new TestDataConnection(context))
+            {
+                var date  = new DateTime(2009,  9,  24,  9, 19, 29,  90);
+                var dates = new DateTime?[] { null, date };
+
+                // Ensures that  the query works properly in memory
+                // ReSharper disable RemoveToList.2
+                var resultCount = db.Types2.ToList().Count(x => dates.Contains(x.DateTimeValue2));
+                // ReSharper restore RemoveToList.2
+                Assert.That(resultCount, Is.GreaterThan(0));
+
+                var result = db.Types2.Count(x => dates.Contains(x.DateTimeValue2));
+                Assert.That(result, Is.EqualTo(resultCount));
+            }
+        }
+
+        [Test]
+        public void TestContainsForNullableDateTimeWithNullAndNotNullValues2([IdlProviders] string context)
+        {
+            using (var db = new TestDataConnection(context))
+            {
+                // Ensures that  the query works properly in memory
+                // ReSharper disable RemoveToList.2
+                var resultCount = db.Types2.ToList().Count(x => new DateTime?[] { null, new DateTime(2009,  9,  24,  9, 19, 29,  90) }.Contains(x.DateTimeValue2));
+                // ReSharper restore RemoveToList.2
+                Assert.That(resultCount, Is.GreaterThan(0));
+
+                var result = db.Types2.Count(x => new DateTime?[] { null, new DateTime(2009,  9,  24,  9, 19, 29,  90) }.Contains(x.DateTimeValue2));
+                Assert.That(result, Is.EqualTo(resultCount));
+            }
+        }
+
         #region GenericQuery classes
 
         public abstract partial class GenericQueryBase
