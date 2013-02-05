@@ -4,7 +4,6 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using SqlBuilder;
 
 	class IntersectBuilder : MethodCallBuilder
