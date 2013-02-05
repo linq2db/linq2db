@@ -522,6 +522,11 @@ namespace LinqToDB.Expressions
 
 				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
 					return Find(((ChangeTypeExpression)expr).Expression, func);
+
+				case ExpressionType.Extension :
+					if (expr.CanReduce)
+						return Find(expr.Reduce(), func);
+					break;
 			}
 
 			return null;

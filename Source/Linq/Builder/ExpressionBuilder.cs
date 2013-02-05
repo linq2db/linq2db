@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			Expression         = ConvertExpressionTree(expression);
 			_visitedExpressions = null;
 
-			DataReaderLocal = Expression.Parameter(dataContext.DataContext.DataReaderType);
+			DataReaderLocal = Expression.Parameter(dataContext.DataContext.DataReaderType, "ldr");
 
 			BlockVariables.  Add(DataReaderLocal);
 			BlockExpressions.Add(Expression.Assign(DataReaderLocal, Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType)));
