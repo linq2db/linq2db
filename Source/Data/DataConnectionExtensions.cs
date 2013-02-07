@@ -700,7 +700,7 @@ namespace LinqToDB.Data
 
 			public override bool Equals(object obj)
 			{
-				return Equals((QueryKey)obj);
+				return Equals((ParamKey)obj);
 			}
 
 			readonly int    _hashCode;
@@ -787,14 +787,16 @@ namespace LinqToDB.Data
 									}
 
 									var memberType  = m.MemberType.ToNullableUnderlying();
+									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
 									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
 									{
-										
+										return Expression.Call(
+											MemberHelper.MethodOf(() => PrepareDataParameter(null, null)),
+											mapper.Body.Transform(e => e == mapper.Parameters[0] ? valueGetter : e),
+											Expression.Constant(m.ColumnName));
 									}
-
-									var valueGetter = Expression.PropertyOrField(obj, m.MemberName) as Expression;
 
 									if (memberType.IsEnum)
 									{
@@ -825,6 +827,16 @@ namespace LinqToDB.Data
 			}
 
 			return func(parameters);
+		}
+
+		static DataParameter PrepareDataParameter(DataParameter dataParameter, string name)
+		{
+			if (dataParameter == null)
+				return new DataParameter { Name = name };
+
+			dataParameter.Name = name;
+
+			return dataParameter;
 		}
 
 		#endregion
