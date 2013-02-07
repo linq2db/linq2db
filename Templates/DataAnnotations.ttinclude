@@ -1,0 +1,59 @@
+<#
+  {
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			beforeGenerateModel();
+			DataAnnotationsImpl();
+		};
+	}
+#>
+<#+
+void DataAnnotationsImpl()
+{
+	foreach (Class cl in GetTreeNodes(Model).OfType<Class>())
+	{
+		foreach (var p in GetTreeNodes(cl).OfType<Property>())
+		{
+			if (p.DisplayName != null)
+			{
+				p.Attributes.Add(new Attribute("Display", "Name=\"" + p.DisplayName + "\"") { IsSeparated = true });
+			}
+
+			if (p.IsRequired)
+			{
+				p.Attributes.Add(
+					new Attribute("Required",
+						string.Format(
+							"ErrorMessage=\"{0} is required.\"",
+							p.DisplayName ?? "The field"))
+					{
+						IsSeparated = true
+					});
+			}
+
+			if (p.StringLength > 0)
+			{
+				p.Attributes.Add(
+					new Attribute("StringLength",
+						p.StringLength.ToString(),
+						string.Format(
+							"ErrorMessage=\"{0} must be a string with a maximum lenfth of {1}.\"",
+							p.DisplayName ?? "The field",
+							p.StringLength))
+					{
+						IsSeparated = true
+					});
+			}
+		}
+	}
+}
+
+partial class Property
+{
+	public string DisplayName;
+	public bool   IsRequired;
+	public int    StringLength;
+
+}
+#>
