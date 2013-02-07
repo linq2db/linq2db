@@ -1,4 +1,4 @@
-﻿<#@ assembly name="System.Core"                   #>
+<#@ assembly name="System.Core"                   #>
 <#@ import namespace="System"                     #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.Linq"                #>
@@ -539,7 +539,7 @@ public partial class MemberGroup : MemberBase
 
 							if (a.Parameters.Count >= 0)
 								len += a.Parameters.Sum(p => 2 + p.Length);
-							
+
 							lens[i] = Math.Max(lens[i], len);
 						}
 					}
@@ -624,7 +624,7 @@ public partial class MemberGroup : MemberBase
 						var q =
 							from a in m.Attributes
 							group a by a.Conditional ?? "";
-						
+
 						foreach (var g in q)
 						{
 							if (g.Key.Length > 0)
@@ -632,27 +632,41 @@ public partial class MemberGroup : MemberBase
 								tt.RemoveSpace();
 								tt.WriteLine("#if " + g.Key);
 							}
-							
+
 							var attrs = g.ToList();
-							
-							tt.Write("[");
 
-							for (var i = 0; i < attrs.Count; i++)
+							var aa = attrs.Where(a => !a.IsSeparated).ToList();
+			
+							if (aa.Count > 0)
 							{
-								if (i > 0) tt.Write(", ");
-								attrs[i].Render(tt);
-							}
+								tt.Write("[");
+				
+								for (var i = 0; i < aa.Count; i++)
+								{
+									if (i > 0) tt.Write(", ");
+									aa[i].Render(tt);
+								}
 
-							tt.WriteLine("]");
+								tt.WriteLine("]");
+							}
+			
+							aa = attrs.Where(a => a.IsSeparated).ToList();
+			
+							foreach (var a in aa)
+							{
+								tt.Write("[");
+								a.Render(tt);
+								tt.WriteLine("]");
+							}
 
 							if (g.Key.Length > 0)
 							{
 								tt.RemoveSpace();
 								tt.WriteLine("#endif");
 							}
-						}				
+						}
 					}
-					
+
 					m.Render(tt, false);
 
 					if (m.InsertBlankLineAfter)
