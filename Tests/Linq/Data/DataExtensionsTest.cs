@@ -80,12 +80,12 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObject3([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestObject3()
 		{
 			var arr1 = new byte[] { 48, 57 };
 			var arr2 = new byte[] { 42 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = new DataConnection())
 			{
 				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr1 }).First(), Is.EqualTo(arr1));
 				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr2 }).First(), Is.EqualTo(arr2));
@@ -93,18 +93,18 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObject4([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestObject4()
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = new DataConnection())
 			{
 				Assert.That(conn.Query<int>("SELECT @p", new { p = 1 }).First(), Is.EqualTo(1));
 			}
 		}
 
 		[Test]
-		public void TestObject5([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestObject5()
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = new DataConnection())
 			{
 				Assert.That(conn.Query<string>(
 					"SELECT @p",
@@ -117,9 +117,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObject6([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestObject6()
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = new DataConnection())
 			{
 				Assert.That(conn.Query<string>(
 					"SELECT @p",
@@ -173,17 +173,53 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDataParameterMapping([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		public void TestDataParameterMapping1()
 		{
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 
-			using (var conn = new DataConnection(context).AddMappingSchema(ms))
+			using (var conn = new DataConnection().AddMappingSchema(ms))
 			{
 				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 }});
 
 				Assert.AreEqual(1L << 32 | 2, n);
+			}
+		}
+
+		[Test]
+		public void TestDataParameterMapping2()
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
+
+			using (var conn = new DataConnection().AddMappingSchema(ms))
+			{
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+
+				Assert.AreEqual(null, n);
+			}
+		}
+
+		[Test]
+		public void TestDataParameterMapping3()
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConvertExpression<TwoValues,DataParameter>(tv =>
+				new DataParameter
+				{
+					Value    = tv == null ? (long?)null : (long)tv.Value1 << 32 | tv.Value2,
+					DataType = DataType.Int64
+				},
+				false);
+
+			using (var conn = new DataConnection().AddMappingSchema(ms))
+			{
+				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues)null });
+
+				Assert.AreEqual(null, n);
 			}
 		}
 	}
