@@ -87,8 +87,8 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr1 }).First(), Is.EqualTo(arr1));
-				Assert.That(conn.Query<byte[]>("SELECT @p", new { p = arr2 }).First(), Is.EqualTo(arr2));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
 			}
 		}
 
@@ -97,7 +97,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Query<int>("SELECT @p", new { p = 1 }).First(), Is.EqualTo(1));
+				Assert.That(conn.Execute<int>("SELECT @p", new { p = 1 }), Is.EqualTo(1));
 			}
 		}
 
@@ -106,13 +106,13 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Query<string>(
+				Assert.That(conn.Execute<string>(
 					"SELECT @p",
 					new
 					{
 						p  = new DataParameter { DataType = DataType.VarChar, Value = "123" },
 						p1 = 1
-					}).First(), Is.EqualTo("123"));
+					}), Is.EqualTo("123"));
 			}
 		}
 
@@ -121,13 +121,13 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Query<string>(
+				Assert.That(conn.Execute<string>(
 					"SELECT @p",
 					new
 					{
 						p1 = new DataParameter { Name = "p", DataType = DataType.Char, Value = "123" },
 						p2 = 1
-					}).First(), Is.EqualTo("123"));
+					}), Is.EqualTo("123"));
 			}
 		}
 

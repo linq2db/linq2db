@@ -191,12 +191,12 @@ namespace LinqToDB.ServiceModel
 
 			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
 			{
-				type  = _result.VaryingTypes[(int)value[1]];
+				type  = _result.VaryingTypes[value[1]];
 				value = value.Substring(2);
 			}
 
 			if (type.IsArray && type == typeof(byte[]))
-				return value == null ? null : System.Convert.FromBase64String(value);
+				return value == null ? null : Convert.FromBase64String(value);
 
 			return ConvertOld.ChangeTypeFromString(value, type);
 		}

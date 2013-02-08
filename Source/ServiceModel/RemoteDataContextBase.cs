@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
@@ -97,9 +99,48 @@ namespace LinqToDB.ServiceModel
 			get { return GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags; }
 		}
 
-		public Type DataReaderType
+		Type IDataContext.DataReaderType
 		{
 			get { return typeof(ServiceModelDataReader); }
+		}
+
+		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			var dataType   = reader.GetFieldType(idx);
+			var methodInfo = GetReaderMethodInfo(dataType);
+
+			var expr = Expression.Call(readerExpression, MemberHelper.MethodOf<IDataReader>(dr => dr.GetString(0)), Expression.Constant(idx));
+			var conv = mappingSchema.GetConvertExpression(typeof(string), dataType);
+
+			return conv.Body.Transform(e => e == conv.Parameters[0] ? expr : e);
+		}
+
+		MethodInfo GetReaderMethodInfo(Type type)
+		{
+			switch (Type.GetTypeCode(type))
+			{
+				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetBoolean (0));
+				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetByte    (0));
+				case TypeCode.Char     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetChar    (0));
+				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt16   (0));
+				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt32   (0));
+				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt64   (0));
+				case TypeCode.Single   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetFloat   (0));
+				case TypeCode.Double   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDouble  (0));
+				case TypeCode.String   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetString  (0));
+				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDecimal (0));
+				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDateTime(0));
+			}
+
+			if (type == typeof(Guid))   return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
+			if (type == typeof(byte[])) return MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
+
+			return null;
+		}
+
+		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return null;
 		}
 
 		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();

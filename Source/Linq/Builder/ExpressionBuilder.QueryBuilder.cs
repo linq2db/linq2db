@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx, MethodInfo checkNullFunction, Expression checkNullParameter)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, checkNullParameter, DataReaderLocal, MappingSchema);
+			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, checkNullParameter, DataReaderLocal, DataContextInfo);
 		}
 
 		public Expression BuildSql(Type type, int idx)

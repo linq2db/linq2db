@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB
 {
@@ -94,9 +95,19 @@ namespace LinqToDB
 			get { return DataProvider.CreateSqlProvider; }
 		}
 
-		public Type DataReaderType
+		Type IDataContext.DataReaderType
 		{
 			get { return DataProvider.DataReaderType; }
+		}
+
+		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+		}
+
+		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
 		object IDataContext.SetQuery(IQueryContext queryContext)

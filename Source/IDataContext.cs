@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB
 {
@@ -14,14 +15,17 @@ namespace LinqToDB
 		SqlProviderFlags   SqlProviderFlags  { get; }
 		Type               DataReaderType    { get; }
 
-		object             SetQuery       (IQueryContext queryContext);
-		int                ExecuteNonQuery(object query);
-		object             ExecuteScalar  (object query);
-		IDataReader        ExecuteReader  (object query);
-		void               ReleaseQuery   (object query);
+		Expression         GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+		bool?              IsDBNullAllowed    (IDataReader reader, int idx);
 
-		string             GetSqlText     (object query);
-		IDataContext       Clone          (bool forNestedQuery);
+		object             SetQuery           (IQueryContext queryContext);
+		int                ExecuteNonQuery    (object query);
+		object             ExecuteScalar      (object query);
+		IDataReader        ExecuteReader      (object query);
+		void               ReleaseQuery       (object query);
+
+		string             GetSqlText         (object query);
+		IDataContext       Clone              (bool forNestedQuery);
 
 		event EventHandler OnClosing;
 	}

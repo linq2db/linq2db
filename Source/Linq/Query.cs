@@ -1054,7 +1054,13 @@ namespace LinqToDB.Linq
 
 				if (mapper == null)
 				{
-					mapInfo.Mapper = mapper = mapInfo.Expression.Compile();
+					var mapperExpression = mapInfo.Expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce(dr) : e;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+
+					mapInfo.Mapper = mapper = mapperExpression.Compile();
 				}
 
 				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);

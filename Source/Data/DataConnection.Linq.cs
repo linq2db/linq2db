@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -43,21 +44,6 @@ namespace LinqToDB.Data
 		}
 
 		#region SetQuery
-
-		public SqlProviderFlags SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
-		public Type             DataReaderType   { get { return DataProvider.DataReaderType;   } }
-
-		object IDataContext.SetQuery(IQueryContext queryContext)
-		{
-			var query = GetCommand(queryContext);
-
-			GetParameters(queryContext, query);
-
-			if (TraceSwitch.TraceInfo)
-				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
-
-			return query;
-		}
 
 		PreparedQuery GetCommand(IQueryContext query)
 		{
@@ -379,6 +365,31 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region IDataContext Members
+
+		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
+		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
+
+		Expression IDataContext.GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
+		{
+			return DataProvider.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
+		}
+
+		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			return DataProvider.IsDBNullAllowed(reader, idx);
+		}
+
+		object IDataContext.SetQuery(IQueryContext queryContext)
+		{
+			var query = GetCommand(queryContext);
+
+			GetParameters(queryContext, query);
+
+			if (TraceSwitch.TraceInfo)
+				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
+
+			return query;
+		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
 		{

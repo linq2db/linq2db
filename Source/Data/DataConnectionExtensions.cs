@@ -620,7 +620,7 @@ namespace LinqToDB.Data
 		static Expression GetColumnReader(
 			IDataProvider dataProvider, MappingSchema mappingSchema, IDataReader dataReader, Type type, int idx, Expression dataReaderExpr)
 		{
-			var ex   = dataProvider.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
+			var ex = dataProvider.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
 
 			if (ex.NodeType == ExpressionType.Lambda)
 			{
