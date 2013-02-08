@@ -285,7 +285,7 @@ public partial class Class : TypeBase
 							tt.RemoveSpace();
 							tt.WriteLine("#endif");
 						}
-					}				
+					}
 				}
 
 				m.Render(tt, false);
