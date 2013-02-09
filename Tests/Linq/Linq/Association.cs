@@ -99,9 +99,11 @@ namespace Tests.Linq
 		public void SelectMany2([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					   Parent.SelectMany(p =>    Child.Select(ch => p)),
 					db.Parent.SelectMany(p => db.Child.Select(ch => p)));
+			}
 		}
 
 		[Test]

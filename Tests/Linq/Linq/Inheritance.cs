@@ -4,7 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
