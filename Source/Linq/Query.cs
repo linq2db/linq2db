@@ -477,7 +477,7 @@ namespace LinqToDB.Linq
 			return value.Equals(defaultValue) ? null : (object)value;
 		}
 
-		static ParameterAccessor GetParameter<TR>(IDataContext dataContext, SqlField field)
+		static ParameterAccessor GetParameter(IDataContext dataContext, SqlField field)
 		{
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
 
@@ -559,7 +559,7 @@ namespace LinqToDB.Linq
 						{
 							if (field.Value.IsInsertable)
 							{
-								var param = GetParameter<int>(dataContextInfo.DataContext, field.Value);
+								var param = GetParameter(dataContextInfo.DataContext, field.Value);
 
 								ei.Queries[0].Parameters.Add(param);
 
@@ -617,7 +617,7 @@ namespace LinqToDB.Linq
 						{
 							if (field.Value.IsInsertable)
 							{
-								var param = GetParameter<object>(dataContextInfo.DataContext, field.Value);
+								var param = GetParameter(dataContextInfo.DataContext, field.Value);
 
 								ei.Queries[0].Parameters.Add(param);
 
@@ -689,7 +689,7 @@ namespace LinqToDB.Linq
 							{
 								if (!supported || !fieldDic.TryGetValue(field, out param))
 								{
-									param = GetParameter<int>(dataContextInfo.DataContext, field);
+									param = GetParameter(dataContextInfo.DataContext, field);
 									ei.Queries[0].Parameters.Add(param);
 
 									if (supported)
@@ -734,11 +734,11 @@ namespace LinqToDB.Linq
 						{
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
-								param = GetParameter<int>(dataContextInfo.DataContext, field);
+								param = GetParameter(dataContextInfo.DataContext, field);
 								ei.Queries[0].Parameters.Add(param);
 
 								if (supported)
-									fieldDic.Add(field, param = GetParameter<int>(dataContextInfo.DataContext, field));
+									fieldDic.Add(field, param = GetParameter(dataContextInfo.DataContext, field));
 							}
 
 							sqlQuery.Update.Items.Add(new SqlQuery.SetExpression(field, param.SqlParameter));
@@ -846,7 +846,7 @@ namespace LinqToDB.Linq
 
 						foreach (var field in fields)
 						{
-							var param = GetParameter<int>(dataContextInfo.DataContext, field);
+							var param = GetParameter(dataContextInfo.DataContext, field);
 
 							ei.Queries[0].Parameters.Add(param);
 
@@ -855,7 +855,7 @@ namespace LinqToDB.Linq
 
 						foreach (var field in keys)
 						{
-							var param = GetParameter<int>(dataContextInfo.DataContext, field);
+							var param = GetParameter(dataContextInfo.DataContext, field);
 
 							ei.Queries[0].Parameters.Add(param);
 
@@ -908,7 +908,7 @@ namespace LinqToDB.Linq
 
 						foreach (var field in keys)
 						{
-							var param = GetParameter<int>(dataContextInfo.DataContext, field);
+							var param = GetParameter(dataContextInfo.DataContext, field);
 
 							ei.Queries[0].Parameters.Add(param);
 

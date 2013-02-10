@@ -974,7 +974,6 @@ namespace LinqToDB.Expressions
 							return ti.Expression;
 
 						var e = (UnaryExpression)expr;
-						var o = Transform(e.Operand, func);
 
 						return e.Update(Transform(e.Operand, func));
 					}

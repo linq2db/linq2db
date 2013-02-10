@@ -2,12 +2,11 @@
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Extensions;
 	using Linq;
-	using Mapping;
 
 	class ConvertFromDataReaderExpression : Expression
 	{

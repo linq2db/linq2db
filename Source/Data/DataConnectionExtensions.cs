@@ -649,16 +649,6 @@ namespace LinqToDB.Data
 					ex);
 			}
 
-			/*
-			ex = Expression.Condition(
-				Expression.Equal(
-					Expression.Call(dataReaderExpr, MemberHelper.MethodOf<IDataReader>(rd => rd.GetFieldType(0)), Expression.Constant(idx)),
-					Expression.Constant(dataReader.GetFieldType(idx))
-				),
-				ex,
-				ex);
-			*/
-
 			return ex;
 		}
 
