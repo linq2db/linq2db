@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSql(Type type, int idx)
 		{
-			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContextInfo);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContextInfo.DataContext);
 		}
 
 		#endregion
@@ -255,8 +255,6 @@ namespace LinqToDB.Linq.Builder
 
 			expression = Expression.Block(BlockVariables, BlockExpressions);
 
-//			BlockVariables.  Clear();
-//			BlockExpressions.Clear();
 			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 

@@ -69,6 +69,8 @@ namespace LinqToDB.Linq
 
 	public class Query<T> : Query
 	{
+		#region Init
+
 		public Query()
 		{
 			GetIEnumerable = MakeEnumerable;
@@ -89,6 +91,8 @@ namespace LinqToDB.Linq
 			Expression        = parseContext.Builder.OriginalExpression;
 			//Parameters        = parameters;
 		}
+
+		#endregion
 
 		#region Properties & Fields
 
@@ -332,14 +336,14 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		#region Query
+		#region RunQuery
 
 		int GetParameterIndex(ISqlExpression parameter)
 		{
 			for (var i = 0; i < Queries[0].Parameters.Count; i++)
 			{
 				var p = Queries[0].Parameters[i].SqlParameter;
-						
+
 				if (p == parameter)
 					return i;
 			}
@@ -1048,6 +1052,8 @@ namespace LinqToDB.Linq
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
 
+			var isFaulted = false;
+
 			foreach (var dr in data)
 			{
 				var mapper = mapInfo.Mapper;
@@ -1063,7 +1069,30 @@ namespace LinqToDB.Linq
 					mapInfo.Mapper = mapper = mapperExpression.Compile();
 				}
 
-				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+				T result;
+				
+				try
+				{
+					result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+				}
+				catch (InvalidCastException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					var mapperExpression = mapInfo.Expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce() : e;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+
+					mapInfo.Mapper = mapper = mapperExpression.Compile();
+					result         = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+				}
+
+				yield return result;
 			}
 		}
 

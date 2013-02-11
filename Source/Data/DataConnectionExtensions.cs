@@ -11,7 +11,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Expressions;
 	using Extensions;
-	using DataProvider;
 	using Mapping;
 
 	public static class DataConnectionExtensions
@@ -403,7 +402,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly MethodInfo _isDBNullInfo = MemberHelper.MethodOf<IDataReader>(rd => rd.IsDBNull(0));
 		static readonly ConcurrentDictionary<QueryKey,Delegate> _objectReaders = new ConcurrentDictionary<QueryKey,Delegate>();
 
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
@@ -416,10 +414,22 @@ namespace LinqToDB.Data
 			{
 				//return GetObjectReader2<T>(dataConnection, dataReader);
 				_objectReaders[key] = func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-					GetColumnReader(dataConnection.DataProvider, dataConnection.MappingSchema, dataReader, type, idx, dataReaderExpr));
+					new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce(dataReader));
 			}
 
 			return (Func<IDataReader,T>)func;
+		}
+
+		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
+		{
+			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
+
+			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
+				new ConvertFromDataReaderExpression(type, idx, dataReaderExpr, dataConnection).Reduce());
+
+			_objectReaders[key] = func;
+
+			return func;
 		}
 
 		static Func<IDataReader,T> CreateObjectReader<T>(
@@ -501,155 +511,6 @@ namespace LinqToDB.Data
 			var lex = Expression.Lambda<Func<IDataReader,T>>(expr, parameter);
 
 			return lex.Compile();
-		}
-
-		static Expression ReplaceParameter(LambdaExpression conv, Expression param)
-		{
-			// Replace multiple parameters with single variable or single parameter with the reader expression.
-			//
-			if (conv.Body.GetCount(e => e == conv.Parameters[0]) > 1)
-			{
-				var variable = Expression.Variable(param.Type);
-				var assign   = Expression.Assign(variable, param);
-
-				return Expression.Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
-			}
-
-			return conv.Body.Transform(e => e == conv.Parameters[0] ? param : e);
-		}
-
-		class ColumnReader
-		{
-			public ColumnReader(IDataProvider dataProvider, MappingSchema mappingSchema, Type columnType, int columnIndex)
-			{
-				_dataProvider  = dataProvider;
-				_mappingSchema = mappingSchema;
-				_columnType    = columnType;
-				_columnIndex   = columnIndex;
-				_defaultValue  = mappingSchema.GetDefaultValue(columnType);
-			}
-
-			public object GetValue(IDataReader dataReader)
-			{
-				//var value = dataReader.GetValue(_columnIndex);
-
-				var fromType = dataReader.GetFieldType(_columnIndex);
-
-				Func<IDataReader,object> func;
-
-				if (!_columnConverters.TryGetValue(fromType, out func))
-				{
-					var parameter      = Expression.Parameter(typeof(IDataReader));
-					var dataReaderExpr = Expression.Convert(parameter, _dataProvider.DataReaderType);
-
-					var expr = GetColumnReader(_dataProvider, _mappingSchema, dataReader, _columnType, _columnIndex, dataReaderExpr);
-
-					var lex  = Expression.Lambda<Func<IDataReader, object>>(
-						expr.Type == typeof(object) ? expr : Expression.Convert(expr, typeof(object)),
-						parameter);
-
-					_columnConverters[fromType] = func = lex.Compile();
-				}
-
-				return func(dataReader);
-
-				/*
-				var value = dataReader.GetValue(_columnIndex);
-
-				if (value is DBNull || value == null)
-					return _defaultValue;
-
-				var fromType = value.GetType();
-
-				if (fromType == _columnType)
-					return value;
-
-				Func<object,object> func;
-
-				if (!_columnConverters.TryGetValue(fromType, out func))
-				{
-					var conv = _mappingSchema.GetConvertExpression(fromType, _columnType, false);
-					var pex  = Expression.Parameter(typeof(object));
-					var ex   = ReplaceParameter(conv, Expression.Convert(pex, fromType));
-					var lex  = Expression.Lambda<Func<object, object>>(
-						ex.Type == typeof(object) ? ex : Expression.Convert(ex, typeof(object)),
-						pex);
-
-					_columnConverters[fromType] = func = lex.Compile();
-				}
-
-				return func(value);
-				*/
-			}
-
-			readonly ConcurrentDictionary<Type,Func<IDataReader,object>> _columnConverters = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
-
-			readonly IDataProvider _dataProvider;
-			readonly MappingSchema _mappingSchema;
-			readonly Type          _columnType;
-			readonly int           _columnIndex;
-			readonly object        _defaultValue;
-		}
-
-		static readonly MethodInfo _columnReaderGetValueInfo = MemberHelper.MethodOf<ColumnReader>(r => r.GetValue(null));
-
-		static Func<IDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
-		{
-			var key = new QueryKey(
-				typeof(T),
-				dataConnection.ID,
-				sql);
-
-			var func = CreateObjectReader<T>(dataConnection, dataReader, (type,idx,dataReaderExpr) =>
-			{
-				var columnReader = new ColumnReader(dataConnection.DataProvider, dataConnection.MappingSchema, type, idx);
-
-				return Expression.Convert(
-					Expression.Call(
-						Expression.Constant(columnReader),
-						_columnReaderGetValueInfo,
-						dataReaderExpr),
-					type);
-			});
-
-			_objectReaders[key] = func;
-
-			return func;
-		}
-
-		static Expression GetColumnReader(
-			IDataProvider dataProvider, MappingSchema mappingSchema, IDataReader dataReader, Type type, int idx, Expression dataReaderExpr)
-		{
-			var ex = dataProvider.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
-
-			if (ex.NodeType == ExpressionType.Lambda)
-			{
-				var l = (LambdaExpression)ex;
-
-				if (l.Parameters.Count == 1)
-					ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
-				else if (l.Parameters.Count == 2)
-					ex = l.Body.Transform(e =>
-						e == l.Parameters[0] ? dataReaderExpr :
-						e == l.Parameters[1] ? Expression.Constant(idx) :
-						e);
-			}
-
-			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false);
-
-			ex = ReplaceParameter(conv, ex);
-
-			// Add check null expression.
-			//
-			if (dataProvider.IsDBNullAllowed(dataReader, idx) ?? true)
-			{
-				ex = Expression.Condition(
-					Expression.Call(dataReaderExpr, _isDBNullInfo, Expression.Constant(idx)),
-					Expression.Constant(mappingSchema.GetDefaultValue(type), type),
-					ex);
-			}
-
-			return ex;
 		}
 
 		#endregion

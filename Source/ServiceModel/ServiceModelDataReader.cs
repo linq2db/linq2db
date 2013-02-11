@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.ServiceModel
 {
@@ -9,19 +10,31 @@ namespace LinqToDB.ServiceModel
 
 	class ServiceModelDataReader : IDataReader
 	{
-		public ServiceModelDataReader(LinqServiceResult result)
+		public ServiceModelDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{
-			_result = result;
+			_mappingSchema = mappingSchema;
+			_result        = result;
 
 			for (var i = 0; i < result.FieldNames.Length; i++)
 				_ordinal.Add(result.FieldNames[i], i);
 		}
 
+		readonly MappingSchema          _mappingSchema;
 		readonly LinqServiceResult      _result;
 		readonly Dictionary<string,int> _ordinal = new Dictionary<string,int>();
 
 		string[] _data;
 		int      _current = -1;
+
+		string GetFieldValue(int i)
+		{
+			var value = _data[i];
+
+			if (_result.VaryingTypes.Length > 0 && !string.IsNullOrEmpty(value) && value[0] == '\0')
+				return value.Substring(2);
+
+			return value;
+		}
 
 		#region IDataReader Members
 
@@ -91,12 +104,12 @@ namespace LinqToDB.ServiceModel
 
 		public bool GetBoolean(int i)
 		{
-			return bool.Parse(_data[i]);
+			return bool.Parse(GetFieldValue(i));
 		}
 
 		public byte GetByte(int i)
 		{
-			return byte.Parse(_data[i]);
+			return byte.Parse(GetFieldValue(i));
 		}
 
 		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
@@ -106,7 +119,7 @@ namespace LinqToDB.ServiceModel
 
 		public char GetChar(int i)
 		{
-			return _data[i][0];
+			return GetFieldValue(i)[0];
 		}
 
 		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
@@ -121,52 +134,60 @@ namespace LinqToDB.ServiceModel
 
 		public string GetDataTypeName(int i)
 		{
-			return _result.FieldTypes[i].FullName;
+			return GetFieldType(i).FullName;
 		}
 
 		public DateTime GetDateTime(int i)
 		{
-			return DateTime.Parse(_data[i], CultureInfo.InvariantCulture);
+			return DateTime.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
 		}
 
 		public decimal GetDecimal(int i)
 		{
-			return decimal.Parse(_data[i], CultureInfo.InvariantCulture);
+			return decimal.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
 		}
 
 		public double GetDouble(int i)
 		{
-			return double.Parse(_data[i], CultureInfo.InvariantCulture);
+			return double.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
 		}
 
 		public Type GetFieldType(int i)
 		{
+			if (_result.VaryingTypes.Length > 0)
+			{
+				var value = _data[i];
+
+				if (!string.IsNullOrEmpty(value) && value[0] == '\0')
+					return _result.VaryingTypes[value[1]];
+			}
+
 			return _result.FieldTypes[i];
 		}
 
 		public float GetFloat(int i)
 		{
-			return float.Parse(_data[i], CultureInfo.InvariantCulture);
+			return float.Parse(GetFieldValue(i), CultureInfo.InvariantCulture);
 		}
 
 		public Guid GetGuid(int i)
 		{
-			return new Guid(_data[i]);
+			return new Guid(GetFieldValue(i));
 		}
 
 		public short GetInt16(int i)
 		{
-			return short.Parse(_data[i]);
+			return short.Parse(GetFieldValue(i));
 		}
 
 		public int GetInt32(int i)
 		{
-			return int.Parse(_data[i]);
+			return int.Parse(GetFieldValue(i));
 		}
 
 		public long GetInt64(int i)
 		{
-			return long.Parse(_data[i]);
+			return long.Parse(GetFieldValue(i));
 		}
 
 		public string GetName(int i)
@@ -181,7 +202,7 @@ namespace LinqToDB.ServiceModel
 
 		public string GetString(int i)
 		{
-			return _data[i];
+			return GetFieldValue(i);
 		}
 
 		public object GetValue(int i)
@@ -195,10 +216,10 @@ namespace LinqToDB.ServiceModel
 				value = value.Substring(2);
 			}
 
-			if (type.IsArray && type == typeof(byte[]))
-				return value == null ? null : Convert.FromBase64String(value);
+//			if (type.IsArray && type == typeof(byte[]))
+//				return value == null ? null : Convert.FromBase64String(value);
 
-			return ConvertOld.ChangeTypeFromString(value, type);
+			return Converter.ChangeType(value, type, _mappingSchema);
 		}
 
 		public int GetValues(object[] values)
