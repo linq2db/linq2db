@@ -11,19 +11,15 @@ namespace LinqToDB.Expressions
 	class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(
-			Type type, int idx, MethodInfo checkNullFunction, Expression checkNullParameter, Expression dataReaderParam, IDataContextInfo contextInfo)
+			Type type, int idx, Expression dataReaderParam, IDataContextInfo contextInfo)
 		{
 			_type               = type;
 			_idx                = idx;
-			_checkNullFunction  = checkNullFunction;
-			_checkNullParameter = checkNullParameter;
 			_dataReaderParam    = dataReaderParam;
 			_contextInfo        = contextInfo;
 		}
 
 		readonly int              _idx;
-		readonly MethodInfo       _checkNullFunction;
-		readonly Expression       _checkNullParameter;
 		readonly Expression       _dataReaderParam;
 		readonly IDataContextInfo _contextInfo;
 		readonly Type             _type;
@@ -35,9 +31,6 @@ namespace LinqToDB.Expressions
 		public override Expression Reduce()
 		{
 			var expr = Call(_dataReaderParam, ReflectionHelper.DataReader.GetValue, Constant(_idx));
-
-			if (_checkNullFunction != null)
-				expr = Call(null, _checkNullFunction, expr, _checkNullParameter);
 
 			Expression mapper;
 
@@ -80,7 +73,7 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataReader dataReader)
 		{
-			return Reduce();
+//			return Reduce();
 
 			var ex = _contextInfo.DataContext.GetReaderExpression(
 				_contextInfo.MappingSchema.NewSchema, dataReader, _idx, _dataReaderParam, _type.ToNullableUnderlying());

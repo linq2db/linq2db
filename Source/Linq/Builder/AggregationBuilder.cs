@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Expressions;
@@ -89,6 +90,13 @@ namespace LinqToDB.Linq.Builder
 				return value;
 			}
 
+			static int CheckNullValue2(IDataReader reader, object context)
+			{
+				if (reader.IsDBNull(0))
+					throw new InvalidOperationException(string.Format("Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead.", context));
+				return 0;
+			}
+
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(FieldIndex);
@@ -112,11 +120,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					expr = Builder.BuildSql(
-						_returnType,
-						fieldIndex, 
-						MemberHelper.MethodOf(() => CheckNullValue(null, null)),
-						Expression.Constant(_methodName));
+					expr = Expression.Block(
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue2(null, null)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Builder.BuildSql(_returnType, fieldIndex));
 				}
 
 				return expr;

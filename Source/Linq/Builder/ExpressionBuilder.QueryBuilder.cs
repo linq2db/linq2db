@@ -168,14 +168,9 @@ namespace LinqToDB.Linq.Builder
 			return field;
 		}
 
-		public Expression BuildSql(Type type, int idx, MethodInfo checkNullFunction, Expression checkNullParameter)
-		{
-			return new ConvertFromDataReaderExpression(type, idx, checkNullFunction, checkNullParameter, DataReaderLocal, DataContextInfo);
-		}
-
 		public Expression BuildSql(Type type, int idx)
 		{
-			return BuildSql(type, idx, null, null);
+			return new ConvertFromDataReaderExpression(type, idx, DataReaderLocal, DataContextInfo);
 		}
 
 		#endregion
