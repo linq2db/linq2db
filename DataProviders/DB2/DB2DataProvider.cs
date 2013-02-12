@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider
 
 	public class DB2DataProvider : DataProviderBase
 	{
-		public DB2DataProvider(string name)
-			: this(name, new DB2MappingSchema(name))
+		public DB2DataProvider()
+			: this(ProviderName.DB2, new DB2MappingSchema())
 		{
 		}
 
-		public DB2DataProvider(string name, MappingSchema mappingSchema)
+		protected DB2DataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter       = false;

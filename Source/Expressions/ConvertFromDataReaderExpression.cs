@@ -73,10 +73,12 @@ namespace LinqToDB.Expressions
 				var variable = Variable(ex.Type);
 				var assign   = Assign(variable, ex);
 
-				return Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
+				ex = Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
 			}
-
-			ex = conv.Body.Transform(e => e == conv.Parameters[0] ? ex : e);
+			else
+			{
+				ex = conv.Body.Transform(e => e == conv.Parameters[0] ? ex : e);
+			}
 
 			// Add check null expression.
 			//

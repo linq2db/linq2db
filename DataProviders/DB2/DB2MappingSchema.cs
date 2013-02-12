@@ -8,7 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class DB2MappingSchema : MappingSchema
 	{
-		public DB2MappingSchema(string configuration) : base(configuration)
+		public DB2MappingSchema() : this(ProviderName.DB2)
+		{
+		}
+
+		protected DB2MappingSchema(string configuration) : base(configuration)
 		{
 			AddScalarType(typeof(DB2Int64),        DB2Int64.       Null, DataType.Int64);
 			AddScalarType(typeof(DB2Int32),        DB2Int32.       Null, DataType.Int32);

@@ -6,7 +6,11 @@ namespace LinqToDB.DataProvider
 
 	public class SybaseMappingSchema : MappingSchema
 	{
-		public SybaseMappingSchema(string configuration) : base(configuration)
+		public SybaseMappingSchema() : this(ProviderName.Sybase)
+		{
+		}
+
+		protected SybaseMappingSchema(string configuration) : base(configuration)
 		{
 		}
 	}

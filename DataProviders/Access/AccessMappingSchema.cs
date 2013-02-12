@@ -6,7 +6,11 @@ namespace LinqToDB.DataProvider
 
 	public class AccessMappingSchema : MappingSchema
 	{
-		public AccessMappingSchema(string configuation) : base(configuation)
+		public AccessMappingSchema() : this(ProviderName.Access)
+		{
+		}
+
+		protected AccessMappingSchema(string configuration) : base(configuration)
 		{
 			SetDataType(typeof(DateTime), DataType.DateTime);
 		}

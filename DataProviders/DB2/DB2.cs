@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 
 	public class DB2 : IDataProviderFactory
 	{
-		static readonly DB2DataProvider _db2DataProvider = new DB2DataProvider(ProviderName.DB2);
+		static readonly DB2DataProvider _db2DataProvider = new DB2DataProvider();
 
 		static DB2()
 		{

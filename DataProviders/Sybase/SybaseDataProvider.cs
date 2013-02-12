@@ -14,12 +14,12 @@ namespace LinqToDB.DataProvider
 	{
 		#region Init
 
-		public SybaseDataProvider(string name)
-			: this(name, new SybaseMappingSchema(name))
+		public SybaseDataProvider()
+			: this(ProviderName.Sybase, new SybaseMappingSchema())
 		{
 		}
 
-		public SybaseDataProvider(string name, MappingSchema mappingSchema)
+		protected SybaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter = false;

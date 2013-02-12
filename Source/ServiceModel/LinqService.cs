@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
+using LinqToDB.Common;
 
 namespace LinqToDB.ServiceModel
 {
@@ -44,6 +45,7 @@ namespace LinqToDB.ServiceModel
 			{
 				return new LinqServiceInfo
 				{
+					MappingSchemaType = ctx.DataProvider.MappingSchema.      GetType().AssemblyQualifiedName,
 					SqlProviderType   = ctx.DataProvider.CreateSqlProvider().GetType().AssemblyQualifiedName,
 					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
 					ConfigurationList = ctx.MappingSchema.ConfigurationList,
@@ -189,7 +191,7 @@ namespace LinqToDB.ServiceModel
 														data[i] = rd.GetValue(i).ToString();
 												}
 												else if (ret.FieldTypes[i] == typeof(byte[]))
-													data[i] = Convert.ToBase64String((byte[])rd.GetValue(i));
+													data[i] = ConvertTo<string>.From((byte[])rd.GetValue(i));
 												else
 													data[i] = (rd.GetValue(i) ?? "").ToString();
 

@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 
 	public class Access : IDataProviderFactory
 	{
-		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider(ProviderName.Access);
+		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider();
 
 		static Access()
 		{

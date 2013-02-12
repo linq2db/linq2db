@@ -10,12 +10,12 @@ namespace LinqToDB.DataProvider
 
 	public class SQLiteDataProvider : DataProviderBase
 	{
-		public SQLiteDataProvider(string name)
-			: this(name, new SQLiteMappingSchema(name))
+		public SQLiteDataProvider()
+			: this(ProviderName.SQLite, new SQLiteMappingSchema())
 		{
 		}
 
-		public SQLiteDataProvider(string name, MappingSchema mappingSchema)
+		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsSkipSupported       = false;

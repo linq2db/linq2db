@@ -216,8 +216,8 @@ namespace LinqToDB.ServiceModel
 				value = value.Substring(2);
 			}
 
-//			if (type.IsArray && type == typeof(byte[]))
-//				return value == null ? null : Convert.FromBase64String(value);
+			if (type.IsArray && type == typeof(byte[]))
+				return value == null ? null : ConvertTo<byte[]>.From(value);
 
 			return Converter.ChangeType(value, type, _mappingSchema);
 		}

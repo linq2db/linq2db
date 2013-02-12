@@ -8,7 +8,11 @@ namespace LinqToDB.DataProvider
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
-		public PostgreSQLMappingSchema(string configuration) : base(configuration)
+		public PostgreSQLMappingSchema() : this(ProviderName.PostgreSQL)
+		{
+		}
+
+		protected PostgreSQLMappingSchema(string configuration) : base(configuration)
 		{
 			SetConvertExpression<NpgsqlTimeStampTZ,DateTimeOffset>(
 				d => new DateTimeOffset(d.Year, d.Month, d.Day, d.Hours, d.Minutes, d.Seconds, d.Milliseconds,

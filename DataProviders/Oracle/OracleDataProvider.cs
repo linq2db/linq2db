@@ -16,12 +16,12 @@ namespace LinqToDB.DataProvider
 
 	public class OracleDataProvider : DataProviderBase
 	{
-		public OracleDataProvider(string name)
-			: this(name, new OracleMappingSchema(name))
+		public OracleDataProvider()
+			: this(ProviderName.Oracle, new OracleMappingSchema())
 		{
 		}
 
-		public OracleDataProvider(string name, MappingSchema mappingSchema)
+		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());

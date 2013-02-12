@@ -6,7 +6,11 @@ namespace LinqToDB.DataProvider
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
-		public SQLiteMappingSchema(string configuration) : base(configuration)
+		public SQLiteMappingSchema() : this(ProviderName.SQLite)
+		{
+		}
+
+		protected SQLiteMappingSchema(string configuration) : base(configuration)
 		{
 		}
 	}

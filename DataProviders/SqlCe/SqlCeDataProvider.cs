@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider
 
 	public class SqlCeDataProvider : DataProviderBase
 	{
-		public SqlCeDataProvider(string name)
-			: this(name, new SqlCeMappingSchema(name))
+		public SqlCeDataProvider()
+			: this(ProviderName.SqlCe, new SqlCeMappingSchema())
 		{
 		}
 
-		public SqlCeDataProvider(string name, MappingSchema mappingSchema)
+		protected SqlCeDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsSubQueryColumnSupported = false;

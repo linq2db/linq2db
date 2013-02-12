@@ -39,14 +39,26 @@ namespace LinqToDB.ServiceModel
 				{
 					var info = client.GetInfo(Configuration);
 
-					_configurationInfo = new ConfigurationInfo
+					MappingSchema ms;
+
+					if (string.IsNullOrEmpty(info.MappingSchemaType))
 					{
-						LinqServiceInfo = info,
-						MappingSchema   = new MappingSchema(
+						ms = new MappingSchema(
 							info.ConfigurationList
 								.Select(c => ContextIDPrefix + "." + c).Concat(new[] { ContextIDPrefix }).Concat(info.ConfigurationList)
 								.Select(c => new MappingSchema(c)).     Concat(new[] { Mapping.MappingSchema.Default })
-								.ToArray())
+								.ToArray());
+					}
+					else
+					{
+						var type = Type.GetType(info.MappingSchemaType);
+						ms = (MappingSchema)Activator.CreateInstance(type);
+					}
+
+					_configurationInfo = new ConfigurationInfo
+					{
+						LinqServiceInfo = info,
+						MappingSchema   = ms,
 					};
 
 					_configurationInfo.MappingSchemaOld = new MappingSchemaOld { NewSchema = _configurationInfo.MappingSchema };
@@ -109,7 +121,12 @@ namespace LinqToDB.ServiceModel
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
 
-			return Expression.Call(readerExpression, methodInfo, Expression.Constant(idx));
+			Expression ex = Expression.Call(readerExpression, methodInfo, Expression.Constant(idx));
+
+			if (ex.Type != dataType)
+				ex = Expression.Convert(ex, dataType);
+
+			return ex;
 		}
 
 		static MethodInfo GetReaderMethodInfo(Type type)

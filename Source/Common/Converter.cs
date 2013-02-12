@@ -28,6 +28,8 @@ namespace LinqToDB.Common
 			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
 			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
 			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
+			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));
+			SetConverter<byte[],         string>     (v => Convert.ToBase64String(v));
 			//SetConverter<long,           int>        (v => checked((int)v));
 		}
 
@@ -77,7 +79,7 @@ namespace LinqToDB.Common
 							e == ps[0] ?
 								Expression.Convert(p, e.Type) :
 							IsDefaultValuePlaceHolder(e) ?
-								Expression.Constant(DefaultValue.GetValue(e.Type)) :
+								Expression.Constant(DefaultValue.GetValue(e.Type), e.Type) :
 								e),
 						typeof(object)),
 					p);

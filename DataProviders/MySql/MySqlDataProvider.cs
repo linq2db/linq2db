@@ -11,12 +11,12 @@ namespace LinqToDB.DataProvider
 
 	public class MySqlDataProvider : DataProviderBase
 	{
-		public MySqlDataProvider(string name)
-			: this(name, new MySqlMappingSchema(name))
+		public MySqlDataProvider()
+			: this(ProviderName.MySql, new MySqlMappingSchema())
 		{
 		}
 
-		public MySqlDataProvider(string name, MappingSchema mappingSchema)
+		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));

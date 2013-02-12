@@ -5,16 +5,15 @@ using System.Data;
 namespace LinqToDB.DataProvider
 {
 	using Data;
-	using Mapping;
 
 	public class SqlServer : IDataProviderFactory
 	{
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(
-			ProviderName.SqlServer2005, SqlServerVersion.v2005, new MappingSchema(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance));
+			ProviderName.SqlServer2005, SqlServerVersion.v2005, new SqlServer2005MappingSchema());
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(
-			ProviderName.SqlServer2008, SqlServerVersion.v2008, new MappingSchema(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance));
+			ProviderName.SqlServer2008, SqlServerVersion.v2008, new SqlServer2008MappingSchema());
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(
-			ProviderName.SqlServer2012, SqlServerVersion.v2012, new MappingSchema(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance));
+			ProviderName.SqlServer2012, SqlServerVersion.v2012, new SqlServer2012MappingSchema());
 
 		static SqlServer()
 		{

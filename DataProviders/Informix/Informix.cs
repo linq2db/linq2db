@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider
 
 	public class Informix : IDataProviderFactory
 	{
-		static readonly InformixDataProvider _informixDataProvider = new InformixDataProvider(ProviderName.Informix);
+		static readonly InformixDataProvider _informixDataProvider = new InformixDataProvider();
 
 		static Informix()
 		{

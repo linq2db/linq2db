@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider
 	public class PostgreSQLDataProvider : DataProviderBase
 	{
 		public PostgreSQLDataProvider(string name)
-			: this(name, new PostgreSQLMappingSchema(name))
+			: this(ProviderName.PostgreSQL, new PostgreSQLMappingSchema())
 		{
 		}
 
-		public PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
+		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());

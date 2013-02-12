@@ -10,12 +10,12 @@ namespace LinqToDB.DataProvider
 
 	public class FirebirdDataProvider : DataProviderBase
 	{
-		public FirebirdDataProvider(string name)
-			: this(name, new FirebirdMappingSchema(name))
+		public FirebirdDataProvider()
+			: this(ProviderName.Firebird, new FirebirdMappingSchema())
 		{
 		}
 
-		public FirebirdDataProvider(string name, MappingSchema mappingSchema)
+		protected FirebirdDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());

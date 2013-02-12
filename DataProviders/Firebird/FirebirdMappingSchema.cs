@@ -6,7 +6,11 @@ namespace LinqToDB.DataProvider
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
-		public FirebirdMappingSchema(string configuration) : base(configuration)
+		public FirebirdMappingSchema() : this(ProviderName.Firebird)
+		{
+		}
+
+		protected FirebirdMappingSchema(string configuration) : base(configuration)
 		{
 		}
 	}

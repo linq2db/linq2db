@@ -45,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SqlServer2012MappingSchema.cs" />
+    <Compile Include="SqlServer2008MappingSchema.cs" />
+    <Compile Include="SqlServer2005MappingSchema.cs" />
     <Compile Include="SqlServer2005SqlProvider.cs" />
     <Compile Include="SqlServer2008SqlProvider.cs" />
     <Compile Include="SqlServerSqlProvider.cs" />

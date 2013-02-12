@@ -11,7 +11,11 @@ namespace LinqToDB.DataProvider
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
-		public SqlCeMappingSchema(string configuration) : base(configuration)
+		public SqlCeMappingSchema() : this(ProviderName.SqlCe)
+		{
+		}
+
+		protected SqlCeMappingSchema(string configuration) : base(configuration)
 		{
 			SetConvertExpression<SqlXml,XmlReader>(
 				s => s.IsNull ? DefaultValue<XmlReader>.Value : s.CreateReader(),

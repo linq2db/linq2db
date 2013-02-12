@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider
 
 	public class InformixDataProvider : DataProviderBase
 	{
-		public InformixDataProvider(string name)
-			: this(name, new InformixMappingSchema(name))
+		public InformixDataProvider()
+			: this(ProviderName.Informix, new InformixMappingSchema())
 		{
 		}
 
-		public InformixDataProvider(string name, MappingSchema mappingSchema)
+		protected InformixDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;

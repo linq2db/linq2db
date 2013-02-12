@@ -9,12 +9,12 @@ namespace LinqToDB.DataProvider
 
 	public class AccessDataProvider : DataProviderBase
 	{
-		public AccessDataProvider(string name)
-			: this(name, new AccessMappingSchema(name))
+		public AccessDataProvider()
+			: this(ProviderName.Access, new AccessMappingSchema())
 		{
 		}
 
-		public AccessDataProvider(string name, MappingSchema mappingSchema)
+		protected AccessDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter = false;
