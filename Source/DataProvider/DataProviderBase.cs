@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
 		}
 
-		static MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
+		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{

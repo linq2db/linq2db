@@ -12,7 +12,6 @@ namespace LinqToDB.ServiceModel
 	using Extensions;
 	using Mapping;
 	using SqlBuilder;
-	using SqlProvider;
 
 	static class LinqServiceSerializer
 	{
@@ -62,7 +61,7 @@ namespace LinqToDB.ServiceModel
 			protected readonly Dictionary<object,int> Dic     = new Dictionary<object,int>();
 			protected int                             Index;
 
-			string ConvertToString(Type type, object value)
+			static string ConvertToString(Type type, object value)
 			{
 				switch (Type.GetTypeCode(type))
 				{

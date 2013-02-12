@@ -57,6 +57,9 @@ namespace LinqToDB.Common
 
 		static bool IsConvertible(Type type)
 		{
+			if (type.IsEnum)
+				return false;
+
 			switch (Type.GetTypeCode(type))
 			{
 				case TypeCode.Boolean :

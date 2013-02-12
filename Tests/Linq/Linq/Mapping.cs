@@ -266,7 +266,7 @@ namespace Tests.Linq
 			public int?  Value1;
 		}
 
-		class MyMappingSchema : MappingSchemaOld
+		class MyMappingSchemaOld : MappingSchemaOld
 		{
 			public override object ConvertChangeType(object value, Type conversionType, bool isNullable)
 			{
@@ -280,12 +280,21 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
+		class MyMappingSchema : MappingSchema
+		{
+			public MyMappingSchema()
+			{
+				SetConvertExpression<int,MyInt>(n => new MyInt { MyValue = n });
+			}
+		}
+
+		static readonly MyMappingSchema    _myMappingSchema    = new MyMappingSchema();
+		static readonly MyMappingSchemaOld _myMappingSchemaOld = new MyMappingSchemaOld();
 
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchema })
+			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld }.AddMappingSchema(_myMappingSchema))
 			{
 				var list = db.GetTable<MyParent>().ToList();
 			}
@@ -294,7 +303,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchema })
+			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld }.AddMappingSchema(_myMappingSchema))
 			{
 				var list = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
@@ -305,7 +314,7 @@ namespace Tests.Linq
 		//[Test] //////////////// TODO
 		public void MyType3()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchema })
+			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld })
 			{
 				db.BeginTransaction();
 

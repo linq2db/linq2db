@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider
 {
@@ -12,6 +13,7 @@ namespace LinqToDB.DataProvider
 
 		protected SQLiteMappingSchema(string configuration) : base(configuration)
 		{
+			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 		}
 	}
 }

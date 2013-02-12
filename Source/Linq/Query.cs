@@ -1075,6 +1075,22 @@ namespace LinqToDB.Linq
 				{
 					result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 				}
+				catch (FormatException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					var mapperExpression = mapInfo.Expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce() : e;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
+
+					mapInfo.Mapper = mapper = mapperExpression.Compile();
+					result         = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+				}
 				catch (InvalidCastException)
 				{
 					if (isFaulted)
