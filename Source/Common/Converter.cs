@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Data.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
@@ -30,7 +31,9 @@ namespace LinqToDB.Common
 			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
 			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));
 			SetConverter<byte[],         string>     (v => Convert.ToBase64String(v));
-			//SetConverter<long,           int>        (v => checked((int)v));
+			SetConverter<TimeSpan,       DateTime>   (v => DateTime.MinValue + v);
+			SetConverter<DateTime,       TimeSpan>   (v => v - DateTime.MinValue);
+			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, null, DateTimeStyles.NoCurrentDateDefault));
 		}
 
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)

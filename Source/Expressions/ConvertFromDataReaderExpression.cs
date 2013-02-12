@@ -42,7 +42,6 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataReader dataReader)
 		{
-//			return Reduce();
 			return GetColumnReader(_dataContext, _dataContext.MappingSchema.NewSchema, dataReader, _type, _idx, _dataReaderParam);
 		}
 
