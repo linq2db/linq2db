@@ -2,18 +2,14 @@ using System;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.IO;
-using System.Xml;
+
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
-using LinqToDB.SqlBuilder;
-
-using Convert = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
 {
-	public partial class MemberMapper
+	public class MemberMapper
 	{
 		#region Init
 
@@ -37,18 +33,7 @@ namespace LinqToDB.Mapping
 
 		internal static MemberMapper CreateMemberMapper(MapMemberInfo mi)
 		{
-			var type = mi.Type;
-			var mm   = null as MemberMapper;
-
-			if (type.IsPrimitive || type.IsEnum)
-				mm = GetPrimitiveMemberMapper(mi);
-
-			if (mm == null) mm = GetNullableMemberMapper(mi);
-			if (mm == null) mm = GetSimpleMemberMapper  (mi);
-#if !SILVERLIGHT
-			if (mm == null) mm = GetSqlTypeMemberMapper (mi);
-#endif
-			return mm ?? new DefaultMemberMapper();
+			return new DefaultMemberMapper();
 		}
 
 		#endregion
@@ -82,113 +67,6 @@ namespace LinqToDB.Mapping
 			get { return _type; }
 		}
 
-		public DbType GetDbType()
-		{
-			if (MapMemberInfo.IsDbTypeSet)
-				return DbType;
-
-			if (DbType != DbType.Object)
-				return DbType;
-
-			var dataType = SqlDataType.GetDataType(_type);
-
-			switch (dataType.SqlDbType)
-			{
-				case SqlDbType.BigInt           : return DbType.Int64;
-				case SqlDbType.Binary           : return DbType.Binary;
-				case SqlDbType.Bit              : return DbType.Boolean;
-				case SqlDbType.Char             : return DbType.AnsiStringFixedLength;
-				case SqlDbType.DateTime         : return DbType.DateTime;
-				case SqlDbType.Decimal          : return DbType.Decimal;
-				case SqlDbType.Float            : return DbType.Double;
-				case SqlDbType.Image            : return DbType.Binary;
-				case SqlDbType.Int              : return DbType.Int32;
-				case SqlDbType.Money            : return DbType.Currency;
-				case SqlDbType.NChar            : return DbType.StringFixedLength;
-				case SqlDbType.NText            : return DbType.String;
-				case SqlDbType.NVarChar         : return DbType.String;
-				case SqlDbType.Real             : return DbType.Single;
-				case SqlDbType.UniqueIdentifier : return DbType.Guid;
-				case SqlDbType.SmallDateTime    : return DbType.DateTime;
-				case SqlDbType.SmallInt         : return DbType.Int16;
-				case SqlDbType.SmallMoney       : return DbType.Currency;
-				case SqlDbType.Text             : return DbType.AnsiString;
-				case SqlDbType.Timestamp        : return DbType.Binary;
-				case SqlDbType.TinyInt          : return DbType.Byte;
-				case SqlDbType.VarBinary        : return DbType.Binary;
-				case SqlDbType.VarChar          : return DbType.AnsiString;
-				case SqlDbType.Variant          : return DbType.Object;
-				case SqlDbType.Xml              : return DbType.Xml;
-				case SqlDbType.Udt              : return DbType.Binary;
-				case SqlDbType.Date             : return DbType.Date;
-				case SqlDbType.Time             : return DbType.Time;
-#if !MONO
-				case SqlDbType.Structured       : return DbType.Binary;
-				case SqlDbType.DateTime2        : return DbType.DateTime2;
-				case SqlDbType.DateTimeOffset   : return DbType.DateTimeOffset;
-#endif
-			}
-
-			return DbType.Object;
-		}
-
-		public int GetDbSize(object value)
-		{
-			if (MapMemberInfo.IsDbSizeSet)
-				return MapMemberInfo.DbSize;
-
-			if (value == null)
-				return 0;
-
-			if (value is string)
-				return ((string)value).Length;
-
-			if (value is byte[])
-				return ((byte[])value).Length;
-
-
-			var dataType = SqlDataType.GetDataType(_type);
-
-			switch (dataType.SqlDbType)
-			{
-				case SqlDbType.BigInt           : return 0;
-				case SqlDbType.Binary           : return 0;
-				case SqlDbType.Bit              : return 0;
-				case SqlDbType.Char             : return 0;
-				case SqlDbType.DateTime         : return 0;
-				case SqlDbType.Decimal          : return 0;
-				case SqlDbType.Float            : return 0;
-				case SqlDbType.Image            : return 0;
-				case SqlDbType.Int              : return 0;
-				case SqlDbType.Money            : return 0;
-				case SqlDbType.NChar            : return 0;
-				case SqlDbType.NText            : return 0;
-				case SqlDbType.NVarChar         : return 0;
-				case SqlDbType.Real             : return 0;
-				case SqlDbType.UniqueIdentifier : return 0;
-				case SqlDbType.SmallDateTime    : return 0;
-				case SqlDbType.SmallInt         : return 0;
-				case SqlDbType.SmallMoney       : return 0;
-				case SqlDbType.Text             : return 0;
-				case SqlDbType.Timestamp        : return 0;
-				case SqlDbType.TinyInt          : return 0;
-				case SqlDbType.VarBinary        : return 0;
-				case SqlDbType.VarChar          : return 0;
-				case SqlDbType.Variant          : return 0;
-				case SqlDbType.Xml              : return 0;
-				case SqlDbType.Udt              : return 0;
-				case SqlDbType.Date             : return 0;
-				case SqlDbType.Time             : return 0;
-#if !MONO
-				case SqlDbType.Structured       : return 0;
-				case SqlDbType.DateTime2        : return 0;
-				case SqlDbType.DateTimeOffset   : return 0;
-#endif
-			}
-
-			return 0;
-		}
-
 		#endregion
 
 		#region Default Members (GetValue, SetValue)
@@ -197,8 +75,6 @@ namespace LinqToDB.Mapping
 		{
 			return MemberAccessor.GetValue(o);
 		}
-
-		public virtual bool     IsNull     (object o) { return GetValue(o) == null; }
 
 		// Simple type getters.
 		//
@@ -509,213 +385,6 @@ namespace LinqToDB.Mapping
 
 			#endregion
 		}
-
-		#endregion
-
-		#region Primitive Mappers
-
-		private static MemberMapper GetPrimitiveMemberMapper(MapMemberInfo mi)
-		{
-			if (mi.MapValues != null)
-				return null;
-
-			var n    = mi.Nullable;
-			var type = mi.MemberAccessor.UnderlyingType;
- 
-			if (type == typeof(SByte))   return n? new SByteMapper.  Nullable(): new SByteMapper();
-			if (type == typeof(Int16))   return n? new Int16Mapper.  Nullable(): new Int16Mapper();
-			if (type == typeof(Int32))   return n? new Int32Mapper.  Nullable(): new Int32Mapper();
-			if (type == typeof(Int64))   return n? new Int64Mapper.  Nullable(): new Int64Mapper();
-			if (type == typeof(Byte))    return n? new ByteMapper.   Nullable(): new ByteMapper();
-			if (type == typeof(UInt16))  return n? new UInt16Mapper. Nullable(): new UInt16Mapper();
-			if (type == typeof(UInt32))  return n? new UInt32Mapper. Nullable(): new UInt32Mapper();
-			if (type == typeof(UInt64))  return n? new UInt64Mapper. Nullable(): new UInt64Mapper();
-			if (type == typeof(Single))  return n? new SingleMapper. Nullable(): new SingleMapper();
-			if (type == typeof(Double))  return n? new DoubleMapper. Nullable(): new DoubleMapper();
-			if (type == typeof(Char))    return n? new CharMapper.   Nullable(): new CharMapper();
-			if (type == typeof(Boolean)) return n? new BooleanMapper.Nullable(): new BooleanMapper();
-
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region Simple Mappers
-
-		private static MemberMapper GetSimpleMemberMapper(MapMemberInfo mi)
-		{
-			if (mi.MapValues != null)
-				return null;
-
-			var n    = mi.Nullable;
-			var type = mi.Type;
-
-			if (type == typeof(String))
-				if (mi.Trimmable) return n? new StringMapper.Trimmable.NullableT(): new StringMapper.Trimmable();
-				else              return n? new StringMapper.Nullable()           : new StringMapper();
-
-			if (type == typeof(DateTime))       return n? new DateTimeMapper.Nullable()       : new DateTimeMapper();
-			if (type == typeof(DateTimeOffset)) return n? new DateTimeOffsetMapper.Nullable() : new DateTimeOffsetMapper();
-			if (type == typeof(Decimal))        return n? new DecimalMapper.Nullable()        : new DecimalMapper();
-			if (type == typeof(Guid))           return n? new GuidMapper.Nullable()           : new GuidMapper();
-			if (type == typeof(Stream))         return n? new StreamMapper.Nullable()         : new StreamMapper();
-#if !SILVERLIGHT
-			if (type == typeof(XmlReader))      return n? new XmlReaderMapper.Nullable()      : new XmlReaderMapper();
-			if (type == typeof(XmlDocument))    return n? new XmlDocumentMapper.Nullable()    : new XmlDocumentMapper();
-#endif
-			return null;
-		}
-
-		class StringMapper : MemberMapper
-		{
-			string _nullValue;
-
-			public override void SetValue(object o, object value)
-			{
-				MemberAccessor.SetValue(
-					o,
-					value is string? value:
-					value == null?   _nullValue:
-					                 MappingSchema.ConvertToString(value));
-			}
-
-			public override void Init(MapMemberInfo mapMemberInfo)
-			{
-				if (mapMemberInfo == null) throw new ArgumentNullException("mapMemberInfo");
-
-				if (mapMemberInfo.NullValue != null)
-					_nullValue = Convert.ToString(mapMemberInfo.NullValue);
-
-				base.Init(mapMemberInfo);
-			}
-
-			public class Nullable : StringMapper
-			{
-				public override object GetValue(object o)
-				{
-					var value = MemberAccessor.GetValue(o);
-					return (string)value == _nullValue? null: value;
-				}
-			}
-
-			public class Trimmable : StringMapper
-			{
-				public override void SetValue(object o, object value)
-				{
-					MemberAccessor.SetValue(
-						o, value == null? _nullValue: MappingSchema.ConvertToString(value).TrimEnd(_trim));
-				}
-
-				public class NullableT : Trimmable
-				{
-					public override object GetValue(object o)
-					{
-						var value = MemberAccessor.GetValue(o);
-						return (string)value == _nullValue? null: value;
-					}
-				}
-			}
-		}
-
-		#endregion
-
-		#region Nullable Mappers
-
-		private static MemberMapper GetNullableMemberMapper(MapMemberInfo mi)
-		{
-			var type = mi.Type;
-
-			if (type.IsGenericType == false || mi.MapValues != null)
-				return null;
-
-			var underlyingType = Nullable.GetUnderlyingType(type);
-
-			if (underlyingType == null)
-				return null;
-
-			if (underlyingType.IsEnum)
-			{
-				underlyingType = Enum.GetUnderlyingType(underlyingType);
-
-				if (underlyingType == typeof(SByte))    return new NullableSByteMapper. Enum();
-				if (underlyingType == typeof(Int16))    return new NullableInt16Mapper. Enum();
-				if (underlyingType == typeof(Int32))    return new NullableInt32Mapper. Enum();
-				if (underlyingType == typeof(Int64))    return new NullableInt64Mapper. Enum();
-				if (underlyingType == typeof(Byte))     return new NullableByteMapper.  Enum();
-				if (underlyingType == typeof(UInt16))   return new NullableUInt16Mapper.Enum();
-				if (underlyingType == typeof(UInt32))   return new NullableUInt32Mapper.Enum();
-				if (underlyingType == typeof(UInt64))   return new NullableUInt64Mapper.Enum();
-			}
-			else
-			{
-				if (underlyingType == typeof(SByte))    return new NullableSByteMapper();
-				if (underlyingType == typeof(Int16))    return new NullableInt16Mapper();
-				if (underlyingType == typeof(Int32))    return new NullableInt32Mapper();
-				if (underlyingType == typeof(Int64))    return new NullableInt64Mapper();
-				if (underlyingType == typeof(Byte))     return new NullableByteMapper();
-				if (underlyingType == typeof(UInt16))   return new NullableUInt16Mapper();
-				if (underlyingType == typeof(UInt32))   return new NullableUInt32Mapper();
-				if (underlyingType == typeof(UInt64))   return new NullableUInt64Mapper();
-				if (underlyingType == typeof(Char))     return new NullableCharMapper();
-				if (underlyingType == typeof(Single))   return new NullableSingleMapper();
-				if (underlyingType == typeof(Boolean))  return new NullableBooleanMapper();
-				if (underlyingType == typeof(Double))   return new NullableDoubleMapper();
-				if (underlyingType == typeof(DateTime)) return new NullableDateTimeMapper();
-				if (underlyingType == typeof(Decimal))  return new NullableDecimalMapper();
-				if (underlyingType == typeof(Guid))     return new NullableGuidMapper();
-			}
-
-			return null;
-		}
-
-		abstract class NullableEnumMapper : MemberMapper
-		{
-			protected Type MemberType;
-			protected Type UnderlyingType;
-
-			public override void Init(MapMemberInfo mapMemberInfo)
-			{
-				if (mapMemberInfo == null) throw new ArgumentNullException("mapMemberInfo");
-
-				MemberType     = Nullable.GetUnderlyingType(mapMemberInfo.Type);
-				UnderlyingType = mapMemberInfo.MemberAccessor.UnderlyingType;
-
-				base.Init(mapMemberInfo);
-			}
-		}
-
-		#endregion
-
-		#region SqlTypes
-
-#if !SILVERLIGHT
-
-		private static MemberMapper GetSqlTypeMemberMapper(MapMemberInfo mi)
-		{
-			var type = mi.Type;
-
-			if (typeof(INullable).IsSameOrParentOf(type) == false)
-				return null;
-
-			var d = mi.MapValues != null;
-
-			if (type == typeof(SqlByte))     return d? new SqlByteMapper.    Default(): new SqlByteMapper();
-			if (type == typeof(SqlInt16))    return d? new SqlInt16Mapper.   Default(): new SqlInt16Mapper();
-			if (type == typeof(SqlInt32))    return d? new SqlInt32Mapper.   Default(): new SqlInt32Mapper();
-			if (type == typeof(SqlInt64))    return d? new SqlInt64Mapper.   Default(): new SqlInt64Mapper();
-			if (type == typeof(SqlSingle))   return d? new SqlSingleMapper.  Default(): new SqlSingleMapper();
-			if (type == typeof(SqlBoolean))  return d? new SqlBooleanMapper. Default(): new SqlBooleanMapper();
-			if (type == typeof(SqlDouble))   return d? new SqlDoubleMapper.  Default(): new SqlDoubleMapper();
-			if (type == typeof(SqlDateTime)) return d? new SqlDateTimeMapper.Default(): new SqlDateTimeMapper();
-			if (type == typeof(SqlDecimal))  return d? new SqlDecimalMapper. Default(): new SqlDecimalMapper();
-			if (type == typeof(SqlMoney))    return d? new SqlMoneyMapper.   Default(): new SqlMoneyMapper();
-			if (type == typeof(SqlGuid))     return d? new SqlGuidMapper.    Default(): new SqlGuidMapper();
-			if (type == typeof(SqlString))   return d? new SqlStringMapper.  Default(): new SqlStringMapper();
-
-			return null;
-		}
-
-#endif
 
 		#endregion
 

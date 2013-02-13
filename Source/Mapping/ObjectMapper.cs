@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -12,7 +11,7 @@ namespace LinqToDB.Mapping
 	using Reflection.MetadataProvider;
 
 	[DebuggerDisplay("Type = {TypeAccessor.Type}, OriginalType = {TypeAccessor.OriginalType}")]
-	public class ObjectMapper : MapDataSourceDestinationBase, IEnumerable<MemberMapper>
+	public class ObjectMapper : IEnumerable<MemberMapper>
 	{
 		#region Protected Members
 
@@ -155,20 +154,6 @@ namespace LinqToDB.Mapping
 
 				return this[name];
 			}
-		}
-
-		public int GetOrdinal(string name, bool byPropertyName)
-		{
-			if (byPropertyName)
-			{
-				for (var i = 0; i < _members.Count; ++i)
-					if (_members[i].MemberName == name)
-						return i;
-
-				return -1;
-			}
-
-			return GetOrdinal(name);
 		}
 
 		internal EntityDescriptor EntityDescriptor { get; private set; }
@@ -449,206 +434,6 @@ namespace LinqToDB.Mapping
 		{
 			return TypeAccessor.CreateInstanceEx();
 		}
-
-		#endregion
-
-		#region IMapDataSource Members
-
-		public override int Count
-		{
-			get { return _members.Count; }
-		}
-
-		public override Type GetFieldType(int index)
-		{
-			return _members[index].Type;
-		}
-
-		public override string GetName(int index)
-		{
-			return _members[index].Name;
-		}
-
-		public override object GetValue(object o, int index)
-		{
-			return _members[index].GetValue(o);
-		}
-
-		public override object GetValue(object o, string name)
-		{
-			MemberMapper mm;
-
-			lock (_nameToMember)
-				if (!_nameToMember.TryGetValue(name, out mm))
-					mm = this[name];
-
-			return mm == null? null: mm.GetValue(o);
-		}
-
-		public override bool     IsNull     (object o, int index) { return this[index].IsNull(o);      }
-
-		// Simple type getters.
-		//
-		public override Int16    GetInt16   (object o, int index) { return this[index].GetInt16   (o); }
-		public override Int32    GetInt32   (object o, int index) { return this[index].GetInt32   (o); }
-		public override Int64    GetInt64   (object o, int index) { return this[index].GetInt64   (o); }
-
-		public override Byte     GetByte    (object o, int index) { return this[index].GetByte    (o); }
-		[CLSCompliant(false)]
-		public override UInt16   GetUInt16  (object o, int index) { return this[index].GetUInt16  (o); }
-		[CLSCompliant(false)]
-		public override UInt32   GetUInt32  (object o, int index) { return this[index].GetUInt32  (o); }
-		[CLSCompliant(false)]
-		public override UInt64   GetUInt64  (object o, int index) { return this[index].GetUInt64  (o); }
-
-		public override Boolean  GetBoolean (object o, int index) { return this[index].GetBoolean (o); }
-		public override Char     GetChar    (object o, int index) { return this[index].GetChar    (o); }
-		public override Single   GetSingle  (object o, int index) { return this[index].GetSingle  (o); }
-		public override Double   GetDouble  (object o, int index) { return this[index].GetDouble  (o); }
-		public override Decimal  GetDecimal (object o, int index) { return this[index].GetDecimal (o); }
-		public override Guid     GetGuid    (object o, int index) { return this[index].GetGuid    (o); }
-		public override DateTime GetDateTime(object o, int index) { return this[index].GetDateTime(o); }
-		public override DateTimeOffset GetDateTimeOffset(object o, int index) { return this[index].GetDateTimeOffset(o); }
-
-		// Nullable type getters.
-		//
-		[CLSCompliant(false)]
-		public override SByte?    GetNullableSByte   (object o, int index) { return this[index].GetNullableSByte   (o); }
-		public override Int16?    GetNullableInt16   (object o, int index) { return this[index].GetNullableInt16   (o); }
-		public override Int32?    GetNullableInt32   (object o, int index) { return this[index].GetNullableInt32   (o); }
-		public override Int64?    GetNullableInt64   (object o, int index) { return this[index].GetNullableInt64   (o); }
-
-		public override Byte?     GetNullableByte    (object o, int index) { return this[index].GetNullableByte    (o); }
-		[CLSCompliant(false)]
-		public override UInt16?   GetNullableUInt16  (object o, int index) { return this[index].GetNullableUInt16  (o); }
-		[CLSCompliant(false)]
-		public override UInt32?   GetNullableUInt32  (object o, int index) { return this[index].GetNullableUInt32  (o); }
-		[CLSCompliant(false)]
-		public override UInt64?   GetNullableUInt64  (object o, int index) { return this[index].GetNullableUInt64  (o); }
-
-		public override Boolean?  GetNullableBoolean (object o, int index) { return this[index].GetNullableBoolean (o); }
-		public override Char?     GetNullableChar    (object o, int index) { return this[index].GetNullableChar    (o); }
-		public override Single?   GetNullableSingle  (object o, int index) { return this[index].GetNullableSingle  (o); }
-		public override Double?   GetNullableDouble  (object o, int index) { return this[index].GetNullableDouble  (o); }
-		public override Decimal?  GetNullableDecimal (object o, int index) { return this[index].GetNullableDecimal (o); }
-		public override Guid?     GetNullableGuid    (object o, int index) { return this[index].GetNullableGuid    (o); }
-		public override DateTime? GetNullableDateTime(object o, int index) { return this[index].GetNullableDateTime(o); }
-		public override DateTimeOffset? GetNullableDateTimeOffset(object o, int index) { return this[index].GetNullableDateTimeOffset(o); }
-
-#if !SILVERLIGHT
-
-		// SQL type getters.
-		//
-		public override SqlByte     GetSqlByte    (object o, int index) { return this[index].GetSqlByte    (o); }
-		public override SqlInt16    GetSqlInt16   (object o, int index) { return this[index].GetSqlInt16   (o); }
-		public override SqlInt32    GetSqlInt32   (object o, int index) { return this[index].GetSqlInt32   (o); }
-		public override SqlInt64    GetSqlInt64   (object o, int index) { return this[index].GetSqlInt64   (o); }
-		public override SqlSingle   GetSqlSingle  (object o, int index) { return this[index].GetSqlSingle  (o); }
-		public override SqlBoolean  GetSqlBoolean (object o, int index) { return this[index].GetSqlBoolean (o); }
-		public override SqlDouble   GetSqlDouble  (object o, int index) { return this[index].GetSqlDouble  (o); }
-		public override SqlDateTime GetSqlDateTime(object o, int index) { return this[index].GetSqlDateTime(o); }
-		public override SqlDecimal  GetSqlDecimal (object o, int index) { return this[index].GetSqlDecimal (o); }
-		public override SqlMoney    GetSqlMoney   (object o, int index) { return this[index].GetSqlMoney   (o); }
-		public override SqlGuid     GetSqlGuid    (object o, int index) { return this[index].GetSqlGuid    (o); }
-		public override SqlString   GetSqlString  (object o, int index) { return this[index].GetSqlString  (o); }
-
-#endif
-
-		#endregion
-
-		#region IMapDataDestination Members
-
-		public override int GetOrdinal(string name)
-		{
-			MemberMapper mm;
-
-			lock (_nameToMember)
-				if (!_nameToMember.TryGetValue(name, out mm))
-					mm = this[name];
-
-			return mm == null? -1: mm.Ordinal;
-		}
-
-		public override void SetValue(object o, int index, object value)
-		{
-			_members[index].SetValue(o, value);
-		}
-
-		public override void SetValue(object o, string name, object value)
-		{
-			SetValue(o, GetOrdinal(name), value);
-		}
-
-		public override void SetNull    (object o, int index)                 { this[index].SetNull    (o); }
-
-		// Simple types setters.
-		//
-		[CLSCompliant(false)]
-		public override void SetSByte   (object o, int index, SByte    value) { this[index].SetSByte   (o, value); }
-		public override void SetInt16   (object o, int index, Int16    value) { this[index].SetInt16   (o, value); }
-		public override void SetInt32   (object o, int index, Int32    value) { this[index].SetInt32   (o, value); }
-		public override void SetInt64   (object o, int index, Int64    value) { this[index].SetInt64   (o, value); }
-
-		public override void SetByte    (object o, int index, Byte     value) { this[index].SetByte    (o, value); }
-		[CLSCompliant(false)]
-		public override void SetUInt16  (object o, int index, UInt16   value) { this[index].SetUInt16  (o, value); }
-		[CLSCompliant(false)]
-		public override void SetUInt32  (object o, int index, UInt32   value) { this[index].SetUInt32  (o, value); }
-		[CLSCompliant(false)]
-		public override void SetUInt64  (object o, int index, UInt64   value) { this[index].SetUInt64  (o, value); }
-
-		public override void SetBoolean (object o, int index, Boolean  value) { this[index].SetBoolean (o, value); }
-		public override void SetChar    (object o, int index, Char     value) { this[index].SetChar    (o, value); }
-		public override void SetSingle  (object o, int index, Single   value) { this[index].SetSingle  (o, value); }
-		public override void SetDouble  (object o, int index, Double   value) { this[index].SetDouble  (o, value); }
-		public override void SetDecimal (object o, int index, Decimal  value) { this[index].SetDecimal (o, value); }
-		public override void SetGuid    (object o, int index, Guid     value) { this[index].SetGuid    (o, value); }
-		public override void SetDateTime(object o, int index, DateTime value) { this[index].SetDateTime(o, value); }
-		public override void SetDateTimeOffset(object o, int index, DateTimeOffset value) { this[index].SetDateTimeOffset(o, value); }
-
-		// Simple types setters.
-		//
-		[CLSCompliant(false)]
-		public override void SetNullableSByte   (object o, int index, SByte?    value) { this[index].SetNullableSByte   (o, value); }
-		public override void SetNullableInt16   (object o, int index, Int16?    value) { this[index].SetNullableInt16   (o, value); }
-		public override void SetNullableInt32   (object o, int index, Int32?    value) { this[index].SetNullableInt32   (o, value); }
-		public override void SetNullableInt64   (object o, int index, Int64?    value) { this[index].SetNullableInt64   (o, value); }
-
-		public override void SetNullableByte    (object o, int index, Byte?     value) { this[index].SetNullableByte    (o, value); }
-		[CLSCompliant(false)]
-		public override void SetNullableUInt16  (object o, int index, UInt16?   value) { this[index].SetNullableUInt16  (o, value); }
-		[CLSCompliant(false)]
-		public override void SetNullableUInt32  (object o, int index, UInt32?   value) { this[index].SetNullableUInt32  (o, value); }
-		[CLSCompliant(false)]
-		public override void SetNullableUInt64  (object o, int index, UInt64?   value) { this[index].SetNullableUInt64  (o, value); }
-
-		public override void SetNullableBoolean (object o, int index, Boolean?  value) { this[index].SetNullableBoolean (o, value); }
-		public override void SetNullableChar    (object o, int index, Char?     value) { this[index].SetNullableChar    (o, value); }
-		public override void SetNullableSingle  (object o, int index, Single?   value) { this[index].SetNullableSingle  (o, value); }
-		public override void SetNullableDouble  (object o, int index, Double?   value) { this[index].SetNullableDouble  (o, value); }
-		public override void SetNullableDecimal (object o, int index, Decimal?  value) { this[index].SetNullableDecimal (o, value); }
-		public override void SetNullableGuid    (object o, int index, Guid?     value) { this[index].SetNullableGuid    (o, value); }
-		public override void SetNullableDateTime(object o, int index, DateTime? value) { this[index].SetNullableDateTime(o, value); }
-		public override void SetNullableDateTimeOffset(object o, int index, DateTimeOffset? value) { this[index].SetNullableDateTimeOffset(o, value); }
-
-#if !SILVERLIGHT
-
-		// SQL type setters.
-		//
-		public override void SetSqlByte    (object o, int index, SqlByte     value) { this[index].SetSqlByte    (o, value); }
-		public override void SetSqlInt16   (object o, int index, SqlInt16    value) { this[index].SetSqlInt16   (o, value); }
-		public override void SetSqlInt32   (object o, int index, SqlInt32    value) { this[index].SetSqlInt32   (o, value); }
-		public override void SetSqlInt64   (object o, int index, SqlInt64    value) { this[index].SetSqlInt64   (o, value); }
-		public override void SetSqlSingle  (object o, int index, SqlSingle   value) { this[index].SetSqlSingle  (o, value); }
-		public override void SetSqlBoolean (object o, int index, SqlBoolean  value) { this[index].SetSqlBoolean (o, value); }
-		public override void SetSqlDouble  (object o, int index, SqlDouble   value) { this[index].SetSqlDouble  (o, value); }
-		public override void SetSqlDateTime(object o, int index, SqlDateTime value) { this[index].SetSqlDateTime(o, value); }
-		public override void SetSqlDecimal (object o, int index, SqlDecimal  value) { this[index].SetSqlDecimal (o, value); }
-		public override void SetSqlMoney   (object o, int index, SqlMoney    value) { this[index].SetSqlMoney   (o, value); }
-		public override void SetSqlGuid    (object o, int index, SqlGuid     value) { this[index].SetSqlGuid    (o, value); }
-		public override void SetSqlString  (object o, int index, SqlString   value) { this[index].SetSqlString  (o, value); }
-
-#endif
 
 		#endregion
 
