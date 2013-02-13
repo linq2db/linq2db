@@ -293,16 +293,25 @@ namespace LinqToDB.Linq.Builder
 					from idx in index.Select((n,i) => new { n, i })
 					where idx.n >= 0
 					let   mm = om[idx.i]
+					where
+						mm.Storage != null ||
+						!(mm.MemberAccessor.MemberInfo is PropertyInfo) ||
+						((PropertyInfo)mm.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 					select new
 					{
-						Member = mm.MemberAccessor.MemberInfo,
-						Expr   = new ConvertFromDataReaderExpression(mm.Type, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Storage = mm.Storage,
+						Member  = mm.MemberAccessor.MemberInfo,
+						Expr    = new ConvertFromDataReaderExpression(mm.Type, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
 					}
 				).ToList();
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
-					members.Select(m => Expression.Bind(m.Member, m.Expr)));
+					members.Select(m => Expression.Bind(
+						m.Storage == null ?
+							m.Member :
+							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Storage).Member,
+						m.Expr)));
 
 				expr = ProcessExpression(expr);
 

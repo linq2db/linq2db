@@ -34,6 +34,30 @@ namespace LinqToDB.Common
 			SetConverter<TimeSpan,       DateTime>   (v => DateTime.MinValue + v);
 			SetConverter<DateTime,       TimeSpan>   (v => v - DateTime.MinValue);
 			SetConverter<string,         DateTime>   (v => DateTime.Parse(v, null, DateTimeStyles.NoCurrentDateDefault));
+			SetConverter<char,           bool>       (v => ToBoolean(v));
+			SetConverter<string,         bool>       (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
+		}
+
+		static bool ToBoolean(char ch)
+		{
+			switch (ch)
+			{
+				case '\x0' : // Allow int <=> Char <=> Boolean
+				case   '0' :
+				case   'n' :
+				case   'N' :
+				case   'f' :
+				case   'F' : return false;
+
+				case '\x1' : // Allow int <=> Char <=> Boolean
+				case   '1' :
+				case   'y' :
+				case   'Y' :
+				case   't' :
+				case   'T' : return true;
+			}
+
+			throw new InvalidCastException("Invalid cast from System.String to System.Bool");
 		}
 
 		public static void SetConverter<TFrom,TTo>(Expression<Func<TFrom,TTo>> expr)
@@ -100,7 +124,7 @@ namespace LinqToDB.Common
 			public static readonly ConcurrentDictionary<Type,Func<object,T>> Converters = new ConcurrentDictionary<Type,Func<object,T>>();
 		}
 
-		public static object ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
+		public static T ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
 		{
 			if (value == null)
 				return DefaultValue<T>.Value;
@@ -148,6 +172,11 @@ namespace LinqToDB.Common
 			}
 
 			return expr is DefaultValueExpression;
+		}
+
+		public static Type GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
+		{
+			return ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, enumType);
 		}
 	}
 }

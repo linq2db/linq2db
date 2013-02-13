@@ -235,7 +235,6 @@
     <Compile Include="Mapping\MapDataSourceBase.cs" />
     <Compile Include="Mapping\MapDataSourceDestinationBase.cs" />
     <Compile Include="MapFieldAttribute.cs" />
-    <Compile Include="Mapping\MapGetDataT.cs" />
     <Compile Include="MapIgnoreAttribute.cs" />
     <Compile Include="Mapping\MapImplicitAttribute.cs" />
     <Compile Include="Mapping\MapMemberInfo.cs" />

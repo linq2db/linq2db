@@ -81,6 +81,11 @@ namespace LinqToDB.Mapping
 
 		#region Convert
 
+		public virtual LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return null;
+		}
+
 		internal ConcurrentDictionary<object,Func<object,object>> Converters
 		{
 			get { return _schemas[0].Converters; }

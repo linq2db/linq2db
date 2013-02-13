@@ -18,8 +18,6 @@ namespace LinqToDB.Mapping
 
 		// Simple type getters.
 		//
-		[CLSCompliant(false)]
-		public virtual  SByte    GetSByte    (object o, int index) { return Map.DefaultSchema.ConvertToSByte   (GetValue(o, index)); }
 		public virtual  Int16    GetInt16    (object o, int index) { return Map.DefaultSchema.ConvertToInt16   (GetValue(o, index)); }
 		public virtual  Int32    GetInt32    (object o, int index) { return Map.DefaultSchema.ConvertToInt32   (GetValue(o, index)); }
 		public virtual  Int64    GetInt64    (object o, int index) { return Map.DefaultSchema.ConvertToInt64   (GetValue(o, index)); }

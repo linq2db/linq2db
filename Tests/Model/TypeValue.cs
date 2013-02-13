@@ -6,13 +6,13 @@ namespace Tests.Model
 {
 	public enum TypeValue
 	{
-		[NullValue]
+		[MapValue(null)] [NullValue]
 		Value0 = 0,
-		[MapValueOld(1)] Value1 = 10,
-		Value2 = 2,
-		Value3 = 3,
-		Value4 = 4,
-		Value5 = 5,
-		Value6 = 6
+		[MapValue(1)] [MapValueOld(1)] Value1 = 10,
+		[MapValue(2)] Value2 = 2,
+		[MapValue(3)] Value3 = 3,
+		[MapValue(4)] Value4 = 4,
+		[MapValue(5)] Value5 = 5,
+		[MapValue(6)] Value6 = 6
 	}
 }

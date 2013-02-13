@@ -13,9 +13,10 @@ using Convert = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
 {
+	using LinqToDB.Common;
+
 	public partial class MemberMapper
 	{
-
 		class SByteMapper : MemberMapper
 		{
 			SByte _nullValue;
@@ -28,7 +29,7 @@ namespace LinqToDB.Mapping
 				MemberAccessor.SetSByte(
 					o,
 					value is SByte ? (SByte)value :
-					value == null ? _nullValue : MappingSchema.ConvertToSByte(value));
+					value == null ? _nullValue : Converter.ChangeTypeTo<SByte>(value));
 			}
 
 			public override void Init(MapMemberInfo mapMemberInfo)

@@ -2012,7 +2012,7 @@ namespace LinqToDB.Linq.Builder
 				if (code == null)
 					code = left.Type.GetDefaultValue();
 				else if (left.Type != code.GetType())
-					code = MappingSchema.ConvertChangeType(code, left.Type);
+					code = Converter.ChangeType(code, left.Type, MappingSchema.NewSchema);
 
 				Expression right = Expression.Constant(code, left.Type);
 

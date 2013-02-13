@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 using Oracle.DataAccess.Types;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Mapping;
 
 	public class OracleMappingSchema : MappingSchema
@@ -30,6 +33,26 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(OracleTimeStampTZ),  OracleTimeStampTZ. Null, DataType.DateTimeOffset);
 			AddScalarType(typeof(OracleXmlStream),    OracleXmlStream.   Null, DataType.Xml);        // ?
 			AddScalarType(typeof(OracleXmlType),      OracleXmlType.     Null, DataType.Xml);
+		}
+
+		public override LambdaExpression TryGetConvertExpression(Type from, Type to)
+		{
+			if (to.IsEnum && from == typeof(decimal))
+			{
+				var type = Converter.GetDefaultMappingFromEnumType(this, to);
+
+				if (type != null)
+				{
+					var fromDecimalToType = GetConvertExpression(from, type, false);
+					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
+
+					return Expression.Lambda(
+						fromTypeToEnum.Body.Transform(e => e == fromTypeToEnum.Parameters[0] ? fromDecimalToType.Body : e),
+						fromDecimalToType.Parameters);
+				}
+			}
+
+			return base.TryGetConvertExpression(from, to);
 		}
 	}
 }

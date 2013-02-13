@@ -4,7 +4,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Xml;
-
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.SqlBuilder;
@@ -784,14 +784,14 @@ namespace LinqToDB.Mapping
 
 					if (valueType != underlyingType)
 						//value = _mappingSchema.ConvertChangeType(value, underlyingType);
-						return MapFrom(MappingSchema.ConvertChangeType(value, underlyingType), mapInfo);
+						return MapFrom(Converter.ChangeType(value, underlyingType, MappingSchema.NewSchema), mapInfo);
 
 					//value = Enum.Parse(type, Enum.GetName(type, value));
 					value = Enum.ToObject(memberType, value);
 				}
 				else
 				{
-					value = MappingSchema.ConvertChangeType(value, memberType);
+					value = Converter.ChangeType(value, memberType, MappingSchema.NewSchema);
 				}
 			}
 

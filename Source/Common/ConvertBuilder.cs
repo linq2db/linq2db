@@ -227,7 +227,12 @@ namespace LinqToDB.Common
 
 				if (fromTypeFields.Any(f => f.attrs.Count != 0))
 				{
-					var field = fromTypeFields.First(f => f.attrs == null);
+					var lex = mappingSchema.TryGetConvertExpression(from, to);
+
+					if (lex != null)
+						return lex.Body.Transform(e => e == lex.Parameters[0] ? expression : e);
+
+					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 
 					return Expression.Convert(
 						Expression.Call(

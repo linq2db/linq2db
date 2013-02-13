@@ -347,7 +347,6 @@ namespace LinqToDB.ServiceModel
 				public string Property;
 				public object Value;
 			}
-
 		}
 
 		class UpdateProvider : IDataServiceUpdateProvider

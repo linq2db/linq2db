@@ -21,8 +21,6 @@ namespace LinqToDB.Mapping
 
 		// Simple type getters.
 		//
-		[CLSCompliant(false)]
-		SByte    GetSByte     (object o, int index);
 		Int16    GetInt16     (object o, int index);
 		Int32    GetInt32     (object o, int index);
 		Int64    GetInt64     (object o, int index);

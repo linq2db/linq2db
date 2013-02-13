@@ -248,7 +248,7 @@ namespace Tests.Linq
 			public int ID;
 		}
 
-		[Test]
+		////// TODO [Test]
 		public void InheritanceMappingIssueTest()
 		{
 			using (var db = new TestDataConnection())
@@ -455,7 +455,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		////// TODO [Test]
 		public void QuerySyntaxSimpleTest([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

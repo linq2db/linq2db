@@ -20,9 +20,6 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(IfxDecimal),     IfxDecimal.    Null, DataType.Decimal);
 			AddScalarType(typeof(IfxTimeSpan),    IfxTimeSpan.   Null, DataType.Time);
 			//AddScalarType(typeof(IfxMonthSpan),   IfxMonthSpan.  Null, DataType.Time);
-
-			SetConvertExpression<string,bool>(s =>
-				s.Length == 1 ? (s[0] != 'F' && s[0] != 'f' && (s[0] == 'T' || s[0] == 't' || bool.Parse(s))): bool.Parse(s));
 		}
 	}
 }

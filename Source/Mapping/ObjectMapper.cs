@@ -489,8 +489,6 @@ namespace LinqToDB.Mapping
 
 		// Simple type getters.
 		//
-		[CLSCompliant(false)]
-		public override SByte    GetSByte   (object o, int index) { return this[index].GetSByte   (o); }
 		public override Int16    GetInt16   (object o, int index) { return this[index].GetInt16   (o); }
 		public override Int32    GetInt32   (object o, int index) { return this[index].GetInt32   (o); }
 		public override Int64    GetInt64   (object o, int index) { return this[index].GetInt64   (o); }

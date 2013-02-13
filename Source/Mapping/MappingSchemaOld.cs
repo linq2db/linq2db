@@ -15,6 +15,7 @@ using System.Xml;
 // ReSharper disable RedundantTypeArgumentsOfMethod
 #endregion
 
+using LinqToDB.Common;
 using Convert  = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
@@ -126,15 +127,6 @@ namespace LinqToDB.Mapping
 		#region Convert
 
 		#region Primitive Types
-
-		[CLSCompliant(false)]
-		public virtual SByte ConvertToSByte(object value)
-		{
-			return
-				value is SByte ? (SByte)value :
-				value == null ? (SByte)NewSchema.GetDefaultValue(typeof(SByte)) :
-					Common.ConvertOld.ToSByte(value);
-		}
 
 		public virtual Int16 ConvertToInt16(object value)
 		{
@@ -613,188 +605,6 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
-		#region General case
-
-		public virtual object ConvertChangeType(object value, Type conversionType)
-		{
-			return ConvertChangeType(value, conversionType, conversionType.IsNullable());
-		}
-
-		public virtual object ConvertChangeType(object value, Type conversionType, bool isNullable)
-		{
-			if (conversionType.IsArray)
-			{
-				if (null == value)
-					return null;
-				
-				Type srcType = value.GetType();
-
-				if (srcType == conversionType)
-					return value;
-
-				if (srcType.IsArray)
-				{
-					Type srcElementType = srcType.GetElementType();
-					Type dstElementType = conversionType.GetElementType();
-
-					if (srcElementType.IsArray != dstElementType.IsArray
-						|| (srcElementType.IsArray &&
-							srcElementType.GetArrayRank() != dstElementType.GetArrayRank()))
-					{
-						throw new InvalidCastException(string.Format(
-							Resources.MappingSchema_IncompatibleArrayTypes,
-							srcType.FullName, conversionType.FullName));
-					}
-
-					Array srcArray = (Array)value;
-					Array dstArray;
-
-					int rank = srcArray.Rank;
-
-					if (rank == 1 && 0 == srcArray.GetLowerBound(0))
-					{
-						int arrayLength = srcArray.Length;
-
-						dstArray = Array.CreateInstance(dstElementType, arrayLength);
-
-						// Int32 is assignable from UInt32, SByte from Byte and so on.
-						//
-						if (dstElementType.IsAssignableFrom(srcElementType))
-							Array.Copy(srcArray, dstArray, arrayLength);
-						else
-							for (int i = 0; i < arrayLength; ++i)
-								dstArray.SetValue(ConvertChangeType(srcArray.GetValue(i), dstElementType, isNullable), i);
-					}
-					else
-					{
-#if SILVERLIGHT
-						throw new InvalidOperationException();
-#else
-						var arrayLength = 1;
-						var dimensions  = new int[rank];
-						var indices     = new int[rank];
-						var lbounds     = new int[rank];
-
-						for (int i = 0; i < rank; ++i)
-						{
-							arrayLength *= (dimensions[i] = srcArray.GetLength(i));
-							lbounds[i] = srcArray.GetLowerBound(i);
-						}
-
-						dstArray = Array.CreateInstance(dstElementType, dimensions, lbounds);
-
-						for (int i = 0; i < arrayLength; ++i)
-						{
-							var index = i;
-
-							for (var j = rank - 1; j >= 0; --j)
-							{
-								indices[j] = index % dimensions[j] + lbounds[j];
-								index /= dimensions[j];
-							}
-
-							dstArray.SetValue(ConvertChangeType(srcArray.GetValue(indices), dstElementType, isNullable), indices);
-						}
-
-#endif
-					}
-
-					return dstArray;
-				}
-			}
-			else if (conversionType.IsEnum)
-				return Enum.ToObject(conversionType, ConvertChangeType(value, Enum.GetUnderlyingType(conversionType), false));
-
-			if (isNullable)
-			{
-				if (conversionType.IsNullable())
-				{
-					// Return a null reference or boxed not null value.
-					//
-					return value == null || value is DBNull? null:
-						ConvertChangeType(value, conversionType.GetGenericArguments()[0]);
-				}
-
-				Type type = conversionType.IsEnum? Enum.GetUnderlyingType(conversionType): conversionType;
-
-				switch (Type.GetTypeCode(type))
-				{
-					case TypeCode.Boolean:  return ConvertToNullableBoolean (value);
-					case TypeCode.Byte:     return ConvertToNullableByte    (value);
-					case TypeCode.Char:     return ConvertToNullableChar    (value);
-					case TypeCode.DateTime: return ConvertToNullableDateTime(value);
-					case TypeCode.Decimal:  return ConvertToNullableDecimal (value);
-					case TypeCode.Double:   return ConvertToNullableDouble  (value);
-					case TypeCode.Int16:    return ConvertToNullableInt16   (value);
-					case TypeCode.Int32:    return ConvertToNullableInt32   (value);
-					case TypeCode.Int64:    return ConvertToNullableInt64   (value);
-					case TypeCode.SByte:    return ConvertToNullableSByte   (value);
-					case TypeCode.Single:   return ConvertToNullableSingle  (value);
-					case TypeCode.UInt16:   return ConvertToNullableUInt16  (value);
-					case TypeCode.UInt32:   return ConvertToNullableUInt32  (value);
-					case TypeCode.UInt64:   return ConvertToNullableUInt64  (value);
-				}
-
-				if (typeof(Guid)           == conversionType) return ConvertToNullableGuid(value);
-				if (typeof(DateTimeOffset) == conversionType) return ConvertToNullableDateTimeOffset(value);
-			}
-
-			switch (Type.GetTypeCode(conversionType))
-			{
-				case TypeCode.Boolean:  return ConvertToBoolean (value);
-				case TypeCode.Byte:     return ConvertToByte    (value);
-				case TypeCode.Char:     return ConvertToChar    (value);
-				case TypeCode.DateTime: return ConvertToDateTime(value);
-				case TypeCode.Decimal:  return ConvertToDecimal (value);
-				case TypeCode.Double:   return ConvertToDouble  (value);
-				case TypeCode.Int16:    return ConvertToInt16   (value);
-				case TypeCode.Int32:    return ConvertToInt32   (value);
-				case TypeCode.Int64:    return ConvertToInt64   (value);
-				case TypeCode.SByte:    return ConvertToSByte   (value);
-				case TypeCode.Single:   return ConvertToSingle  (value);
-				case TypeCode.String:   return ConvertToString  (value);
-				case TypeCode.UInt16:   return ConvertToUInt16  (value);
-				case TypeCode.UInt32:   return ConvertToUInt32  (value);
-				case TypeCode.UInt64:   return ConvertToUInt64  (value);
-			}
-
-			if (typeof(Guid)           == conversionType) return ConvertToGuid          (value);
-			if (typeof(Stream)         == conversionType) return ConvertToStream        (value);
-#if !SILVERLIGHT
-			if (typeof(XmlReader)      == conversionType) return ConvertToXmlReader     (value);
-			if (typeof(XmlDocument)    == conversionType) return ConvertToXmlDocument   (value);
-#endif
-			if (typeof(byte[])         == conversionType) return ConvertToByteArray     (value);
-			if (typeof(Binary)         == conversionType) return ConvertToLinqBinary    (value);
-			if (typeof(DateTimeOffset) == conversionType) return ConvertToDateTimeOffset(value);
-			if (typeof(char[])         == conversionType) return ConvertToCharArray     (value);
-
-#if !SILVERLIGHT
-
-			if (typeof(SqlInt32)       == conversionType) return ConvertToSqlInt32      (value);
-			if (typeof(SqlString)      == conversionType) return ConvertToSqlString     (value);
-			if (typeof(SqlDecimal)     == conversionType) return ConvertToSqlDecimal    (value);
-			if (typeof(SqlDateTime)    == conversionType) return ConvertToSqlDateTime   (value);
-			if (typeof(SqlBoolean)     == conversionType) return ConvertToSqlBoolean    (value);
-			if (typeof(SqlMoney)       == conversionType) return ConvertToSqlMoney      (value);
-			if (typeof(SqlGuid)        == conversionType) return ConvertToSqlGuid       (value);
-			if (typeof(SqlDouble)      == conversionType) return ConvertToSqlDouble     (value);
-			if (typeof(SqlByte)        == conversionType) return ConvertToSqlByte       (value);
-			if (typeof(SqlInt16)       == conversionType) return ConvertToSqlInt16      (value);
-			if (typeof(SqlInt64)       == conversionType) return ConvertToSqlInt64      (value);
-			if (typeof(SqlSingle)      == conversionType) return ConvertToSqlSingle     (value);
-			if (typeof(SqlBinary)      == conversionType) return ConvertToSqlBinary     (value);
-			if (typeof(SqlBytes)       == conversionType) return ConvertToSqlBytes      (value);
-			if (typeof(SqlChars)       == conversionType) return ConvertToSqlChars      (value);
-			if (typeof(SqlXml)         == conversionType) return ConvertToSqlXml        (value);
-
-#endif
-
-			return System.Convert.ChangeType(value, conversionType, Thread.CurrentThread.CurrentCulture);
-		}
-
-		#endregion
-		
 		#endregion
 
 		#region GetNullValue
@@ -871,7 +681,7 @@ namespace LinqToDB.Mapping
 
 			try
 			{
-				value = ConvertChangeType(value, Enum.GetUnderlyingType(type));
+				value = Converter.ChangeType(value, Enum.GetUnderlyingType(type));
 
 				if (Enum.IsDefined(type, value))
 				{
