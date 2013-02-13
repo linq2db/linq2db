@@ -225,14 +225,12 @@
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Mapping\AssociationDescriptor.cs" />
     <Compile Include="AssociationAttribute.cs" />
-    <Compile Include="Mapping\DataReaderMapper.cs" />
     <Compile Include="Mapping\DefaultMappingSchema.cs" />
     <Compile Include="Mapping\DefaultMemberMapper.cs" />
     <Compile Include="Mapping\IMapDataDestination.cs" />
     <Compile Include="Mapping\IMapDataSource.cs" />
     <Compile Include="Mapping\IMappingSchemaProvider.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
-    <Compile Include="Mapping\IValueMapper.cs" />
     <Compile Include="Mapping\Map.cs" />
     <Compile Include="Mapping\MapDataSourceBase.cs" />
     <Compile Include="Mapping\MapDataSourceDestinationBase.cs" />
@@ -255,7 +253,6 @@
     <Compile Include="Mapping\ObjectMapperAttribute.cs" />
     <Compile Include="Mapping\ObjectMapperT.cs" />
     <Compile Include="Mapping\TrimmableAttribute.cs" />
-    <Compile Include="Mapping\ValueMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />

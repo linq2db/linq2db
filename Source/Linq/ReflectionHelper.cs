@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.Data.SqlTypes;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml;
 
 namespace LinqToDB.Linq
 {
@@ -151,95 +147,6 @@ namespace LinqToDB.Linq
 		{
 			public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(0));
 			public static MethodInfo IsDBNull = MethodOf(rd => rd.IsDBNull(0));
-		}
-
-		internal class QueryCtx : Expressor<QueryContext>
-		{
-			public static FieldInfo Counter = FieldOf(ctx => ctx.Counter);
-		}
-
-		public class MapSchema : Expressor<Mapping.MappingSchemaOld>
-		{
-			public static MethodInfo MapValueToEnum = MethodOf(m => m.MapValueToEnum   (null, null));
-			public static MethodInfo ChangeType     = MethodOf(m => m.ConvertChangeType(null, null));
-
-			public static Dictionary<Type,MethodInfo> Converters = new Dictionary<Type,MethodInfo>
-			{
-				// Primitive Types
-				//
-				{ typeof(SByte),           MethodOf(m => m.ConvertToSByte                 (null)) },
-				{ typeof(Int16),           MethodOf(m => m.ConvertToInt16                 (null)) },
-				{ typeof(Int32),           MethodOf(m => m.ConvertToInt32                 (null)) },
-				{ typeof(Int64),           MethodOf(m => m.ConvertToInt64                 (null)) },
-				{ typeof(Byte),            MethodOf(m => m.ConvertToByte                  (null)) },
-				{ typeof(UInt16),          MethodOf(m => m.ConvertToUInt16                (null)) },
-				{ typeof(UInt32),          MethodOf(m => m.ConvertToUInt32                (null)) },
-				{ typeof(UInt64),          MethodOf(m => m.ConvertToUInt64                (null)) },
-				{ typeof(Char),            MethodOf(m => m.ConvertToChar                  (null)) },
-				{ typeof(Single),          MethodOf(m => m.ConvertToSingle                (null)) },
-				{ typeof(Double),          MethodOf(m => m.ConvertToDouble                (null)) },
-				{ typeof(Boolean),         MethodOf(m => m.ConvertToBoolean               (null)) },
-
-				// Simple Types
-				//
-				{ typeof(String),          MethodOf(m => m.ConvertToString                (null)) },
-				{ typeof(DateTime),        MethodOf(m => m.ConvertToDateTime              (null)) },
-				{ typeof(TimeSpan),        MethodOf(m => m.ConvertToTimeSpan              (null)) },
-				{ typeof(DateTimeOffset),  MethodOf(m => m.ConvertToDateTimeOffset        (null)) },
-				{ typeof(Decimal),         MethodOf(m => m.ConvertToDecimal               (null)) },
-				{ typeof(Guid),            MethodOf(m => m.ConvertToGuid                  (null)) },
-				{ typeof(Stream),          MethodOf(m => m.ConvertToStream                (null)) },
-#if !SILVERLIGHT
-				{ typeof(XmlReader),       MethodOf(m => m.ConvertToXmlReader             (null)) },
-				{ typeof(XmlDocument),     MethodOf(m => m.ConvertToXmlDocument           (null)) },
-#endif
-				{ typeof(Byte[]),          MethodOf(m => m.ConvertToByteArray             (null)) },
-				{ typeof(System.Data.Linq.Binary),      MethodOf(m => m.ConvertToLinqBinary            (null)) },
-				{ typeof(Char[]),          MethodOf(m => m.ConvertToCharArray             (null)) },
-
-				// Nullable Types
-				//
-				{ typeof(SByte?),          MethodOf(m => m.ConvertToNullableSByte         (null)) },
-				{ typeof(Int16?),          MethodOf(m => m.ConvertToNullableInt16         (null)) },
-				{ typeof(Int32?),          MethodOf(m => m.ConvertToNullableInt32         (null)) },
-				{ typeof(Int64?),          MethodOf(m => m.ConvertToNullableInt64         (null)) },
-				{ typeof(Byte?),           MethodOf(m => m.ConvertToNullableByte          (null)) },
-				{ typeof(UInt16?),         MethodOf(m => m.ConvertToNullableUInt16        (null)) },
-				{ typeof(UInt32?),         MethodOf(m => m.ConvertToNullableUInt32        (null)) },
-				{ typeof(UInt64?),         MethodOf(m => m.ConvertToNullableUInt64        (null)) },
-				{ typeof(Char?),           MethodOf(m => m.ConvertToNullableChar          (null)) },
-				{ typeof(Double?),         MethodOf(m => m.ConvertToNullableDouble        (null)) },
-				{ typeof(Single?),         MethodOf(m => m.ConvertToNullableSingle        (null)) },
-				{ typeof(Boolean?),        MethodOf(m => m.ConvertToNullableBoolean       (null)) },
-				{ typeof(DateTime?),       MethodOf(m => m.ConvertToNullableDateTime      (null)) },
-				{ typeof(TimeSpan?),       MethodOf(m => m.ConvertToNullableTimeSpan      (null)) },
-				{ typeof(DateTimeOffset?), MethodOf(m => m.ConvertToNullableDateTimeOffset(null)) },
-				{ typeof(Decimal?),        MethodOf(m => m.ConvertToNullableDecimal       (null)) },
-				{ typeof(Guid?),           MethodOf(m => m.ConvertToNullableGuid          (null)) },
-
-#if !SILVERLIGHT
-
-				// SqlTypes
-				//
-				{ typeof(SqlByte),         MethodOf(m => m.ConvertToSqlByte               (null)) },
-				{ typeof(SqlInt16),        MethodOf(m => m.ConvertToSqlInt16              (null)) },
-				{ typeof(SqlInt32),        MethodOf(m => m.ConvertToSqlInt32              (null)) },
-				{ typeof(SqlInt64),        MethodOf(m => m.ConvertToSqlInt64              (null)) },
-				{ typeof(SqlSingle),       MethodOf(m => m.ConvertToSqlSingle             (null)) },
-				{ typeof(SqlBoolean),      MethodOf(m => m.ConvertToSqlBoolean            (null)) },
-				{ typeof(SqlDouble),       MethodOf(m => m.ConvertToSqlDouble             (null)) },
-				{ typeof(SqlDateTime),     MethodOf(m => m.ConvertToSqlDateTime           (null)) },
-				{ typeof(SqlDecimal),      MethodOf(m => m.ConvertToSqlDecimal            (null)) },
-				{ typeof(SqlMoney),        MethodOf(m => m.ConvertToSqlMoney              (null)) },
-				{ typeof(SqlString),       MethodOf(m => m.ConvertToSqlString             (null)) },
-				{ typeof(SqlBinary),       MethodOf(m => m.ConvertToSqlBinary             (null)) },
-				{ typeof(SqlGuid),         MethodOf(m => m.ConvertToSqlGuid               (null)) },
-				{ typeof(SqlBytes),        MethodOf(m => m.ConvertToSqlBytes              (null)) },
-				{ typeof(SqlChars),        MethodOf(m => m.ConvertToSqlChars              (null)) },
-				{ typeof(SqlXml),          MethodOf(m => m.ConvertToSqlXml                (null)) },
-
-#endif
-			};
 		}
 
 		public class Functions

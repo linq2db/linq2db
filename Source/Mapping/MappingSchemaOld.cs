@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
@@ -16,7 +15,6 @@ using System.Xml;
 // ReSharper disable RedundantTypeArgumentsOfMethod
 #endregion
 
-using KeyValue = System.Collections.Generic.KeyValuePair<System.Type,System.Type>;
 using Convert  = LinqToDB.Common.ConvertOld;
 
 namespace LinqToDB.Mapping
@@ -799,15 +797,6 @@ namespace LinqToDB.Mapping
 		
 		#endregion
 
-		#region Factory Members
-
-		public virtual DataReaderMapper CreateDataReaderMapper(IDataReader dataReader)
-		{
-			return new DataReaderMapper(this, dataReader);
-		}
-
-		#endregion
-
 		#region GetNullValue
 
 		public virtual object GetNullValue(Type type)
@@ -846,28 +835,6 @@ namespace LinqToDB.Mapping
 
 				return mapValues;
 			}
-		}
-
-		#endregion
-
-		#region ValueMapper
-
-		[CLSCompliant(false)]
-		public virtual IValueMapper DefaultValueMapper
-		{
-			get { return ValueMapping.DefaultMapper; }
-		}
-
-		internal readonly Dictionary<Type,IValueMapper>     SameTypeMappers      = new Dictionary<Type,IValueMapper>();
-		internal readonly Dictionary<KeyValue,IValueMapper> DifferentTypeMappers = new Dictionary<KeyValue,IValueMapper>();
-
-		[CLSCompliant(false)]
-		[Obsolete]
-		protected internal virtual IValueMapper GetValueMapper(
-			Type sourceType,
-			Type destType)
-		{
-			return ValueMapping.GetMapper(sourceType, destType);
 		}
 
 		#endregion
