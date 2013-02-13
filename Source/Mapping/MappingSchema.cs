@@ -60,6 +60,8 @@ namespace LinqToDB.Mapping
 
 		#region Default Values
 
+		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
+
 		public object GetDefaultValue(Type type)
 		{
 			foreach (var info in _schemas)
@@ -67,6 +69,24 @@ namespace LinqToDB.Mapping
 				var o = info.GetDefaultValue(type);
 				if (o.IsSome)
 					return o.Value;
+			}
+
+			if (type.IsEnum)
+			{
+				var fields =
+					from f in type.GetFields()
+					where (f.Attributes & EnumField) == EnumField
+					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration).Where(a => a.Value == null).ToList()
+					where attrs.Count > 0
+					select Enum.Parse(type, f.Name);
+
+				var value = fields.FirstOrDefault();
+
+				if (value != null)
+				{
+					SetDefaultValue(type, value);
+					return value;
+				}
 			}
 
 			return DefaultValue.GetValue(type);
