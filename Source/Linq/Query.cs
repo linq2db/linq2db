@@ -1082,14 +1082,8 @@ namespace LinqToDB.Linq
 
 					isFaulted = true;
 
-					var mapperExpression = mapInfo.Expression.Transform(e =>
-					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce() : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
-
-					mapInfo.Mapper = mapper = mapperExpression.Compile();
-					result         = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 				}
 				catch (InvalidCastException)
 				{
@@ -1098,14 +1092,8 @@ namespace LinqToDB.Linq
 
 					isFaulted = true;
 
-					var mapperExpression = mapInfo.Expression.Transform(e =>
-					{
-						var ex = e as ConvertFromDataReaderExpression;
-						return ex != null ? ex.Reduce() : e;
-					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
-
-					mapInfo.Mapper = mapper = mapperExpression.Compile();
-					result         = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 				}
 
 				yield return result;
@@ -1136,7 +1124,8 @@ namespace LinqToDB.Linq
 			if (queryContext == null)
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
 
-			var counter = 0;
+			var counter   = 0;
+			var isFaulted = false;
 
 			foreach (var dr in data)
 			{
@@ -1144,10 +1133,45 @@ namespace LinqToDB.Linq
 
 				if (mapper == null)
 				{
-					mapInfo.Mapper = mapper = mapInfo.Expression.Compile();
+					var mapperExpression = mapInfo.Expression.Transform(e =>
+					{
+						var ex = e as ConvertFromDataReaderExpression;
+						return ex != null ? ex.Reduce(dr) : e;
+					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],int,T>>;
+
+					mapInfo.Mapper = mapper = mapperExpression.Compile();
 				}
 
-				yield return mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps, counter++);
+				T result;
+				
+				try
+				{
+					result = mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps, counter);
+				}
+				catch (FormatException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps, counter);
+				}
+				catch (InvalidCastException)
+				{
+					if (isFaulted)
+						throw;
+
+					isFaulted = true;
+
+					mapInfo.Mapper = mapInfo.Expression.Compile();
+					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps, counter);
+				}
+
+				counter++;
+
+				yield return result;
 			}
 		}
 

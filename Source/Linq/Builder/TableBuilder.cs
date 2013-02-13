@@ -351,17 +351,13 @@ namespace LinqToDB.Linq.Builder
 
 			static readonly MethodInfo _mapperMethod = MemberHelper.MethodOf(() => MapDataReaderToObject(null, null));
 
-#if FW4 || SILVERLIGHT
 			ParameterExpression _variable;
 			static int _varIndex;
-#endif
 
 			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
 			{
-#if FW4 || SILVERLIGHT
 				if (buildBlock && _variable != null)
 					return _variable;
-#endif
 
 				var data = new MappingData
 				{
@@ -378,8 +374,6 @@ namespace LinqToDB.Linq.Builder
 
 				expr = ProcessExpression(expr);
 
-#if FW4 || SILVERLIGHT
-
 				if (!buildBlock)
 					return expr;
 
@@ -387,10 +381,6 @@ namespace LinqToDB.Linq.Builder
 				Builder.BlockExpressions.Add(Expression.Assign(_variable, expr));
 
 				return _variable;
-
-#else
-				return expr;
-#endif
 			}
 
 			protected virtual Expression ProcessExpression(Expression expression)

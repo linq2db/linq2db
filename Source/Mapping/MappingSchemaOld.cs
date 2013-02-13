@@ -862,61 +862,12 @@ namespace LinqToDB.Mapping
 		internal readonly Dictionary<KeyValue,IValueMapper> DifferentTypeMappers = new Dictionary<KeyValue,IValueMapper>();
 
 		[CLSCompliant(false)]
+		[Obsolete]
 		protected internal virtual IValueMapper GetValueMapper(
 			Type sourceType,
 			Type destType)
 		{
 			return ValueMapping.GetMapper(sourceType, destType);
-		}
-
-		[CLSCompliant(false)]
-		internal protected IValueMapper[] GetValueMappers(
-			IMapDataSource      source,
-			IMapDataDestination dest,
-			int[]               index)
-		{
-			IValueMapper[] mappers = new IValueMapper[index.Length];
-
-			for (int i = 0; i < index.Length; i++)
-			{
-				int n = index[i];
-
-				if (n < 0)
-					continue;
-
-				if (!source.SupportsTypedValues(i) || !dest.SupportsTypedValues(n))
-				{
-					mappers[i] = DefaultValueMapper;
-					continue;
-				}
-
-				Type sourceType = source.GetFieldType(i);
-				Type destType   = dest.  GetFieldType(n);
-
-				if (sourceType == null) sourceType = typeof(object);
-				if (destType   == null) destType   = typeof(object);
-
-				IValueMapper t;
-
-				if (sourceType == destType)
-				{
-					lock (SameTypeMappers)
-						if (!SameTypeMappers.TryGetValue(sourceType, out t))
-							SameTypeMappers.Add(sourceType, t = GetValueMapper(sourceType, destType));
-				}
-				else
-				{
-					var key = new KeyValue(sourceType, destType);
-
-					lock (DifferentTypeMappers)
-						if (!DifferentTypeMappers.TryGetValue(key, out t))
-								DifferentTypeMappers[key] = t = GetValueMapper(sourceType, destType);
-				}
-
-				mappers[i] = t;
-			}
-
-			return mappers;
 		}
 
 		#endregion
