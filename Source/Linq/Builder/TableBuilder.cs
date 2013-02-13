@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -273,83 +273,10 @@ namespace LinqToDB.Linq.Builder
 
 			#region BuildQuery
 
-			class MappingData
-			{
-				public MappingSchemaOld  MappingSchema;
-				public ObjectMapper      ObjectMapper;
-				public int[]             Index;
-				public IValueMapper[]    ValueMappers;
-			}
-
-			static object MapDataReaderToObject(IDataReader dataReader, MappingData data)
-			{
-				var source     = data.MappingSchema.CreateDataReaderMapper(dataReader);
-				var destObject = data.ObjectMapper.CreateInstance();
-
-				if (data.ValueMappers == null)
-				{
-					var mappers = new IValueMapper[data.Index.Length];
-
-					for (var i = 0; i < data.Index.Length; i++)
-					{
-						var n = data.Index[i];
-
-						if (n < 0)
-							continue;
-
-						if (!data.ObjectMapper.SupportsTypedValues(i))
-						{
-							mappers[i] = data.MappingSchema.DefaultValueMapper;
-							continue;
-						}
-
-						var sourceType = source.           GetFieldType(n) ?? typeof(object);
-						var destType   = data.ObjectMapper.GetFieldType(i) ?? typeof(object);
-
-						IValueMapper t;
-
-						if (sourceType == destType)
-						{
-							lock (data.MappingSchema.SameTypeMappers)
-								if (!data.MappingSchema.SameTypeMappers.TryGetValue(sourceType, out t))
-									data.MappingSchema.SameTypeMappers.Add(sourceType, t = data.MappingSchema.GetValueMapper(sourceType, destType));
-						}
-						else
-						{
-							var key = new KeyValuePair<Type,Type>(sourceType, destType);
-
-							lock (data.MappingSchema.DifferentTypeMappers)
-								if (!data.MappingSchema.DifferentTypeMappers.TryGetValue(key, out t))
-									data.MappingSchema.DifferentTypeMappers.Add(key, t = data.MappingSchema.GetValueMapper(sourceType, destType));
-						}
-
-						mappers[i] = t;
-					}
-
-					data.ValueMappers = mappers;
-				}
-
-				var dest = data.ObjectMapper;
-				var idx  = data.Index;
-				var ms   = data.ValueMappers;
-
-				for (var i = 0; i < idx.Length; i++)
-				{
-					var n = idx[i];
-
-					if (n >= 0)
-						ms[i].Map(source, dataReader, n, dest, destObject, i);
-				}
-
-				return destObject;
-			}
-
 			static object DefaultInheritanceMappingException(object value, Type type)
 			{
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
-
-			static readonly MethodInfo _mapperMethod = MemberHelper.MethodOf(() => MapDataReaderToObject(null, null));
 
 			ParameterExpression _variable;
 			static int _varIndex;
@@ -359,25 +286,30 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var data = new MappingData
-				{
-					MappingSchema = Builder.MappingSchema,
-					ObjectMapper  = Builder.MappingSchema.GetObjectMapper(objectType),
-					Index         = index
-				};
+				var om = Builder.MappingSchema.GetObjectMapper(objectType);
 
-				Expression expr = Expression.Convert(
-					Expression.Call(null, _mapperMethod,
-						ExpressionBuilder.DataReaderParam,
-						Expression.Constant(data)),
-					objectType);
+				var members =
+				(
+					from idx in index.Select((n,i) => new { n, i })
+					where idx.n >= 0
+					let   mm = om[idx.i]
+					select new
+					{
+						Member = mm.MemberAccessor.MemberInfo,
+						Expr   = new ConvertFromDataReaderExpression(mm.Type, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+					}
+				).ToList();
+
+				Expression expr = Expression.MemberInit(
+					Expression.New(objectType),
+					members.Select(m => Expression.Bind(m.Member, m.Expr)));
 
 				expr = ProcessExpression(expr);
 
 				if (!buildBlock)
 					return expr;
 
-				Builder.BlockVariables.  Add(_variable = Expression.Variable(expr.Type, expr.Type.Name + _varIndex++));
+				Builder.BlockVariables.  Add(_variable = Expression.Variable(expr.Type, expr.Type.Name + Interlocked.Increment(ref _varIndex)));
 				Builder.BlockExpressions.Add(Expression.Assign(_variable, expr));
 
 				return _variable;

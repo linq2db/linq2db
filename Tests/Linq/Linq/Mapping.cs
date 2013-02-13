@@ -210,50 +210,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Parent")]
-		public class ParentObject2
-		{
-			class IntToDateMemberMapper : MemberMapper
-			{
-				public override void SetValue(object o, object value)
-				{
-					((ParentObject2)o).Value1 = new DateTime(2010, 1, Convert.ToInt32(value));
-				}
-			}
-
-			public int      ParentID;
-			[MemberMapper(typeof(IntToDateMemberMapper))]
-			public DateTime Value1;
-		}
-
-		[Test]
-		public void MemberMapperTest1([DataContexts] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<ParentObject2>()
-					where p.ParentID == 1
-					select p;
-
-				Assert.AreEqual(new DateTime(2010, 1, 1), q.First().Value1);
-			}
-		}
-
-		//[Test]
-		public void MemberMapperTest2([DataContexts] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
-					from p in db.GetTable<ParentObject2>()
-					where p.ParentID == 1
-					select p.Value1;
-
-				Assert.AreEqual(new DateTime(2010, 1, 1), q.First());
-			}
-		}
-
 		struct MyInt
 		{
 			public int MyValue;

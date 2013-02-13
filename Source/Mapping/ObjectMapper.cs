@@ -7,7 +7,6 @@ using System.Globalization;
 
 namespace LinqToDB.Mapping
 {
-	using Extensions;
 	using Reflection;
 	using Reflection.Extension;
 	using Reflection.MetadataProvider;
@@ -21,42 +20,7 @@ namespace LinqToDB.Mapping
 		{
 			if (mapMemberInfo == null) throw new ArgumentNullException("mapMemberInfo");
 
-			MemberMapper mm = null;
-
-			var attr = mapMemberInfo.MemberAccessor.GetAttribute<MemberMapperAttribute>();
-
-			if (attr == null)
-			{
-				var attrs = mapMemberInfo.Type.GetAttributes<MemberMapperAttribute>();
-
-				foreach (MemberMapperAttribute a in attrs)
-				{
-					if (a.MemberType == null)
-					{
-						mm = a.MemberMapper;
-						break;
-					}
-				}
-			}
-			else
-				mm = attr.MemberMapper;
-
-			if (mm == null)
-			{
-				var attrs = mapMemberInfo.MemberAccessor.MemberInfo.DeclaringType.GetAttributes<MemberMapperAttribute>();
-
-				foreach (MemberMapperAttribute a in attrs)
-				{
-					if (a.MemberType == mapMemberInfo.Type)
-					{
-						mm = a.MemberMapper;
-						break;
-					}
-				}
-			}
-
-			if (mm == null)
-				mm = MemberMapper.CreateMemberMapper(mapMemberInfo);
+			MemberMapper mm = MemberMapper.CreateMemberMapper(mapMemberInfo);
 
 			mm.Init(mapMemberInfo);
 
@@ -522,8 +486,6 @@ namespace LinqToDB.Mapping
 		}
 
 		public override bool     IsNull     (object o, int index) { return this[index].IsNull(o);      }
-
-		public override bool     SupportsTypedValues(int index)   { return this[index].SupportsValue;  }
 
 		// Simple type getters.
 		//

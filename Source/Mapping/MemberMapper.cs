@@ -63,7 +63,6 @@ namespace LinqToDB.Mapping
 		public MapMemberInfo  MapMemberInfo  { get; private set; }
 		public int            Ordinal        { get; private set; }
 		public MemberAccessor MemberAccessor { get; private set; }
-		public bool           IsExplicit     { get; set;         }
 
 		internal void SetOrdinal(int ordinal)
 		{
@@ -193,8 +192,6 @@ namespace LinqToDB.Mapping
 		#endregion
 
 		#region Default Members (GetValue, SetValue)
-
-		public virtual bool SupportsValue { get { return !IsExplicit; } }
 
 		public virtual object GetValue(object o)
 		{

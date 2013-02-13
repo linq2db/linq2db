@@ -1059,8 +1059,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlByteMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1092,8 +1090,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlInt16Mapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1125,8 +1121,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlInt32Mapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1158,8 +1152,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlInt64Mapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1191,8 +1183,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlSingleMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1224,8 +1214,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlBooleanMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1257,8 +1245,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlDoubleMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1290,8 +1276,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlDateTimeMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1323,8 +1307,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlDecimalMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1356,8 +1338,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlMoneyMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1389,8 +1369,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlGuidMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));
@@ -1422,8 +1400,6 @@ namespace LinqToDB.Mapping
 
 			public class Default : SqlStringMapper
 			{
-				public override bool SupportsValue { get { return false; } }
-
 				public override object GetValue(object o)
 				{
 					return MapTo(base.GetValue(o));

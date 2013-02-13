@@ -19,8 +19,6 @@ namespace LinqToDB.Mapping
 
 		bool     IsNull       (object o, int index);
 
-		bool     SupportsTypedValues(int index);
-
 		// Simple type getters.
 		//
 		[CLSCompliant(false)]

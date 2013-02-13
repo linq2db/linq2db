@@ -13,8 +13,6 @@ namespace LinqToDB.Mapping
 
 		void SetNull      (object o, int index);
 
-		bool SupportsTypedValues(int index);
-
 		// Simple type setters.
 		//
 		[CLSCompliant(false)]

@@ -3,6 +3,7 @@ using System;
 namespace LinqToDB.Mapping
 {
 	[CLSCompliant(false)]
+	[Obsolete]
 	public interface IValueMapper
 	{
 		void Map(
