@@ -541,6 +541,13 @@ namespace LinqToDB.Expressions
 			return Transform(lambda.Body, e => e == lambda.Parameters[0] ? exprToReplaceParameter : e);
 		}
 
+		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2)
+		{
+			return Transform(lambda.Body, e =>
+				e == lambda.Parameters[0] ? exprToReplaceParameter1 :
+				e == lambda.Parameters[1] ? exprToReplaceParameter2 : e);
+		}
+
 		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{

@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
 
-			context.SetAlias(selector.Parameters[0].Name);
+			context.     SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
 
 			var outerKeyLambda = ((LambdaExpression)methodCall.Arguments[2].Unwrap());
@@ -244,8 +244,7 @@ namespace LinqToDB.Linq.Builder
 					// Convert outer condition.
 					//
 					var outerParam = Expression.Parameter(context._outerKeyLambda.Body.Type, "o");
-					var outerKey   = context._outerKeyLambda.Body.Transform(
-						e => e == context._outerKeyLambda.Parameters[0] ? context.Lambda.Parameters[0] : e);
+					var outerKey   = context._outerKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
 					outerKey = context.Builder.BuildExpression(context, outerKey);
 

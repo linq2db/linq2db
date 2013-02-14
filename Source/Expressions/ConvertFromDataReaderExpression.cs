@@ -54,13 +54,8 @@ namespace LinqToDB.Expressions
 			{
 				var l = (LambdaExpression)ex;
 
-				if (l.Parameters.Count == 1)
-					ex = l.Body.Transform(e => e == l.Parameters[0] ? dataReaderExpr : e);
-				else if (l.Parameters.Count == 2)
-					ex = l.Body.Transform(e =>
-						e == l.Parameters[0] ? dataReaderExpr :
-						e == l.Parameters[1] ? Constant(idx) :
-						e);
+				     if (l.Parameters.Count == 1) ex = l.GetBody(dataReaderExpr);
+				else if (l.Parameters.Count == 2) ex = l.GetBody(dataReaderExpr, Constant(idx));
 			}
 
 			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false);
@@ -72,11 +67,11 @@ namespace LinqToDB.Expressions
 				var variable = Variable(ex.Type);
 				var assign   = Assign(variable, ex);
 
-				ex = Block(new[] { variable }, new[] { assign, conv.Body.Transform(e => e == conv.Parameters[0] ? variable : e) });
+				ex = Block(new[] { variable }, new[] { assign, conv.GetBody(variable) });
 			}
 			else
 			{
-				ex = conv.Body.Transform(e => e == conv.Parameters[0] ? ex : e);
+				ex = conv.GetBody(ex);
 			}
 
 			// Add check null expression.

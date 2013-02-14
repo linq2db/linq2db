@@ -1197,9 +1197,7 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Call(null,
 				GetMethodInfo(method, "Select").MakeGenericMethod(types1[0], types2[1]),
 				((MethodCallExpression)sequence).Arguments[0],
-				Expression.Lambda(
-					lambda.Body.Transform(ex => ReferenceEquals(ex, lambda.Parameters[0]) ? sbody : ex),
-					slambda.Parameters[0]));
+				Expression.Lambda(lambda.GetBody(sbody), slambda.Parameters[0]));
 		}
 
 		#endregion

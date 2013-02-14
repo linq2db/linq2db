@@ -645,7 +645,7 @@ namespace LinqToDB.Data
 									{
 										return Expression.Call(
 											MemberHelper.MethodOf(() => PrepareDataParameter(null, null)),
-											mapper.Body.Transform(e => e == mapper.Parameters[0] ? valueGetter : e),
+											mapper.GetBody(valueGetter),
 											Expression.Constant(m.ColumnName));
 									}
 
@@ -655,7 +655,7 @@ namespace LinqToDB.Data
 										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);
 
 										memberType  = mapType;
-										valueGetter = convExpr.Body.Transform(e => e == convExpr.Parameters[0] ? valueGetter : e);
+										valueGetter = convExpr.GetBody(valueGetter);
 									}
 
 									return (Expression)Expression.MemberInit(

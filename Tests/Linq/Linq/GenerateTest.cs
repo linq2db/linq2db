@@ -19,7 +19,7 @@ namespace Tests.Linq
 			Expression<Func<Person,bool>> a = x => x.FirstName == "John";
 			Expression<Func<Person,bool>> b = x => x.LastName  == "Pupkin";
 
-			var bBody     = b.Body.Transform(e => e == b.Parameters[0] ? a.Parameters[0] : e);
+			var bBody     = b.GetBody(a.Parameters[0]);
 			var predicate = Expression.Lambda<Func<Person,bool>>(Expression.AndAlso(a.Body, bBody), a.Parameters[0]);
 
 			using (var db = new TestDataConnection())
