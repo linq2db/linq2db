@@ -475,12 +475,6 @@ namespace LinqToDB.Linq
 			public static readonly Dictionary<object,Query<int>>    Delete             = new Dictionary<object,Query<int>>();
 		}
 
-		static object ConvertNullable<TT>(TT value, TT defaultValue)
-			where TT : struct
-		{
-			return value.Equals(defaultValue) ? null : (object)value;
-		}
-
 		static ParameterAccessor GetParameter(IDataContext dataContext, SqlField field)
 		{
 			var exprParam = Expression.Parameter(typeof(Expression), "expr");
@@ -503,33 +497,9 @@ namespace LinqToDB.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
-			if (!mm.Type.IsClass && mm.MapMemberInfo.Nullable && !mm.Type.IsNullable())
-			{
-				var method = MemberHelper.MethodOf(() => ConvertNullable(0, 0))
-					.GetGenericMethodDefinition()
-					.MakeGenericMethod(mm.Type);
-
-				getter = Expression.Call(null, method, getter, Expression.Constant(mm.MapMemberInfo.NullValue));
-			}
-//			else
-//				getter = Expression.Convert(getter, typeof(object));
-
 			var param = ExpressionBuilder.CreateParameterAccessor(
 				dataContext.MappingSchema.NewSchema,
-				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.SystemType, field.Name.Replace('.', '_'));
-
-			/*
-			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
-				getter,
-				new [] { exprParam, Expression.Parameter(typeof(object[]), "ps") });
-
-			var param = new ParameterAccessor
-			{
-				Expression   = null,
-				Accessor     = mapper.Compile(),
-				SqlParameter = new SqlParameter(field.SystemType, field.Name.Replace('.', '_'), null)
-			};
-			*/
+				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			if (field.SystemType.IsEnum)
 				param.SqlParameter.SetEnumConverter(field.SystemType, dataContext.MappingSchema);

@@ -537,6 +537,8 @@ namespace LinqToDB.Common
 				).ToList()
 			).ToList();
 
+			Type defaultType = null;
+
 			if (fields.All(attrs => attrs.Count != 0))
 			{
 				var attr = fields.FirstOrDefault(attrs => attrs[0].Value != null);
@@ -546,11 +548,17 @@ namespace LinqToDB.Common
 					var valueType = attr[0].Value.GetType();
 
 					if (fields.All(attrs => attrs[0].Value == null || attrs[0].Value.GetType() == valueType))
-						return valueType;
+						defaultType = valueType;
 				}
 			}
 
-			return Enum.GetUnderlyingType(type);
+			if (defaultType == null)
+				defaultType = Enum.GetUnderlyingType(type);
+
+			if (type.IsNullable() && !defaultType.IsClass && !defaultType.IsNullable())
+				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
+
+			return defaultType;
 		}
 
 		#endregion

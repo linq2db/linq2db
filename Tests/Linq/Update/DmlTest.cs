@@ -1305,35 +1305,6 @@ namespace Tests.Update
 			}
 		}
 
-		[TableName("Parent")]
-		public class  NullableFieldTestObject
-		{
-			public int ParentID;
-			[Nullable] public int Value1;
-		}
-
-		[Test]
-		public void NullableFieldTest([DataContexts] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Delete(p => p.ParentID == 1100);
-
-				try
-				{
-					db.Insert(new NullableFieldTestObject { ParentID = 1100 });
-
-					var parent = db.Parent.Single(p => p.ParentID == 1100);
-
-					Assert.IsNull(parent.Value1);
-				}
-				finally
-				{
-					db.Parent.Delete(p => p.ParentID == 1100);
-				}
-			}
-		}
-
 		public class FullName
 		{
 			           public string FirstName     { get; set; }

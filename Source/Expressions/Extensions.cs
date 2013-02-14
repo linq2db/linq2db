@@ -536,6 +536,11 @@ namespace LinqToDB.Expressions
 
 		#region Transform
 
+		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter)
+		{
+			return Transform(lambda.Body, e => e == lambda.Parameters[0] ? exprToReplaceParameter : e);
+		}
+
 		static IEnumerable<T> Transform<T>(ICollection<T> source, Func<T,T> func)
 			where T : class
 		{
