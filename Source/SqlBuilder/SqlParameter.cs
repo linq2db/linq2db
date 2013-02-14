@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlBuilder
 {
-	using Mapping;
+	using LinqToDB.Extensions;
 
 	public class SqlParameter : ISqlExpression, IValueContainer
 	{
 		public SqlParameter(Type systemType, string name, object value)
 		{
+			if (systemType.ToNullableUnderlying().IsEnum)
+				throw new ArgumentException();
+
 			IsQueryParameter = true;
 			Name             = name;
 			SystemType       = systemType;
@@ -62,7 +64,6 @@ namespace LinqToDB.SqlBuilder
 
 		#region Value Converter
 
-		internal List<Type> EnumTypes;
 		internal List<int>  TakeValues;
 
 		private Converter<object,object> _valueConverter;
@@ -70,52 +71,14 @@ namespace LinqToDB.SqlBuilder
 		{
 			get
 			{
-				if (_valueConverter == null)
-				{
-					if (EnumTypes != null)
-						foreach (var type in EnumTypes.ToArray())
-							SetEnumConverter(type, Map.DefaultSchema);
-					else if (TakeValues != null)
-						foreach (var take in TakeValues.ToArray())
-							SetTakeConverter(take);
-				}
+				if (_valueConverter == null && TakeValues != null)
+					foreach (var take in TakeValues.ToArray())
+						SetTakeConverter(take);
 
 				return _valueConverter;
 			}
 
 			set { _valueConverter = value; }
-		}
-
-		bool _isEnumConverterSet;
-
-		internal void SetEnumConverter(Type type, MappingSchemaOld ms)
-		{
-			if (!_isEnumConverterSet)
-			{
-				_isEnumConverterSet = true;
-
-				if (EnumTypes == null)
-					EnumTypes = new List<Type>();
-
-				EnumTypes.Add(type);
-
-				SetEnumConverterInternal(type, ms);
-			}
-		}
-
-		void SetEnumConverterInternal(Type type, MappingSchemaOld ms)
-		{
-			var toType = Converter.GetDefaultMappingFromEnumType(ms.NewSchema, type);
-
-			if (_valueConverter == null)
-			{
-				_valueConverter = o => Converter.ChangeType(o, toType, ms.NewSchema);
-			}
-			else
-			{
-				var converter = _valueConverter;
-				_valueConverter = o => Converter.ChangeType(converter(o), toType, ms.NewSchema);
-			}
 		}
 
 		internal void SetTakeConverter(int take)

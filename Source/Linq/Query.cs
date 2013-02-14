@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -384,6 +385,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
+
 		void SetParameters(Expression expr, object[] parameters, int idx)
 		{
 			foreach (var p in Queries[idx].Parameters)
@@ -403,9 +406,37 @@ namespace LinqToDB.Linq
 
 						foreach (var v in (IEnumerable)value)
 						{
-							values.Add(v != null && v.GetType().IsEnum ?
-								MappingSchema.MapEnumToValue(v, true) :
-								v);
+							value = v;
+
+							if (v != null)
+							{
+								var valueType = v.GetType();
+
+								if (valueType.ToNullableUnderlying().IsEnum)
+								{
+									if (_enumConverters == null)
+										_enumConverters = new ConcurrentDictionary<Type,Func<object,object>>();
+
+									Func<object,object> converter;
+
+									if (!_enumConverters.TryGetValue(valueType, out converter))
+									{
+										var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema.NewSchema, valueType);
+										var convExpr  = MappingSchema.NewSchema.GetConvertExpression(valueType, toType);
+										var convParam = Expression.Parameter(typeof(object));
+
+										var lex = Expression.Lambda<Func<object,object>>(
+											Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
+											convParam);
+
+										converter = lex.Compile();
+									}
+
+									value = converter(v);
+								}
+							}
+
+							values.Add(value);
 						}
 
 						value = values;
@@ -500,9 +531,6 @@ namespace LinqToDB.Linq
 			var param = ExpressionBuilder.CreateParameterAccessor(
 				dataContext.MappingSchema.NewSchema,
 				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
-
-			if (field.SystemType.IsEnum)
-				param.SqlParameter.SetEnumConverter(field.SystemType, dataContext.MappingSchema);
 
 			return param;
 		}

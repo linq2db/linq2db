@@ -1466,9 +1466,6 @@ namespace LinqToDB.Linq.Builder
 						var l = ConvertToSql(context, operand);
 						var r = ConvertToSql(context, value);
 
-						if (l is SqlParameter) ((SqlParameter)l).SetEnumConverter(type, MappingSchema);
-						if (r is SqlParameter) ((SqlParameter)r).SetEnumConverter(type, MappingSchema);
-
 						return Convert(context, new SqlQuery.Predicate.ExprExpr(l, op, r));
 					}
 			}
@@ -1713,7 +1710,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression   = expression,
 				Accessor     = mapper.Compile(),
-				SqlParameter = new SqlParameter(type, name, null)
+				SqlParameter = new SqlParameter(accessorExpression.Type, name, null)
 			};
 		}
 

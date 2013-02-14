@@ -159,16 +159,6 @@ namespace LinqToDB.Linq.Builder
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;
 
-					if (expr is SqlParameter)
-					{
-						var type = info.Member.MemberType == MemberTypes.Field ?
-							((FieldInfo)   info.Member).FieldType :
-							((PropertyInfo)info.Member).PropertyType;
-
-						if (type.IsEnum)
-							((SqlParameter)expr).SetEnumConverter(type, builder.MappingSchema);
-					}
-
 					items.Add(new SqlQuery.SetExpression(column[0].Sql, expr));
 				}
 			}
@@ -207,9 +197,6 @@ namespace LinqToDB.Linq.Builder
 					{
 						var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 						var expr   = builder.ConvertToSqlExpression(ctx, ma.Expression);
-
-						if (expr is SqlParameter && ma.Expression.Type.IsEnum)
-							((SqlParameter)expr).SetEnumConverter(ma.Expression.Type, builder.MappingSchema);
 
 						items.Add(new SqlQuery.SetExpression(column[0].Sql, expr));
 					}
@@ -277,9 +264,6 @@ namespace LinqToDB.Linq.Builder
 
 			builder.ReplaceParent(ctx, sp);
 
-			if (expr is SqlParameter && update.Body.Type.IsEnum)
-				((SqlParameter)expr).SetEnumConverter(update.Body.Type, builder.MappingSchema);
-
 			items.Add(new SqlQuery.SetExpression(column, expr));
 		}
 
@@ -315,10 +299,7 @@ namespace LinqToDB.Linq.Builder
 			if (column.Length == 0)
 				throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType.Name, member.Name);
 
-			var expr   = builder.ConvertToSql(select, update);
-
-			if (expr is SqlParameter && update.Type.IsEnum)
-				((SqlParameter)expr).SetEnumConverter(update.Type, builder.MappingSchema);
+			var expr = builder.ConvertToSql(select, update);
 
 			items.Add(new SqlQuery.SetExpression(column[0].Sql, expr));
 		}
