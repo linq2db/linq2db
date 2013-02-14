@@ -11,14 +11,6 @@ namespace LinqToDB.DataProvider
 			return System.Text.Encoding.UTF8.GetBytes(value);
 		}
 
-		public override byte[] ConvertToByteArray(object value)
-		{
-			if (value is string)
-				return ConvertToByteArray((string)value);
-
-			return base.ConvertToByteArray(value);
-		}
-
 		public bool ConvertToBoolean(string value)
 		{
 			if (value.Length == 1)
@@ -31,26 +23,11 @@ namespace LinqToDB.DataProvider
 			return Common.ConvertOld.ToBoolean(value);
 		}
 
-		public override bool ConvertToBoolean(object value)
-		{
-			if (value is string)
-				return ConvertToBoolean((string)value);
-
-			return base.ConvertToBoolean(value);
-		}
-
 		public System.IO.Stream ConvertToStream(string value)
 		{
 			return new System.IO.MemoryStream(ConvertToByteArray(value));
 		}
 
-		public override System.IO.Stream ConvertToStream(object value)
-		{
-			if (value is string)
-				return ConvertToStream((string)value);
-
-			return base.ConvertToStream(value);
-		}
 
 #if !SILVERLIGHT
 
@@ -59,40 +36,12 @@ namespace LinqToDB.DataProvider
 			return Common.ConvertOld.ToSqlBinary(ConvertToByteArray(value));
 		}
 
-		public override System.Data.SqlTypes.SqlBinary ConvertToSqlBinary(object value)
-		{
-			if (value is string)
-				return ConvertToSqlBinary((string)value);
-			return base.ConvertToSqlBinary(value);
-		}
 
 		public System.Data.SqlTypes.SqlBytes ConvertToSqlBytes(string value)
 		{
 			return Common.ConvertOld.ToSqlBytes(ConvertToByteArray(value));
 		}
 
-		public override System.Data.SqlTypes.SqlBytes ConvertToSqlBytes(object value)
-		{
-			if (value is string)
-				return ConvertToSqlBytes((string)value);
-
-			return base.ConvertToSqlBytes(value);
-		}
-
-		public override System.Data.SqlTypes.SqlGuid ConvertToSqlGuid(object value)
-		{
-			if (value is string)
-				return new System.Data.SqlTypes.SqlGuid(new Guid((string)value));
-			return base.ConvertToSqlGuid(value);
-		}
-
 #endif
-
-		public override bool? ConvertToNullableBoolean(object value)
-		{
-			if (value is string)
-				return ConvertToBoolean((string)value);
-			return base.ConvertToNullableBoolean(value);
-		}
 	}
 }

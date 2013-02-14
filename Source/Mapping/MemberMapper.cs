@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 
 using LinqToDB.Common;
@@ -76,150 +75,10 @@ namespace LinqToDB.Mapping
 			return MemberAccessor.GetValue(o);
 		}
 
-		// Simple type getters.
-		//
-		[CLSCompliant(false)]
-		public virtual SByte    GetSByte   (object o) { return MemberAccessor.GetSByte   (o); }
-		public virtual Int16    GetInt16   (object o) { return MemberAccessor.GetInt16   (o); }
-		public virtual Int32    GetInt32   (object o) { return MemberAccessor.GetInt32   (o); }
-		public virtual Int64    GetInt64   (object o) { return MemberAccessor.GetInt64   (o); }
-
-		public virtual Byte     GetByte    (object o) { return MemberAccessor.GetByte    (o); }
-		[CLSCompliant(false)]
-		public virtual UInt16   GetUInt16  (object o) { return MemberAccessor.GetUInt16  (o); }
-		[CLSCompliant(false)]
-		public virtual UInt32   GetUInt32  (object o) { return MemberAccessor.GetUInt32  (o); }
-		[CLSCompliant(false)]
-		public virtual UInt64   GetUInt64  (object o) { return MemberAccessor.GetUInt64  (o); }
-
-		public virtual Boolean  GetBoolean (object o) { return MemberAccessor.GetBoolean (o); }
-		public virtual Char     GetChar    (object o) { return MemberAccessor.GetChar    (o); }
-		public virtual Single   GetSingle  (object o) { return MemberAccessor.GetSingle  (o); }
-		public virtual Double   GetDouble  (object o) { return MemberAccessor.GetDouble  (o); }
-		public virtual Decimal  GetDecimal (object o) { return MemberAccessor.GetDecimal (o); }
-		public virtual Guid     GetGuid    (object o) { return MemberAccessor.GetGuid    (o); }
-		public virtual DateTime GetDateTime(object o) { return MemberAccessor.GetDateTime(o); }
-		public virtual DateTimeOffset GetDateTimeOffset(object o) { return MemberAccessor.GetDateTimeOffset(o); }
-
-		// Nullable type getters.
-		//
-		[CLSCompliant(false)]
-		public virtual SByte?    GetNullableSByte   (object o) { return MemberAccessor.GetNullableSByte   (o); }
-		public virtual Int16?    GetNullableInt16   (object o) { return MemberAccessor.GetNullableInt16   (o); }
-		public virtual Int32?    GetNullableInt32   (object o) { return MemberAccessor.GetNullableInt32   (o); }
-		public virtual Int64?    GetNullableInt64   (object o) { return MemberAccessor.GetNullableInt64   (o); }
-
-		public virtual Byte?     GetNullableByte    (object o) { return MemberAccessor.GetNullableByte    (o); }
-		[CLSCompliant(false)]
-		public virtual UInt16?   GetNullableUInt16  (object o) { return MemberAccessor.GetNullableUInt16  (o); }
-		[CLSCompliant(false)]
-		public virtual UInt32?   GetNullableUInt32  (object o) { return MemberAccessor.GetNullableUInt32  (o); }
-		[CLSCompliant(false)]
-		public virtual UInt64?   GetNullableUInt64  (object o) { return MemberAccessor.GetNullableUInt64  (o); }
-
-		public virtual Boolean?  GetNullableBoolean (object o) { return MemberAccessor.GetNullableBoolean (o); }
-		public virtual Char?     GetNullableChar    (object o) { return MemberAccessor.GetNullableChar    (o); }
-		public virtual Single?   GetNullableSingle  (object o) { return MemberAccessor.GetNullableSingle  (o); }
-		public virtual Double?   GetNullableDouble  (object o) { return MemberAccessor.GetNullableDouble  (o); }
-		public virtual Decimal?  GetNullableDecimal (object o) { return MemberAccessor.GetNullableDecimal (o); }
-		public virtual Guid?     GetNullableGuid    (object o) { return MemberAccessor.GetNullableGuid    (o); }
-		public virtual DateTime? GetNullableDateTime(object o) { return MemberAccessor.GetNullableDateTime(o); }
-		public virtual DateTimeOffset? GetNullableDateTimeOffset(object o) { return MemberAccessor.GetNullableDateTimeOffset(o); }
-
-#if !SILVERLIGHT
-
-		// SQL type getters.
-		//
-		public virtual SqlByte     GetSqlByte    (object o) { return MemberAccessor.GetSqlByte    (o); }
-		public virtual SqlInt16    GetSqlInt16   (object o) { return MemberAccessor.GetSqlInt16   (o); }
-		public virtual SqlInt32    GetSqlInt32   (object o) { return MemberAccessor.GetSqlInt32   (o); }
-		public virtual SqlInt64    GetSqlInt64   (object o) { return MemberAccessor.GetSqlInt64   (o); }
-		public virtual SqlSingle   GetSqlSingle  (object o) { return MemberAccessor.GetSqlSingle  (o); }
-		public virtual SqlBoolean  GetSqlBoolean (object o) { return MemberAccessor.GetSqlBoolean (o); }
-		public virtual SqlDouble   GetSqlDouble  (object o) { return MemberAccessor.GetSqlDouble  (o); }
-		public virtual SqlDateTime GetSqlDateTime(object o) { return MemberAccessor.GetSqlDateTime(o); }
-		public virtual SqlDecimal  GetSqlDecimal (object o) { return MemberAccessor.GetSqlDecimal (o); }
-		public virtual SqlMoney    GetSqlMoney   (object o) { return MemberAccessor.GetSqlMoney   (o); }
-		public virtual SqlGuid     GetSqlGuid    (object o) { return MemberAccessor.GetSqlGuid    (o); }
-		public virtual SqlString   GetSqlString  (object o) { return MemberAccessor.GetSqlString  (o); }
-
-#endif
-
 		public virtual void SetValue(object o, object value)
 		{
 			MemberAccessor.SetValue(o, value);
 		}
-
-		public virtual void SetNull   (object o)                { SetValue(o, null); }
-
-		// Simple type setters.
-		//
-		[CLSCompliant(false)]
-		public virtual void SetSByte   (object o, SByte    value) { MemberAccessor.SetSByte   (o, value); }
-		public virtual void SetInt16   (object o, Int16    value) { MemberAccessor.SetInt16   (o, value); }
-		public virtual void SetInt32   (object o, Int32    value) { MemberAccessor.SetInt32   (o, value); }
-		public virtual void SetInt64   (object o, Int64    value) { MemberAccessor.SetInt64   (o, value); }
-
-		public virtual void SetByte    (object o, Byte     value) { MemberAccessor.SetByte    (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetUInt16  (object o, UInt16   value) { MemberAccessor.SetUInt16  (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetUInt32  (object o, UInt32   value) { MemberAccessor.SetUInt32  (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetUInt64  (object o, UInt64   value) { MemberAccessor.SetUInt64  (o, value); }
-
-		public virtual void SetBoolean (object o, Boolean  value) { MemberAccessor.SetBoolean (o, value); }
-		public virtual void SetChar    (object o, Char     value) { MemberAccessor.SetChar    (o, value); }
-		public virtual void SetSingle  (object o, Single   value) { MemberAccessor.SetSingle  (o, value); }
-		public virtual void SetDouble  (object o, Double   value) { MemberAccessor.SetDouble  (o, value); }
-		public virtual void SetDecimal (object o, Decimal  value) { MemberAccessor.SetDecimal (o, value); }
-		public virtual void SetGuid    (object o, Guid     value) { MemberAccessor.SetGuid    (o, value); }
-		public virtual void SetDateTime(object o, DateTime value) { MemberAccessor.SetDateTime(o, value); }
-		public virtual void SetDateTimeOffset(object o, DateTimeOffset value) { MemberAccessor.SetDateTimeOffset(o, value); }
-
-		// Nullable type setters.
-		//
-		[CLSCompliant(false)]
-		public virtual void SetNullableSByte   (object o, SByte?    value) { MemberAccessor.SetNullableSByte   (o, value); }
-		public virtual void SetNullableInt16   (object o, Int16?    value) { MemberAccessor.SetNullableInt16   (o, value); }
-		public virtual void SetNullableInt32   (object o, Int32?    value) { MemberAccessor.SetNullableInt32   (o, value); }
-		public virtual void SetNullableInt64   (object o, Int64?    value) { MemberAccessor.SetNullableInt64   (o, value); }
-
-		public virtual void SetNullableByte    (object o, Byte?     value) { MemberAccessor.SetNullableByte    (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetNullableUInt16  (object o, UInt16?   value) { MemberAccessor.SetNullableUInt16  (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetNullableUInt32  (object o, UInt32?   value) { MemberAccessor.SetNullableUInt32  (o, value); }
-		[CLSCompliant(false)]
-		public virtual void SetNullableUInt64  (object o, UInt64?   value) { MemberAccessor.SetNullableUInt64  (o, value); }
-
-		public virtual void SetNullableBoolean (object o, Boolean?  value) { MemberAccessor.SetNullableBoolean (o, value); }
-		public virtual void SetNullableChar    (object o, Char?     value) { MemberAccessor.SetNullableChar    (o, value); }
-		public virtual void SetNullableSingle  (object o, Single?   value) { MemberAccessor.SetNullableSingle  (o, value); }
-		public virtual void SetNullableDouble  (object o, Double?   value) { MemberAccessor.SetNullableDouble  (o, value); }
-		public virtual void SetNullableDecimal (object o, Decimal?  value) { MemberAccessor.SetNullableDecimal (o, value); }
-		public virtual void SetNullableGuid    (object o, Guid?     value) { MemberAccessor.SetNullableGuid    (o, value); }
-		public virtual void SetNullableDateTime(object o, DateTime? value) { MemberAccessor.SetNullableDateTime(o, value); }
-		public virtual void SetNullableDateTimeOffset(object o, DateTimeOffset? value) { MemberAccessor.SetNullableDateTimeOffset(o, value); }
-
-#if !SILVERLIGHT
-
-		// SQL type setters.
-		//
-		public virtual void SetSqlByte    (object o, SqlByte     value) { MemberAccessor.SetSqlByte    (o, value); }
-		public virtual void SetSqlInt16   (object o, SqlInt16    value) { MemberAccessor.SetSqlInt16   (o, value); }
-		public virtual void SetSqlInt32   (object o, SqlInt32    value) { MemberAccessor.SetSqlInt32   (o, value); }
-		public virtual void SetSqlInt64   (object o, SqlInt64    value) { MemberAccessor.SetSqlInt64   (o, value); }
-		public virtual void SetSqlSingle  (object o, SqlSingle   value) { MemberAccessor.SetSqlSingle  (o, value); }
-		public virtual void SetSqlBoolean (object o, SqlBoolean  value) { MemberAccessor.SetSqlBoolean (o, value); }
-		public virtual void SetSqlDouble  (object o, SqlDouble   value) { MemberAccessor.SetSqlDouble  (o, value); }
-		public virtual void SetSqlDateTime(object o, SqlDateTime value) { MemberAccessor.SetSqlDateTime(o, value); }
-		public virtual void SetSqlDecimal (object o, SqlDecimal  value) { MemberAccessor.SetSqlDecimal (o, value); }
-		public virtual void SetSqlMoney   (object o, SqlMoney    value) { MemberAccessor.SetSqlMoney   (o, value); }
-		public virtual void SetSqlGuid    (object o, SqlGuid     value) { MemberAccessor.SetSqlGuid    (o, value); }
-		public virtual void SetSqlString  (object o, SqlString   value) { MemberAccessor.SetSqlString  (o, value); }
-
-#endif
 
 		public virtual void CloneValue    (object source, object dest)  { MemberAccessor.CloneValue(source, dest); }
 
@@ -238,11 +97,6 @@ namespace LinqToDB.Mapping
 
 			private readonly MemberMapper _mapper;
 
-			object GetObject(object o)
-			{
-				return MemberAccessor.GetValue(o);
-			}
-
 			#region GetValue
 
 			public override object GetValue(object o)
@@ -250,67 +104,6 @@ namespace LinqToDB.Mapping
 				var obj = MemberAccessor.GetValue(o);
 				return obj == null? null: _mapper.GetValue(obj);
 			}
-
-			// Simple type getters.
-			//
-			public override SByte    GetSByte   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (SByte)MappingSchema.NewSchema.GetDefaultValue(typeof(SByte)):    _mapper.GetSByte   (obj); }
-			public override Int16    GetInt16   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int16)MappingSchema.NewSchema.GetDefaultValue(typeof(Int16)):    _mapper.GetInt16   (obj); }
-			public override Int32    GetInt32   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int32)MappingSchema.NewSchema.GetDefaultValue(typeof(Int32)):    _mapper.GetInt32   (obj); }
-			public override Int64    GetInt64   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Int64)MappingSchema.NewSchema.GetDefaultValue(typeof(Int64)):    _mapper.GetInt64   (obj); }
-
-			public override Byte     GetByte    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Byte)  MappingSchema.NewSchema.GetDefaultValue(typeof(Byte)):     _mapper.GetByte    (obj); }
-			public override UInt16   GetUInt16  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt16)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt16)):   _mapper.GetUInt16  (obj); }
-			public override UInt32   GetUInt32  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt32)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt32)):   _mapper.GetUInt32  (obj); }
-			public override UInt64   GetUInt64  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (UInt64)MappingSchema.NewSchema.GetDefaultValue(typeof(UInt64)):   _mapper.GetUInt64  (obj); }
-
-			public override Boolean  GetBoolean (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Boolean) MappingSchema.NewSchema.GetDefaultValue(typeof(Boolean)):  _mapper.GetBoolean (obj); }
-			public override Char     GetChar    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Char)    MappingSchema.NewSchema.GetDefaultValue(typeof(Char)):     _mapper.GetChar    (obj); }
-			public override Single   GetSingle  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Single)  MappingSchema.NewSchema.GetDefaultValue(typeof(Single)):   _mapper.GetSingle  (obj); }
-			public override Double   GetDouble  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Double)  MappingSchema.NewSchema.GetDefaultValue(typeof(Double)):   _mapper.GetDouble  (obj); }
-			public override Decimal  GetDecimal (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Decimal) MappingSchema.NewSchema.GetDefaultValue(typeof(Decimal)):  _mapper.GetDecimal (obj); }
-			public override Guid     GetGuid    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (Guid)    MappingSchema.NewSchema.GetDefaultValue(typeof(Guid)):     _mapper.GetGuid    (obj); }
-			public override DateTime GetDateTime(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (DateTime)MappingSchema.NewSchema.GetDefaultValue(typeof(DateTime)): _mapper.GetDateTime(obj); }
-			public override DateTimeOffset GetDateTimeOffset(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? (DateTimeOffset)MappingSchema.NewSchema.GetDefaultValue(typeof(DateTimeOffset)): _mapper.GetDateTimeOffset(obj); }
-
-			// Nullable type getters.
-			//
-			public override SByte?    GetNullableSByte   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableSByte   (obj); }
-			public override Int16?    GetNullableInt16   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableInt16   (obj); }
-			public override Int32?    GetNullableInt32   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableInt32   (obj); }
-			public override Int64?    GetNullableInt64   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableInt64   (obj); }
-
-			public override Byte?     GetNullableByte    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableByte    (obj); }
-			public override UInt16?   GetNullableUInt16  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableUInt16  (obj); }
-			public override UInt32?   GetNullableUInt32  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableUInt32  (obj); }
-			public override UInt64?   GetNullableUInt64  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableUInt64  (obj); }
-
-			public override Boolean?  GetNullableBoolean (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableBoolean (obj); }
-			public override Char?     GetNullableChar    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableChar    (obj); }
-			public override Single?   GetNullableSingle  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableSingle  (obj); }
-			public override Double?   GetNullableDouble  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableDouble  (obj); }
-			public override Decimal?  GetNullableDecimal (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableDecimal (obj); }
-			public override Guid?     GetNullableGuid    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableGuid    (obj); }
-			public override DateTime? GetNullableDateTime(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableDateTime(obj); }
-			public override DateTimeOffset? GetNullableDateTimeOffset(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? null: _mapper.GetNullableDateTimeOffset(obj); }
-
-#if !SILVERLIGHT
-
-			// SQL type getters.
-			//
-			public override SqlByte     GetSqlByte    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlByte.    Null: _mapper.GetSqlByte    (obj); }
-			public override SqlInt16    GetSqlInt16   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlInt16.   Null: _mapper.GetSqlInt16   (obj); }
-			public override SqlInt32    GetSqlInt32   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlInt32.   Null: _mapper.GetSqlInt32   (obj); }
-			public override SqlInt64    GetSqlInt64   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlInt64.   Null: _mapper.GetSqlInt64   (obj); }
-			public override SqlSingle   GetSqlSingle  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlSingle.  Null: _mapper.GetSqlSingle  (obj); }
-			public override SqlBoolean  GetSqlBoolean (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlBoolean. Null: _mapper.GetSqlBoolean (obj); }
-			public override SqlDouble   GetSqlDouble  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlDouble.  Null: _mapper.GetSqlDouble  (obj); }
-			public override SqlDateTime GetSqlDateTime(object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlDateTime.Null: _mapper.GetSqlDateTime(obj); }
-			public override SqlDecimal  GetSqlDecimal (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlDecimal. Null: _mapper.GetSqlDecimal (obj); }
-			public override SqlMoney    GetSqlMoney   (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlMoney.   Null: _mapper.GetSqlMoney   (obj); }
-			public override SqlGuid     GetSqlGuid    (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlGuid.    Null: _mapper.GetSqlGuid    (obj); }
-			public override SqlString   GetSqlString  (object o) { var obj = MemberAccessor.GetValue(o); return obj == null? SqlString.  Null: _mapper.GetSqlString  (obj); }
-
-#endif
 
 			#endregion
 
@@ -323,65 +116,6 @@ namespace LinqToDB.Mapping
 				if (obj != null)
 					_mapper.SetValue(obj, value);
 			}
-
-			public override void SetSByte   (object o, SByte    value) { var obj = GetObject(o); if (obj != null) _mapper.SetSByte   (obj, value); }
-			public override void SetInt16   (object o, Int16    value) { var obj = GetObject(o); if (obj != null) _mapper.SetInt16   (obj, value); }
-			public override void SetInt32   (object o, Int32    value) { var obj = GetObject(o); if (obj != null) _mapper.SetInt32   (obj, value); }
-			public override void SetInt64   (object o, Int64    value) { var obj = GetObject(o); if (obj != null) _mapper.SetInt64   (obj, value); }
-
-			public override void SetByte    (object o, Byte     value) { var obj = GetObject(o); if (obj != null) _mapper.SetByte    (obj, value); }
-			public override void SetUInt16  (object o, UInt16   value) { var obj = GetObject(o); if (obj != null) _mapper.SetUInt16  (obj, value); }
-			public override void SetUInt32  (object o, UInt32   value) { var obj = GetObject(o); if (obj != null) _mapper.SetUInt32  (obj, value); }
-			public override void SetUInt64  (object o, UInt64   value) { var obj = GetObject(o); if (obj != null) _mapper.SetUInt64  (obj, value); }
-
-			public override void SetBoolean (object o, Boolean  value) { var obj = GetObject(o); if (obj != null) _mapper.SetBoolean (obj, value); }
-			public override void SetChar    (object o, Char     value) { var obj = GetObject(o); if (obj != null) _mapper.SetChar    (obj, value); }
-			public override void SetSingle  (object o, Single   value) { var obj = GetObject(o); if (obj != null) _mapper.SetSingle  (obj, value); }
-			public override void SetDouble  (object o, Double   value) { var obj = GetObject(o); if (obj != null) _mapper.SetDouble  (obj, value); }
-			public override void SetDecimal (object o, Decimal  value) { var obj = GetObject(o); if (obj != null) _mapper.SetDecimal (obj, value); }
-			public override void SetGuid    (object o, Guid     value) { var obj = GetObject(o); if (obj != null) _mapper.SetGuid    (obj, value); }
-			public override void SetDateTime(object o, DateTime value) { var obj = GetObject(o); if (obj != null) _mapper.SetDateTime(obj, value); }
-			public override void SetDateTimeOffset(object o, DateTimeOffset value) { var obj = GetObject(o); if (obj != null) _mapper.SetDateTimeOffset(obj, value); }
-
-			// Nullable type setters.
-			//
-			public override void SetNullableSByte   (object o, SByte?    value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableSByte   (obj, value); }
-			public override void SetNullableInt16   (object o, Int16?    value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableInt16   (obj, value); }
-			public override void SetNullableInt32   (object o, Int32?    value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableInt32   (obj, value); }
-			public override void SetNullableInt64   (object o, Int64?    value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableInt64   (obj, value); }
-
-			public override void SetNullableByte    (object o, Byte?     value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableByte    (obj, value); }
-			public override void SetNullableUInt16  (object o, UInt16?   value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableUInt16  (obj, value); }
-			public override void SetNullableUInt32  (object o, UInt32?   value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableUInt32  (obj, value); }
-			public override void SetNullableUInt64  (object o, UInt64?   value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableUInt64  (obj, value); }
-
-			public override void SetNullableBoolean (object o, Boolean?  value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableBoolean (obj, value); }
-			public override void SetNullableChar    (object o, Char?     value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableChar    (obj, value); }
-			public override void SetNullableSingle  (object o, Single?   value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableSingle  (obj, value); }
-			public override void SetNullableDouble  (object o, Double?   value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableDouble  (obj, value); }
-			public override void SetNullableDecimal (object o, Decimal?  value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableDecimal (obj, value); }
-			public override void SetNullableGuid    (object o, Guid?     value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableGuid    (obj, value); }
-			public override void SetNullableDateTime(object o, DateTime? value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableDateTime(obj, value); }
-			public override void SetNullableDateTimeOffset(object o, DateTimeOffset? value) { var obj = GetObject(o); if (obj != null) _mapper.SetNullableDateTimeOffset(obj, value); }
-
-#if !SILVERLIGHT
-
-			// SQL type setters.
-			//
-			public override void SetSqlByte    (object o, SqlByte     value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlByte    (obj, value); }
-			public override void SetSqlInt16   (object o, SqlInt16    value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlInt16   (obj, value); }
-			public override void SetSqlInt32   (object o, SqlInt32    value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlInt32   (obj, value); }
-			public override void SetSqlInt64   (object o, SqlInt64    value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlInt64   (obj, value); }
-			public override void SetSqlSingle  (object o, SqlSingle   value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlSingle  (obj, value); }
-			public override void SetSqlBoolean (object o, SqlBoolean  value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlBoolean (obj, value); }
-			public override void SetSqlDouble  (object o, SqlDouble   value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlDouble  (obj, value); }
-			public override void SetSqlDateTime(object o, SqlDateTime value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlDateTime(obj, value); }
-			public override void SetSqlDecimal (object o, SqlDecimal  value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlDecimal (obj, value); }
-			public override void SetSqlMoney   (object o, SqlMoney    value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlMoney   (obj, value); }
-			public override void SetSqlGuid    (object o, SqlGuid     value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlGuid    (obj, value); }
-			public override void SetSqlString  (object o, SqlString   value) { var obj = GetObject(o); if (obj != null) _mapper.SetSqlString  (obj, value); }
-
-#endif
 
 			#endregion
 		}

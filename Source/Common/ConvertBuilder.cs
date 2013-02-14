@@ -225,7 +225,7 @@ namespace LinqToDB.Common
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attrs.Count != 0))
+				if (fromTypeFields.Any(f => f.attrs.Count(a => a.Value != null) != 0))
 				{
 					var lex = mappingSchema.TryGetConvertExpression(from, to);
 
@@ -479,11 +479,11 @@ namespace LinqToDB.Common
 
 				if (from.IsNullable())
 					ex = Tuple.Create(
-						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(to)) as Expression,
+						Expression.Condition(Expression.PropertyOrField(p, "HasValue"), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
 				else if (from.IsClass)
 					ex = Tuple.Create(
-						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(to)) as Expression,
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
 			}
 

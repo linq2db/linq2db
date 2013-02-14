@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Expressions
 {
@@ -7,12 +8,14 @@ namespace LinqToDB.Expressions
 
 	public class DefaultValueExpression : Expression
 	{
-		public DefaultValueExpression(Type type)
+		public DefaultValueExpression(MappingSchema mappingSchema, Type type)
 		{
-			_type = type;
+			_mappingSchema = mappingSchema;
+			_type          = type;
 		}
 
-		readonly Type _type;
+		readonly MappingSchema _mappingSchema;
+		readonly Type          _type;
 
 		public override Type           Type      { get { return _type;                    } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
@@ -20,7 +23,11 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			return Constant(DefaultValue.GetValue(Type), Type);
+			return Constant(
+				_mappingSchema == null ?
+					DefaultValue.GetValue(Type) :
+					_mappingSchema.GetDefaultValue(Type),
+				Type);
 		}
 	}
 }

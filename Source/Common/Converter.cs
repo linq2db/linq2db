@@ -77,7 +77,9 @@ namespace LinqToDB.Common
 		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{
 			if (value == null)
-				return DefaultValue.GetValue(conversionType);
+				return mappingSchema == null ?
+					DefaultValue.GetValue(conversionType) :
+					mappingSchema.GetDefaultValue(conversionType);
 
 			if (value.GetType() == conversionType)
 				return value;
@@ -105,8 +107,8 @@ namespace LinqToDB.Common
 						b.Transform(e =>
 							e == ps[0] ?
 								Expression.Convert(p, e.Type) :
-							IsDefaultValuePlaceHolder(e) ?
-								Expression.Constant(DefaultValue.GetValue(e.Type), e.Type) :
+							IsDefaultValuePlaceHolder(e) ? 
+								new DefaultValueExpression(mappingSchema, e.Type) :
 								e),
 						typeof(object)),
 					p);
@@ -149,7 +151,7 @@ namespace LinqToDB.Common
 						e == ps[0] ?
 							Expression.Convert (p, e.Type) :
 							IsDefaultValuePlaceHolder(e) ?
-								Expression.Constant(DefaultValue.GetValue(e.Type)) :
+								new DefaultValueExpression(mappingSchema, e.Type) :
 								e),
 					p);
 

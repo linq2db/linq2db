@@ -222,23 +222,6 @@ namespace LinqToDB.Reflection
 			return nullValue;
 		}
 
-		private static IsNullHandler _isNull = IsNullInternal;
-		public  static IsNullHandler  IsNull
-		{
-			get { return _isNull ?? (_isNull = IsNullInternal); }
-			set { _isNull = value; }
-		}
-
-		private static bool IsNullInternal(object value)
-		{
-			if (value == null)
-				return true;
-
-			var nullValue = GetNullValue(value.GetType());
-
-			return nullValue != null && value.Equals(nullValue);
-		}
-
 		#endregion
 	}
 }

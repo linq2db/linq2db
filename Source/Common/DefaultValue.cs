@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Linq.Expressions;
-
-using JetBrains.Annotations;
+using System.Reflection;
 
 namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using Mapping;
 
 	public static class DefaultValue
 	{
@@ -33,18 +34,34 @@ namespace LinqToDB.Common
 			_values[typeof(string)]         = default(string);
 		}
 
+		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
+
 		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
 
-		public static object GetValue([NotNull] Type type)
+		public static object GetValue([JetBrains.Annotations.NotNull] Type type, MappingSchema mappingSchema = null)
 		{
 			if (type == null) throw new ArgumentNullException("type");
+
+			var ms = mappingSchema ?? MappingSchema.Default;
 
 			object value;
 
 			if (_values.TryGetValue(type, out value))
 				return value;
 
-			if (!type.IsClass && !type.IsNullable())
+			if (type.IsEnum)
+			{
+				var fields =
+					from f in type.GetFields()
+					where (f.Attributes & EnumField) == EnumField
+					let attrs = ms.GetAttributes<MapValueAttribute>(f, a => a.Configuration).Where(a => a.Value == null).ToList()
+					where attrs.Count > 0
+					select Enum.Parse(type, f.Name);
+
+				value = fields.FirstOrDefault();
+			}
+
+			if (value == null && !type.IsClass && !type.IsNullable())
 			{
 				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 

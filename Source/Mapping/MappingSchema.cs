@@ -89,7 +89,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return DefaultValue.GetValue(type);
+			return DefaultValue.GetValue(type, this);
 		}
 
 		public void SetDefaultValue(Type type, object value)
@@ -172,7 +172,7 @@ namespace LinqToDB.Mapping
 			_schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new ConvertInfo.LambdaInfo(ex, null, func, false));
 		}
 
-		static LambdaExpression AddNullCheck(LambdaExpression expr)
+		LambdaExpression AddNullCheck(LambdaExpression expr)
 		{
 			var p = expr.Parameters[0];
 
@@ -181,7 +181,7 @@ namespace LinqToDB.Mapping
 					Expression.Condition(
 						Expression.PropertyOrField(p, "HasValue"),
 						expr.Body,
-						new DefaultValueExpression(expr.Body.Type)),
+						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
 
 			if (p.Type.IsClass)
@@ -189,7 +189,7 @@ namespace LinqToDB.Mapping
 					Expression.Condition(
 						Expression.NotEqual(p, Expression.Constant(null, p.Type)),
 						expr.Body,
-						new DefaultValueExpression(expr.Body.Type)),
+						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
 
 			return expr;

@@ -9,6 +9,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -320,7 +321,7 @@ namespace Tests
 		{
 			get
 			{
-				return _parent4 ?? (_parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = Map.DefaultSchema.MapValueToEnum<TypeValue>(p.Value1) }).ToList());
+				return _parent4 ?? (_parent4 = Parent.Select(p => new Parent4 { ParentID = p.ParentID, Value1 = ConvertTo<TypeValue>.From(p.Value1) }).ToList());
 			}
 		}
 
