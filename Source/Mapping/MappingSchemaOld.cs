@@ -214,11 +214,6 @@ namespace LinqToDB.Mapping
 			return MapEnumToValue(value, value.GetType(), convertToUnderlyingType);
 		}
 
-		public object MapEnumToValue(object value)
-		{
-			return MapEnumToValue(value, false);
-		}
-
 		#endregion
 	}
 }

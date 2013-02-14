@@ -101,6 +101,22 @@ namespace LinqToDB.Mapping
 
 		#region Convert
 
+		public T ChangeTypeTo<T>(object value)
+		{
+			return Converter.ChangeTypeTo<T>(value, this);
+		}
+
+		public object ChangeType(object value, Type conversionType)
+		{
+			return Converter.ChangeType(value, conversionType, this);
+		}
+
+		public object EnumToValue(Enum value)
+		{
+			var toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType());
+			return Converter.ChangeType(value, toType, this);
+		}
+
 		public virtual LambdaExpression TryGetConvertExpression(Type @from, Type to)
 		{
 			return null;

@@ -1071,7 +1071,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var attrs = v.GetType().GetCustomAttributes(typeof(SqlEnumAttribute), true);
 
-				v = MappingSchema.MapEnumToValue(v, attrs.Length == 0);
+				if (attrs.Length == 0)
+					v = MappingSchema.NewSchema.EnumToValue((Enum)v);
 			}
 
 			value = new SqlValue(v);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlBuilder
 {
@@ -104,14 +105,16 @@ namespace LinqToDB.SqlBuilder
 
 		void SetEnumConverterInternal(Type type, MappingSchemaOld ms)
 		{
+			var toType = Converter.GetDefaultMappingFromEnumType(ms.NewSchema, type);
+
 			if (_valueConverter == null)
 			{
-				_valueConverter = o => ms.MapEnumToValue(o, type, true);
+				_valueConverter = o => Converter.ChangeType(o, toType, ms.NewSchema);
 			}
 			else
 			{
 				var converter = _valueConverter;
-				_valueConverter = o => ms.MapEnumToValue(converter(o), type, true);
+				_valueConverter = o => Converter.ChangeType(converter(o), toType, ms.NewSchema);
 			}
 		}
 
