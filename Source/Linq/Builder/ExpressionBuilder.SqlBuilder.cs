@@ -1100,6 +1100,10 @@ namespace LinqToDB.Linq.Builder
 			string name = null;
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
+
+			p = CreateParameterAccessor(MappingSchema.NewSchema, newExpr, expr, ExpressionParam, ParametersParam, expr.Type, name);
+
+			/*
 			var mapper  = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(newExpr, typeof(object)),
 				new [] { ExpressionParam, ParametersParam });
@@ -1110,6 +1114,7 @@ namespace LinqToDB.Linq.Builder
 				Accessor     = mapper.Compile(),
 				SqlParameter = new SqlParameter(expr.Type, name, null)
 			};
+			*/
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1686,8 +1691,12 @@ namespace LinqToDB.Linq.Builder
 			if (member is MethodInfo)
 				member = ((MethodInfo)member).GetPropertyInfo();
 
-			var par    = ReplaceParameter(_expressionAccessors, ex, _ => {});
-			var expr   = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
+			var par  = ReplaceParameter(_expressionAccessors, ex, _ => {});
+			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
+
+			var p = CreateParameterAccessor(MappingSchema.NewSchema, expr, expr, ExpressionParam, ParametersParam, expr.Type, member.Name);
+
+			/*
 			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(expr, typeof(object)),
 				new [] { ExpressionParam, ParametersParam });
@@ -1698,11 +1707,54 @@ namespace LinqToDB.Linq.Builder
 				Accessor     = mapper.Compile(),
 				SqlParameter = new SqlParameter(expr.Type, member.Name, null)
 			};
+			*/
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
 
 			return p.SqlParameter;
+		}
+
+		internal static ParameterAccessor CreateParameterAccessor(
+			MappingSchema       mappingSchema,
+			Expression          accessorExpression,
+			Expression          expression,
+			ParameterExpression expressionParam,
+			ParameterExpression parametersParam,
+			Type                type,
+			string              name)
+		{
+//			if (accessorExpression.Type != expression.Type || accessorExpression.Type != type)
+//			{
+//				throw new ArgumentException();
+//			}
+
+			if (type.IsEnum)
+			{
+//							var toType = Converter.GetDefaultMappingFromEnumType(ms.NewSchema, type);
+//
+//			if (_valueConverter == null)
+//			{
+//				_valueConverter = o => Converter.ChangeType(o, toType, ms.NewSchema);
+//			}
+//			else
+//			{
+//				var converter = _valueConverter;
+//				_valueConverter = o => Converter.ChangeType(converter(o), toType, ms.NewSchema);
+//			}
+
+			}
+
+			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
+				Expression.Convert(accessorExpression, typeof(object)),
+				new [] { expressionParam, parametersParam });
+
+			return new ParameterAccessor
+			{
+				Expression   = expression,
+				Accessor     = mapper.Compile(),
+				SqlParameter = new SqlParameter(type, name, null)
+			};
 		}
 
 		static Expression FindExpression(Expression expr)

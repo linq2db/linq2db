@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
 	using Builder;
+	using Data;
 	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
@@ -511,10 +511,15 @@ namespace LinqToDB.Linq
 
 				getter = Expression.Call(null, method, getter, Expression.Constant(mm.MapMemberInfo.NullValue));
 			}
-			else
-				getter = Expression.Convert(getter, typeof(object));
+//			else
+//				getter = Expression.Convert(getter, typeof(object));
 
-			var mapper    = Expression.Lambda<Func<Expression,object[],object>>(
+			var param = ExpressionBuilder.CreateParameterAccessor(
+				dataContext.MappingSchema.NewSchema,
+				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.SystemType, field.Name.Replace('.', '_'));
+
+			/*
+			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				getter,
 				new [] { exprParam, Expression.Parameter(typeof(object[]), "ps") });
 
@@ -524,6 +529,7 @@ namespace LinqToDB.Linq
 				Accessor     = mapper.Compile(),
 				SqlParameter = new SqlParameter(field.SystemType, field.Name.Replace('.', '_'), null)
 			};
+			*/
 
 			if (field.SystemType.IsEnum)
 				param.SqlParameter.SetEnumConverter(field.SystemType, dataContext.MappingSchema);

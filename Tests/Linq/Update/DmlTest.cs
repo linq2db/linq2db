@@ -22,8 +22,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -47,8 +45,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -72,8 +68,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -97,8 +91,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -126,8 +118,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -155,8 +145,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -184,8 +172,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -220,8 +206,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var parent = new Parent1 { ParentID = 1001, Value1 = 1001 };
@@ -250,8 +234,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -284,8 +266,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -485,8 +465,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Types.Delete(c => c.ID > 1000);
@@ -514,8 +492,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -544,8 +520,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -572,8 +546,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -602,8 +574,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -633,8 +603,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -662,8 +630,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -691,8 +657,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Parent.Delete(p => p.Value1 == 11);
@@ -718,8 +682,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -746,8 +708,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -774,8 +734,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -820,8 +778,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var types = db.GetTable<LinqDataTypesArrayTest>();
@@ -843,8 +799,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var types = db.GetTable<LinqDataTypesArrayTest>();
@@ -873,8 +827,6 @@ namespace Tests.Update
 
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Parent.Delete(p => p.ParentID > 1000);
@@ -906,8 +858,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -942,8 +892,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -970,8 +918,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					var id = 1001;
@@ -998,8 +944,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Parent.Delete(p => p.ParentID == 1001);
@@ -1024,8 +968,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -1058,8 +1000,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -1090,8 +1030,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Person.Delete(p => p.ID > 2);
@@ -1122,8 +1060,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					for (var i = 0; i < 2; i++)
@@ -1158,8 +1094,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					for (var i = 0; i < 2; i++)
@@ -1195,8 +1129,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				var id = 0;
 
 				try
@@ -1237,8 +1169,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				var id = 0;
 
 				try
@@ -1274,8 +1204,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				var id = 0;
 
 				try
@@ -1341,16 +1269,19 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				db.Types2.Delete(_ => _.ID > 1000);
 
-				((DataConnection)db).BulkCopy(1,
-					new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
-					new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    });
-					//new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 });
-
-				db.Types2.Delete(_ => _.ID > 1000);
+				try
+				{
+					((DataConnection)db).BulkCopy(1,
+						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
+						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    });
+						//new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 });
+				}
+				finally
+				{
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
 			}
 		}
 
@@ -1361,11 +1292,16 @@ namespace Tests.Update
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
-				((DataConnection)db).BulkCopy(100,
-					new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
-					new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 });
-
-				db.Types2.Delete(_ => _.ID > 1000);
+				try
+				{
+					((DataConnection)db).BulkCopy(100,
+						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
+						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 });
+				}
+				finally
+				{
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
 			}
 		}
 
@@ -1383,11 +1319,18 @@ namespace Tests.Update
 			{
 				db.Parent.Delete(p => p.ParentID == 1100);
 
-				db.Insert(new NullableFieldTestObject { ParentID = 1100 });
+				try
+				{
+					db.Insert(new NullableFieldTestObject { ParentID = 1100 });
 
-				var parent = db.Parent.Single(p => p.ParentID == 1100);
+					var parent = db.Parent.Single(p => p.ParentID == 1100);
 
-				Assert.IsNull(parent.Value1);
+					Assert.IsNull(parent.Value1);
+				}
+				finally
+				{
+					db.Parent.Delete(p => p.ParentID == 1100);
+				}
 			}
 		}
 
@@ -1422,8 +1365,16 @@ namespace Tests.Update
 
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-				db.Insert(p);
+				var id = db.Person.Max(t => t.ID);
+
+				try
+				{
+					db.Insert(p);
+				}
+				finally
+				{
+					db.Person.Delete(t => t.ID > id);
+				}
 			}
 		}
 
@@ -1432,13 +1383,21 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-				db
-					.Into(db.GetTable<TestPerson1>())
-						.Value(_ => _.Name.FirstName, "FirstName")
-						.Value(_ => _.Name.LastName, () => "LastName")
-						.Value(_ => _.Gender,         "F")
-					.Insert();
+				var id = db.Person.Max(t => t.ID);
+
+				try
+				{
+					db
+						.Into(db.GetTable<TestPerson1>())
+							.Value(_ => _.Name.FirstName, "FirstName")
+							.Value(_ => _.Name.LastName,  () => "LastName")
+							.Value(_ => _.Gender,         "F")
+						.Insert();
+				}
+				finally
+				{
+					db.Person.Delete(t => t.ID > id);
+				}
 			}
 		}
 
@@ -1447,18 +1406,26 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-				db
-					.GetTable<TestPerson1>()
-					.Insert(() => new TestPerson1
-					{
-						Name = new FullName
+				var id = db.Person.Max(t => t.ID);
+
+				try
+				{
+					db
+						.GetTable<TestPerson1>()
+						.Insert(() => new TestPerson1
 						{
-							FirstName = "FirstName",
-							LastName = "LastName"
-						},
-						Gender = "M",
-					});
+							Name = new FullName
+							{
+								FirstName = "FirstName",
+								LastName  = "LastName"
+							},
+							Gender = "M",
+						});
+				}
+				finally
+				{
+					db.Person.Delete(t => t.ID > id);
+				}
 			}
 		}
 
@@ -1467,8 +1434,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
@@ -1496,8 +1461,6 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.TestIdentity.Delete();

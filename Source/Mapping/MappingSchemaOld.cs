@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
 using System.Threading;
 
-	#region ReSharper disable
+#region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEvident
 // ReSharper disable UseObjectOrCollectionInitializer
 // ReSharper disable SuggestUseVarKeywordEverywhere
 // ReSharper disable RedundantTypeArgumentsOfMethod
 #endregion
-
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
