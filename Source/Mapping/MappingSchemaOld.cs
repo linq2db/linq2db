@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEvident
@@ -124,95 +123,6 @@ namespace LinqToDB.Mapping
 		public virtual object GetNullValue(Type type)
 		{
 			return TypeAccessor.GetNullValue(type);
-		}
-
-		#endregion
-
-		#region GetMapValues
-
-		private readonly Dictionary<Type,MapValue[]> _mapValues = new Dictionary<Type,MapValue[]>();
-
-		public virtual MapValue[] GetMapValues([JetBrains.Annotations.NotNull] Type type)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			lock (_mapValues)
-			{
-				MapValue[] mapValues;
-
-				if (_mapValues.TryGetValue(type, out mapValues))
-					return mapValues;
-
-				var  typeExt = TypeExtension.GetTypeExtension(type, Extensions);
-				bool isSet;
-
-				mapValues = MetadataProvider.GetMapValues(typeExt, type, out isSet);
-
-				_mapValues.Add(type, mapValues);
-
-				return mapValues;
-			}
-		}
-
-		#endregion
-
-		#region ValueToEnum, EnumToValue
-
-		public virtual object MapEnumToValue(object value, [JetBrains.Annotations.NotNull] Type type, bool convertToUnderlyingType)
-		{
-			if (value == null)
-				return null;
-
-			if (type == null) throw new ArgumentNullException("type");
-
-			type = value.GetType();
-
-			object nullValue = GetNullValue(type);
-
-			if (nullValue != null)
-			{
-				IComparable comp = (IComparable)value;
-
-				try
-				{
-					if (comp.CompareTo(nullValue) == 0)
-						return null;
-				}
-				catch
-				{
-				}
-			}
-
-			MapValue[] mapValues = GetMapValues(type);
-
-			if (mapValues != null)
-			{
-				IComparable comp = (IComparable)value;
-
-				foreach (MapValue mv in mapValues)
-				{
-					try
-					{
-						if (comp.CompareTo(mv.OrigValue) == 0)
-							return mv.MapValues[0];
-					}
-					catch
-					{
-					}
-				}
-			}
-
-			return convertToUnderlyingType ?
-				System.Convert.ChangeType(value, Enum.GetUnderlyingType(value.GetType()), Thread.CurrentThread.CurrentCulture) :
-				value;
-		}
-
-		public virtual object MapEnumToValue(object value, bool convertToUnderlyingType)
-		{
-			if (value == null)
-				return null;
-
-			return MapEnumToValue(value, value.GetType(), convertToUnderlyingType);
 		}
 
 		#endregion

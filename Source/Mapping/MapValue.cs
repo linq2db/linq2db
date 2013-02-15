@@ -2,22 +2,13 @@ namespace LinqToDB.Mapping
 {
 	public class MapValue
 	{
-		public MapValue(object origValue, params object[] mapValues)
+		public MapValue(object origValue, params MapValueAttribute[] mapValues)
 		{
-			_origValue = origValue;
-			_mapValues = mapValues;
+			OrigValue = origValue;
+			MapValues = mapValues;
 		}
 
-		private readonly object _origValue;
-		public           object  OrigValue
-		{
-			get { return _origValue;  }
-		}
-
-		private readonly object[] _mapValues;
-		public           object[]  MapValues
-		{
-			get { return _mapValues;  }
-		}
+		public object              OrigValue { get; private set; }
+		public MapValueAttribute[] MapValues { get; private set; }
 	}
 }

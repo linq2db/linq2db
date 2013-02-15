@@ -2,11 +2,11 @@
 using System.Linq.Expressions;
 
 using Oracle.DataAccess.Types;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using Expressions;
 	using Mapping;
 
 	public class OracleMappingSchema : MappingSchema

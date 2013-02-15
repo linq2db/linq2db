@@ -89,22 +89,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetMapValues
-
-		public virtual MapValue[] GetMapValues(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		public virtual MapValue[] GetMapValues(TypeExtension typeExtension, Type type, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		#endregion
-
 		#region GetNullable
 
 		public virtual bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)

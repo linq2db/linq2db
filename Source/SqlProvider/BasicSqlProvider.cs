@@ -1580,20 +1580,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				if (type.IsEnum)
-				{
-					value = Map.DefaultSchema.MapEnumToValue(value, false);
-
-					if (value != null && !value.GetType().IsEnum)
-					{
-						/////throw new InvalidOperationException();
-						BuildValue(sb, value);
-					}
-					else
-						sb.Append(value);
-				}
-				else
-					sb.Append(value);
+				sb.Append(value);
 			}
 		}
 

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
-using LinqToDB.Common;
+
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 
@@ -46,6 +46,8 @@ namespace LinqToDB.DataProvider
 			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampTZ >((r,i) => GetOracleTimeStampTZ (r,i));
 			SetProviderField<OracleDataReader,DateTimeOffset    ,OracleTimeStampLTZ>((r,i) => GetOracleTimeStampLTZ(r,i));
 		}
+
+		#region Init
 
 		/*
 		static OracleDataProvider()
@@ -132,6 +134,8 @@ namespace LinqToDB.DataProvider
 		}
 		*/
 
+		#endregion
+
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
 		{
 			var tstz = rd.GetOracleTimeStampTZ(idx);
@@ -168,26 +172,6 @@ namespace LinqToDB.DataProvider
 			dataConnection.Command = null;
 			((OracleCommand)dataConnection.Command).BindByName = true;
 			//base.InitCommand(dataConnection);
-		}
-
-		protected override Expression TryGetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			var fromType = ((DbDataReader)reader).GetFieldType(idx);
-
-			if (fromType == typeof(decimal) && toType.IsEnum)
-			{
-				var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, toType);
-
-				if (type != null)
-					return GetReaderExpression(mappingSchema, reader, idx, readerExpression, type);
-			}
-
-			return null;
-		}
-
-		public override Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			return base.GetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

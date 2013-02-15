@@ -122,11 +122,6 @@ namespace LinqToDB.DataProvider
 
 		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 
-		protected virtual Expression TryGetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
-		{
-			return null;
-		}
-
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
@@ -146,11 +141,6 @@ namespace LinqToDB.DataProvider
 			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
 			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
-				return expr;
-
-			expr = TryGetReaderExpression(mappingSchema, reader, idx, readerExpression, toType);
-
-			if (expr != null)
 				return expr;
 
 			return Expression.Convert(

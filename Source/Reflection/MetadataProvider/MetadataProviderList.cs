@@ -140,36 +140,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetMapValues
-
-		public override MapValue[] GetMapValues(TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetMapValues(typeExtension, member, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetMapValues(typeExtension, member, out isSet);
-		}
-
-		public override MapValue[] GetMapValues(TypeExtension typeExt, Type type, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetMapValues(typeExt, type, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetMapValues(typeExt, type, out isSet);
-		}
-
-		#endregion
-
 		#region GetNullable
 
 		public override bool GetNullable(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)

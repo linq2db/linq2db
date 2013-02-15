@@ -2,12 +2,12 @@ using System;
 using System.Data;
 using System.Diagnostics;
 
-using LinqToDB.Common;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
-
 namespace LinqToDB.Mapping
 {
+	using Common;
+	using Extensions;
+	using Reflection;
+
 	public class MemberMapper
 	{
 		#region Init
@@ -143,28 +143,28 @@ namespace LinqToDB.Mapping
 			if (mapInfo.Trimmable && value is string)
 				value = value.ToString().TrimEnd(_trim);
 
-			if (mapInfo.MapValues != null)
-			{
-				var comp = (IComparable)value;
-
-				foreach (var mv       in mapInfo.MapValues)
-				foreach (var mapValue in mv.MapValues)
-				{
-					try
-					{
-						if (comp is string && ((string)comp).Length == 1 && mapValue is char)
-						{
-							if (((string)comp)[0] == (char)mapValue)
-								return mv.OrigValue;
-						}
-						else if (comp.CompareTo(mapValue) == 0)
-							return mv.OrigValue;
-					}
-					catch
-					{
-					}
-				}
-			}
+//			if (mapInfo.MapValues != null)
+//			{
+//				var comp = (IComparable)value;
+//
+//				foreach (var mv       in mapInfo.MapValues)
+//				foreach (var mapValue in mv.MapValues)
+//				{
+//					try
+//					{
+//						if (comp is string && ((string)comp).Length == 1 && mapValue.Value is char)
+//						{
+//							if (((string)comp)[0] == (char)mapValue.Value)
+//								return mv.OrigValue;
+//						}
+//						else if (comp.CompareTo(mapValue) == 0)
+//							return mv.OrigValue;
+//					}
+//					catch
+//					{
+//					}
+//				}
+//			}
 
 			var valueType  = value.GetType();
 			var memberType = mapInfo.Type;
@@ -227,22 +227,22 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			if (mapInfo.MapValues != null)
-			{
-				var comp = (IComparable)value;
-
-				foreach (var mv in mapInfo.MapValues)
-				{
-					try
-					{
-						if (comp.CompareTo(mv.OrigValue) == 0)
-							return mv.MapValues[0];
-					}
-					catch
-					{
-					}
-				}
-			}
+//			if (mapInfo.MapValues != null)
+//			{
+//				var comp = (IComparable)value;
+//
+//				foreach (var mv in mapInfo.MapValues)
+//				{
+//					try
+//					{
+//						if (comp.CompareTo(mv.OrigValue) == 0)
+//							return mv.MapValues[0].Value;
+//					}
+//					catch
+//					{
+//					}
+//				}
+//			}
 
 			return value;
 		}

@@ -367,11 +367,7 @@ namespace LinqToDB.Mapping
 
 		private MapValue[] GetMapValues(MemberAccessor member)
 		{
-			bool isSet;
-
-			var values = MetadataProvider.GetMapValues(Extension, member, out isSet);
-
-			return isSet? values: MappingSchema.GetMapValues(member.Type);
+			return MappingSchema.NewSchema.GetMapValues(member.Type);
 		}
 
 		protected virtual bool GetNullable(MemberAccessor memberAccessor)

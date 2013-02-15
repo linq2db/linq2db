@@ -660,5 +660,44 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		#region GetMapValues
+
+		ConcurrentDictionary<Type,MapValue[]> _mapValues;
+
+		public virtual MapValue[] GetMapValues([JetBrains.Annotations.NotNull] Type type)
+		{
+			if (type == null) throw new ArgumentNullException("type");
+
+			if (_mapValues == null)
+				_mapValues = new ConcurrentDictionary<Type,MapValue[]>();
+
+			MapValue[] mapValues;
+
+			if (_mapValues.TryGetValue(type, out mapValues))
+				return mapValues;
+
+			var underlyingType = type.ToNullableUnderlying();
+
+			if (underlyingType.IsEnum)
+			{
+				var fields =
+				(
+					from f in underlyingType.GetFields()
+					where (f.Attributes & EnumField) == EnumField
+					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration)
+					select new MapValue(Enum.Parse(underlyingType, f.Name), attrs)
+				).ToArray();
+
+				if (fields.Any(f => f.MapValues.Length > 0))
+					mapValues = fields;
+			}
+
+			_mapValues[type] = mapValues;
+
+			return mapValues;
+		}
+
+		#endregion
 	}
 }

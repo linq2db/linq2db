@@ -1417,12 +1417,12 @@ namespace LinqToDB.Linq.Builder
 			if (nullValue != null)
 				dic.Add(nullValue, null);
 
-			var mapValues = MappingSchema.GetMapValues(type);
+			var mapValues = MappingSchema.NewSchema.GetMapValues(type);
 
 			if (mapValues != null)
 				foreach (var mv in mapValues)
 					if (!dic.ContainsKey(mv.OrigValue))
-						dic.Add(mv.OrigValue, mv.MapValues[0]);
+						dic.Add(mv.OrigValue, mv.MapValues[0].Value);
 
 			switch (value.NodeType)
 			{
