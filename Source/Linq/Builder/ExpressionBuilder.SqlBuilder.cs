@@ -1412,11 +1412,6 @@ namespace LinqToDB.Linq.Builder
 
 			var dic = new Dictionary<object, object>();
 
-			var nullValue = MappingSchema.GetNullValue(type);
-
-			if (nullValue != null)
-				dic.Add(nullValue, null);
-
 			var mapValues = MappingSchema.NewSchema.GetMapValues(type);
 
 			if (mapValues != null)

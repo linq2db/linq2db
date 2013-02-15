@@ -408,13 +408,7 @@ namespace LinqToDB.Mapping
 
 		protected virtual object GetNullValue(MemberAccessor memberAccessor, bool isNullable)
 		{
-			if (isNullable)
-			{
-				bool isSet;
-				return MetadataProvider.GetNullValue(MappingSchema, Extension, memberAccessor, out isSet);
-			}
-
-			return MappingSchema.GetNullValue(memberAccessor.Type);
+			return MappingSchema.NewSchema.GetDefaultValue(memberAccessor.Type);
 		}
 
 		protected virtual InheritanceMappingAttribute[] GetInheritanceMapping()

@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 
 namespace LinqToDB.Reflection.MetadataProvider
 {
@@ -233,13 +232,16 @@ namespace LinqToDB.Reflection.MetadataProvider
 			//
 			var attrs = member.GetTypeAttributes<NullValueAttribute>();
 
-			foreach (NullValueAttribute a in attrs)
+			foreach (var a in attrs)
 				if (a.Type == null && a.Value != null && a.Value.GetType() == member.Type ||
 					a.Type != null && a.Type == member.Type)
 					return isSet = true;
 
 			if (member.Type.IsEnum)
-				return isSet = mappingSchema.GetNullValue(member.Type) != null;
+			{
+				var values = mappingSchema.NewSchema.GetMapValues(member.Type);
+				return isSet = values != null && values.Any(v => v.MapValues.Any(m => m.Value == null));
+			}
 
 			if (member.Type.IsClass)
 			{
@@ -288,7 +290,7 @@ namespace LinqToDB.Reflection.MetadataProvider
 			//
 			var attrs = member.GetTypeAttributes<NullValueAttribute>();
 
-			foreach (NullValueAttribute a in attrs)
+			foreach (var a in attrs)
 			{
 				if (a.Type == null && a.Value != null && a.Value.GetType() == member.Type ||
 					a.Type != null && a.Type == member.Type)
