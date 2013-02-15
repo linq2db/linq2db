@@ -1534,7 +1534,7 @@ namespace LinqToDB.SqlBuilder
 					public T2 Expr    (ISqlExpression expr) { return _expr.Add(new Predicate.ExprExpr(_expr._expr, _op, expr)); }
 					public T2 Field   (SqlField      field) { return Expr(field);               }
 					public T2 SubQuery(SqlQuery   subQuery) { return Expr(subQuery);            }
-					public T2 Value   (object        value) { return Expr(new SqlValue(value)); }
+					public T2 Value   (object        value) { return Expr(new SqlValue(null, value)); }
 
 					public T2 All     (SqlQuery   subQuery) { return Expr(SqlFunction.CreateAll (subQuery)); }
 					public T2 Some    (SqlQuery   subQuery) { return Expr(SqlFunction.CreateSome(subQuery)); }
@@ -1556,8 +1556,8 @@ namespace LinqToDB.SqlBuilder
 
 				public T2 Like(ISqlExpression expression, SqlValue escape) { return Add(new Predicate.Like(_expr, false, expression, escape)); }
 				public T2 Like(ISqlExpression expression)                  { return Like(expression, null); }
-				public T2 Like(string expression,         SqlValue escape) { return Like(new SqlValue(expression), escape); }
-				public T2 Like(string expression)                          { return Like(new SqlValue(expression), null);   }
+				public T2 Like(string expression,         SqlValue escape) { return Like(new SqlValue(null, expression), escape); }
+				public T2 Like(string expression)                          { return Like(new SqlValue(null, expression), null);   }
 
 				#endregion
 
@@ -1594,7 +1594,7 @@ namespace LinqToDB.SqlBuilder
 							if (item is ISqlExpression)
 								list.Values.Add((ISqlExpression)item);
 							else
-								list.Values.Add(new SqlValue(item));
+								list.Values.Add(new SqlValue(null, item));
 						}
 					}
 
@@ -1619,7 +1619,7 @@ namespace LinqToDB.SqlBuilder
 				public Expr_ Expr    (ISqlExpression expr)     { return new Expr_(_condition, true, expr); }
 				public Expr_ Field   (SqlField       field)    { return Expr(field);               }
 				public Expr_ SubQuery(SqlQuery       subQuery) { return Expr(subQuery);            }
-				public Expr_ Value   (object         value)    { return Expr(new SqlValue(value)); }
+				public Expr_ Value   (object         value)    { return Expr(new SqlValue(null, value)); }
 
 				public T2 Exists(SqlQuery subQuery)
 				{
@@ -1642,7 +1642,7 @@ namespace LinqToDB.SqlBuilder
 			public Expr_ Expr    (ISqlExpression expr)     { return new Expr_(this, false, expr); }
 			public Expr_ Field   (SqlField       field)    { return Expr(field);                  }
 			public Expr_ SubQuery(SqlQuery       subQuery) { return Expr(subQuery);               }
-			public Expr_ Value   (object         value)    { return Expr(new SqlValue(value));    }
+			public Expr_ Value   (object         value)    { return Expr(new SqlValue(null, value));    }
 
 			public T2 Exists(SqlQuery subQuery)
 			{
@@ -1995,7 +1995,7 @@ namespace LinqToDB.SqlBuilder
 
 			public SelectClause Take(int value)
 			{
-				TakeValue = new SqlValue(value);
+				TakeValue = new SqlValue(null, value);
 				return this;
 			}
 
@@ -2013,7 +2013,7 @@ namespace LinqToDB.SqlBuilder
 
 			public SelectClause Skip(int value)
 			{
-				SkipValue = new SqlValue(value);
+				SkipValue = new SqlValue(null, value);
 				return this;
 			}
 
@@ -4165,7 +4165,7 @@ namespace LinqToDB.SqlBuilder
 								var p = (SqlParameter)e;
 
 								if (p.Value == null)
-									return new SqlValue(null);
+									return new SqlValue(null, null);
 							}
 
 							break;
@@ -4198,7 +4198,7 @@ namespace LinqToDB.SqlBuilder
 									if (ee.Operator == Predicate.Operator.NotEqual)
 										value = !value;
 
-									return new Predicate.Expr(new SqlValue(value), SqlBuilder.Precedence.Comparison);
+									return new Predicate.Expr(new SqlValue(null, value), SqlBuilder.Precedence.Comparison);
 								}
 							}
 
@@ -4237,17 +4237,17 @@ namespace LinqToDB.SqlBuilder
 			return this;
 		}
 
-		Predicate ConvertInListPredicate(Predicate.InList p)
+		static Predicate ConvertInListPredicate(Predicate.InList p)
 		{
 			if (p.Values == null || p.Values.Count == 0)
-				return new Predicate.Expr(new SqlValue(p.IsNot));
+				return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 			if (p.Values.Count == 1 && p.Values[0] is SqlParameter)
 			{
 				var pr = (SqlParameter)p.Values[0];
 
 				if (pr.Value == null)
-					return new Predicate.Expr(new SqlValue(p.IsNot));
+					return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 				if (pr.Value is IEnumerable)
 				{
@@ -4269,11 +4269,11 @@ namespace LinqToDB.SqlBuilder
 							foreach (var item in items)
 							{
 								var value = field.MemberMapper.GetValue(item);
-								values.Add(new SqlValue(value));
+								values.Add(new SqlValue(field.MemberMapper.MappingSchema, value));
 							}
 
 							if (values.Count == 0)
-								return new Predicate.Expr(new SqlValue(p.IsNot));
+								return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 							return new Predicate.InList(keys[0], p.IsNot, values);
 						}
@@ -4291,7 +4291,7 @@ namespace LinqToDB.SqlBuilder
 									var value = field.MemberMapper.GetValue(item);
 									var cond  = value == null ?
 										new Condition(false, new Predicate.IsNull  (field, false)) :
-										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, new SqlValue(value)));
+										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, new SqlValue(field.MemberMapper.MappingSchema, value)));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -4300,7 +4300,7 @@ namespace LinqToDB.SqlBuilder
 							}
 
 							if (sc.Conditions.Count == 0)
-								return new Predicate.Expr(new SqlValue(p.IsNot));
+								return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 							if (p.IsNot)
 								return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);
@@ -4325,12 +4325,13 @@ namespace LinqToDB.SqlBuilder
 
 								foreach (var item in items)
 								{
-									var value = ta[names[0]].GetValue(item);
-									values.Add(new SqlValue(value));
+									var ma    = ta[names[0]];
+									var value = ma.GetValue(item);
+									values.Add(new SqlValue(null, value));
 								}
 
 								if (values.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
+									return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 								return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
 							}
@@ -4348,7 +4349,7 @@ namespace LinqToDB.SqlBuilder
 										var value = ta[names[i]].GetValue(item);
 										var cond  = value == null ?
 											new Condition(false, new Predicate.IsNull  (sql, false)) :
-											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
+											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(null, value)));
 
 										itemCond.Conditions.Add(cond);
 									}
@@ -4357,7 +4358,7 @@ namespace LinqToDB.SqlBuilder
 								}
 
 								if (sc.Conditions.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
+									return new Predicate.Expr(new SqlValue(null, p.IsNot));
 
 								if (p.IsNot)
 									return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);

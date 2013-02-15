@@ -18,6 +18,11 @@ namespace LinqToDB.Mapping
 
 	public class MappingSchemaOld
 	{
+		public static implicit operator MappingSchema(MappingSchemaOld ms)
+		{
+			return ms.NewSchema;
+		}
+
 		public MappingSchema NewSchema = MappingSchema.Default;
 
 		#region ObjectMapper Support

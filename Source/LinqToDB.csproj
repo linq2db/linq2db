@@ -84,6 +84,7 @@
     <Compile Include="IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Mapping\MapValueAttribute.cs" />

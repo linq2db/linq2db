@@ -61,14 +61,13 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
+		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
 			var table          = new SqlTable(builder.MappingSchema, fromType);
 			var mapper         = builder.MappingSchema.GetObjectMapper(fromType);
-			var discriminators = TableBuilder.TableContext.GetInheritanceDiscriminators(
-				builder, table, fromType, mapper.InheritanceMapping);
+			var discriminators = TableBuilder.TableContext.GetInheritanceDiscriminators(builder, table, fromType, mapper.InheritanceMapping);
 
-			return builder.MakeIsPredicate(context, mapper.InheritanceMapping, discriminators, toType,
+			return builder.MakeIsPredicate(context, discriminators, toType,
 				name =>
 				{
 					var field  = table.Fields.Values.First(f => f.Name == name);

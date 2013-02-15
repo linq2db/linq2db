@@ -126,10 +126,10 @@ namespace LinqToDB.DataProvider
 								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", func.Parameters[1]));
 
 							if (type.Length > 0)
-								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(type.Length));
+								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(null, type.Length));
 
 							if (type.Precision > 0)
-								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale));
+								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(null, type.Precision), new SqlValue(null, type.Scale));
 
 							return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1]);
 						}
@@ -156,8 +156,8 @@ namespace LinqToDB.DataProvider
 					case "DateTime"      :
 					case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);
 					case "TinyInt"       : return new SqlFunction(func.SystemType, "SmallInt",  func.Parameters);
-					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
-					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
+					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(null, 19), new SqlValue(null, 4));
+					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(null, 10), new SqlValue(null, 4));
 					case "VarChar"       :
 						if (func.Parameters[0].SystemType.ToUnderlying() == typeof(decimal))
 							return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);

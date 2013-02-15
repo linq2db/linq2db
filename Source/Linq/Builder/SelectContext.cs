@@ -384,7 +384,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression.Sql is SqlQuery.SearchCondition)
 			{
-				expression.Sql = Builder.Convert(this, new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)));
+				expression.Sql = Builder.Convert(
+					this,
+					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(null, true), new SqlValue(null, false)));
 			}
 
 			return expression;

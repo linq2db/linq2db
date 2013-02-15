@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						member.Info1 = new SqlInfo
 						{
-							Sql    = new SqlValue(null),
+							Sql    = new SqlValue(null, null),
 							Query  = sequence1.SqlQuery,
 							Member = member.Info2.Member
 						};
@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						member.Info2 = new SqlInfo
 						{
-							Sql    = new SqlValue(null),
+							Sql    = new SqlValue(null, null),
 							Query  = sequence2.SqlQuery,
 							Member = member.Info1.Member
 						};

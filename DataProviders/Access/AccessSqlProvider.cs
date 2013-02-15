@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider
 				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
 				{
 					var text = ((SqlValue)predicate.Expr2).Value.ToString();
-					var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+					var val  = new SqlValue(null, ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
 
 					predicate = new SqlQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
 				}
@@ -249,8 +249,8 @@ namespace LinqToDB.DataProvider
 				case "CASE"      : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
 				case "CharIndex" :
 					func = func.Parameters.Length == 2?
-						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
+						new SqlFunction(func.SystemType, "InStr", new SqlValue(null, 1),    func.Parameters[1], func.Parameters[0], new SqlValue(null, 1)):
+						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(null, 1));
 					break;
 
 				case "Convert"   :

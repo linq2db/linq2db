@@ -204,16 +204,16 @@ namespace LinqToDB.DataProvider
 									if (func.Parameters[1].SystemType == typeof(string))
 										return func.Parameters[1];
 
-									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("HH24:MI:SS"));
+									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue(null, "HH24:MI:SS"));
 								}
 
 								if (func.Parameters[1].SystemType.ToUnderlying() == typeof(DateTime) &&
 									IsDateDataType(func.Parameters[0], "Date"))
 								{
-									return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
+									return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue(null, "DD"));
 								}
 
-								return new SqlFunction(func.SystemType, "To_Timestamp", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+								return new SqlFunction(func.SystemType, "To_Timestamp", func.Parameters[1], new SqlValue(null, "YYYY-MM-DD HH24:MI:SS"));
 							}
 
 							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider
 							func.SystemType,
 							"Round",
 							new SqlFunction(func.SystemType, "AVG", func.Parameters[0]),
-							new SqlValue(27));
+							new SqlValue(null, 27));
 				}
 			}
 			else if (expr is SqlExpression)

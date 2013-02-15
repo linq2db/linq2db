@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider
 
 				switch (func.Name)
 				{
-					case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(" "), func.Parameters[0]);
+					case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(null, " "), func.Parameters[0]);
 					case "Convert" :
 						{
 							var ftype = func.SystemType.ToUnderlying();

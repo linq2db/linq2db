@@ -172,6 +172,8 @@ namespace Tests.Data
 			public int Value2;
 		}
 
+#pragma warning disable 675
+
 		[Test]
 		public void TestDataParameterMapping1()
 		{

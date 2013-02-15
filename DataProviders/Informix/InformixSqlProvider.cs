@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider
 											return new SqlFunction(
 												func.SystemType,
 												"Date",
-												new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d")));
+												new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue(null, "%Y-%m-%d")));
 										}
 
 										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
@@ -160,8 +160,8 @@ namespace LinqToDB.DataProvider
 									new SqlFunction(null, "Day",   func.Parameters),
 									new SqlFunction(null, "Year",  func.Parameters)),
 								new SqlFunction(null, "Mdy",
-									new SqlValue(1),
-									new SqlValue(1),
+									new SqlValue(null, 1),
+									new SqlValue(null, 1),
 									new SqlFunction(null, "Year", func.Parameters))));
 					case "Week"     :
 						return

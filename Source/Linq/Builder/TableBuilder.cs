@@ -207,17 +207,13 @@ namespace LinqToDB.Linq.Builder
 				return OriginalType;
 			}
 
-			public List<InheritanceMappingAttribute> InheritanceMapping;
-			public List<string>                      InheritanceDiscriminators;
+			public List<InheritanceMapping> InheritanceMapping;
 
 			protected void Init()
 			{
 				Builder.Contexts.Add(this);
 
-				InheritanceMapping = ObjectMapper.InheritanceMapping;
-
-				if (InheritanceMapping.Count > 0)
-					InheritanceDiscriminators = GetInheritanceDiscriminators(Builder, SqlTable, ObjectType, InheritanceMapping);
+				InheritanceMapping = GetInheritanceDiscriminators(Builder, SqlTable, ObjectType, ObjectMapper.InheritanceMapping);
 
 				// Original table is a parent.
 				//
@@ -230,43 +226,51 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			internal static List<string> GetInheritanceDiscriminators(
-				ExpressionBuilder                 builder,
-				SqlTable                          sqlTable,
-				Type                              objectType,
-				List<InheritanceMappingAttribute> inheritanceMapping)
+			internal static List<InheritanceMapping> GetInheritanceDiscriminators(
+				ExpressionBuilder                   builder,
+				SqlTable                            sqlTable,
+				Type                                objectType,
+				List<InheritanceMappingAttribute> inheritanceMappingAttributes)
 			{
-				var inheritanceDiscriminators = new List<string>(inheritanceMapping.Count);
+				var inheritanceMappings = new List<InheritanceMapping>(inheritanceMappingAttributes.Count);
 
-				foreach (var mapping in inheritanceMapping)
+				if (inheritanceMappingAttributes.Count > 0)
 				{
-					string discriminator = null;
-
-					foreach (MemberMapper mm in builder.MappingSchema.GetObjectMapper(mapping.Type))
+					foreach (var m in inheritanceMappingAttributes)
 					{
-						if (!sqlTable.Fields.Any(f => f.Value.Name == mm.MemberName))
+						var mapping = new InheritanceMapping
 						{
-							var field = new SqlField(mm.Type, mm.MemberName, mm.Name, mm.MapMemberInfo.Nullable, int.MinValue, null, mm);
-							sqlTable.Fields.Add(field);
+							Code      = m.Code,
+							IsDefault = m.IsDefault,
+							Type      = m.Type,
+						};
+
+						foreach (MemberMapper mm in builder.MappingSchema.GetObjectMapper(mapping.Type))
+						{
+							if (!sqlTable.Fields.Any(f => f.Value.Name == mm.MemberName))
+							{
+								var field = new SqlField(mm.Type, mm.MemberName, mm.Name, mm.MapMemberInfo.Nullable, int.MinValue, null, mm);
+								sqlTable.Fields.Add(field);
+							}
+
+							if (mm.MapMemberInfo.IsInheritanceDiscriminator)
+								mapping.Discriminator = mm;
 						}
 
-						if (mm.MapMemberInfo.IsInheritanceDiscriminator)
-							discriminator = mm.MapMemberInfo.MemberName;
+						inheritanceMappings.Add(mapping);
 					}
 
-					inheritanceDiscriminators.Add(discriminator);
+					var discriminator = inheritanceMappings.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
+
+					if (discriminator == null)
+						throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", objectType);
+
+					foreach (var mapping in inheritanceMappings)
+						if (mapping.Discriminator == null)
+							mapping.Discriminator = discriminator;
 				}
 
-				var dname = inheritanceDiscriminators.FirstOrDefault(s => s != null);
-
-				if (dname == null)
-					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", objectType);
-
-				for (var i = 0; i < inheritanceDiscriminators.Count; i++)
-					if (inheritanceDiscriminators[i] == null)
-						inheritanceDiscriminators[i] = dname;
-
-				return inheritanceDiscriminators;
+				return inheritanceMappings;
 			}
 
 			#endregion
@@ -389,7 +393,7 @@ namespace LinqToDB.Linq.Builder
 					var dindex          =
 						(
 							from f in SqlTable.Fields.Values
-							where f.Name == InheritanceDiscriminators[0]
+							where f.Name == InheritanceMapping[0].DiscriminatorName
 							select ConvertToParentIndex(_indexes[f].Index, null)
 						).First();
 
@@ -408,7 +412,7 @@ namespace LinqToDB.Linq.Builder
 					var dindex =
 						(
 							from f in SqlTable.Fields.Values
-							where f.Name == InheritanceDiscriminators[mapping.i]
+							where f.Name == InheritanceMapping[mapping.i].DiscriminatorName
 							select ConvertToParentIndex(_indexes[f].Index, null)
 						).First();
 

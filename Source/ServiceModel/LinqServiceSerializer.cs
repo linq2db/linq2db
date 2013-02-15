@@ -1139,7 +1139,7 @@ namespace LinqToDB.ServiceModel
 							var systemType = Read<Type>();
 							var value      = ReadValue(systemType);
 
-							obj = new SqlValue(systemType, value);
+							obj = new SqlValue(null, systemType, value);
 
 							break;
 						}

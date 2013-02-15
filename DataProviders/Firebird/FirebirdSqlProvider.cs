@@ -101,12 +101,12 @@ namespace LinqToDB.DataProvider
 						switch ((Sql.DateParts)((SqlValue)func.Parameters[0]).Value)
 						{
 							case Sql.DateParts.Quarter  :
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Month), Mul(func.Parameters[1], 3), func.Parameters[2]);
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(null, Sql.DateParts.Month), Mul(func.Parameters[1], 3), func.Parameters[2]);
 							case Sql.DateParts.DayOfYear:
 							case Sql.DateParts.WeekDay:
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Day),   func.Parameters[1],         func.Parameters[2]);
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(null, Sql.DateParts.Day),   func.Parameters[1],         func.Parameters[2]);
 							case Sql.DateParts.Week     :
-								return new SqlFunction(func.SystemType, func.Name, new SqlValue(Sql.DateParts.Day),   Mul(func.Parameters[1], 7), func.Parameters[2]);
+								return new SqlFunction(func.SystemType, func.Name, new SqlValue(null, Sql.DateParts.Day),   Mul(func.Parameters[1], 7), func.Parameters[2]);
 						}
 
 						break;
