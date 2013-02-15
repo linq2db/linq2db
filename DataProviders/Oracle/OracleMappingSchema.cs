@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider
 					var fromTypeToEnum    = GetConvertExpression(type, to,   false);
 
 					return Expression.Lambda(
-						fromTypeToEnum.Body.Transform(e => e == fromTypeToEnum.Parameters[0] ? fromDecimalToType.Body : e),
+						fromTypeToEnum.GetBody(fromDecimalToType.Body),
 						fromDecimalToType.Parameters);
 				}
 			}

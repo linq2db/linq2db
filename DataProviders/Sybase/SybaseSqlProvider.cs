@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider
 									func.Parameters[0],
 									func.Parameters[1],
 									func.Parameters[1],
-									new SqlValue(null, null));
+									new SqlValue(null));
 						}
 
 						break;

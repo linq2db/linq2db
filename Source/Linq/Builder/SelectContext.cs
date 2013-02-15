@@ -386,7 +386,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				expression.Sql = Builder.Convert(
 					this,
-					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(null, true), new SqlValue(null, false)));
+					new SqlFunction(typeof(bool), "CASE", expression.Sql, new SqlValue(true), new SqlValue(false)));
 			}
 
 			return expression;

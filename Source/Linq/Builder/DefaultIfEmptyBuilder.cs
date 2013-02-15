@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					var idx = q.DefaultIfEmpty(-1).First();
 
 					if (idx == -1)
-						idx = SqlQuery.Select.Add(new SqlValue(null, (int?)1));
+						idx = SqlQuery.Select.Add(new SqlValue((int?)1));
 
 					var n = ConvertToParentIndex(idx, this);
 

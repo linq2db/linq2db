@@ -4,55 +4,20 @@ using System.Text;
 
 namespace LinqToDB.SqlBuilder
 {
-	using Common;
-	using LinqToDB.Extensions;
-	using Linq;
-	using Mapping;
-
 	public class SqlValue : ISqlExpression, IValueContainer
 	{
-		public SqlValue(MappingSchema mappingSchema, Type systemType, object value)
+		public SqlValue(Type systemType, object value)
 		{
 			SystemType = systemType;
 			Value      = value;
-
-			ConvertValue(mappingSchema);
 		}
 
-		public SqlValue(MappingSchema mappingSchema, object value)
+		public SqlValue(object value)
 		{
 			Value = value;
 
 			if (value != null)
 				SystemType = value.GetType();
-
-			ConvertValue(mappingSchema);
-		}
-
-		void ConvertValue(MappingSchema mappingSchema)
-		{
-			if (mappingSchema == null)
-			{
-				if (SystemType != null)
-				{
-					var underlyingType = SystemType.ToNullableUnderlying();
-
-					if (underlyingType.IsEnum && MappingSchema.Default.GetAttribute<SqlEnumAttribute>(underlyingType) == null)
-						throw new InvalidOperationException();
-				}
-
-				return;
-			}
-
-			{
-				var underlyingType = SystemType.ToNullableUnderlying();
-
-				if (underlyingType.IsEnum && mappingSchema.GetAttribute<SqlEnumAttribute>(underlyingType) == null)
-				{
-					SystemType = Converter.GetDefaultMappingFromEnumType(mappingSchema, SystemType);
-					Value      = Converter.ChangeType(Value, SystemType, mappingSchema);
-				}
-			}
 		}
 
 		public object Value      { get; private set; }
@@ -129,7 +94,7 @@ namespace LinqToDB.SqlBuilder
 			ICloneableElement clone;
 
 			if (!objectTree.TryGetValue(this, out clone))
-				objectTree.Add(this, clone = new SqlValue(null, SystemType, Value));
+				objectTree.Add(this, clone = new SqlValue(SystemType, Value));
 
 			return clone;
 		}

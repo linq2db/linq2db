@@ -227,11 +227,6 @@ namespace LinqToDB.Common
 
 				if (fromTypeFields.Any(f => f.attrs.Count(a => a.Value != null) != 0))
 				{
-					var lex = mappingSchema.TryGetConvertExpression(from, to);
-
-					if (lex != null)
-						return lex.GetBody(expression);
-
 					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 
 					return Expression.Convert(
@@ -400,6 +395,11 @@ namespace LinqToDB.Common
 
 			if (le != null)
 				return Tuple.Create(le.GetBody(expr), false);
+
+			var lex = mappingSchema.TryGetConvertExpression(from, to);
+
+			if (lex != null)
+				return Tuple.Create(lex.GetBody(expr), true);
 
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??

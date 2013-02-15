@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 							var expr = Builder.BuildExpression(this, expression);
 
 							if (SqlQuery.Select.Columns.Count == 0)
-								SqlQuery.Select.Expr(new SqlValue(null, 1));
+								SqlQuery.Select.Expr(new SqlValue(1));
 
 							return expr;
 						}

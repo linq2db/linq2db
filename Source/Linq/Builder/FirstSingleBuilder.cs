@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 			if (take != 0)
-				builder.BuildTake(sequence, new SqlValue(builder.MappingSchema, take));
+				builder.BuildTake(sequence, new SqlValue(take));
 
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 						Parent.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 						var expr = Sequence.BuildExpression(expression, level);
-						var idx  = SqlQuery.Select.Add(new SqlValue(null, 1));
+						var idx  = SqlQuery.Select.Add(new SqlValue(1));
 
 						idx = ConvertToParentIndex(idx, this);
 
