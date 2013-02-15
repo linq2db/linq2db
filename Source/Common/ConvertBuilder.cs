@@ -166,13 +166,13 @@ namespace LinqToDB.Common
 		{
 			if (to.IsEnum)
 			{
-				var toFields = to.GetFields()
-					.Where (f => (f.Attributes & EnumField) == EnumField)
-					.Select(f => new { f, attrs = mappingSchema.GetAttributes<MapValueAttribute>(f, a => a.Configuration) })
-					.ToList();
+				var toFields = mappingSchema.GetMapValues(to);
+
+				if (toFields == null)
+					return null;
 
 				var fromTypeFields = toFields
-					.Select(f => new { f.f, attrs = f.attrs.Where(a => a.Value == null || a.Value.GetType() == @from).ToList() })
+					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == @from).ToList() })
 					.ToList();
 
 				if (fromTypeFields.All(f => f.attrs.Count != 0))
@@ -180,7 +180,7 @@ namespace LinqToDB.Common
 					var cases = fromTypeFields
 						.Select(f => new
 							{
-								value = Enum.Parse(to, f.f.Name),
+								value = f.OrigValue,
 								attrs = f.attrs
 									.Where (a => a.Configuration == f.attrs[0].Configuration)
 									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(@from))
@@ -234,7 +234,7 @@ namespace LinqToDB.Common
 							_throwLinqToDBException,
 							Expression.Constant(
 								string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
-									to.FullName, field.f.Name, from.FullName))),
+									to.FullName, field.OrigValue, from.FullName))),
 							to);
 				}
 			}

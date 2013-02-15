@@ -73,19 +73,22 @@ namespace LinqToDB.Mapping
 
 			if (type.IsEnum)
 			{
-				var fields =
-					from f in type.GetFields()
-					where (f.Attributes & EnumField) == EnumField
-					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration).Where(a => a.Value == null).ToList()
-					where attrs.Count > 0
-					select Enum.Parse(type, f.Name);
+				var mapValues = GetMapValues(type);
 
-				var value = fields.FirstOrDefault();
-
-				if (value != null)
+				if (mapValues != null)
 				{
-					SetDefaultValue(type, value);
-					return value;
+					var fields =
+						from f in mapValues
+						where f.MapValues.Any(a => a.Value == null)
+						select f.OrigValue;
+
+					var value = fields.FirstOrDefault();
+
+					if (value != null)
+					{
+						SetDefaultValue(type, value);
+						return value;
+					}
 				}
 			}
 

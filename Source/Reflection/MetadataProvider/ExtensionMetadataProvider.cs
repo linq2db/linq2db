@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 using LinqToDB.Common;
-using LinqToDB.Extensions;
+
 using Convert=System.Convert;
 
 namespace LinqToDB.Reflection.MetadataProvider

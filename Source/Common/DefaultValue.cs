@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Common
 {
@@ -34,8 +33,6 @@ namespace LinqToDB.Common
 			_values[typeof(string)]         = default(string);
 		}
 
-		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
-
 		static readonly ConcurrentDictionary<Type,object> _values = new ConcurrentDictionary<Type,object>();
 
 		public static object GetValue([JetBrains.Annotations.NotNull] Type type, MappingSchema mappingSchema = null)
@@ -51,14 +48,17 @@ namespace LinqToDB.Common
 
 			if (type.IsEnum)
 			{
-				var fields =
-					from f in type.GetFields()
-					where (f.Attributes & EnumField) == EnumField
-					let attrs = ms.GetAttributes<MapValueAttribute>(f, a => a.Configuration).Where(a => a.Value == null).ToList()
-					where attrs.Count > 0
-					select Enum.Parse(type, f.Name);
+				var mapValues = ms.GetMapValues(type);
 
-				value = fields.FirstOrDefault();
+				if (mapValues != null)
+				{
+					var fields =
+						from f in mapValues
+						where f.MapValues.Any(a => a.Value == null)
+						select f.OrigValue;
+
+					value = fields.FirstOrDefault();
+				}
 			}
 
 			if (value == null && !type.IsClass && !type.IsNullable())
