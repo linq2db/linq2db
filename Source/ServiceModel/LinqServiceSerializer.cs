@@ -51,9 +51,9 @@ namespace LinqToDB.ServiceModel
 
 		#region SerializerBase
 
-		const int _paramIndex     = -1;
-		const int _typeIndex      = -2;
-		const int _typeArrayIndex = -3;
+		const int ParamIndex     = -1;
+		const int TypeIndex      = -2;
+		const int TypeArrayIndex = -3;
 
 		class SerializerBase
 		{
@@ -74,7 +74,6 @@ namespace LinqToDB.ServiceModel
 				if (type == typeof(DateTimeOffset))
 					return ((DateTimeOffset)value).ToString("o");
 
-//				return Common.ConvertOld.ToString(value);
 				return Common.Converter.ChangeTypeTo<string>(value);
 			}
 
@@ -176,7 +175,7 @@ namespace LinqToDB.ServiceModel
 						Builder
 							.Append(idx)
 							.Append(' ')
-							.Append(_typeArrayIndex)
+							.Append(TypeArrayIndex)
 							.Append(' ')
 							.Append(elementType);
 					}
@@ -187,7 +186,7 @@ namespace LinqToDB.ServiceModel
 						Builder
 							.Append(idx)
 							.Append(' ')
-							.Append(_typeIndex);
+							.Append(TypeIndex);
 
 						Append(type.FullName);
 					}
@@ -463,7 +462,7 @@ namespace LinqToDB.ServiceModel
 				Builder
 					.Append(++Index)
 					.Append(' ')
-					.Append(_paramIndex);
+					.Append(ParamIndex);
 
 				Append(parameters.Length);
 
@@ -1017,9 +1016,9 @@ namespace LinqToDB.ServiceModel
 
 				switch ((QueryElementType)type)
 				{
-					case (QueryElementType)_paramIndex     : obj = _parameters = ReadArray<SqlParameter>(); break;
-					case (QueryElementType)_typeIndex      : obj = ResolveType(ReadString());               break;
-					case (QueryElementType)_typeArrayIndex : obj = GetArrayType(Read<Type>());              break;
+					case (QueryElementType)ParamIndex     : obj = _parameters = ReadArray<SqlParameter>(); break;
+					case (QueryElementType)TypeIndex      : obj = ResolveType(ReadString());               break;
+					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(Read<Type>());              break;
 
 					case QueryElementType.SqlField :
 						{

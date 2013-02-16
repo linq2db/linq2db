@@ -259,64 +259,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetNullValue
-
-		private static object CheckNullValue(object value, MemberAccessor member)
-		{
-			if (value is Type && (Type)value == typeof(DBNull))
-			{
-				value = DBNull.Value;
-
-				if (member.Type == typeof(string))
-					value = null;
-			}
-
-			return value;
-		}
-
-		public override object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			// Check member [NullValue(0)]
-			//
-			var attr = member.GetAttribute<NullValueAttribute>();
-
-			if (attr != null)
-			{
-				isSet = true;
-				return CheckNullValue(attr.Value, member);
-			}
-
-			// Check type [NullValues(typeof(int), 0)]
-			//
-			var attrs = member.GetTypeAttributes<NullValueAttribute>();
-
-			foreach (var a in attrs)
-			{
-				if (a.Type == null && a.Value != null && a.Value.GetType() == member.Type ||
-					a.Type != null && a.Type == member.Type)
-				{
-					isSet = true;
-					return CheckNullValue(a.Value, member);
-				}
-			}
-
-			if (member.Type.IsEnum)
-			{
-				var value = CheckNullValue(mappingSchema.GetNullValue(member.Type), member);
-
-				if (value != null)
-				{
-					isSet = true;
-					return value;
-				}
-			}
-
-			isSet = false;
-			return null;
-		}
-
-		#endregion
-
 		#region GetDbName
 
 		public override string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)

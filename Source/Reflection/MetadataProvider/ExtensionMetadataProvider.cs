@@ -118,19 +118,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetNullable
-
-		public override object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			// Check extension <Member1 NullValue='-1' />
-			//
-			var value = GetValue(typeExtension, member, "NullValue", out isSet);
-
-			return isSet? TypeExtension.ChangeType(value, member.Type): null;
-		}
-
-		#endregion
-
 		#region GetDbName
 
 		public override string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)

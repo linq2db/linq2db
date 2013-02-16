@@ -104,30 +104,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetNullValue
-
-		public virtual object GetNullValue(MappingSchemaOld mappingSchema, TypeExtension typeExtension, MemberAccessor member, out bool isSet)
-		{
-			isSet = false;
-
-			if (member.Type.IsEnum)
-				return null;
-
-			var value = mappingSchema.GetNullValue(member.Type);
-
-			if (value is Type && (Type)value == typeof(DBNull))
-			{
-				value = DBNull.Value;
-
-				if (member.Type == typeof(string))
-					value = null;
-			}
-
-			return value;
-		}
-
-		#endregion
-
 		#region GetDbName
 
 		public virtual string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)
