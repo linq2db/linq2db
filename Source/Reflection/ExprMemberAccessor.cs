@@ -173,7 +173,7 @@ namespace LinqToDB.Reflection
 
 			public override void SetValue(object obj, object value)
 			{
-				Setter(obj, ConvertToOld<T>.From(value));
+				Setter(obj, ConvertTo<T>.From(value));
 			}
 		}
 

@@ -113,7 +113,7 @@ namespace LinqToDB.Linq
 
 		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContextInfo dci, Expression expr, object[] ps)
 		{
-			yield return ConvertToOld<T>.From(GetElement(qc, dci, expr, ps));
+			yield return ConvertTo<T>.From(GetElement(qc, dci, expr, ps));
 		}
 
 		#endregion

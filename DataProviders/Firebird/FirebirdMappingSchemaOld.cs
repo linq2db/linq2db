@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.SqlTypes;
+using System.IO;
 
 namespace LinqToDB.DataProvider
 {
@@ -20,10 +22,10 @@ namespace LinqToDB.DataProvider
 					case '0': case 'F' :case 'N' : case 'f': case 'n': return false;
 				}
 
-			return Common.ConvertOld.ToBoolean(value);
+			return Common.ConvertTo<bool>.From(value);
 		}
 
-		public System.IO.Stream ConvertToStream(string value)
+		public Stream ConvertToStream(string value)
 		{
 			return new System.IO.MemoryStream(ConvertToByteArray(value));
 		}
@@ -31,15 +33,15 @@ namespace LinqToDB.DataProvider
 
 #if !SILVERLIGHT
 
-		public System.Data.SqlTypes.SqlBinary ConvertToSqlBinary(string value)
+		public SqlBinary ConvertToSqlBinary(string value)
 		{
-			return Common.ConvertOld.ToSqlBinary(ConvertToByteArray(value));
+			return Common.ConvertTo<SqlBinary>.From(ConvertToByteArray(value));
 		}
 
 
-		public System.Data.SqlTypes.SqlBytes ConvertToSqlBytes(string value)
+		public SqlBytes ConvertToSqlBytes(string value)
 		{
-			return Common.ConvertOld.ToSqlBytes(ConvertToByteArray(value));
+			return Common.ConvertTo<SqlBytes>.From(ConvertToByteArray(value));
 		}
 
 #endif

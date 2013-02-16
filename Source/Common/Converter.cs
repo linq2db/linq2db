@@ -24,7 +24,8 @@ namespace LinqToDB.Common
 
 		static Converter()
 		{
-			SetConverter<string,         Binary>     (v => new Binary(Encoding.UTF8.GetBytes(v)));
+			SetConverter<string,         Binary>     (v => new Binary(Convert.FromBase64String(v)));
+			SetConverter<Binary,         string>     (v => Convert.ToBase64String(v.ToArray()));
 			SetConverter<Binary,         byte[]>     (v => v.ToArray());
 			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
 			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);

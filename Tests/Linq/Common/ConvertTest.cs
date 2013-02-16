@@ -138,8 +138,8 @@ namespace Tests.Common
 		[Test]
 		public void ToBinary()
 		{
-			const string data = "za\u0306\u01FD\u03B2\uD8FF\uDCFF";
-			Assert.AreEqual(Encoding.UTF8.GetBytes(data), ConvertTo<Binary>.From(data).ToArray());
+			const string data = "emHMhse9zrLxj7O/";
+			Assert.AreEqual(Convert.FromBase64String(data), ConvertTo<Binary>.From(data).ToArray());
 		}
 
 		enum Enum2

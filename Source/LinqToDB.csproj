@@ -46,12 +46,9 @@
     <Compile Include="ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
-    <Compile Include="Common\ConvertOld.cs" />
-    <Compile Include="Common\Convert.generated.cs" />
     <Compile Include="Common\Converter.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />
     <Compile Include="Common\ConvertInfo.cs" />
-    <Compile Include="Common\ConvertOldT.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />

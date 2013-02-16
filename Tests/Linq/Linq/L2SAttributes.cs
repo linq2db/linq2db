@@ -51,7 +51,7 @@ namespace Tests.Linq
 					Gender    = "M"
 				});
 
-				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertToOld<int>.From(id));
+				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 			}
 		}
 	}

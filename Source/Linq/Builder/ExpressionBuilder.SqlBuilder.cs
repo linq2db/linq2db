@@ -1278,7 +1278,7 @@ namespace LinqToDB.Linq.Builder
 				if (conv.Operand.Type == typeof(char))
 				{
 					left  = conv.Operand;
-					right = Expression.Constant(ConvertToOld<char>.From(((ConstantExpression)right).Value));
+					right = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)right).Value));
 				}
 			}
 
@@ -1289,7 +1289,7 @@ namespace LinqToDB.Linq.Builder
 				if (conv.Operand.Type == typeof(char))
 				{
 					right = conv.Operand;
-					left  = Expression.Constant(ConvertToOld<char>.From(((ConstantExpression)left).Value));
+					left  = Expression.Constant(ConvertTo<char>.From(((ConstantExpression)left).Value));
 				}
 			}
 
