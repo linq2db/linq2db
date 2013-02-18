@@ -27,7 +27,7 @@ namespace LinqToDB.Mapping
 			MappingSchema          = mapMemberInfo.MappingSchema;
 
 			if (Storage != null)
-				MemberAccessor = ExprMemberAccessor.GetMemberAccessor(MemberAccessor.TypeAccessor, Storage);
+				MemberAccessor = new MemberAccessor(MemberAccessor.TypeAccessor, Storage);
 		}
 
 		internal static MemberMapper CreateMemberMapper(MapMemberInfo mi)
@@ -79,8 +79,6 @@ namespace LinqToDB.Mapping
 		{
 			MemberAccessor.SetValue(o, value);
 		}
-
-		public virtual void CloneValue    (object source, object dest)  { MemberAccessor.CloneValue(source, dest); }
 
 		#endregion
 
@@ -183,7 +181,7 @@ namespace LinqToDB.Mapping
 
 				if (memberType.IsEnum)
 				{
-					var underlyingType = mapInfo.MemberAccessor.UnderlyingType;
+					var underlyingType = mapInfo.MemberAccessor.Type.ToUnderlying();
 
 					if (valueType != underlyingType)
 						//value = _mappingSchema.ConvertChangeType(value, underlyingType);

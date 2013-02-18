@@ -7,9 +7,9 @@ namespace LinqToDB.Reflection
 {
 	using Extensions;
 
-	class ExprTypeAccessor<T> : TypeAccessor
+	class TypeAccessor<T> : TypeAccessor
 	{
-		static ExprTypeAccessor()
+		static TypeAccessor()
 		{
 			// Create Instance.
 			//
@@ -43,14 +43,12 @@ namespace LinqToDB.Reflection
 				}
 			}
 
-			// Add fields.
-			//
-			foreach (var fi in typeof(T).GetFields(BindingFlags.Instance | BindingFlags.Public))
-				_members.Add(fi);
-
-			foreach (var pi in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
-				if (pi.GetIndexParameters().Length == 0)
-					_members.Add(pi);
+			foreach (var memberInfo in type.GetMembers(BindingFlags.Instance | BindingFlags.Public))
+			{
+				if (memberInfo.MemberType == MemberTypes.Field ||
+					memberInfo.MemberType == MemberTypes.Property && ((PropertyInfo)memberInfo).GetIndexParameters().Length == 0)
+					_members.Add(memberInfo);
+			}
 
 			// ObjectFactory
 			//
@@ -73,10 +71,10 @@ namespace LinqToDB.Reflection
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
 		static readonly IObjectFactory   _objectFactory;
 
-		public ExprTypeAccessor()
+		public TypeAccessor()
 		{
 			foreach (var member in _members)
-				AddMember(ExprMemberAccessor.GetMemberAccessor(this, member.Name));
+				AddMember(new MemberAccessor(this, member));
 
 			ObjectFactory = _objectFactory;
 		}

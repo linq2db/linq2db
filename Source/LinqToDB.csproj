@@ -245,8 +245,7 @@
     <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
-    <Compile Include="Reflection\ExprMemberAccessor.cs" />
-    <Compile Include="Reflection\ExprTypeAccessor.cs" />
+    <Compile Include="Reflection\TypeAccessorT.cs" />
     <Compile Include="Reflection\Extension\AttributeExtension.cs" />
     <Compile Include="Reflection\Extension\AttributeExtensionCollection.cs" />
     <Compile Include="Reflection\Extension\AttributeNameCollection.cs" />

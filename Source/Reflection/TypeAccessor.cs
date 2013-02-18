@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Reflection
 {
@@ -86,27 +89,34 @@ namespace LinqToDB.Reflection
 
 		#region Static Members
 
-		private static readonly Dictionary<Type,TypeAccessor> _accessors = new Dictionary<Type,TypeAccessor>(10);
+		static readonly ConcurrentDictionary<Type,TypeAccessor> _accessors = new ConcurrentDictionary<Type,TypeAccessor>();
 
-		public static TypeAccessor GetAccessor(Type originalType)
+		public static TypeAccessor GetAccessor([NotNull] Type type)
 		{
-			if (originalType == null) throw new ArgumentNullException("originalType");
+			if (type == null) throw new ArgumentNullException("type");
 
-			lock (_accessors)
-			{
-				TypeAccessor accessor;
+			TypeAccessor accessor;
 
-				if (_accessors.TryGetValue(originalType, out accessor))
-					return accessor;
-
-				var accessorType = typeof(ExprTypeAccessor<>).MakeGenericType(originalType);
-
-				accessor = (TypeAccessor)Activator.CreateInstance(accessorType);
-
-				_accessors.Add(originalType, accessor);
-
+			if (_accessors.TryGetValue(type, out accessor))
 				return accessor;
-			}
+
+			var accessorType = typeof(TypeAccessor<>).MakeGenericType(type);
+
+			accessor = (TypeAccessor)Activator.CreateInstance(accessorType);
+
+			_accessors[type] = accessor;
+
+			return accessor;
+		}
+
+		public static TypeAccessor GetAccessor<T>()
+		{
+			TypeAccessor accessor;
+
+			if (_accessors.TryGetValue(typeof(T), out accessor))
+				return accessor;
+
+			return _accessors[typeof(T)] = new TypeAccessor<T>();
 		}
 
 		#endregion

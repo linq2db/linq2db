@@ -188,13 +188,13 @@ namespace LinqToDB.Mapping
 				if (GetMapIgnore(ma))
 					continue;
 
-				var mapFieldAttr = ma.GetAttribute<MapFieldAttribute>();
+				var mapFieldAttr = mappingSchema.NewSchema.GetAttribute<MapFieldAttribute>(ma.MemberInfo);
 
 				if (mapFieldAttr == null || (mapFieldAttr.OrigName == null && mapFieldAttr.Format == null))
 				{
 					var mi = new MapMemberInfo();
 
-					var dbTypeAttribute = ma.GetAttribute<DbTypeAttribute>();
+					var dbTypeAttribute = mappingSchema.NewSchema.GetAttribute<DbTypeAttribute>(ma.MemberInfo);
 
 					if (dbTypeAttribute != null)
 					{

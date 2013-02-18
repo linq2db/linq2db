@@ -1,89 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using Reflection;
+
 	class EntityDescriptor
 	{
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
 			_mappingSchema = mappingSchema;
-			_type          = type;
 
+			TypeAccessor = TypeAccessor.GetAccessor(type);
 			Associations = new List<AssociationDescriptor>();
 			Columns      = new List<ColumnDescriptor>();
 
 			Init();
 		}
 
+		readonly MappingSchema _mappingSchema;
+
+		public TypeAccessor                TypeAccessor              { get; private set; }
+		public string                      TableName                 { get; private set; }
+		public string                      SchemaName                { get; private set; }
+		public string                      DatabaseName              { get; private set; }
+		public bool                        IsColumnAttributeRequired { get; private set; }
+		public List<ColumnDescriptor>      Columns                   { get; private set; }
+		public List<AssociationDescriptor> Associations              { get; private set; }
+
 		void Init()
 		{
-			var ta = _mappingSchema.GetAttribute<TableAttribute>(_type, a => a.Configuration);
+			var ta = _mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
 			if (ta == null)
 			{
-				TableName = _type.Name;
+				TableName = TypeAccessor.Type.Name;
 
-				if (_type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 			else
 			{
-				TableName                      = ta.Name;
-				SchemaName                    = ta.Schema;
-				DatabaseName                  = ta.Database;
+				TableName                 = ta.Name;
+				SchemaName                = ta.Schema;
+				DatabaseName              = ta.Database;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
-			foreach (var memberInfo in _type.GetMembers(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var member in TypeAccessor.Members)
 			{
-				Type memberType;
-
-				if (memberInfo.MemberType == MemberTypes.Field)
-				{
-					var fieldInfo = (FieldInfo)memberInfo;
-					memberType = fieldInfo.FieldType;
-				}
-				else if (memberInfo.MemberType == MemberTypes.Property)
-				{
-					var propertyInfo = (PropertyInfo)memberInfo;
-					memberType = propertyInfo.PropertyType;
-				}
-				else
-					continue;
-
-				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(memberInfo, attr => attr.Configuration);
+				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo, attr => attr.Configuration);
 
 				if (aa != null)
 				{
-					Associations.Add(new AssociationDescriptor(_type, memberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
+					Associations.Add(new AssociationDescriptor(
+						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(memberInfo, attr => attr.Configuration);
+				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
 					if (ca.IsColumn)
-						Columns.Add(new ColumnDescriptor(_mappingSchema, ca, memberInfo));
+						Columns.Add(new ColumnDescriptor(_mappingSchema, ca, member.MemberInfo));
 				}
-				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(memberType))
+				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type))
 				{
-					Columns.Add(new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), memberInfo));
+					Columns.Add(new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member.MemberInfo));
 				}
 			}
 		}
-
-		readonly MappingSchema _mappingSchema;
-		readonly Type          _type;
-
-		public string TableName                 { get; private set; }
-		public string SchemaName                { get; private set; }
-		public string DatabaseName              { get; private set; }
-		public bool   IsColumnAttributeRequired { get; private set; }
-
-		public List<ColumnDescriptor>      Columns      { get; private set; }
-		public List<AssociationDescriptor> Associations { get; private set; }
 	}
 }
