@@ -63,7 +63,7 @@ namespace Tests.Model
 		}
 	}
 
-	[TableName("LinqDataTypes")]
+	[Table(Name="LinqDataTypes")]
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
 		[PrimaryKey]

@@ -141,7 +141,7 @@ namespace Tests.Model
 		}
 	}
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	public class Parent3 : IEquatable<Parent3>, IComparable
 	{
 		[MapField("ParentID")]
@@ -172,7 +172,7 @@ namespace Tests.Model
 		}
 	}
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
 		public int       ParentID;
@@ -202,7 +202,7 @@ namespace Tests.Model
 		}
 	}
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	public class Parent5 : IEquatable<Parent5>, IComparable
 	{
 		public int  ParentID;
@@ -239,7 +239,7 @@ namespace Tests.Model
 
 	#region Parent1/GrandChild1
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
 	{
 		[PrimaryKey]
@@ -273,7 +273,7 @@ namespace Tests.Model
 		}
 	}
 
-	[TableName("GrandChild")]
+	[Table(Name="GrandChild")]
 	public class GrandChild1 : IEquatable<GrandChild1>
 	{
 		public int  ParentID;
@@ -321,7 +321,7 @@ namespace Tests.Model
 
 	#region Inheritance
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceNull))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance1))]
 	[InheritanceMapping(             Type = typeof(ParentInheritanceValue), IsDefault = true)]
@@ -408,7 +408,7 @@ namespace Tests.Model
 
 	#region Inheritance2
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase2))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance12))]
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance12))]
@@ -431,7 +431,7 @@ namespace Tests.Model
 
 	#region Inheritance3
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance13))]
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance13))]
@@ -460,7 +460,7 @@ namespace Tests.Model
 		Value2 = 2
 	}
 
-	[TableName("Parent")]
+	[Table(Name="Parent")]
 	[InheritanceMapping(Code = (int)Parent4Type.Value1, Type = typeof(ParentInheritance14))]
 	[InheritanceMapping(Code = (int)Parent4Type.Value2, Type = typeof(ParentInheritance24))]
 	public abstract class ParentInheritanceBase4

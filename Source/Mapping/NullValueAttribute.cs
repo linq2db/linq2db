@@ -2,6 +2,7 @@ using System;
 
 namespace LinqToDB.Mapping
 {
+	[Obsolete]
 	[AttributeUsage(
 		AttributeTargets.Class | AttributeTargets.Interface |
 		AttributeTargets.Property | AttributeTargets.Field | 

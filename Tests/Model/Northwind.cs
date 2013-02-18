@@ -24,7 +24,7 @@ namespace Tests.Model
 			}
 		}
 
-		[TableName("Categories")]
+		[Table(Name="Categories")]
 		public class Category
 		{
 			[PrimaryKey, NonUpdatable] public int    CategoryID;
@@ -36,7 +36,7 @@ namespace Tests.Model
 			public List<Product> Products;
 		}
 
-		[TableName("CustomerCustomerDemo")]
+		[Table(Name="CustomerCustomerDemo")]
 		public class CustomerCustomerDemo
 		{
 			[PrimaryKey, NotNull] public string CustomerID;
@@ -49,7 +49,7 @@ namespace Tests.Model
 			public Customer Customers;
 		}
 
-		[TableName("CustomerDemographics")]
+		[Table(Name="CustomerDemographics")]
 		public class CustomerDemographic
 		{
 			[PrimaryKey, NotNull] public string CustomerTypeID;
@@ -59,7 +59,7 @@ namespace Tests.Model
 			public List<CustomerCustomerDemo> CustomerCustomerDemos;
 		}
 
-		[TableName("Customers")]
+		[Table(Name="Customers")]
 		public class Customer : EntityBase<string>
 		{
 			[PrimaryKey] public string CustomerID;
@@ -86,7 +86,7 @@ namespace Tests.Model
 			}
 		}
 
-		[TableName("Employees")]
+		[Table(Name="Employees")]
 		public class Employee : EntityBase<int>
 		{
 			[PrimaryKey, NonUpdatable] public int       EmployeeID;
@@ -120,7 +120,7 @@ namespace Tests.Model
 			}
 		}
 
-		[TableName("EmployeeTerritories")]
+		[Table(Name="EmployeeTerritories")]
 		public class EmployeeTerritory
 		{
 			[PrimaryKey]          public int    EmployeeID;
@@ -130,7 +130,7 @@ namespace Tests.Model
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")] public Territory Territory;
 		}
 
-		[TableName("Order Details")]
+		[Table(Name="Order Details")]
 		public class OrderDetail
 		{
 			[PrimaryKey] public int     OrderID;
@@ -143,7 +143,7 @@ namespace Tests.Model
 			[Association(ThisKey="ProductID", OtherKey="ProductID")] public Product Product;
 		}
 
-		[TableName("Orders")]
+		[Table(Name="Orders")]
 		public class Order : EntityBase<int>
 		{
 			[PrimaryKey, NonUpdatable] public int       OrderID;
@@ -172,7 +172,7 @@ namespace Tests.Model
 			}
 		}
 
-		[TableName("Products")]
+		[Table(Name="Products")]
 		[InheritanceMapping(Code=true,  Type=typeof(DiscontinuedProduct))]
 		[InheritanceMapping(Code=false, Type=typeof(ActiveProduct))]
 		public abstract class Product
@@ -196,7 +196,7 @@ namespace Tests.Model
 		public class ActiveProduct       : Product {}
 		public class DiscontinuedProduct : Product {}
 
-		[TableName("Region")]
+		[Table(Name="Region")]
 		public class Region
 		{
 			[PrimaryKey] public int    RegionID;
@@ -206,7 +206,7 @@ namespace Tests.Model
 			public List<Territory> Territories;
 		}
 
-		[TableName("Shippers")]
+		[Table(Name="Shippers")]
 		public class Shipper
 		{
 			[PrimaryKey, NonUpdatable] public int    ShipperID;
@@ -217,7 +217,7 @@ namespace Tests.Model
 			public List<Order> Orders;
 		}
 
-		[TableName("Suppliers")]
+		[Table(Name="Suppliers")]
 		public class Supplier
 		{
 			[PrimaryKey, NonUpdatable] public int    SupplierID;
@@ -237,7 +237,7 @@ namespace Tests.Model
 			public List<Product> Products;
 		}
 
-		[TableName("Territories")]
+		[Table(Name="Territories")]
 		public class Territory
 		{
 			[PrimaryKey, NotNull] public string TerritoryID;

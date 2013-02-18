@@ -142,24 +142,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetTableName
-
-		public override string GetTableName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			if (IsLinqObject(type))
-			{
-				isSet = true;
-
-				var attrs = type.GetCustomAttributes(typeof(System.Data.Linq.Mapping.TableAttribute), true);
-
-				return ((System.Data.Linq.Mapping.TableAttribute)attrs[0]).Name;
-			}
-
-			return base.GetTableName(type, extensions, out isSet);
-		}
-
-		#endregion
-
 		#region GetPrimaryKeyOrder
 
 		public override int GetPrimaryKeyOrder(Type type, TypeExtension typeExt, MemberAccessor member, out bool isSet)

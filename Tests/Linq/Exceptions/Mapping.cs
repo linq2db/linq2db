@@ -5,8 +5,8 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Common;
 
 namespace Tests.Exceptions
 {
@@ -23,7 +23,7 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		public class TestPerson1
 		{
 			            public int    PersonID;

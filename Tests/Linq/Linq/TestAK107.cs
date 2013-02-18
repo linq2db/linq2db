@@ -3,7 +3,6 @@
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -14,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TestAK107 : TestBase
 	{
-		[TableName(Name = "t_test_user")]
+		[Table(Name = "t_test_user")]
 		public sealed class User
 		{
 			[PrimaryKey, Identity]
@@ -27,7 +26,7 @@ namespace Tests.Linq
 			public string Name { get; set; }
 		}
 
-		[TableName(Name = "t_test_user_contract")]
+		[Table(Name = "t_test_user_contract")]
 		public sealed class Contract
 		{
 			[PrimaryKey, Identity]

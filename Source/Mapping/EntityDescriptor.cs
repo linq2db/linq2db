@@ -21,6 +21,21 @@ namespace LinqToDB.Mapping
 		{
 			var ta = _mappingSchema.GetAttribute<TableAttribute>(_type, a => a.Configuration);
 
+			if (ta == null)
+			{
+				Name = _type.Name;
+
+				if (_type.IsInterface && Name.StartsWith("I"))
+					Name = Name.Substring(1);
+			}
+			else
+			{
+				Name                      = ta.Name;
+				Schema                    = ta.Schema;
+				Database                  = ta.Database;
+				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
+			}
+
 			foreach (var memberInfo in _type.GetMembers(BindingFlags.Instance | BindingFlags.Public))
 			{
 				Type memberType;
@@ -57,13 +72,18 @@ namespace LinqToDB.Mapping
 							Storage    = ca.Storage,
 						});
 				}
-				else if ((ta == null || !ta.IsColumnAttributeRequired) && _mappingSchema.IsScalarType(memberType))
+				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(memberType))
 					Columns.Add(new ColumnDescriptior(memberInfo));
 			}
 		}
 
 		readonly MappingSchema _mappingSchema;
 		readonly Type          _type;
+
+		public string Name                      { get; set; }
+		public string Schema                    { get; set; }
+		public string Database                  { get; set; }
+		public bool   IsColumnAttributeRequired { get; set; }
 
 		public List<ColumnDescriptior>     Columns      { get; private set; }
 		public List<AssociationDescriptor> Associations { get; private set; }

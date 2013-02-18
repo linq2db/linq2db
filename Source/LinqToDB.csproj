@@ -107,9 +107,6 @@
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="TableAttribute.cs" />
-    <Compile Include="TableNameAttribute.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="ProviderName.cs" />
     <Compile Include="Data\IDataReaderEx.cs" />

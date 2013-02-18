@@ -104,39 +104,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDbName
-
-		public virtual string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		#endregion
-
-		#region GetOwnerName
-
-		public virtual string GetOwnerName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			isSet = false;
-			return null;
-		}
-
-		#endregion
-
-		#region GetTableName
-
-		public virtual string GetTableName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			isSet = false;
-			return
-				type.IsInterface && type.Name.StartsWith("I")
-					? type.Name.Substring(1)
-					: type.Name;
-		}
-
-		#endregion
-
 		#region GetPrimaryKeyOrder
 
 		public virtual int GetPrimaryKeyOrder(Type type, TypeExtension typeExt, MemberAccessor member, out bool isSet)

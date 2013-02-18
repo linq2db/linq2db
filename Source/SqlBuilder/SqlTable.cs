@@ -8,7 +8,6 @@ namespace LinqToDB.SqlBuilder
 {
 	using Mapping;
 	using Reflection.Extension;
-	using SqlProvider;
 
 	public class SqlTable : ISqlTableSource
 	{
@@ -61,10 +60,11 @@ namespace LinqToDB.SqlBuilder
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 
-			bool isSet;
-			Database     = mappingSchema.MetadataProvider.GetDatabaseName(objectType, mappingSchema.Extensions, out isSet);
-			Owner        = mappingSchema.MetadataProvider.GetOwnerName   (objectType, mappingSchema.Extensions, out isSet);
-			Name         = mappingSchema.MetadataProvider.GetTableName   (objectType, mappingSchema.Extensions, out isSet);
+			var ed = new EntityDescriptor(mappingSchema, objectType);
+
+			Database     = ed.Database;
+			Owner        = ed.Schema;
+			Name         = ed.Name;
 			ObjectType   = objectType;
 			PhysicalName = Name;
 
@@ -72,6 +72,8 @@ namespace LinqToDB.SqlBuilder
 
 			foreach (MemberMapper mm in mappingSchema.GetObjectMapper(objectType))
 			{
+				bool isSet;
+
 				var ua =
 					mappingSchema.MetadataProvider.GetNonUpdatableAttribute(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
 

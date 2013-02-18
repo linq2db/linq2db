@@ -543,7 +543,7 @@ namespace Tests.Linq
 					select t1);
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		public class PersonCharTest
 		{
 			public int    PersonID;

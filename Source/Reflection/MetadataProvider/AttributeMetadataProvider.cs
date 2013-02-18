@@ -259,60 +259,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDbName
-
-		public override string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			var attrs = type.GetCustomAttributes(typeof(TableNameAttribute), true);
-
-			if (attrs.Length > 0)
-			{
-				var name = ((TableNameAttribute)attrs[0]).Database;
-				isSet = name != null;
-				return name;
-			}
-
-			return base.GetDatabaseName(type, extensions, out isSet);
-		}
-
-		#endregion
-
-		#region GetTableName
-
-		public override string GetOwnerName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			var attrs = type.GetCustomAttributes(typeof(TableNameAttribute), true);
-
-			if (attrs.Length > 0)
-			{
-				var name = ((TableNameAttribute)attrs[0]).Owner;
-				isSet = name != null;
-				return name;
-			}
-
-			return base.GetOwnerName(type, extensions, out isSet);
-		}
-
-		#endregion
-
-		#region GetTableName
-
-		public override string GetTableName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			var attrs = type.GetCustomAttributes(typeof(TableNameAttribute), true);
-
-			if (attrs.Length > 0)
-			{
-				var name = ((TableNameAttribute)attrs[0]).Name;
-				isSet = name != null;
-				return name;
-			}
-
-			return base.GetTableName(type, extensions, out isSet);
-		}
-
-		#endregion
-
 		#region GetPrimaryKeyOrder
 
 		public override int GetPrimaryKeyOrder(Type type, TypeExtension typeExt, MemberAccessor member, out bool isSet)

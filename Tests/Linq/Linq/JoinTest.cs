@@ -610,7 +610,7 @@ namespace Tests.Linq
 						.OrderBy(x => x.Parent.ParentID));
 		}
 
-		[TableName("Child")]
+		[Table(Name="Child")]
 		public class CountedChild
 		{
 			public static int Count;

@@ -108,7 +108,7 @@ namespace Tests.Linq
 			Value1 = 1,
 		}
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		class TestParent
 		{
 			public int       ParentID;
@@ -138,7 +138,7 @@ namespace Tests.Linq
 			[MapValue("O")] Other,
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		public class Person9
 		{
 			public int     PersonID;
@@ -155,7 +155,7 @@ namespace Tests.Linq
 				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
 		}
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		[MapField("Value1", "Value.Value1")]
 		public class ParentObject
 		{
@@ -190,7 +190,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Child")]
+		[Table(Name="Child")]
 		public class ChildObject
 		{
 			public int ParentID;
@@ -215,7 +215,7 @@ namespace Tests.Linq
 			public int MyValue;
 		}
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		class MyParent
 		{
 			public MyInt ParentID;
@@ -276,7 +276,7 @@ namespace Tests.Linq
 		}
 
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		class MyParent1
 		{
 			public int  ParentID;

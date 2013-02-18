@@ -491,7 +491,7 @@ namespace Tests.Linq
 					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		[ObjectFactory(typeof(Factory))]
 		public class TestPersonObject
 		{
@@ -549,7 +549,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		public class TestParent
 		{
 			[MapField("ParentID")] public int  ParentID_;

@@ -323,7 +323,7 @@ namespace Tests.Linq
 
 		public enum TestEntityType : byte { Type1, Type2 }
 
-		[TableName("GrandChild")]
+		[Table(Name="GrandChild")]
 		[MapField("GrandChildID", "Id")]
 		[MapField("ChildID",      "InnerEnity.Id")]
 		[MapField("ParentID",     "InnerEntityType")]
@@ -333,7 +333,7 @@ namespace Tests.Linq
 			public TestEntityType InnerEntityType { get; set; }
 		}
 
-		[TableName("GrandChild")]
+		[Table(Name="GrandChild")]
 		[MapField("GrandChildID", "Id")]
 		[MapField("ChildID",   "Owner.Id")]
 		[MapField("ParentID", "EntityType")]
@@ -369,8 +369,8 @@ namespace Tests.Linq
 		}
 
 		public enum SuperAccountType { Client, Organization }
-	    
-		[TableName("GrandChild")]
+
+		[Table(Name="GrandChild")]
 		[MapField("GrandChildID", "Id")]
 		[MapField("ParentID",     "Type")]
 		public class SuperAccount : Entity, IEnumerable<object>

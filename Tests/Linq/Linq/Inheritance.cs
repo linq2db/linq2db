@@ -216,7 +216,7 @@ namespace Tests.Linq
 			ParentEx.Test(this, context);
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		class PersonEx : Person
 		{
 		}
@@ -229,7 +229,7 @@ namespace Tests.Linq
 		}
 
 		[InheritanceMapping(Code = 1, Type = typeof(Parent222))]
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		public class Parent111
 		{
 			[MapField(IsInheritanceDiscriminator = true)]
@@ -340,7 +340,7 @@ namespace Tests.Linq
 			int ChildID { get; set; }
 		}
 
-		[TableName("Child")]
+		[Table(Name="Child")]
 		class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey]
@@ -398,7 +398,7 @@ namespace Tests.Linq
 			A2,
 		}
 
-		[TableName("LinqDataTypes")]
+		[Table(Name="LinqDataTypes")]
 		public abstract class InheritanceBase
 		{
 			public Guid GuidValue { get; set; }
@@ -465,7 +465,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		[InheritanceMapping(Code = 1, Type = typeof(Test17John))]
 		[InheritanceMapping(Code = 2, Type = typeof(Test17Tester))]
 		public class Test17Person
@@ -495,7 +495,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		[InheritanceMapping(Code = Gender.Male,   Type = typeof(Test18Male))]
 		[InheritanceMapping(Code = Gender.Female, Type = typeof(Test18Female))]
 		public class Test18Person

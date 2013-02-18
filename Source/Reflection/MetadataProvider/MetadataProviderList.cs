@@ -157,57 +157,6 @@ namespace LinqToDB.Reflection.MetadataProvider
 
 		#endregion
 
-		#region GetDbName
-
-		public override string GetDatabaseName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetDatabaseName(type, extensions, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetDatabaseName(type, extensions, out isSet);
-		}
-
-		#endregion
-
-		#region GetOwnerName
-
-		public override string GetOwnerName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetOwnerName(type, extensions, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetOwnerName(type, extensions, out isSet);
-		}
-
-		#endregion
-
-		#region GetTableName
-
-		public override string GetTableName(Type type, ExtensionList extensions, out bool isSet)
-		{
-			foreach (var p in _list)
-			{
-				var value = p.GetTableName(type, extensions, out isSet);
-
-				if (isSet)
-					return value;
-			}
-
-			return base.GetTableName(type, extensions, out isSet);
-		}
-
-		#endregion
-
 		#region GetPrimaryKeyOrder
 
 		public override int GetPrimaryKeyOrder(Type type, TypeExtension typeExt, MemberAccessor member, out bool isSet)

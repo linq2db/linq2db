@@ -761,7 +761,7 @@ namespace Tests.Update
 			}
 		}
 
-		[TableName("LinqDataTypes")]
+		[Table(Name="LinqDataTypes")]
 		public class LinqDataTypesArrayTest
 		{
 			public int      ID;
@@ -1312,7 +1312,7 @@ namespace Tests.Update
 			[Nullable] public string MiddleName;
 		}
 
-		[TableName("Person")]
+		[Table(Name="Person")]
 		[MapField("FirstName",  "Name.FirstName")]
 		[MapField("LastName",   "Name.LastName")]
 		[MapField("MiddleName", "Name.MiddleName")]

@@ -30,7 +30,7 @@ namespace Tests.Linq
             int ID { get; set; }
         }
 
-        [TableName(Name = "Person")]
+        [Table(Name="Person")]
         public class PersonWithId : IHasID
         {
             public PersonWithId()

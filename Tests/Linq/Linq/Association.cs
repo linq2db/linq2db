@@ -293,7 +293,7 @@ namespace Tests.Linq
 					select new { c.Parent, c });
 		}
 
-		[TableName("Parent")]
+		[Table(Name="Parent")]
 		public class Top
 		{
 			public int  ParentID;
@@ -303,7 +303,7 @@ namespace Tests.Linq
 			public Middle Middle { get; set; }
 		}
 
-		[TableName("Child")]
+		[Table(Name="Child")]
 		public class Middle
 		{
 			[PrimaryKey] public int ParentID;
@@ -316,7 +316,7 @@ namespace Tests.Linq
 			public Bottom Bottom1 { get; set; }
 		}
 
-		[TableName("GrandChild")]
+		[Table(Name="GrandChild")]
 		public class Bottom
 		{
 			public int ParentID;
@@ -384,7 +384,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[TableName("Child")]
+		[Table(Name="Child")]
 		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(ChildForHeirarhy))]
 		public class ChildBaseForHeirarhy
 		{

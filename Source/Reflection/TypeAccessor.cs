@@ -7,8 +7,6 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using Mapping;
-
 	public delegate object NullValueProvider(Type type);
 	public delegate bool   IsNullHandler    (object obj);
 
@@ -130,8 +128,8 @@ namespace LinqToDB.Reflection
 
 			if (type.IsValueType)
 			{
-				if (type.IsEnum)
-					return GetEnumNullValue(type);
+//				if (type.IsEnum)
+//					return GetEnumNullValue(type);
 
 				if (type.IsPrimitive)
 				{
@@ -190,37 +188,6 @@ namespace LinqToDB.Reflection
 		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
 
 		static readonly Dictionary<Type,object> _nullValues = new Dictionary<Type,object>();
-
-		static object GetEnumNullValue(Type type)
-		{
-			object nullValue;
-
-			lock (_nullValues)
-				if (_nullValues.TryGetValue(type, out nullValue))
-					return nullValue;
-
-			var fields = type.GetFields();
-
-			foreach (var fi in fields)
-			{
-				if ((fi.Attributes & EnumField) == EnumField)
-				{
-					var attrs = Attribute.GetCustomAttributes(fi, typeof(NullValueAttribute));
-
-					if (attrs.Length > 0)
-					{
-						nullValue = Enum.Parse(type, fi.Name, false);
-						break;
-					}
-				}
-			}
-
-			lock (_nullValues)
-				if (!_nullValues.ContainsKey(type))
-					_nullValues.Add(type, nullValue);
-
-			return nullValue;
-		}
 
 		#endregion
 	}
