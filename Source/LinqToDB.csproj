@@ -51,6 +51,7 @@
     <Compile Include="Common\ConvertInfo.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="NonColumnAttribute.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
@@ -86,7 +87,7 @@
     <Compile Include="Mapping\MappingSchema.cs" />
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Mapping\MapValueAttribute.cs" />
-    <Compile Include="Mapping\ColumnDescriptior.cs" />
+    <Compile Include="Mapping\ColumnDescriptor.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />

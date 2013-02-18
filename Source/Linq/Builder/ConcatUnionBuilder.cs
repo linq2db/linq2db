@@ -301,8 +301,6 @@ namespace LinqToDB.Linq.Builder
 							return Builder.BuildSql(expression.Type, n);
 						}
 					}
-
-					//throw new InvalidOperationException();
 				}
 
 				return base.BuildExpression(expression, level);

@@ -62,9 +62,9 @@ namespace LinqToDB.SqlBuilder
 
 			var ed = new EntityDescriptor(mappingSchema, objectType);
 
-			Database     = ed.Database;
-			Owner        = ed.Schema;
-			Name         = ed.Name;
+			Database     = ed.DatabaseName;
+			Owner        = ed.SchemaName;
+			Name         = ed.TableName;
 			ObjectType   = objectType;
 			PhysicalName = Name;
 

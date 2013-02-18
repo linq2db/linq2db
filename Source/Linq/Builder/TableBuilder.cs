@@ -681,7 +681,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var p  = (SqlQuery.Predicate.ExprExpr)cond.Predicate;
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).MemberMapper.MemberAccessor.MemberInfo);
-			Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).MemberMapper.MemberAccessor.MemberInfo);
+
+						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).MemberMapper.MemberAccessor.MemberInfo);
 
 						while (e1.Type != e2.Type)
 						{

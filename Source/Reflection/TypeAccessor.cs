@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
@@ -110,84 +108,6 @@ namespace LinqToDB.Reflection
 				return accessor;
 			}
 		}
-
-		#endregion
-
-		#region GetNullValue
-
-		private static NullValueProvider _getNullValue = GetNullInternal;
-		public  static NullValueProvider  GetNullValue
-		{
-			get { return _getNullValue ?? (_getNullValue = GetNullInternal);}
-			set { _getNullValue = value; }
-		}
-
-		static object GetNullInternal(Type type)
-		{
-			if (type == null) throw new ArgumentNullException("type");
-
-			if (type.IsValueType)
-			{
-//				if (type.IsEnum)
-//					return GetEnumNullValue(type);
-
-				if (type.IsPrimitive)
-				{
-					if (type == typeof(Int32))          return Common.Configuration.NullableValues.Int32;
-					if (type == typeof(Double))         return Common.Configuration.NullableValues.Double;
-					if (type == typeof(Int16))          return Common.Configuration.NullableValues.Int16;
-					if (type == typeof(Boolean))        return Common.Configuration.NullableValues.Boolean;
-					if (type == typeof(SByte))          return Common.Configuration.NullableValues.SByte;
-					if (type == typeof(Int64))          return Common.Configuration.NullableValues.Int64;
-					if (type == typeof(Byte))           return Common.Configuration.NullableValues.Byte;
-					if (type == typeof(UInt16))         return Common.Configuration.NullableValues.UInt16;
-					if (type == typeof(UInt32))         return Common.Configuration.NullableValues.UInt32;
-					if (type == typeof(UInt64))         return Common.Configuration.NullableValues.UInt64;
-					if (type == typeof(Single))         return Common.Configuration.NullableValues.Single;
-					if (type == typeof(Char))           return Common.Configuration.NullableValues.Char;
-				}
-				else
-				{
-					if (type == typeof(DateTime))       return Common.Configuration.NullableValues.DateTime;
-					if (type == typeof(DateTimeOffset)) return Common.Configuration.NullableValues.DateTimeOffset;
-					if (type == typeof(Decimal))        return Common.Configuration.NullableValues.Decimal;
-					if (type == typeof(Guid))           return Common.Configuration.NullableValues.Guid;
-
-#if !SILVERLIGHT
-
-					if (type == typeof(SqlInt32))       return SqlInt32.   Null;
-					if (type == typeof(SqlString))      return SqlString.  Null;
-					if (type == typeof(SqlBoolean))     return SqlBoolean. Null;
-					if (type == typeof(SqlByte))        return SqlByte.    Null;
-					if (type == typeof(SqlDateTime))    return SqlDateTime.Null;
-					if (type == typeof(SqlDecimal))     return SqlDecimal. Null;
-					if (type == typeof(SqlDouble))      return SqlDouble.  Null;
-					if (type == typeof(SqlGuid))        return SqlGuid.    Null;
-					if (type == typeof(SqlInt16))       return SqlInt16.   Null;
-					if (type == typeof(SqlInt64))       return SqlInt64.   Null;
-					if (type == typeof(SqlMoney))       return SqlMoney.   Null;
-					if (type == typeof(SqlSingle))      return SqlSingle.  Null;
-					if (type == typeof(SqlBinary))      return SqlBinary.  Null;
-
-#endif
-				}
-			}
-			else
-			{
-				if (type == typeof(String)) return Common.Configuration.NullableValues.String;
-				if (type == typeof(DBNull)) return DBNull.Value;
-				if (type == typeof(Stream)) return Stream.Null;
-#if !SILVERLIGHT
-				if (type == typeof(SqlXml)) return SqlXml.Null;
-#endif
-			}
-
-			return null;
-		}
-
-		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
-
-		static readonly Dictionary<Type,object> _nullValues = new Dictionary<Type,object>();
 
 		#endregion
 	}

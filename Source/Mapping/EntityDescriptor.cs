@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 			_type          = type;
 
 			Associations = new List<AssociationDescriptor>();
-			Columns      = new List<ColumnDescriptior>();
+			Columns      = new List<ColumnDescriptor>();
 
 			Init();
 		}
@@ -23,16 +23,16 @@ namespace LinqToDB.Mapping
 
 			if (ta == null)
 			{
-				Name = _type.Name;
+				TableName = _type.Name;
 
-				if (_type.IsInterface && Name.StartsWith("I"))
-					Name = Name.Substring(1);
+				if (_type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+					TableName = TableName.Substring(1);
 			}
 			else
 			{
-				Name                      = ta.Name;
-				Schema                    = ta.Schema;
-				Database                  = ta.Database;
+				TableName                      = ta.Name;
+				SchemaName                    = ta.Schema;
+				DatabaseName                  = ta.Database;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
@@ -66,26 +66,24 @@ namespace LinqToDB.Mapping
 				if (ca != null)
 				{
 					if (ca.IsColumn)
-						Columns.Add(new ColumnDescriptior(memberInfo)
-						{
-							ColumnName = ca.Name ?? memberInfo.Name,
-							Storage    = ca.Storage,
-						});
+						Columns.Add(new ColumnDescriptor(_mappingSchema, ca, memberInfo));
 				}
 				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(memberType))
-					Columns.Add(new ColumnDescriptior(memberInfo));
+				{
+					Columns.Add(new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), memberInfo));
+				}
 			}
 		}
 
 		readonly MappingSchema _mappingSchema;
 		readonly Type          _type;
 
-		public string Name                      { get; set; }
-		public string Schema                    { get; set; }
-		public string Database                  { get; set; }
-		public bool   IsColumnAttributeRequired { get; set; }
+		public string TableName                 { get; private set; }
+		public string SchemaName                { get; private set; }
+		public string DatabaseName              { get; private set; }
+		public bool   IsColumnAttributeRequired { get; private set; }
 
-		public List<ColumnDescriptior>     Columns      { get; private set; }
+		public List<ColumnDescriptor>      Columns      { get; private set; }
 		public List<AssociationDescriptor> Associations { get; private set; }
 	}
 }

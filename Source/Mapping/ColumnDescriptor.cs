@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	class ColumnDescriptior
+	class ColumnDescriptor
 	{
-		public ColumnDescriptior(MemberInfo memberInfo)
+		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberInfo memberInfo)
 		{
 			MemberInfo = memberInfo;
 
@@ -21,13 +21,15 @@ namespace LinqToDB.Mapping
 			}
 
 			MemberName = MemberInfo.Name;
-			ColumnName = MemberInfo.Name;
+			ColumnName = columnAttribute.Name ?? MemberInfo.Name;
+			Storage    = columnAttribute.Storage;
+
 		}
 
 		public MemberInfo MemberInfo { get; private set; }
 		public Type       MemberType { get; private set; }
-		public string     MemberName { get; set; }
-		public string     ColumnName { get; set; }
-		public string     Storage    { get; set; }
+		public string     MemberName { get; private set; }
+		public string     ColumnName { get; private set; }
+		public string     Storage    { get; private set; }
 	}
 }
