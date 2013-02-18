@@ -41,6 +41,31 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region CanBeNull
+
+		volatile ConcurrentDictionary<Type,bool> _canBeNull;
+
+		public Option<bool> GetCanBeNull(Type type)
+		{
+			if (_canBeNull == null)
+				return Option<bool>.None;
+
+			bool o;
+			return _canBeNull.TryGetValue(type, out o) ? Option<bool>.Some(o) : Option<bool>.None;
+		}
+
+		public void SetCanBeNull(Type type, bool value)
+		{
+			if (_canBeNull == null)
+				lock (this)
+					if (_canBeNull == null)
+						_canBeNull = new ConcurrentDictionary<Type,bool>();
+
+			_canBeNull[type] = value;
+		}
+
+		#endregion
+
 		#region ConvertInfo
 
 		ConvertInfo _convertInfo;

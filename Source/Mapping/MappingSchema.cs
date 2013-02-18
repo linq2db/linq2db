@@ -102,6 +102,48 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region CanBeNull
+
+		public bool GetCanBeNull(Type type)
+		{
+			foreach (var info in _schemas)
+			{
+				var o = info.GetCanBeNull(type);
+				if (o.IsSome)
+					return o.Value;
+			}
+
+			if (type.IsEnum)
+			{
+				var mapValues = GetMapValues(type);
+
+				if (mapValues != null)
+				{
+					var fields =
+						from f in mapValues
+						where f.MapValues.Any(a => a.Value == null)
+						select f.OrigValue;
+
+					var value = fields.FirstOrDefault();
+
+					if (value != null)
+					{
+						SetCanBeNull(type, true);
+						return true;
+					}
+				}
+			}
+
+			return type.IsClass || type.IsNullable();
+		}
+
+		public void SetCanBeNull(Type type, bool value)
+		{
+			_schemas[0].SetCanBeNull(type, value);
+		}
+
+		#endregion
+
 		#region Convert
 
 		public T ChangeTypeTo<T>(object value)
@@ -633,6 +675,16 @@ namespace LinqToDB.Mapping
 				SetDataType(type, dataType);
 		}
 
+		public void AddScalarType(Type type, object defaultValue, bool canBeNull, DataType dataType = DataType.Undefined)
+		{
+			SetScalarType  (type);
+			SetDefaultValue(type, defaultValue);
+			SetCanBeNull   (type, canBeNull);
+
+			if (dataType != DataType.Undefined)
+				SetDataType(type, dataType);
+		}
+
 		public void AddScalarType(Type type, DataType dataType = DataType.Undefined)
 		{
 			SetScalarType(type);
@@ -699,6 +751,25 @@ namespace LinqToDB.Mapping
 			_mapValues[type] = mapValues;
 
 			return mapValues;
+		}
+
+		#endregion
+
+		#region EntityDescriptor
+
+		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
+
+		internal EntityDescriptor GetEntityDescriptor(Type type)
+		{
+			if (_entityDescriptors == null)
+				_entityDescriptors = new ConcurrentDictionary<Type,EntityDescriptor>();
+
+			EntityDescriptor ed;
+
+			if (!_entityDescriptors.TryGetValue(type, out ed))
+				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
+
+			return ed;
 		}
 
 		#endregion

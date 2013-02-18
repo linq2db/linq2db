@@ -863,7 +863,7 @@ namespace LinqToDB.SqlBuilder
 						var fields2 = Convert(fields1,     action, f => new SqlField(f));
 						var targs   = table.TableArguments == null ? null : Convert(table.TableArguments, action);
 
-						var fe = fields2 == null || ReferenceEquals(fields1,     fields2);
+						var fe = fields2 == null || ReferenceEquals(fields1, fields2);
 						var ta = ReferenceEquals(table.TableArguments, targs);
 
 						if (!fe || !ta)

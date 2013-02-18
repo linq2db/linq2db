@@ -449,7 +449,7 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td    = new EntityDescriptor(dataConnection.MappingSchema, typeof(T));
+				var td    = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 				var names = new List<string>(dataReader.FieldCount);
 
 				for (var i = 0; i < dataReader.FieldCount; i++)
@@ -596,7 +596,7 @@ namespace LinqToDB.Data
 
 			if (!_parameterReaders.TryGetValue(key, out func))
 			{
-				var td  = new EntityDescriptor(dataConnection.MappingSchema, type);
+				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
 				var p   = Expression.Parameter(typeof(object), "p");
 				var obj = Expression.Parameter(parameters.GetType(), "obj");
 

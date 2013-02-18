@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Builder.Contexts.Add(this);
 
-				InheritanceMapping = GetInheritanceDiscriminators(Builder, SqlTable, ObjectType, ObjectMapper.InheritanceMapping);
+				InheritanceMapping = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType).InheritanceMapping;
 
 				// Original table is a parent.
 				//
@@ -224,53 +224,6 @@ namespace LinqToDB.Linq.Builder
 					if (predicate.GetType() != typeof(SqlQuery.Predicate.Expr))
 						SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
 				}
-			}
-
-			internal static List<InheritanceMapping> GetInheritanceDiscriminators(
-				ExpressionBuilder                   builder,
-				SqlTable                            sqlTable,
-				Type                                objectType,
-				List<InheritanceMappingAttribute> inheritanceMappingAttributes)
-			{
-				var inheritanceMappings = new List<InheritanceMapping>(inheritanceMappingAttributes.Count);
-
-				if (inheritanceMappingAttributes.Count > 0)
-				{
-					foreach (var m in inheritanceMappingAttributes)
-					{
-						var mapping = new InheritanceMapping
-						{
-							Code      = m.Code,
-							IsDefault = m.IsDefault,
-							Type      = m.Type,
-						};
-
-						foreach (MemberMapper mm in builder.MappingSchema.GetObjectMapper(mapping.Type))
-						{
-							if (!sqlTable.Fields.Any(f => f.Value.Name == mm.MemberName))
-							{
-								var field = new SqlField(mm.Type, mm.MemberName, mm.Name, mm.MapMemberInfo.Nullable, int.MinValue, null, mm);
-								sqlTable.Fields.Add(field);
-							}
-
-							if (mm.MapMemberInfo.IsInheritanceDiscriminator)
-								mapping.Discriminator = mm;
-						}
-
-						inheritanceMappings.Add(mapping);
-					}
-
-					var discriminator = inheritanceMappings.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
-
-					if (discriminator == null)
-						throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", objectType);
-
-					foreach (var mapping in inheritanceMappings)
-						if (mapping.Discriminator == null)
-							mapping.Discriminator = discriminator;
-				}
-
-				return inheritanceMappings;
 			}
 
 			#endregion

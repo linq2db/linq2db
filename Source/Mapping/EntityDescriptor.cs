@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.Mapping
 {
 	using Reflection;
+	using Linq;
 
 	class EntityDescriptor
 	{
@@ -27,6 +29,8 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
+
+		public Type ObjectType { get { return TypeAccessor.Type; } }
 
 		void Init()
 		{
@@ -69,6 +73,60 @@ namespace LinqToDB.Mapping
 				{
 					Columns.Add(new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member.MemberInfo));
 				}
+			}
+		}
+
+		private List<InheritanceMapping> _inheritanceMapping;
+		public  List<InheritanceMapping>  InheritanceMapping
+		{
+			get
+			{
+				if (_inheritanceMapping == null)
+				{
+					var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration);
+
+					_inheritanceMapping = new List<InheritanceMapping>(mappingAttrs.Length);
+
+					if (mappingAttrs.Length > 0)
+					{
+						foreach (var m in mappingAttrs)
+						{
+							var mapping = new InheritanceMapping
+							{
+								Code      = m.Code,
+								IsDefault = m.IsDefault,
+								Type      = m.Type,
+							};
+
+							if (mapping.Type != ObjectType)
+							{
+								var ed = _mappingSchema.GetEntityDescriptor(mapping.Type);
+
+								foreach (var column in ed.Columns)
+								{
+									if (Columns.All(f => f.MemberName != column.MemberName))
+										Columns.Add(column);
+
+									if (column.IsDiscriminator)
+										mapping.Discriminator = column;
+								}
+							}
+
+							_inheritanceMapping.Add(mapping);
+						}
+
+						var discriminator = _inheritanceMapping.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
+
+						if (discriminator == null)
+							throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
+
+						foreach (var mapping in _inheritanceMapping)
+							if (mapping.Discriminator == null)
+								mapping.Discriminator = discriminator;
+					}
+				}
+
+				return _inheritanceMapping;
 			}
 		}
 	}

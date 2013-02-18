@@ -363,6 +363,7 @@ namespace Tests.Model
 
 	public class ParentInheritance1 : ParentInheritanceBase, IEquatable<ParentInheritance1>
 	{
+		[Column(IsDiscriminator = true)]
 		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 
@@ -385,6 +386,7 @@ namespace Tests.Model
 
 	public class ParentInheritanceValue : ParentInheritanceBase
 	{
+		[Column(IsDiscriminator = true)]
 		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 

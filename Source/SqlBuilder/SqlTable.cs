@@ -60,7 +60,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 
-			var ed = new EntityDescriptor(mappingSchema, objectType);
+			var ed = mappingSchema.NewSchema.GetEntityDescriptor(objectType);
 
 			Database     = ed.DatabaseName;
 			Owner        = ed.SchemaName;

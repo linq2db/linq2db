@@ -1940,7 +1940,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlQuery.Predicate.ExprExpr(
 											getSql(inheritanceMapping[m.i].DiscriminatorName),
 											SqlQuery.Predicate.Operator.NotEqual,
-											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.Type, m.m.Code)))));
+											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
 						}
 
 						return cond;
@@ -1951,7 +1951,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlQuery.Predicate.ExprExpr(
 							getSql(inheritanceMapping[mapping[0].i].DiscriminatorName),
 							SqlQuery.Predicate.Operator.Equal,
-							MappingSchema.NewSchema.GetSqlValue(mapping[0].m.Discriminator.Type, mapping[0].m.Code)));
+							MappingSchema.NewSchema.GetSqlValue(mapping[0].m.Discriminator.MemberType, mapping[0].m.Code)));
 
 				default:
 					{
@@ -1966,7 +1966,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlQuery.Predicate.ExprExpr(
 											getSql(inheritanceMapping[m.i].DiscriminatorName),
 											SqlQuery.Predicate.Operator.Equal,
-											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.Type, m.m.Code))),
+											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code))),
 									true));
 						}
 

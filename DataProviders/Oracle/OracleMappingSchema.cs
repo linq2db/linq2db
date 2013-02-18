@@ -17,22 +17,22 @@ namespace LinqToDB.DataProvider
 
 		protected OracleMappingSchema(string configuration) : base(configuration)
 		{
-			AddScalarType(typeof(OracleBFile),        OracleBFile.       Null, DataType.VarChar);    // ?
-			AddScalarType(typeof(OracleBinary),       OracleBinary.      Null, DataType.VarBinary);
-			AddScalarType(typeof(OracleBlob),         OracleBlob.        Null, DataType.VarBinary);  // ?
-			AddScalarType(typeof(OracleClob),         OracleClob.        Null, DataType.NText);
-			AddScalarType(typeof(OracleDate),         OracleDate.        Null, DataType.DateTime);
-			AddScalarType(typeof(OracleDecimal),      OracleDecimal.     Null, DataType.Decimal);
-			AddScalarType(typeof(OracleIntervalDS),   OracleIntervalDS.  Null, DataType.Time);       // ?
-			AddScalarType(typeof(OracleIntervalYM),   OracleIntervalYM.  Null, DataType.Date);       // ?
-			AddScalarType(typeof(OracleRef),          OracleRef.         Null, DataType.Binary);     // ?
-			AddScalarType(typeof(OracleRefCursor),    OracleRefCursor.   Null, DataType.Binary);     // ?
-			AddScalarType(typeof(OracleString),       OracleString.      Null, DataType.NVarChar);
-			AddScalarType(typeof(OracleTimeStamp),    OracleTimeStamp.   Null, DataType.DateTime2);
-			AddScalarType(typeof(OracleTimeStampLTZ), OracleTimeStampLTZ.Null, DataType.DateTimeOffset);
-			AddScalarType(typeof(OracleTimeStampTZ),  OracleTimeStampTZ. Null, DataType.DateTimeOffset);
-			AddScalarType(typeof(OracleXmlStream),    OracleXmlStream.   Null, DataType.Xml);        // ?
-			AddScalarType(typeof(OracleXmlType),      OracleXmlType.     Null, DataType.Xml);
+			AddScalarType(typeof(OracleBFile),        OracleBFile.       Null, true, DataType.VarChar);    // ?
+			AddScalarType(typeof(OracleBinary),       OracleBinary.      Null, true, DataType.VarBinary);
+			AddScalarType(typeof(OracleBlob),         OracleBlob.        Null, true, DataType.VarBinary);  // ?
+			AddScalarType(typeof(OracleClob),         OracleClob.        Null, true, DataType.NText);
+			AddScalarType(typeof(OracleDate),         OracleDate.        Null, true, DataType.DateTime);
+			AddScalarType(typeof(OracleDecimal),      OracleDecimal.     Null, true, DataType.Decimal);
+			AddScalarType(typeof(OracleIntervalDS),   OracleIntervalDS.  Null, true, DataType.Time);       // ?
+			AddScalarType(typeof(OracleIntervalYM),   OracleIntervalYM.  Null, true, DataType.Date);       // ?
+			AddScalarType(typeof(OracleRef),          OracleRef.         Null, true, DataType.Binary);     // ?
+			AddScalarType(typeof(OracleRefCursor),    OracleRefCursor.   Null, true, DataType.Binary);     // ?
+			AddScalarType(typeof(OracleString),       OracleString.      Null, true, DataType.NVarChar);
+			AddScalarType(typeof(OracleTimeStamp),    OracleTimeStamp.   Null, true, DataType.DateTime2);
+			AddScalarType(typeof(OracleTimeStampLTZ), OracleTimeStampLTZ.Null, true, DataType.DateTimeOffset);
+			AddScalarType(typeof(OracleTimeStampTZ),  OracleTimeStampTZ. Null, true, DataType.DateTimeOffset);
+			AddScalarType(typeof(OracleXmlStream),    OracleXmlStream.   Null, true, DataType.Xml);        // ?
+			AddScalarType(typeof(OracleXmlType),      OracleXmlType.     Null, true, DataType.Xml);
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)

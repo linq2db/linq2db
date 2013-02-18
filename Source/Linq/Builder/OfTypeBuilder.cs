@@ -64,8 +64,8 @@ namespace LinqToDB.Linq.Builder
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
 			var table          = new SqlTable(builder.MappingSchema, fromType);
-			var mapper         = builder.MappingSchema.GetObjectMapper(fromType);
-			var discriminators = TableBuilder.TableContext.GetInheritanceDiscriminators(builder, table, fromType, mapper.InheritanceMapping);
+			var mapper         = builder.MappingSchema.NewSchema.GetEntityDescriptor(fromType);
+			var discriminators = mapper.InheritanceMapping;
 
 			return builder.MakeIsPredicate(context, discriminators, toType,
 				name =>

@@ -10,16 +10,20 @@ namespace LinqToDB.Mapping
 	using Reflection.Extension;
 	using Reflection.MetadataProvider;
 
-	[DebuggerDisplay("Type = {TypeAccessor.Type}, OriginalType = {TypeAccessor.OriginalType}")]
+	[DebuggerDisplay("Type = {TypeAccessor.Type}")]
 	public class ObjectMapper : IEnumerable<MemberMapper>
 	{
+		public ObjectMapper()
+		{
+		}
+
 		#region Protected Members
 
 		protected virtual MemberMapper CreateMemberMapper(MapMemberInfo mapMemberInfo)
 		{
 			if (mapMemberInfo == null) throw new ArgumentNullException("mapMemberInfo");
 
-			MemberMapper mm = MemberMapper.CreateMemberMapper(mapMemberInfo);
+			var mm = MemberMapper.CreateMemberMapper(mapMemberInfo);
 
 			mm.Init(mapMemberInfo);
 
@@ -170,7 +174,7 @@ namespace LinqToDB.Mapping
 
 			TypeAccessor     = TypeAccessor.GetAccessor(type);
 			MappingSchema    = mappingSchema;
-			EntityDescriptor = new EntityDescriptor(mappingSchema.NewSchema, type);
+			EntityDescriptor = mappingSchema.NewSchema.GetEntityDescriptor(type);
 			_extension       = TypeExtension.GetTypeExtension(TypeAccessor.Type, mappingSchema.Extensions);
 
 			_inheritanceMapping.AddRange(GetInheritanceMapping());
