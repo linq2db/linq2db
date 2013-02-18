@@ -132,10 +132,10 @@ namespace Tests.Linq
 
 		public enum Gender9
 		{
-			[MapValue("M")] [MapValueOld('M')] Male,
-			[MapValue("F")] [MapValueOld('F')] Female,
-			[MapValue("U")] [MapValueOld('U')] Unknown,
-			[MapValue("O")] [MapValueOld('O')] Other,
+			[MapValue("M")] Male,
+			[MapValue("F")] Female,
+			[MapValue("U")] Unknown,
+			[MapValue("O")] Other,
 		}
 
 		[TableName("Person")]

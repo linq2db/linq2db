@@ -581,45 +581,6 @@ namespace Tests.Linq
 					from p in db.GetTable<PersonCharTest>() where 'M' == p.Gender select p.PersonID);
 		}
 
-		[TableName("Person")]
-		public class PersonBoolTest
-		{
-			public int    PersonID;
-			public string FirstName;
-			public string LastName;
-			public string MiddleName;
-			[MapField("Gender"), MapValueOld(true, "M"), MapValueOld(false, "F")]
-			public bool   IsMale;
-		}
-
-		//[Test]
-		public void BoolTest1([DataContexts] string context)
-		{
-			List<PersonBoolTest> list;
-
-			using (var db = new TestDataConnection())
-				list = db.GetTable<PersonBoolTest>().ToList();
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in list                          where p.IsMale select p.PersonID,
-					from p in db.GetTable<PersonBoolTest>() where p.IsMale select p.PersonID);
-		}
-
-		//[Test]
-		public void BoolTest2([DataContexts] string context)
-		{
-			List<PersonBoolTest> list;
-
-			using (var db = new TestDataConnection())
-				list = db.GetTable<PersonBoolTest>().ToList();
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in list                          where p.IsMale == true select p.PersonID,
-					from p in db.GetTable<PersonBoolTest>() where p.IsMale == true select p.PersonID);
-		}
-
 		[Test]
 		public void BoolTest31([DataContexts] string context)
 		{

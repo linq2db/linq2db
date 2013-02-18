@@ -8,7 +8,7 @@ namespace Tests.Model
 	{
 		[MapValue(null)] [NullValue]
 		Value0 = 0,
-		[MapValue(1)] [MapValueOld(1)] Value1 = 10,
+		[MapValue(1)] Value1 = 10,
 		[MapValue(2)] Value2 = 2,
 		[MapValue(3)] Value3 = 3,
 		[MapValue(4)] Value4 = 4,

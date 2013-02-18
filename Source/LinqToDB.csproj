@@ -236,7 +236,6 @@
     <Compile Include="Mapping\MappingException.cs" />
     <Compile Include="Mapping\MappingSchemaOld.cs" />
     <Compile Include="Mapping\MapValue.cs" />
-    <Compile Include="Mapping\MapValueOldAttribute.cs" />
     <Compile Include="Mapping\MemberMapper.cs" />
     <Compile Include="Mapping\NotNullAttribute.cs" />
     <Compile Include="NullableAttribute.cs" />

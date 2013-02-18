@@ -6,9 +6,9 @@ namespace Tests.Model
 {
 	public enum Gender
 	{
-		[MapValueOld("M")] [MapValue("M")] Male,
-		[MapValueOld("F")] [MapValue("F")] Female,
-		[MapValueOld("U")] [MapValue("U")] Unknown,
-		[MapValueOld("O")] [MapValue("O")] Other,
+		[MapValue("M")] Male,
+		[MapValue("F")] Female,
+		[MapValue("U")] Unknown,
+		[MapValue("O")] Other,
 	}
 }

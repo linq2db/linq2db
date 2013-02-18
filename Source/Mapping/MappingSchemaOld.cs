@@ -31,10 +31,10 @@ namespace LinqToDB.Mapping
 
 		public ObjectMapper GetObjectMapper(Type type)
 		{
-			ObjectMapper om;
-
 			lock (_mappers)
 			{
+				ObjectMapper om;
+
 				if (_mappers.TryGetValue(type, out om))
 					return om;
 
@@ -115,15 +115,6 @@ namespace LinqToDB.Mapping
 		#region Public Members
 
 		public ExtensionList Extensions { get; set; }
-
-		#endregion
-
-		#region GetNullValue
-
-		public virtual object GetNullValue(Type type)
-		{
-			return TypeAccessor.GetNullValue(type);
-		}
 
 		#endregion
 	}
