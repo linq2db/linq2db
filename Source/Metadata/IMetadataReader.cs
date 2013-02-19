@@ -5,7 +5,7 @@ namespace LinqToDB.Metadata
 {
 	public interface IMetadataReader
 	{
-		T[] GetAttributes<T>(Type type)             where T : Attribute;
-		T[] GetAttributes<T>(MemberInfo memberInfo) where T : Attribute;
+		T[] GetAttributes<T>(Type type,             bool inherit = true) where T : Attribute;
+		T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true) where T : Attribute;
 	}
 }

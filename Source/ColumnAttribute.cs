@@ -14,6 +14,11 @@ namespace LinqToDB
 			PrimaryKeyOrder = int.MinValue;
 		}
 
+		public ColumnAttribute(string name) : this()
+		{
+			Name = name;
+		}
+
 		public string Configuration { get; set; }
 
 		/// <summary>

@@ -22,16 +22,16 @@ namespace LinqToDB.Metadata
 
 		readonly IMetadataReader[] _readers;
 
-		public T[] GetAttributes<T>(Type type)
+		public T[] GetAttributes<T>(Type type, bool inherit)
 			where T : Attribute
 		{
-			return _readers.SelectMany(r => r.GetAttributes<T>(type)).ToArray();
+			return _readers.SelectMany(r => r.GetAttributes<T>(type, inherit)).ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
 			where T : Attribute
 		{
-			return _readers.SelectMany(r => r.GetAttributes<T>(memberInfo)).ToArray();
+			return _readers.SelectMany(r => r.GetAttributes<T>(memberInfo, inherit)).ToArray();
 		}
 	}
 }

@@ -384,10 +384,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table(Name="Child")]
+		[Table(Name="Child", IsColumnAttributeRequired=false)]
 		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(ChildForHeirarhy))]
 		public class ChildBaseForHeirarhy
 		{
+			[Column(IsDiscriminator = true)]
 			[MapField(IsInheritanceDiscriminator = true)]
 			public int ChildID { get; set; }
 		}

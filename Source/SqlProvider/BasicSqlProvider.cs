@@ -1122,7 +1122,7 @@ namespace LinqToDB.SqlProvider
 									}
 
 									var field = GetUnderlayingField(keys[0]);
-									var value = field.MemberMapper.GetValue(item);
+									var value = field.ColumnDescriptor.MemberAccessor.GetValue(item);
 
 									if (value is ISqlExpression)
 										BuildExpression(sb, (ISqlExpression)value);
@@ -1148,7 +1148,7 @@ namespace LinqToDB.SqlProvider
 									foreach (var key in keys)
 									{
 										var field = GetUnderlayingField(key);
-										var value = field.MemberMapper.GetValue(item);
+										var value = field.ColumnDescriptor.MemberAccessor.GetValue(item);
 
 										BuildExpression(sb, GetPrecedence(p), key);
 

@@ -29,6 +29,7 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
+		public List<InheritanceMapping>    InheritanceMapping        { get; private set; }
 
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
@@ -67,66 +68,72 @@ namespace LinqToDB.Mapping
 				if (ca != null)
 				{
 					if (ca.IsColumn)
-						Columns.Add(new ColumnDescriptor(_mappingSchema, ca, member.MemberInfo));
+					{
+						var cd = new ColumnDescriptor(_mappingSchema, ca, member);
+						Columns.Add(cd);
+						_columnNames.Add(member.Name, cd);
+					}
 				}
 				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type))
 				{
-					Columns.Add(new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member.MemberInfo));
+					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
+					Columns.Add(cd);
+					_columnNames.Add(member.Name, cd);
 				}
 			}
 		}
 
-		private List<InheritanceMapping> _inheritanceMapping;
-		public  List<InheritanceMapping>  InheritanceMapping
+		readonly Dictionary<string,ColumnDescriptor> _columnNames = new Dictionary<string, ColumnDescriptor>();
+
+		public ColumnDescriptor this[string memberName]
 		{
 			get
 			{
-				if (_inheritanceMapping == null)
+				ColumnDescriptor cd;
+				_columnNames.TryGetValue(memberName, out cd);
+				return cd;
+			}
+		}
+
+		internal void InitInheritanceMapping()
+		{
+			var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
+
+			InheritanceMapping = new List<InheritanceMapping>(mappingAttrs.Length);
+
+			if (mappingAttrs.Length > 0)
+			{
+				foreach (var m in mappingAttrs)
 				{
-					var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration);
-
-					_inheritanceMapping = new List<InheritanceMapping>(mappingAttrs.Length);
-
-					if (mappingAttrs.Length > 0)
+					var mapping = new InheritanceMapping
 					{
-						foreach (var m in mappingAttrs)
-						{
-							var mapping = new InheritanceMapping
-							{
-								Code      = m.Code,
-								IsDefault = m.IsDefault,
-								Type      = m.Type,
-							};
+						Code      = m.Code,
+						IsDefault = m.IsDefault,
+						Type      = m.Type,
+					};
 
-							if (mapping.Type != ObjectType)
-							{
-								var ed = _mappingSchema.GetEntityDescriptor(mapping.Type);
+					var ed = _mappingSchema.GetEntityDescriptor(mapping.Type);
 
-								foreach (var column in ed.Columns)
-								{
-									if (Columns.All(f => f.MemberName != column.MemberName))
-										Columns.Add(column);
+					foreach (var column in ed.Columns)
+					{
+						if (Columns.All(f => f.MemberName != column.MemberName))
+							Columns.Add(column);
 
-									if (column.IsDiscriminator)
-										mapping.Discriminator = column;
-								}
-							}
-
-							_inheritanceMapping.Add(mapping);
-						}
-
-						var discriminator = _inheritanceMapping.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
-
-						if (discriminator == null)
-							throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
-
-						foreach (var mapping in _inheritanceMapping)
-							if (mapping.Discriminator == null)
-								mapping.Discriminator = discriminator;
+						if (column.IsDiscriminator)
+							mapping.Discriminator = column;
 					}
+
+					InheritanceMapping.Add(mapping);
 				}
 
-				return _inheritanceMapping;
+				var discriminator = InheritanceMapping.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
+
+				if (discriminator == null)
+					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
+
+				foreach (var mapping in InheritanceMapping)
+					if (mapping.Discriminator == null)
+						mapping.Discriminator = discriminator;
 			}
 		}
 	}

@@ -68,25 +68,20 @@ namespace LinqToDB.SqlBuilder
 			ObjectType   = objectType;
 			PhysicalName = Name;
 
-			var typeExt = TypeExtension.GetTypeExtension(objectType, mappingSchema.Extensions);
-
-			foreach (MemberMapper mm in mappingSchema.GetObjectMapper(objectType))
+			foreach (var column in ed.Columns)
 			{
-				bool isSet;
-
-				var ua =
-					mappingSchema.MetadataProvider.GetNonUpdatableAttribute(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
-
-				var order = mappingSchema.MetadataProvider.GetPrimaryKeyOrder(objectType, typeExt, mm.MapMemberInfo.MemberAccessor, out isSet);
-
-				Fields.Add(new SqlField(
-					mm.Type,
-					mm.MemberName,
-					mm.Name,
-					mm.MapMemberInfo.Nullable,
-					isSet ? order : int.MinValue,
-					ua,
-					mm));
+				Fields.Add(new SqlField
+				{
+					SystemType       = column.MemberType,
+					Name             = column.MemberName,
+					PhysicalName     = column.ColumnName,
+					Nullable         = column.CanBeNull,
+					PrimaryKeyOrder  = column.PrimaryKeyOrder,
+					IsIdentity       = column.IsIdentity,
+					IsInsertable     = !column.SkipOnInsert,
+					IsUpdatable      = !column.SkipOnUpdate,
+					ColumnDescriptor = column,
+				});
 			}
 
 			var identityField = GetIdentityField();
@@ -197,7 +192,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				if (_all == null)
 				{
-					_all = new SqlField(null, "*", "*", true, -1, null, null);
+					_all = new SqlField { Name = "*", PhysicalName = "*" };
 					((IChild<ISqlTableSource>)_all).Parent = this;
 				}
 

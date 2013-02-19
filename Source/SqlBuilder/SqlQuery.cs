@@ -2138,21 +2138,18 @@ namespace LinqToDB.SqlBuilder
 				{
 					var p = (SqlParameter)expression;
 
-					//if (type.IsEnum)
-					//	p.SetEnumConverter(type, mappingSchema);
-
 					if (column is SqlField)
 					{
 						var field = (SqlField)column;
 
-						if (field.MemberMapper != null)
-						{
-							if (field.MemberMapper.MapMemberInfo.IsDbTypeSet)
-								p.DbType = field.MemberMapper.MapMemberInfo.DbType;
-
-							if (field.MemberMapper.MapMemberInfo.IsDbSizeSet)
-								p.DbSize = field.MemberMapper.MapMemberInfo.DbSize;
-						}
+//						if (field.ColumnDescriptorptor != null)
+//						{
+//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
+//								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
+//
+//							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbSizeSet)
+//								p.DbSize = field.ColumnDescriptorptor.MapMemberInfo.DbSize;
+//						}
 					}
 				}
 			}
@@ -4265,12 +4262,12 @@ namespace LinqToDB.SqlBuilder
 						{
 							var values = new List<ISqlExpression>();
 							var field  = GetUnderlayingField(keys[0]);
-							var mm     = field.MemberMapper;
+							var cd     = field.ColumnDescriptor;
 
 							foreach (var item in items)
 							{
-								var value = mm.GetValue(item);
-								values.Add(mm.MappingSchema.NewSchema.GetSqlValue(mm.Type, value));
+								var value = cd.MemberAccessor.GetValue(item);
+								values.Add(cd.MappingSchema.GetSqlValue(cd.MemberType, value));
 							}
 
 							if (values.Count == 0)
@@ -4289,11 +4286,11 @@ namespace LinqToDB.SqlBuilder
 								foreach (var key in keys)
 								{
 									var field = GetUnderlayingField(key);
-									var mm    = field.MemberMapper;
-									var value = mm.GetValue(item);
+									var cd    = field.ColumnDescriptor;
+									var value = cd.MemberAccessor.GetValue(item);
 									var cond  = value == null ?
 										new Condition(false, new Predicate.IsNull  (field, false)) :
-										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, mm.MappingSchema.NewSchema.GetSqlValue(value)));
+										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, cd.MappingSchema.GetSqlValue(value)));
 
 									itemCond.Conditions.Add(cond);
 								}
@@ -4575,7 +4572,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				if (_all == null)
 				{
-					_all = new SqlField(null, "*", "*", true, -1, null, null);
+					_all = new SqlField { Name = "*", PhysicalName = "*" };
 					((IChild<ISqlTableSource>)_all).Parent = this;
 				}
 

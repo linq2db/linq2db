@@ -460,47 +460,47 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		public T[] GetAttributes<T>(Type type)
+		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
 			var q =
 				from mr in MetadataReaders
-				from a in mr.GetAttributes<T>(type)
+				from a in mr.GetAttributes<T>(type, inherit)
 				select a;
 
 			return q.ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			var q =
 				from mr in MetadataReaders
-				from a in mr.GetAttributes<T>(memberInfo)
+				from a in mr.GetAttributes<T>(memberInfo, inherit)
 				select a;
 
 			return q.ToArray();
 		}
 
-		public T GetAttribute<T>(Type type)
+		public T GetAttribute<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes<T>(type);
+			var attrs = GetAttributes<T>(type, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
-		public T GetAttribute<T>(MemberInfo memberInfo)
+		public T GetAttribute<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes<T>(memberInfo);
+			var attrs = GetAttributes<T>(memberInfo, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
-		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter)
+		public T[] GetAttributes<T>(Type type, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var list  = new List<T>();
-			var attrs = GetAttributes<T>(type);
+			var attrs = GetAttributes<T>(type, inherit);
 
 			foreach (var c in ConfigurationList)
 				foreach (var a in attrs)
@@ -510,11 +510,11 @@ namespace LinqToDB.Mapping
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo, Func<T,string> configGetter)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var list  = new List<T>();
-			var attrs = GetAttributes<T>(memberInfo);
+			var attrs = GetAttributes<T>(memberInfo, inherit);
 
 			foreach (var c in ConfigurationList)
 				foreach (var a in attrs)
@@ -524,17 +524,17 @@ namespace LinqToDB.Mapping
 			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
 		}
 
-		public T GetAttribute<T>(Type type, Func<T,string> configGetter)
+		public T GetAttribute<T>(Type type, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes(type, configGetter);
+			var attrs = GetAttributes(type, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 		
-		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter)
+		public T GetAttribute<T>(MemberInfo memberInfo, Func<T,string> configGetter, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = GetAttributes(memberInfo, configGetter);
+			var attrs = GetAttributes(memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
@@ -767,7 +767,10 @@ namespace LinqToDB.Mapping
 			EntityDescriptor ed;
 
 			if (!_entityDescriptors.TryGetValue(type, out ed))
+			{
 				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
+				ed.InitInheritanceMapping();
+			}
 
 			return ed;
 		}

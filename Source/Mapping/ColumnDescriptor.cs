@@ -3,20 +3,24 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using Reflection;
+
 	class ColumnDescriptor
 	{
-		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberInfo memberInfo)
+		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberAccessor memberAccessor)
 		{
-			MemberInfo = memberInfo;
+			MappingSchema  = mappingSchema;
+			MemberAccessor = memberAccessor;
+			MemberInfo     = memberAccessor.MemberInfo;
 
-			if (memberInfo.MemberType == MemberTypes.Field)
+			if (MemberInfo.MemberType == MemberTypes.Field)
 			{
-				var fieldInfo = (FieldInfo)memberInfo;
+				var fieldInfo = (FieldInfo)MemberInfo;
 				MemberType = fieldInfo.FieldType;
 			}
-			else if (memberInfo.MemberType == MemberTypes.Property)
+			else if (MemberInfo.MemberType == MemberTypes.Property)
 			{
-				var propertyInfo = (PropertyInfo)memberInfo;
+				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType = propertyInfo.PropertyType;
 			}
 
@@ -32,21 +36,26 @@ namespace LinqToDB.Mapping
 			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsPrimaryKey    = columnAttribute.IsPrimaryKey || PrimaryKeyOrder >= 0;
 			CanBeNull       = columnAttribute.GetCanBeNull() ?? mappingSchema.GetCanBeNull(MemberType);
+
+			if (IsPrimaryKey && PrimaryKeyOrder < 0)
+				PrimaryKeyOrder = 0;
 		}
 
-		public MemberInfo MemberInfo      { get; private set; }
-		public Type       MemberType      { get; private set; }
-		public string     MemberName      { get; private set; }
-		public string     ColumnName      { get; private set; }
-		public string     Storage         { get; private set; }
-		public bool       IsDiscriminator { get; private set; }
-		public DataType   DataType        { get; private set; }
-		public string     DbType          { get; private set; }
-		public bool       IsIdentity      { get; private set; }
-		public bool       SkipOnInsert    { get; private set; }
-		public bool       SkipOnUpdate    { get; private set; }
-		public bool       IsPrimaryKey    { get; private set; }
-		public int        PrimaryKeyOrder { get; private set; }
-		public bool       CanBeNull       { get; private set; }
+		public MappingSchema  MappingSchema   { get; private set; }
+		public MemberAccessor MemberAccessor  { get; private set; }
+		public MemberInfo     MemberInfo      { get; private set; }
+		public Type           MemberType      { get; private set; }
+		public string         MemberName      { get; private set; }
+		public string         ColumnName      { get; private set; }
+		public string         Storage         { get; private set; }
+		public bool           IsDiscriminator { get; private set; }
+		public DataType       DataType        { get; private set; }
+		public string         DbType          { get; private set; }
+		public bool           IsIdentity      { get; private set; }
+		public bool           SkipOnInsert    { get; private set; }
+		public bool           SkipOnUpdate    { get; private set; }
+		public bool           IsPrimaryKey    { get; private set; }
+		public int            PrimaryKeyOrder { get; private set; }
+		public bool           CanBeNull       { get; private set; }
 	}
 }

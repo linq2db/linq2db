@@ -62,8 +62,8 @@ namespace Tests.Model
 
 	public class Child
 	{
-		[PrimaryKey] public int ParentID;
-		[PrimaryKey] public int ChildID;
+		[Column(IsPrimaryKey=true)][PrimaryKey] public int ParentID;
+		[Column(IsPrimaryKey=true)][PrimaryKey] public int ChildID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public Parent  Parent;
@@ -243,8 +243,8 @@ namespace Tests.Model
 	public class Parent1 : IEquatable<Parent1>, IComparable
 	{
 		[PrimaryKey]
-		public int  ParentID;
-		public int? Value1;
+		[Column(IsPrimaryKey=true)] public int  ParentID;
+		                            public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children;
@@ -273,7 +273,7 @@ namespace Tests.Model
 		}
 	}
 
-	[Table(Name="GrandChild")]
+	[Table(Name="GrandChild", IsColumnAttributeRequired=false)]
 	public class GrandChild1 : IEquatable<GrandChild1>
 	{
 		public int  ParentID;
@@ -321,7 +321,7 @@ namespace Tests.Model
 
 	#region Inheritance
 
-	[Table(Name="Parent")]
+	[Table(Name="Parent", IsColumnAttributeRequired=false)]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceNull))]
 	[InheritanceMapping(Code = 1,    Type = typeof(ParentInheritance1))]
 	[InheritanceMapping(             Type = typeof(ParentInheritanceValue), IsDefault = true)]
@@ -416,8 +416,7 @@ namespace Tests.Model
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance12))]
 	public class ParentInheritanceBase2
 	{
-		[PrimaryKey]
-		public int ParentID;
+		[Column(IsPrimaryKey=true)] public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children;
@@ -425,6 +424,7 @@ namespace Tests.Model
 
 	public class ParentInheritance12 : ParentInheritanceBase2
 	{
+		[Column(IsDiscriminator = true)]
 		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 	}
@@ -439,7 +439,7 @@ namespace Tests.Model
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance13))]
 	public abstract class ParentInheritanceBase3
 	{
-		[PrimaryKey]
+		[Column(IsPrimaryKey=true)] [PrimaryKey]
 		public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
@@ -448,6 +448,7 @@ namespace Tests.Model
 
 	public class ParentInheritance13 : ParentInheritanceBase3
 	{
+		[Column("Value1", IsDiscriminator = true)]
 		[MapField("Value1", IsInheritanceDiscriminator = true)]
 		public int Value;
 	}
@@ -467,7 +468,7 @@ namespace Tests.Model
 	[InheritanceMapping(Code = (int)Parent4Type.Value2, Type = typeof(ParentInheritance24))]
 	public abstract class ParentInheritanceBase4
 	{
-		[PrimaryKey]
+		[Column(IsPrimaryKey=true)]
 		public int ParentID;
 
 		public abstract Parent4Type Value1 { get; }
@@ -475,12 +476,14 @@ namespace Tests.Model
 
 	public class ParentInheritance14 : ParentInheritanceBase4
 	{
+		[Column(IsDiscriminator = true)]
 		[MapField(IsInheritanceDiscriminator = true)]
 		public override Parent4Type Value1 { get { return Parent4Type.Value1; } }
 	}
 
 	public class ParentInheritance24 : ParentInheritanceBase4
 	{
+		[Column(IsDiscriminator = true)]
 		[MapField(IsInheritanceDiscriminator = true)]
 		public override Parent4Type Value1 { get { return Parent4Type.Value2; } }
 	}

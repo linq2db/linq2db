@@ -516,9 +516,8 @@ namespace LinqToDB.Linq
 					ReflectionHelper.Constant.Value),
 				typeof(T));
 
-			var mm       = field.MemberMapper;
-			var members  = mm.MemberName.Split('.');
-			var defValue = Expression.Constant(mm.MapMemberInfo.Type.GetDefaultValue(), mm.MapMemberInfo.Type);
+			var members  = field.Name.Split('.');
+			var defValue = Expression.Constant(dataContext.MappingSchema.NewSchema.GetDefaultValue(field.SystemType), field.SystemType);
 
 			for (var i = 0; i < members.Length; i++)
 			{

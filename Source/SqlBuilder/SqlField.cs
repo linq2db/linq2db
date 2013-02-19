@@ -10,44 +10,34 @@ namespace LinqToDB.SqlBuilder
 	{
 		public SqlField()
 		{
+			PrimaryKeyOrder = -1;
+			Nullable        = true;
 		}
 
 		public SqlField(SqlField field)
-			: this(field.SystemType, field.Name, field.PhysicalName, field.Nullable, field.PrimaryKeyOrder, field._nonUpdatableAttribute, field.MemberMapper)
 		{
+			SystemType       = field.SystemType;
+			Alias            = field.Alias;
+			Name             = field.Name;
+			PhysicalName     = field.PhysicalName;
+			Nullable         = field.Nullable;
+			PrimaryKeyOrder  = field.PrimaryKeyOrder;
+			IsIdentity       = field.IsIdentity;
+			IsInsertable     = field.IsInsertable;
+			IsUpdatable      = field.IsUpdatable;
+			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
-		public SqlField(
-			Type                  systemType,
-			string                name,
-			string                physicalName,
-			bool                  nullable,
-			int                   pkOrder,
-			NonUpdatableAttribute nonUpdatableAttribute,
-			MemberMapper          memberMapper)
-		{
-			SystemType             = systemType;
-			Alias                  = name.Replace('.', '_');
-			Name                   = name;
-			Nullable               = nullable;
-			PrimaryKeyOrder        = pkOrder;
-			_memberMapper          = memberMapper;
-			_physicalName          = physicalName;
-			_nonUpdatableAttribute = nonUpdatableAttribute;
-		}
-
-		public Type            SystemType      { get; set; }
-		public string          Alias           { get; set; }
-		public string          Name            { get; set; }
-		public bool            Nullable        { get; set; }
-		public int             PrimaryKeyOrder { get; set; }
-		public ISqlTableSource Table           { get; private set; }
-
-		readonly MemberMapper _memberMapper;
-		public   MemberMapper  MemberMapper
-		{
-			get { return _memberMapper; }
-		}
+		public   Type             SystemType       { get; set; }
+		public   string           Alias            { get; set; }
+		public   string           Name             { get; set; }
+		public   bool             Nullable         { get; set; }
+		public   int              PrimaryKeyOrder  { get; set; }
+		public   bool             IsIdentity       { get; set; }
+		public   bool             IsInsertable     { get; set; }
+		public   bool             IsUpdatable      { get; set; }
+		public   ISqlTableSource  Table            { get; private set; }
+		internal ColumnDescriptor ColumnDescriptor { get; set; }
 
 		private string _physicalName;
 		public  string  PhysicalName
@@ -56,13 +46,8 @@ namespace LinqToDB.SqlBuilder
 			set { _physicalName = value; }
 		}
 
-		public bool IsIdentity   { get { return _nonUpdatableAttribute != null && _nonUpdatableAttribute.IsIdentity; } }
-		public bool IsInsertable { get { return _nonUpdatableAttribute == null || !_nonUpdatableAttribute.OnInsert;  } }
-		public bool IsUpdatable  { get { return _nonUpdatableAttribute == null || !_nonUpdatableAttribute.OnUpdate;  } }
 
 		public bool IsPrimaryKey { get { return PrimaryKeyOrder != int.MinValue; } }
-
-		readonly NonUpdatableAttribute  _nonUpdatableAttribute;
 
 		ISqlTableSource IChild<ISqlTableSource>.Parent { get { return Table; } set { Table = value; } }
 

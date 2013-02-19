@@ -10,7 +10,6 @@ using System.Text;
 namespace LinqToDB.ServiceModel
 {
 	using Extensions;
-	using Mapping;
 	using SqlBuilder;
 
 	static class LinqServiceSerializer
@@ -483,12 +482,7 @@ namespace LinqToDB.ServiceModel
 							var fld = (SqlField)e;
 
 							if (fld != fld.Table.All)
-							{
 								GetType(fld.SystemType);
-
-								if (fld.MemberMapper != null)
-									GetType(fld.MemberMapper.MemberAccessor.TypeAccessor.Type);
-							}
 
 							break;
 						}
@@ -545,8 +539,6 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsIdentity);
 							Append(elem.IsUpdatable);
 							Append(elem.IsInsertable);
-							Append(elem.MemberMapper == null ? null : elem.MemberMapper.MemberAccessor.TypeAccessor.Type);
-							Append(elem.MemberMapper == null ? null : elem.MemberMapper.Name);
 
 							break;
 						}
@@ -1030,23 +1022,18 @@ namespace LinqToDB.ServiceModel
 							var isIdentity       = ReadBool();
 							var isUpdatable      = ReadBool();
 							var isInsertable     = ReadBool();
-							var memberMapperType = Read<Type>();
-							var memberMapperName = ReadString();
-							var memberMapper     = memberMapperType == null ?
-								null : Map.DefaultSchema.GetObjectMapper(memberMapperType)[memberMapperName];
 
-							obj = new SqlField(
-								systemType,
-								name,
-								physicalName,
-								nullable,
-								primaryKeyOrder,
-								isIdentity
-									? new IdentityAttribute()
-									: isInsertable || isUpdatable
-										? new NonUpdatableAttribute(isInsertable, isUpdatable, false)
-										: null,
-								memberMapper);
+							obj = new SqlField
+							{
+								SystemType      = systemType,
+								Name            = name,
+								PhysicalName    = physicalName,
+								Nullable        = nullable,
+								PrimaryKeyOrder = primaryKeyOrder,
+								IsIdentity      = isIdentity,
+								IsInsertable    = isInsertable,
+								IsUpdatable     = isUpdatable,
+							};
 
 							break;
 						}

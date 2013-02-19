@@ -134,10 +134,10 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual IBuildContext Parent { get; set; }
 
-			public Type         OriginalType;
-			public Type         ObjectType;
-			public ObjectMapper ObjectMapper;
-			public SqlTable     SqlTable;
+			public Type             OriginalType;
+			public Type             ObjectType;
+			public EntityDescriptor EntityDescriptor;
+			public SqlTable         SqlTable;
 
 			#endregion
 
@@ -145,15 +145,15 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder      = builder;
-				Parent       = buildInfo.Parent;
-				Expression   = buildInfo.Expression;
-				SqlQuery     = buildInfo.SqlQuery;
+				Builder          = builder;
+				Parent           = buildInfo.Parent;
+				Expression       = buildInfo.Expression;
+				SqlQuery         = buildInfo.SqlQuery;
 
-				OriginalType = originalType;
-				ObjectType   = GetObjectType();
-				SqlTable     = new SqlTable(builder.MappingSchema, ObjectType);
-				ObjectMapper = Builder.MappingSchema.GetObjectMapper(ObjectType);
+				OriginalType     = originalType;
+				ObjectType       = GetObjectType();
+				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
+				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
 
 				SqlQuery.From.Table(SqlTable);
 
@@ -179,10 +179,10 @@ namespace LinqToDB.Linq.Builder
 				if (!mc.Method.ReturnType.IsGenericType || mc.Method.ReturnType.GetGenericTypeDefinition() != typeof(Table<>))
 					throw new LinqException("Table function has to return Table<T>.");
 
-				OriginalType = mc.Method.ReturnType.GetGenericArguments()[0];
-				ObjectType   = GetObjectType();
-				SqlTable     = new SqlTable(builder.MappingSchema, ObjectType);
-				ObjectMapper = Builder.MappingSchema.GetObjectMapper(ObjectType);
+				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
+				ObjectType       = GetObjectType();
+				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
+				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
 
 				SqlQuery.From.Table(SqlTable);
 
@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Builder.Contexts.Add(this);
 
-				InheritanceMapping = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType).InheritanceMapping;
+				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
 				// Original table is a parent.
 				//
@@ -243,22 +243,22 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var om = Builder.MappingSchema.GetObjectMapper(objectType);
+				var ed = Builder.MappingSchema.NewSchema.GetEntityDescriptor(objectType);
 
 				var members =
 				(
 					from idx in index.Select((n,i) => new { n, i })
 					where idx.n >= 0
-					let   mm = om[idx.i]
+					let   cd = ed.Columns[idx.i]
 					where
-						mm.Storage != null ||
-						!(mm.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)mm.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+						cd.Storage != null ||
+						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
+						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 					select new
 					{
-						Storage = mm.Storage,
-						Member  = mm.MemberAccessor.MemberInfo,
-						Expr    = new ConvertFromDataReaderExpression(mm.Type, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Storage = cd.Storage,
+						Member  = cd.MemberAccessor.MemberInfo,
+						Expr    = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
 					}
 				).ToList();
 
@@ -420,8 +420,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var memberExpression = (MemberExpression)expression;
 
-						if (ObjectMapper != null &&
-							ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
+						if (EntityDescriptor != null &&
+							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 						{
 							throw new LinqException("Member '{0}.{1}' is not a table column.",
 								memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
@@ -456,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
-									.Select(_ => new SqlInfo { Sql = _, Member = _.MemberMapper.MemberAccessor.MemberInfo })
+									.Select(f => new SqlInfo { Sql = f, Member = f.ColumnDescriptor.MemberInfo })
 									.ToArray();
 
 							break;
@@ -472,7 +472,7 @@ namespace LinqToDB.Linq.Builder
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
 									orderby f.PrimaryKeyOrder
-									select new SqlInfo { Sql = f, Member = f.MemberMapper.MemberAccessor.MemberInfo };
+									select new SqlInfo { Sql = f, Member = f.ColumnDescriptor.MemberInfo };
 
 								var key = q.ToArray();
 
@@ -489,7 +489,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo { Sql = table.Field, Member = table.Field.MemberMapper.MemberAccessor.MemberInfo }
+									new SqlInfo { Sql = table.Field, Member = table.Field.ColumnDescriptor.MemberInfo }
 								};
 
 							break;
@@ -594,7 +594,7 @@ namespace LinqToDB.Linq.Builder
 
 					case RequestFor.Association      :
 						{
-							if (ObjectMapper.Associations.Count > 0)
+							if (EntityDescriptor.Associations.Count > 0)
 							{
 								var table = FindTable(expression, level, false);
 								var isat  =
@@ -633,9 +633,9 @@ namespace LinqToDB.Linq.Builder
 					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
 					{
 						var p  = (SqlQuery.Predicate.ExprExpr)cond.Predicate;
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).MemberMapper.MemberAccessor.MemberInfo);
+						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
 
-						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).MemberMapper.MemberAccessor.MemberInfo);
+						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
 						while (e1.Type != e2.Type)
 						{
@@ -682,7 +682,7 @@ namespace LinqToDB.Linq.Builder
 					return this;
 				}
 
-				if (ObjectMapper.Associations.Count > 0)
+				if (EntityDescriptor.Associations.Count > 0)
 				{
 					var levelExpression = expression.GetLevelExpression(level);
 
@@ -782,14 +782,14 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var field in SqlTable.Fields.Values)
 									{
-										if (field.MemberMapper is MemberMapper.ComplexMapper)
+										if (field.Name.IndexOf('.') >= 0)
 										{
 											var name = levelMember.Member.Name;
 
 											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
 												name += "." + ex.Member.Name;
 
-											if (field.MemberMapper.MemberName == name)
+											if (field.Name == name)
 												return field;
 										}
 									}
@@ -801,10 +801,9 @@ namespace LinqToDB.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (field.MemberMapper.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member))
 								{
-									if (field.MemberMapper is MemberMapper.ComplexMapper &&
-										field.MemberMapper.MemberName.IndexOf('.') > 0)
+									if (field.Name.IndexOf('.') > 0)
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
@@ -818,7 +817,7 @@ namespace LinqToDB.Linq.Builder
 											name = me.Member.Name + '.' + name;
 										}
 
-										return SqlTable.Fields.Values.FirstOrDefault(f => f.MemberMapper.MemberName == name);
+										return SqlTable.Fields.Values.FirstOrDefault(f => f.Name == name);
 									}
 
 									return field;
@@ -832,8 +831,8 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							if (throwException &&
-								ObjectMapper != null &&
-								ObjectMapper.TypeAccessor.Type == memberExpression.Member.DeclaringType)
+								EntityDescriptor != null &&
+								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
@@ -882,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 
 			TableLevel GetAssociation(Expression expression, int level)
 			{
-				var objectMapper    = ObjectMapper;
+				var objectMapper    = EntityDescriptor;
 				var levelExpression = expression.GetLevelExpression(level);
 				var inheritance     =
 					(
@@ -965,10 +964,10 @@ namespace LinqToDB.Linq.Builder
 					IsList     = true;
 				}
 
-				OriginalType = type;
-				ObjectType   = GetObjectType();
-				ObjectMapper = Builder.MappingSchema.GetObjectMapper(ObjectType);
-				SqlTable     = new SqlTable(builder.MappingSchema, ObjectType);
+				OriginalType     = type;
+				ObjectType       = GetObjectType();
+				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
+				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SqlQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : IsList ? SqlTable.InnerJoin() : SqlTable.WeakInnerJoin();

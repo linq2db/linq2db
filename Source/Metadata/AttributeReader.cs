@@ -5,10 +5,10 @@ namespace LinqToDB.Metadata
 {
 	public class AttributeReader : IMetadataReader
 	{
-		public T[] GetAttributes<T>(Type type)
+		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = type.GetCustomAttributes(typeof(T), true);
+			var attrs = type.GetCustomAttributes(typeof(T), inherit);
 			var arr   = new T[attrs.Length];
 
 			for (var i = 0; i < attrs.Length; i++)
@@ -17,10 +17,10 @@ namespace LinqToDB.Metadata
 			return arr;
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = memberInfo.GetCustomAttributes(typeof(T), true);
+			var attrs = memberInfo.GetCustomAttributes(typeof(T), inherit);
 			var arr   = new T[attrs.Length];
 
 			for (var i = 0; i < attrs.Length; i++)

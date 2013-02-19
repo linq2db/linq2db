@@ -1,7 +1,6 @@
 ﻿using System;
 
 using LinqToDB;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -23,15 +22,16 @@ namespace Tests.Model
 		}
 
 		[Identity, PrimaryKey]
+		[Column(Name="PersonID", IsIdentity=true, IsPrimaryKey=true)]
 		//[SequenceName(ProviderName.PostgreSQL, "Seq")]
 		[SequenceName(ProviderName.Firebird,   "PersonID")]
-		[MapField("PersonID")] public int    ID;
-		                       public string FirstName { get; set; }
-		                       public string LastName;
-		[Nullable]             public string MiddleName;
-		                       public Gender Gender;
+		[MapField("PersonID")]   public int    ID;
+		                         public string FirstName { get; set; }
+		                         public string LastName;
+		[Column(CanBeNull=true)] [Nullable]             public string MiddleName;
+		                         public Gender Gender;
 
-		[MapIgnore]            public string Name { get { return FirstName + " " + LastName; }}
+		[MapIgnore, NonColumn]   public string Name { get { return FirstName + " " + LastName; }}
 
 		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = true)]
 		public Patient Patient;

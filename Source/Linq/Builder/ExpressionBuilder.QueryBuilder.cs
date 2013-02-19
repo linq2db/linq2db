@@ -188,10 +188,10 @@ namespace LinqToDB.Linq.Builder
 						var om = (
 							from c in Contexts.OfType<TableBuilder.TableContext>()
 							where c.ObjectType == me.Member.DeclaringType
-							select c.ObjectMapper
+							select c.EntityDescriptor
 						).FirstOrDefault();
 
-						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) && om[me.Member.Name, true] == null;
+						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) && om[me.Member.Name] == null;
 					}
 			}
 
@@ -390,8 +390,8 @@ namespace LinqToDB.Linq.Builder
 											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
 
 											var ee = Expression.Equal(
-												Expression.MakeMemberAccess(op,            field2.MemberMapper.MemberAccessor.MemberInfo),
-												Expression.MakeMemberAccess(me.Expression, field1.MemberMapper.MemberAccessor.MemberInfo));
+												Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo),
+												Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo));
 
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}

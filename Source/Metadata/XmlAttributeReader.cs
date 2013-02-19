@@ -140,7 +140,7 @@ namespace LinqToDB.Metadata
 			.ToDictionary(t => t.Name);
 		}
 
-		public T[] GetAttributes<T>(Type type)
+		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
 			MetaTypeInfo t;
@@ -151,7 +151,7 @@ namespace LinqToDB.Metadata
 			return new T[0];
 		}
 
-		public T[] GetAttributes<T>(MemberInfo memberInfo)
+		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			var type = memberInfo.DeclaringType;
