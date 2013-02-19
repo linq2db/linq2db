@@ -51,12 +51,12 @@ namespace Tests.Linq
             [Identity, PrimaryKey]
             [SequenceName(ProviderName.Firebird, "PersonID")]
             [MapField("PersonID")]
-            public int ID { get; set; }
-            public string FirstName { get; set; }
-            public string LastName;
+            [Column("PersonID", IsPrimaryKey=true, IsIdentity=true)] public int ID { get; set; }
+            [Column]                                                 public string FirstName { get; set; }
+            [Column]                                                 public string LastName;
             [Nullable]
-            public string MiddleName;
-            public Gender Gender;
+            [Column]                                                 public string MiddleName;
+            [Column]                                                 public Gender Gender;
 
             [MapIgnore]
             public string Name { get { return FirstName + " " + LastName; } }

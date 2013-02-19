@@ -24,13 +24,13 @@ namespace Tests.Model
 			}
 		}
 
-		[Table(Name="Categories")]
+		[Table("Categories")]
 		public class Category
 		{
-			[PrimaryKey, NonUpdatable] public int    CategoryID;
-			[NotNull]                  public string CategoryName;
-			                           public string Description;
-			                           public Binary Picture;
+			[Column(IsPrimaryKey=true, IsIdentity=true), PrimaryKey, NonUpdatable] public int    CategoryID;
+			[Column(CanBeNull=false), NotNull]                                     public string CategoryName;
+			[Column]                                                               public string Description;
+			[Column]                                                               public Binary Picture;
 
 			[Association(ThisKey="CategoryID", OtherKey="CategoryID")]
 			public List<Product> Products;
@@ -39,8 +39,8 @@ namespace Tests.Model
 		[Table(Name="CustomerCustomerDemo")]
 		public class CustomerCustomerDemo
 		{
-			[PrimaryKey, NotNull] public string CustomerID;
-			[PrimaryKey, NotNull] public string CustomerTypeID;
+			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerID;
+			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerTypeID;
 
 			[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID")]
 			public CustomerDemographic CustomerDemographics;
@@ -52,8 +52,8 @@ namespace Tests.Model
 		[Table(Name="CustomerDemographics")]
 		public class CustomerDemographic
 		{
-			[PrimaryKey, NotNull] public string CustomerTypeID;
-			                      public string CustomerDesc;
+			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerTypeID;
+			[Column]                                                          public string CustomerDesc;
 			
 			[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID")]
 			public List<CustomerCustomerDemo> CustomerCustomerDemos;
@@ -62,17 +62,17 @@ namespace Tests.Model
 		[Table(Name="Customers")]
 		public class Customer : EntityBase<string>
 		{
-			[PrimaryKey] public string CustomerID;
-			[NotNull]    public string CompanyName;
-			             public string ContactName;
-			             public string ContactTitle;
-			             public string Address;
-			             public string City;
-			             public string Region;
-			             public string PostalCode;
-			             public string Country;
-			             public string Phone;
-			             public string Fax;
+			[Column(IsPrimaryKey=true)] [PrimaryKey] public string CustomerID;
+			[Column(CanBeNull=false)]   [NotNull]    public string CompanyName;
+			[Column]                                 public string ContactName;
+			[Column]                                 public string ContactTitle;
+			[Column]                                 public string Address;
+			[Column]                                 public string City;
+			[Column]                                 public string Region;
+			[Column]                                 public string PostalCode;
+			[Column]                                 public string Country;
+			[Column]                                 public string Phone;
+			[Column]                                 public string Fax;
 
 			[Association(ThisKey="CustomerID", OtherKey="CustomerID")]
 			public List<CustomerCustomerDemo> CustomerCustomerDemos;
@@ -89,24 +89,24 @@ namespace Tests.Model
 		[Table(Name="Employees")]
 		public class Employee : EntityBase<int>
 		{
-			[PrimaryKey, NonUpdatable] public int       EmployeeID;
-			[NotNull]                  public string    LastName;
-			[NotNull]                  public string    FirstName;
-			                           public string    Title;
-			                           public string    TitleOfCourtesy;
-			                           public DateTime? BirthDate;
-			                           public DateTime? HireDate;
-			                           public string    Address;
-			                           public string    City;
-			                           public string    Region;
-			                           public string    PostalCode;
-			                           public string    Country;
-			                           public string    HomePhone;
-			                           public string    Extension;
-			                           public Binary    Photo;
-			                           public string    Notes;
-			                           public int?      ReportsTo;
-			                           public string    PhotoPath;
+			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int       EmployeeID;
+			[Column(CanBeNull=false)] [NotNull]                                     public string    LastName;
+			[Column(CanBeNull=false)] [NotNull]                                     public string    FirstName;
+			[Column]                                                                public string    Title;
+			[Column]                                                                public string    TitleOfCourtesy;
+			[Column]                                                                public DateTime? BirthDate;
+			[Column]                                                                public DateTime? HireDate;
+			[Column]                                                                public string    Address;
+			[Column]                                                                public string    City;
+			[Column]                                                                public string    Region;
+			[Column]                                                                public string    PostalCode;
+			[Column]                                                                public string    Country;
+			[Column]                                                                public string    HomePhone;
+			[Column]                                                                public string    Extension;
+			[Column]                                                                public Binary    Photo;
+			[Column]                                                                public string    Notes;
+			[Column]                                                                public int?      ReportsTo;
+			[Column]                                                                public string    PhotoPath;
 
 			[Association(ThisKey="EmployeeID", OtherKey="ReportsTo")]  public List<Employee>          Employees;
 			[Association(ThisKey="EmployeeID", OtherKey="EmployeeID")] public List<EmployeeTerritory> EmployeeTerritories;
@@ -123,8 +123,8 @@ namespace Tests.Model
 		[Table(Name="EmployeeTerritories")]
 		public class EmployeeTerritory
 		{
-			[PrimaryKey]          public int    EmployeeID;
-			[PrimaryKey, NotNull] public string TerritoryID;
+			[Column(IsPrimaryKey=true)]                 [PrimaryKey]          public int    EmployeeID;
+			[Column(IsPrimaryKey=true,CanBeNull=false)] [PrimaryKey, NotNull] public string TerritoryID;
 
 			[Association(ThisKey="EmployeeID",  OtherKey="EmployeeID")]  public Employee  Employee;
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")] public Territory Territory;
@@ -133,11 +133,11 @@ namespace Tests.Model
 		[Table(Name="Order Details")]
 		public class OrderDetail
 		{
-			[PrimaryKey] public int     OrderID;
-			[PrimaryKey] public int     ProductID;
-			             public decimal UnitPrice;
-			             public short   Quantity;
-			             public float   Discount;
+			[Column(IsPrimaryKey=true)] [PrimaryKey] public int     OrderID;
+			[Column(IsPrimaryKey=true)] [PrimaryKey] public int     ProductID;
+			[Column]                                 public decimal UnitPrice;
+			[Column]                                 public short   Quantity;
+			[Column]                                 public float   Discount;
 
 			[Association(ThisKey="OrderID",   OtherKey="OrderID")]   public Order   Order;
 			[Association(ThisKey="ProductID", OtherKey="ProductID")] public Product Product;
@@ -146,20 +146,20 @@ namespace Tests.Model
 		[Table(Name="Orders")]
 		public class Order : EntityBase<int>
 		{
-			[PrimaryKey, NonUpdatable] public int       OrderID;
-			                           public string    CustomerID;
-			                           public int?      EmployeeID;
-			                           public DateTime? OrderDate;
-			                           public DateTime? RequiredDate;
-			                           public DateTime? ShippedDate;
-			                           public int?      ShipVia;
-			                           public decimal   Freight;
-			                           public string    ShipName;
-			                           public string    ShipAddress;
-			                           public string    ShipCity;
-			                           public string    ShipRegion;
-			                           public string    ShipPostalCode;
-			                           public string    ShipCountry;
+			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int       OrderID;
+			[Column]                                                                public string    CustomerID;
+			[Column]                                                                public int?      EmployeeID;
+			[Column]                                                                public DateTime? OrderDate;
+			[Column]                                                                public DateTime? RequiredDate;
+			[Column]                                                                public DateTime? ShippedDate;
+			[Column]                                                                public int?      ShipVia;
+			[Column]                                                                public decimal   Freight;
+			[Column]                                                                public string    ShipName;
+			[Column]                                                                public string    ShipAddress;
+			[Column]                                                                public string    ShipCity;
+			[Column]                                                                public string    ShipRegion;
+			[Column]                                                                public string    ShipPostalCode;
+			[Column]                                                                public string    ShipCountry;
 
 			[Association(ThisKey="OrderID",    OtherKey="OrderID")]                     public List<OrderDetail> OrderDetails;
 			[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)] public Customer          Customer;
@@ -177,16 +177,16 @@ namespace Tests.Model
 		[InheritanceMapping(Code=false, Type=typeof(ActiveProduct))]
 		public abstract class Product
 		{
-			[PrimaryKey, NonUpdatable]                  public int      ProductID;
-			[NotNull]                                   public string   ProductName;
-			                                            public int?     SupplierID;
-			                                            public int?     CategoryID;
-			                                            public string   QuantityPerUnit;
-			                                            public decimal? UnitPrice;
-			                                            public short?   UnitsInStock;
-			                                            public short?   UnitsOnOrder;
-			                                            public short?   ReorderLevel;
-			[MapField(IsInheritanceDiscriminator=true)] public bool     Discontinued;
+			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable]    public int      ProductID;
+			[Column(CanBeNull=false)] [NotNull]                                        public string   ProductName;
+			[Column]                                                                   public int?     SupplierID;
+			[Column]                                                                   public int?     CategoryID;
+			[Column]                                                                   public string   QuantityPerUnit;
+			[Column]                                                                   public decimal? UnitPrice;
+			[Column]                                                                   public short?   UnitsInStock;
+			[Column]                                                                   public short?   UnitsOnOrder;
+			[Column]                                                                   public short?   ReorderLevel;
+			[Column(IsDiscriminator=true)] [MapField(IsInheritanceDiscriminator=true)] public bool     Discontinued;
 
 			[Association(ThisKey="ProductID",  OtherKey="ProductID")]  public List<OrderDetail> OrderDetails;
 			[Association(ThisKey="CategoryID", OtherKey="CategoryID")] public Category          Category;
@@ -199,8 +199,8 @@ namespace Tests.Model
 		[Table(Name="Region")]
 		public class Region
 		{
-			[PrimaryKey] public int    RegionID;
-			[NotNull]    public string RegionDescription;
+			[Column(IsPrimaryKey=true)] [PrimaryKey] public int    RegionID;
+			[Column(CanBeNull=false)] [NotNull]    public string RegionDescription;
 
 			[Association(ThisKey="RegionID", OtherKey="RegionID")]
 			public List<Territory> Territories;
@@ -209,9 +209,9 @@ namespace Tests.Model
 		[Table(Name="Shippers")]
 		public class Shipper
 		{
-			[PrimaryKey, NonUpdatable] public int    ShipperID;
-			[NotNull]                  public string CompanyName;
-			                           public string Phone;
+			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int    ShipperID;
+			[Column(CanBeNull=false)] [NotNull]                                     public string CompanyName;
+			[Column]                                                                public string Phone;
 
 			[Association(ThisKey="ShipperID", OtherKey="ShipVia")]
 			public List<Order> Orders;
@@ -220,18 +220,18 @@ namespace Tests.Model
 		[Table(Name="Suppliers")]
 		public class Supplier
 		{
-			[PrimaryKey, NonUpdatable] public int    SupplierID;
-			[NotNull]                  public string CompanyName;
-			                           public string ContactName;
-			                           public string ContactTitle;
-			                           public string Address;
-			                           public string City;
-			                           public string Region;
-			                           public string PostalCode;
-			                           public string Country;
-			                           public string Phone;
-			                           public string Fax;
-			                           public string HomePage;
+			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int    SupplierID;
+			[Column(CanBeNull=false)] [NotNull]                                     public string CompanyName;
+			[Column]                                                                public string ContactName;
+			[Column]                                                                public string ContactTitle;
+			[Column]                                                                public string Address;
+			[Column]                                                                public string City;
+			[Column]                                                                public string Region;
+			[Column]                                                                public string PostalCode;
+			[Column]                                                                public string Country;
+			[Column]                                                                public string Phone;
+			[Column]                                                                public string Fax;
+			[Column]                                                                public string HomePage;
 
 			[Association(ThisKey="SupplierID", OtherKey="SupplierID")]
 			public List<Product> Products;
@@ -240,9 +240,9 @@ namespace Tests.Model
 		[Table(Name="Territories")]
 		public class Territory
 		{
-			[PrimaryKey, NotNull] public string TerritoryID;
-			[NotNull]             public string TerritoryDescription;
-			                      public int    RegionID;
+			[Column(IsPrimaryKey=true, CanBeNull=false)] [PrimaryKey, NotNull] public string TerritoryID;
+			[Column(CanBeNull=false)] [NotNull]                                public string TerritoryDescription;
+			[Column]                                                           public int    RegionID;
 
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")]
 			public List<EmployeeTerritory> EmployeeTerritories;

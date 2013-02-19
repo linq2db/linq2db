@@ -145,8 +145,8 @@ namespace Tests.Model
 	public class Parent3 : IEquatable<Parent3>, IComparable
 	{
 		[MapField("ParentID")]
-		public int  ParentID2 { get; set; }
-		public int? Value1    { get; set; }
+		[Column("ParentID")] public int  ParentID2 { get; set; }
+		[Column]             public int? Value1    { get; set; }
 
 		public override bool Equals(object obj)
 		{
@@ -172,11 +172,11 @@ namespace Tests.Model
 		}
 	}
 
-	[Table(Name="Parent")]
+	[Table("Parent")]
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
-		public int       ParentID;
-		public TypeValue Value1;
+		[Column] public int       ParentID;
+		[Column] public TypeValue Value1;
 
 		public override bool Equals(object obj)
 		{
@@ -202,7 +202,7 @@ namespace Tests.Model
 		}
 	}
 
-	[Table(Name="Parent")]
+	[Table(Name = "Parent", IsColumnAttributeRequired = false)]
 	public class Parent5 : IEquatable<Parent5>, IComparable
 	{
 		public int  ParentID;
@@ -244,7 +244,7 @@ namespace Tests.Model
 	{
 		[PrimaryKey]
 		[Column(IsPrimaryKey=true)] public int  ParentID;
-		                            public int? Value1;
+		[Column]                    public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children;

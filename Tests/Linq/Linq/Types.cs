@@ -543,7 +543,7 @@ namespace Tests.Linq
 					select t1);
 		}
 
-		[Table(Name="Person")]
+		[Table("Person", IsColumnAttributeRequired=false)]
 		public class PersonCharTest
 		{
 			public int    PersonID;

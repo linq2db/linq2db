@@ -24,8 +24,8 @@ namespace LinqToDB.Mapping
 				MemberType = propertyInfo.PropertyType;
 			}
 
-			MemberName      = MemberInfo.Name;
-			ColumnName      = columnAttribute.Name ?? MemberInfo.Name;
+			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
+			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
 			Storage         = columnAttribute.Storage;
 			IsDiscriminator = columnAttribute.IsDiscriminator;
 			DataType        = columnAttribute.DataType;

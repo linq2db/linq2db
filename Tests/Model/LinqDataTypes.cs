@@ -67,16 +67,16 @@ namespace Tests.Model
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
 		[PrimaryKey]
-		public int       ID;
-		public decimal   MoneyValue;
-		public DateTime? DateTimeValue;
+		[Column(IsPrimaryKey=true)] public int       ID;
+		[Column]                    public decimal   MoneyValue;
+		[Column]                    public DateTime? DateTimeValue;
 		[DbType(DbType.DateTime2)]
-		public DateTime? DateTimeValue2;
-		public bool?     BoolValue;
-		public Guid?     GuidValue;
-		public short?    SmallIntValue;
-		public int?      IntValue;
-		public long?     BigIntValue;
+		[Column]                    public DateTime? DateTimeValue2;
+		[Column]                    public bool?     BoolValue;
+		[Column]                    public Guid?     GuidValue;
+		[Column]                    public short?    SmallIntValue;
+		[Column]                    public int?      IntValue;
+		[Column]                    public long?     BigIntValue;
 
 		public override bool Equals(object obj)
 		{

@@ -216,7 +216,7 @@ namespace Tests.Linq
 			ParentEx.Test(this, context);
 		}
 
-		[Table(Name="Person")]
+		[Table("Person", IsColumnAttributeRequired = false)]
 		class PersonEx : Person
 		{
 		}
@@ -344,7 +344,7 @@ namespace Tests.Linq
 		class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey]
-			public int ChildID { get; set; }
+			[Column(IsPrimaryKey = true)] public int ChildID { get; set; }
 
 		}
 
@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Table(Name="LinqDataTypes")]
 		public abstract class InheritanceBase
 		{
-			public Guid GuidValue { get; set; }
+			[Column] public Guid GuidValue { get; set; }
 
 			[MapField("ID")]
 			public virtual TypeCodeEnum TypeCode
@@ -426,6 +426,7 @@ namespace Tests.Linq
 
 		class InheritanceA1 : InheritanceA
 		{
+			[Column("ID", IsDiscriminator = true)]
 			[MapField("ID", IsInheritanceDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
 			{
@@ -435,6 +436,7 @@ namespace Tests.Linq
 
 		class InheritanceA2 : InheritanceA
 		{
+			[Column("ID", IsDiscriminator = true)]
 			[MapField("ID", IsInheritanceDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
 			{
@@ -465,11 +467,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table(Name="Person")]
+		[Table("Person")]
 		[InheritanceMapping(Code = 1, Type = typeof(Test17John))]
 		[InheritanceMapping(Code = 2, Type = typeof(Test17Tester))]
 		public class Test17Person
 		{
+			[Column(IsDiscriminator = true)]
 			[MapField(IsInheritanceDiscriminator = true)]
 			public int PersonID { get; set; }
 		}
@@ -500,21 +503,23 @@ namespace Tests.Linq
 		[InheritanceMapping(Code = Gender.Female, Type = typeof(Test18Female))]
 		public class Test18Person
 		{
+			[Column(IsPrimaryKey=true, IsIdentity=true, SkipOnInsert=false, SkipOnUpdate=false)]
 			[PrimaryKey, NonUpdatable(IsIdentity = true, OnInsert = true, OnUpdate = true), SequenceName("PERSONID")]
 			public int    PersonID { get; set; }
+			[Column(IsDiscriminator = true)]
 			[MapField(IsInheritanceDiscriminator = true)]
 			public Gender Gender   { get; set; }
 		}
 
 		public class Test18Male : Test18Person
 		{
-			public string FirstName { get; set; }
+			[Column] public string FirstName { get; set; }
 		}
 
 		public class Test18Female : Test18Person
 		{
-			public string FirstName { get; set; }
-			public string LastName  { get; set; }
+			[Column] public string FirstName { get; set; }
+			[Column] public string LastName  { get; set; }
 		}
 
 		[Test]

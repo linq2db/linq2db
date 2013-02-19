@@ -5,7 +5,9 @@ namespace LinqToDB
 	/// <summary>
 	/// Associates a class with a column in a database table.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+	[AttributeUsage(
+		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
+		AllowMultiple = true, Inherited = true)]
 	public class ColumnAttribute : Attribute
 	{
 		public ColumnAttribute()
@@ -19,12 +21,41 @@ namespace LinqToDB
 			Name = name;
 		}
 
+		public ColumnAttribute(string name, string memberName) : this()
+		{
+			Name       = name;
+			MemberName = memberName;
+		}
+
+		internal ColumnAttribute(string memberName, ColumnAttribute ca)
+		{
+			MemberName      = memberName + "." + ca.MemberName;
+			Configuration   = ca.Configuration;
+			Name            = ca.Name;
+			DataType        = ca.DataType;
+			DbType          = ca.DbType;
+			Storage         = ca.Storage;
+			IsDiscriminator = ca.IsDiscriminator;
+			IsIdentity      = ca.IsIdentity;
+			IsPrimaryKey    = ca.IsPrimaryKey;
+			PrimaryKeyOrder = ca.PrimaryKeyOrder;
+
+			if (ca.GetSkipOnInsert() != null) SkipOnInsert = ca.SkipOnInsert;
+			if (ca.GetSkipOnUpdate() != null) SkipOnUpdate = ca.SkipOnUpdate;
+			if (ca.GetCanBeNull()    != null) CanBeNull    = ca.CanBeNull;
+		}
+
 		public string Configuration { get; set; }
 
 		/// <summary>
 		/// Gets or sets the name of a column.
 		/// </summary>
 		public string Name { get; set; }
+
+		/// <summary>
+		/// Gets or sets the name of an associated member name.
+		/// </summary>
+		public string MemberName { get; set; }
 
 		/// <summary>
 		/// Gets or sets the type of the database column.

@@ -293,11 +293,11 @@ namespace Tests.Linq
 					select new { c.Parent, c });
 		}
 
-		[Table(Name="Parent")]
+		[Table("Parent")]
 		public class Top
 		{
-			public int  ParentID;
-			public int? Value1;
+			[Column] public int  ParentID;
+			[Column] public int? Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = true)]
 			public Middle Middle { get; set; }
@@ -306,8 +306,8 @@ namespace Tests.Linq
 		[Table(Name="Child")]
 		public class Middle
 		{
-			[PrimaryKey] public int ParentID;
-			[PrimaryKey] public int ChildID;
+			[Column(IsPrimaryKey=true), PrimaryKey] public int ParentID;
+			[Column(IsPrimaryKey=true), PrimaryKey] public int ChildID;
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = false)]
 			public Bottom Bottom { get; set; }
@@ -316,7 +316,7 @@ namespace Tests.Linq
 			public Bottom Bottom1 { get; set; }
 		}
 
-		[Table(Name="GrandChild")]
+		[Table("GrandChild", IsColumnAttributeRequired=false)]
 		public class Bottom
 		{
 			public int ParentID;

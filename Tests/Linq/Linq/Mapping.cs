@@ -6,8 +6,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Convert = System.Convert;
-
 #pragma warning disable 0649
 
 namespace Tests.Linq
@@ -108,11 +106,11 @@ namespace Tests.Linq
 			Value1 = 1,
 		}
 
-		[Table(Name="Parent")]
+		[Table("Parent")]
 		class TestParent
 		{
-			public int       ParentID;
-			public TestValue Value1;
+			[Column] public int       ParentID;
+			[Column] public TestValue Value1;
 		}
 
 		[Test]
@@ -138,7 +136,7 @@ namespace Tests.Linq
 			[MapValue("O")] Other,
 		}
 
-		[Table(Name="Person")]
+		[Table("Person", IsColumnAttributeRequired=false)]
 		public class Person9
 		{
 			public int     PersonID;
@@ -159,8 +157,8 @@ namespace Tests.Linq
 		[MapField("Value1", "Value.Value1")]
 		public class ParentObject
 		{
-			public int   ParentID;
-			public Inner Value = new Inner();
+			[Column] public int   ParentID;
+			[Column] public Inner Value = new Inner();
 
 			public class Inner
 			{
@@ -193,8 +191,8 @@ namespace Tests.Linq
 		[Table(Name="Child")]
 		public class ChildObject
 		{
-			public int ParentID;
-			public int ChildID;
+			[Column] public int ParentID;
+			[Column] public int ChildID;
 
 			[Association(ThisKey="ParentID", OtherKey="ParentID")]
 			public ParentObject Parent;
@@ -279,13 +277,13 @@ namespace Tests.Linq
 		[Table(Name="Parent")]
 		class MyParent1
 		{
-			public int  ParentID;
-			public int? Value1;
+			[Column] public int  ParentID;
+			[Column] public int? Value1;
 
-			[MapIgnore]
+			[NonColumn, MapIgnore]
 			public string Value2 { get { return "1"; } }
 
-			public int GetValue() { return 2;}
+			public int GetValue() { return 2; }
 		}
 
 		[Test]

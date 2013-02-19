@@ -1312,10 +1312,13 @@ namespace Tests.Update
 			[Nullable] public string MiddleName;
 		}
 
-		[Table(Name="Person")]
+		[Table(Name="Person", IsColumnAttributeRequired=false)]
 		[MapField("FirstName",  "Name.FirstName")]
 		[MapField("LastName",   "Name.LastName")]
 		[MapField("MiddleName", "Name.MiddleName")]
+		[Column("FirstName",  "Name.FirstName")]
+		[Column("LastName",   "Name.LastName")]
+		[Column("MiddleName", "Name.MiddleName")]
 		public class TestPerson1
 		{
 			[Identity, PrimaryKey]

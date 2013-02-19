@@ -1997,7 +1997,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var m in mapping)
 			{
 				var field = table.SqlTable.Fields[table.InheritanceMapping[m.i].DiscriminatorName];
-				var ttype = table.ObjectType;
+				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
 				if (obj.Type != ttype)

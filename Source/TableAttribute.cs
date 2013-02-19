@@ -10,6 +10,11 @@ namespace LinqToDB
 			IsColumnAttributeRequired = true;
 		}
 
+		public TableAttribute(string tableName) : this()
+		{
+			Name = tableName;
+		}
+
 		public string Configuration             { get; set; }
 		public string Name                      { get; set; }
 		public string Schema                    { get; set; }

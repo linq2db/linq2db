@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
@@ -52,6 +53,8 @@ namespace LinqToDB.Mapping
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
 			}
 
+			var attrs = new List<ColumnAttribute>();
+
 			foreach (var member in TypeAccessor.Members)
 			{
 				var aa = _mappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo, attr => attr.Configuration);
@@ -69,9 +72,16 @@ namespace LinqToDB.Mapping
 				{
 					if (ca.IsColumn)
 					{
-						var cd = new ColumnDescriptor(_mappingSchema, ca, member);
-						Columns.Add(cd);
-						_columnNames.Add(member.Name, cd);
+						if (ca.MemberName != null)
+						{
+							attrs.Add(new ColumnAttribute(member.Name, ca));
+						}
+						else
+						{
+							var cd = new ColumnDescriptor(_mappingSchema, ca, member);
+							Columns.Add(cd);
+							_columnNames.Add(member.Name, cd);
+						}
 					}
 				}
 				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type))
@@ -80,6 +90,38 @@ namespace LinqToDB.Mapping
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
 				}
+			}
+
+			var typeColumnAttrs = _mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+
+			foreach (var attr in typeColumnAttrs.Concat(attrs))
+				if (attr.IsColumn)
+					SetColumn(attr);
+		}
+
+		void SetColumn(ColumnAttribute attr)
+		{
+			if (attr.MemberName == null)
+				throw new LinqToDBException(string.Format("The Column attribute of the '{0}' type must have MemberName.", TypeAccessor.Type));
+
+			if (attr.MemberName.IndexOf('.') < 0)
+			{
+				var ex = TypeAccessor[attr.MemberName];
+
+				if (ex == null)
+					throw new LinqToDBException(string.Format("The '{0}' type does not have '{1}' member.", TypeAccessor.Type, attr.MemberName));
+
+				var cd = new ColumnDescriptor(_mappingSchema, attr, ex);
+
+				Columns.Add(cd);
+				_columnNames.Add(attr.MemberName, cd);
+			}
+			else
+			{
+				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, _mappingSchema, attr.MemberName));
+
+				Columns.Add(cd);
+				_columnNames.Add(attr.MemberName, cd);
 			}
 		}
 

@@ -620,8 +620,8 @@ namespace Tests.Linq
 				Count++;
 			}
 
-			public int ParentID;
-			public int ChildID;
+			[Column] public int ParentID;
+			[Column] public int ChildID;
 		}
 
 		[Test]

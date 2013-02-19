@@ -27,7 +27,7 @@ namespace LinqToDB.Mapping
 			MappingSchema          = mapMemberInfo.MappingSchema;
 
 			if (Storage != null)
-				MemberAccessor = new MemberAccessor(MemberAccessor.TypeAccessor, Storage);
+				MemberAccessor = new MemberAccessor(MemberAccessor.TypeAccessor, mapMemberInfo.MappingSchema, Storage);
 		}
 
 		internal static MemberMapper CreateMemberMapper(MapMemberInfo mi)
