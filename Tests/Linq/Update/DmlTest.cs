@@ -761,7 +761,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Table(Name="LinqDataTypes")]
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
 		public class LinqDataTypesArrayTest
 		{
 			public int      ID;
@@ -1325,6 +1325,7 @@ namespace Tests.Update
 			//[SequenceName(ProviderName.PostgreSQL, "Seq")]
 			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[MapField("PersonID")]
+			[Column("PersonID", IsPrimaryKey=true, IsIdentity=true)]
 			public int ID;
 
 			public string Gender;

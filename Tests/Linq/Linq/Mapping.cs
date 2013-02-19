@@ -154,11 +154,12 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Parent")]
+		[Column("Value1", "Value.Value1")]
 		[MapField("Value1", "Value.Value1")]
 		public class ParentObject
 		{
 			[Column] public int   ParentID;
-			[Column] public Inner Value = new Inner();
+			         public Inner Value = new Inner();
 
 			public class Inner
 			{

@@ -1,6 +1,8 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Linq;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Reflection
 {
@@ -19,35 +21,75 @@ namespace LinqToDB.Reflection
 			}
 			else
 			{
-				var members  = memberName.Split('.');
-				var param    = Expression.Parameter(TypeAccessor.Type, "obj");
-				var expr     = param as Expression;
-				/*
-				var defValue = Expression.Constant(mappingSchema.GetDefaultValue(field.SystemType), field.SystemType);
+				HasGetter = true;
+				HasSetter = true;
 
-				for (var i = 0; i < members.Length; i++)
+				var members = memberName.Split('.');
+				var param   = Expression.Parameter(TypeAccessor.Type, "obj");
+				var expr    = param as Expression;
+				var infos   = members.Select(m =>
 				{
-					var        member = members[i];
-					Expression pof    = Expression.PropertyOrField(getter, member);
+					expr = Expression.PropertyOrField(expr, m);
+					return new
+					{
+						member = ((MemberExpression)expr).Member,
+						type   = expr.Type,
+					};
+				}).ToArray();
 
-					getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
+				var lastInfo = infos[infos.Length - 1];
+
+				MemberInfo = lastInfo.member;
+				Type       = lastInfo.type;
+
+				var defValue = Expression.Constant(mappingSchema.GetDefaultValue(Type), Type);
+
+				expr = param;
+
+				for (var i = 0; i < infos.Length; i++)
+				{
+					var info = infos[i];
+
+					if (info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null)
+						HasSetter = false;
+
+					if (i == 0 || !(info.type.IsClass || info.type.IsNullable()))
+					{
+						expr = Expression.MakeMemberAccess(expr, info.member);
+					}
+					else
+					{
+						var local = Expression.Parameter(expr.Type);
+
+						expr = Expression.Block(
+							new[] { local },
+							new[]
+							{
+								Expression.Assign(local, expr) as Expression,
+								Expression.Condition(
+									Expression.Equal(local, Expression.Constant(null)),
+									defValue,
+									Expression.MakeMemberAccess(local, info.member))
+							});
+					}
 				}
 
+				Getter = Expression.Lambda(expr, param);
 
-				Getter = Expression.Lambda(
-				Expression.MakeMemberAccess(Expression.Convert(param, TypeAccessor.Type), memberInfo),
-				param);
+				var objParam = Expression.Parameter(typeof(object), "obj");
 
-				var defValue = Expression.Constant(dataContext.MappingSchema.NewSchema.GetDefaultValue(field.SystemType), field.SystemType);
+				expr = expr.Transform(e => e == param ? Expression.Convert(objParam, TypeAccessor.Type) : e);
 
-				for (var i = 0; i < members.Length; i++)
+				var getterExpr = Expression.Lambda<Func<object,object>>(
+					Expression.Convert(expr, typeof(object)),
+					objParam);
+
+				_getter = getterExpr.Compile();
+
+				if (HasSetter)
 				{
-					var        member = members[i];
-					Expression pof    = Expression.PropertyOrField(getter, member);
-
-					getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
+					_setter = (_,__) => { throw new InvalidOperationException(); };
 				}
-				*/
 			}
 		}
 
@@ -68,7 +110,7 @@ namespace LinqToDB.Reflection
 			var param   = Expression.Parameter(TypeAccessor.Type, "obj");
 
 			Getter = Expression.Lambda(
-				Expression.MakeMemberAccess(Expression.Convert(param, TypeAccessor.Type), memberInfo),
+				Expression.MakeMemberAccess(param, memberInfo),
 				param);
 
 			var objParam   = Expression.Parameter(typeof(object), "obj");
