@@ -5,10 +5,10 @@ namespace LinqToDB
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class SequenceNameAttribute : Attribute
 	{
-		public SequenceNameAttribute(string providerName, string sequenceName)
+		public SequenceNameAttribute(string configuration, string sequenceName)
 		{
-			ProviderName = providerName;
-			SequenceName = sequenceName;
+			Configuration = configuration;
+			SequenceName  = sequenceName;
 		}
 
 		public SequenceNameAttribute(string sequenceName)
@@ -16,7 +16,7 @@ namespace LinqToDB
 			SequenceName = sequenceName;
 		}
 
-		public string ProviderName { get; set; }
-		public string SequenceName { get; set; }
+		public string Configuration { get; set; }
+		public string SequenceName  { get; set; }
 	}
 }

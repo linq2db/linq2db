@@ -290,9 +290,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var names = new Dictionary<string,int>();
 				var n     = 0;
+				var ed    = Builder.MappingSchema.NewSchema.GetEntityDescriptor(objectType);
 
-				foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(objectType))
-					names.Add(mm.MemberName, n++);
+				foreach (var cd in ed.Columns)
+					if (cd.MemberAccessor.TypeAccessor.Type == ed.TypeAccessor.Type)
+						names.Add(cd.MemberName, n++);
 
 				var q =
 					from r in SqlTable.Fields.Values.Select((f,i) => new { f, i })
@@ -825,8 +827,8 @@ namespace LinqToDB.Linq.Builder
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
-										foreach (MemberMapper mm in Builder.MappingSchema.GetObjectMapper(mapping.Type))
-											if (mm.MapMemberInfo.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+										foreach (var mm in Builder.MappingSchema.NewSchema.GetEntityDescriptor(mapping.Type).Columns)
+											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 							}
 
@@ -886,7 +888,7 @@ namespace LinqToDB.Linq.Builder
 				var inheritance     =
 					(
 						from m in InheritanceMapping
-						let om = Builder.MappingSchema.GetObjectMapper(m.Type)
+						let om = Builder.MappingSchema.NewSchema.GetEntityDescriptor(m.Type)
 						where om.Associations.Count > 0
 						select om
 					).ToList();

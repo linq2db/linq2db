@@ -650,7 +650,7 @@ namespace LinqToDB.ServiceModel
 
 								foreach (var a in elem.SequenceAttributes)
 								{
-									Append(a.ProviderName);
+									Append(a.Configuration);
 									Append(a.SequenceName);
 								}
 							}

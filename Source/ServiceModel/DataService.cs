@@ -68,9 +68,9 @@ namespace LinqToDB.ServiceModel
 
 		class TypeInfo
 		{
-			public ResourceType Type;
-			public SqlTable     Table;
-			public ObjectMapper Mapper;
+			public ResourceType     Type;
+			public SqlTable         Table;
+			public EntityDescriptor Mapper;
 		}
 
 		class MetadataInfo
@@ -99,7 +99,7 @@ namespace LinqToDB.ServiceModel
 					let tt  = t.GetGenericArguments()[0]
 					let tbl = new SqlTable(_mappingSchema, tt)
 					where tbl.Fields.Values.Any(f => f.IsPrimaryKey)
-					let m   = _mappingSchema.GetObjectMapper(tt)
+					let m   = _mappingSchema.NewSchema.GetEntityDescriptor(tt)
 					select new
 					{
 						p.Name,
@@ -155,13 +155,13 @@ namespace LinqToDB.ServiceModel
 								m.Type,
 								item.Type,
 								new SqlTable(_mappingSchema, item.Type),
-								_mappingSchema.GetObjectMapper(item.Type));
+								_mappingSchema.NewSchema.GetEntityDescriptor(item.Type));
 						}
 					}
 				}
 			}
 
-			TypeInfo GetTypeInfo(Type type, Type baseType, SqlTable table, ObjectMapper mapper)
+			TypeInfo GetTypeInfo(Type type, Type baseType, SqlTable table, EntityDescriptor mapper)
 			{
 				TypeInfo typeInfo;
 
@@ -209,7 +209,7 @@ namespace LinqToDB.ServiceModel
 
 			public object CreateInstance(Type type)
 			{
-				return TypeDic[type].Mapper.CreateInstance();
+				return TypeDic[type].Mapper.TypeAccessor.CreateInstance();
 			}
 		}
 
@@ -420,7 +420,7 @@ namespace LinqToDB.ServiceModel
 			public object GetValue(object targetResource, string propertyName)
 			{
 				var m = _data.TypeDic[targetResource.GetType()].Mapper;
-				return m[propertyName, true].GetValue(targetResource);
+				return m[propertyName].MemberAccessor.GetValue(targetResource);
 			}
 
 			public void RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)
@@ -453,7 +453,7 @@ namespace LinqToDB.ServiceModel
 			{
 				var m = _data.TypeDic[targetResource.GetType()].Mapper;
 
-				m[propertyName, true].SetValue(targetResource, propertyValue);
+				m[propertyName].MemberAccessor.SetValue(targetResource, propertyValue);
 
 				_actions.Add(new ResourceAction.Update { Resource = targetResource, Property = propertyName, Value = propertyValue });
 			}

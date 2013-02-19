@@ -2194,10 +2194,10 @@ namespace LinqToDB.SqlProvider
 
 			foreach (var attr in attrs)
 			{
-				if (attr.ProviderName == Name)
+				if (attr.Configuration == Name)
 					return attr;
 
-				if (defaultAttr == null && attr.ProviderName == null)
+				if (defaultAttr == null && attr.Configuration == null)
 					defaultAttr = attr;
 			}
 

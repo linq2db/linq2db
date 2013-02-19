@@ -7,7 +7,6 @@ using System.Threading;
 namespace LinqToDB.SqlBuilder
 {
 	using Mapping;
-	using Reflection.Extension;
 
 	public class SqlTable : ISqlTableSource
 	{
@@ -88,10 +87,10 @@ namespace LinqToDB.SqlBuilder
 
 			if (identityField != null)
 			{
-				var om = mappingSchema.GetObjectMapper(ObjectType);
-				var mm = om[identityField.Name, true];
+				var cd = ed[identityField.Name];
 
-				_sequenceAttributes = mm.MapMemberInfo.MemberAccessor.GetAttributes<SequenceNameAttribute>();
+				_sequenceAttributes = mappingSchema.NewSchema.GetAttributes<SequenceNameAttribute>(
+					cd.MemberAccessor.MemberInfo, a => a.Configuration);
 			}
 		}
 
