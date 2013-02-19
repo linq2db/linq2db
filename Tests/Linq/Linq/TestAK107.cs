@@ -16,11 +16,13 @@ namespace Tests.Linq
 		[Table(Name = "t_test_user")]
 		public sealed class User
 		{
+			[Column("user_id", IsPrimaryKey = true, IsIdentity = true)]
 			[PrimaryKey, Identity]
 			[SequenceName("sq_test_user")]
 			[MapField("user_id")]
 			public long Id { get; set; }
 
+			[Column("name", SkipOnUpdate = true, CanBeNull = false)]
 			[NotNull, NonUpdatable(OnInsert = false)]
 			[MapField("name")]
 			public string Name { get; set; }
@@ -29,11 +31,13 @@ namespace Tests.Linq
 		[Table(Name = "t_test_user_contract")]
 		public sealed class Contract
 		{
+			[Column("user_contract_id", IsPrimaryKey = true, IsIdentity = true)]
 			[PrimaryKey, Identity]
 			[SequenceName("sq_test_user_contract")]
 			[MapField("user_contract_id")]
 			public long Id { get; set; }
 
+			[Column("user_id", SkipOnUpdate = true, CanBeNull = false)]
 			[NotNull, NonUpdatable(OnInsert = false)]
 			[MapField("user_id")]
 			public long UserId { get; set; }
@@ -41,10 +45,12 @@ namespace Tests.Linq
 			[Association(ThisKey = "UserId", OtherKey = "Id", CanBeNull = false)]
 			public User User { get; set; }
 
+			[Column("contract_no", SkipOnUpdate = true, CanBeNull = false)]
 			[NotNull, NonUpdatable(OnInsert = false)]
 			[MapField("contract_no")]
 			public long ContractNo { get; set; }
 
+			[Column("name", CanBeNull = false)]
 			[NotNull]
 			[MapField("name")]
 			public string Name { get; set; }

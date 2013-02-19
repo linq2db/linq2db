@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		public MappingSchemaOld MappingSchema
+		public MappingSchema MappingSchema
 		{
 			get { return DataContextInfo.MappingSchema; }
 		}
@@ -484,7 +484,7 @@ namespace LinqToDB.Linq.Builder
 
 		LambdaExpression ConvertMethodExpression(MemberInfo mi)
 		{
-			var attr = MappingSchema.NewSchema.GetAttribute<MethodExpressionAttribute>(mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<MethodExpressionAttribute>(mi, a => a.Configuration);
 
 			if (attr != null)
 			{

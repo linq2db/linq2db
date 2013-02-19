@@ -33,7 +33,7 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			var columnReader = new ColumnReader(_dataContext, _dataContext.MappingSchema.NewSchema, _type, _idx);
+			var columnReader = new ColumnReader(_dataContext, _dataContext.MappingSchema, _type, _idx);
 			return Convert(Call(Constant(columnReader), _columnReaderGetValueInfo, _dataReaderParam), _type);
 		}
 
@@ -41,7 +41,7 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataReader dataReader)
 		{
-			return GetColumnReader(_dataContext, _dataContext.MappingSchema.NewSchema, dataReader, _type, _idx, _dataReaderParam);
+			return GetColumnReader(_dataContext, _dataContext.MappingSchema, dataReader, _type, _idx, _dataReaderParam);
 		}
 
 		static Expression GetColumnReader(

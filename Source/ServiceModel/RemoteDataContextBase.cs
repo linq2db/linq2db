@@ -20,9 +20,8 @@ namespace LinqToDB.ServiceModel
 
 		class ConfigurationInfo
 		{
-			public LinqServiceInfo  LinqServiceInfo;
-			public MappingSchema    MappingSchema;
-			public MappingSchemaOld MappingSchemaOld;
+			public LinqServiceInfo LinqServiceInfo;
+			public MappingSchema   MappingSchema;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ConcurrentDictionary<string,ConfigurationInfo>();
@@ -46,7 +45,7 @@ namespace LinqToDB.ServiceModel
 						ms = new MappingSchema(
 							info.ConfigurationList
 								.Select(c => ContextIDPrefix + "." + c).Concat(new[] { ContextIDPrefix }).Concat(info.ConfigurationList)
-								.Select(c => new MappingSchema(c)).     Concat(new[] { Mapping.MappingSchema.Default })
+								.Select(c => new MappingSchema(c)).     Concat(new[] { MappingSchema.Default })
 								.ToArray());
 					}
 					else
@@ -60,8 +59,6 @@ namespace LinqToDB.ServiceModel
 						LinqServiceInfo = info,
 						MappingSchema   = ms,
 					};
-
-					_configurationInfo.MappingSchemaOld = new MappingSchemaOld { NewSchema = _configurationInfo.MappingSchema };
 				}
 				finally
 				{
@@ -82,10 +79,10 @@ namespace LinqToDB.ServiceModel
 			get { return _contextID ?? (_contextID = GetConfigurationInfo().MappingSchema.ConfigurationList[0]); }
 		}
 
-		private MappingSchemaOld _mappingSchema;
-		public  MappingSchemaOld  MappingSchema
+		private MappingSchema _mappingSchema;
+		public  MappingSchema  MappingSchema
 		{
-			get { return _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchemaOld); }
+			get { return _mappingSchema ?? (_mappingSchema = GetConfigurationInfo().MappingSchema); }
 			set { _mappingSchema = value; }
 		}
 
@@ -277,7 +274,7 @@ namespace LinqToDB.ServiceModel
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
 			var result = LinqServiceSerializer.DeserializeResult(ret);
 
-			return new ServiceModelDataReader(MappingSchema.NewSchema, result);
+			return new ServiceModelDataReader(MappingSchema, result);
 		}
 
 		public void ReleaseQuery(object query)

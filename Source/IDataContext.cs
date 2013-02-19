@@ -8,12 +8,13 @@ namespace LinqToDB
 	using Mapping;
 	using SqlProvider;
 
-	public interface IDataContext : IMappingSchemaProvider, IDisposable
+	public interface IDataContext : IDisposable
 	{
 		string             ContextID         { get; }
 		Func<ISqlProvider> CreateSqlProvider { get; }
 		SqlProviderFlags   SqlProviderFlags  { get; }
 		Type               DataReaderType    { get; }
+		MappingSchema      MappingSchema     { get; }
 
 		Expression         GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed    (IDataReader reader, int idx);

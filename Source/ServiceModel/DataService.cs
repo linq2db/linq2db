@@ -18,7 +18,7 @@ namespace LinqToDB.ServiceModel
 		public DataService()
 		{
 			if (_defaultMetadata == null)
-				_defaultMetadata = Tuple.Create(default(T), new MetadataInfo(Map.DefaultSchema));
+				_defaultMetadata = Tuple.Create(default(T), new MetadataInfo(MappingSchema.Default));
 
 			_metadata = new MetadataProvider(_defaultMetadata.Item2);
 			_query    = new QueryProvider   (_defaultMetadata.Item2);
@@ -27,7 +27,7 @@ namespace LinqToDB.ServiceModel
 
 		static Tuple<T,MetadataInfo> _defaultMetadata;
 
-		public DataService(MappingSchemaOld mappingSchema)
+		public DataService(MappingSchema mappingSchema)
 		{
 			lock (_cache)
 			{
@@ -42,8 +42,8 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		readonly static Dictionary<MappingSchemaOld,Tuple<T,MetadataInfo>> _cache =
-			new Dictionary<MappingSchemaOld,Tuple<T,MetadataInfo>>();
+		readonly static Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache =
+			new Dictionary<MappingSchema,Tuple<T,MetadataInfo>>();
 
 		readonly MetadataProvider _metadata;
 		readonly QueryProvider    _query;
@@ -75,13 +75,13 @@ namespace LinqToDB.ServiceModel
 
 		class MetadataInfo
 		{
-			public MetadataInfo(MappingSchemaOld mappingSchema)
+			public MetadataInfo(MappingSchema mappingSchema)
 			{
 				_mappingSchema = mappingSchema;
 				LoadMetadata();
 			}
 
-			readonly MappingSchemaOld _mappingSchema;
+			readonly MappingSchema _mappingSchema;
 
 			readonly public Dictionary<Type,TypeInfo>                  TypeDic     = new Dictionary<Type,TypeInfo>();
 			readonly public Dictionary<string,ResourceType>            Types       = new Dictionary<string,ResourceType>();
@@ -99,7 +99,7 @@ namespace LinqToDB.ServiceModel
 					let tt  = t.GetGenericArguments()[0]
 					let tbl = new SqlTable(_mappingSchema, tt)
 					where tbl.Fields.Values.Any(f => f.IsPrimaryKey)
-					let m   = _mappingSchema.NewSchema.GetEntityDescriptor(tt)
+					let m   = _mappingSchema.GetEntityDescriptor(tt)
 					select new
 					{
 						p.Name,
@@ -155,7 +155,7 @@ namespace LinqToDB.ServiceModel
 								m.Type,
 								item.Type,
 								new SqlTable(_mappingSchema, item.Type),
-								_mappingSchema.NewSchema.GetEntityDescriptor(item.Type));
+								_mappingSchema.GetEntityDescriptor(item.Type));
 						}
 					}
 				}

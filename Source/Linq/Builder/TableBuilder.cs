@@ -12,7 +12,6 @@ namespace LinqToDB.Linq.Builder
 	using SqlBuilder;
 	using LinqToDB.Expressions;
 	using Mapping;
-	using Reflection.Extension;
 
 	class TableBuilder : ISequenceBuilder
 	{
@@ -153,7 +152,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
-				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				SqlQuery.From.Table(SqlTable);
 
@@ -182,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
-				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				SqlQuery.From.Table(SqlTable);
 
@@ -197,10 +196,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 				{
-					var extension = TypeExtension.GetTypeExtension(type, Builder.MappingSchema.Extensions);
-					var mapping   = Builder.MappingSchema.MetadataProvider.GetInheritanceMapping(type, extension);
+					var mapping = Builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
-					if (mapping.Length > 0)
+					if (mapping.Count > 0)
 						return type;
 				}
 
@@ -243,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var ed = Builder.MappingSchema.NewSchema.GetEntityDescriptor(objectType);
+				var ed = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				var members =
 				(
@@ -290,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var names = new Dictionary<string,int>();
 				var n     = 0;
-				var ed    = Builder.MappingSchema.NewSchema.GetEntityDescriptor(objectType);
+				var ed    = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 				foreach (var cd in ed.Columns)
 					if (cd.MemberAccessor.TypeAccessor.Type == ed.TypeAccessor.Type)
@@ -827,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
-										foreach (var mm in Builder.MappingSchema.NewSchema.GetEntityDescriptor(mapping.Type).Columns)
+										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 							}
@@ -888,7 +886,7 @@ namespace LinqToDB.Linq.Builder
 				var inheritance     =
 					(
 						from m in InheritanceMapping
-						let om = Builder.MappingSchema.NewSchema.GetEntityDescriptor(m.Type)
+						let om = Builder.MappingSchema.GetEntityDescriptor(m.Type)
 						where om.Associations.Count > 0
 						select om
 					).ToList();
@@ -968,7 +966,7 @@ namespace LinqToDB.Linq.Builder
 
 				OriginalType     = type;
 				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.NewSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SqlQuery.From[parent.SqlTable];

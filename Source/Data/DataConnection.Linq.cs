@@ -414,20 +414,6 @@ namespace LinqToDB.Data
 			get { return GetCreateSqlProvider(DataProvider); }
 		}
 
-
-		MappingSchemaOld _mappingSchemaOld;
-		MappingSchemaOld IMappingSchemaProvider.MappingSchema
-		{
-			get { return _mappingSchemaOld ?? (_mappingSchemaOld = new MappingSchemaOld { NewSchema = MappingSchema }); }
-		}
-
-		public MappingSchemaOld MappingSchemaOld
-		{
-			get { return _mappingSchemaOld;  }
-			set { _mappingSchemaOld = value; }
-		}
-
-
 		#endregion
 	}
 }

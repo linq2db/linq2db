@@ -29,10 +29,10 @@ namespace LinqToDB.Linq
 
 		public string           ContextID;
 		public Expression       Expression;
-		public MappingSchemaOld MappingSchema;
+		public MappingSchema    MappingSchema;
 		public SqlProviderFlags SqlProviderFlags;
 
-		public bool Compare(string contextID, MappingSchemaOld mappingSchema, Expression expr)
+		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
 		{
 			return
 				ContextID.Length == contextID.Length &&
@@ -421,8 +421,8 @@ namespace LinqToDB.Linq
 
 									if (!_enumConverters.TryGetValue(valueType, out converter))
 									{
-										var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema.NewSchema, valueType);
-										var convExpr  = MappingSchema.NewSchema.GetConvertExpression(valueType, toType);
+										var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+										var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
 										var convParam = Expression.Parameter(typeof(object));
 
 										var lex = Expression.Lambda<Func<object,object>>(
@@ -466,7 +466,7 @@ namespace LinqToDB.Linq
 			QueryContext  qc,
 			IDataContext  dc,
 			IDataReader   rd,
-			MappingSchemaOld ms,
+			MappingSchema ms,
 			Expression    expr,
 			object[]      ps);
 
@@ -517,7 +517,7 @@ namespace LinqToDB.Linq
 				typeof(T));
 
 			var members  = field.Name.Split('.');
-			var defValue = Expression.Constant(dataContext.MappingSchema.NewSchema.GetDefaultValue(field.SystemType), field.SystemType);
+			var defValue = Expression.Constant(dataContext.MappingSchema.GetDefaultValue(field.SystemType), field.SystemType);
 
 			for (var i = 0; i < members.Length; i++)
 			{
@@ -527,8 +527,13 @@ namespace LinqToDB.Linq
 				getter = i == 0 ? pof : Expression.Condition(Expression.Equal(getter, Expression.Constant(null)), defValue, pof);
 			}
 
+			var expr = dataContext.MappingSchema.GetConvertExpression(field.SystemType, typeof(DataParameter), createDefault: false);
+
+			if (expr != null)
+				getter = Expression.PropertyOrField(expr.GetBody(getter), "Value");
+
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext.MappingSchema.NewSchema,
+				dataContext.MappingSchema,
 				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;

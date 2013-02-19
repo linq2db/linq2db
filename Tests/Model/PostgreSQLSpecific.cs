@@ -1,7 +1,6 @@
 using System;
 
 using LinqToDB;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -9,21 +8,21 @@ namespace Tests.Model
 	{
 		public class SequenceTest1
 		{
-			[Identity, SequenceName("SequenceTestSeq")]
+			[Column(IsIdentity = true), SequenceName("SequenceTestSeq")]
 			public int    ID;
 			public string Value;
 		}
 
 		public class SequenceTest2
 		{
-			[Identity]
+			[Column(IsIdentity = true)]
 			public int    ID;
 			public string Value;
 		}
 
 		public class SequenceTest3
 		{
-			[Identity, SequenceName("SequenceTestSeq")]
+			[Column(IsIdentity = true), SequenceName("SequenceTestSeq")]
 			public int    ID;
 			public string Value;
 		}

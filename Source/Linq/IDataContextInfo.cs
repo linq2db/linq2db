@@ -9,7 +9,7 @@ namespace LinqToDB.Linq
 	{
 		IDataContext     DataContext      { get; }
 		string           ContextID        { get; }
-		MappingSchemaOld MappingSchema    { get; }
+		MappingSchema    MappingSchema    { get; }
 		bool             DisposeContext   { get; }
 		SqlProviderFlags SqlProviderFlags { get; }
 

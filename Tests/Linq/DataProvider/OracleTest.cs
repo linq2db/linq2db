@@ -516,13 +516,13 @@ namespace Tests.DataProvider
 		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
 		public class Trade
 		{
-			[MapField("STG_TRADE_ID")]          public int       ID             { get; set; }
-			[MapField("STG_TRADE_VERSION")]     public int       Version        { get; set; }
-			[MapField("INFORMATION_TYPE_ID")]   public int       TypeID         { get; set; }
-			[MapField("INFORMATION_TYPE_NAME")] public string    TypeName       { get; set; }
-			[MapField("value")]                 public string    Value          { get; set; }
-			[MapField("value_as_integer")]      public int?      ValueAsInteger { get; set; }
-			[MapField("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
+			[Column("STG_TRADE_ID")]          public int       ID             { get; set; }
+			[Column("STG_TRADE_VERSION")]     public int       Version        { get; set; }
+			[Column("INFORMATION_TYPE_ID")]   public int       TypeID         { get; set; }
+			[Column("INFORMATION_TYPE_NAME")] public string    TypeName       { get; set; }
+			[Column("value")]                 public string    Value          { get; set; }
+			[Column("value_as_integer")]      public int?      ValueAsInteger { get; set; }
+			[Column("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
 		}
 
 		[Test]

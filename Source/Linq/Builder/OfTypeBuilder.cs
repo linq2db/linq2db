@@ -7,7 +7,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlBuilder;
-	using Reflection.Extension;
 
 	class OfTypeBuilder : MethodCallBuilder
 	{
@@ -43,10 +42,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 					{
-						var extension = TypeExtension.GetTypeExtension(type, builder.MappingSchema.Extensions);
-						var mapping   = builder.MappingSchema.MetadataProvider.GetInheritanceMapping(type, extension);
+						var mapping = builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
-						if (mapping.Length > 0)
+						if (mapping.Count > 0)
 						{
 							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
@@ -64,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
 			var table          = new SqlTable(builder.MappingSchema, fromType);
-			var mapper         = builder.MappingSchema.NewSchema.GetEntityDescriptor(fromType);
+			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType);
 			var discriminators = mapper.InheritanceMapping;
 
 			return builder.MakeIsPredicate(context, discriminators, toType,

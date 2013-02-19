@@ -11,7 +11,7 @@ namespace LinqToDB.SqlBuilder
 		{
 		}
 
-		public SqlTable(MappingSchemaOld mappingSchema)
+		public SqlTable(MappingSchema mappingSchema)
 			: base(mappingSchema, typeof(T))
 		{
 		}

@@ -1,8 +1,8 @@
 ﻿using System;
-using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
+	using Data;
 	using DataProvider;
 	using SqlProvider;
 	using Mapping;
@@ -12,10 +12,10 @@ namespace LinqToDB.Linq
 		private IDataContext    _dataContext;
 		public  IDataContext     DataContext      { get { return _dataContext ?? (_dataContext = new DataConnection()); } }
 
-		public MappingSchemaOld  MappingSchema    { get { return Map.DefaultSchema; } }
-		public bool              DisposeContext   { get { return true; } }
+		public MappingSchema     MappingSchema    { get { return MappingSchema.Default; } }
+		public bool              DisposeContext   { get { return true;                  } }
 		public SqlProviderFlags  SqlProviderFlags { get { return _dataProvider.SqlProviderFlags; } }
-		public string            ContextID        { get { return _dataProvider.Name; } }
+		public string            ContextID        { get { return _dataProvider.Name;    } }
 
 		public ISqlProvider CreateSqlProvider()
 		{

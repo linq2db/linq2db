@@ -55,11 +55,11 @@ namespace LinqToDB.SqlBuilder
 
 		#region Init from type
 
-		public SqlTable([JetBrains.Annotations.NotNull] MappingSchemaOld mappingSchema, Type objectType) : this()
+		public SqlTable([JetBrains.Annotations.NotNull] MappingSchema mappingSchema, Type objectType) : this()
 		{
 			if (mappingSchema == null) throw new ArgumentNullException("mappingSchema");
 
-			var ed = mappingSchema.NewSchema.GetEntityDescriptor(objectType);
+			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
 			Database     = ed.DatabaseName;
 			Owner        = ed.SchemaName;
@@ -89,13 +89,13 @@ namespace LinqToDB.SqlBuilder
 			{
 				var cd = ed[identityField.Name];
 
-				_sequenceAttributes = mappingSchema.NewSchema.GetAttributes<SequenceNameAttribute>(
+				_sequenceAttributes = mappingSchema.GetAttributes<SequenceNameAttribute>(
 					cd.MemberAccessor.MemberInfo, a => a.Configuration);
 			}
 		}
 
 		public SqlTable(Type objectType)
-			: this(Map.DefaultSchema, objectType)
+			: this(MappingSchema.Default, objectType)
 		{
 		}
 

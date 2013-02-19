@@ -10,11 +10,10 @@ using System.Text;
 namespace LinqToDB.DataProvider
 {
 	using Extensions;
-	using Mapping;
 	using SqlBuilder;
 	using SqlProvider;
 
-	public class FirebirdSqlProvider : BasicSqlProvider, IMappingSchemaProvider
+	public class FirebirdSqlProvider : BasicSqlProvider
 	{
 		public FirebirdSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -261,16 +260,5 @@ namespace LinqToDB.DataProvider
 		{
 			BuildInsertOrUpdateQueryAsMerge(sb, "FROM rdb$database");
 		}
-
-		#region IMappingSchemaProvider Members
-
-		readonly FirebirdMappingSchemaOld _mappingSchema = new FirebirdMappingSchemaOld();
-
-		MappingSchemaOld IMappingSchemaProvider.MappingSchema
-		{
-			get { return _mappingSchema; }
-		}
-
-		#endregion
 	}
 }

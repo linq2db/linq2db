@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -217,29 +218,25 @@ namespace Tests.Linq
 		[Table(Name="Parent")]
 		class MyParent
 		{
-			public MyInt ParentID;
-			public int?  Value1;
-		}
-
-		class MyMappingSchemaOld : MappingSchemaOld
-		{
+			[Column] public MyInt ParentID;
+			[Column] public int?  Value1;
 		}
 
 		class MyMappingSchema : MappingSchema
 		{
 			public MyMappingSchema()
 			{
-				SetConvertExpression<int,MyInt>(n => new MyInt { MyValue = n });
+				SetConvertExpression<int,MyInt>          (n => new MyInt { MyValue = n });
+				SetConvertExpression<MyInt,DataParameter>(n => new DataParameter { Value = n.MyValue });
 			}
 		}
 
-		static readonly MyMappingSchema    _myMappingSchema    = new MyMappingSchema();
-		static readonly MyMappingSchemaOld _myMappingSchemaOld = new MyMappingSchemaOld();
+		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
 
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld }.AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				var list = db.GetTable<MyParent>().ToList();
 			}
@@ -248,7 +245,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld }.AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				var list = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
@@ -256,13 +253,11 @@ namespace Tests.Linq
 			}
 		}
 
-		//[Test] //////////////// TODO
+		[Test]
 		public void MyType3()
 		{
-			using (var db = new TestDataConnection { MappingSchemaOld = _myMappingSchemaOld })
+			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
 			{
-				db.BeginTransaction();
-
 				try
 				{
 					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });

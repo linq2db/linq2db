@@ -2142,14 +2142,14 @@ namespace LinqToDB.SqlBuilder
 					{
 						var field = (SqlField)column;
 
-//						if (field.ColumnDescriptorptor != null)
-//						{
+						if (field.ColumnDescriptor != null)
+						{
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
 //								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
 //
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbSizeSet)
 //								p.DbSize = field.ColumnDescriptorptor.MapMemberInfo.DbSize;
-//						}
+						}
 					}
 				}
 			}

@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 							if (ma.Member.IsNullableValueMember())
 								break;
 
-							if (Expressions.ConvertMember(MappingSchema.NewSchema, ma.Member) == null)
+							if (Expressions.ConvertMember(MappingSchema, ma.Member) == null)
 							{
 								var ctx = GetContext(context, expr);
 
@@ -358,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma = (MemberExpression)e;
-							var l  = Expressions.ConvertMember(MappingSchema.NewSchema, ma.Member);
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Member);
 
 							if (l != null)
 							{
@@ -427,7 +427,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema.NewSchema, pi.Method);
+			var l = Expressions.ConvertMember(MappingSchema, pi.Method);
 			return l == null ? null : ConvertMethod(pi, l);
 		}
 
@@ -460,7 +460,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertNew(NewExpression pi)
 		{
-			var lambda = Expressions.ConvertMember(MappingSchema.NewSchema, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema, pi.Constructor);
 
 			if (lambda != null)
 			{
@@ -897,7 +897,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema.NewSchema, ex.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Member);
 
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
@@ -926,7 +926,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = Expressions.ConvertMember(MappingSchema.NewSchema, e.Method);
+							var l = Expressions.ConvertMember(MappingSchema, e.Method);
 
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
@@ -1072,10 +1072,10 @@ namespace LinqToDB.Linq.Builder
 				var attrs = v.GetType().GetCustomAttributes(typeof(SqlEnumAttribute), true);
 
 				if (attrs.Length == 0)
-					v = MappingSchema.NewSchema.EnumToValue((Enum)v);
+					v = MappingSchema.EnumToValue((Enum)v);
 			}
 
-			value = MappingSchema.NewSchema.GetSqlValue(expr.Type, v);
+			value = MappingSchema.GetSqlValue(expr.Type, v);
 
 			_constants.Add(expr, value);
 
@@ -1101,7 +1101,7 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			p = CreateParameterAccessor(MappingSchema.NewSchema, newExpr, expr, ExpressionParam, ParametersParam, name);
+			p = CreateParameterAccessor(MappingSchema, newExpr, expr, ExpressionParam, ParametersParam, name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1412,7 +1412,7 @@ namespace LinqToDB.Linq.Builder
 
 			var dic = new Dictionary<object, object>();
 
-			var mapValues = MappingSchema.NewSchema.GetMapValues(type);
+			var mapValues = MappingSchema.GetMapValues(type);
 
 			if (mapValues != null)
 				foreach (var mv in mapValues)
@@ -1443,12 +1443,12 @@ namespace LinqToDB.Linq.Builder
 						if (left.NodeType == ExpressionType.Convert)
 						{
 							l = ConvertToSql(context, operand);
-							r = MappingSchema.NewSchema.GetSqlValue(mapValue);
+							r = MappingSchema.GetSqlValue(mapValue);
 						}
 						else
 						{
 							r = ConvertToSql(context, operand);
-							l = MappingSchema.NewSchema.GetSqlValue(mapValue);
+							l = MappingSchema.GetSqlValue(mapValue);
 						}
 
 						return Convert(context, new SqlQuery.Predicate.ExprExpr(l, op, r));
@@ -1599,7 +1599,7 @@ namespace LinqToDB.Linq.Builder
 
 				var rex =
 					isNull ?
-						MappingSchema.NewSchema.GetSqlValue(right.Type, null) :
+						MappingSchema.GetSqlValue(right.Type, null) :
 						rcol ?? GetParameter(right, lcol.Member);
 
 				var predicate = Convert(leftContext, new SqlQuery.Predicate.ExprExpr(
@@ -1672,7 +1672,7 @@ namespace LinqToDB.Linq.Builder
 
 			var par  = ReplaceParameter(_expressionAccessors, ex, _ => {});
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(MappingSchema.NewSchema, expr, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(MappingSchema, expr, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1940,7 +1940,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlQuery.Predicate.ExprExpr(
 											getSql(inheritanceMapping[m.i].DiscriminatorName),
 											SqlQuery.Predicate.Operator.NotEqual,
-											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
+											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
 						}
 
 						return cond;
@@ -1951,7 +1951,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlQuery.Predicate.ExprExpr(
 							getSql(inheritanceMapping[mapping[0].i].DiscriminatorName),
 							SqlQuery.Predicate.Operator.Equal,
-							MappingSchema.NewSchema.GetSqlValue(mapping[0].m.Discriminator.MemberType, mapping[0].m.Code)));
+							MappingSchema.GetSqlValue(mapping[0].m.Discriminator.MemberType, mapping[0].m.Code)));
 
 				default:
 					{
@@ -1966,7 +1966,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlQuery.Predicate.ExprExpr(
 											getSql(inheritanceMapping[m.i].DiscriminatorName),
 											SqlQuery.Predicate.Operator.Equal,
-											MappingSchema.NewSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code))),
+											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code))),
 									true));
 						}
 
@@ -2009,7 +2009,7 @@ namespace LinqToDB.Linq.Builder
 				if (code == null)
 					code = left.Type.GetDefaultValue();
 				else if (left.Type != code.GetType())
-					code = Converter.ChangeType(code, left.Type, MappingSchema.NewSchema);
+					code = Converter.ChangeType(code, left.Type, MappingSchema);
 
 				Expression right = Expression.Constant(code, left.Type);
 
@@ -2211,12 +2211,12 @@ namespace LinqToDB.Linq.Builder
 
 		SqlFunctionAttribute GetFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.NewSchema.GetAttribute<SqlFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<SqlFunctionAttribute>(member, a => a.Configuration);
 		}
 
 		internal TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.NewSchema.GetAttribute<TableFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<TableFunctionAttribute>(member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

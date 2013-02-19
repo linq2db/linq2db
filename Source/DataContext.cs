@@ -21,15 +21,14 @@ namespace LinqToDB
 			ConfigurationString = configurationString;
 			DataProvider        = DataConnection.GetDataProvider(configurationString);
 			ContextID           = DataProvider.Name;
-
-			MappingSchema = /*DataProvider.MappingSchema ??*/ Map.DefaultSchema; //////////// TODO
+			MappingSchema       = DataProvider.MappingSchema;
 		}
 
-		public string           ConfigurationString { get; private set; }
-		public IDataProvider    DataProvider        { get; private set; }
-		public string           ContextID           { get; set;         }
-		public MappingSchemaOld MappingSchema       { get; set;         }
-		public string           LastQuery           { get; set;         }
+		public string        ConfigurationString { get; private set; }
+		public IDataProvider DataProvider        { get; private set; }
+		public string        ContextID           { get; set;         }
+		public MappingSchema MappingSchema       { get; set;         }
+		public string        LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
 		public  bool  KeepConnectionAlive
@@ -73,7 +72,7 @@ namespace LinqToDB
 				if (_connectionString == null)
 					_connectionString = DataConnection.GetConnectionString(ConfigurationString);
 
-				_dataConnection = new DataConnection(DataProvider, _connectionString) { MappingSchemaOld = MappingSchema };
+				_dataConnection = new DataConnection(DataProvider, _connectionString);
 			}
 
 			return _dataConnection;
@@ -172,8 +171,8 @@ namespace LinqToDB
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 				dc._dataConnection = _dataConnection.Transaction != null ?
-					new DataConnection(DataProvider, _dataConnection.Transaction) { MappingSchemaOld = MappingSchema } :
-					new DataConnection(DataProvider, _dataConnection.Connection)  { MappingSchemaOld = MappingSchema };
+					new DataConnection(DataProvider, _dataConnection.Transaction) :
+					new DataConnection(DataProvider, _dataConnection.Connection);
 
 			return dc;
 		}

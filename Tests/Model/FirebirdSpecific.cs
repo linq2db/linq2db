@@ -1,7 +1,6 @@
 using System;
 
 using LinqToDB;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -9,10 +8,10 @@ namespace Tests.Model
 	{
 		public class SequenceTest
 		{
-			[Identity, SequenceName("SequenceTestSeq")]
+			[Column(IsIdentity = true), SequenceName("SequenceTestSeq")]
 			public int    ID;
 
-			[MapField("VALUE_")] // 'Value' reserved by firebird
+			[Column("VALUE_")] // 'Value' reserved by firebird
 			public string Value;
 		}
 	}

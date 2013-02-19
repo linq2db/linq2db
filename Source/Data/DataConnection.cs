@@ -490,9 +490,6 @@ namespace LinqToDB.Data
 			_mappingSchema = new MappingSchema(mappingSchema, _mappingSchema);
 			_id            = null;
 
-			if (_mappingSchemaOld != null)
-				_mappingSchemaOld.NewSchema = _mappingSchema;
-
 			return this;
 		}
 
