@@ -1313,9 +1313,6 @@ namespace Tests.Update
 		}
 
 		[Table(Name="Person", IsColumnAttributeRequired=false)]
-		[MapField("FirstName",  "Name.FirstName")]
-		[MapField("LastName",   "Name.LastName")]
-		[MapField("MiddleName", "Name.MiddleName")]
 		[Column("FirstName",  "Name.FirstName")]
 		[Column("LastName",   "Name.LastName")]
 		[Column("MiddleName", "Name.MiddleName")]
@@ -1324,7 +1321,6 @@ namespace Tests.Update
 			[Identity, PrimaryKey]
 			//[SequenceName(ProviderName.PostgreSQL, "Seq")]
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[MapField("PersonID")]
 			[Column("PersonID", IsPrimaryKey=true, IsIdentity=true)]
 			public int ID;
 

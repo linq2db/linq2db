@@ -25,13 +25,13 @@ namespace Tests.Model
 		[Identity, PrimaryKey]
 		[Column("PersonID", IsIdentity=true, IsPrimaryKey=true)]
 		[SequenceName(ProviderName.Firebird, "PersonID")]
-		[MapField("PersonID")]   public int    ID;
-		                         public string FirstName { get; set; }
-		                         public string LastName;
-		[Column] [Nullable]      public string MiddleName;
-		                         public Gender Gender;
+		                    public int    ID;
+		                    public string FirstName { get; set; }
+		                    public string LastName;
+		[Column] [Nullable] public string MiddleName;
+		                    public Gender Gender;
 
-		[NonColumn]              public string Name { get { return FirstName + " " + LastName; }}
+		[NonColumn]         public string Name { get { return FirstName + " " + LastName; }}
 
 		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)]
 		public Patient Patient;

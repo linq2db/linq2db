@@ -402,7 +402,7 @@ namespace Tests.Linq
 		{
 			[Column] public Guid GuidValue { get; set; }
 
-			[MapField("ID")]
+			[Column("ID")]
 			public virtual TypeCodeEnum TypeCode
 			{
 				get { return TypeCodeEnum.Base; }
@@ -416,7 +416,7 @@ namespace Tests.Linq
 			[Association(CanBeNull = true, ThisKey = "GuidValue", OtherKey = "GuidValue")]
 			public List<InheritanceB> Bs { get; set; }
 
-			[MapField("ID", IsInheritanceDiscriminator = true)]
+			[Column("ID", IsDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
 			{
 				get { return TypeCodeEnum.A; }
@@ -426,7 +426,6 @@ namespace Tests.Linq
 		class InheritanceA1 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			[MapField("ID", IsInheritanceDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
 			{
 				get { return TypeCodeEnum.A1; }
@@ -436,7 +435,6 @@ namespace Tests.Linq
 		class InheritanceA2 : InheritanceA
 		{
 			[Column("ID", IsDiscriminator = true)]
-			[MapField("ID", IsInheritanceDiscriminator = true)]
 			public override TypeCodeEnum TypeCode
 			{
 				get { return TypeCodeEnum.A2; }
@@ -472,7 +470,6 @@ namespace Tests.Linq
 		public class Test17Person
 		{
 			[Column(IsDiscriminator = true)]
-			[MapField(IsInheritanceDiscriminator = true)]
 			public int PersonID { get; set; }
 		}
 
@@ -506,7 +503,6 @@ namespace Tests.Linq
 			[PrimaryKey, NonUpdatable(IsIdentity = true, OnInsert = true, OnUpdate = true), SequenceName("PERSONID")]
 			public int    PersonID { get; set; }
 			[Column(IsDiscriminator = true)]
-			[MapField(IsInheritanceDiscriminator = true)]
 			public Gender Gender   { get; set; }
 		}
 

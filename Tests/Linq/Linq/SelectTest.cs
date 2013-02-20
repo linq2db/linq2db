@@ -552,8 +552,8 @@ namespace Tests.Linq
 		[Table(Name="Parent")]
 		public class TestParent
 		{
-			[MapField("ParentID")] public int  ParentID_;
-			[MapField("Value1")]   public int? Value1_;
+			[Column("ParentID")] public int  ParentID_;
+			[Column("Value1")]   public int? Value1_;
 		}
 
 		[Test]

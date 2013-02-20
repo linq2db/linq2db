@@ -186,7 +186,7 @@ namespace Tests.Model
 			[Column]                                                                   public short?   UnitsInStock;
 			[Column]                                                                   public short?   UnitsOnOrder;
 			[Column]                                                                   public short?   ReorderLevel;
-			[Column(IsDiscriminator=true)] [MapField(IsInheritanceDiscriminator=true)] public bool     Discontinued;
+			[Column(IsDiscriminator=true)]                                             public bool     Discontinued;
 
 			[Association(ThisKey="ProductID",  OtherKey="ProductID")]  public List<OrderDetail> OrderDetails;
 			[Association(ThisKey="CategoryID", OtherKey="CategoryID")] public Category          Category;

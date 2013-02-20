@@ -327,9 +327,6 @@ namespace Tests.Linq
 		[Column("GrandChildID", "Id")]
 		[Column("ChildID",      "InnerEnity.Id")]
 		[Column("ParentID",     "InnerEntityType")]
-		[MapField("GrandChildID", "Id")]
-		[MapField("ChildID",      "InnerEnity.Id")]
-		[MapField("ParentID",     "InnerEntityType")]
 		public class LookupEntity : Entity
 		{
 			public Entity         InnerEnity      { get; set; }
@@ -340,9 +337,6 @@ namespace Tests.Linq
 		[Column("GrandChildID", "Id")]
 		[Column("ChildID",      "Owner.Id")]
 		[Column("ParentID",     "EntityType")]
-		[MapField("GrandChildID", "Id")]
-		[MapField("ChildID",      "Owner.Id")]
-		[MapField("ParentID",     "EntityType")]
 		public class TestEntityBase : Entity
 		{
 			public TestEntityType EntityType { get; set; }
@@ -379,8 +373,6 @@ namespace Tests.Linq
 		[Table("GrandChild")]
 		[Column("GrandChildID", "Id")]
 		[Column("ParentID",     "Type")]
-		[MapField("GrandChildID", "Id")]
-		[MapField("ParentID",     "Type")]
 		public class SuperAccount : Entity, IEnumerable<object>
 		{
 			public List<Entity>     InnerAccounts { get; set; }

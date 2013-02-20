@@ -389,7 +389,6 @@ namespace Tests.Linq
 		public class ChildBaseForHeirarhy
 		{
 			[Column(IsDiscriminator = true)]
-			[MapField(IsInheritanceDiscriminator = true)]
 			public int ChildID { get; set; }
 		}
 

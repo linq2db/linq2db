@@ -50,7 +50,6 @@ namespace Tests.Linq
 
             [Identity, PrimaryKey]
             [SequenceName(ProviderName.Firebird, "PersonID")]
-            [MapField("PersonID")]
             [Column("PersonID", IsPrimaryKey=true, IsIdentity=true)] public int    ID        { get; set; }
             [Column]                                                 public string FirstName { get; set; }
             [Column]                                                 public string LastName;

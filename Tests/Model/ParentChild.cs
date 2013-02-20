@@ -144,7 +144,6 @@ namespace Tests.Model
 	[Table(Name="Parent")]
 	public class Parent3 : IEquatable<Parent3>, IComparable
 	{
-		[MapField("ParentID")]
 		[Column("ParentID")] public int  ParentID2 { get; set; }
 		[Column]             public int? Value1    { get; set; }
 
@@ -364,7 +363,6 @@ namespace Tests.Model
 	public class ParentInheritance1 : ParentInheritanceBase, IEquatable<ParentInheritance1>
 	{
 		[Column(IsDiscriminator = true)]
-		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 
 		public override bool Equals(object obj)
@@ -387,7 +385,6 @@ namespace Tests.Model
 	public class ParentInheritanceValue : ParentInheritanceBase
 	{
 		[Column(IsDiscriminator = true)]
-		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 
 		public override bool Equals(object obj)
@@ -425,7 +422,6 @@ namespace Tests.Model
 	public class ParentInheritance12 : ParentInheritanceBase2
 	{
 		[Column(IsDiscriminator = true)]
-		[MapField(IsInheritanceDiscriminator = true)]
 		public int Value1;
 	}
 
@@ -449,7 +445,6 @@ namespace Tests.Model
 	public class ParentInheritance13 : ParentInheritanceBase3
 	{
 		[Column("Value1", IsDiscriminator = true)]
-		[MapField("Value1", IsInheritanceDiscriminator = true)]
 		public int Value;
 	}
 
@@ -477,14 +472,12 @@ namespace Tests.Model
 	public class ParentInheritance14 : ParentInheritanceBase4
 	{
 		[Column(IsDiscriminator = true)]
-		[MapField(IsInheritanceDiscriminator = true)]
 		public override Parent4Type Value1 { get { return Parent4Type.Value1; } }
 	}
 
 	public class ParentInheritance24 : ParentInheritanceBase4
 	{
 		[Column(IsDiscriminator = true)]
-		[MapField(IsInheritanceDiscriminator = true)]
 		public override Parent4Type Value1 { get { return Parent4Type.Value2; } }
 	}
 
