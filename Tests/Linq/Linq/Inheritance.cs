@@ -198,7 +198,7 @@ namespace Tests.Linq
 
 		class ParentEx : Parent
 		{
-			[NonColumn]
+			[NotColumn]
 			protected bool Field1;
 
 			public static void Test(Inheritance inheritance, string context)

@@ -3,9 +3,9 @@
 namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
-	public class NonColumnAttribute : ColumnAttribute
+	public class NotColumnAttribute : ColumnAttribute
 	{
-		public NonColumnAttribute()
+		public NotColumnAttribute()
 		{
 			IsColumn = false;
 		}

@@ -28,7 +28,7 @@ namespace Tests.Model
 		public class Category
 		{
 			[Column(IsPrimaryKey=true, IsIdentity=true), PrimaryKey, NonUpdatable] public int    CategoryID;
-			[Column(CanBeNull=false), NotNull]                                     public string CategoryName;
+			[Column, NotNull]                                                      public string CategoryName;
 			[Column]                                                               public string Description;
 			[Column]                                                               public Binary Picture;
 
@@ -36,11 +36,11 @@ namespace Tests.Model
 			public List<Product> Products;
 		}
 
-		[Table(Name="CustomerCustomerDemo")]
+		[Table("CustomerCustomerDemo")]
 		public class CustomerCustomerDemo
 		{
-			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerID;
-			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerTypeID;
+			[Column(IsPrimaryKey=true), PrimaryKey, NotNull] public string CustomerID;
+			[Column(IsPrimaryKey=true), PrimaryKey, NotNull] public string CustomerTypeID;
 
 			[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID")]
 			public CustomerDemographic CustomerDemographics;
@@ -49,11 +49,11 @@ namespace Tests.Model
 			public Customer Customers;
 		}
 
-		[Table(Name="CustomerDemographics")]
+		[Table("CustomerDemographics")]
 		public class CustomerDemographic
 		{
-			[Column(IsPrimaryKey=true, CanBeNull=false), PrimaryKey, NotNull] public string CustomerTypeID;
-			[Column]                                                          public string CustomerDesc;
+			[Column(IsPrimaryKey=true), PrimaryKey, NotNull] public string CustomerTypeID;
+			[Column]                                         public string CustomerDesc;
 			
 			[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID")]
 			public List<CustomerCustomerDemo> CustomerCustomerDemos;
@@ -63,7 +63,7 @@ namespace Tests.Model
 		public class Customer : EntityBase<string>
 		{
 			[Column(IsPrimaryKey=true)] [PrimaryKey] public string CustomerID;
-			[Column(CanBeNull=false)]   [NotNull]    public string CompanyName;
+			[Column, NotNull]                        public string CompanyName;
 			[Column]                                 public string ContactName;
 			[Column]                                 public string ContactTitle;
 			[Column]                                 public string Address;
@@ -90,8 +90,8 @@ namespace Tests.Model
 		public class Employee : EntityBase<int>
 		{
 			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int       EmployeeID;
-			[Column(CanBeNull=false)] [NotNull]                                     public string    LastName;
-			[Column(CanBeNull=false)] [NotNull]                                     public string    FirstName;
+			[Column, NotNull]                                                       public string    LastName;
+			[Column, NotNull]                                                       public string    FirstName;
 			[Column]                                                                public string    Title;
 			[Column]                                                                public string    TitleOfCourtesy;
 			[Column]                                                                public DateTime? BirthDate;
@@ -123,8 +123,8 @@ namespace Tests.Model
 		[Table(Name="EmployeeTerritories")]
 		public class EmployeeTerritory
 		{
-			[Column(IsPrimaryKey=true)]                 [PrimaryKey]          public int    EmployeeID;
-			[Column(IsPrimaryKey=true,CanBeNull=false)] [PrimaryKey, NotNull] public string TerritoryID;
+			[Column(IsPrimaryKey=true)] [PrimaryKey]          public int    EmployeeID;
+			[Column(IsPrimaryKey=true)] [PrimaryKey, NotNull] public string TerritoryID;
 
 			[Association(ThisKey="EmployeeID",  OtherKey="EmployeeID")]  public Employee  Employee;
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")] public Territory Territory;
@@ -178,7 +178,7 @@ namespace Tests.Model
 		public abstract class Product
 		{
 			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable]    public int      ProductID;
-			[Column(CanBeNull=false)] [NotNull]                                        public string   ProductName;
+			[Column, NotNull]                                                          public string   ProductName;
 			[Column]                                                                   public int?     SupplierID;
 			[Column]                                                                   public int?     CategoryID;
 			[Column]                                                                   public string   QuantityPerUnit;
@@ -200,7 +200,7 @@ namespace Tests.Model
 		public class Region
 		{
 			[Column(IsPrimaryKey=true)] [PrimaryKey] public int    RegionID;
-			[Column(CanBeNull=false)] [NotNull]    public string RegionDescription;
+			[Column, NotNull]                        public string RegionDescription;
 
 			[Association(ThisKey="RegionID", OtherKey="RegionID")]
 			public List<Territory> Territories;
@@ -210,7 +210,7 @@ namespace Tests.Model
 		public class Shipper
 		{
 			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int    ShipperID;
-			[Column(CanBeNull=false)] [NotNull]                                     public string CompanyName;
+			[Column, NotNull]                                                       public string CompanyName;
 			[Column]                                                                public string Phone;
 
 			[Association(ThisKey="ShipperID", OtherKey="ShipVia")]
@@ -221,7 +221,7 @@ namespace Tests.Model
 		public class Supplier
 		{
 			[Column(IsPrimaryKey=true, IsIdentity=true)] [PrimaryKey, NonUpdatable] public int    SupplierID;
-			[Column(CanBeNull=false)] [NotNull]                                     public string CompanyName;
+			[Column, NotNull]                                                       public string CompanyName;
 			[Column]                                                                public string ContactName;
 			[Column]                                                                public string ContactTitle;
 			[Column]                                                                public string Address;
@@ -241,7 +241,7 @@ namespace Tests.Model
 		public class Territory
 		{
 			[Column(IsPrimaryKey=true, CanBeNull=false)] [PrimaryKey, NotNull] public string TerritoryID;
-			[Column(CanBeNull=false)] [NotNull]                                public string TerritoryDescription;
+			[Column, NotNull]                                                  public string TerritoryDescription;
 			[Column]                                                           public int    RegionID;
 
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")]

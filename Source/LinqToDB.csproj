@@ -52,7 +52,7 @@
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="DataProvider\ReaderInfo.cs" />
-    <Compile Include="NonColumnAttribute.cs" />
+    <Compile Include="NotColumnAttribute.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
@@ -225,25 +225,11 @@
     <Compile Include="Mapping\MapValue.cs" />
     <Compile Include="Mapping\NotNullAttribute.cs" />
     <Compile Include="Mapping\NullableAttribute.cs" />
-    <Compile Include="Mapping\NullValueAttribute.cs" />
-    <Compile Include="Mapping\TrimmableAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
-    <Compile Include="Reflection\Extension\AttributeExtension.cs" />
-    <Compile Include="Reflection\Extension\AttributeExtensionCollection.cs" />
-    <Compile Include="Reflection\Extension\AttributeNameCollection.cs" />
-    <Compile Include="Reflection\Extension\ExtensionList.cs" />
-    <Compile Include="Reflection\Extension\MemberExtension.cs" />
-    <Compile Include="Reflection\Extension\MemberExtensionCollection.cs" />
-    <Compile Include="Reflection\Extension\TypeExtension.cs">
-      <DependentUpon>TypeExtension.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Reflection\Extension\TypeExtensionAttribute.cs" />
-    <Compile Include="Reflection\Extension\TypeExtensionException.cs" />
-    <Compile Include="Reflection\Extension\ValueCollection.cs" />
     <Compile Include="Reflection\IObjectFactory.cs" />
     <Compile Include="Reflection\MemberAccessor.cs" />
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
@@ -267,11 +253,6 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Reflection\Extension\TypeExtension.xsd">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
