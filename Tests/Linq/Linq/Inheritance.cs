@@ -198,7 +198,7 @@ namespace Tests.Linq
 
 		class ParentEx : Parent
 		{
-			[MapIgnore]
+			[NonColumn]
 			protected bool Field1;
 
 			public static void Test(Inheritance inheritance, string context)
@@ -229,17 +229,16 @@ namespace Tests.Linq
 		}
 
 		[InheritanceMapping(Code = 1, Type = typeof(Parent222))]
-		[Table(Name="Parent")]
+		[Table("Parent")]
 		public class Parent111
 		{
-			[MapField(IsInheritanceDiscriminator = true)]
+			[Column(IsDiscriminator = true)]
 			public int ParentID;
 		}
 
-		[MapField("Value1", "Value.ID")]
+		[Column("Value1", "Value.ID")]
 		public class Parent222 : Parent111
 		{
-			[MapIgnore]
 			public Value111 Value;
 		}
 
@@ -248,7 +247,7 @@ namespace Tests.Linq
 			public int ID;
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void InheritanceMappingIssueTest()
 		{
 			using (var db = new TestDataConnection())

@@ -223,7 +223,6 @@
     <Compile Include="AssociationAttribute.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
     <Compile Include="MapFieldAttribute.cs" />
-    <Compile Include="MapIgnoreAttribute.cs" />
     <Compile Include="Mapping\MapValue.cs" />
     <Compile Include="Mapping\NotNullAttribute.cs" />
     <Compile Include="Mapping\NullableAttribute.cs" />

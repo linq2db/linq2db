@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -52,14 +51,12 @@ namespace Tests.Linq
             [Identity, PrimaryKey]
             [SequenceName(ProviderName.Firebird, "PersonID")]
             [MapField("PersonID")]
-            [Column("PersonID", IsPrimaryKey=true, IsIdentity=true)] public int ID { get; set; }
+            [Column("PersonID", IsPrimaryKey=true, IsIdentity=true)] public int    ID        { get; set; }
             [Column]                                                 public string FirstName { get; set; }
             [Column]                                                 public string LastName;
-            [Nullable]
-            [Column]                                                 public string MiddleName;
+            [Column, Nullable]                                       public string MiddleName;
             [Column]                                                 public Gender Gender;
 
-            [MapIgnore]
             public string Name { get { return FirstName + " " + LastName; } }
 
             public override bool Equals(object obj)

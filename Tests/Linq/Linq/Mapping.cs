@@ -269,14 +269,12 @@ namespace Tests.Linq
 			}
 		}
 
-
-		[Table(Name="Parent")]
+		[Table("Parent")]
 		class MyParent1
 		{
 			[Column] public int  ParentID;
 			[Column] public int? Value1;
 
-			[NonColumn, MapIgnore]
 			public string Value2 { get { return "1"; } }
 
 			public int GetValue() { return 2; }

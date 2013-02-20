@@ -23,18 +23,17 @@ namespace Tests.Model
 		}
 
 		[Identity, PrimaryKey]
-		[Column(Name="PersonID", IsIdentity=true, IsPrimaryKey=true)]
-		//[SequenceName(ProviderName.PostgreSQL, "Seq")]
-		[SequenceName(ProviderName.Firebird,   "PersonID")]
+		[Column("PersonID", IsIdentity=true, IsPrimaryKey=true)]
+		[SequenceName(ProviderName.Firebird, "PersonID")]
 		[MapField("PersonID")]   public int    ID;
 		                         public string FirstName { get; set; }
 		                         public string LastName;
-		[Column(CanBeNull=true)] [Nullable]             public string MiddleName;
+		[Column] [Nullable]      public string MiddleName;
 		                         public Gender Gender;
 
-		[MapIgnore, NonColumn]   public string Name { get { return FirstName + " " + LastName; }}
+		[NonColumn]              public string Name { get { return FirstName + " " + LastName; }}
 
-		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = true)]
+		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)]
 		public Patient Patient;
 
 		public override bool Equals(object obj)

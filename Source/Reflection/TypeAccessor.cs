@@ -17,7 +17,7 @@ namespace LinqToDB.Reflection
 			if (member == null) throw new ArgumentNullException("member");
 
 			_members.Add(member);
-			_memberNames.Add(member.MemberInfo.Name, member);
+			_membersByName[member.MemberInfo.Name] = member;
 		}
 
 		#endregion
@@ -53,14 +53,18 @@ namespace LinqToDB.Reflection
 			get { return _members; }
 		}
 
-		private readonly Dictionary<string,MemberAccessor> _memberNames = new Dictionary<string,MemberAccessor>();
+		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new ConcurrentDictionary<string,MemberAccessor>();
 
 		public MemberAccessor this[string memberName]
 		{
 			get
 			{
-				MemberAccessor ma;
-				return _memberNames.TryGetValue(memberName, out ma) ? ma : null;
+				return _membersByName.GetOrAdd(memberName, name =>
+				{
+					var ma = new MemberAccessor(this, name);
+					Members.Add(ma);
+					return ma;
+				});
 			}
 		}
 
@@ -93,14 +97,14 @@ namespace LinqToDB.Reflection
 			return accessor;
 		}
 
-		public static TypeAccessor GetAccessor<T>()
+		public static TypeAccessor<T> GetAccessor<T>()
 		{
 			TypeAccessor accessor;
 
 			if (_accessors.TryGetValue(typeof(T), out accessor))
-				return accessor;
+				return (TypeAccessor<T>)accessor;
 
-			return _accessors[typeof(T)] = new TypeAccessor<T>();
+			return (TypeAccessor<T>)(_accessors[typeof(T)] = new TypeAccessor<T>());
 		}
 
 		#endregion

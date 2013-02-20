@@ -7,7 +7,7 @@ namespace LinqToDB.Reflection
 {
 	using Extensions;
 
-	class TypeAccessor<T> : TypeAccessor
+	public class TypeAccessor<T> : TypeAccessor
 	{
 		static TypeAccessor()
 		{
@@ -81,6 +81,11 @@ namespace LinqToDB.Reflection
 
 		static readonly Func<T> _createInstance;
 		public override object   CreateInstance()
+		{
+			return _createInstance();
+		}
+
+		public T Create()
 		{
 			return _createInstance();
 		}

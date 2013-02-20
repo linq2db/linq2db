@@ -26,8 +26,8 @@ namespace Tests.Exceptions
 		[Table(Name="Person")]
 		public class TestPerson1
 		{
-			            public int    PersonID;
-			[MapIgnore] public string FirstName;
+			[Column] public int    PersonID;
+			         public string FirstName;
 		}
 
 		[Test, ExpectedException(typeof(LinqException))]

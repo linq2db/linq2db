@@ -106,10 +106,6 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-
-				if (ex == null)
-					throw new LinqToDBException(string.Format("The '{0}' type does not have '{1}' member.", TypeAccessor.Type, attr.MemberName));
-
 				var cd = new ColumnDescriptor(_mappingSchema, attr, ex);
 
 				Columns.Add(cd);
@@ -117,7 +113,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, _mappingSchema, attr.MemberName));
+				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
 
 				Columns.Add(cd);
 				_columnNames.Add(attr.MemberName, cd);

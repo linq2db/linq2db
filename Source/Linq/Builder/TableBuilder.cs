@@ -254,18 +254,17 @@ namespace LinqToDB.Linq.Builder
 						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
 					select new
 					{
-						Storage = cd.Storage,
-						Member  = cd.MemberAccessor.MemberInfo,
-						Expr    = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Column = cd,
+						Expr   = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
 					}
 				).ToList();
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
 					members.Select(m => Expression.Bind(
-						m.Storage == null ?
-							m.Member :
-							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Storage).Member,
+						m.Column.Storage == null ?
+							m.Column.MemberAccessor.MemberInfo :
+							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
 						m.Expr)));
 
 				expr = ProcessExpression(expr);
