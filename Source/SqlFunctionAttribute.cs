@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	using Extensions;
 	using SqlBuilder;
@@ -22,8 +22,8 @@ namespace LinqToDB.Linq
 
 		public SqlFunctionAttribute(string name, params int[] argIndices)
 		{
-			Name        = name;
-			ArgIndices  = argIndices;
+			Name       = name;
+			ArgIndices = argIndices;
 		}
 
 		public SqlFunctionAttribute(string configuration, string name)

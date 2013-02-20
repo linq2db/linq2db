@@ -35,10 +35,19 @@ namespace LinqToDB.Mapping
 			SkipOnUpdate    = columnAttribute.GetSkipOnUpdate() ?? IsIdentity;
 			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsPrimaryKey    = columnAttribute.IsPrimaryKey || PrimaryKeyOrder >= 0;
-			CanBeNull       = columnAttribute.GetCanBeNull() ?? mappingSchema.GetCanBeNull(MemberType);
 
 			if (IsPrimaryKey && PrimaryKeyOrder < 0)
 				PrimaryKeyOrder = 0;
+
+			var canBeNull = columnAttribute.GetCanBeNull();
+
+			if (canBeNull != null)
+				CanBeNull = canBeNull.Value;
+			else
+			{
+				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberInfo, attr => attr.Configuration);
+				CanBeNull = na != null ? na.CanBeNull : mappingSchema.GetCanBeNull(MemberType);
+			}
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }

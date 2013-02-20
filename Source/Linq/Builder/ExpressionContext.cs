@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 
-	public class ExpressionContext : SequenceContextBase
+	class ExpressionContext : SequenceContextBase
 	{
 		public ExpressionContext(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
 			: base(parent, sequence, lambda)

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
-using System.Text;
 using System.Xml;
 
 namespace LinqToDB.Common
@@ -166,10 +165,10 @@ namespace LinqToDB.Common
 
 		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
-			if (expr is MemberExpression)
-			{
-				var me = (MemberExpression)expr;
+			var me = expr as MemberExpression;
 
+			if (me != null)
+			{
 				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}

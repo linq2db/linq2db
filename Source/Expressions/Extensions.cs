@@ -5,8 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Linq.Builder;
-
 	public static class Extensions
 	{
 		#region GetCount

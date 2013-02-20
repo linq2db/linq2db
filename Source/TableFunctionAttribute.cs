@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	using SqlBuilder;
 

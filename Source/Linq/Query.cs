@@ -849,7 +849,7 @@ namespace LinqToDB.Linq
 
 						if (fields.Count == 0)
 						{
-							if (Common.Configuration.Linq.IgnoreEmptyUpdate)
+							if (Configuration.Linq.IgnoreEmptyUpdate)
 								return 0;
 
 							throw new LinqException(

@@ -2,10 +2,10 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlBuilder;
 

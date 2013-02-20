@@ -15,12 +15,11 @@ namespace LinqToDB.Linq.Builder
 	// But the class means to have a lot of inheritors, and functionality of the inheritors
 	// will be doubled as well. So lets double it once here.
 	//
-	public class SelectContext : IBuildContext
+	class SelectContext : IBuildContext
 	{
 		#region Init
 
 #if DEBUG
-		[CLSCompliant(false)]
 		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
 
 		public MethodCallExpression MethodCall;

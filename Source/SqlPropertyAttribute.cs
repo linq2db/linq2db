@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	using Extensions;
 	using SqlBuilder;

@@ -264,10 +264,5 @@ namespace LinqToDB.DataProvider
 
 			return value;
 		}
-
-		//protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
-		//{
-		//	BuildInsertOrUpdateQueryAsMerge(sb, "FROM SYSTABLES");
-		//}
 	}
 }

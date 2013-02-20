@@ -11,7 +11,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Expressions;
 	using Extensions;
-	using Mapping;
 
 	public static class DataConnectionExtensions
 	{

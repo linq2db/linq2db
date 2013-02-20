@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static string[] MethodNames = new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder _builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return 
 				methodCall.IsQueryable(MethodNames) &&

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using Mapping;
 
 	public class DefaultValueExpression : Expression
 	{

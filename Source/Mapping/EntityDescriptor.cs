@@ -65,7 +65,7 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(member.MemberInfo, attr => attr.Configuration);
+				var ca = _mappingSchema.GetAttribute<ColumnAttribute>  (member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{

@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlBuilder;
 
-	public abstract class SequenceContextBase : IBuildContext
+	abstract class SequenceContextBase : IBuildContext
 	{
 		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
 		{
@@ -21,7 +21,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 #if DEBUG
-		[CLSCompliant(false)]
 		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
 #endif
 

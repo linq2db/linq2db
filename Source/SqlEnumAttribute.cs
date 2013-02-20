@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	[AttributeUsage(AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
 	public sealed class SqlEnumAttribute : Attribute

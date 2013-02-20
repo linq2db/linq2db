@@ -7,7 +7,7 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 
-	public class AssociationDescriptor
+	class AssociationDescriptor
 	{
 		public AssociationDescriptor(
 			[JNotNull] Type       type,

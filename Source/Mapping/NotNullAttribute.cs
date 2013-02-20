@@ -9,5 +9,10 @@ namespace LinqToDB.Mapping
 			: base(false)
 		{
 		}
+
+		public NotNullAttribute(string configuration)
+			: base(configuration, false)
+		{
+		}
 	}
 }
