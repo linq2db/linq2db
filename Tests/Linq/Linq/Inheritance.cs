@@ -456,7 +456,7 @@ namespace Tests.Linq
 			}
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void QuerySyntaxSimpleTest([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

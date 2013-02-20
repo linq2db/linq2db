@@ -261,11 +261,25 @@ namespace LinqToDB.Linq.Builder
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
-					members.Select(m => Expression.Bind(
+					members.Where(m => !m.Column.MemberAccessor.IsComplex).Select(m => Expression.Bind(
 						m.Column.Storage == null ?
 							m.Column.MemberAccessor.MemberInfo :
 							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
 						m.Expr)));
+
+				if (members.Any(m => m.Column.MemberAccessor.IsComplex))
+				{
+					var obj   = Expression.Variable(expr.Type);
+					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
+
+					exprs.AddRange(
+						members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
+							m.Column.MemberAccessor.Setter.GetBody(obj, m.Expr)));
+
+					exprs.Add(obj);
+
+					expr = Expression.Block(new[] { obj }, exprs);
+				}
 
 				expr = ProcessExpression(expr);
 

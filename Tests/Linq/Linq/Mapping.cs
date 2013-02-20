@@ -168,7 +168,7 @@ namespace Tests.Linq
 			}
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void Inner1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -179,7 +179,7 @@ namespace Tests.Linq
 			}
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void Inner2([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

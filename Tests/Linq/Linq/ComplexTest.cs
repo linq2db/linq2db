@@ -324,6 +324,9 @@ namespace Tests.Linq
 		public enum TestEntityType : byte { Type1, Type2 }
 
 		[Table(Name="GrandChild")]
+		[Column("GrandChildID", "Id")]
+		[Column("ChildID",      "InnerEnity.Id")]
+		[Column("ParentID",     "InnerEntityType")]
 		[MapField("GrandChildID", "Id")]
 		[MapField("ChildID",      "InnerEnity.Id")]
 		[MapField("ParentID",     "InnerEntityType")]
@@ -334,9 +337,12 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="GrandChild")]
+		[Column("GrandChildID", "Id")]
+		[Column("ChildID",      "Owner.Id")]
+		[Column("ParentID",     "EntityType")]
 		[MapField("GrandChildID", "Id")]
-		[MapField("ChildID",   "Owner.Id")]
-		[MapField("ParentID", "EntityType")]
+		[MapField("ChildID",      "Owner.Id")]
+		[MapField("ParentID",     "EntityType")]
 		public class TestEntityBase : Entity
 		{
 			public TestEntityType EntityType { get; set; }
@@ -370,7 +376,9 @@ namespace Tests.Linq
 
 		public enum SuperAccountType { Client, Organization }
 
-		[Table(Name="GrandChild")]
+		[Table("GrandChild")]
+		[Column("GrandChildID", "Id")]
+		[Column("ParentID",     "Type")]
 		[MapField("GrandChildID", "Id")]
 		[MapField("ParentID",     "Type")]
 		public class SuperAccount : Entity, IEnumerable<object>
@@ -397,7 +405,7 @@ namespace Tests.Linq
 			#endregion
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void IEnumerableTest1()
 		{
 			using (var db = new TestDataConnection())
@@ -412,7 +420,7 @@ namespace Tests.Linq
 			}
 		}
 
-		////// TODO [Test]
+		[Test]
 		public void IEnumerableTest2()
 		{
 			using (var db = new TestDataConnection())
