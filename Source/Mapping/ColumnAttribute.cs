@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Associates a class with a column in a database table.
@@ -36,7 +36,6 @@ namespace LinqToDB
 			DbType          = ca.DbType;
 			Storage         = ca.Storage;
 			IsDiscriminator = ca.IsDiscriminator;
-			IsIdentity      = ca.IsIdentity;
 			IsPrimaryKey    = ca.IsPrimaryKey;
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
 			IsColumn        = ca.IsColumn;
@@ -44,6 +43,7 @@ namespace LinqToDB
 			if (ca.GetSkipOnInsert() != null) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.GetSkipOnUpdate() != null) SkipOnUpdate = ca.SkipOnUpdate;
 			if (ca.GetCanBeNull()    != null) CanBeNull    = ca.CanBeNull;
+			if (ca.GetIsIdentity()   != null) IsIdentity   = ca.IsIdentity;
 		}
 
 		public string Configuration { get; set; }
@@ -83,10 +83,10 @@ namespace LinqToDB
 		/// </summary>
 		public bool IsDiscriminator { get; set; }
 
+		private bool? _skipOnInsert;
 		/// <summary>
 		/// Gets or sets whether a column is insertable.
 		/// </summary>
-		private bool? _skipOnInsert;
 		public  bool   SkipOnInsert
 		{
 			get { return _skipOnInsert ?? false; }
@@ -98,10 +98,10 @@ namespace LinqToDB
 			return _skipOnInsert;
 		}
 
+		private bool? _skipOnUpdate;
 		/// <summary>
 		/// Gets or sets whether a column is updatable.
 		/// </summary>
-		private bool? _skipOnUpdate;
 		public  bool   SkipOnUpdate
 		{
 			get { return _skipOnUpdate ?? false; }
@@ -113,10 +113,20 @@ namespace LinqToDB
 			return _skipOnUpdate;
 		}
 
+		private bool? _isIdentity;
 		/// <summary>
 		/// Gets or sets whether a column contains values that the database auto-generates.
 		/// </summary>
-		public bool IsIdentity { get; set; }
+		public  bool   IsIdentity
+		{
+			get { return _isIdentity ?? false; }
+			set { _isIdentity = value;         }
+		}
+
+		public bool? GetIsIdentity()
+		{
+			return _isIdentity;
+		}
 
 		/// <summary>
 		/// Gets or sets whether this class member represents a column that is part or all of the primary key of the table.
@@ -128,10 +138,10 @@ namespace LinqToDB
 		/// </summary>
 		public int PrimaryKeyOrder { get; set; }
 
+		private bool? _canBeNull;
 		/// <summary>
 		/// Gets or sets whether a column can contain null values.
 		/// </summary>
-		private bool? _canBeNull;
 		public  bool   CanBeNull
 		{
 			get { return _canBeNull ?? true; }

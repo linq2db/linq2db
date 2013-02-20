@@ -50,11 +50,11 @@ namespace Tests.Linq
 
             [Identity, PrimaryKey]
             [SequenceName(ProviderName.Firebird, "PersonID")]
-            [Column("PersonID", IsPrimaryKey=true, IsIdentity=true)] public int    ID        { get; set; }
-            [Column]                                                 public string FirstName { get; set; }
-            [Column]                                                 public string LastName;
-            [Column, Nullable]                                       public string MiddleName;
-            [Column]                                                 public Gender Gender;
+            [Column("PersonID", IsPrimaryKey=true)] public int    ID        { get; set; }
+            [Column]                                public string FirstName { get; set; }
+            [Column]                                public string LastName;
+            [Column, Nullable]                      public string MiddleName;
+            [Column]                                public Gender Gender;
 
             public string Name { get { return FirstName + " " + LastName; } }
 

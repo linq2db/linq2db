@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -70,7 +71,6 @@ namespace Tests.Model
 		[Column(IsPrimaryKey=true)] public int       ID;
 		[Column]                    public decimal   MoneyValue;
 		[Column]                    public DateTime? DateTimeValue;
-		[DbType(DbType.DateTime2)]
 		[Column]                    public DateTime? DateTimeValue2;
 		[Column]                    public bool?     BoolValue;
 		[Column]                    public Guid?     GuidValue;

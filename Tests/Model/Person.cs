@@ -23,7 +23,7 @@ namespace Tests.Model
 		}
 
 		[Identity, PrimaryKey]
-		[Column("PersonID", IsIdentity=true, IsPrimaryKey=true)]
+		[Column("PersonID", IsPrimaryKey=true)]
 		[SequenceName(ProviderName.Firebird, "PersonID")]
 		            public int    ID;
 		[NotNull]   public string FirstName { get; set; }

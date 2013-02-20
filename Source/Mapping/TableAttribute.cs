@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB.Mapping
 {
-	[AttributeUsageAttribute(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
 	public class TableAttribute : Attribute
 	{
 		public TableAttribute()

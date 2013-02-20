@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -8,7 +9,6 @@ namespace Tests.Model
 	{
 		public class SequenceTest
 		{
-			[Column(IsIdentity = true)]
 			[Identity, SequenceName("SequenceTestSeq")]
 			public int    ID;
 			public string Value;

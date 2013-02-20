@@ -30,9 +30,6 @@ namespace LinqToDB.Mapping
 			IsDiscriminator = columnAttribute.IsDiscriminator;
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
-			IsIdentity      = columnAttribute.IsIdentity;
-			SkipOnInsert    = columnAttribute.GetSkipOnInsert() ?? IsIdentity;
-			SkipOnUpdate    = columnAttribute.GetSkipOnUpdate() ?? IsIdentity;
 			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsPrimaryKey    = columnAttribute.IsPrimaryKey || PrimaryKeyOrder >= 0;
 
@@ -48,6 +45,20 @@ namespace LinqToDB.Mapping
 				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberInfo, attr => attr.Configuration);
 				CanBeNull = na != null ? na.CanBeNull : mappingSchema.GetCanBeNull(MemberType);
 			}
+
+			var isIdentity = columnAttribute.GetIsIdentity();
+
+			if (isIdentity != null)
+				IsIdentity = isIdentity.Value;
+			else
+			{
+				var na = mappingSchema.GetAttribute<IdentityAttribute>(MemberInfo, attr => attr.Configuration);
+				if (na != null)
+					IsIdentity = true;
+			}
+
+			SkipOnInsert    = columnAttribute.GetSkipOnInsert() ?? IsIdentity;
+			SkipOnUpdate    = columnAttribute.GetSkipOnUpdate() ?? IsIdentity;
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }

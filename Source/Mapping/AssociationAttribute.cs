@@ -1,9 +1,7 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB.Mapping
 {
-	using Mapping;
-
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
 	public class AssociationAttribute : Attribute
 	{

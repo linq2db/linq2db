@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Table(Name = "t_test_user")]
 		public sealed class User
 		{
-			[Column("user_id", IsPrimaryKey = true, IsIdentity = true)]
+			[Column("user_id", IsPrimaryKey = true)]
 			[PrimaryKey, Identity]
 			[SequenceName("sq_test_user")]
 			public long Id { get; set; }
@@ -28,7 +28,7 @@ namespace Tests.Linq
 		[Table(Name = "t_test_user_contract")]
 		public sealed class Contract
 		{
-			[Column("user_contract_id", IsPrimaryKey = true, IsIdentity = true)]
+			[Column("user_contract_id", IsPrimaryKey = true)]
 			[PrimaryKey, Identity]
 			[SequenceName("sq_test_user_contract")]
 			public long Id { get; set; }

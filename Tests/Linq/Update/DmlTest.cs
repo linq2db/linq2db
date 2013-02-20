@@ -1312,7 +1312,7 @@ namespace Tests.Update
 			[Nullable] public string MiddleName;
 		}
 
-		[Table(Name="Person", IsColumnAttributeRequired=false)]
+		[Table("Person", IsColumnAttributeRequired=false)]
 		[Column("FirstName",  "Name.FirstName")]
 		[Column("LastName",   "Name.LastName")]
 		[Column("MiddleName", "Name.MiddleName")]
@@ -1321,7 +1321,7 @@ namespace Tests.Update
 			[Identity, PrimaryKey]
 			//[SequenceName(ProviderName.PostgreSQL, "Seq")]
 			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID", IsPrimaryKey=true, IsIdentity=true)]
+			[Column("PersonID", IsPrimaryKey=true)]
 			public int ID;
 
 			public string Gender;

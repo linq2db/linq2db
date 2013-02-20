@@ -65,7 +65,7 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var ca = _mappingSchema.GetAttribute<ColumnAttribute>  (member.MemberInfo, attr => attr.Configuration);
+				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(member.MemberInfo, attr => attr.Configuration);
 
 				if (ca != null)
 				{
@@ -83,7 +83,9 @@ namespace LinqToDB.Mapping
 						}
 					}
 				}
-				else if (!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type))
+				else if (
+					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
+					_mappingSchema.GetAttribute<IdentityAttribute>(member.MemberInfo, attr => attr.Configuration) != null)
 				{
 					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);

@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ColumnAttribute.cs" />
+    <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\Converter.cs" />
@@ -52,7 +52,7 @@
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="DataProvider\ReaderInfo.cs" />
-    <Compile Include="NotColumnAttribute.cs" />
+    <Compile Include="Mapping\NotColumnAttribute.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Configuration\LinqToDBSection.cs" />
@@ -76,11 +76,8 @@
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="ITable.cs" />
-    <Compile Include="DbTypeAttribute.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ExpressionQueryImpl.cs" />
-    <Compile Include="IdentityAttribute.cs">
+    <Compile Include="Mapping\IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Mapping\InheritanceMapping.cs" />
@@ -107,7 +104,7 @@
     </Compile>
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
-    <Compile Include="TableAttribute.cs" />
+    <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="ProviderName.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
@@ -220,7 +217,7 @@
     <Compile Include="LinqToDBException.cs" />
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Mapping\AssociationDescriptor.cs" />
-    <Compile Include="AssociationAttribute.cs" />
+    <Compile Include="Mapping\AssociationAttribute.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
     <Compile Include="Mapping\MapValue.cs" />
     <Compile Include="Mapping\NotNullAttribute.cs" />
