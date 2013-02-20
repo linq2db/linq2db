@@ -85,7 +85,8 @@ namespace LinqToDB.Mapping
 				}
 				else if (
 					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
-					_mappingSchema.GetAttribute<IdentityAttribute>(member.MemberInfo, attr => attr.Configuration) != null)
+					_mappingSchema.GetAttribute<IdentityAttribute>  (member.MemberInfo, attr => attr.Configuration) != null ||
+					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(member.MemberInfo, attr => attr.Configuration) != null)
 				{
 					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);

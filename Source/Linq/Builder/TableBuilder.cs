@@ -816,24 +816,29 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member))
 								{
-									if (field.Name.IndexOf('.') > 0)
+									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
 									{
 										var name = memberExpression.Member.Name;
-										var me   = memberExpression;
+										var me = memberExpression;
 
-										if (!(me.Expression is MemberExpression))
-											return null;
-
-										while (me.Expression is MemberExpression)
+										if (me.Expression is MemberExpression)
 										{
-											me   = (MemberExpression)me.Expression;
-											name = me.Member.Name + '.' + name;
+											while (me.Expression is MemberExpression)
+											{
+												me = (MemberExpression)me.Expression;
+												name = me.Member.Name + '.' + name;
+											}
+
+											var fld = SqlTable.Fields.Values.FirstOrDefault(f => f.Name == name);
+
+											if (fld != null)
+												return fld;
 										}
-
-										return SqlTable.Fields.Values.FirstOrDefault(f => f.Name == name);
 									}
-
-									return field;
+									else
+									{
+										return field;
+									}
 								}
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)

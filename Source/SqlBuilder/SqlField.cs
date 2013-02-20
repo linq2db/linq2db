@@ -10,8 +10,7 @@ namespace LinqToDB.SqlBuilder
 	{
 		public SqlField()
 		{
-			PrimaryKeyOrder = -1;
-			Nullable        = true;
+			Nullable = true;
 		}
 
 		public SqlField(SqlField field)
@@ -21,6 +20,7 @@ namespace LinqToDB.SqlBuilder
 			Name             = field.Name;
 			PhysicalName     = field.PhysicalName;
 			Nullable         = field.Nullable;
+			IsPrimaryKey     = field.IsPrimaryKey;
 			PrimaryKeyOrder  = field.PrimaryKeyOrder;
 			IsIdentity       = field.IsIdentity;
 			IsInsertable     = field.IsInsertable;
@@ -32,6 +32,7 @@ namespace LinqToDB.SqlBuilder
 		public   string           Alias            { get; set; }
 		public   string           Name             { get; set; }
 		public   bool             Nullable         { get; set; }
+		public   bool             IsPrimaryKey     { get; set; }
 		public   int              PrimaryKeyOrder  { get; set; }
 		public   bool             IsIdentity       { get; set; }
 		public   bool             IsInsertable     { get; set; }
@@ -45,9 +46,6 @@ namespace LinqToDB.SqlBuilder
 			get { return _physicalName ?? Name; }
 			set { _physicalName = value; }
 		}
-
-
-		public bool IsPrimaryKey { get { return PrimaryKeyOrder != int.MinValue; } }
 
 		ISqlTableSource IChild<ISqlTableSource>.Parent { get { return Table; } set { Table = value; } }
 

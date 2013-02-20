@@ -96,10 +96,7 @@
     <Compile Include="Metadata\SystemDataLinqAttributeReader.cs" />
     <Compile Include="Metadata\MetaTypeInfo.cs" />
     <Compile Include="Metadata\XmlAttributeReader.cs" />
-    <Compile Include="NonUpdatableAttribute.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PrimaryKeyAttribute.cs">
+    <Compile Include="Mapping\PrimaryKeyAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
@@ -207,7 +204,7 @@
     <Compile Include="SqlBuilder\SqlParameter.cs" />
     <Compile Include="SqlProvider\BasicSqlProvider.cs" />
     <Compile Include="SqlProvider\ISqlProvider.cs" />
-    <Compile Include="SequenceNameAttribute.cs" />
+    <Compile Include="Mapping\SequenceNameAttribute.cs" />
     <Compile Include="SqlBuilder\SqlQuery.cs" />
     <Compile Include="SqlBuilder\SqlTable.cs" />
     <Compile Include="SqlBuilder\SqlTableT.cs" />

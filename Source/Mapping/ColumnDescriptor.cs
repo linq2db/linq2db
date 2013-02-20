@@ -27,38 +27,57 @@ namespace LinqToDB.Mapping
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
 			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
 			Storage         = columnAttribute.Storage;
+			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsDiscriminator = columnAttribute.IsDiscriminator;
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
-			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
-			IsPrimaryKey    = columnAttribute.IsPrimaryKey || PrimaryKeyOrder >= 0;
 
-			if (IsPrimaryKey && PrimaryKeyOrder < 0)
-				PrimaryKeyOrder = 0;
+			var defaultCanBeNull = false;
 
-			var canBeNull = columnAttribute.GetCanBeNull();
-
-			if (canBeNull != null)
-				CanBeNull = canBeNull.Value;
+			if (columnAttribute.HasCanBeNull())
+				CanBeNull = columnAttribute.CanBeNull;
 			else
 			{
 				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberInfo, attr => attr.Configuration);
-				CanBeNull = na != null ? na.CanBeNull : mappingSchema.GetCanBeNull(MemberType);
+
+				if (na != null)
+				{
+					CanBeNull = na.CanBeNull;
+				}
+				else
+				{
+					CanBeNull        = mappingSchema.GetCanBeNull(MemberType);
+					defaultCanBeNull = true;
+				}
 			}
 
-			var isIdentity = columnAttribute.GetIsIdentity();
-
-			if (isIdentity != null)
-				IsIdentity = isIdentity.Value;
+			if (columnAttribute.HasIsIdentity())
+				IsIdentity = columnAttribute.IsIdentity;
 			else
 			{
-				var na = mappingSchema.GetAttribute<IdentityAttribute>(MemberInfo, attr => attr.Configuration);
-				if (na != null)
+				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberInfo, attr => attr.Configuration);
+				if (a != null)
 					IsIdentity = true;
 			}
 
-			SkipOnInsert    = columnAttribute.GetSkipOnInsert() ?? IsIdentity;
-			SkipOnUpdate    = columnAttribute.GetSkipOnUpdate() ?? IsIdentity;
+			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
+			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
+
+			if (defaultCanBeNull && IsIdentity)
+				CanBeNull = false;
+
+			if (columnAttribute.HasIsPrimaryKey())
+				IsPrimaryKey = columnAttribute.IsPrimaryKey;
+			else
+			{
+				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberInfo, attr => attr.Configuration);
+
+				if (a != null)
+				{
+					IsPrimaryKey    = true;
+					PrimaryKeyOrder = a.Order;
+				}
+			}
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }

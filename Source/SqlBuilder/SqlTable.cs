@@ -75,6 +75,7 @@ namespace LinqToDB.SqlBuilder
 					Name             = column.MemberName,
 					PhysicalName     = column.ColumnName,
 					Nullable         = column.CanBeNull,
+					IsPrimaryKey     = column.IsPrimaryKey,
 					PrimaryKeyOrder  = column.PrimaryKeyOrder,
 					IsIdentity       = column.IsIdentity,
 					IsInsertable     = !column.SkipOnInsert,

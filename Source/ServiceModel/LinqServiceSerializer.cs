@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.ServiceModel
 {
 	using Extensions;
+	using Mapping;
 	using SqlBuilder;
 
 	static class LinqServiceSerializer
@@ -535,6 +536,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Name);
 							Append(elem.PhysicalName);
 							Append(elem.Nullable);
+							Append(elem.IsPrimaryKey);
 							Append(elem.PrimaryKeyOrder);
 							Append(elem.IsIdentity);
 							Append(elem.IsUpdatable);
@@ -1018,6 +1020,7 @@ namespace LinqToDB.ServiceModel
 							var name             = ReadString();
 							var physicalName     = ReadString();
 							var nullable         = ReadBool();
+							var isPrimaryKey     = ReadBool();
 							var primaryKeyOrder  = ReadInt();
 							var isIdentity       = ReadBool();
 							var isUpdatable      = ReadBool();
@@ -1029,6 +1032,7 @@ namespace LinqToDB.ServiceModel
 								Name            = name,
 								PhysicalName    = physicalName,
 								Nullable        = nullable,
+								IsPrimaryKey    = isPrimaryKey,
 								PrimaryKeyOrder = primaryKeyOrder,
 								IsIdentity      = isIdentity,
 								IsInsertable    = isInsertable,

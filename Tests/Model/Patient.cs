@@ -1,6 +1,5 @@
 ﻿using System;
 
-using LinqToDB;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -8,7 +7,6 @@ namespace Tests.Model
 	public class Patient
 	{
 		[PrimaryKey]
-		[Column(IsPrimaryKey=true)]
 		public int    PersonID;
 		public string Diagnosis;
 

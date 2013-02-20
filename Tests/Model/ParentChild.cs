@@ -62,8 +62,8 @@ namespace Tests.Model
 
 	public class Child
 	{
-		[Column(IsPrimaryKey=true)][PrimaryKey] public int ParentID;
-		[Column(IsPrimaryKey=true)][PrimaryKey] public int ChildID;
+		[PrimaryKey] public int ParentID;
+		[PrimaryKey] public int ChildID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public Parent  Parent;
@@ -238,12 +238,11 @@ namespace Tests.Model
 
 	#region Parent1/GrandChild1
 
-	[Table(Name="Parent")]
+	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
 	{
-		[PrimaryKey]
-		[Column(IsPrimaryKey=true)] public int  ParentID;
-		[Column]                    public int? Value1;
+		[PrimaryKey] public int  ParentID;
+		[Column]     public int? Value1;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<Child> Children;
@@ -435,7 +434,7 @@ namespace Tests.Model
 	[InheritanceMapping(Code = 2,    Type = typeof(ParentInheritance13))]
 	public abstract class ParentInheritanceBase3
 	{
-		[Column(IsPrimaryKey=true)] [PrimaryKey]
+		[PrimaryKey]
 		public int ParentID;
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]

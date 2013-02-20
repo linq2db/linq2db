@@ -15,33 +15,28 @@ namespace Tests.Linq
 		[Table(Name = "t_test_user")]
 		public sealed class User
 		{
-			[Column("user_id", IsPrimaryKey = true)]
-			[PrimaryKey, Identity]
+			[Column("user_id"), PrimaryKey, Identity]
 			[SequenceName("sq_test_user")]
 			public long Id { get; set; }
 
 			[Column("name", SkipOnUpdate=true), NotNull]
-			[NonUpdatable(OnInsert = false)]
 			public string Name { get; set; }
 		}
 
 		[Table(Name = "t_test_user_contract")]
 		public sealed class Contract
 		{
-			[Column("user_contract_id", IsPrimaryKey = true)]
-			[PrimaryKey, Identity]
+			[Column("user_contract_id", IsIdentity=true), PrimaryKey]
 			[SequenceName("sq_test_user_contract")]
 			public long Id { get; set; }
 
 			[Column("user_id", SkipOnUpdate = true, CanBeNull = false)]
-			[NonUpdatable(OnInsert = false)]
 			public long UserId { get; set; }
 
 			[Association(ThisKey = "UserId", OtherKey = "Id", CanBeNull = false)]
 			public User User { get; set; }
 
 			[Column("contract_no", SkipOnUpdate = true, CanBeNull = false)]
-			[NonUpdatable(OnInsert = false)]
 			public long ContractNo { get; set; }
 
 			[Column("name"), NotNull]

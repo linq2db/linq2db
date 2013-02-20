@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB
+namespace LinqToDB.Mapping
 {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class SequenceNameAttribute : Attribute

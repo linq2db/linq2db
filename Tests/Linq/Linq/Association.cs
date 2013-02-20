@@ -306,8 +306,8 @@ namespace Tests.Linq
 		[Table(Name="Child")]
 		public class Middle
 		{
-			[Column(IsPrimaryKey=true), PrimaryKey] public int ParentID;
-			[Column(IsPrimaryKey=true), PrimaryKey] public int ChildID;
+			[PrimaryKey] public int ParentID;
+			[PrimaryKey] public int ChildID;
 
 			[Association(ThisKey = "ChildID", OtherKey = "ChildID", CanBeNull = false)]
 			public Bottom Bottom { get; set; }

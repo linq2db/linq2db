@@ -12,8 +12,7 @@ namespace LinqToDB.Mapping
 	{
 		public ColumnAttribute()
 		{
-			IsColumn        = true;
-			PrimaryKeyOrder = int.MinValue;
+			IsColumn = true;
 		}
 
 		public ColumnAttribute(string columnName) : this()
@@ -36,14 +35,14 @@ namespace LinqToDB.Mapping
 			DbType          = ca.DbType;
 			Storage         = ca.Storage;
 			IsDiscriminator = ca.IsDiscriminator;
-			IsPrimaryKey    = ca.IsPrimaryKey;
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
 			IsColumn        = ca.IsColumn;
 
-			if (ca.GetSkipOnInsert() != null) SkipOnInsert = ca.SkipOnInsert;
-			if (ca.GetSkipOnUpdate() != null) SkipOnUpdate = ca.SkipOnUpdate;
-			if (ca.GetCanBeNull()    != null) CanBeNull    = ca.CanBeNull;
-			if (ca.GetIsIdentity()   != null) IsIdentity   = ca.IsIdentity;
+			if (ca.HasSkipOnInsert()) SkipOnInsert = ca.SkipOnInsert;
+			if (ca.HasSkipOnUpdate()) SkipOnUpdate = ca.SkipOnUpdate;
+			if (ca.HasCanBeNull())    CanBeNull    = ca.CanBeNull;
+			if (ca.HasIsIdentity())   IsIdentity   = ca.IsIdentity;
+			if (ca.HasIsPrimaryKey()) IsPrimaryKey = ca.IsPrimaryKey;
 		}
 
 		public string Configuration { get; set; }
@@ -93,10 +92,7 @@ namespace LinqToDB.Mapping
 			set { _skipOnInsert = value;         }
 		}
 
-		public bool? GetSkipOnInsert()
-		{
-			return _skipOnInsert;
-		}
+		public bool HasSkipOnInsert() { return _skipOnInsert.HasValue; }
 
 		private bool? _skipOnUpdate;
 		/// <summary>
@@ -108,10 +104,7 @@ namespace LinqToDB.Mapping
 			set { _skipOnUpdate = value;         }
 		}
 
-		public bool? GetSkipOnUpdate()
-		{
-			return _skipOnUpdate;
-		}
+		public bool HasSkipOnUpdate() { return _skipOnUpdate.HasValue; }
 
 		private bool? _isIdentity;
 		/// <summary>
@@ -123,15 +116,19 @@ namespace LinqToDB.Mapping
 			set { _isIdentity = value;         }
 		}
 
-		public bool? GetIsIdentity()
-		{
-			return _isIdentity;
-		}
+		public bool HasIsIdentity() { return _isIdentity.HasValue; }
 
+		private bool? _isPrimaryKey;
 		/// <summary>
 		/// Gets or sets whether this class member represents a column that is part or all of the primary key of the table.
 		/// </summary>
-		public bool IsPrimaryKey { get; set; }
+		public  bool   IsPrimaryKey
+		{
+			get { return _isPrimaryKey ?? false;  }
+			set { _isPrimaryKey = value; }
+		}
+
+		public bool HasIsPrimaryKey() { return _isPrimaryKey.HasValue; }
 
 		/// <summary>
 		/// Gets or sets the Primary Key order.
@@ -148,9 +145,6 @@ namespace LinqToDB.Mapping
 			set { _canBeNull = value;        }
 		}
 
-		public bool? GetCanBeNull()
-		{
-			return _canBeNull;
-		}
+		public bool HasCanBeNull() { return _canBeNull.HasValue; }
 	}
 }

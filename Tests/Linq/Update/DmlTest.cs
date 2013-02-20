@@ -1318,8 +1318,7 @@ namespace Tests.Update
 		[Column("MiddleName", "Name.MiddleName")]
 		public class TestPerson1
 		{
-			[Identity, PrimaryKey]
-			//[SequenceName(ProviderName.PostgreSQL, "Seq")]
+			[Identity]
 			[SequenceName(ProviderName.Firebird, "PersonID")]
 			[Column("PersonID", IsPrimaryKey=true)]
 			public int ID;

@@ -22,14 +22,12 @@ namespace Tests.Model
 			FirstName = firstName;
 		}
 
-		[Identity, PrimaryKey]
-		[Column("PersonID", IsPrimaryKey=true)]
 		[SequenceName(ProviderName.Firebird, "PersonID")]
-		            public int    ID;
-		[NotNull]   public string FirstName { get; set; }
-		[NotNull]   public string LastName;
-		[Nullable]  public string MiddleName;
-		            public Gender Gender;
+		[Column("PersonID"), Identity, PrimaryKey] public int    ID;
+		[NotNull]                                  public string FirstName { get; set; }
+		[NotNull]                                  public string LastName;
+		[Nullable]                                 public string MiddleName;
+		                                           public Gender Gender;
 
 		[NotColumn] public string Name { get { return FirstName + " " + LastName; }}
 

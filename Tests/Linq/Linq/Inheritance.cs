@@ -342,8 +342,7 @@ namespace Tests.Linq
 		[Table(Name="Child")]
 		class ChildTest14 : IChildTest14
 		{
-			[PrimaryKey]
-			[Column(IsPrimaryKey = true)] public int ChildID { get; set; }
+			[PrimaryKey] public int ChildID { get; set; }
 
 		}
 
@@ -499,11 +498,8 @@ namespace Tests.Linq
 		[InheritanceMapping(Code = Gender.Female, Type = typeof(Test18Female))]
 		public class Test18Person
 		{
-			[Column(IsPrimaryKey=true, IsIdentity=true, SkipOnInsert=false, SkipOnUpdate=false)]
-			[PrimaryKey, NonUpdatable(IsIdentity = true, OnInsert = true, OnUpdate = true), SequenceName("PERSONID")]
-			public int    PersonID { get; set; }
-			[Column(IsDiscriminator = true)]
-			public Gender Gender   { get; set; }
+			[PrimaryKey, Identity, SequenceName("PERSONID")] public int    PersonID { get; set; }
+			[Column(IsDiscriminator = true)]                 public Gender Gender   { get; set; }
 		}
 
 		public class Test18Male : Test18Person
