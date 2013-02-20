@@ -16,20 +16,20 @@ namespace LinqToDB
 			PrimaryKeyOrder = int.MinValue;
 		}
 
-		public ColumnAttribute(string name) : this()
+		public ColumnAttribute(string columnName) : this()
 		{
-			Name = name;
+			Name = columnName;
 		}
 
-		public ColumnAttribute(string name, string memberName) : this()
+		public ColumnAttribute(string columnName, string memberName) : this()
 		{
-			Name       = name;
+			Name       = columnName;
 			MemberName = memberName;
 		}
 
 		internal ColumnAttribute(string memberName, ColumnAttribute ca)
 		{
-			MemberName      = memberName + "." + ca.MemberName;
+			MemberName      = memberName + "." + ca.MemberName.TrimStart('.');
 			Configuration   = ca.Configuration;
 			Name            = ca.Name;
 			DataType        = ca.DataType;
@@ -39,6 +39,7 @@ namespace LinqToDB
 			IsIdentity      = ca.IsIdentity;
 			IsPrimaryKey    = ca.IsPrimaryKey;
 			PrimaryKeyOrder = ca.PrimaryKeyOrder;
+			IsColumn        = ca.IsColumn;
 
 			if (ca.GetSkipOnInsert() != null) SkipOnInsert = ca.SkipOnInsert;
 			if (ca.GetSkipOnUpdate() != null) SkipOnUpdate = ca.SkipOnUpdate;

@@ -154,13 +154,11 @@ namespace Tests.Linq
 				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
 		}
 
-		[Table(Name="Parent")]
-		[Column("Value1", "Value.Value1")]
-		[MapField("Value1", "Value.Value1")]
+		[Table("Parent")]
 		public class ParentObject
 		{
-			[Column] public int   ParentID;
-			         public Inner Value = new Inner();
+			[Column]                      public int   ParentID;
+			[Column("Value1", ".Value1")] public Inner Value = new Inner();
 
 			public class Inner
 			{
