@@ -384,6 +384,9 @@ namespace LinqToDB.Expressions
 						return true;
 					}
 
+				case ExpressionType.Default  :
+					return true;
+
 				case ExpressionType.Parameter:
 					{
 						var e1 = (ParameterExpression)expr1;

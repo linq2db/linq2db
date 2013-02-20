@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
@@ -43,39 +44,55 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var defValue = new DefaultValueExpression(MappingSchema.Default, Type);
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
 
 				// Build getter.
 				//
 				{
-					expr = objParam;
-
-					for (var i = 0; i < infos.Length; i++)
+					if (checkNull)
 					{
-						var info = infos[i];
+						var ret = Expression.Variable(Type, "ret");
 
-						if (info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null)
-							HasSetter = false;
-
-						if (i == 0 || !(info.type.IsClass || info.type.IsNullable()))
+						Func<Expression,int,Expression> makeGetter = null; makeGetter = (ex, i) =>
 						{
+							var info = infos[i];
+							var next = Expression.MakeMemberAccess(ex, info.member);
+
+							if (i == infos.Length - 1)
+								return Expression.Assign(ret, next);
+
+							if (next.Type.IsClass || next.Type.IsNullable())
+							{
+								var local = Expression.Variable(next.Type);
+
+								return Expression.Block(
+									new[] { local },
+									new[]
+									{
+										Expression.Assign(local, next) as Expression,
+										Expression.IfThen(
+											Expression.NotEqual(local, Expression.Constant(null)),
+											makeGetter(local, i + 1))
+									});
+							}
+
+							return makeGetter(next, i + 1);
+						};
+
+						expr = Expression.Block(
+							new[] { ret },
+							new[]
+							{
+								Expression.Assign(ret, new DefaultValueExpression(MappingSchema.Default, Type)),
+								makeGetter(objParam, 0),
+								ret
+							});
+					}
+					else
+					{
+						expr = objParam;
+						foreach (var info in infos)
 							expr = Expression.MakeMemberAccess(expr, info.member);
-						}
-						else
-						{
-							var local = Expression.Parameter(expr.Type);
-
-							expr = Expression.Block(
-								new[] { local },
-								new[]
-								{
-									Expression.Assign(local, expr) as Expression,
-									Expression.Condition(
-										Expression.Equal(local, Expression.Constant(null)),
-										defValue,
-										Expression.MakeMemberAccess(local, info.member))
-								});
-						}
 					}
 
 					Getter = Expression.Lambda(expr, objParam);
@@ -84,16 +101,64 @@ namespace LinqToDB.Reflection
 				// Build setter.
 				//
 				{
+					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
+
 					var valueParam = Expression.Parameter(Type, "value");
 
 					if (HasSetter)
 					{
-						for (var i = 0; i < infos.Length - 1; i++)
+						if (checkNull)
 						{
-							var info = infos[i];
+							var vars  = new List<ParameterExpression>();
+							var exprs = new List<Expression>();
 
-							
+							Action<Expression,int> makeSetter = null; makeSetter = (ex, i) =>
+							{
+								var info = infos[i];
+								var next = Expression.MakeMemberAccess(ex, info.member);
+
+								if (i == infos.Length - 1)
+								{
+									exprs.Add(Expression.Assign(next, valueParam));
+								}
+								else
+								{
+									if (next.Type.IsClass || next.Type.IsNullable())
+									{
+										var local = Expression.Variable(next.Type);
+
+										vars.Add(local);
+
+										exprs.Add(Expression.Assign(local, next));
+										exprs.Add(
+											Expression.IfThen(
+												Expression.Equal(local, Expression.Constant(null)),
+												Expression.Block(
+													Expression.Assign(local, Expression.New(local.Type)),
+													Expression.Assign(next, local))));
+
+										makeSetter(local, i + 1);
+									}
+									else
+									{
+										makeSetter(next, i + 1);
+									}
+								}
+							};
+
+							makeSetter(objParam, 0);
+
+							expr = Expression.Block(vars, exprs);
 						}
+						else
+						{
+							expr = objParam;
+							foreach (var info in infos)
+								expr = Expression.MakeMemberAccess(expr, info.member);
+							expr = Expression.Assign(expr, valueParam);
+						}
+
+						Setter = Expression.Lambda(expr, objParam, valueParam);
 					}
 					else
 					{

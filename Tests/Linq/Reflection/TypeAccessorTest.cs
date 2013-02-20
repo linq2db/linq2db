@@ -23,7 +23,8 @@ namespace Tests.Reflection
 
 		class TestClass2
 		{
-			public TestClass3 Class3;
+			public TestClass3  Class3;
+			public TestStruct1 Struct1;
 		}
 
 		class TestClass3
@@ -34,6 +35,11 @@ namespace Tests.Reflection
 		class TestClass4
 		{
 			public int Field1;
+		}
+
+		struct TestStruct1
+		{
+			public TestClass3 Class3;
 		}
 
 		[Test]
@@ -62,11 +68,55 @@ namespace Tests.Reflection
 		public void Test3()
 		{
 			var ta  = TypeAccessor.GetAccessor<TestClass1>();
-			var obj = new TestClass1 { Class2 = new TestClass2 { Class3 = new TestClass3 { Class4 = new TestClass4 { Field1 = 50 }}}};
+			var obj = new TestClass1
+			{
+				Class2 = new TestClass2 {
+				Class3 = new TestClass3 {
+				Class4 = new TestClass4 { Field1 = 50 }
+			}}};
 
 			var value = ta["Class2.Class3.Class4.Field1"].GetValue(obj);
 
 			Assert.That(value, Is.EqualTo(50));
+		}
+
+		[Test]
+		public void Test4()
+		{
+			var ta  = TypeAccessor.GetAccessor<TestClass1>();
+			var obj = new TestClass1
+			{
+				Class2  = new TestClass2  {
+				Struct1 = new TestStruct1 {
+				Class3  = new TestClass3  {
+				Class4  = new TestClass4  { Field1 = 50 }
+			}}}};
+
+			var value = ta["Class2.Struct1.Class3.Class4.Field1"].GetValue(obj);
+
+			Assert.That(value, Is.EqualTo(50));
+		}
+
+		[Test]
+		public void Test5()
+		{
+			var ta  = TypeAccessor.GetAccessor<TestClass1>();
+			var obj = new TestClass1();
+
+			ta["Class2.Class3.Class4.Field1"].SetValue(obj, 42);
+
+			Assert.That(obj.Class2.Class3.Class4.Field1, Is.EqualTo(42));
+		}
+
+		[Test]
+		public void Test6()
+		{
+			var ta  = TypeAccessor.GetAccessor<TestClass1>();
+			var obj = new TestClass1();
+
+			ta["Class2.Struct1.Class3.Class4.Field1"].SetValue(obj, 42);
+
+			Assert.That(obj.Class2.Struct1.Class3.Class4.Field1, Is.EqualTo(42));
 		}
 	}
 }

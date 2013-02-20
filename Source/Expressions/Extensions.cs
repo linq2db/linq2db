@@ -669,13 +669,11 @@ namespace LinqToDB.Expressions
 							return ex;
 
 						var e = (ConditionalExpression)expr;
-						var s = Transform(e.Test,    func);
-						var t = Transform(e.IfTrue,  func);
-						var f = Transform(e.IfFalse, func);
 
-						return s != e.Test || t != e.IfTrue || f != e.IfFalse ?
-							Expression.Condition(s, t, f) :
-							expr;
+						return e.Update(
+							Transform(e.Test,    func),
+							Transform(e.IfTrue,  func),
+							Transform(e.IfFalse, func));
 					}
 
 				case ExpressionType.Invoke:
@@ -685,10 +683,9 @@ namespace LinqToDB.Expressions
 							return exp;
 
 						var e  = (InvocationExpression)expr;
-						var ex = Transform(e.Expression, func);
-						var a  = Transform(e.Arguments,  func);
-
-						return ex != e.Expression || a != e.Arguments ? Expression.Invoke(ex, a) : expr;
+						return e.Update(
+							Transform(e.Expression, func),
+							Transform(e.Arguments,  func));
 					}
 
 				case ExpressionType.Lambda:
@@ -845,6 +842,7 @@ namespace LinqToDB.Expressions
 							Transform(e.Expressions, func));
 					}
 
+				case ExpressionType.Default  :
 				case ExpressionType.Extension:
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr);
@@ -1203,6 +1201,7 @@ namespace LinqToDB.Expressions
 						return ex != e.Expressions || v != e.Variables ? Expression.Block(e.Type, v, ex) : expr;
 					}
 
+				case ExpressionType.Default  :
 				case ExpressionType.Extension:
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr).Expression;
