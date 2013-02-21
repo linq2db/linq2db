@@ -3,7 +3,6 @@
 namespace LinqToDB.Extensions
 {
 	using Common;
-	using Linq;
 	using Mapping;
 	using SqlBuilder;
 
@@ -21,7 +20,7 @@ namespace LinqToDB.Extensions
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
-			if (underlyingType.IsEnum && mappingSchema.GetAttribute<SqlEnumAttribute>(underlyingType) == null)
+			if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 			{
 				var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
 

@@ -111,7 +111,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[SqlExpression("sq_test_user_contract.nextval")]
+		[Sql.Expression("sq_test_user_contract.nextval")]
 		static long ContractSequence { get; set;  }
 
 		[Test]

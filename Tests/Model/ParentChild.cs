@@ -491,13 +491,13 @@ namespace Tests.Model
 			_ctx = ctx;
 		}
 
-		[TableFunction(Name="GetParentByID")]
+		[Sql.TableFunction(Name="GetParentByID")]
 		public Table<Parent> GetParentByID(int? id)
 		{
 			return _ctx.GetTable<Parent>(this, (MethodInfo)(MethodBase.GetCurrentMethod()), id);
 		}
 
-		[TableExpression("{0} {1} WITH (TABLOCK)")]
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public Table<T> WithTabLock<T>()
 			where T : class 
 		{

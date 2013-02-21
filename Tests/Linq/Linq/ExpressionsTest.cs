@@ -49,7 +49,7 @@ namespace Tests.Linq
 				AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
-		[MethodExpression("Count4Expression")]
+		[Sql.ExpressionMethod("Count4Expression")]
 		static int Count4(Parent p, int id, int n)
 		{
 			return (_count4Expression ?? (_count4Expression = Count4Expression().Compile()))(p, id, n);
@@ -73,7 +73,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count4(p, n, 4)));
 		}
 
-		[MethodExpression("Count5Expression")]
+		[Sql.ExpressionMethod("Count5Expression")]
 		static int Count5(ITestDataContext db, Parent p, int n)
 		{
 			return (_count5Expression ?? (_count5Expression = Count5Expression().Compile()))(db, p, n);
@@ -97,7 +97,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count5(db, p, n)));
 		}
 
-		[MethodExpression("Count6Expression")]
+		[Sql.ExpressionMethod("Count6Expression")]
 		static int Count6(Table<Child> c, Parent p)
 		{
 			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
@@ -119,7 +119,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count6(db.Child, p)));
 		}
 
-		[MethodExpression("Count7Expression")]
+		[Sql.ExpressionMethod("Count7Expression")]
 		static int Count7(Table<Child> ch, Parent p, int n)
 		{
 			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
@@ -143,7 +143,7 @@ namespace Tests.Linq
 					db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
 
-		[MethodExpression("Expression8")]
+		[Sql.ExpressionMethod("Expression8")]
 		static IQueryable<Parent> GetParent(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
@@ -214,7 +214,7 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[MethodExpression("GetBoolExpression1")]
+		[Sql.ExpressionMethod("GetBoolExpression1")]
 		static bool GetBool1<T>(T obj)
 		{
 			throw new InvalidOperationException();
@@ -240,7 +240,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[MethodExpression("GetBoolExpression2_{0}")]
+		[Sql.ExpressionMethod("GetBoolExpression2_{0}")]
 		static bool GetBool2<T>(T obj)
 		{
 			throw new InvalidOperationException();
@@ -267,7 +267,7 @@ namespace Tests.Linq
 
 		class TestClass<T>
 		{
-			[MethodExpression("GetBoolExpression3")]
+			[Sql.ExpressionMethod("GetBoolExpression3")]
 			public static bool GetBool3(Parent obj)
 			{
 				throw new InvalidOperationException();

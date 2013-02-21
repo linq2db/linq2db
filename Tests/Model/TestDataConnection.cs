@@ -44,7 +44,7 @@ namespace Tests.Model
 		public Table<LinqDataTypes2>         Types2                 { get { return GetTable<LinqDataTypes2>();         } }
 		public Table<TestIdentity>           TestIdentity           { get { return GetTable<TestIdentity>();           } }
 
-		[TableFunction(Name="GetParentByID")]
+		[Sql.TableFunction(Name="GetParentByID")]
 		public Table<Parent> GetParentByID(int? id)
 		{
 			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(), id);
@@ -74,13 +74,13 @@ namespace Tests.Model
 			return string.Join("\n\n", commands);
 		}
 
-		[MethodExpression("Expression9")]
+		[Sql.ExpressionMethod("Expression9")]
 		static public IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[MethodExpression("Expression9")]
+		[Sql.ExpressionMethod("Expression9")]
 		public IQueryable<Parent> GetParent10(Child ch)
 		{
 			throw new InvalidOperationException();

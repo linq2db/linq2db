@@ -1069,7 +1069,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (v != null && v.GetType().IsEnum)
 			{
-				var attrs = v.GetType().GetCustomAttributes(typeof(SqlEnumAttribute), true);
+				var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
 
 				if (attrs.Length == 0)
 					v = MappingSchema.EnumToValue((Enum)v);
@@ -2209,14 +2209,14 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		SqlFunctionAttribute GetFunctionAttribute(MemberInfo member)
+		Sql.FunctionAttribute GetFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<SqlFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.FunctionAttribute>(member, a => a.Configuration);
 		}
 
-		internal TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
+		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<TableFunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member, a => a.Configuration);
 		}
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)

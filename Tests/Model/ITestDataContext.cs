@@ -1,7 +1,6 @@
 ﻿using System;
 
 using LinqToDB;
-using LinqToDB.Linq;
 
 namespace Tests.Model
 {
@@ -28,7 +27,7 @@ namespace Tests.Model
 		Table<LinqDataTypes2>         Types2                 { get; }
 		Table<TestIdentity>           TestIdentity           { get; }
 
-		[TableFunction(Name="GetParentByID")]
+		[Sql.TableFunction(Name="GetParentByID")]
 		Table<Parent> GetParentByID(int? id);
 	}
 }

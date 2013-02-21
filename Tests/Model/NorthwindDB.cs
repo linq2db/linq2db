@@ -42,7 +42,7 @@ namespace Tests.Model
 			public int Rank;
 		}
 
-		class FreeTextTableExpressionAttribute : TableExpressionAttribute
+		class FreeTextTableExpressionAttribute : Sql.TableExpressionAttribute
 		{
 			public FreeTextTableExpressionAttribute()
 				: base("")

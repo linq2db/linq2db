@@ -1034,14 +1034,14 @@ namespace LinqToDB.Linq
 		#region Sql specific
 
 		[CLSCompliant(false)]
-		[SqlFunction("RTrim", 0)]
+		[Sql.Function("RTrim", 0)]
 		public static string TrimRight(string str, char[] trimChars)
 		{
 			return str == null ? null : str.TrimEnd(trimChars);
 		}
 
 		[CLSCompliant(false)]
-		[SqlFunction("LTrim", 0)]
+		[Sql.Function("LTrim", 0)]
 		public static string TrimLeft(string str, char[] trimChars)
 		{
 			return str == null ? null : str.TrimStart(trimChars);
@@ -1051,7 +1051,7 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		[SqlFunction]
+		[Sql.Function]
 		static int? ConvertToCaseCompareTo(string str, string value)
 		{
 			return str == null || value == null ? (int?)null : str.CompareTo(value);
@@ -1059,7 +1059,7 @@ namespace LinqToDB.Linq
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
 		//
-		[SqlFunction]
+		[Sql.Function]
 		static string AltStuff(string str, int? startLocation, int? length, string value)
 		{
 			return Sql.Stuff(str, startLocation, length, value);
@@ -1067,7 +1067,7 @@ namespace LinqToDB.Linq
 
 		// DB2
 		//
-		[SqlFunction]
+		[Sql.Function]
 		static string VarChar(object obj, int? size)
 		{
 			return obj.ToString();
@@ -1075,7 +1075,7 @@ namespace LinqToDB.Linq
 
 		// DB2
 		//
-		[SqlFunction]
+		[Sql.Function]
 		static string Hex(Guid? guid)
 		{
 			return guid == null ? null : guid.ToString();
@@ -1086,10 +1086,10 @@ namespace LinqToDB.Linq
 		// DB2, PostgreSQL, Access, MS SQL, SqlCe
 		//
 		[CLSCompliant(false)]
-		[SqlFunction]
-		[SqlFunction(ProviderName.DB2,        "Repeat")]
-		[SqlFunction(ProviderName.PostgreSQL, "Repeat")]
-		[SqlFunction(ProviderName.Access,     "String", 1, 0)]
+		[Sql.Function]
+		[Sql.Function(ProviderName.DB2,        "Repeat")]
+		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
+		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
 		static string Replicate(string str, int? count)
 		{
 			if (str == null || count == null)
@@ -1104,10 +1104,10 @@ namespace LinqToDB.Linq
 		}
 
 		[CLSCompliant(false)]
-		[SqlFunction]
-		[SqlFunction(ProviderName.DB2,        "Repeat")]
-		[SqlFunction(ProviderName.PostgreSQL, "Repeat")]
-		[SqlFunction(ProviderName.Access,     "String", 1, 0)]
+		[Sql.Function]
+		[Sql.Function(ProviderName.DB2,        "Repeat")]
+		[Sql.Function(ProviderName.PostgreSQL, "Repeat")]
+		[Sql.Function(ProviderName.Access,     "String", 1, 0)]
 		static string Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)
@@ -1121,9 +1121,9 @@ namespace LinqToDB.Linq
 			return sb.ToString();
 		}
 
-		// MSSQL
+		// SqlServer
 		//
-		[SqlFunction]
+		[Sql.Function]
 		static DateTime? DateAdd(Sql.DateParts part, int? number, int? days)
 		{
 			return days == null ? null : Sql.DateAdd(part, number, new DateTime(1900, 1, days.Value + 1));
@@ -1131,12 +1131,12 @@ namespace LinqToDB.Linq
 
 		// MSSQL
 		//
-		[SqlFunction] static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
-		[SqlFunction] static Double?  Round(Double?  value, int precision, int mode) { return 0; }
+		[Sql.Function] static Decimal? Round(Decimal? value, int precision, int mode) { return 0; }
+		[Sql.Function] static Double?  Round(Double?  value, int precision, int mode) { return 0; }
 
 		// Access
 		//
-		[SqlFunction(ProviderName.Access, "DateSerial")]
+		[Sql.Function(ProviderName.Access, "DateSerial")]
 		static DateTime? MakeDateTime2(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null?
@@ -1147,7 +1147,7 @@ namespace LinqToDB.Linq
 		// Access
 		//
 		[CLSCompliant(false)]
-		[SqlFunction("Int", 0)]
+		[Sql.Function("Int", 0)]
 		static T AccessInt<T>(T value)
 		{
 			return value;
@@ -1156,17 +1156,17 @@ namespace LinqToDB.Linq
 		// Access
 		//
 		[CLSCompliant(false)]
-		[SqlFunction("Round", 0, 1)]
+		[Sql.Function("Round", 0, 1)]
 		static T AccessRound<T>(T value, int? precision) { return value; }
 
 		// Firebird
 		//
-		[SqlFunction("PI", ServerSideOnly = true)] static decimal DecimalPI() { return (decimal)Math.PI; }
-		[SqlFunction("PI", ServerSideOnly = true)] static double  DoublePI () { return          Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)] static decimal DecimalPI() { return (decimal)Math.PI; }
+		[Sql.Function("PI", ServerSideOnly = true)] static double  DoublePI () { return          Math.PI; }
 
 		// Informix
 		//
-		[SqlFunction]
+		[Sql.Function]
 		static DateTime? Mdy(int? month, int? day, int? year)
 		{
 			return year == null || month == null || day == null ?

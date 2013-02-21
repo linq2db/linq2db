@@ -75,7 +75,7 @@
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
-    <Compile Include="ITable.cs" />
+    <Compile Include="Linq\ITable.cs" />
     <Compile Include="ExpressionQueryImpl.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs">
       <SubType>Code</SubType>
@@ -169,17 +169,17 @@
     <Compile Include="Linq\LinqException.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="Linq\MemberInfoComparer.cs" />
-    <Compile Include="MethodExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.ExpressionMethodAttribute.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
-    <Compile Include="Sql.cs" />
-    <Compile Include="SqlEnumAttribute.cs" />
-    <Compile Include="SqlExpressionAttribute.cs" />
-    <Compile Include="SqlFunctionAttribute.cs" />
-    <Compile Include="SqlPropertyAttribute.cs" />
-    <Compile Include="TableExpressionAttribute.cs" />
-    <Compile Include="TableFunctionAttribute.cs" />
+    <Compile Include="Sql\Sql.cs" />
+    <Compile Include="Sql\Sql.EnumAttribute.cs" />
+    <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.FunctionAttribute.cs" />
+    <Compile Include="Sql\Sql.PropertyAttribute.cs" />
+    <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
     <Compile Include="TableT.cs" />
     <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
