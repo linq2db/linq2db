@@ -217,7 +217,6 @@
     <Compile Include="Metadata\AttributeReaderTest.cs" />
     <Compile Include="Metadata\XmlReaderTest.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="ProviderSpecific\PostgreSQL.cs" />
     <Compile Include="DataProvider\SqlServerTest.cs" />
     <Compile Include="Reflection\TypeAccessorTest.cs" />
     <Compile Include="Update\BatchTest.cs" />
@@ -240,7 +239,6 @@
     <Compile Include="Linq\IdlTest.cs" />
     <Compile Include="Linq\L2SAttributes.cs" />
     <Compile Include="Linq\ParserTest.cs" />
-    <Compile Include="ProviderSpecific\Firebird.cs" />
     <Compile Include="DataProvider\OracleTest.cs" />
     <Compile Include="Linq\TableFunctionTest.cs" />
     <Compile Include="Linq\VisualBasicTest.cs" />
