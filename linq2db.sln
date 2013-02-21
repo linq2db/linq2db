@@ -40,6 +40,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.SqlServer", "DataP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Access", "DataProviders\Access\LinqToDB.Access.csproj", "{E8687813-3AA8-415F-B749-8A11B1A70D88}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{751CE0BA-690F-42BF-94C7-C8276F8A84CF}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.MIT = LICENSE.MIT
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
