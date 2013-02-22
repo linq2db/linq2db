@@ -3,6 +3,7 @@ using System.Data.Linq.SqlClient;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -375,12 +376,54 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff([DataContexts] string context)
+		public void Stuff1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Stuff(p.FirstName, 3, 1, "123") == "Jo123n" && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		new class Category
+		{
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
+		}
+
+		class Task
+		{
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
+		}
+
+		class TaskCategory
+		{
+			[Column, NotNull] public int Id;
+			[Column, NotNull] public int TaskId;
+			[Column, NotNull] public int CategoryId;
+		}
+
+		[Test]
+		public void Stuff2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from t in db.GetTable<Task>()
+					join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
+					from tc in g.DefaultIfEmpty()
+					select new
+					{
+						t.Id,
+						t.Name,
+						Categories = Sql.Stuff(
+							from c in db.GetTable<Category>()
+							where c.Id == tc.CategoryId
+							select "," + c.Name, 1, 1, "")
+					};
+
+				q.ToString();
 			}
 		}
 

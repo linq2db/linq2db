@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
@@ -335,6 +336,12 @@ namespace LinqToDB
 			return str == null || value == null || startLocation == null || length == null ?
 				null :
 				str.Remove(startLocation.Value - 1, length.Value).Insert(startLocation.Value - 1, value);
+		}
+
+		[Sql.Function(ServerSideOnly = true)]
+		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
+		{
+			throw new NotImplementedException();
 		}
 
 		[Sql.Function]
