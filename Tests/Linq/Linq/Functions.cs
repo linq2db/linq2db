@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -360,6 +361,54 @@ namespace Tests.Linq
 				AreEqual(
 					   Parent.Select(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID)),
 					db.Parent.Select(p => ChildCount(p)));
+		}
+
+		new class Category
+		{
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
+		}
+
+		class Task
+		{
+			[PrimaryKey, Identity] public int    Id;
+			[Column, NotNull]      public string Name;
+		}
+
+		class TaskCategory
+		{
+			[Column, NotNull] public int Id;
+			[Column, NotNull] public int TaskId;
+			[Column, NotNull] public int CategoryId;
+		}
+
+		[Sql.Function(ServerSideOnly = true)]
+		static string Stuff(IEnumerable<string> characterExpression, int start, int length, string replaceWithExpression)
+		{
+			throw new NotImplementedException();
+		}
+
+		[Test]
+		public void Test1()
+		{
+			using (var db = new TestDataConnection(ProviderName.SqlServer2012))
+			{
+				var q =
+					from t in db.GetTable<Task>()
+					join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
+					from tc in g.DefaultIfEmpty()
+					select new
+					{
+						t.Id,
+						t.Name,
+						Categories = Stuff(
+							from c in db.GetTable<Category>()
+							where c.Id == tc.CategoryId
+							select "," + c.Name, 1, 1, "")
+					};
+
+				q.ToString();
+			}
 		}
 	}
 
