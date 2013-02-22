@@ -1,2 +1,62 @@
+<#@ assembly name="System.Data"      #>
+<#@ import namespace="System.Data"   #>
+<#@ include file="T4Model.ttinclude" #>
+<#
+
+#><#+
+
+IDbConnection DataConnection;
+
+string        DatabaseName             = null;
+string        DataContextName          = "DataContext";
+string        BaseDataContextClass     = "LinqToDB.Data.DataConnection";
+string        BaseEntityClass          = null;
+string        OneToManyAssociationType = "IEnumerable<{0}>";
+
+string OwnerToInclude           = null;
+string[] DatabaseQuote          = null;
+
+bool   RenderField              = false;
+bool   RenderBackReferences     = true;
+bool   RenderForeignKeys        = true;
+
+void LoadMetadata()
+{
+	Model.Usings.Add("LinqToDB.Mapping");
+
+	var dataContext = new Class(DataContextName);
+
+	if (Model.Namespace.Name == null) Model.Namespace.Name = "DataModel";
+	if (BaseDataContextClass != null) dataContext.BaseClass = BaseDataContextClass;
+
+	Model.Types.Add(dataContext);
+
+	LoadServerMetadata();
+
+	foreach (var table in Model.Types.OfType<Class>().Where(t => t.IsTable))
+	{
+
+	}
+}
+
+partial class Class
+{
+	public bool   IsTable                 { get; set; }
+	public string Schema                  { get; set; }
+	public string TableName               { get; set; }
+	public string DataContextPropertyName { get; set; }
+	public bool   IsView                  { get; set; }
+	public string Description             { get; set; }
+
+	public string TypeName
+	{
+		get { return Name;  }
+		set { Name = value; }
+	}
+
+//	public Dictionary<string,Column>     Columns     = new Dictionary<string,Column>();
+//	public Dictionary<string,ForeignKey> ForeignKeys = new Dictionary<string,ForeignKey>();
+}
 
 
+#>

@@ -71,11 +71,13 @@ ModelSource Model = new ModelSource();
 
 public partial class ModelSource : ITree
 {
+	public int CurrentNamespace = 0;
+
 	public List<string>    Usings     = new List<String>    { "System"        };
 	public List<Namespace> Namespaces = new List<Namespace> { new Namespace() };
 
-	public Namespace      Namespace { get { return Namespaces[0];       } }
-	public List<TypeBase> Types     { get { return Namespaces[0].Types; } }
+	public Namespace      Namespace { get { return Namespaces[CurrentNamespace];       } }
+	public List<TypeBase> Types     { get { return Namespaces[CurrentNamespace].Types; } }
 
 	public virtual void Render(GeneratedTextTransformation tt)
 	{
