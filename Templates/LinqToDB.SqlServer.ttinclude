@@ -2,7 +2,457 @@
 <#
 #>
 <#+
-void LoadServerMetadata()
+void LoadServerMetadata(IDbConnection conn)
 {
+	var tables  = CreateList(new { ID = "", Table  = new Table()  });
+	var columns = CreateList(new { ID = "", Column = new Column() });
+
+	using (var cmd  = conn.CreateCommand())
+	{
+		// Load tables & views.
+		//
+		string s = @"
+			SELECT
+				TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME AS TABLE_FULLNAME,
+				TABLE_SCHEMA,
+				TABLE_NAME,
+				TABLE_TYPE,
+				ISNULL(CONVERT(varchar(8000), x.Value), '') AS TABLE_DESC
+			FROM
+				INFORMATION_SCHEMA.TABLES s
+			  LEFT JOIN 
+				sys.tables t 
+			  ON 
+				OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+			  LEFT JOIN 
+				sys.extended_properties x 
+			  ON 
+				OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND 
+				x.minor_id = 0 AND 
+				x.name = 'MS_Description'
+			WHERE {0} 
+				(
+				t.object_id IS NULL OR
+				t.is_ms_shipped <> 1 AND
+				(
+					SELECT 
+						major_id 
+					FROM 
+						sys.extended_properties 
+					WHERE
+						major_id = t.object_id and 
+						minor_id = 0           and 
+						class    = 1           and 
+						name     = N'microsoft_database_tools_support'
+					) IS NULL
+				)";
+
+		if (string.IsNullOrWhiteSpace(OwnerToInclude))
+			cmd.CommandText = string.Format(s, "");
+		else
+			cmd.CommandText = string.Format(s, " TABLE_SCHEMA = '" + OwnerToInclude + "' AND ");
+
+		using (var rd = cmd.ExecuteReader())
+		{
+			while (rd.Read())
+			{
+				var t = new
+				{
+					ID    = Convert.ToString(rd[0]),
+					Table = new Table
+					{
+						Schema      = rd[1].ToString(),
+						TableName   = rd[2].ToString(),
+						TypeName    = rd[2].ToString(),
+						IsView      = rd[3].ToString() == "VIEW",
+						Description = Convert.ToString(rd[4]),
+					}
+				};
+
+				tables.Add(t);
+			}
+		}
+
+		// Load columns.
+		//
+		s = @"
+			SELECT
+				(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) as id,
+				(CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END)         as isNullable,
+				ORDINAL_POSITION         as colid,
+				COLUMN_NAME              as name,
+				c.DATA_TYPE              as dataType,
+				CHARACTER_MAXIMUM_LENGTH as length, 
+				ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION) AS prec,
+				NUMERIC_SCALE            as scale,
+				COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as isIdentity,
+				ISNULL(CONVERT(varchar(8000), x.Value), '') AS COLUMN_DESC
+			FROM
+				INFORMATION_SCHEMA.COLUMNS c
+			  LEFT JOIN 
+				sys.extended_properties x 
+			  ON 
+				OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND 
+				ORDINAL_POSITION = x.minor_id AND 
+				x.name = 'MS_Description'
+			{0}";
+
+		if(string.IsNullOrWhiteSpace(OwnerToInclude))
+			cmd.CommandText = string.Format(s, "");
+		else
+			cmd.CommandText = string.Format(s, "WHERE TABLE_SCHEMA = '" + OwnerToInclude + "' ");
+
+		using (var rd = cmd.ExecuteReader())
+		{
+			while (rd.Read())
+			{
+				var col = new
+				{
+					ID     = Convert.ToString(rd["id"]),
+					Column = new Column
+					{
+						ID         = Convert.ToInt16  (rd["colid"]),
+						ColumnName = Convert.ToString (rd["name"]),
+						MemberName = Convert.ToString (rd["name"]),
+						ColumnType = Convert.ToString (rd["dataType"]),
+						IsNullable = Convert.ToBoolean(rd["isNullable"]),
+						IsIdentity = Convert.ToBoolean(rd["isIdentity"]),
+						Length     = rd.IsDBNull(rd.GetOrdinal("length")) ? 0 : Convert.ToInt64(rd["length"]),
+						Precision  = rd.IsDBNull(rd.GetOrdinal("prec"))   ? 0 : Convert.ToInt32(rd["prec"]),
+						Scale      = rd.IsDBNull(rd.GetOrdinal("scale"))  ? 0 : Convert.ToInt32(rd["scale"]),
+						Description = Convert.ToString(rd["COLUMN_DESC"]),
+					}
+				};
+
+				var c = col.Column;
+
+				switch (c.ColumnType)
+				{
+					case "image"            : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Image;            break;
+					case "text"             : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.Text;             break;
+					case "binary"           : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Binary;           break;
+					case "tinyint"          : c.Type = "byte";           c.DbType = DbType.Byte;           c.SqlDbType = SqlDbType.TinyInt;          break;
+					case "date"             : c.Type = "DateTime";       c.DbType = DbType.Date;           c.SqlDbType = SqlDbType.Date;             break;
+					case "time"             : c.Type = "DateTime";       c.DbType = DbType.Time;           c.SqlDbType = SqlDbType.Time;             break;
+					case "bit"              : c.Type = "bool";           c.DbType = DbType.Boolean;        c.SqlDbType = SqlDbType.Bit;              break;
+					case "smallint"         : c.Type = "short";          c.DbType = DbType.Int16;          c.SqlDbType = SqlDbType.SmallInt;         break;
+					case "decimal"          : c.Type = "decimal";        c.DbType = DbType.Decimal;        c.SqlDbType = SqlDbType.Decimal;          break;
+					case "int"              : c.Type = "int";            c.DbType = DbType.Int32;          c.SqlDbType = SqlDbType.Int;              break;
+					case "smalldatetime"    : c.Type = "DateTime";       c.DbType = DbType.DateTime;       c.SqlDbType = SqlDbType.SmallDateTime;    break;
+					case "real"             : c.Type = "float";          c.DbType = DbType.Single;         c.SqlDbType = SqlDbType.Real;             break;
+					case "money"            : c.Type = "decimal";        c.DbType = DbType.Currency;       c.SqlDbType = SqlDbType.Money;            break;
+					case "datetime"         : c.Type = "DateTime";       c.DbType = DbType.DateTime;       c.SqlDbType = SqlDbType.DateTime;         break;
+					case "float"            : c.Type = "double";         c.DbType = DbType.Double;         c.SqlDbType = SqlDbType.Float;            break;
+					case "numeric"          : c.Type = "decimal";        c.DbType = DbType.Decimal;        c.SqlDbType = SqlDbType.Decimal;          break;
+					case "smallmoney"       : c.Type = "decimal";        c.DbType = DbType.Currency;       c.SqlDbType = SqlDbType.SmallMoney;       break;
+					case "datetime2"        : c.Type = "DateTime";       c.DbType = DbType.DateTime2;      c.SqlDbType = SqlDbType.DateTime2;        break;
+					case "bigint"           : c.Type = "long";           c.DbType = DbType.Int64;          c.SqlDbType = SqlDbType.BigInt;           break;
+					case "varbinary"        : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.VarBinary;        break;
+					case "timestamp"        : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Timestamp;        break;
+					case "sysname"          : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.NVarChar;         break;
+					case "nvarchar"         : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.NVarChar;         break;
+					case "varchar"          : c.Type = "string";         c.DbType = DbType.AnsiString;     c.SqlDbType = SqlDbType.VarChar;          break;
+					case "ntext"            : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.NText;            break;
+					case "uniqueidentifier" : c.Type = "Guid";           c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.UniqueIdentifier; break;
+					case "datetimeoffset"   : c.Type = "DateTimeOffset"; c.DbType = DbType.DateTimeOffset; c.SqlDbType = SqlDbType.DateTimeOffset;   break;
+					case "sql_variant"      : c.Type = "object";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Variant;          break;
+					case "xml"              : c.Type = "string";         c.DbType = DbType.Xml;            c.SqlDbType = SqlDbType.Xml;              break;
+
+					case "char" :
+						c.Type      = Convert.ToInt32 (rd["length"]) == 1 ? "char" : "string";
+						c.DbType    = DbType.AnsiStringFixedLength;
+						c.SqlDbType = SqlDbType.Char;
+						break;
+
+					case "nchar" :
+						c.Type      = Convert.ToInt32 (rd["length"]) == 1 ? "char" : "string";
+						c.DbType    = DbType.StringFixedLength;
+						c.SqlDbType = SqlDbType.NChar;
+						break;
+
+					//hierarchyid
+					//geometry
+					//geography
+					default                 : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Binary;           break;
+				}
+
+				switch (c.Type)
+				{
+					case "string" :
+					case "object" :
+					case "byte[]" : c.IsClass = true; break;
+				}
+
+				if (c.IsNullable && !c.IsClass)
+					c.Type += "?";
+
+				columns.Add(col);
+			}
+		}
+
+		// Load PKs.
+		//
+		s = @"
+			SELECT
+				(k.TABLE_CATALOG + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME) as id,
+				k.CONSTRAINT_NAME                                             as name,
+				k.COLUMN_NAME                                                 as colname,
+				k.ORDINAL_POSITION                                            as colid
+			FROM
+				INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+			  JOIN 
+				INFORMATION_SCHEMA.TABLE_CONSTRAINTS c 
+			  ON 
+				k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND 
+				k.CONSTRAINT_SCHEMA = c.CONSTRAINT_SCHEMA AND 
+				k.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+			WHERE
+				c.CONSTRAINT_TYPE='PRIMARY KEY' 
+				{0}";
+
+		if(string.IsNullOrWhiteSpace(OwnerToInclude))
+			cmd.CommandText = string.Format(s, "");
+		else
+			cmd.CommandText = string.Format(s, "AND k.TABLE_SCHEMA = '" + OwnerToInclude + "' ");
+
+		using (var rd = cmd.ExecuteReader())
+		{
+			while (rd.Read())
+			{
+				var id      = Convert.ToString(rd["id"]);
+				var colid   = Convert.ToInt32 (rd["colid"]);
+				var colname = Convert.ToString(rd["colname"]);
+
+				columns.Single(_ => _.ID == id && _.Column.ColumnName == colname).Column.PKOrder = colid;
+			}
+		}
+
+		// Load FKs.
+		//
+		s = @"
+			SELECT
+				rc.CONSTRAINT_NAME  as Name, 
+				fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTable,
+				fk.COLUMN_NAME      as ThisColumn,
+				pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTable,
+				pk.COLUMN_NAME      as OtherColumn,
+				cu.ORDINAL_POSITION as Ordinal
+			FROM
+				INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+			  JOIN 
+				INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE fk
+					ON
+						rc.CONSTRAINT_CATALOG        = fk.CONSTRAINT_CATALOG AND
+				rc.CONSTRAINT_SCHEMA		 = fk.CONSTRAINT_SCHEMA AND
+						rc.CONSTRAINT_NAME           = fk.CONSTRAINT_NAME
+			  JOIN 
+				INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE pk
+					ON
+						rc.UNIQUE_CONSTRAINT_CATALOG = pk.CONSTRAINT_CATALOG AND
+				rc.UNIQUE_CONSTRAINT_SCHEMA	 = pk.CONSTRAINT_SCHEMA AND
+						rc.UNIQUE_CONSTRAINT_NAME    = pk.CONSTRAINT_NAME
+			  JOIN 
+				INFORMATION_SCHEMA.KEY_COLUMN_USAGE cu
+					ON
+				rc.CONSTRAINT_CATALOG = cu.CONSTRAINT_CATALOG AND
+				rc.CONSTRAINT_SCHEMA = cu.CONSTRAINT_SCHEMA AND
+						rc.CONSTRAINT_NAME = cu.CONSTRAINT_NAME
+			{0}
+			ORDER BY
+				ThisTable,
+				Ordinal";
+
+		if(string.IsNullOrWhiteSpace(OwnerToInclude))
+			cmd.CommandText = string.Format(s, "");
+		else
+			cmd.CommandText = string.Format(s, "WHERE fk.TABLE_SCHEMA = '" + OwnerToInclude + "' ");
+
+		using (var rd = cmd.ExecuteReader())
+		{
+			while (rd.Read())
+			{
+				var name            = Convert.ToString(rd["Name"]);
+				var thisTableID     = Convert.ToString(rd["ThisTable"]);
+				var otherTableID    = Convert.ToString(rd["OtherTable"]);
+				var thisColumnName  = Convert.ToString(rd["ThisColumn"]);
+				var otherColumnName = Convert.ToString(rd["OtherColumn"]);
+
+				var thisTable   = (from t in tables  where t.ID == thisTableID  select t.Table).Single();
+				var otherTable  = (from t in tables  where t.ID == otherTableID select t.Table).Single();
+				var thisColumn  = (from c in columns where c.ID == thisTableID  && c.Column.ColumnName == thisColumnName  select c.Column).Single();
+				var otherColumn = (from c in columns where c.ID == otherTableID && c.Column.ColumnName == otherColumnName select c.Column).Single();
+
+				if (thisTable.ForeignKeys.ContainsKey(name) == false)
+					thisTable.ForeignKeys.Add(name, new ForeignKey { KeyName = name, MemberName = name, OtherTable = otherTable });
+
+				var key = thisTable.ForeignKeys[name];
+
+				key.ThisColumns. Add(thisColumn);
+				key.OtherColumns.Add(otherColumn);
+			}
+		}
+	}
+
+	var qc =
+		from c in columns
+		group c by c.ID into gr
+		join t in tables on gr.Key equals t.ID
+		select new { t.Table, gr };
+
+	foreach (var c in qc)
+	{
+		foreach (var col in from col in c.gr orderby col.Column.ID select col.Column)
+			c.Table.Columns.Add(col.ColumnName, col);
+
+		if (c.Table.Schema == "dbo")
+		{
+			c.Table.Schema = null;
+			Tables.Add(c.Table.TableName, c.Table);
+		}
+		else
+		{
+			Tables.Add(c.Table.Schema + "." + c.Table.TableName, c.Table);
+		}
+	}
+
+	{
+		Model.Usings.Add("System.Collections.Generic");
+		Model.Usings.Add("System.Linq");
+		Model.Usings.Add("System.Linq.Expressions");
+		Model.Usings.Add("System.Reflection");
+		Model.Usings.Add("LinqToDB");
+		Model.Usings.Add("LinqToDB.SqlBuilder");
+
+		DataContextObject.Members.Add(
+			new MemberGroup
+			{
+				Region  = "FreeTextTable",
+				Members =
+				{
+					new Class("FreeTextKey<T>",
+						new MemberGroup
+						{
+							IsCompact = true,
+							Members   =
+							{
+								new Field("T",   "Key"),
+								new Field("int", "Rank")
+							}
+						})
+					{
+						IsPartial = false
+					},
+
+					new Class("FreeTextTableExpressionAttribute")
+					{
+						IsPartial = false,
+						BaseClass = "Sql.TableExpressionAttribute",
+						Members   =
+						{
+							new Method(null, "FreeTextTableExpressionAttribute")
+							{
+								AfterSignature = { ": base(\"\")" },
+							},
+							new Method("string", "Convert",
+								new[] { "string value" },
+								new[]
+								{
+									"if (value != null && value.Length > 0 && value[0] != '[')",
+									"	return \"[\" + value + \"]\";",
+									"return value;"
+								})
+							{
+								AccessModifier = AccessModifier.Private
+							},
+							new Method("void", "SetTable",
+								new[] { "SqlTable table", "MemberInfo member", "IEnumerable<Expression> expArgs", "IEnumerable<ISqlExpression> sqlArgs" },
+								new[]
+								{
+									"var aargs  = sqlArgs.ToArray();",
+									"var arr    = ConvertArgs(member, aargs).ToList();",
+									"var method = (MethodInfo)member;",
+									"",
+									"{",
+									"	var ttype  = method.GetGenericArguments()[0];",
+									"	var tbl    = new SqlTable(ttype);",
+									"",
+									"	var database     = Convert(tbl.Database);",
+									"	var owner        = Convert(tbl.Owner);",
+									"	var physicalName = Convert(tbl.PhysicalName);",
+									"",
+									"	var name = \"\";",
+									"",
+									"	if (database != null)",
+									"		name = database + \".\" + (owner == null ? \".\" : owner + \".\");",
+									"	else if (owner != null)",
+									"		name = owner + \".\";",
+									"",
+									"	name += physicalName;",
+									"",
+									"	arr.Add(new SqlExpression(name, Precedence.Primary));",
+									"}",
+									"",
+									"{",
+									"	var field = ((ConstantExpression)expArgs.First()).Value;",
+									"",
+									"	if (field is string)",
+									"	{",
+									"		arr[0] = new SqlExpression(field.ToString(), Precedence.Primary);",
+									"	}",
+									"	else if (field is LambdaExpression)",
+									"	{",
+									"		var body = ((LambdaExpression)field).Body;",
+									"",
+									"		if (body is MemberExpression)",
+									"		{",
+									"			var name = ((MemberExpression)body).Member.Name;",
+									"",
+									"			if (name.Length > 0 && name[0] != '[')",
+									"				name = \"[\" + name + \"]\";",
+									"",
+									"			arr[0] = new SqlExpression(name, Precedence.Primary);",
+									"		}",
+									"	}",
+									"}",
+									"",
+									"table.SqlTableType   = SqlTableType.Expression;",
+									"table.Name           = \"FREETEXTTABLE({6}, {2}, {3}) {1}\";",
+									"table.TableArguments = arr.ToArray();",
+								})
+							{
+								IsOverride = true
+							}
+						}
+					},
+					new Method("Table<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+						new[] { "string field", "string text" },
+						new[]
+						{
+							"return this.GetTable<FreeTextKey<TKey>>(",
+							"	this,",
+							"	((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),",
+							"	field,",
+							"	text);",
+						})
+					{
+						Attributes = { new Attribute("FreeTextTableExpressionAttribute") }
+					},
+					new Method("Table<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+						new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
+						new[]
+						{
+							"return this.GetTable<FreeTextKey<TKey>>(",
+							"	this,",
+							"	((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),",
+							"	fieldSelector,",
+							"	text);",
+						})
+					{
+						Attributes = { new Attribute("FreeTextTableExpressionAttribute") }
+					},
+				}
+			}
+		);
+	}
 }
 #>

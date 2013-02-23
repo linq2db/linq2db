@@ -2,46 +2,292 @@
 <#@ import namespace="System.Data"   #>
 <#@ include file="T4Model.ttinclude" #>
 <#
-
+	{
+		var beforeGenerateModel = BeforeGenerateModel;
+		BeforeGenerateModel = () =>
+		{
+			GenerateTypesFromMetadata();
+			beforeGenerateModel();
+		};
+	}
 #><#+
 
-IDbConnection DataConnection;
-
-string        DatabaseName             = null;
-string        DataContextName          = "DataContext";
-string        BaseDataContextClass     = "LinqToDB.Data.DataConnection";
-string        BaseEntityClass          = null;
-string        OneToManyAssociationType = "IEnumerable<{0}>";
-
-string OwnerToInclude           = null;
-string[] DatabaseQuote          = null;
-
-bool   RenderField              = false;
-bool   RenderBackReferences     = true;
-bool   RenderForeignKeys        = true;
-
-void LoadMetadata()
+string   NamespaceName
 {
-	Model.Usings.Add("LinqToDB.Mapping");
+	get { return Model.Namespace.Name;  }
+	set { Model.Namespace.Name = value; }
+}
 
-	var dataContext = new Class(DataContextName);
+string   DatabaseName             = null;
+string   DataContextName          = "DataContext";
+string   BaseDataContextClass     = "LinqToDB.Data.DataConnection";
+string   BaseEntityClass          = null;
+string   OneToManyAssociationType = "IEnumerable<{0}>";
 
-	if (Model.Namespace.Name == null) Model.Namespace.Name = "DataModel";
-	if (BaseDataContextClass != null) dataContext.BaseClass = BaseDataContextClass;
+string   OwnerToInclude           = null;
+string[] DatabaseQuote            = null;
 
-	Model.Types.Add(dataContext);
+bool     RenderField              = false;
+bool     RenderBackReferences     = true;
+bool     RenderForeignKeys        = true;
 
-	LoadServerMetadata();
+Class    DataContextObject;
 
-	foreach (var table in Model.Types.OfType<Class>().Where(t => t.IsTable))
+void LoadMetadata(IDbConnection conn)
+{
+	if (conn.State == ConnectionState.Closed)
+		conn.Open();
+
+	if (DataContextObject == null)
 	{
+		DataContextObject = new Class(DataContextName) { BaseClass = BaseDataContextClass };
+		Model.Types.Add(DataContextObject);
+	}
 
+	LoadServerMetadata(conn);
+
+	foreach (var t in Tables.Values)
+	{
+		t.BaseClass = BaseEntityClass;
+
+		if (t.TypeName.Contains(" "))
+		{
+			var ss = t.TypeName.Split(' ').Where(_ => _.Trim().Length > 0).Select(_ => char.ToUpper(_[0]) + _.Substring(1));
+			t.TypeName = string.Join("", ss.ToArray());
+		}
+
+		foreach (var key in t.ForeignKeys.Values.ToList())
+			if (!key.KeyName.EndsWith("_BackReference"))
+				key.OtherTable.ForeignKeys.Add(key.KeyName + "_BackReference", key.BackReference = new ForeignKey
+				{
+					KeyName         = key.KeyName    + "_BackReference",
+					MemberName      = key.MemberName + "_BackReference",
+					AssociationType = AssociationType.Auto,
+					OtherTable      = t,
+					ThisColumns     = key.OtherColumns,
+					OtherColumns    = key.ThisColumns,
+				});
+
+		foreach (var key in t.ForeignKeys.Values)
+		{
+			if (key.BackReference != null && key.AssociationType == AssociationType.Auto)
+			{
+				if (key.ThisColumns.All(_ => _.IsPrimaryKey))
+				{
+					if (t.Columns.Values.Count(_ => _.IsPrimaryKey) == key.ThisColumns.Count)
+						key.AssociationType = AssociationType.OneToOne;
+					else
+						key.AssociationType = AssociationType.ManyToOne;
+				}
+				else
+					key.AssociationType = AssociationType.ManyToOne;
+
+				key.CanBeNull = key.ThisColumns.All(_ => _.IsNullable);
+			}
+		}
+
+		foreach (var key in t.ForeignKeys.Values)
+		{
+			var name = key.MemberName;
+
+			if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+			{
+				name = key.ThisColumns[0].MemberName;
+				name = name.Substring(0, name.Length - "id".Length);
+
+				if (!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
+						t.Columns.    Values.Select(_ => _.MemberName)).Concat(
+						new[] { t.TypeName }).Any(_ => _ == name))
+				{
+					name = key.MemberName;;
+				}
+			}
+			
+			if (name == key.MemberName)
+			{
+				if (name.StartsWith("FK_"))
+					name = name.Substring(3);
+
+				if (name.EndsWith("_BackReference"))
+					name = name.Substring(0, name.Length - "_BackReference".Length);
+
+				name = string.Join("", name.Split('_').Where(_ => _.Length > 0 && _ != t.TableName).ToArray());
+
+//				if (name.Length > 0)
+//					name = key.AssociationType == AssociationType.OneToMany ? PluralizeAssociationName(name) : SingularizeAssociationName(name);
+			}
+
+			if (name.Length != 0 &&
+				!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
+					t.Columns.    Values.Select(_ => _.MemberName)).Concat(
+					new[] { t.TypeName }).Any(_ => _ == name))
+			{
+				key.MemberName = name;
+			}
+		}
+	}
+
+	if (Tables.Values.SelectMany(_ => _.ForeignKeys.Values).Any(_ => _.AssociationType == AssociationType.OneToMany))
+		Model.Usings.Add("System.Collections.Generic");
+
+	var keyWords = new HashSet<string>
+	{
+		"abstract", "as",       "base",     "bool",    "break",     "byte",     "case",       "catch",     "char",    "checked",
+		"class",    "const",    "continue", "decimal", "default",   "delegate", "do",         "double",    "else",    "enum",
+		"event",    "explicit", "extern",   "false",   "finally",   "fixed",    "float",      "for",       "foreach", "goto",
+		"if",       "implicit", "in",       "int",     "interface", "internal", "is",         "lock",      "long",    "new",
+		"null",     "object",   "operator", "out",     "override",  "params",   "private",    "protected", "public",  "readonly",
+		"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",   "stackalloc", "static",    "struct",  "switch",
+		"this",     "throw",    "true",     "try",     "typeof",    "uint",     "ulong",      "unchecked", "unsafe",  "ushort",
+		"using",    "virtual",  "volatile", "void",    "while"
+	};
+
+	foreach (var t in Tables.Values)
+	{
+		if (keyWords.Contains(t.TypeName))
+			t.TypeName = "@" + t.TypeName;
+
+		if (keyWords.Contains(t.DataContextPropertyName))
+			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
+
+		foreach (var col in t.Columns.Values)
+			if (keyWords.Contains(col.MemberName))
+				col.MemberName = "@" + col.MemberName;
 	}
 }
 
-partial class Class
+void GenerateTypesFromMetadata()
 {
-	public bool   IsTable                 { get; set; }
+	if (Tables.Count == 0)
+		return;
+
+	Model.Usings.Add("LinqToDB.Mapping");
+
+	if (NamespaceName == null)
+		NamespaceName = "DataModel";
+
+	var props = new MemberGroup { IsCompact = true };
+
+	DataContextObject.Members.Insert(0, props);
+
+	foreach (var t in Tables.Values.OrderBy(tbl => tbl.TypeName))
+	{
+		props.Members.Add(new Property(
+			string.Format("Table<{0}>", t.TypeName),
+			(t.DataContextPropertyName ?? t.TypeName).ToString(),
+			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
+			null));
+
+		var tableAttrs = new List<string>();
+
+		if (DatabaseName != null) tableAttrs.Add("Database=" + '"' + DatabaseName + '"');
+		if (t.Schema     != null) tableAttrs.Add("Schema="   + '"' + t.Schema     + '"');
+
+		tableAttrs.Add((tableAttrs.Count == 0 ? "" : "Name=") + '"' + t.TableName + '"');
+
+		t.Attributes.Add(new Attribute("Table", tableAttrs.ToArray()) { IsSeparated = true } );
+
+		if (t.IsView)
+			t.Comment.Add(" View");
+
+		if (!string.IsNullOrWhiteSpace(t.Description))
+		{
+			t.Comment.Add("/ <summary>");
+			t.Comment.Add("/ " + t.Description);
+			t.Comment.Add("/ </summary>");
+		}
+
+		var columns     = new MemberGroup { IsCompact = true };
+		var nPKs        = t.Columns.Values.Count(c => c.IsPrimaryKey);
+		var allNullable = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
+
+		foreach (var c in t.Columns.Values)
+		{
+			// Column.
+			//
+			var ca = new Attribute("Column");
+			var canBeReplaced = true;
+
+			if (c.MemberName != c.ColumnName)
+			{
+				ca.Parameters.Add('"' + c.ColumnName + '"');
+				canBeReplaced = false;
+			}
+
+			c.Attributes.Add(ca);
+
+			// PK.
+			//
+			if (c.IsPrimaryKey)
+			{
+				var pka = new Attribute("PrimaryKey");
+
+				if (nPKs > 1)
+					pka.Parameters.Add(c.PKOrder.ToString());
+
+				if (canBeReplaced)
+					c.Attributes[0] = pka;
+				else
+					c.Attributes.Add(pka);
+
+				canBeReplaced = false;
+			}
+
+			// Identity.
+			//
+			if (c.IsIdentity)
+			{
+				var ida = new Attribute("Identity");
+
+				if (canBeReplaced)
+					c.Attributes[0] = ida;
+				else
+					c.Attributes.Add(ida);
+
+				canBeReplaced = false;
+			}
+
+			// Nullable.
+			//
+			if (c.IsNullable)
+				c.Attributes.Add(new Attribute((allNullable ? "" : "   ") + "Nullable"));
+			else if (!c.IsIdentity)
+				c.Attributes.Add(new Attribute("NotNull"));
+
+			if (!string.IsNullOrWhiteSpace(c.Description))
+			{
+				c.Comment.Add("/ <summary>");
+				c.Comment.Add("/ " + c.Description);
+				c.Comment.Add("/ </summary>");
+			}
+
+			// End line comment.
+			//
+			var elComm = c.ColumnType;
+
+			if (c.Length != 0)
+				elComm += "(" + c.Length + ")";
+
+			if (c.Precision != 0)
+				elComm += "(" + c.Precision + ","+ c.Scale + ")";
+
+			c.EndLineComment = elComm;
+
+			columns.Members.Add(c);
+		}
+
+		t.Members.Add(columns);
+
+		Model.Types.Add(t);
+	}
+
+	Tables.Clear();
+}
+
+Dictionary<string,Table> Tables = new Dictionary<string,Table>();
+
+public partial class Table : Class
+{
 	public string Schema                  { get; set; }
 	public string TableName               { get; set; }
 	public string DataContextPropertyName { get; set; }
@@ -54,9 +300,72 @@ partial class Class
 		set { Name = value; }
 	}
 
-//	public Dictionary<string,Column>     Columns     = new Dictionary<string,Column>();
-//	public Dictionary<string,ForeignKey> ForeignKeys = new Dictionary<string,ForeignKey>();
+	public Dictionary<string,Column>     Columns     = new Dictionary<string,Column>();
+	public Dictionary<string,ForeignKey> ForeignKeys = new Dictionary<string,ForeignKey>();
 }
 
+public partial class Column : Property
+{
+	public int          ID;
+	public string       ColumnName; // Column name in database
+	public bool         IsNullable;
+	public bool         IsIdentity;
+	public string       ColumnType; // Type of the column in database
+	public bool         IsClass;
+	public DbType       DbType;
+	public SqlDbType    SqlDbType;
+	public long         Length;
+	public int          Precision;
+	public int          Scale;
+	public string		Description;
+	public int          PKOrder = -1;
 
+	public bool IsPrimaryKey { get { return PKOrder >= 0; } }
+
+	public string MemberName
+	{
+		get { return Name;  }
+		set { Name = value; }
+	}
+}
+
+public enum AssociationType
+{
+	Auto,
+	OneToOne,
+	OneToMany,
+	ManyToOne,
+}
+
+public partial class ForeignKey
+{
+	public string       KeyName;
+	public string       MemberName;
+	public Table        OtherTable;
+	public List<Column> ThisColumns  = new List<Column>();
+	public List<Column> OtherColumns = new List<Column>();
+	public bool         CanBeNull    = true;
+	public ForeignKey   BackReference;
+
+	private AssociationType _associationType = AssociationType.Auto;
+	public  AssociationType  AssociationType
+	{
+		get { return _associationType; }
+		set
+		{
+			_associationType = value;
+
+			if (BackReference != null)
+			{
+				switch (value)
+				{
+					case AssociationType.Auto      : BackReference.AssociationType = AssociationType.Auto;      break;
+					case AssociationType.OneToOne  : BackReference.AssociationType = AssociationType.OneToOne;  break;
+					case AssociationType.OneToMany : BackReference.AssociationType = AssociationType.ManyToOne; break;
+					case AssociationType.ManyToOne : BackReference.AssociationType = AssociationType.OneToMany; break;
+				}
+			}
+		}
+	}
+}
 #>

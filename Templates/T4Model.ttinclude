@@ -167,6 +167,8 @@ public abstract partial class TypeBase : IClassMember
 {
 	public AccessModifier  AccessModifier = AccessModifier.Public;
 	public string          Name;
+	public bool            IsPartial  = true;
+	public List<string>    Comment    = new List<string>();
 	public List<Attribute> Attributes = new List<Attribute>();
 
 	public abstract void Render(GeneratedTextTransformation tt);
@@ -179,8 +181,9 @@ public abstract partial class TypeBase : IClassMember
 static Action<GeneratedTextTransformation,Class> WriteBeginClass = (tt,cl) =>
 {
 	tt.Write(cl.AccessModifier.ToString().ToLower() + " ");
-	if (cl.IsStatic) tt.Write("static ");		
-	tt.Write("partial class {0}", cl.Name);
+	if (cl.IsStatic)  tt.Write("static ");
+	if (cl.IsPartial) tt.Write("partial ", cl.Name);
+	tt.Write("class {0}", cl.Name);
 
 	if (!string.IsNullOrEmpty(cl.BaseClass) || cl.Interfaces.Count > 0)
 	{
@@ -217,6 +220,9 @@ public partial class Class : TypeBase
 	
 	public override void Render(GeneratedTextTransformation tt)
 	{
+		foreach (var c in Comment)
+			tt.WriteLine("//" + c);
+
 		if (Attributes.Count > 0)
 		{
 			var aa = Attributes.Where(a => !a.IsSeparated).ToList();
@@ -1057,7 +1063,7 @@ public partial class Property : MemberBase
 static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
 {
 	var am  = m.AccessModifier.ToString().ToLower();
-	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsStatic ? " static" : "";
+	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsOverride ? " override" : m.IsStatic ? " static" : "";
 
 	tt.Write("{0}{1}{2}{3}{4}{5}{6} {7}",
 		am,     LenDiff(m.AccessModifierLen, am),
@@ -1099,6 +1105,12 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		
 		writeParams();
 
+		foreach (var s in m.AfterSignature)
+		{
+			tt.Write(" ");
+			tt.Write(s);
+		}
+
 		len = tt.GenerationEnvironment.Length - len;
 
 		if (m.IsAbstract || m.AccessModifier == AccessModifier.Partial)
@@ -1129,6 +1141,11 @@ static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compa
 		writeParams ();
 		writeComment();
 
+		tt.PushIndent("\t");
+		foreach (var s in m.AfterSignature)
+			tt.WriteLine(s);
+		tt.PopIndent();
+
 		tt.WriteLine("{");
 		tt.PushIndent("\t");
 		
@@ -1151,9 +1168,11 @@ public partial class Method : MemberBase
 {
 	public bool         IsAbstract;
 	public bool         IsVirtual;
+	public bool         IsOverride;
 	public bool         IsStatic;
-	public List<string> Parameters = new List<string>();
-	public List<string> Body       = new List<string>();
+	public List<string> AfterSignature = new List<string>();
+	public List<string> Parameters     = new List<string>();
+	public List<string> Body           = new List<string>();
 	
 	public Method()
 	{
@@ -1314,6 +1333,11 @@ string ToCamelCase(string name)
 	n = Math.Max(1, n - 1);
 
 	return name.Substring(0, n).ToLower() + name.Substring(n);
+}
+
+List<T> CreateList<T>(T item)
+{
+	return new List<T>();
 }
 
 partial class PartialHelper

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 
 namespace T4Model.LinqToDB
 {
@@ -6,6 +7,8 @@ namespace T4Model.LinqToDB
 	{
 		static void Main(string[] args)
 		{
+			System.Data.SqlClient.SqlConnection c;
+//			c.State == ConnectionState.Closed
 		}
 	}
 }

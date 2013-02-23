@@ -2,9 +2,16 @@
 <#@ output extension=".generated.cs"                            #>
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude" #>
 <#
-	Model.Namespace.Name = "Northwind";
+//	NamespaceName   = "DataContext";
+	DataContextName = "NorthwindDB";
+//	DatabaseName    = "Northwind";
 
-	LoadMetadata();
+	var conn = new System.Data.SqlClient.SqlConnection();
+	conn.ConnectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
+
+	LoadMetadata(conn);
+
+	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
 	GenerateModel();
 #>
