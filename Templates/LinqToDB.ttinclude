@@ -172,11 +172,13 @@ void GenerateTypesFromMetadata()
 
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.TypeName))
 	{
-		props.Members.Add(new Property(
+		var dcProp = new Property(
 			string.Format("Table<{0}>", t.TypeName),
 			(t.DataContextPropertyName ?? t.TypeName).ToString(),
 			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
-			null));
+			null);
+
+		props.Members.Add(dcProp);
 
 		var tableAttrs = new List<string>();
 
@@ -192,9 +194,12 @@ void GenerateTypesFromMetadata()
 
 		if (!string.IsNullOrWhiteSpace(t.Description))
 		{
-			t.Comment.Add("/ <summary>");
-			t.Comment.Add("/ " + t.Description);
-			t.Comment.Add("/ </summary>");
+			t.     Comment.Add("/ <summary>");
+			t.     Comment.Add("/ " + t.Description);
+			t.     Comment.Add("/ </summary>");
+			dcProp.Comment.Add("/ <summary>");
+			dcProp.Comment.Add("/ " + t.Description);
+			dcProp.Comment.Add("/ </summary>");
 		}
 
 		var columns     = new MemberGroup { IsCompact = true };
@@ -211,6 +216,18 @@ void GenerateTypesFromMetadata()
 			if (c.MemberName != c.ColumnName)
 			{
 				ca.Parameters.Add('"' + c.ColumnName + '"');
+				canBeReplaced = false;
+			}
+
+			if (c.SkipOnInsert)
+			{
+				ca.Parameters.Add("SkipOnInsert=true");
+				canBeReplaced = false;
+			}
+
+			if (c.SkipOnUpdate)
+			{
+				ca.Parameters.Add("SkipOnUpdate=true");
 				canBeReplaced = false;
 			}
 
@@ -265,11 +282,8 @@ void GenerateTypesFromMetadata()
 			//
 			var elComm = c.ColumnType;
 
-			if (c.Length != 0)
-				elComm += "(" + c.Length + ")";
-
-			if (c.Precision != 0)
-				elComm += "(" + c.Precision + ","+ c.Scale + ")";
+			if (c.Length != 0)    elComm += "(" + c.Length + ")";
+			if (c.Precision != 0) elComm += "(" + c.Precision + ","+ c.Scale + ")";
 
 			c.EndLineComment = elComm;
 
@@ -277,6 +291,35 @@ void GenerateTypesFromMetadata()
 		}
 
 		t.Members.Add(columns);
+
+		if (t.ForeignKeys.Count > 0)
+		{
+			var associations = new MemberGroup { Region = "Associations" };
+
+			foreach (var key in t.ForeignKeys.Values)
+			{
+				key.Comment.Add("/ <summary>");
+				key.Comment.Add("/ " + key.KeyName);
+				key.Comment.Add("/ </summary>");
+
+				if (key.AssociationType == AssociationType.OneToMany)
+					key.Type = string.Format(OneToManyAssociationType, key.OtherTable.TypeName);
+				else
+					key.Type = key.OtherTable.TypeName;
+
+				var aa = new Attribute("Association");
+
+				aa.Parameters.Add("ThisKey=\""   + string.Join(", ", (from c in key.ThisColumns  select c.MemberName).ToArray()) + "\"");
+				aa.Parameters.Add("OtherKey=\""  + string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray()) + "\"");
+				aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
+
+				key.Attributes.Add(aa);
+
+				associations.Members.Add(key);
+			}
+
+			t.Members.Add(associations);
+		}
 
 		Model.Types.Add(t);
 	}
@@ -306,19 +349,21 @@ public partial class Table : Class
 
 public partial class Column : Property
 {
-	public int          ID;
-	public string       ColumnName; // Column name in database
-	public bool         IsNullable;
-	public bool         IsIdentity;
-	public string       ColumnType; // Type of the column in database
-	public bool         IsClass;
-	public DbType       DbType;
-	public SqlDbType    SqlDbType;
-	public long         Length;
-	public int          Precision;
-	public int          Scale;
-	public string		Description;
-	public int          PKOrder = -1;
+	public int       ID;
+	public string    ColumnName; // Column name in database
+	public bool      IsNullable;
+	public bool      IsIdentity;
+	public string    ColumnType; // Type of the column in database
+	public bool      IsClass;
+	public DbType    DbType;
+	public SqlDbType SqlDbType;
+	public long      Length;
+	public int       Precision;
+	public int       Scale;
+	public string    Description;
+	public int       PKOrder = -1;
+	public bool      SkipOnUpdate;
+	public bool      SkipOnInsert;
 
 	public bool IsPrimaryKey { get { return PKOrder >= 0; } }
 
@@ -337,15 +382,20 @@ public enum AssociationType
 	ManyToOne,
 }
 
-public partial class ForeignKey
+public partial class ForeignKey : Property
 {
 	public string       KeyName;
-	public string       MemberName;
 	public Table        OtherTable;
 	public List<Column> ThisColumns  = new List<Column>();
 	public List<Column> OtherColumns = new List<Column>();
 	public bool         CanBeNull    = true;
 	public ForeignKey   BackReference;
+
+	public string MemberName
+	{
+		get { return Name;  }
+		set { Name = value; }
+	}
 
 	private AssociationType _associationType = AssociationType.Auto;
 	public  AssociationType  AssociationType

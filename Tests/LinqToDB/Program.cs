@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Data;
+using System.Linq;
+
+using DataModel;
 
 namespace T4Model.LinqToDB
 {
@@ -7,8 +9,10 @@ namespace T4Model.LinqToDB
 	{
 		static void Main(string[] args)
 		{
-			System.Data.SqlClient.SqlConnection c;
-//			c.State == ConnectionState.Closed
+			using (var dc = new NorthwindDB())
+			{
+				dc.Customers.ToList();
+			}
 		}
 	}
 }

@@ -19,12 +19,18 @@ namespace DataModel
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public Table<AlphabeticalListOfProducts> AlphabeticalListOfProducts { get { return this.GetTable<AlphabeticalListOfProducts>(); } }
+		/// <summary>
+		/// Description for Categories table.
+		/// </summary>
 		public Table<Categories>                 Categories                 { get { return this.GetTable<Categories>(); } }
 		public Table<CategorySalesFor1997>       CategorySalesFor1997       { get { return this.GetTable<CategorySalesFor1997>(); } }
 		public Table<CurrentProductList>         CurrentProductList         { get { return this.GetTable<CurrentProductList>(); } }
 		public Table<CustomerAndSuppliersByCity> CustomerAndSuppliersByCity { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
 		public Table<CustomerCustomerDemo>       CustomerCustomerDemo       { get { return this.GetTable<CustomerCustomerDemo>(); } }
 		public Table<CustomerDemographics>       CustomerDemographics       { get { return this.GetTable<CustomerDemographics>(); } }
+		/// <summary>
+		/// Description of Customers table.
+		/// </summary>
 		public Table<Customers>                  Customers                  { get { return this.GetTable<Customers>(); } }
 		public Table<Employees>                  Employees                  { get { return this.GetTable<Employees>(); } }
 		public Table<EmployeeTerritories>        EmployeeTerritories        { get { return this.GetTable<EmployeeTerritories>(); } }
@@ -178,6 +184,16 @@ namespace DataModel
 		[Column,     NotNull    ] public string CategoryName { get; set; } // nvarchar(15)
 		[Column,        Nullable] public string Description  { get; set; } // ntext(1073741823)
 		[Column,        Nullable] public byte[] Picture      { get; set; } // image(2147483647)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Categories_BackReference
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		public IEnumerable<Products> FK_Products_Categories_BackReference { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -211,6 +227,22 @@ namespace DataModel
 	{
 		[PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
 		[PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		public CustomerDemographics FK_CustomerCustomerDemo { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		public Customers Customers { get; set; }
+
+		#endregion
 	}
 
 	[Table("CustomerDemographics")]
@@ -218,6 +250,16 @@ namespace DataModel
 	{
 		[PrimaryKey, NotNull    ] public string CustomerTypeID { get; set; } // nchar(10)
 		[Column,        Nullable] public string CustomerDesc   { get; set; } // ntext(1073741823)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
+
+		#endregion
 	}
 
 	/// <summary>
@@ -243,6 +285,22 @@ namespace DataModel
 		[Column,        Nullable] public string Country      { get; set; } // nvarchar(15)
 		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
 		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		public IEnumerable<Orders> FK_Orders_Customers_BackReference { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		public IEnumerable<CustomerCustomerDemo> FK_CustomerCustomerDemo_Customers_BackReference { get; set; }
+
+		#endregion
 	}
 
 	[Table("Employees")]
@@ -266,6 +324,34 @@ namespace DataModel
 		[Column,        Nullable] public string    Notes           { get; set; } // ntext(1073741823)
 		[Column,        Nullable] public int?      ReportsTo       { get; set; } // int(10,0)
 		[Column,        Nullable] public string    PhotoPath       { get; set; } // nvarchar(255)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Employees_Employees
+		/// </summary>
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		public Employees FK_Employees_Employees { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		public IEnumerable<Orders> Orders { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		public IEnumerable<EmployeeTerritories> EmployeeTerritories { get; set; }
+
+		/// <summary>
+		/// FK_Employees_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
+		public IEnumerable<Employees> FK_Employees_Employees_BackReference { get; set; }
+
+		#endregion
 	}
 
 	[Table("EmployeeTerritories")]
@@ -273,6 +359,22 @@ namespace DataModel
 	{
 		[PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int(10,0)
 		[PrimaryKey(2), NotNull] public string TerritoryID { get; set; } // nvarchar(20)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		public Employees Employees { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		public Territories Territories { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -315,6 +417,22 @@ namespace DataModel
 		[Column,                           NotNull] public decimal UnitPrice { get; set; } // money(19,4)
 		[Column,                           NotNull] public short   Quantity  { get; set; } // smallint(5,0)
 		[Column,                           NotNull] public float   Discount  { get; set; } // real(24,0)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		public Orders OrderDetailsOrders { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Products
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		public Products OrderDetailsProducts { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -347,6 +465,34 @@ namespace DataModel
 		[Column,     Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
 		[Column,     Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
 		[Column,     Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Shippers
+		/// </summary>
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		public Shippers Shippers { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		public Employees Employees { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		public Customers Customers { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Orders_BackReference
+		/// </summary>
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
+		public IEnumerable<OrderDetails> FK_Order_Details_Orders_BackReference { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -396,6 +542,28 @@ namespace DataModel
 		[Column,        Nullable] public short?   UnitsOnOrder    { get; set; } // smallint(5,0)
 		[Column,        Nullable] public short?   ReorderLevel    { get; set; } // smallint(5,0)
 		[Column,     NotNull    ] public bool     Discontinued    { get; set; } // bit
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		public Suppliers Suppliers { get; set; }
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		public Categories Categories { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Products_BackReference
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true)]
+		public IEnumerable<OrderDetails> FK_Order_Details_Products_BackReference { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -441,6 +609,16 @@ namespace DataModel
 	{
 		[PrimaryKey, NotNull] public int    RegionID          { get; set; } // int(10,0)
 		[Column,     NotNull] public string RegionDescription { get; set; } // nchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Territories_Region_BackReference
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
+		public IEnumerable<Territories> FK_Territories_Region_BackReference { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -469,6 +647,16 @@ namespace DataModel
 		[PrimaryKey, Identity   ] public int    ShipperID   { get; set; } // int(10,0)
 		[Column,     NotNull    ] public string CompanyName { get; set; } // nvarchar(40)
 		[Column,        Nullable] public string Phone       { get; set; } // nvarchar(24)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Shippers_BackReference
+		/// </summary>
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
+		public IEnumerable<Orders> FK_Orders_Shippers_BackReference { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -504,6 +692,16 @@ namespace DataModel
 		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
 		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
 		[Column,        Nullable] public string HomePage     { get; set; } // ntext(1073741823)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Suppliers_BackReference
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		public IEnumerable<Products> FK_Products_Suppliers_BackReference { get; set; }
+
+		#endregion
 	}
 
 	[Table("Territories")]
@@ -512,5 +710,21 @@ namespace DataModel
 		[PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
 		[Column,     NotNull] public string TerritoryDescription { get; set; } // nchar(50)
 		[Column,     NotNull] public int    RegionID             { get; set; } // int(10,0)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		public Region Region { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories_BackReference
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
+		public IEnumerable<EmployeeTerritories> FK_EmployeeTerritories_Territories_BackReference { get; set; }
+
+		#endregion
 	}
 }

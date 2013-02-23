@@ -148,7 +148,7 @@ void LoadServerMetadata(IDbConnection conn)
 					case "datetime2"        : c.Type = "DateTime";       c.DbType = DbType.DateTime2;      c.SqlDbType = SqlDbType.DateTime2;        break;
 					case "bigint"           : c.Type = "long";           c.DbType = DbType.Int64;          c.SqlDbType = SqlDbType.BigInt;           break;
 					case "varbinary"        : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.VarBinary;        break;
-					case "timestamp"        : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Timestamp;        break;
+					case "timestamp"        : c.Type = "byte[]";         c.DbType = DbType.Binary;         c.SqlDbType = SqlDbType.Timestamp; c.SkipOnInsert = true; c.SkipOnUpdate = true; break;
 					case "sysname"          : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.NVarChar;         break;
 					case "nvarchar"         : c.Type = "string";         c.DbType = DbType.String;         c.SqlDbType = SqlDbType.NVarChar;         break;
 					case "varchar"          : c.Type = "string";         c.DbType = DbType.AnsiString;     c.SqlDbType = SqlDbType.VarChar;          break;

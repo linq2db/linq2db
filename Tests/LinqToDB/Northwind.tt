@@ -8,6 +8,7 @@
 
 	var conn = new System.Data.SqlClient.SqlConnection();
 	conn.ConnectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
+	//conn.ConnectionString = @"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;";
 
 	LoadMetadata(conn);
 
