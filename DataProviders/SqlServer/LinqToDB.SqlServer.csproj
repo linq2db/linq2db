@@ -50,6 +50,7 @@
     <Compile Include="SqlServer2005MappingSchema.cs" />
     <Compile Include="SqlServer2005SqlProvider.cs" />
     <Compile Include="SqlServer2008SqlProvider.cs" />
+    <Compile Include="SqlServerSchemaProvider.cs" />
     <Compile Include="SqlServerSqlProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlServer.cs" />

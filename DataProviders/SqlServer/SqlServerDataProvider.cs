@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class SqlServerDataProvider : DataProviderBase
@@ -71,6 +72,11 @@ namespace LinqToDB.DataProvider
 			return Version == SqlServerVersion.v2005 ?
 				new SqlServer2005SqlProvider(SqlProviderFlags) as ISqlProvider:
 				new SqlServer2008SqlProvider(SqlProviderFlags);
+		}
+
+		public override DatabaseSchema GetSchema(DataConnection dataConnection)
+		{
+			return new SqlServerSchemaProvider().GetSchema(dataConnection);
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();

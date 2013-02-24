@@ -204,6 +204,7 @@
     <Compile Include="DataProvider\MySqlTest.cs" />
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
+    <Compile Include="DataProvider\SchemaProvider\SchemaProviderTest.cs" />
     <Compile Include="DataProvider\SybaseTest.cs" />
     <Compile Include="DataProvider\SQLiteTest.cs" />
     <Compile Include="DataProvider\ExpressionTest.cs" />

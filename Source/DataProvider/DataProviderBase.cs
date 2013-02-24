@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
+using LinqToDB.DataProvider.SchemaProvider;
 
 namespace LinqToDB.DataProvider
 {
@@ -201,6 +202,15 @@ namespace LinqToDB.DataProvider
 			parameter.ParameterName = name;
 			SetParameterType(parameter, dataType);
 			parameter.Value = value ?? DBNull.Value;
+		}
+
+		class CommonSchemaProvider : SchemaProviderBase
+		{
+		}
+
+		public virtual DatabaseSchema GetSchema(DataConnection dataConnection)
+		{
+			return new CommonSchemaProvider().GetSchema(dataConnection);
 		}
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)

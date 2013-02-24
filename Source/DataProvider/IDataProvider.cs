@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public interface IDataProvider
@@ -25,6 +26,7 @@ namespace LinqToDB.DataProvider
 		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
 		void             SetParameter       (IDbDataParameter parameter, string name, DataType dataType, object value);
 
+		DatabaseSchema   GetSchema          (DataConnection dataConnection);
 		int              BulkCopy<T>        (DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source);
 	}
 }

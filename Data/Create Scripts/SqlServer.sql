@@ -61,6 +61,271 @@ GO
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 GO
 
+
+-- Person_SelectByKey
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectByKey')
+BEGIN DROP Procedure Person_SelectByKey
+END
+GO
+
+CREATE Procedure Person_SelectByKey
+	@id int
+AS
+
+SELECT * FROM Person WHERE PersonID = @id
+
+GO
+
+GRANT EXEC ON Person_SelectByKey TO PUBLIC
+GO
+
+-- Person_SelectAll
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectAll')
+BEGIN DROP Procedure Person_SelectAll END
+GO
+
+CREATE Procedure Person_SelectAll
+AS
+
+SELECT * FROM Person
+
+GO
+
+GRANT EXEC ON Person_SelectAll TO PUBLIC
+GO
+
+-- Person_SelectByName
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectByName')
+BEGIN DROP Procedure Person_SelectByName END
+GO
+
+CREATE Procedure Person_SelectByName
+	@firstName nvarchar(50),
+	@lastName  nvarchar(50)
+AS
+
+SELECT
+	*
+FROM
+	Person
+WHERE
+	FirstName = @firstName AND LastName = @lastName
+
+GO
+
+GRANT EXEC ON Person_SelectByName TO PUBLIC
+GO
+
+-- Person_SelectListByName
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_SelectListByName')
+BEGIN DROP Procedure Person_SelectListByName
+END
+GO
+
+CREATE Procedure Person_SelectListByName
+	@firstName nvarchar(50),
+	@lastName  nvarchar(50)
+AS
+
+SELECT
+	*
+FROM
+	Person
+WHERE
+	FirstName like @firstName AND LastName like @lastName
+
+GO
+
+GRANT EXEC ON Person_SelectByName TO PUBLIC
+GO
+
+-- Person_Insert
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_Insert')
+BEGIN DROP Procedure Person_Insert END
+GO
+
+CREATE Procedure Person_Insert
+	@FirstName  nvarchar(50),
+	@LastName   nvarchar(50),
+	@MiddleName nvarchar(50),
+	@Gender     char(1)
+AS
+
+INSERT INTO Person
+	( LastName,  FirstName,  MiddleName,  Gender)
+VALUES
+	(@LastName, @FirstName, @MiddleName, @Gender)
+
+SELECT Cast(SCOPE_IDENTITY() as int) PersonID
+
+GO
+
+GRANT EXEC ON Person_Insert TO PUBLIC
+GO
+
+-- Person_Insert_OutputParameter
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_Insert_OutputParameter')
+BEGIN DROP Procedure Person_Insert_OutputParameter END
+GO
+
+CREATE Procedure Person_Insert_OutputParameter
+	@FirstName  nvarchar(50),
+	@LastName   nvarchar(50),
+	@MiddleName nvarchar(50),
+	@Gender     char(1),
+	@PersonID   int output
+AS
+
+INSERT INTO Person
+	( LastName,  FirstName,  MiddleName,  Gender)
+VALUES
+	(@LastName, @FirstName, @MiddleName, @Gender)
+
+SET @PersonID = Cast(SCOPE_IDENTITY() as int)
+
+GO
+
+GRANT EXEC ON Person_Insert_OutputParameter TO PUBLIC
+GO
+
+-- Person_Update
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_Update')
+BEGIN DROP Procedure Person_Update END
+GO
+
+CREATE Procedure Person_Update
+	@PersonID   int,
+	@FirstName  nvarchar(50),
+	@LastName   nvarchar(50),
+	@MiddleName nvarchar(50),
+	@Gender     char(1)
+AS
+
+UPDATE
+	Person
+SET
+	LastName   = @LastName,
+	FirstName  = @FirstName,
+	MiddleName = @MiddleName,
+	Gender     = @Gender
+WHERE
+	PersonID = @PersonID
+
+GO
+
+GRANT EXEC ON Person_Update TO PUBLIC
+GO
+
+-- Person_Delete
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Person_Delete')
+BEGIN DROP Procedure Person_Delete END
+GO
+
+CREATE Procedure Person_Delete
+	@PersonID int
+AS
+
+DELETE FROM Person WHERE PersonID = @PersonID
+
+GO
+
+GRANT EXEC ON Person_Delete TO PUBLIC
+GO
+
+-- Patient_SelectAll
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Patient_SelectAll')
+BEGIN DROP Procedure Patient_SelectAll END
+GO
+
+CREATE Procedure Patient_SelectAll
+AS
+
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID
+
+GO
+
+GRANT EXEC ON Patient_SelectAll TO PUBLIC
+GO
+
+-- Patient_SelectByName
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'Patient_SelectByName')
+BEGIN DROP Procedure Patient_SelectByName END
+GO
+
+CREATE Procedure Patient_SelectByName
+	@firstName nvarchar(50),
+	@lastName  nvarchar(50)
+AS
+
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID
+	AND FirstName = @firstName AND LastName = @lastName
+
+GO
+
+GRANT EXEC ON Person_SelectByName TO PUBLIC
+GO
+
+
+-- OutRefTest
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'OutRefTest')
+BEGIN DROP Procedure OutRefTest END
+GO
+
+CREATE Procedure OutRefTest
+	@ID             int,
+	@outputID       int output,
+	@inputOutputID  int output,
+	@str            varchar(50),
+	@outputStr      varchar(50) output,
+	@inputOutputStr varchar(50) output
+AS
+
+SET @outputID       = @ID
+SET @inputOutputID  = @ID + @inputOutputID
+SET @outputStr      = @str
+SET @inputOutputStr = @str + @inputOutputStr
+
+GO
+
+-- OutRefEnumTest
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'OutRefEnumTest')
+BEGIN DROP Procedure OutRefEnumTest END
+GO
+
+CREATE Procedure OutRefEnumTest
+	@str            varchar(50),
+	@outputStr      varchar(50) output,
+	@inputOutputStr varchar(50) output
+AS
+
+SET @outputStr      = @str
+SET @inputOutputStr = @str + @inputOutputStr
+
+GO
+
+
 -- Data Types test
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('AllTypes') AND type in (N'U'))
@@ -190,6 +455,15 @@ GO
 DROP FUNCTION GetParentByID
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentView') AND type in (N'V'))
+BEGIN DROP VIEW ParentView END
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentChildView') AND type in (N'V'))
+BEGIN DROP VIEW ParentChildView END
+GO
+
+
 DROP TABLE Parent
 GO
 DROP TABLE Child
@@ -204,6 +478,9 @@ GO
 CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
+GO
+
 CREATE FUNCTION GetParentByID(@id int)
 RETURNS TABLE
 AS
@@ -213,10 +490,31 @@ RETURN
 )
 GO
 
+-- ParentView
+
+CREATE VIEW ParentView
+AS
+	SELECT * FROM Parent
+GO
+
+-- ParentChildView
+
+CREATE VIEW ParentChildView
+AS
+	SELECT
+		p.ParentID,
+		p.Value1,
+		ch.ChildID
+	FROM Parent p
+		LEFT JOIN Child ch ON p.ParentID = ch.ParentID
+GO
+
+
+-- LinqDataTypes
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('LinqDataTypes') AND type in (N'U'))
 BEGIN DROP TABLE LinqDataTypes END
 GO
-
 
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
