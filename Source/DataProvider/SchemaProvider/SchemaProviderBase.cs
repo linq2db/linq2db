@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data.Common;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.SchemaProvider
 {
@@ -7,20 +7,46 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		public virtual DatabaseSchema GetSchema(DataConnection dataConnection)
+		public abstract DatabaseSchema GetSchema(DataConnection dataConnection);
+
+		protected string ToValidName(string name)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			if (name.Contains(" "))
+			{
+				var ss = name.Split(' ')
+					.Where (s => s.Trim().Length > 0)
+					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
+				return string.Join("", ss.ToArray());
+			}
 
-			var schema     = dbConnection.GetSchema();
-			var tables     = dbConnection.GetSchema("Tables");
-			var columns    = dbConnection.GetSchema("Columns");
-			var allColumns = dbConnection.GetSchema("AllColumns");
-			var views      = dbConnection.GetSchema("Views");
-			var procedures = dbConnection.GetSchema("Procedures");
+			return name;
+		}
 
+		protected string ToTypeName(Type type, bool isNullable)
+		{
+			if (type == null)
+				type = typeof(object);
 
+			var memberType = type.Name;
 
-			return new DatabaseSchema();
+			switch (memberType)
+			{
+				case "Byte"    : memberType = "byte";    break;
+				case "Byte[]"  : memberType = "byte[]";  break;
+				case "Int16"   : memberType = "short";   break;
+				case "Int32"   : memberType = "int";     break;
+				case "Int64"   : memberType = "long";    break;
+				case "Decimal" : memberType = "decimal"; break;
+				case "Single"  : memberType = "float";   break;
+				case "Double"  : memberType = "double";  break;
+				case "String"  : memberType = "string";  break;
+				case "Object"  : memberType = "object";  break;
+			}
+
+			if (!type.IsClass && isNullable)
+				memberType += "?";
+
+			return memberType;
 		}
 	}
 }

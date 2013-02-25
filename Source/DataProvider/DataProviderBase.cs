@@ -8,13 +8,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
-using LinqToDB.DataProvider.SchemaProvider;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Expressions;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public abstract class DataProviderBase : IDataProvider
@@ -204,13 +204,9 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
-		class CommonSchemaProvider : SchemaProviderBase
+		public virtual ISchemaProvider GetSchemaProvider()
 		{
-		}
-
-		public virtual DatabaseSchema GetSchema(DataConnection dataConnection)
-		{
-			return new CommonSchemaProvider().GetSchema(dataConnection);
+			throw new NotImplementedException();
 		}
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)

@@ -26,7 +26,12 @@ namespace Tests.DataProvider.SchemaProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var dbSchema = conn.DataProvider.GetSchema(conn);
+				var sp       = conn.DataProvider.GetSchemaProvider();
+				var dbSchema = sp.GetSchema(conn);
+
+				dbSchema.Tables.ToDictionary(
+					t => t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
+					t => t.Columns.ToDictionary(c => c.ColumnName));
 
 				switch (context)
 				{

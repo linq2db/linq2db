@@ -74,9 +74,9 @@ namespace LinqToDB.DataProvider
 				new SqlServer2008SqlProvider(SqlProviderFlags);
 		}
 
-		public override DatabaseSchema GetSchema(DataConnection dataConnection)
+		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SqlServerSchemaProvider().GetSchema(dataConnection);
+			return new SqlServerSchemaProvider();
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();

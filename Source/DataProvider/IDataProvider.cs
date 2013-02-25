@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider
 		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
 		void             SetParameter       (IDbDataParameter parameter, string name, DataType dataType, object value);
 
-		DatabaseSchema   GetSchema          (DataConnection dataConnection);
+		ISchemaProvider  GetSchemaProvider  ();
 		int              BulkCopy<T>        (DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source);
 	}
 }

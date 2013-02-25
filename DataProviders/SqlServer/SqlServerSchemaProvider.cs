@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
-using System.Data.Common;
 using System.Data;
 
 using Microsoft.SqlServer.Types;
@@ -15,12 +15,12 @@ namespace LinqToDB.DataProvider
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = (SqlConnection)dataConnection.Connection;
 			var dataTypes    = dbConnection.GetSchema("DataTypes");
-			var descriptions = dataConnection.Query(new { TableFullName = "", Description = "" }, @"
+			var descriptions = dataConnection.Query(new { id = "", description = "" }, @"
 				SELECT
-					s.TABLE_CATALOG + '.' + s.TABLE_SCHEMA + '.' + s.TABLE_NAME AS TableFullName,
-					ISNULL(CONVERT(varchar(8000), x.Value), '') AS Description
+					s.TABLE_CATALOG + '.' + s.TABLE_SCHEMA + '.' + s.TABLE_NAME as id,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                 as description
 				FROM
 					INFORMATION_SCHEMA.TABLES s
 					JOIN 
@@ -40,28 +40,73 @@ namespace LinqToDB.DataProvider
 				let tableName   = t.Field<string>("TABLE_NAME")
 				select new TableSchema
 				{
-					CatalogName = catalogName,
-					SchemaName  = schemaName,
-					TableName   = tableName,
-					Description = descriptions
-						.Where (d => d.TableFullName == catalogName + "." + schemaName + "." + tableName)
-						.Select(d => d.Description)
+					CatalogName     = catalogName,
+					SchemaName      = schemaName,
+					TableName       = tableName,
+					TypeName        = ToValidName(tableName),
+					Description     = descriptions
+						.Where (d => d.id == catalogName + "." + schemaName + "." + tableName)
+						.Select(d => d.description)
 						.FirstOrDefault(),
-					Columns     = new List<ColumnSchema>(),
+					IsDefaultSchema = schemaName == "dbo",
+					Columns         = new List<ColumnSchema>(),
 				}
 			).ToList();
 
+			var pks = dataConnection.Query(new { id = "", pkName = "", columnName = "", ordinal = 0 }, @"
+				SELECT
+					(k.TABLE_CATALOG + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME) as id,
+					k.CONSTRAINT_NAME                                             as pkName,
+					k.COLUMN_NAME                                                 as columnName,
+					k.ORDINAL_POSITION                                            as ordinal
+				FROM
+					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+				  JOIN 
+					INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+				  ON 
+					k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND 
+					k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND 
+					k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
+				WHERE
+					c.CONSTRAINT_TYPE='PRIMARY KEY'")
+				.ToList();
+
+			var colProps = dataConnection.Query(new { id = "", isIdentity = false, description = "" }, @"
+				SELECT
+					(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME + '.' + COLUMN_NAME)                         as id,
+					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as isIdentity,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')                                                         as description
+				FROM
+					INFORMATION_SCHEMA.COLUMNS c
+					LEFT JOIN 
+						sys.extended_properties x
+					ON
+						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND 
+						ORDINAL_POSITION = x.minor_id AND 
+						x.name = 'MS_Description'")
+				.ToList();
+
 			var columns =
 				from c  in dbConnection.GetSchema("Columns").AsEnumerable()
-				join dt in dataTypes.AsEnumerable() on c.Field<string>("DATA_TYPE") equals dt.Field<string>("TypeName") into g
-				from dt in g.DefaultIfEmpty()
-				join t  in tables
-					on
-						c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME")
-					equals
-						t.CatalogName                    + "." + t.SchemaName                    + "." + t.TableName
+				let cid = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME")
+				let cnm = c.Field<string>("COLUMN_NAME")
+
+				join dt in dataTypes.AsEnumerable()
+					on c.Field<string>("DATA_TYPE") equals dt.Field<string>("TypeName") into g1
+				from dt in g1.DefaultIfEmpty()
+
+				join pk in pks
+					on cid + "." + cnm equals pk.id + "." + pk.columnName into g2
+				from pk in g2.DefaultIfEmpty()
+
+				join cp in colProps
+					on cid + "." + cnm equals cp.id into g3
+				from cp in g3.DefaultIfEmpty()
+
+				join t  in tables on cid equals t.CatalogName + "." + t.SchemaName + "." + t.TableName
+
 				orderby c.Field<int>("ORDINAL_POSITION")
-				select new { t, c, dt };
+				select new { t, c, dt, pk, cp };
 
 			foreach (var column in columns)
 			{
@@ -111,7 +156,9 @@ namespace LinqToDB.DataProvider
 					}
 				}
 
-				var dataType = DataType.Undefined;
+				var dataType     = DataType.Undefined;
+				var skipOnInsert = false;
+				var skipOnUpdate = false;
 
 				switch (columnType)
 				{
@@ -135,7 +182,7 @@ namespace LinqToDB.DataProvider
 					case "datetime2"        : dataType = DataType.DateTime2;      break;
 					case "bigint"           : dataType = DataType.Int64;          break;
 					case "varbinary"        : dataType = DataType.VarBinary;      break;
-					case "timestamp"        : dataType = DataType.Timestamp;      break;
+					case "timestamp"        : dataType = DataType.Timestamp; skipOnInsert = skipOnUpdate = true; break;
 					case "sysname"          : dataType = DataType.NVarChar;       break;
 					case "nvarchar"         : dataType = DataType.NVarChar;       break;
 					case "varchar"          : dataType = DataType.VarChar;        break;
@@ -151,19 +198,32 @@ namespace LinqToDB.DataProvider
 					case "geometry"         : dataType = DataType.Udt;            break;
 				}
 
+				var isNullable = column.c.Field<string>("IS_NULLABLE") == "YES";
+
 				column.t.Columns.Add(new ColumnSchema
 				{
-					ColumnName = columnName,
-					SystemType = systemType ?? typeof(object),
-					IsNullable = column.c.Field<string>("IS_NULLABLE") == "YES",
-					DataType   = dataType,
-					DbType     = dbType,
+					ColumnName      = columnName,
+					ColumnType      = dbType,
+					IsNullable      = isNullable,
+					MemberName      = ToValidName(columnName),
+					MemberType      = ToTypeName(systemType, isNullable),
+					SystemType      = systemType ?? typeof(object),
+					DataType        = dataType,
+					SkipOnInsert    = skipOnInsert || (column.cp != null && column.cp.isIdentity),
+					SkipOnUpdate    = skipOnUpdate || (column.cp != null && column.cp.isIdentity),
+					IsPrimaryKey    = column.pk != null,
+					PrimaryKeyOrder = column.pk != null ? column.pk.ordinal : -1,
+					IsIdentity      = column.cp != null && column.cp.isIdentity,
+					Description     = column.cp != null ? column.cp.description : null,
 				});
 			}
 
 			return new DatabaseSchema
 			{
-				Tables = tables
+				DataSource    = dbConnection.DataSource,
+				Database      = dbConnection.Database,
+				ServerVersion = dbConnection.ServerVersion,
+				Tables        = tables
 			};
 		}
 	}

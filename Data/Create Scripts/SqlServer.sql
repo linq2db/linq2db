@@ -481,6 +481,10 @@ GO
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
+GO
+
+
 CREATE FUNCTION GetParentByID(@id int)
 RETURNS TABLE
 AS
@@ -557,5 +561,22 @@ GO
 
 CREATE TABLE TestIdentity (
 	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
+)
+GO
+
+
+-- IndexTable
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('IndexTable') AND type in (N'U'))
+BEGIN DROP TABLE IndexTable END
+GO
+
+CREATE TABLE IndexTable
+(
+	PKField1    int NOT NULL,
+	PKField2    int NOT NULL,
+	UniqueField int NOT NULL,
+	IndexField  int NOT NULL,
+	CONSTRAINT PK_IndexTable PRIMARY KEY CLUSTERED (PKField2, PKField1),
+	CONSTRAINT IX_IndexTable UNIQUE NONCLUSTERED (UniqueField)
 )
 GO
