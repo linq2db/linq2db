@@ -48,5 +48,91 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 			return memberType;
 		}
+
+		protected virtual DatabaseSchema ProcessSchema(DatabaseSchema databaseSchema)
+		{
+			foreach (var t in databaseSchema.Tables)
+			{
+				foreach (var key in t.ForeignKeys.ToList())
+				{
+					if (!key.KeyName.EndsWith("_BackReference"))
+					{
+						key.OtherTable.ForeignKeys.Add(
+							key.BackReference = new ForeignKeySchema
+							{
+								KeyName         = key.KeyName    + "_BackReference",
+								MemberName      = key.MemberName + "_BackReference",
+								AssociationType = AssociationType.Auto,
+								OtherTable      = t,
+								ThisColumns     = key.OtherColumns,
+								OtherColumns    = key.ThisColumns,
+							});
+					}
+				}
+			}
+
+			foreach (var t in databaseSchema.Tables)
+			{
+				foreach (var key in t.ForeignKeys)
+				{
+					if (key.BackReference != null && key.AssociationType == AssociationType.Auto)
+					{
+						if (key.ThisColumns.All(_ => _.IsPrimaryKey))
+						{
+							if (t.Columns.Count(_ => _.IsPrimaryKey) == key.ThisColumns.Count)
+								key.AssociationType = AssociationType.OneToOne;
+							else
+								key.AssociationType = AssociationType.ManyToOne;
+						}
+						else
+							key.AssociationType = AssociationType.ManyToOne;
+
+						key.CanBeNull = key.ThisColumns.All(_ => _.IsNullable);
+					}
+				}
+
+				foreach (var key in t.ForeignKeys)
+				{
+					var name = key.MemberName;
+
+					if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+					{
+						name = key.ThisColumns[0].MemberName;
+						name = name.Substring(0, name.Length - "id".Length);
+
+						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
+							t.Columns.    Select(_ => _.MemberName)).Concat(
+							new[] { t.TypeName }).All(_ => _ != name))
+						{
+							name = key.MemberName;
+						}
+					}
+			
+					if (name == key.MemberName)
+					{
+						if (name.StartsWith("FK_"))
+							name = name.Substring(3);
+
+						if (name.EndsWith("_BackReference"))
+							name = name.Substring(0, name.Length - "_BackReference".Length);
+
+						name = string.Join("", name.Split('_').Where(_ => _.Length > 0 && _ != t.TableName).ToArray());
+
+//						if (name.Length > 0)
+//							name = key.AssociationType == AssociationType.OneToMany ? PluralizeAssociationName(name) : SingularizeAssociationName(name);
+					}
+
+					if (name.Length != 0 &&
+						t.ForeignKeys.Select(_ => _.MemberName).Concat(
+						t.Columns.    Select(_ => _.MemberName)).Concat(
+							new[] { t.TypeName }).All(_ => _ != name))
+					{
+						key.MemberName = name;
+					}
+				}
+			}
+
+			return databaseSchema;
+		}
 	}
 }

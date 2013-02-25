@@ -17,43 +17,79 @@ namespace LinqToDB.DataProvider
 		{
 			var dbConnection = (SqlConnection)dataConnection.Connection;
 			var dataTypes    = dbConnection.GetSchema("DataTypes");
-			var descriptions = dataConnection.Query(new { id = "", description = "" }, @"
+			var tables       = dataConnection.Query(
+				new { catalog = "", schema = "", name = "", type = "", desc = "" }, @"
 				SELECT
-					s.TABLE_CATALOG + '.' + s.TABLE_SCHEMA + '.' + s.TABLE_NAME as id,
-					ISNULL(CONVERT(varchar(8000), x.Value), '')                 as description
+					TABLE_CATALOG as catalog,
+					TABLE_SCHEMA  as [schema],
+					TABLE_NAME    as name,
+					TABLE_TYPE    as type,
+					ISNULL(CONVERT(varchar(8000), x.Value), '') as [desc]
 				FROM
 					INFORMATION_SCHEMA.TABLES s
-					JOIN 
+					LEFT JOIN
+						sys.tables t
+					ON
+						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+					LEFT JOIN
+						sys.extended_properties x
+					ON
+						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
+						x.minor_id = 0 AND 
+						x.name = 'MS_Description'
+				WHERE
+					t.object_id IS NULL OR
+					t.is_ms_shipped <> 1 AND
+					(
+						SELECT
+							major_id
+						FROM
+							sys.extended_properties
+						WHERE
+							major_id = t.object_id and
+							minor_id = 0           and
+							class    = 1           and
+							name     = N'microsoft_database_tools_support'
+					) IS NULL")
+				.Select(t => new TableSchema
+				{
+					CatalogName     = t.catalog,
+					SchemaName      = t.schema,
+					TableName       = t.name,
+					TypeName        = ToValidName(t.name),
+					Description     = t.desc,
+					IsView          = t.type == "VIEW",
+					IsDefaultSchema = t.schema == "dbo",
+					Columns         = new List<ColumnSchema>(),
+					ForeignKeys     = new List<ForeignKeySchema>(),
+				})
+				.ToList();
+
+			var cols = dataConnection.Query(
+				new { id = "", name = "", isNullable = false, ordinal = 0, dataType = "", length = 0, prec = 0, scale = 0, desc = "", isIdentity = false }, @"
+				SELECT
+					(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) as id,
+					COLUMN_NAME                                             as name,
+					(CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END)       as isNullable,
+					ORDINAL_POSITION                                        as ordinal,
+					c.DATA_TYPE                                             as dataType,
+					CHARACTER_MAXIMUM_LENGTH                                as length,
+					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)           as prec,
+					NUMERIC_SCALE                                           as scale,
+					ISNULL(CONVERT(varchar(8000), x.Value), '')             as [desc],
+					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as isIdentity
+				FROM
+					INFORMATION_SCHEMA.COLUMNS c
+					LEFT JOIN 
 						sys.extended_properties x 
 					ON 
 						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND 
-						x.minor_id = 0 AND 
+						ORDINAL_POSITION = x.minor_id AND
 						x.name = 'MS_Description'")
 				.ToList();
 
-			var tables =
-			(
-				from t in dbConnection.GetSchema("Tables").AsEnumerable()
-				where t.Field<string>("TABLE_TYPE") == "BASE TABLE"
-				let catalogName = t.Field<string>("TABLE_CATALOG")
-				let schemaName  = t.Field<string>("TABLE_SCHEMA")
-				let tableName   = t.Field<string>("TABLE_NAME")
-				select new TableSchema
-				{
-					CatalogName     = catalogName,
-					SchemaName      = schemaName,
-					TableName       = tableName,
-					TypeName        = ToValidName(tableName),
-					Description     = descriptions
-						.Where (d => d.id == catalogName + "." + schemaName + "." + tableName)
-						.Select(d => d.description)
-						.FirstOrDefault(),
-					IsDefaultSchema = schemaName == "dbo",
-					Columns         = new List<ColumnSchema>(),
-				}
-			).ToList();
-
-			var pks = dataConnection.Query(new { id = "", pkName = "", columnName = "", ordinal = 0 }, @"
+			var pks = dataConnection.Query(
+				new { id = "", pkName = "", columnName = "", ordinal = 0 }, @"
 				SELECT
 					(k.TABLE_CATALOG + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME) as id,
 					k.CONSTRAINT_NAME                                             as pkName,
@@ -71,47 +107,26 @@ namespace LinqToDB.DataProvider
 					c.CONSTRAINT_TYPE='PRIMARY KEY'")
 				.ToList();
 
-			var colProps = dataConnection.Query(new { id = "", isIdentity = false, description = "" }, @"
-				SELECT
-					(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME + '.' + COLUMN_NAME)                         as id,
-					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as isIdentity,
-					ISNULL(CONVERT(varchar(8000), x.Value), '')                                                         as description
-				FROM
-					INFORMATION_SCHEMA.COLUMNS c
-					LEFT JOIN 
-						sys.extended_properties x
-					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND 
-						ORDINAL_POSITION = x.minor_id AND 
-						x.name = 'MS_Description'")
-				.ToList();
-
 			var columns =
-				from c  in dbConnection.GetSchema("Columns").AsEnumerable()
-				let cid = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME")
-				let cnm = c.Field<string>("COLUMN_NAME")
+				from c  in cols
 
 				join dt in dataTypes.AsEnumerable()
-					on c.Field<string>("DATA_TYPE") equals dt.Field<string>("TypeName") into g1
+					on c.dataType equals dt.Field<string>("TypeName") into g1
 				from dt in g1.DefaultIfEmpty()
 
 				join pk in pks
-					on cid + "." + cnm equals pk.id + "." + pk.columnName into g2
+					on c.id + "." + c.name equals pk.id + "." + pk.columnName into g2
 				from pk in g2.DefaultIfEmpty()
 
-				join cp in colProps
-					on cid + "." + cnm equals cp.id into g3
-				from cp in g3.DefaultIfEmpty()
+				join t  in tables on c.id equals t.CatalogName + "." + t.SchemaName + "." + t.TableName
 
-				join t  in tables on cid equals t.CatalogName + "." + t.SchemaName + "." + t.TableName
-
-				orderby c.Field<int>("ORDINAL_POSITION")
-				select new { t, c, dt, pk, cp };
+				orderby c.ordinal
+				select new { t, c, dt, pk };
 
 			foreach (var column in columns)
 			{
-				var columnName = column.c.Field<string>("COLUMN_NAME");
-				var columnType = column.c.Field<string>("DATA_TYPE");
+				var columnName = column.c.name;
+				var columnType = column.c.dataType;
 
 				Type systemType = null;
 
@@ -144,10 +159,10 @@ namespace LinqToDB.DataProvider
 						{
 							switch (paramNames[i].Trim())
 							{
-								case "length"     : paramValues[i] = column.c["CHARACTER_OCTET_LENGTH"];   break;
-								case "max length" : paramValues[i] = column.c["CHARACTER_MAXIMUM_LENGTH"]; break;
-								case "precision"  : paramValues[i] = column.c["NUMERIC_PRECISION"];        break;
-								case "scale"      : paramValues[i] = column.c["NUMERIC_SCALE"];            break;
+								case "length"     :
+								case "max length" : paramValues[i] = column.c.length; break;
+								case "precision"  : paramValues[i] = column.c.prec;   break;
+								case "scale"      : paramValues[i] = column.c.scale;  break;
 							}
 						}
 
@@ -198,10 +213,11 @@ namespace LinqToDB.DataProvider
 					case "geometry"         : dataType = DataType.Udt;            break;
 				}
 
-				var isNullable = column.c.Field<string>("IS_NULLABLE") == "YES";
+				var isNullable = column.c.isNullable;
 
 				column.t.Columns.Add(new ColumnSchema
 				{
+					Table           = column.t,
 					ColumnName      = columnName,
 					ColumnType      = dbType,
 					IsNullable      = isNullable,
@@ -209,22 +225,84 @@ namespace LinqToDB.DataProvider
 					MemberType      = ToTypeName(systemType, isNullable),
 					SystemType      = systemType ?? typeof(object),
 					DataType        = dataType,
-					SkipOnInsert    = skipOnInsert || (column.cp != null && column.cp.isIdentity),
-					SkipOnUpdate    = skipOnUpdate || (column.cp != null && column.cp.isIdentity),
+					SkipOnInsert    = skipOnInsert || column.c.isIdentity,
+					SkipOnUpdate    = skipOnUpdate || column.c.isIdentity,
 					IsPrimaryKey    = column.pk != null,
 					PrimaryKeyOrder = column.pk != null ? column.pk.ordinal : -1,
-					IsIdentity      = column.cp != null && column.cp.isIdentity,
-					Description     = column.cp != null ? column.cp.description : null,
+					IsIdentity      = column.c.isIdentity,
+					Description     = column.c.desc,
 				});
 			}
 
-			return new DatabaseSchema
+			var fks = dataConnection.Query(
+				new { name = "", thisTable = "", thisColumn = "", otherTable = "", otherColumn = "", ordinal = 0 }, @"
+				SELECT
+					rc.CONSTRAINT_NAME                                             as name,
+					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as thisTable,
+					fk.COLUMN_NAME                                                 as thisColumn,
+					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as otherTable,
+					pk.COLUMN_NAME                                                 as otherColumn,
+					cu.ORDINAL_POSITION                                            as ordinal
+				FROM
+					INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+					JOIN
+						INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE fk
+					ON
+						rc.CONSTRAINT_CATALOG = fk.CONSTRAINT_CATALOG AND
+						rc.CONSTRAINT_SCHEMA  = fk.CONSTRAINT_SCHEMA  AND
+						rc.CONSTRAINT_NAME    = fk.CONSTRAINT_NAME
+					JOIN
+						INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE pk
+					ON
+						rc.UNIQUE_CONSTRAINT_CATALOG = pk.CONSTRAINT_CATALOG AND
+						rc.UNIQUE_CONSTRAINT_SCHEMA  = pk.CONSTRAINT_SCHEMA AND
+						rc.UNIQUE_CONSTRAINT_NAME    = pk.CONSTRAINT_NAME
+					JOIN
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE cu
+					ON
+						rc.CONSTRAINT_CATALOG = cu.CONSTRAINT_CATALOG AND
+						rc.CONSTRAINT_SCHEMA  = cu.CONSTRAINT_SCHEMA  AND
+						rc.CONSTRAINT_NAME    = cu.CONSTRAINT_NAME
+				ORDER BY
+					ThisTable,
+					Ordinal")
+				.ToList();
+
+			foreach (var fk in fks)
+			{
+				var thisTable   = (from t in tables             where t.ID         == fk.thisTable   select t).Single();
+				var otherTable  = (from t in tables             where t.ID         == fk.otherTable  select t).Single();
+				var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.thisColumn  select c).Single();
+				var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.otherColumn select c).Single();
+
+				var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.name);
+
+				if (key == null)
+				{
+					key = new ForeignKeySchema
+					{
+						KeyName      = fk.name,
+						MemberName   = fk.name,
+						ThisTable    = thisTable,
+						OtherTable   = otherTable,
+						ThisColumns  = new List<ColumnSchema>(),
+						OtherColumns = new List<ColumnSchema>(),
+						CanBeNull    = true,
+					};
+					thisTable.ForeignKeys.Add(key);
+				}
+
+				key.ThisColumns. Add(thisColumn);
+				key.OtherColumns.Add(otherColumn);
+			}
+
+			return ProcessSchema(new DatabaseSchema
 			{
 				DataSource    = dbConnection.DataSource,
 				Database      = dbConnection.Database,
 				ServerVersion = dbConnection.ServerVersion,
 				Tables        = tables
-			};
+			});
 		}
 	}
 }
