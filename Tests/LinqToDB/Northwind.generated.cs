@@ -136,7 +136,7 @@ namespace DataModel
 			}
 		}
 
-		[FreeTextTableExpressionAttribute]
+		[FreeTextTableExpression]
 		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
@@ -146,7 +146,7 @@ namespace DataModel
 				text);
 		}
 
-		[FreeTextTableExpressionAttribute]
+		[FreeTextTableExpression]
 		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			return this.GetTable<FreeTextKey<TKey>>(
@@ -417,18 +417,18 @@ namespace DataModel
 	[Table("Order Details")]
 	public partial class OrderDetails
 	{
-		[PrimaryKey(1), NotNull] public int     OrderID   { get; set; } // int
-		[PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
-		[Column,        NotNull] public decimal UnitPrice { get; set; } // money
-		[Column,        NotNull] public short   Quantity  { get; set; } // smallint
-		[Column,        NotNull] public float   Discount  { get; set; } // real
+		[Column("OrderID"), PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
+		[                   PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
+		[Column,                           NotNull] public decimal UnitPrice { get; set; } // money
+		[Column,                           NotNull] public short   Quantity  { get; set; } // smallint
+		[Column,                           NotNull] public float   Discount  { get; set; } // real
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
 		public Orders OrderDetailsOrders { get; set; }
 
 		/// <summary>
@@ -494,7 +494,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=false)]
 		public IEnumerable<OrderDetails> OrderDetails { get; set; }
 
 		#endregion

@@ -131,7 +131,7 @@ void GenerateSqlServerTypes()
 						"	text);",
 					})
 				{
-					Attributes = { new Attribute("FreeTextTableExpressionAttribute") }
+					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 				new Method("Table<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
 					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
@@ -144,7 +144,7 @@ void GenerateSqlServerTypes()
 						"	text);",
 					})
 				{
-					Attributes = { new Attribute("FreeTextTableExpressionAttribute") }
+					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
 			}
 		}

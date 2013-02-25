@@ -13,7 +13,7 @@
 
 	LoadMetadata(conn);
 
-	//Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
 	GenerateModel();
 #>
