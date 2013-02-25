@@ -1,5 +1,6 @@
 <#@ assembly name="System.Data"      #>
 <#@ import namespace="System.Data"   #>
+<#@ import namespace="LinqToDB.Data" #>
 <#@ include file="T4Model.ttinclude" #>
 <#
 	{
@@ -10,7 +11,8 @@
 			beforeGenerateModel();
 		};
 	}
-#><#+
+#>
+<#+
 
 string   NamespaceName
 {
@@ -19,7 +21,7 @@ string   NamespaceName
 }
 
 string   DatabaseName             = null;
-string   DataContextName          = "DataContext";
+string   DataContextName          = null;
 string   BaseDataContextClass     = "LinqToDB.Data.DataConnection";
 string   BaseEntityClass          = null;
 string   OneToManyAssociationType = "IEnumerable<{0}>";
@@ -33,28 +35,71 @@ bool     RenderForeignKeys        = true;
 
 Class    DataContextObject;
 
-void LoadMetadata(IDbConnection conn)
+void LoadServerMetadata(DataConnection dataConnection)
 {
-	if (conn.State == ConnectionState.Closed)
-		conn.Open();
+	var sp = dataConnection.DataProvider.GetSchemaProvider();
+	var db = sp.GetSchema(dataConnection);
 
+	if (DataContextName == null)
+		DataContextObject.Name = DataContextName = db.Database + "DB";
+
+	DataContextObject.Comment.Add("/ <summary>");
+	DataContextObject.Comment.Add("/ Database       : " + db.Database);
+	DataContextObject.Comment.Add("/ Data Source    : " + db.DataSource);
+	DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
+	DataContextObject.Comment.Add("/ </summary>");
+
+	foreach (var t in db.Tables)
+	{
+		Tables.Add(
+			t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
+			new Table
+			{
+				Schema      = t.IsDefaultSchema ? null : t.SchemaName,
+				TableName   = t.TableName,
+				TypeName    = t.TypeName,
+				IsView      = false,
+				Description = t.Description,
+				Columns     = t.Columns.ToDictionary(
+					c => c.ColumnName,
+					c => new Column
+					{
+						ColumnName      = c.ColumnName,
+						ColumnType      = c.ColumnType,
+						IsNullable      = c.IsNullable,
+						IsIdentity      = c.IsIdentity,
+						IsPrimaryKey    = c.IsPrimaryKey,
+						PrimaryKeyOrder = c.PrimaryKeyOrder,
+						MemberName      = CheckType(c.SystemType, c.MemberName),
+						Type            = c.MemberType,
+						SkipOnInsert    = c.SkipOnInsert,
+						SkipOnUpdate    = c.SkipOnUpdate,
+						Description     = c.Description,
+					})
+			});
+	}
+}
+
+string CheckType(Type type, string typeName)
+{
+	if (!Model.Usings.Contains(type.Namespace))
+		Model.Usings.Add(type.Namespace);
+	return typeName;
+}
+
+void LoadMetadata(DataConnection dataConnection)
+{
 	if (DataContextObject == null)
 	{
 		DataContextObject = new Class(DataContextName) { BaseClass = BaseDataContextClass };
 		Model.Types.Add(DataContextObject);
 	}
 
-	LoadServerMetadata(conn);
+	LoadServerMetadata(dataConnection);
 
 	foreach (var t in Tables.Values)
 	{
 		t.BaseClass = BaseEntityClass;
-
-		if (t.TypeName.Contains(" "))
-		{
-			var ss = t.TypeName.Split(' ').Where(_ => _.Trim().Length > 0).Select(_ => char.ToUpper(_[0]) + _.Substring(1));
-			t.TypeName = string.Join("", ss.ToArray());
-		}
 
 		foreach (var key in t.ForeignKeys.Values.ToList())
 			if (!key.KeyName.EndsWith("_BackReference"))
@@ -96,10 +141,10 @@ void LoadMetadata(IDbConnection conn)
 				name = name.Substring(0, name.Length - "id".Length);
 
 				if (!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
-						t.Columns.    Values.Select(_ => _.MemberName)).Concat(
-						new[] { t.TypeName }).Any(_ => _ == name))
+					 t.Columns.    Values.Select(_ => _.MemberName)).Concat(
+					 new[] { t.TypeName }).Any(_ => _ == name))
 				{
-					name = key.MemberName;;
+					name = key.MemberName;
 				}
 			}
 			
@@ -119,8 +164,8 @@ void LoadMetadata(IDbConnection conn)
 
 			if (name.Length != 0 &&
 				!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
-					t.Columns.    Values.Select(_ => _.MemberName)).Concat(
-					new[] { t.TypeName }).Any(_ => _ == name))
+				 t.Columns.    Values.Select(_ => _.MemberName)).Concat(
+				 new[] { t.TypeName }).Any(_ => _ == name))
 			{
 				key.MemberName = name;
 			}
@@ -161,6 +206,7 @@ void GenerateTypesFromMetadata()
 	if (Tables.Count == 0)
 		return;
 
+	Model.Usings.Add("LinqToDB");
 	Model.Usings.Add("LinqToDB.Mapping");
 
 	if (NamespaceName == null)
@@ -219,13 +265,13 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			if (c.SkipOnInsert)
+			if (c.SkipOnInsert && !c.IsIdentity)
 			{
 				ca.Parameters.Add("SkipOnInsert=true");
 				canBeReplaced = false;
 			}
 
-			if (c.SkipOnUpdate)
+			if (c.SkipOnUpdate && !c.IsIdentity)
 			{
 				ca.Parameters.Add("SkipOnUpdate=true");
 				canBeReplaced = false;
@@ -240,7 +286,7 @@ void GenerateTypesFromMetadata()
 				var pka = new Attribute("PrimaryKey");
 
 				if (nPKs > 1)
-					pka.Parameters.Add(c.PKOrder.ToString());
+					pka.Parameters.Add(c.PrimaryKeyOrder.ToString());
 
 				if (canBeReplaced)
 					c.Attributes[0] = pka;
@@ -280,12 +326,7 @@ void GenerateTypesFromMetadata()
 
 			// End line comment.
 			//
-			var elComm = c.ColumnType;
-
-			if (c.Length != 0)    elComm += "(" + c.Length + ")";
-			if (c.Precision != 0) elComm += "(" + c.Precision + ","+ c.Scale + ")";
-
-			c.EndLineComment = elComm;
+			c.EndLineComment = c.ColumnType;
 
 			columns.Members.Add(c);
 		}
@@ -343,29 +384,22 @@ public partial class Table : Class
 		set { Name = value; }
 	}
 
-	public Dictionary<string,Column>     Columns     = new Dictionary<string,Column>();
+	public Dictionary<string,Column>     Columns;
 	public Dictionary<string,ForeignKey> ForeignKeys = new Dictionary<string,ForeignKey>();
 }
 
 public partial class Column : Property
 {
-	public int       ID;
 	public string    ColumnName; // Column name in database
 	public bool      IsNullable;
 	public bool      IsIdentity;
 	public string    ColumnType; // Type of the column in database
-	public bool      IsClass;
 	public DbType    DbType;
-	public SqlDbType SqlDbType;
-	public long      Length;
-	public int       Precision;
-	public int       Scale;
 	public string    Description;
-	public int       PKOrder = -1;
+	public bool      IsPrimaryKey;
+	public int       PrimaryKeyOrder;
 	public bool      SkipOnUpdate;
 	public bool      SkipOnInsert;
-
-	public bool IsPrimaryKey { get { return PKOrder >= 0; } }
 
 	public string MemberName
 	{

@@ -1335,11 +1335,6 @@ string ToCamelCase(string name)
 	return name.Substring(0, n).ToLower() + name.Substring(n);
 }
 
-List<T> CreateList<T>(T item)
-{
-	return new List<T>();
-}
-
 partial class PartialHelper
 {
 	partial void Set(Property property);

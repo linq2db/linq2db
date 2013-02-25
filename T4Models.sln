@@ -5,7 +5,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 	ProjectSection(SolutionItems) = preProject
 		Templates\DataAnnotations.ttinclude = Templates\DataAnnotations.ttinclude
 		Templates\EditableObject.ttinclude = Templates\EditableObject.ttinclude
-		Templates\LinqToDB.SqlServer.ttinclude = Templates\LinqToDB.SqlServer.ttinclude
 		Templates\LinqToDB.ttinclude = Templates\LinqToDB.ttinclude
 		Templates\NotifyPropertyChanged.ttinclude = Templates\NotifyPropertyChanged.ttinclude
 		Templates\T4Model.ttinclude = Templates\T4Model.ttinclude

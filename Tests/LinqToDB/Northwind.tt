@@ -1,18 +1,19 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"     #>
-<#@ output extension=".generated.cs"                            #>
-<#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+<#@ include file="..\..\Templates\LinqToDB.ttinclude"       #>
+<#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll"           #>
+<#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll" #>
 <#
 //	NamespaceName   = "DataContext";
-	DataContextName = "NorthwindDB";
+//	DataContextName = "NorthwindDB";
 //	DatabaseName    = "Northwind";
 
-	var conn = new System.Data.SqlClient.SqlConnection();
-	conn.ConnectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
-	//conn.ConnectionString = @"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;";
+	//var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
+	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 
 	LoadMetadata(conn);
 
-	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+	//Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
 	GenerateModel();
 #>

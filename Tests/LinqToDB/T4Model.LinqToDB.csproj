@@ -32,8 +32,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="linq2db">
-      <HintPath>..\..\..\linq2db\Source\bin\Debug\linq2db.dll</HintPath>
+    <Reference Include="linq2db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="linq2db.SqlServer">
+      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\Microsoft.SqlServer.Types.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
