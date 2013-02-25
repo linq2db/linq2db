@@ -49,16 +49,18 @@ void LoadServerMetadata(DataConnection dataConnection)
 	DataContextObject.Comment.Add("/ Server Version : " + db.ServerVersion);
 	DataContextObject.Comment.Add("/ </summary>");
 
-	foreach (var t in db.Tables)
-	{
-		Tables.Add(
-			t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
-			new Table
+	var tables = db.Tables
+		.Select(t => new
+		{
+			t,
+			key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
+			table = new Table
 			{
 				Schema      = t.IsDefaultSchema ? null : t.SchemaName,
+				BaseClass   = BaseEntityClass,
 				TableName   = t.TableName,
 				TypeName    = t.TypeName,
-				IsView      = false,
+				IsView      = t.IsView,
 				Description = t.Description,
 				Columns     = t.Columns.ToDictionary(
 					c => c.ColumnName,
@@ -76,7 +78,42 @@ void LoadServerMetadata(DataConnection dataConnection)
 						SkipOnUpdate    = c.SkipOnUpdate,
 						Description     = c.Description,
 					})
-			});
+			}
+		})
+		.ToList();
+
+	foreach (var t in tables)
+		Tables.Add(t.key, t.table);
+
+	var keys =
+	(
+		from t in tables
+		from k in t.t.ForeignKeys
+		let otherTable = tables.Where(tbl => tbl.t == k.OtherTable).Select(tbl => tbl.table).Single()
+		select new
+		{
+			k,
+			k.KeyName,
+			t,
+			key = new ForeignKey
+			{
+				KeyName         = k.KeyName,
+				OtherTable      = otherTable,
+				OtherColumns    = k.OtherColumns.Select(c => otherTable.Columns[c.ColumnName]).ToList(),
+				ThisColumns     = k.ThisColumns. Select(c => t.table.   Columns[c.ColumnName]).ToList(),
+				CanBeNull       = k.CanBeNull,
+				MemberName      = k.MemberName,
+				AssociationType = (AssociationType)(int)k.AssociationType,
+			}
+		}
+	).ToList();
+
+	foreach (var key in keys)
+	{
+		key.t.table.ForeignKeys.Add(key.KeyName, key.key);
+
+		if (key.k.BackReference != null)
+			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
 	}
 }
 
@@ -96,81 +133,6 @@ void LoadMetadata(DataConnection dataConnection)
 	}
 
 	LoadServerMetadata(dataConnection);
-
-	foreach (var t in Tables.Values)
-	{
-		t.BaseClass = BaseEntityClass;
-
-		foreach (var key in t.ForeignKeys.Values.ToList())
-			if (!key.KeyName.EndsWith("_BackReference"))
-				key.OtherTable.ForeignKeys.Add(key.KeyName + "_BackReference", key.BackReference = new ForeignKey
-				{
-					KeyName         = key.KeyName    + "_BackReference",
-					MemberName      = key.MemberName + "_BackReference",
-					AssociationType = AssociationType.Auto,
-					OtherTable      = t,
-					ThisColumns     = key.OtherColumns,
-					OtherColumns    = key.ThisColumns,
-				});
-
-		foreach (var key in t.ForeignKeys.Values)
-		{
-			if (key.BackReference != null && key.AssociationType == AssociationType.Auto)
-			{
-				if (key.ThisColumns.All(_ => _.IsPrimaryKey))
-				{
-					if (t.Columns.Values.Count(_ => _.IsPrimaryKey) == key.ThisColumns.Count)
-						key.AssociationType = AssociationType.OneToOne;
-					else
-						key.AssociationType = AssociationType.ManyToOne;
-				}
-				else
-					key.AssociationType = AssociationType.ManyToOne;
-
-				key.CanBeNull = key.ThisColumns.All(_ => _.IsNullable);
-			}
-		}
-
-		foreach (var key in t.ForeignKeys.Values)
-		{
-			var name = key.MemberName;
-
-			if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
-			{
-				name = key.ThisColumns[0].MemberName;
-				name = name.Substring(0, name.Length - "id".Length);
-
-				if (!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
-					 t.Columns.    Values.Select(_ => _.MemberName)).Concat(
-					 new[] { t.TypeName }).Any(_ => _ == name))
-				{
-					name = key.MemberName;
-				}
-			}
-			
-			if (name == key.MemberName)
-			{
-				if (name.StartsWith("FK_"))
-					name = name.Substring(3);
-
-				if (name.EndsWith("_BackReference"))
-					name = name.Substring(0, name.Length - "_BackReference".Length);
-
-				name = string.Join("", name.Split('_').Where(_ => _.Length > 0 && _ != t.TableName).ToArray());
-
-//				if (name.Length > 0)
-//					name = key.AssociationType == AssociationType.OneToMany ? PluralizeAssociationName(name) : SingularizeAssociationName(name);
-			}
-
-			if (name.Length != 0 &&
-				!t.ForeignKeys.Values.Select(_ => _.MemberName).Concat(
-				 t.Columns.    Values.Select(_ => _.MemberName)).Concat(
-				 new[] { t.TypeName }).Any(_ => _ == name))
-			{
-				key.MemberName = name;
-			}
-		}
-	}
 
 	if (Tables.Values.SelectMany(_ => _.ForeignKeys.Values).Any(_ => _.AssociationType == AssociationType.OneToMany))
 		Model.Usings.Add("System.Collections.Generic");
@@ -420,9 +382,9 @@ public partial class ForeignKey : Property
 {
 	public string       KeyName;
 	public Table        OtherTable;
-	public List<Column> ThisColumns  = new List<Column>();
-	public List<Column> OtherColumns = new List<Column>();
-	public bool         CanBeNull    = true;
+	public List<Column> ThisColumns;
+	public List<Column> OtherColumns;
+	public bool         CanBeNull;
 	public ForeignKey   BackReference;
 
 	public string MemberName

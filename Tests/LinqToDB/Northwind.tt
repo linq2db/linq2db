@@ -8,8 +8,8 @@
 //	DataContextName = "NorthwindDB";
 //	DatabaseName    = "Northwind";
 
-	//var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
-	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
+	//var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 
 	LoadMetadata(conn);
 

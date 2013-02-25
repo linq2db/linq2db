@@ -5,201 +5,628 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
-using Microsoft.SqlServer.Types;
-
 namespace DataModel
 {
 	/// <summary>
-	/// Database       : TestData
-	/// Data Source    : DBHost\SQLSERVER2008
+	/// Database       : Northwind
+	/// Data Source    : .
 	/// Server Version : 10.50.4000
 	/// </summary>
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
-		public Table<AllTypes>      AllTypes      { get { return this.GetTable<AllTypes>(); } }
-		public Table<AllTypes2>     AllTypes2     { get { return this.GetTable<AllTypes2>(); } }
-		public Table<BinaryData>    BinaryData    { get { return this.GetTable<BinaryData>(); } }
-		public Table<Child>         Child         { get { return this.GetTable<Child>(); } }
-		public Table<DataTypeTest>  DataTypeTest  { get { return this.GetTable<DataTypeTest>(); } }
-		public Table<Doctor>        Doctor        { get { return this.GetTable<Doctor>(); } }
-		public Table<GrandChild>    GrandChild    { get { return this.GetTable<GrandChild>(); } }
-		public Table<IndexTable>    IndexTable    { get { return this.GetTable<IndexTable>(); } }
-		public Table<LinqDataTypes> LinqDataTypes { get { return this.GetTable<LinqDataTypes>(); } }
+		public Table<AlphabeticalListOfProducts> AlphabeticalListOfProducts { get { return this.GetTable<AlphabeticalListOfProducts>(); } }
 		/// <summary>
-		/// This is Parent table
+		/// Description for Categories table.
 		/// </summary>
-		public Table<Parent>        Parent        { get { return this.GetTable<Parent>(); } }
-		public Table<Patient>       Patient       { get { return this.GetTable<Patient>(); } }
-		public Table<Person>        Person        { get { return this.GetTable<Person>(); } }
-		public Table<TestIdentity>  TestIdentity  { get { return this.GetTable<TestIdentity>(); } }
-	}
-
-	[Table("AllTypes")]
-	public partial class AllTypes
-	{
-		[PrimaryKey,                                   Identity] public int       ID                       { get; set; } // int
-		[Column,                                       Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,                                       Nullable] public decimal?  numericDataType          { get; set; } // numeric(18, 0)
-		[Column,                                       Nullable] public Boolean?  bitDataType              { get; set; } // bit
-		[Column,                                       Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal(18, 0)
-		[Column,                                       Nullable] public decimal?  smallmoneyDataType       { get; set; } // smallmoney
-		[Column,                                       Nullable] public int?      intDataType              { get; set; } // int
-		[Column,                                       Nullable] public SByte?    tinyintDataType          { get; set; } // tinyint
-		[Column,                                       Nullable] public decimal?  moneyDataType            { get; set; } // money
-		[Column,                                       Nullable] public double?   floatDataType            { get; set; } // float
-		[Column,                                       Nullable] public float?    realDataType             { get; set; } // real
-		[Column,                                       Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
-		[Column,                                       Nullable] public DateTime? smalldatetimeDataType    { get; set; } // smalldatetime
-		[Column,                                       Nullable] public string    charDataType             { get; set; } // char(1)
-		[Column,                                       Nullable] public string    varcharDataType          { get; set; } // varchar(20)
-		[Column,                                       Nullable] public string    textDataType             { get; set; } // text
-		[Column,                                       Nullable] public string    ncharDataType            { get; set; } // nchar(40)
-		[Column,                                       Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
-		[Column,                                       Nullable] public string    ntextDataType            { get; set; } // ntext
-		[Column,                                       Nullable] public byte[]    binaryDataType           { get; set; } // binary(1)
-		[Column,                                       Nullable] public byte[]    varbinaryDataType        { get; set; } // varbinary(1)
-		[Column,                                       Nullable] public byte[]    imageDataType            { get; set; } // image
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), Nullable] public byte[]    timestampDataType        { get; set; } // timestamp
-		[Column,                                       Nullable] public Guid?     uniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column,                                       Nullable] public object    sql_variantDataType      { get; set; } // sql_variant
-		[Column,                                       Nullable] public string    nvarchar_max_DataType    { get; set; } // nvarchar(-1)
-		[Column,                                       Nullable] public string    varchar_max_DataType     { get; set; } // varchar(-1)
-		[Column,                                       Nullable] public byte[]    varbinary_max_DataType   { get; set; } // varbinary(-1)
-		[Column,                                       Nullable] public string    xmlDataType              { get; set; } // xml
-	}
-
-	[Table("AllTypes2")]
-	public partial class AllTypes2
-	{
-		[PrimaryKey, Identity] public int             ID                     { get; set; } // int
-		[Column,     Nullable] public DateTime?       dateDataType           { get; set; } // date
-		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset()
-		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2()
-		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time()
-		[Column,     Nullable] public SqlHierarchyId? hierarchyidDataType    { get; set; } // hierarchyid
-		[Column,     Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
-		[Column,     Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
-	}
-
-	[Table("BinaryData")]
-	public partial class BinaryData
-	{
-		[PrimaryKey,                                   Identity] public int    BinaryDataID { get; set; } // int
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull ] public byte[] Stamp        { get; set; } // timestamp
-		[Column,                                       NotNull ] public byte[] Data         { get; set; } // varbinary(1024)
-	}
-
-	[Table("Child")]
-	public partial class Child
-	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
+		public Table<Categories>                 Categories                 { get { return this.GetTable<Categories>(); } }
+		public Table<CategorySalesFor1997>       CategorySalesFor1997       { get { return this.GetTable<CategorySalesFor1997>(); } }
+		public Table<CurrentProductList>         CurrentProductList         { get { return this.GetTable<CurrentProductList>(); } }
+		public Table<CustomerAndSuppliersByCity> CustomerAndSuppliersByCity { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
+		public Table<CustomerCustomerDemo>       CustomerCustomerDemo       { get { return this.GetTable<CustomerCustomerDemo>(); } }
+		public Table<CustomerDemographics>       CustomerDemographics       { get { return this.GetTable<CustomerDemographics>(); } }
 		/// <summary>
-		/// This ChildID column
+		/// Description of Customers table.
 		/// </summary>
-		[Column, Nullable] public int? ChildID  { get; set; } // int
+		public Table<Customers>                  Customers                  { get { return this.GetTable<Customers>(); } }
+		public Table<Employees>                  Employees                  { get { return this.GetTable<Employees>(); } }
+		public Table<EmployeeTerritories>        EmployeeTerritories        { get { return this.GetTable<EmployeeTerritories>(); } }
+		public Table<Invoices>                   Invoices                   { get { return this.GetTable<Invoices>(); } }
+		public Table<OrderDetails>               OrderDetails               { get { return this.GetTable<OrderDetails>(); } }
+		public Table<OrderDetailsExtended>       OrderDetailsExtended       { get { return this.GetTable<OrderDetailsExtended>(); } }
+		public Table<Orders>                     Orders                     { get { return this.GetTable<Orders>(); } }
+		public Table<OrdersQry>                  OrdersQry                  { get { return this.GetTable<OrdersQry>(); } }
+		public Table<OrderSubtotals>             OrderSubtotals             { get { return this.GetTable<OrderSubtotals>(); } }
+		public Table<Products>                   Products                   { get { return this.GetTable<Products>(); } }
+		public Table<ProductsAboveAveragePrice>  ProductsAboveAveragePrice  { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
+		public Table<ProductSalesFor1997>        ProductSalesFor1997        { get { return this.GetTable<ProductSalesFor1997>(); } }
+		public Table<ProductsByCategory>         ProductsByCategory         { get { return this.GetTable<ProductsByCategory>(); } }
+		public Table<QuarterlyOrders>            QuarterlyOrders            { get { return this.GetTable<QuarterlyOrders>(); } }
+		public Table<Region>                     Region                     { get { return this.GetTable<Region>(); } }
+		public Table<SalesByCategory>            SalesByCategory            { get { return this.GetTable<SalesByCategory>(); } }
+		public Table<SalesTotalsByAmount>        SalesTotalsByAmount        { get { return this.GetTable<SalesTotalsByAmount>(); } }
+		public Table<Shippers>                   Shippers                   { get { return this.GetTable<Shippers>(); } }
+		public Table<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarter    { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
+		public Table<SummaryOfSalesByYear>       SummaryOfSalesByYear       { get { return this.GetTable<SummaryOfSalesByYear>(); } }
+		public Table<Suppliers>                  Suppliers                  { get { return this.GetTable<Suppliers>(); } }
+		public Table<Territories>                Territories                { get { return this.GetTable<Territories>(); } }
 	}
 
-	[Table("DataTypeTest")]
-	public partial class DataTypeTest
+	// View
+	[Table("Alphabetical list of products")]
+	public partial class AlphabeticalListOfProducts
 	{
-		[PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
-		[Column,     Nullable] public byte[]    Binary_    { get; set; } // binary(50)
-		[Column,     Nullable] public Boolean?  Boolean_   { get; set; } // bit
-		[Column,     Nullable] public SByte?    Byte_      { get; set; } // tinyint
-		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // varbinary(50)
-		[Column,     Nullable] public string    Char_      { get; set; } // char(1)
-		[Column,     Nullable] public DateTime? DateTime_  { get; set; } // datetime
-		[Column,     Nullable] public decimal?  Decimal_   { get; set; } // decimal(20, 2)
-		[Column,     Nullable] public double?   Double_    { get; set; } // float
-		[Column,     Nullable] public Guid?     Guid_      { get; set; } // uniqueidentifier
-		[Column,     Nullable] public short?    Int16_     { get; set; } // smallint
-		[Column,     Nullable] public int?      Int32_     { get; set; } // int
-		[Column,     Nullable] public long?     Int64_     { get; set; } // bigint
-		[Column,     Nullable] public decimal?  Money_     { get; set; } // money
-		[Column,     Nullable] public SByte?    SByte_     { get; set; } // tinyint
-		[Column,     Nullable] public float?    Single_    { get; set; } // real
-		[Column,     Nullable] public byte[]    Stream_    { get; set; } // varbinary(50)
-		[Column,     Nullable] public string    String_    { get; set; } // nvarchar(50)
-		[Column,     Nullable] public short?    UInt16_    { get; set; } // smallint
-		[Column,     Nullable] public int?      UInt32_    { get; set; } // int
-		[Column,     Nullable] public long?     UInt64_    { get; set; } // bigint
-		[Column,     Nullable] public string    Xml_       { get; set; } // xml
-	}
-
-	[Table("Doctor")]
-	public partial class Doctor
-	{
-		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
-	}
-
-	[Table("GrandChild")]
-	public partial class GrandChild
-	{
-		[Column, Nullable] public int? ParentID     { get; set; } // int
-		[Column, Nullable] public int? ChildID      { get; set; } // int
-		[Column, Nullable] public int? GrandChildID { get; set; } // int
-	}
-
-	[Table("IndexTable")]
-	public partial class IndexTable
-	{
-		[PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
-		[PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
-		[Column,        NotNull] public int UniqueField { get; set; } // int
-		[Column,        NotNull] public int IndexField  { get; set; } // int
-	}
-
-	[Table("LinqDataTypes")]
-	public partial class LinqDataTypes
-	{
-		[Column, Nullable] public int?      ID             { get; set; } // int
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2()
-		[Column, Nullable] public Boolean?  BoolValue      { get; set; } // bit
-		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
-		[Column, Nullable] public int?      IntValue       { get; set; } // int
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
+		[Column, NotNull    ] public int      ProductID       { get; set; } // int
+		[Column, NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
+		[Column,    Nullable] public int?     SupplierID      { get; set; } // int
+		[Column,    Nullable] public int?     CategoryID      { get; set; } // int
+		[Column,    Nullable] public string   QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column,    Nullable] public decimal? UnitPrice       { get; set; } // money
+		[Column,    Nullable] public short?   UnitsInStock    { get; set; } // smallint
+		[Column,    Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column,    Nullable] public short?   ReorderLevel    { get; set; } // smallint
+		[Column, NotNull    ] public Boolean  Discontinued    { get; set; } // bit
+		[Column, NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
 	}
 
 	/// <summary>
-	/// This is Parent table
+	/// Description for Categories table.
 	/// </summary>
-	[Table("Parent")]
-	public partial class Parent
+	[Table("Categories")]
+	public partial class Categories
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
-		[Column, Nullable] public int? Value1   { get; set; } // int
+		/// <summary>
+		/// Description of Categories.CategoryID field.
+		/// </summary>
+		[PrimaryKey, Identity   ] public int    CategoryID   { get; set; } // int
+		[Column,     NotNull    ] public string CategoryName { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string Description  { get; set; } // ntext
+		[Column,        Nullable] public byte[] Picture      { get; set; } // image
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Categories_BackReference
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=false)]
+		public IEnumerable<Products> Products { get; set; }
+
+		#endregion
 	}
 
-	[Table("Patient")]
-	public partial class Patient
+	// View
+	[Table("Category Sales for 1997")]
+	public partial class CategorySalesFor1997
 	{
-		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
+		[Column, NotNull    ] public string   CategoryName  { get; set; } // nvarchar(15)
+		[Column,    Nullable] public decimal? CategorySales { get; set; } // money
 	}
 
-	[Table("Person")]
-	public partial class Person
+	// View
+	[Table("Current Product List")]
+	public partial class CurrentProductList
 	{
-		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string Gender     { get; set; } // char(1)
+		[Identity         ] public int    ProductID   { get; set; } // int
+		[Column,   NotNull] public string ProductName { get; set; } // nvarchar(40)
 	}
 
-	[Table("TestIdentity")]
-	public partial class TestIdentity
+	// View
+	[Table("Customer and Suppliers by City")]
+	public partial class CustomerAndSuppliersByCity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // int
+		[Column,    Nullable] public string City         { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string ContactName  { get; set; } // nvarchar(30)
+		[Column, NotNull    ] public string Relationship { get; set; } // varchar(9)
+	}
+
+	[Table("CustomerCustomerDemo")]
+	public partial class CustomerCustomerDemo
+	{
+		[PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
+		[PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		public CustomerDemographics FK_CustomerCustomerDemo { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		public Customers Customers { get; set; }
+
+		#endregion
+	}
+
+	[Table("CustomerDemographics")]
+	public partial class CustomerDemographics
+	{
+		[PrimaryKey, NotNull    ] public string CustomerTypeID { get; set; } // nchar(10)
+		[Column,        Nullable] public string CustomerDesc   { get; set; } // ntext
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
+
+		#endregion
+	}
+
+	/// <summary>
+	/// Description of Customers table.
+	/// </summary>
+	[Table("Customers")]
+	public partial class Customers
+	{
+		/// <summary>
+		/// Just ID.
+		/// </summary>
+		[PrimaryKey, NotNull    ] public string CustomerID   { get; set; } // nchar(5)
+		/// <summary>
+		/// Name of the Company.
+		/// </summary>
+		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column,        Nullable] public string ContactName  { get; set; } // nvarchar(30)
+		[Column,        Nullable] public string ContactTitle { get; set; } // nvarchar(30)
+		[Column,        Nullable] public string Address      { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string City         { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string Region       { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string PostalCode   { get; set; } // nvarchar(10)
+		[Column,        Nullable] public string Country      { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
+		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		public IEnumerable<Orders> Orders { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
+
+		#endregion
+	}
+
+	[Table("Employees")]
+	public partial class Employees
+	{
+		[PrimaryKey, Identity   ] public int       EmployeeID      { get; set; } // int
+		[Column,     NotNull    ] public string    LastName        { get; set; } // nvarchar(20)
+		[Column,     NotNull    ] public string    FirstName       { get; set; } // nvarchar(10)
+		[Column,        Nullable] public string    Title           { get; set; } // nvarchar(30)
+		[Column,        Nullable] public string    TitleOfCourtesy { get; set; } // nvarchar(25)
+		[Column,        Nullable] public DateTime? BirthDate       { get; set; } // datetime
+		[Column,        Nullable] public DateTime? HireDate        { get; set; } // datetime
+		[Column,        Nullable] public string    Address         { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string    City            { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string    Region          { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string    PostalCode      { get; set; } // nvarchar(10)
+		[Column,        Nullable] public string    Country         { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string    HomePhone       { get; set; } // nvarchar(24)
+		[Column,        Nullable] public string    Extension       { get; set; } // nvarchar(4)
+		[Column,        Nullable] public byte[]    Photo           { get; set; } // image
+		[Column,        Nullable] public string    Notes           { get; set; } // ntext
+		[Column,        Nullable] public int?      ReportsTo       { get; set; } // int
+		[Column,        Nullable] public string    PhotoPath       { get; set; } // nvarchar(255)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Employees_Employees
+		/// </summary>
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		public Employees FK_Employees_Employees { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		public IEnumerable<Orders> Orders { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		public IEnumerable<EmployeeTerritories> EmployeeTerritories { get; set; }
+
+		/// <summary>
+		/// FK_Employees_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
+		public IEnumerable<Employees> FK_Employees_Employees_BackReference { get; set; }
+
+		#endregion
+	}
+
+	[Table("EmployeeTerritories")]
+	public partial class EmployeeTerritories
+	{
+		[PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
+		[PrimaryKey(2), NotNull] public string TerritoryID { get; set; } // nvarchar(20)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		public Employees Employees { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		public Territories Territories { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Invoices")]
+	public partial class Invoices
+	{
+		[Column,    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column,    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column,    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    CustomerID     { get; set; } // nchar(5)
+		[Column, NotNull    ] public string    CustomerName   { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string    Address        { get; set; } // nvarchar(60)
+		[Column,    Nullable] public string    City           { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    Region         { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
+		[Column,    Nullable] public string    Country        { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string    Salesperson    { get; set; } // nvarchar(31)
+		[Column, NotNull    ] public int       OrderID        { get; set; } // int
+		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // datetime
+		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column, NotNull    ] public string    ShipperName    { get; set; } // nvarchar(40)
+		[Column, NotNull    ] public int       ProductID      { get; set; } // int
+		[Column, NotNull    ] public string    ProductName    { get; set; } // nvarchar(40)
+		[Column, NotNull    ] public decimal   UnitPrice      { get; set; } // money
+		[Column, NotNull    ] public short     Quantity       { get; set; } // smallint
+		[Column, NotNull    ] public float     Discount       { get; set; } // real
+		[Column,    Nullable] public decimal?  ExtendedPrice  { get; set; } // money
+		[Column,    Nullable] public decimal?  Freight        { get; set; } // money
+	}
+
+	[Table("Order Details")]
+	public partial class OrderDetails
+	{
+		[PrimaryKey(1), NotNull] public int     OrderID   { get; set; } // int
+		[PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
+		[Column,        NotNull] public decimal UnitPrice { get; set; } // money
+		[Column,        NotNull] public short   Quantity  { get; set; } // smallint
+		[Column,        NotNull] public float   Discount  { get; set; } // real
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
+		public Orders OrderDetailsOrders { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Products
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		public Products OrderDetailsProducts { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Order Details Extended")]
+	public partial class OrderDetailsExtended
+	{
+		[Column, NotNull    ] public int      OrderID       { get; set; } // int
+		[Column, NotNull    ] public int      ProductID     { get; set; } // int
+		[Column, NotNull    ] public string   ProductName   { get; set; } // nvarchar(40)
+		[Column, NotNull    ] public decimal  UnitPrice     { get; set; } // money
+		[Column, NotNull    ] public short    Quantity      { get; set; } // smallint
+		[Column, NotNull    ] public float    Discount      { get; set; } // real
+		[Column,    Nullable] public decimal? ExtendedPrice { get; set; } // money
+	}
+
+	[Table("Orders")]
+	public partial class Orders
+	{
+		[PrimaryKey, Identity] public int       OrderID        { get; set; } // int
+		[Column,     Nullable] public string    CustomerID     { get; set; } // nchar(5)
+		[Column,     Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,     Nullable] public DateTime? OrderDate      { get; set; } // datetime
+		[Column,     Nullable] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column,     Nullable] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column,     Nullable] public int?      ShipVia        { get; set; } // int
+		[Column,     Nullable] public decimal?  Freight        { get; set; } // money
+		[Column,     Nullable] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column,     Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column,     Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column,     Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column,     Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column,     Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Shippers
+		/// </summary>
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		public Shippers Shippers { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Employees
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		public Employees Employees { get; set; }
+
+		/// <summary>
+		/// FK_Orders_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		public Customers Customers { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Orders_BackReference
+		/// </summary>
+		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
+		public IEnumerable<OrderDetails> OrderDetails { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Orders Qry")]
+	public partial class OrdersQry
+	{
+		[Column, NotNull    ] public int       OrderID        { get; set; } // int
+		[Column,    Nullable] public string    CustomerID     { get; set; } // nchar(5)
+		[Column,    Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // datetime
+		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column,    Nullable] public int?      ShipVia        { get; set; } // int
+		[Column,    Nullable] public decimal?  Freight        { get; set; } // money
+		[Column,    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column,    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column,    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string    CompanyName    { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string    Address        { get; set; } // nvarchar(60)
+		[Column,    Nullable] public string    City           { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    Region         { get; set; } // nvarchar(15)
+		[Column,    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
+		[Column,    Nullable] public string    Country        { get; set; } // nvarchar(15)
+	}
+
+	// View
+	[Table("Order Subtotals")]
+	public partial class OrderSubtotals
+	{
+		[Column, NotNull    ] public int      OrderID  { get; set; } // int
+		[Column,    Nullable] public decimal? Subtotal { get; set; } // money
+	}
+
+	[Table("Products")]
+	public partial class Products
+	{
+		[PrimaryKey, Identity   ] public int      ProductID       { get; set; } // int
+		[Column,     NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
+		[Column,        Nullable] public int?     SupplierID      { get; set; } // int
+		[Column,        Nullable] public int?     CategoryID      { get; set; } // int
+		[Column,        Nullable] public string   QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column,        Nullable] public decimal? UnitPrice       { get; set; } // money
+		[Column,        Nullable] public short?   UnitsInStock    { get; set; } // smallint
+		[Column,        Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column,        Nullable] public short?   ReorderLevel    { get; set; } // smallint
+		[Column,     NotNull    ] public Boolean  Discontinued    { get; set; } // bit
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		public Suppliers Suppliers { get; set; }
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		public Categories Categories { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Products_BackReference
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		public IEnumerable<OrderDetails> OrderDetails { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Products Above Average Price")]
+	public partial class ProductsAboveAveragePrice
+	{
+		[Column, NotNull    ] public string   ProductName { get; set; } // nvarchar(40)
+		[Column,    Nullable] public decimal? UnitPrice   { get; set; } // money
+	}
+
+	// View
+	[Table("Product Sales for 1997")]
+	public partial class ProductSalesFor1997
+	{
+		[Column, NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
+		[Column,    Nullable] public decimal? ProductSales { get; set; } // money
+	}
+
+	// View
+	[Table("Products by Category")]
+	public partial class ProductsByCategory
+	{
+		[Column, NotNull    ] public string  CategoryName    { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string  ProductName     { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string  QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column,    Nullable] public short?  UnitsInStock    { get; set; } // smallint
+		[Column, NotNull    ] public Boolean Discontinued    { get; set; } // bit
+	}
+
+	// View
+	[Table("Quarterly Orders")]
+	public partial class QuarterlyOrders
+	{
+		[Column, Nullable] public string CustomerID  { get; set; } // nchar(5)
+		[Column, Nullable] public string CompanyName { get; set; } // nvarchar(40)
+		[Column, Nullable] public string City        { get; set; } // nvarchar(15)
+		[Column, Nullable] public string Country     { get; set; } // nvarchar(15)
+	}
+
+	[Table("Region")]
+	public partial class Region
+	{
+		[PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
+		[Column,     NotNull] public string RegionDescription { get; set; } // nchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Territories_Region_BackReference
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		public IEnumerable<Territories> Territories { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Sales by Category")]
+	public partial class SalesByCategory
+	{
+		[Column, NotNull    ] public int      CategoryID   { get; set; } // int
+		[Column, NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
+		[Column,    Nullable] public decimal? ProductSales { get; set; } // money
+	}
+
+	// View
+	[Table("Sales Totals by Amount")]
+	public partial class SalesTotalsByAmount
+	{
+		[Column,    Nullable] public decimal?  SaleAmount  { get; set; } // money
+		[Column, NotNull    ] public int       OrderID     { get; set; } // int
+		[Column, NotNull    ] public string    CompanyName { get; set; } // nvarchar(40)
+		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+	}
+
+	[Table("Shippers")]
+	public partial class Shippers
+	{
+		[PrimaryKey, Identity   ] public int    ShipperID   { get; set; } // int
+		[Column,     NotNull    ] public string CompanyName { get; set; } // nvarchar(40)
+		[Column,        Nullable] public string Phone       { get; set; } // nvarchar(24)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Orders_Shippers_BackReference
+		/// </summary>
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=false)]
+		public IEnumerable<Orders> Orders { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Summary of Sales by Quarter")]
+	public partial class SummaryOfSalesByQuarter
+	{
+		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+		[Column, NotNull    ] public int       OrderID     { get; set; } // int
+		[Column,    Nullable] public decimal?  Subtotal    { get; set; } // money
+	}
+
+	// View
+	[Table("Summary of Sales by Year")]
+	public partial class SummaryOfSalesByYear
+	{
+		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+		[Column, NotNull    ] public int       OrderID     { get; set; } // int
+		[Column,    Nullable] public decimal?  Subtotal    { get; set; } // money
+	}
+
+	[Table("Suppliers")]
+	public partial class Suppliers
+	{
+		[PrimaryKey, Identity   ] public int    SupplierID   { get; set; } // int
+		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column,        Nullable] public string ContactName  { get; set; } // nvarchar(30)
+		[Column,        Nullable] public string ContactTitle { get; set; } // nvarchar(30)
+		[Column,        Nullable] public string Address      { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string City         { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string Region       { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string PostalCode   { get; set; } // nvarchar(10)
+		[Column,        Nullable] public string Country      { get; set; } // nvarchar(15)
+		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
+		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
+		[Column,        Nullable] public string HomePage     { get; set; } // ntext
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Products_Suppliers_BackReference
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=false)]
+		public IEnumerable<Products> Products { get; set; }
+
+		#endregion
+	}
+
+	[Table("Territories")]
+	public partial class Territories
+	{
+		[PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
+		[Column,     NotNull] public string TerritoryDescription { get; set; } // nchar(50)
+		[Column,     NotNull] public int    RegionID             { get; set; } // int
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Territories_Region
+		/// </summary>
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		public Region Region { get; set; }
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories_BackReference
+		/// </summary>
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		public IEnumerable<EmployeeTerritories> EmployeeTerritories { get; set; }
+
+		#endregion
 	}
 }
