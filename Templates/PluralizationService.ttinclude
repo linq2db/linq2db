@@ -1,0 +1,74 @@
+<#@ assembly name="System.Data.Entity.Design"                          #>
+<#@ import namespace="System.Globalization"                            #>
+<#@ import namespace="System.Data.Entity.Design.PluralizationServices" #>
+<#
+	{
+		ToPlural   = Pluralization.ToPlural;
+		ToSingular = Pluralization.ToSingular;
+	}
+#>
+<#+
+static class Pluralization
+{
+	static PluralizationService _service = PluralizationService.CreateService(CultureInfo.CurrentCulture);
+
+	public static Dictionary<string,string> Dictionary = new Dictionary<string,string>
+	{
+		{ "access",       "accesses"     }, { "afterlife",    "afterlives"   }, { "alga",         "algae"        },
+		{ "alumna",       "alumnae"      }, { "alumnus",      "alumni"       }, { "analysis",     "analyses"     },
+		{ "antenna",      "antennae"     }, { "appendix",     "appendices"   }, { "axis",         "axes"         },
+		{ "bacillus",     "bacilli"      }, { "basis",        "bases"        }, { "Bedouin",      "Bedouin"      },
+		{ "cactus",       "cacti"        }, { "calf",         "calves"       }, { "cherub",       "cherubim"     },
+		{ "child",        "children"     }, { "cod",          "cod"          }, { "cookie",       "cookies"      },
+		{ "criterion",    "criteria"     }, { "curriculum",   "curricula"    }, { "data",         "data"         },
+		{ "deer",         "deer"         }, { "diagnosis",    "diagnoses"    }, { "die",          "dice"         },
+		{ "dormouse",     "dormice"      }, { "elf",          "elves"        }, { "elk",          "elk"          },
+		{ "erratum",      "errata"       }, { "esophagus",    "esophagi"     }, { "fauna",        "faunae"       },
+		{ "fish",         "fish"         }, { "flora",        "florae"       }, { "focus",        "foci"         },
+		{ "foot",         "feet"         }, { "formula",      "formulae"     }, { "fundus",       "fundi"        },
+		{ "fungus",       "fungi"        }, { "genie",        "genii"        }, { "genus",        "genera"       },
+		{ "goose",        "geese"        }, { "grouse",       "grouse"       }, { "hake",         "hake"         },
+		{ "half",         "halves"       }, { "headquarters", "headquarters" }, { "hippo",        "hippos"       },
+		{ "hippopotamus", "hippopotami"  }, { "hoof",         "hooves"       }, { "housewife",    "housewives"   },
+		{ "hypothesis",   "hypotheses"   }, { "index",        "indices"      }, { "jackknife",    "jackknives"   },
+		{ "knife",        "knives"       }, { "labium",       "labia"        }, { "larva",        "larvae"       },
+		{ "leaf",         "leaves"       }, { "life",         "lives"        }, { "loaf",         "loaves"       },
+		{ "louse",        "lice"         }, { "magus",        "magi"         }, { "man",          "men"          },
+		{ "memorandum",   "memoranda"    }, { "midwife",      "midwives"     }, { "millennium",   "millennia"    },
+		{ "moose",        "moose"        }, { "mouse",        "mice"         }, { "nebula",       "nebulae"      },
+		{ "neurosis",     "neuroses"     }, { "nova",         "novas"        }, { "nucleus",      "nuclei"       },
+		{ "oesophagus",   "oesophagi"    }, { "offspring",    "offspring"    }, { "ovum",         "ova"          },
+		{ "ox",           "oxen"         }, { "papyrus",      "papyri"       }, { "passerby",     "passersby"    },
+		{ "penknife",     "penknives"    }, { "person",       "people"       }, { "phenomenon",   "phenomena"    },
+		{ "placenta",     "placentae"    }, { "pocketknife",  "pocketknives" }, { "process",      "processes"    },
+		{ "pupa",         "pupae"        }, { "radius",       "radii"        }, { "reindeer",     "reindeer"     },
+		{ "retina",       "retinae"      }, { "rhinoceros",   "rhinoceros"   }, { "roe",          "roe"          },
+		{ "salmon",       "salmon"       }, { "scarf",        "scarves"      }, { "self",         "selves"       },
+		{ "seraph",       "seraphim"     }, { "series",       "series"       }, { "sheaf",        "sheaves"      },
+		{ "sheep",        "sheep"        }, { "shelf",        "shelves"      }, { "species",      "species"      },
+		{ "spectrum",     "spectra"      }, { "status",       "status"       }, { "stimulus",     "stimuli"      },
+		{ "stratum",      "strata"       }, { "supernova",    "supernovas"   }, { "swine",        "swine"        },
+		{ "terminus",     "termini"      }, { "thesaurus",    "thesauri"     }, { "thesis",       "theses"       },
+		{ "thief",        "thieves"      }, { "trout",        "trout"        }, { "vulva",        "vulvae"       },
+		{ "wife",         "wives"        }, { "wildebeest",   "wildebeest"   }, { "wolf",         "wolves"       },
+		{ "woman",        "women"        }, { "yen",          "yen"          },
+	};
+
+	public static string ToPlural(string str)
+	{
+		string ret;
+
+		if (Dictionary.TryGetValue(str, out ret))
+			return ret;
+
+		return _service.IsPlural(str) ? str : _service.Pluralize(str);
+	}
+
+	public static string ToSingular(string str)
+	{
+		var ret = Dictionary.Where(dic => dic.Value == str).Select(dic => dic.Key).FirstOrDefault();
+
+		return ret ?? (_service.IsSingular(str) ? str : _service.Singularize(str));
+	}
+}
+#>

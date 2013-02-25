@@ -1259,6 +1259,9 @@ public partial class Attribute
 // Helpers.
 //
 
+Func<string,string> ToPlural   = s => s + "s";
+Func<string,string> ToSingular = s => s;
+
 static string LenDiff(int max, string str)
 {
 	var s = "";

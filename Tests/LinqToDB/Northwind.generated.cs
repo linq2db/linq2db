@@ -23,41 +23,41 @@ namespace DataModel
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
-		public Table<AlphabeticalListOfProducts> AlphabeticalListOfProducts { get { return this.GetTable<AlphabeticalListOfProducts>(); } }
+		public Table<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		/// <summary>
 		/// Description for Categories table.
 		/// </summary>
-		public Table<Categories>                 Categories                 { get { return this.GetTable<Categories>(); } }
-		public Table<CategorySalesFor1997>       CategorySalesFor1997       { get { return this.GetTable<CategorySalesFor1997>(); } }
-		public Table<CurrentProductList>         CurrentProductList         { get { return this.GetTable<CurrentProductList>(); } }
-		public Table<CustomerAndSuppliersByCity> CustomerAndSuppliersByCity { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
-		public Table<CustomerCustomerDemo>       CustomerCustomerDemo       { get { return this.GetTable<CustomerCustomerDemo>(); } }
-		public Table<CustomerDemographics>       CustomerDemographics       { get { return this.GetTable<CustomerDemographics>(); } }
+		public Table<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
+		public Table<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
+		public Table<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
 		/// <summary>
 		/// Description of Customers table.
 		/// </summary>
-		public Table<Customers>                  Customers                  { get { return this.GetTable<Customers>(); } }
-		public Table<Employees>                  Employees                  { get { return this.GetTable<Employees>(); } }
-		public Table<EmployeeTerritories>        EmployeeTerritories        { get { return this.GetTable<EmployeeTerritories>(); } }
-		public Table<Invoices>                   Invoices                   { get { return this.GetTable<Invoices>(); } }
-		public Table<OrderDetails>               OrderDetails               { get { return this.GetTable<OrderDetails>(); } }
-		public Table<OrderDetailsExtended>       OrderDetailsExtended       { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public Table<Orders>                     Orders                     { get { return this.GetTable<Orders>(); } }
-		public Table<OrdersQry>                  OrdersQry                  { get { return this.GetTable<OrdersQry>(); } }
-		public Table<OrderSubtotals>             OrderSubtotals             { get { return this.GetTable<OrderSubtotals>(); } }
-		public Table<Products>                   Products                   { get { return this.GetTable<Products>(); } }
-		public Table<ProductsAboveAveragePrice>  ProductsAboveAveragePrice  { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
-		public Table<ProductSalesFor1997>        ProductSalesFor1997        { get { return this.GetTable<ProductSalesFor1997>(); } }
-		public Table<ProductsByCategory>         ProductsByCategory         { get { return this.GetTable<ProductsByCategory>(); } }
-		public Table<QuarterlyOrders>            QuarterlyOrders            { get { return this.GetTable<QuarterlyOrders>(); } }
-		public Table<Region>                     Region                     { get { return this.GetTable<Region>(); } }
-		public Table<SalesByCategory>            SalesByCategory            { get { return this.GetTable<SalesByCategory>(); } }
-		public Table<SalesTotalsByAmount>        SalesTotalsByAmount        { get { return this.GetTable<SalesTotalsByAmount>(); } }
-		public Table<Shippers>                   Shippers                   { get { return this.GetTable<Shippers>(); } }
-		public Table<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarter    { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
-		public Table<SummaryOfSalesByYear>       SummaryOfSalesByYear       { get { return this.GetTable<SummaryOfSalesByYear>(); } }
-		public Table<Suppliers>                  Suppliers                  { get { return this.GetTable<Suppliers>(); } }
-		public Table<Territories>                Territories                { get { return this.GetTable<Territories>(); } }
+		public Table<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
+		public Table<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
+		public Table<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
+		public Table<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
+		public Table<Employee>                   Employees                    { get { return this.GetTable<Employee>(); } }
+		public Table<EmployeeTerritory>          EmployeeTerritories          { get { return this.GetTable<EmployeeTerritory>(); } }
+		public Table<Invoice>                    Invoices                     { get { return this.GetTable<Invoice>(); } }
+		public Table<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
+		public Table<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
+		public Table<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
+		public Table<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
+		public Table<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
+		public Table<Product>                    Products                     { get { return this.GetTable<Product>(); } }
+		public Table<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
+		public Table<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
+		public Table<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
+		public Table<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
+		public Table<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
+		public Table<SalesByCategory>            SalesByCategories            { get { return this.GetTable<SalesByCategory>(); } }
+		public Table<SalesTotalsByAmount>        SalesTotalsByAmounts         { get { return this.GetTable<SalesTotalsByAmount>(); } }
+		public Table<Shipper>                    Shippers                     { get { return this.GetTable<Shipper>(); } }
+		public Table<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
+		public Table<SummaryOfSalesByYear>       SummaryOfSalesByYears        { get { return this.GetTable<SummaryOfSalesByYear>(); } }
+		public Table<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
+		public Table<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
 		#region FreeTextTable
 
@@ -161,7 +161,7 @@ namespace DataModel
 
 	// View
 	[Table("Alphabetical list of products")]
-	public partial class AlphabeticalListOfProducts
+	public partial class AlphabeticalListOfProduct
 	{
 		[Column, NotNull    ] public int      ProductID       { get; set; } // int
 		[Column, NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
@@ -180,7 +180,7 @@ namespace DataModel
 	/// Description for Categories table.
 	/// </summary>
 	[Table("Categories")]
-	public partial class Categories
+	public partial class Category
 	{
 		/// <summary>
 		/// Description of Categories.CategoryID field.
@@ -196,7 +196,7 @@ namespace DataModel
 		/// FK_Products_Categories_BackReference
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=false)]
-		public IEnumerable<Products> Products { get; set; }
+		public IEnumerable<Product> Products { get; set; }
 
 		#endregion
 	}
@@ -217,61 +217,11 @@ namespace DataModel
 		[Column,   NotNull] public string ProductName { get; set; } // nvarchar(40)
 	}
 
-	// View
-	[Table("Customer and Suppliers by City")]
-	public partial class CustomerAndSuppliersByCity
-	{
-		[Column,    Nullable] public string City         { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string ContactName  { get; set; } // nvarchar(30)
-		[Column, NotNull    ] public string Relationship { get; set; } // varchar(9)
-	}
-
-	[Table("CustomerCustomerDemo")]
-	public partial class CustomerCustomerDemo
-	{
-		[PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
-		[PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
-		public CustomerDemographics FK_CustomerCustomerDemo { get; set; }
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
-		public Customers Customers { get; set; }
-
-		#endregion
-	}
-
-	[Table("CustomerDemographics")]
-	public partial class CustomerDemographics
-	{
-		[PrimaryKey, NotNull    ] public string CustomerTypeID { get; set; } // nchar(10)
-		[Column,        Nullable] public string CustomerDesc   { get; set; } // ntext
-
-		#region Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
-
-		#endregion
-	}
-
 	/// <summary>
 	/// Description of Customers table.
 	/// </summary>
 	[Table("Customers")]
-	public partial class Customers
+	public partial class Customer
 	{
 		/// <summary>
 		/// Just ID.
@@ -297,19 +247,69 @@ namespace DataModel
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
-		public IEnumerable<Orders> Orders { get; set; }
+		public IEnumerable<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemo { get; set; }
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Customer and Suppliers by City")]
+	public partial class CustomerAndSuppliersByCity
+	{
+		[Column,    Nullable] public string City         { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string ContactName  { get; set; } // nvarchar(30)
+		[Column, NotNull    ] public string Relationship { get; set; } // varchar(9)
+	}
+
+	[Table("CustomerCustomerDemo")]
+	public partial class CustomerCustomerDemo
+	{
+		[PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
+		[PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		public CustomerDemographic FK_CustomerCustomerDemo { get; set; }
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_Customers
+		/// </summary>
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		public Customer Customer { get; set; }
+
+		#endregion
+	}
+
+	[Table("CustomerDemographics")]
+	public partial class CustomerDemographic
+	{
+		[PrimaryKey, NotNull    ] public string CustomerTypeID { get; set; } // nchar(10)
+		[Column,        Nullable] public string CustomerDesc   { get; set; } // ntext
+
+		#region Associations
+
+		/// <summary>
+		/// FK_CustomerCustomerDemo_BackReference
+		/// </summary>
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
 	}
 
 	[Table("Employees")]
-	public partial class Employees
+	public partial class Employee
 	{
 		[PrimaryKey, Identity   ] public int       EmployeeID      { get; set; } // int
 		[Column,     NotNull    ] public string    LastName        { get; set; } // nvarchar(20)
@@ -336,31 +336,31 @@ namespace DataModel
 		/// FK_Employees_Employees
 		/// </summary>
 		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
-		public Employees FK_Employees_Employees { get; set; }
+		public Employee FK_Employees_Employees { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
-		public IEnumerable<Orders> Orders { get; set; }
+		public IEnumerable<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
-		public IEnumerable<EmployeeTerritories> EmployeeTerritories { get; set; }
+		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
-		public IEnumerable<Employees> FK_Employees_Employees_BackReference { get; set; }
+		public IEnumerable<Employee> FK_Employees_Employees_BackReference { get; set; }
 
 		#endregion
 	}
 
 	[Table("EmployeeTerritories")]
-	public partial class EmployeeTerritories
+	public partial class EmployeeTerritory
 	{
 		[PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
 		[PrimaryKey(2), NotNull] public string TerritoryID { get; set; } // nvarchar(20)
@@ -371,20 +371,20 @@ namespace DataModel
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
-		public Employees Employees { get; set; }
+		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
-		public Territories Territories { get; set; }
+		public Territory Territory { get; set; }
 
 		#endregion
 	}
 
 	// View
 	[Table("Invoices")]
-	public partial class Invoices
+	public partial class Invoice
 	{
 		[Column,    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
 		[Column,    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
@@ -414,47 +414,8 @@ namespace DataModel
 		[Column,    Nullable] public decimal?  Freight        { get; set; } // money
 	}
 
-	[Table("Order Details")]
-	public partial class OrderDetails
-	{
-		[Column("OrderID"), PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
-		[                   PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
-		[Column,                           NotNull] public decimal UnitPrice { get; set; } // money
-		[Column,                           NotNull] public short   Quantity  { get; set; } // smallint
-		[Column,                           NotNull] public float   Discount  { get; set; } // real
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Order_Details_Orders
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
-		public Orders OrderDetailsOrders { get; set; }
-
-		/// <summary>
-		/// FK_Order_Details_Products
-		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
-		public Products OrderDetailsProducts { get; set; }
-
-		#endregion
-	}
-
-	// View
-	[Table("Order Details Extended")]
-	public partial class OrderDetailsExtended
-	{
-		[Column, NotNull    ] public int      OrderID       { get; set; } // int
-		[Column, NotNull    ] public int      ProductID     { get; set; } // int
-		[Column, NotNull    ] public string   ProductName   { get; set; } // nvarchar(40)
-		[Column, NotNull    ] public decimal  UnitPrice     { get; set; } // money
-		[Column, NotNull    ] public short    Quantity      { get; set; } // smallint
-		[Column, NotNull    ] public float    Discount      { get; set; } // real
-		[Column,    Nullable] public decimal? ExtendedPrice { get; set; } // money
-	}
-
 	[Table("Orders")]
-	public partial class Orders
+	public partial class Order
 	{
 		[PrimaryKey, Identity] public int       OrderID        { get; set; } // int
 		[Column,     Nullable] public string    CustomerID     { get; set; } // nchar(5)
@@ -477,27 +438,66 @@ namespace DataModel
 		/// FK_Orders_Shippers
 		/// </summary>
 		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
-		public Shippers Shippers { get; set; }
+		public Shipper Shipper { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
-		public Employees Employees { get; set; }
+		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
-		public Customers Customers { get; set; }
+		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
 		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=false)]
-		public IEnumerable<OrderDetails> OrderDetails { get; set; }
+		public IEnumerable<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
+	}
+
+	[Table("Order Details")]
+	public partial class OrderDetail
+	{
+		[Column("OrderID"), PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
+		[                   PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
+		[Column,                           NotNull] public decimal UnitPrice { get; set; } // money
+		[Column,                           NotNull] public short   Quantity  { get; set; } // smallint
+		[Column,                           NotNull] public float   Discount  { get; set; } // real
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Order_Details_Orders
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		public Order OrderDetailsOrder { get; set; }
+
+		/// <summary>
+		/// FK_Order_Details_Products
+		/// </summary>
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		public Product OrderDetailsProduct { get; set; }
+
+		#endregion
+	}
+
+	// View
+	[Table("Order Details Extended")]
+	public partial class OrderDetailsExtended
+	{
+		[Column, NotNull    ] public int      OrderID       { get; set; } // int
+		[Column, NotNull    ] public int      ProductID     { get; set; } // int
+		[Column, NotNull    ] public string   ProductName   { get; set; } // nvarchar(40)
+		[Column, NotNull    ] public decimal  UnitPrice     { get; set; } // money
+		[Column, NotNull    ] public short    Quantity      { get; set; } // smallint
+		[Column, NotNull    ] public float    Discount      { get; set; } // real
+		[Column,    Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
 	// View
@@ -528,14 +528,14 @@ namespace DataModel
 
 	// View
 	[Table("Order Subtotals")]
-	public partial class OrderSubtotals
+	public partial class OrderSubtotal
 	{
 		[Column, NotNull    ] public int      OrderID  { get; set; } // int
 		[Column,    Nullable] public decimal? Subtotal { get; set; } // money
 	}
 
 	[Table("Products")]
-	public partial class Products
+	public partial class Product
 	{
 		[PrimaryKey, Identity   ] public int      ProductID       { get; set; } // int
 		[Column,     NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
@@ -554,19 +554,19 @@ namespace DataModel
 		/// FK_Products_Suppliers
 		/// </summary>
 		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
-		public Suppliers Suppliers { get; set; }
+		public Supplier Supplier { get; set; }
 
 		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
-		public Categories Categories { get; set; }
+		public Category Category { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference
 		/// </summary>
 		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
-		public IEnumerable<OrderDetails> OrderDetails { get; set; }
+		public IEnumerable<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
 	}
@@ -601,7 +601,7 @@ namespace DataModel
 
 	// View
 	[Table("Quarterly Orders")]
-	public partial class QuarterlyOrders
+	public partial class QuarterlyOrder
 	{
 		[Column, Nullable] public string CustomerID  { get; set; } // nchar(5)
 		[Column, Nullable] public string CompanyName { get; set; } // nvarchar(40)
@@ -621,7 +621,7 @@ namespace DataModel
 		/// FK_Territories_Region_BackReference
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
-		public IEnumerable<Territories> Territories { get; set; }
+		public IEnumerable<Territory> Territories { get; set; }
 
 		#endregion
 	}
@@ -647,7 +647,7 @@ namespace DataModel
 	}
 
 	[Table("Shippers")]
-	public partial class Shippers
+	public partial class Shipper
 	{
 		[PrimaryKey, Identity   ] public int    ShipperID   { get; set; } // int
 		[Column,     NotNull    ] public string CompanyName { get; set; } // nvarchar(40)
@@ -659,7 +659,7 @@ namespace DataModel
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
 		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=false)]
-		public IEnumerable<Orders> Orders { get; set; }
+		public IEnumerable<Order> Orders { get; set; }
 
 		#endregion
 	}
@@ -683,7 +683,7 @@ namespace DataModel
 	}
 
 	[Table("Suppliers")]
-	public partial class Suppliers
+	public partial class Supplier
 	{
 		[PrimaryKey, Identity   ] public int    SupplierID   { get; set; } // int
 		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
@@ -704,13 +704,13 @@ namespace DataModel
 		/// FK_Products_Suppliers_BackReference
 		/// </summary>
 		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=false)]
-		public IEnumerable<Products> Products { get; set; }
+		public IEnumerable<Product> Products { get; set; }
 
 		#endregion
 	}
 
 	[Table("Territories")]
-	public partial class Territories
+	public partial class Territory
 	{
 		[PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
 		[Column,     NotNull] public string TerritoryDescription { get; set; } // nchar(50)
@@ -728,7 +728,7 @@ namespace DataModel
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
-		public IEnumerable<EmployeeTerritories> EmployeeTerritories { get; set; }
+		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
 	}

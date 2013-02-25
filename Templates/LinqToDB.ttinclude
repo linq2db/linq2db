@@ -35,6 +35,11 @@ bool     RenderForeignKeys        = true;
 
 Class    DataContextObject;
 
+bool PluralizeClassNames                 = false;
+bool SingularizeClassNames               = true;
+bool PluralizeDataContextPropertyNames   = true;
+bool SingularizeDataContextPropertyNames = false;
+
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
@@ -56,13 +61,18 @@ void LoadServerMetadata(DataConnection dataConnection)
 			key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
 			table = new Table
 			{
-				Schema      = t.IsDefaultSchema ? null : t.SchemaName,
-				BaseClass   = BaseEntityClass,
-				TableName   = t.TableName,
-				TypeName    = t.TypeName,
-				IsView      = t.IsView,
-				Description = t.Description,
-				Columns     = t.Columns.ToDictionary(
+				Schema                  = t.IsDefaultSchema ? null : t.SchemaName,
+				BaseClass               = BaseEntityClass,
+				TableName               = t.TableName,
+				TypeName                =
+					PluralizeClassNames   ? ToPlural  (t.TypeName) :
+					SingularizeClassNames ? ToSingular(t.TypeName) : t.TypeName,
+				DataContextPropertyName =
+					PluralizeDataContextPropertyNames   ? ToPlural  (t.TypeName) :
+					SingularizeDataContextPropertyNames ? ToSingular(t.TypeName) : t.TypeName,
+				IsView                  = t.IsView,
+				Description             = t.Description,
+				Columns                 = t.Columns.ToDictionary(
 					c => c.ColumnName,
 					c => new Column
 					{
@@ -114,6 +124,9 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 		if (key.k.BackReference != null)
 			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
+
+		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
+			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
 	}
 }
 
@@ -182,7 +195,7 @@ void GenerateTypesFromMetadata()
 	{
 		var dcProp = new Property(
 			string.Format("Table<{0}>", t.TypeName),
-			(t.DataContextPropertyName ?? t.TypeName).ToString(),
+			t.DataContextPropertyName,
 			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
 			null);
 

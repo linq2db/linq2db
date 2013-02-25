@@ -1,6 +1,7 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" #>
-<#@ output extension=".generated.cs"                        #>
-<#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"       #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"   #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll"           #>
 <#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll" #>
 <#
