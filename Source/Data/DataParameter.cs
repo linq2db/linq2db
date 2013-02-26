@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Data;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Data
 {
+	using Mapping;
+
 	[ScalarType]
 	public class DataParameter
 	{
@@ -34,15 +36,13 @@ namespace LinqToDB.Data
 		/// </returns>
 		public DataType DataType { get; set; }
 
-/*
 		/// <summary>
 		/// Gets or sets a value indicating whether the parameter is input-only, output-only, bidirectional, or a stored procedure return value parameter.
 		/// </summary>
 		/// <returns>
 		/// One of the <see cref="T:System.Data.ParameterDirection"/> values. The default is Input.
 		/// </returns>
-		public ParameterDirection Direction { get; set; }
-*/
+		public ParameterDirection? Direction { get; set; }
 
 /*
 		/// <summary>
@@ -84,7 +84,6 @@ namespace LinqToDB.Data
 		public int Scale { get; set; }
 */
 
-/*
 		/// <summary>
 		/// Gets or sets the maximum size, in bytes, of the data within the column.
 		/// </summary>
@@ -92,8 +91,7 @@ namespace LinqToDB.Data
 		/// <returns>
 		/// The maximum size, in bytes, of the data within the column. The default value is inferred from the parameter value.
 		/// </returns>
-		public int Size { get; set; }
-*/
+		public int? Size { get; set; }
 
 		/// <summary>
 		/// Gets or sets the value of the parameter.

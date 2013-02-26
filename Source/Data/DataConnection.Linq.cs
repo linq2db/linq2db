@@ -107,8 +107,7 @@ namespace LinqToDB.Data
 
 			var ordered = DataProvider.SqlProviderFlags.IsParameterOrderDependent;
 			var c       = ordered ? pq.SqlParameters.Count : parameters.Length;
-
-			List<IDbDataParameter> parms = new List<IDbDataParameter>(c);
+			var parms   = new List<IDbDataParameter>(c);
 
 			if (ordered)
 			{

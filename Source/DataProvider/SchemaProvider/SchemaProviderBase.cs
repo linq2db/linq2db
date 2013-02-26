@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			switch (memberType)
 			{
 				case "Byte"    : memberType = "byte";    break;
+				case "SByte"   : memberType = "sbyte";   break;
 				case "Byte[]"  : memberType = "byte[]";  break;
 				case "Int16"   : memberType = "short";   break;
 				case "Int32"   : memberType = "int";     break;
@@ -117,9 +118,6 @@ namespace LinqToDB.DataProvider.SchemaProvider
 							name = name.Substring(0, name.Length - "_BackReference".Length);
 
 						name = string.Join("", name.Split('_').Where(_ => _.Length > 0 && _ != t.TableName).ToArray());
-
-//						if (name.Length > 0)
-//							name = key.AssociationType == AssociationType.OneToMany ? PluralizeAssociationName(name) : SingularizeAssociationName(name);
 					}
 
 					if (name.Length != 0 &&

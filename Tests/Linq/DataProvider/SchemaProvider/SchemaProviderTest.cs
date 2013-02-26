@@ -51,13 +51,6 @@ namespace Tests.DataProvider.SchemaProvider
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
-
-				dbSchema.Tables.ToDictionary(
-					t => t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
-					t => t.Columns.ToDictionary(c => c.ColumnName));
-
-				var table = dbSchema.Tables.Single(t => t.TableName == "Parent");
-				Assert.That(dbSchema.Tables.Single(t => t.TableName == "Parent"), Is.Not.Null);
 			}
 		}
 	}

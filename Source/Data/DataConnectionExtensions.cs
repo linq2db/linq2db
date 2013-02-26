@@ -68,6 +68,16 @@ namespace LinqToDB.Data
 			return ExecuteQuery<T>(connection);
 		}
 
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
+
+			SetParameters(connection, parameters);
+
+			return ExecuteQuery<T>(connection);
+		}
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, DataParameter parameter)
 		{
 			return Query<T>(connection, sql, new[] { parameter });
@@ -145,6 +155,16 @@ namespace LinqToDB.Data
 		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
 			connection.SetCommand(sql);
+
+			SetParameters(connection, parameters);
+
+			return connection.Command.ExecuteNonQuery();
+		}
+
+		public static int ExecuteProc(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
 
 			SetParameters(connection, parameters);
 
@@ -260,6 +280,22 @@ namespace LinqToDB.Data
 			SetParameters(connection, dps);
 
 			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+		}
+
+		public static DataReader ExecuteReader(
+			this DataConnection    connection,
+			string                 sql,
+			CommandType            commandType,
+			CommandBehavior        commandBehavior,
+			params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+
+			connection.Command.CommandType = commandType;
+
+			SetParameters(connection, parameters);
+
+			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader(commandBehavior) };
 		}
 
 		static IEnumerable<T> ExecuteQuery<T>(DataConnection connection, IDataReader rd, string sql)
@@ -529,6 +565,9 @@ namespace LinqToDB.Data
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType());
+
+				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
+				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
 
 				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
 				dataConnection.Command.Parameters.Add(p);
