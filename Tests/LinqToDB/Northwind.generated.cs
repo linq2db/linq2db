@@ -12,6 +12,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlBuilder;
@@ -62,6 +63,114 @@ namespace DataModel
 		public Table<SummaryOfSalesByYear>       SummaryOfSalesByYears        { get { return this.GetTable<SummaryOfSalesByYear>(); } }
 		public Table<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public Table<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
+
+		public NorthwindDB()
+		{
+		}
+
+		public NorthwindDB(string configuration)
+			: base(configuration)
+		{
+		}
+
+		#region FreeTextTable
+
+		public class FreeTextKey<T>
+		{
+			public T   Key;
+			public int Rank;
+		}
+
+		public class FreeTextTableExpressionAttribute : Sql.TableExpressionAttribute
+		{
+			public FreeTextTableExpressionAttribute()
+				: base("")
+			{
+			}
+
+			private string Convert(string value)
+			{
+				if (value != null && value.Length > 0 && value[0] != '[')
+					return "[" + value + "]";
+				return value;
+			}
+
+			public override void SetTable(SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+			{
+				var aargs  = sqlArgs.ToArray();
+				var arr    = ConvertArgs(member, aargs).ToList();
+				var method = (MethodInfo)member;
+
+				{
+					var ttype  = method.GetGenericArguments()[0];
+					var tbl    = new SqlTable(ttype);
+
+					var database     = Convert(tbl.Database);
+					var owner        = Convert(tbl.Owner);
+					var physicalName = Convert(tbl.PhysicalName);
+
+					var name = "";
+
+					if (database != null)
+						name = database + "." + (owner == null ? "." : owner + ".");
+					else if (owner != null)
+						name = owner + ".";
+
+					name += physicalName;
+
+					arr.Add(new SqlExpression(name, Precedence.Primary));
+				}
+
+				{
+					var field = ((ConstantExpression)expArgs.First()).Value;
+
+					if (field is string)
+					{
+						arr[0] = new SqlExpression(field.ToString(), Precedence.Primary);
+					}
+					else if (field is LambdaExpression)
+					{
+						var body = ((LambdaExpression)field).Body;
+
+						if (body is MemberExpression)
+						{
+							var name = ((MemberExpression)body).Member.Name;
+
+							if (name.Length > 0 && name[0] != '[')
+								name = "[" + name + "]";
+
+							arr[0] = new SqlExpression(name, Precedence.Primary);
+						}
+					}
+				}
+
+				table.SqlTableType   = SqlTableType.Expression;
+				table.Name           = "FREETEXTTABLE({6}, {2}, {3}) {1}";
+				table.TableArguments = arr.ToArray();
+			}
+		}
+
+		[FreeTextTableExpression]
+		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
+		{
+			return this.GetTable<FreeTextKey<TKey>>(
+				this,
+				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),
+				field,
+				text);
+		}
+
+		[FreeTextTableExpression]
+		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
+		{
+			return this.GetTable<FreeTextKey<TKey>>(
+				this,
+				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),
+				fieldSelector,
+				text);
+		}
+
+		#endregion
 	}
 
 	// View
@@ -640,6 +749,8 @@ namespace DataModel
 
 	public static partial class NorthwindDBExtensions
 	{
+		#region Stored Procedures
+
 		#region TenMostExpensiveProducts
 
 		public partial class TenMostExpensiveProductsResult
@@ -671,7 +782,7 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
 				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date", @Ending_Date));
+				new DataParameter("@Ending_Date",    @Ending_Date));
 		}
 
 		#endregion
@@ -690,7 +801,7 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
 				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date", @Ending_Date));
+				new DataParameter("@Ending_Date",    @Ending_Date));
 		}
 
 		#endregion
@@ -760,8 +871,10 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<SalesByCategoryResult>("[Northwind]..[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName),
-				new DataParameter("@OrdYear", @OrdYear));
+				new DataParameter("@OrdYear",      @OrdYear));
 		}
+
+		#endregion
 
 		#endregion
 	}
@@ -791,6 +904,15 @@ namespace DataModel
 		public Table<Patient>         Patients         { get { return this.GetTable<Patient>(); } }
 		public Table<Person>          People           { get { return this.GetTable<Person>(); } }
 		public Table<TestIdentity>    TestIdentities   { get { return this.GetTable<TestIdentity>(); } }
+
+		public TestDataDB()
+		{
+		}
+
+		public TestDataDB(string configuration)
+			: base(configuration)
+		{
+		}
 
 		#region Table Functions
 
@@ -1133,6 +1255,8 @@ namespace DataModel
 
 	public static partial class TestDataDBExtensions
 	{
+		#region Stored Procedures
+
 		#region Person_SelectByKey
 
 		public partial class Person_SelectByKeyResult
@@ -1185,7 +1309,7 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<Person_SelectByNameResult>("[TestData]..[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName", @lastName));
+				new DataParameter("@lastName",  @lastName));
 		}
 
 		#endregion
@@ -1205,7 +1329,7 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<Person_SelectListByNameResult>("[TestData]..[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName", @lastName));
+				new DataParameter("@lastName",  @lastName));
 		}
 
 		#endregion
@@ -1220,10 +1344,10 @@ namespace DataModel
 		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, string @Gender)
 		{
 			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
-				new DataParameter("@FirstName", @FirstName),
-				new DataParameter("@LastName", @LastName),
+				new DataParameter("@FirstName",  @FirstName),
+				new DataParameter("@LastName",   @LastName),
 				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender", @Gender));
+				new DataParameter("@Gender",     @Gender));
 		}
 
 		#endregion
@@ -1232,12 +1356,16 @@ namespace DataModel
 
 		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, string @Gender, ref int? @PersonID)
 		{
-			return dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName", @FirstName),
-				new DataParameter("@LastName", @LastName),
+			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
+				new DataParameter("@FirstName",  @FirstName),
+				new DataParameter("@LastName",   @LastName),
 				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender", @Gender),
-				new DataParameter("@PersonID", @PersonID));
+				new DataParameter("@Gender",     @Gender),
+				new DataParameter("@PersonID",   @PersonID)   { Direction = ParameterDirection.InputOutput });
+
+			@PersonID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).  Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -1247,11 +1375,11 @@ namespace DataModel
 		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, string @Gender)
 		{
 			return dataConnection.ExecuteProc("[TestData]..[Person_Update]",
-				new DataParameter("@PersonID", @PersonID),
-				new DataParameter("@FirstName", @FirstName),
-				new DataParameter("@LastName", @LastName),
+				new DataParameter("@PersonID",   @PersonID),
+				new DataParameter("@FirstName",  @FirstName),
+				new DataParameter("@LastName",   @LastName),
 				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender", @Gender));
+				new DataParameter("@Gender",     @Gender));
 		}
 
 		#endregion
@@ -1301,7 +1429,7 @@ namespace DataModel
 		{
 			return dataConnection.QueryProc<Patient_SelectByNameResult>("[TestData]..[Patient_SelectByName]",
 				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName", @lastName));
+				new DataParameter("@lastName",  @lastName));
 		}
 
 		#endregion
@@ -1310,13 +1438,20 @@ namespace DataModel
 
 		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
-			return dataConnection.ExecuteProc("[TestData]..[OutRefTest]",
-				new DataParameter("@ID", @ID),
-				new DataParameter("@outputID", @outputID),
-				new DataParameter("@inputOutputID", @inputOutputID),
-				new DataParameter("@str", @str),
-				new DataParameter("@outputStr", @outputStr),
-				new DataParameter("@inputOutputStr", @inputOutputStr));
+			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefTest]",
+				new DataParameter("@ID",             @ID),
+				new DataParameter("@outputID",       @outputID)       { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@inputOutputID",  @inputOutputID)  { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@str",            @str),
+				new DataParameter("@outputStr",      @outputStr)      { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
+			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -1325,10 +1460,15 @@ namespace DataModel
 
 		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
-			return dataConnection.ExecuteProc("[TestData]..[OutRefEnumTest]",
-				new DataParameter("@str", @str),
-				new DataParameter("@outputStr", @outputStr),
-				new DataParameter("@inputOutputStr", @inputOutputStr));
+			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefEnumTest]",
+				new DataParameter("@str",            @str),
+				new DataParameter("@outputStr",      @outputStr)      { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -1352,9 +1492,14 @@ namespace DataModel
 
 		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
 		{
-			return dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt", @outputInt),
-				new DataParameter("@outputString", @outputString));
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -1378,6 +1523,13 @@ namespace DataModel
 
 		#endregion
 
+		#endregion
+	}
+
+	public static partial class SqlFunctions
+	{
+		#region SQL Functions
+
 		#region Scalar_ReturnParameter
 
 		[Sql.Function(Name="Scalar_ReturnParameter", ServerSideOnly=true)]
@@ -1385,6 +1537,8 @@ namespace DataModel
 		{
 			throw new InvalidOperationException();
 		}
+
+		#endregion
 
 		#endregion
 	}

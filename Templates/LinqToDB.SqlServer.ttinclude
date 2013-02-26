@@ -1,10 +1,10 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
 	{
-		var beforeGenerateModel = BeforeGenerateModel;
-		BeforeGenerateModel = () =>
+		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
+		AfterGenerateLinqToDBModel = () =>
 		{
-			beforeGenerateModel();
+			afterGenerateLinqToDBModel();
 			GenerateSqlServerTypes();
 		};
 	}

@@ -202,7 +202,10 @@ void LoadMetadata(DataConnection dataConnection)
 {
 	if (DataContextObject == null)
 	{
-		DataContextObject = new Class(DataContextName) { BaseClass = BaseDataContextClass };
+		DataContextObject = new Class(DataContextName)
+		{
+			BaseClass = BaseDataContextClass,
+		};
 		Model.Types.Add(DataContextObject);
 	}
 
@@ -237,6 +240,8 @@ void LoadMetadata(DataConnection dataConnection)
 	}
 }
 
+Action AfterGenerateLinqToDBModel = () => {};
+
 void GenerateTypesFromMetadata()
 {
 	if (Tables.Count == 0)
@@ -249,6 +254,9 @@ void GenerateTypesFromMetadata()
 		NamespaceName = "DataModel";
 
 	var props = new MemberGroup { IsCompact = true };
+
+	DataContextObject.Members.Add(new Method(null, DataContextObject.Name));
+	DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } });
 
 	DataContextObject.Members.Insert(0, props);
 
@@ -406,6 +414,7 @@ void GenerateTypesFromMetadata()
 		Model.Usings.Add("System.Collections.Generic");
 		Model.Usings.Add("System.Data");
 		Model.Usings.Add("LinqToDB.Data");
+		Model.Usings.Add("LinqToDB.Common");
 
 		var procs = new MemberGroup { Region = "Stored Procedures" };
 		var tabfs = new MemberGroup { Region = "Table Functions" };
@@ -463,20 +472,62 @@ void GenerateTypesFromMetadata()
 				spName += "[" + p.ProcedureName + "]\"";
 				spName += p.ProcParameters.Count == 0 ? ");" : ",";
 
+				var hasOut = p.ProcParameters.Any(pr => pr.IsOut);
+				var prefix = hasOut ? "var ret = " : "return ";
+
 				if (p.ResultTable == null)
-					p.Body.Add("return dataConnection.ExecuteProc(" + spName);
+					p.Body.Add(prefix + "dataConnection.ExecuteProc(" + spName);
 				else
-					p.Body.Add("return dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName);
+					p.Body.Add(prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName);
+
+				var maxLenSchema = p.ProcParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
+				var maxLenParam  = p.ProcParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
+				var maxLenType   = p.ProcParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
 
 				for (var i = 0; i < p.ProcParameters.Count; i++)
 				{
-					var str = string.Format("\tnew DataParameter(\"{0}\", {1})",
-						p.ProcParameters[i].SchemaName,
-						p.ProcParameters[i].ParameterName);
+					var pr = p.ProcParameters[i];
+
+					var str = string.Format("\tnew DataParameter(\"{0}\", {1}{2})",
+						pr.SchemaName,
+						LenDiff(maxLenSchema, pr.SchemaName),
+						pr.ParameterName);
+
+					if (pr.IsOut)
+					{
+						str += LenDiff(maxLenParam, pr.ParameterName);
+						str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
+
+						if (pr.Size != null)
+							str += ", Size = " + pr.Size.Value;
+
+						str += " }";
+					}
 
 					str += i + 1 == p.ProcParameters.Count ? ");" : ",";
 
 					p.Body.Add(str);
+				}
+
+				if (hasOut)
+				{
+					p.Body.Add("");
+
+					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut))
+					{
+						var str = string.Format("{0} {1}= Converter.ChangeTypeTo<{2}>{3}(((IDbDataParameter)dataConnection.Command.Parameters[\"{4}\"]).{5}Value);",
+							pr.ParameterName,
+							LenDiff(maxLenParam,  pr.ParameterName),
+							pr.ParameterType,
+							LenDiff(maxLenType,   pr.ParameterType),
+							pr.SchemaName,
+							LenDiff(maxLenSchema, pr.SchemaName));
+
+						p.Body.Add(str);
+					}
+
+					p.Body.Add("");
+					p.Body.Add("return ret;");
 				}
 			}
 
@@ -502,21 +553,19 @@ void GenerateTypesFromMetadata()
 			else                        funcs.Members.Add(proc);
 		}
 
-		if (procs.Members.Count > 0 || funcs.Members.Count > 0)
-		{
-			var classExt = new Class(DataContextObject.Name + "Extensions") { IsStatic = true };
+		if (procs.Members.Count > 0)
+			Model.Types.Add(new Class(DataContextObject.Name + "Extensions", procs) { IsStatic = true });
 
-			classExt.Members.AddRange(procs.Members);
-			classExt.Members.AddRange(funcs.Members);
-
-			Model.Types.Add(classExt);
-		}
+		if (funcs.Members.Count > 0)
+			Model.Types.Add(new Class("SqlFunctions", funcs) { IsStatic = true });
 
 		if (tabfs.Members.Count > 0) DataContextObject.Members.Add(tabfs);
 	}
 
 	Tables.    Clear();
 	Procedures.Clear();
+
+	AfterGenerateLinqToDBModel();
 }
 
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();

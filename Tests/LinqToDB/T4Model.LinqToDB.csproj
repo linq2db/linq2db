@@ -63,6 +63,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="Northwind.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Northwind.generated.cs</LastGenOutput>
