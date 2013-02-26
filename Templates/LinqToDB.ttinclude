@@ -11,8 +11,7 @@
 			beforeGenerateModel();
 		};
 	}
-#>
-<#+
+#><#+
 
 string   NamespaceName
 {
@@ -128,6 +127,68 @@ void LoadServerMetadata(DataConnection dataConnection)
 		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
 			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
 	}
+
+	var procedures = db.Procedures
+		.Select(p => new
+		{
+			p,
+			key = p.IsDefaultSchema ? p.ProcedureName : p.SchemaName + "." + p.ProcedureName,
+			proc = new Procedure
+			{
+				Schema          = p.IsDefaultSchema ? null : p.SchemaName,
+				ProcedureName   = p.ProcedureName,
+				Name            = p.MemberName,
+				IsFunction      = p.IsFunction,
+				IsTableFunction = p.IsTableFunction,
+				IsDefaultSchema = p.IsDefaultSchema,
+				ResultTable     = p.ResultTable == null ? null :
+					new Table
+					{
+						TypeName =
+							PluralizeClassNames   ? ToPlural  (p.ResultTable.TypeName) :
+							SingularizeClassNames ? ToSingular(p.ResultTable.TypeName) : p.ResultTable.TypeName,
+						Columns  = p.ResultTable.Columns.ToDictionary(
+							c => c.ColumnName,
+							c => new Column
+							{
+								ColumnName      = c.ColumnName,
+								ColumnType      = c.ColumnType,
+								IsNullable      = c.IsNullable,
+								IsIdentity      = c.IsIdentity,
+								IsPrimaryKey    = c.IsPrimaryKey,
+								PrimaryKeyOrder = c.PrimaryKeyOrder,
+								MemberName      = CheckType(c.SystemType, c.MemberName),
+								Type            = c.MemberType,
+								SkipOnInsert    = c.SkipOnInsert,
+								SkipOnUpdate    = c.SkipOnUpdate,
+								Description     = c.Description,
+							})
+					},
+				SimilarTables  = p.SimilarTables == null ? new List<Table>() :
+					p.SimilarTables
+						.Select(t => tables.Single(tbl => tbl.t == t).table)
+						.ToList(),
+				ProcParameters = p.Parameters
+					.Select(pr => new Parameter
+					{
+						SchemaName    = pr.SchemaName,
+						SchemaType    = pr.SchemaType,
+						IsIn          = pr.IsIn,
+						IsOut         = pr.IsOut,
+						IsResult      = pr.IsResult,
+						Size          = pr.Size,
+						ParameterName = pr.ParameterName,
+						ParameterType = pr.ParameterType,
+						SystemType    = pr.SystemType,
+						DataType      = pr.DataType.ToString(),
+					})
+					.ToList(),
+			}
+		})
+		.ToList();
+
+	foreach (var p in procedures)
+		Procedures.Add(p.key, p.proc);
 }
 
 string CheckType(Type type, string typeName)
@@ -340,10 +401,126 @@ void GenerateTypesFromMetadata()
 		Model.Types.Add(t);
 	}
 
-	Tables.Clear();
+	if (Procedures.Count > 0)
+	{
+		Model.Usings.Add("System.Collections.Generic");
+		Model.Usings.Add("System.Data");
+		Model.Usings.Add("LinqToDB.Data");
+
+		var procs = new MemberGroup { Region = "Stored Procedures" };
+		var tabfs = new MemberGroup { Region = "Table Functions" };
+		var funcs = new MemberGroup { Region = "SQL Functions" };
+
+		foreach (var p in Procedures.Values)
+		{
+			var proc = new MemberGroup { Region = p.Name };
+
+			if (p.IsTableFunction)
+			{
+				p.Attributes.Add(new Attribute("Sql.TableFunction", "Name=\"" + p.ProcedureName + "\""));
+				p.Type = "Table<" + p.ResultTable.TypeName + ">";
+			}
+			else if (p.IsFunction)
+			{
+				p.IsStatic = true;
+				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.ProcedureName + "\"", "ServerSideOnly=true"));
+			}
+			else
+			{
+				p.IsStatic = true;
+				p.Type     = p.ResultTable == null ? "int" : "IEnumerable<" + p.ResultTable.TypeName + ">";
+				p.Parameters.Add("this DataConnection dataConnection");
+			}
+
+			foreach (var pr in p.ProcParameters.Where(par => !par.IsResult))
+				p.Parameters.Add(string.Format("{0}{1} {2}",
+					pr.IsOut ? pr.IsIn ? "ref " : "out " : "", pr.ParameterType, pr.ParameterName));
+
+			if (p.IsTableFunction)
+			{
+				var body = string.Format("return GetTable<{0}>(this, (MethodInfo)MethodBase.GetCurrentMethod()", p.ResultTable.TypeName);
+
+				body += p.ProcParameters.Count == 0 ? ");" : ",";
+
+				p.Body.Add(body);
+
+				for (var i = 0; i < p.ProcParameters.Count; i++)
+					p.Body.Add("\t" + p.ProcParameters[i].ParameterName + (i + 1 == p.ProcParameters.Count ? ");" : ","));
+			}
+			else if (p.IsFunction)
+			{
+				p.Body.Add("throw new InvalidOperationException();");
+			}
+			else
+			{
+				var spName = "\"";
+
+				if (DatabaseName != null) spName += "[" + DatabaseName + "].";
+				if (p.Schema     != null) spName += "[" + p.Schema     + "].";
+				else if (DatabaseName != null) spName += ".";
+
+				spName += "[" + p.ProcedureName + "]\"";
+				spName += p.ProcParameters.Count == 0 ? ");" : ",";
+
+				if (p.ResultTable == null)
+					p.Body.Add("return dataConnection.ExecuteProc(" + spName);
+				else
+					p.Body.Add("return dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName);
+
+				for (var i = 0; i < p.ProcParameters.Count; i++)
+				{
+					var str = string.Format("\tnew DataParameter(\"{0}\", {1})",
+						p.ProcParameters[i].SchemaName,
+						p.ProcParameters[i].ParameterName);
+
+					str += i + 1 == p.ProcParameters.Count ? ");" : ",";
+
+					p.Body.Add(str);
+				}
+			}
+
+			if (p.ResultTable != null && p.ResultTable.DataContextPropertyName == null)
+			{
+				var columns = new MemberGroup { IsCompact = true };
+
+				foreach (var c in p.ResultTable.Columns.Values)
+				{
+					if (c.MemberName != c.ColumnName)
+						c.Attributes.Add(new Attribute("Column") { Parameters = { '"' + c.ColumnName + '"' } });
+					columns.Members.Add(c);
+				}
+
+				p.ResultTable.Members.Add(columns);
+				proc.Members.Add(p.ResultTable);
+			}
+
+			proc.Members.Add(p);
+
+			     if (!p.IsFunction)     procs.Members.Add(proc);
+			else if (p.IsTableFunction) tabfs.Members.Add(proc);
+			else                        funcs.Members.Add(proc);
+		}
+
+		if (procs.Members.Count > 0 || funcs.Members.Count > 0)
+		{
+			var classExt = new Class(DataContextObject.Name + "Extensions") { IsStatic = true };
+
+			classExt.Members.AddRange(procs.Members);
+			classExt.Members.AddRange(funcs.Members);
+
+			Model.Types.Add(classExt);
+		}
+
+		if (tabfs.Members.Count > 0) DataContextObject.Members.Add(tabfs);
+	}
+
+	Tables.    Clear();
+	Procedures.Clear();
 }
 
-Dictionary<string,Table> Tables = new Dictionary<string,Table>();
+Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();
+Dictionary<string,Procedure> Procedures = new Dictionary<string,Procedure>();
 
 public partial class Table : Class
 {
@@ -427,4 +604,33 @@ public partial class ForeignKey : Property
 		}
 	}
 }
+
+public partial class Procedure : Method
+{
+	public string Schema          { get; set; }
+	public string ProcedureName   { get; set; }
+	public bool   IsFunction      { get; set; }
+	public bool   IsTableFunction { get; set; }
+	public bool   IsDefaultSchema { get; set; }
+
+	public Table           ResultTable    { get; set; }
+	public List<Table>     SimilarTables  { get; set; }
+	public List<Parameter> ProcParameters { get; set; }
+}
+
+public class Parameter
+{
+	public string   SchemaName    { get; set; }
+	public string   SchemaType    { get; set; }
+	public bool     IsIn          { get; set; }
+	public bool     IsOut         { get; set; }
+	public bool     IsResult      { get; set; }
+	public int?     Size          { get; set; }
+
+	public string   ParameterName { get; set; }
+	public string   ParameterType { get; set; }
+	public Type     SystemType    { get; set; }
+	public string   DataType      { get; set; }
+}
+
 #>

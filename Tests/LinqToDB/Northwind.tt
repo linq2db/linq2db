@@ -7,14 +7,24 @@
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
-//	DatabaseName    = "Northwind";
+	DatabaseName    = "Northwind";
 
 	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
-	//var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 
 	LoadMetadata(conn);
 
 	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+
+	GenerateTypesFromMetadata();
+
+	DataContextName   = null;
+	DataContextObject = null;
+
+	DatabaseName = "TestData";
+
+	conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+
+	LoadMetadata(conn);
 
 	GenerateModel();
 #>
