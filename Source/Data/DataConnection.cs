@@ -11,6 +11,7 @@ namespace LinqToDB.Data
 {
 	using Configuration;
 	using DataProvider;
+	using DataProvider.Access;
 	using DataProvider.SqlServer;
 	using Mapping;
 
@@ -174,6 +175,7 @@ namespace LinqToDB.Data
 			var section = LinqToDBSection.Instance;
 
 			SqlServerFactory.GetDataProvider();
+			AccessFactory.   GetDataProvider();
 
 			if (section != null)
 			{

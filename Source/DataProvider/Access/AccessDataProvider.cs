@@ -2,7 +2,7 @@
 using System.Data;
 using System.Data.OleDb;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Access
 {
 	using Mapping;
 	using SqlProvider;

@@ -4,6 +4,7 @@ using System.IO;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Access;
 
 using NUnit.Framework;
 
@@ -165,7 +166,7 @@ namespace Tests.Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.Access.CreateDataConnection(connection))
+			using (var conn = AccessFactory.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes

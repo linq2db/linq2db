@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Access
 {
 	using Mapping;
 

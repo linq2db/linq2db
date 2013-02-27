@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Access
 {
 	using Data;
 
-	public class Access : IDataProviderFactory
+	public class AccessFactory : IDataProviderFactory
 	{
 		static readonly AccessDataProvider _accessDataProvider = new AccessDataProvider();
 
-		static Access()
+		static AccessFactory()
 		{
 			DataConnection.AddDataProvider(_accessDataProvider);
 		}
