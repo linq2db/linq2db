@@ -11,6 +11,7 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	using LinqToDB.Common;
 	using Extensions;
 	using Linq;
 	using SqlBuilder;
@@ -558,9 +559,8 @@ namespace LinqToDB
 			{
 				var part = (DateParts)((SqlValue)args[_datePartIndex]).Value;
 				var pstr = _partMapping != null ? _partMapping[(int)part] : part.ToString();
-				var str  = string.Format(Expression, pstr ?? part.ToString());
+				var str  = Expression.Args(pstr ?? part.ToString());
 				var type = member.GetMemberType();
-
 
 				return _isExpression ?
 					                new SqlExpression(type, str, Precedence, ConvertArgs(member, args)) :

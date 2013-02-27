@@ -2,7 +2,7 @@
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Common
 {
 	static class Tools
 	{

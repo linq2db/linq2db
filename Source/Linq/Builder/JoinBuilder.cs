@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 
@@ -28,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException(string.Format("Explicit construction of entity type '{0}' in join is not allowed.", body.Type));
+					throw new NotSupportedException("Explicit construction of entity type '{0}' in join is not allowed.".Args(body.Type));
 			}
 
 			return true;
@@ -96,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 				for (var i = 0; i < mi1.Bindings.Count; i++)
 				{
 					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
-						throw new LinqException(string.Format("List of member inits does not match for entity type '{0}'.", outerKeySelector.Type));
+						throw new LinqException("List of member inits does not match for entity type '{0}'.".Args(outerKeySelector.Type));
 
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;

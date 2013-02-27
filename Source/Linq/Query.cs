@@ -739,8 +739,7 @@ namespace LinqToDB.Linq
 								missedKey.Name);
 
 						if (fields.Count == 0)
-							throw new LinqException(
-								string.Format("There are no fields to update in the type '{0}'.", sqlTable.Name));
+							throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.Name);
 
 						foreach (var field in fields)
 						{
@@ -852,8 +851,7 @@ namespace LinqToDB.Linq
 							if (Configuration.Linq.IgnoreEmptyUpdate)
 								return 0;
 
-							throw new LinqException(
-								string.Format("There are no fields to update in the type '{0}'.", sqlTable.Name));
+							throw new LinqException("There are no fields to update in the type '{0}'.".Args(sqlTable.Name));
 						}
 
 						foreach (var field in fields)
@@ -915,8 +913,7 @@ namespace LinqToDB.Linq
 						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 
 						if (keys.Count == 0)
-							throw new LinqException(
-								string.Format("Table '{0}' does not have primary key.", sqlTable.Name));
+							throw new LinqException("Table '{0}' does not have primary key.".Args(sqlTable.Name));
 
 						foreach (var field in keys)
 						{

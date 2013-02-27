@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
+	using Common;
 	using Extensions;
 
 	public class TypeAccessor<T> : TypeAccessor
@@ -60,12 +61,12 @@ namespace LinqToDB.Reflection
 
 		static T ThrowException()
 		{
-			throw new LinqToDBException(string.Format("The '{0}' type must have default or init constructor.", typeof(T).FullName));
+			throw new LinqToDBException("The '{0}' type must have default or init constructor.".Args(typeof(T).FullName));
 		}
 
 		static T ThrowAbstractException()
 		{
-			throw new LinqToDBException(string.Format("Cant create an instance of abstract class '{0}'.", typeof(T).FullName));
+			throw new LinqToDBException("Cant create an instance of abstract class '{0}'.".Args(typeof(T).FullName));
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();

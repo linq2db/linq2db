@@ -1319,7 +1319,7 @@ namespace LinqToDB.SqlProvider
 									SqlQuery.GetTableSource(field.Table);
 #endif
 
-									throw new SqlException(string.Format("Table {0} not found.", field.Table));
+									throw new SqlException("Table {0} not found.", field.Table);
 								}
 
 								var table = GetTableAlias(ts);
@@ -1329,7 +1329,7 @@ namespace LinqToDB.SqlProvider
 									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
 
 								if (string.IsNullOrEmpty(table))
-									throw new SqlException(string.Format("Table {0} should have an alias.", field.Table));
+									throw new SqlException("Table {0} should have an alias.", field.Table);
 
 								addAlias = alias != field.PhysicalName;
 
@@ -1365,13 +1365,13 @@ namespace LinqToDB.SqlProvider
 							table = SqlQuery.GetTableSource(column.Parent);
 #endif
 
-							throw new SqlException(string.Format("Table not found for '{0}'.", column));
+							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
 						var tableAlias = GetTableAlias(table) ?? GetTablePhysicalName(column.Parent, null);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							throw new SqlException(string.Format("Table {0} should have an alias.", column.Parent));
+							throw new SqlException("Table {0} should have an alias.", column.Parent);
 
 						addAlias = alias != column.Alias;
 

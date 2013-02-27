@@ -9,6 +9,7 @@ using System.Threading;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Configuration;
 	using DataProvider;
 	using DataProvider.Access;
@@ -41,7 +42,7 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				throw new LinqToDBException(string.Format("Configuration '{0}' is not defined.", configurationString));
+				throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 			}
 		}
 
@@ -311,7 +312,7 @@ namespace LinqToDB.Data
 			if (_configurations.TryGetValue(configurationString, out ci))
 				return ci.ConnectionString;
 
-			throw new LinqToDBException(string.Format("Configuration '{0}' is not defined.", configurationString));
+			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
 		#endregion

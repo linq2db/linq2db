@@ -8,6 +8,7 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;
@@ -200,7 +201,7 @@ namespace LinqToDB.Data
 				var now = DateTime.Now;
 				var n   = Command.ExecuteNonQuery();
 
-				WriteTraceLine(string.Format("Execution time: {0}. Records affected: {1}.\r\n", DateTime.Now - now, n), TraceSwitch.DisplayName);
+				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
 
 				return n;
 			}
@@ -215,7 +216,7 @@ namespace LinqToDB.Data
 				var now = DateTime.Now;
 				var ret = ExecuteScalarInternal(query);
 
-				WriteTraceLine(string.Format("Execution time: {0}\r\n", DateTime.Now - now), TraceSwitch.DisplayName);
+				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return ret;
 			}
@@ -286,7 +287,7 @@ namespace LinqToDB.Data
 				var now = DateTime.Now;
 				var ret = Command.ExecuteReader();
 
-				WriteTraceLine(string.Format("Execution time: {0}\r\n", DateTime.Now - now), TraceSwitch.DisplayName);
+				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return ret;
 			}

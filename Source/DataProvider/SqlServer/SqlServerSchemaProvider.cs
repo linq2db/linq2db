@@ -321,7 +321,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (procedure.IsFunction && !procedure.IsTableFunction)
 					continue;
 
-				var commandText = string.Format("[{0}].[{1}].[{2}]",
+				var commandText = "[{0}].[{1}].[{2}]".Args(
 					procedure.CatalogName, procedure.SchemaName, procedure.ProcedureName);
 
 				CommandType     commandType;
@@ -458,7 +458,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = string.Format(format, paramValues);
+						dbType = format.Args(paramValues);
 				}
 			}
 

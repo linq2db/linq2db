@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
 	using Extensions;
 	using SqlBuilder;
 	using SqlProvider;
@@ -379,7 +380,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildDateTime(StringBuilder sb, object value)
 		{
-			sb.Append(string.Format("#{0:yyyy-MM-dd HH:mm:ss}#", value));
+			sb.Append("#{0:yyyy-MM-dd HH:mm:ss}#".Args(value));
 		}
 	}
 }

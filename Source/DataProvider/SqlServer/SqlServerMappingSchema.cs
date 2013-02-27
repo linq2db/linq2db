@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				foreach (var typeName in new[] { "SqlHierarchyId", "SqlGeography", "SqlGeometry" })
 				{
-					var type = Type.GetType(string.Format("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types", typeName));
+					var type = Type.GetType("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types".Args(typeName));
 
 					if (type == null)
 						continue;

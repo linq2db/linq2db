@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
@@ -104,7 +105,7 @@ namespace LinqToDB.Mapping
 		void SetColumn(ColumnAttribute attr)
 		{
 			if (attr.MemberName == null)
-				throw new LinqToDBException(string.Format("The Column attribute of the '{0}' type must have MemberName.", TypeAccessor.Type));
+				throw new LinqToDBException("The Column attribute of the '{0}' type must have MemberName.".Args(TypeAccessor.Type));
 
 			if (attr.MemberName.IndexOf('.') < 0)
 			{

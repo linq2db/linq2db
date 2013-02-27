@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlBuilder;
@@ -85,7 +86,9 @@ namespace LinqToDB.Linq.Builder
 			static object CheckNullValue(object value, object context)
 			{
 				if (value == null || value is DBNull)
-					throw new InvalidOperationException(string.Format("Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead.", context));
+					throw new InvalidOperationException(
+						"Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead."
+						.Args(context));
 
 				return value;
 			}
@@ -93,7 +96,9 @@ namespace LinqToDB.Linq.Builder
 			static int CheckNullValue2(IDataReader reader, object context)
 			{
 				if (reader.IsDBNull(0))
-					throw new InvalidOperationException(string.Format("Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead.", context));
+					throw new InvalidOperationException(
+						"Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead."
+						.Args(context));
 				return 0;
 			}
 

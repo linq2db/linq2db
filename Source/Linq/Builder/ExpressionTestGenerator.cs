@@ -9,6 +9,7 @@ using System.Text;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 
 	class ExpressionTestGenerator
@@ -519,8 +520,7 @@ namespace LinqToDB.Linq.Builder
 				var attrs = c.GetCustomAttributesData();
 #endif
 				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + p.Name).ToArray();
-				return string.Format(
-					"{0}\n\t\tpublic {1}({2})\n\t\t{{\n\t\t\tthrow new NotImplementedException();\n\t\t}}",
+				return "{0}\n\t\tpublic {1}({2})\n\t\t{{\n\t\t\tthrow new NotImplementedException();\n\t\t}}".Args(
 					attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					name,
 					ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t));
@@ -536,8 +536,7 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = f.GetCustomAttributesData();
 #endif
-				return string.Format(
-					"{0}\n\t\tpublic {1} {2};",
+				return "{0}\n\t\tpublic {1} {2};".Args(
 					attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					GetTypeName(f.FieldType),
 					f.Name);
@@ -671,7 +670,7 @@ namespace {0}
 
 				if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
 				{
-					name = string.Format("{0}?", GetTypeName(args[0]));
+					name = "{0}?".Args(GetTypeName(args[0]));
 				}
 				else
 				{

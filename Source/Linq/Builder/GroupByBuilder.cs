@@ -8,6 +8,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 
@@ -33,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException(string.Format("Explicit construction of entity type '{0}' in group by is not allowed.", body.Type));
+					throw new NotSupportedException("Explicit construction of entity type '{0}' in group by is not allowed.".Args(body.Type));
 			}
 
 			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);

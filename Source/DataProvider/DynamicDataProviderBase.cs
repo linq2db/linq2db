@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Extensions;
+	using Common;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase : DataProviderBase

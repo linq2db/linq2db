@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
 	using Linq;
 	using Mapping;
 	using SqlBuilder;
@@ -395,7 +396,7 @@ namespace LinqToDB.ServiceModel
 					return resource; 
 				}
 
-				throw new Exception(string.Format("Type '{0}' not found", fullTypeName));
+				throw new Exception("Type '{0}' not found".Args(fullTypeName));
 			}
 
 			public void DeleteResource(object targetResource)

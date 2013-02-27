@@ -9,6 +9,7 @@ using System.Text;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlBuilder;
@@ -434,7 +435,7 @@ namespace LinqToDB.ServiceModel
 						UnresolvedTypes.Add(str);
 
 						Debug.WriteLine(
-							string.Format("Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.", str),
+							"Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.".Args(str),
 							"LinqServiceSerializer");
 					}
 				}
