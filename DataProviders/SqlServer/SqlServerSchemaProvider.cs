@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Data;
-using LinqToDB.Common;
-using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using SchemaProvider;
 
@@ -521,9 +520,9 @@ namespace LinqToDB.DataProvider
 
 			switch (columnType)
 			{
-				case "hierarchyid" : return typeof(SqlHierarchyId);
-				case "geography"   : return typeof(SqlGeography);
-				case "geometry"    : return typeof(SqlGeometry);
+				case "hierarchyid" :
+				case "geography"   :
+				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
 			}
 
 			return null;

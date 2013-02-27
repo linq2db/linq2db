@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Data.SqlTypes;
 using System.IO;
+using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
-
-using Microsoft.SqlServer.Types;
 
 namespace LinqToDB.DataProvider
 {
@@ -36,9 +35,30 @@ namespace LinqToDB.DataProvider
 			AddScalarType(typeof(SqlSingle),      SqlSingle.     Null, true, DataType.Single);
 			AddScalarType(typeof(SqlString),      SqlString.     Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),         SqlXml.        Null, true, DataType.Xml);
-			AddScalarType(typeof(SqlHierarchyId), SqlHierarchyId.Null, true, DataType.Udt);
-			AddScalarType(typeof(SqlGeography),   SqlGeography.  Null, true, DataType.Udt);
-			AddScalarType(typeof(SqlGeometry),    SqlGeometry.   Null, true, DataType.Udt);
+
+			try
+			{
+				foreach (var typeName in new[] { "SqlHierarchyId", "SqlGeography", "SqlGeometry" })
+				{
+					var type = Type.GetType(string.Format("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types", typeName));
+
+					if (type == null)
+						continue;
+
+					var p = type.GetProperty("Null");
+					var l = Expression.Lambda<Func<object>>(
+						Expression.Convert(Expression.Property(null, p), typeof(object)));
+
+					var nullValue = l.Compile()();
+
+					AddScalarType(type, nullValue, true, DataType.Udt);
+
+					SqlServerDataProvider.SetUdtType(type, typeName.Substring(3).ToLower());
+				}
+			}
+			catch (Exception)
+			{
+			}
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();

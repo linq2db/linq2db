@@ -9,8 +9,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-using Microsoft.SqlServer.Types;
-
 namespace LinqToDB.DataProvider
 {
 	using Data;
@@ -168,12 +166,21 @@ namespace LinqToDB.DataProvider
 
 		#region Udt support
 
-		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>(new Dictionary<Type,string>
+		static readonly ConcurrentDictionary<Type,string> _udtTypes = new ConcurrentDictionary<Type,string>();
+
+		internal static void SetUdtType(Type type, string udtName)
 		{
-			{ typeof(SqlGeography),   "geography"   },
-			{ typeof(SqlGeometry),    "geometry"    },
-			{ typeof(SqlHierarchyId), "hierarchyid" },
-		});
+			_udtTypes[type] = udtName;
+		}
+
+		internal static Type GetUdtType(string udtName)
+		{
+			foreach (var udtType in _udtTypes)
+				if (udtType.Value == udtName)
+					return udtType.Key;
+
+			return null;
+		}
 
 		public void AddUdtType(Type type, string udtName)
 		{
