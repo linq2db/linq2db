@@ -31,6 +31,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 			switch (memberType)
 			{
+				case "Boolean" : memberType = "bool";    break;
 				case "Byte"    : memberType = "byte";    break;
 				case "SByte"   : memberType = "sbyte";   break;
 				case "Byte[]"  : memberType = "byte[]";  break;
