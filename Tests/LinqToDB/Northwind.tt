@@ -1,13 +1,20 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
-<#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"   #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"        #>
+<#@ output extension=".generated.cs"                               #>
+<#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"    #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"  #>
 <#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll"           #>
 <#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll" #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
-	DatabaseName    = "Northwind";
+	DatabaseName    = null;//"Northwind";
+	GenerateDatabaseName = true;
+	OneToManyAssociationType = "List<{0}>";
+
+//	BaseEntityClass = "object";
+
+//	GenerateBackReferences = false;
+//	GenerateAssociations = true;
 
 	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
@@ -20,7 +27,7 @@
 	DataContextName   = null;
 	DataContextObject = null;
 
-	DatabaseName = "TestData";
+	DatabaseName = null;//"TestData";
 
 	conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 

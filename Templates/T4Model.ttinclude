@@ -1338,9 +1338,11 @@ string ToCamelCase(string name)
 	return name.Substring(0, n).ToLower() + name.Substring(n);
 }
 
-partial class PartialHelper
-{
-	partial void Set(Property property);
-}
+event Action<Property,string,object> SetPropertyValueAction;
 
+void SetPropertyValue(Property propertyObject, string propertyName, object value)
+{
+	if (SetPropertyValueAction != null)
+		SetPropertyValueAction(propertyObject, propertyName, value);
+}
 #>

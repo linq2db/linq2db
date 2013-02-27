@@ -186,7 +186,7 @@ namespace DataModel
 		[Column,    Nullable] public short?   UnitsInStock    { get; set; } // smallint
 		[Column,    Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
 		[Column,    Nullable] public short?   ReorderLevel    { get; set; } // smallint
-		[Column, NotNull    ] public Boolean  Discontinued    { get; set; } // bit
+		[Column, NotNull    ] public bool     Discontinued    { get; set; } // bit
 		[Column, NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
 	}
 
@@ -210,7 +210,7 @@ namespace DataModel
 		/// FK_Products_Categories_BackReference
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=false)]
-		public IEnumerable<Product> Products { get; set; }
+		public List<Product> Products { get; set; }
 
 		#endregion
 	}
@@ -261,13 +261,13 @@ namespace DataModel
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
-		public IEnumerable<Order> Orders { get; set; }
+		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
+		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
 	}
@@ -317,7 +317,7 @@ namespace DataModel
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
 		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
-		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
+		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
 	}
@@ -356,19 +356,19 @@ namespace DataModel
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
-		public IEnumerable<Order> Orders { get; set; }
+		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
-		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
+		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
-		public IEnumerable<Employee> FK_Employees_Employees_BackReference { get; set; }
+		public List<Employee> FK_Employees_Employees_BackReference { get; set; }
 
 		#endregion
 	}
@@ -470,7 +470,7 @@ namespace DataModel
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
 		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=false)]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; }
+		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
 	}
@@ -560,7 +560,7 @@ namespace DataModel
 		[Column,        Nullable] public short?   UnitsInStock    { get; set; } // smallint
 		[Column,        Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
 		[Column,        Nullable] public short?   ReorderLevel    { get; set; } // smallint
-		[Column,     NotNull    ] public Boolean  Discontinued    { get; set; } // bit
+		[Column,     NotNull    ] public bool     Discontinued    { get; set; } // bit
 
 		#region Associations
 
@@ -580,7 +580,7 @@ namespace DataModel
 		/// FK_Order_Details_Products_BackReference
 		/// </summary>
 		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; }
+		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
 	}
@@ -606,11 +606,11 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Products by Category")]
 	public partial class ProductsByCategory
 	{
-		[Column, NotNull    ] public string  CategoryName    { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string  ProductName     { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string  QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column,    Nullable] public short?  UnitsInStock    { get; set; } // smallint
-		[Column, NotNull    ] public Boolean Discontinued    { get; set; } // bit
+		[Column, NotNull    ] public string CategoryName    { get; set; } // nvarchar(15)
+		[Column, NotNull    ] public string ProductName     { get; set; } // nvarchar(40)
+		[Column,    Nullable] public string QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column,    Nullable] public short? UnitsInStock    { get; set; } // smallint
+		[Column, NotNull    ] public bool   Discontinued    { get; set; } // bit
 	}
 
 	// View
@@ -635,7 +635,7 @@ namespace DataModel
 		/// FK_Territories_Region_BackReference
 		/// </summary>
 		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
-		public IEnumerable<Territory> Territories { get; set; }
+		public List<Territory> Territories { get; set; }
 
 		#endregion
 	}
@@ -673,7 +673,7 @@ namespace DataModel
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
 		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=false)]
-		public IEnumerable<Order> Orders { get; set; }
+		public List<Order> Orders { get; set; }
 
 		#endregion
 	}
@@ -718,7 +718,7 @@ namespace DataModel
 		/// FK_Products_Suppliers_BackReference
 		/// </summary>
 		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=false)]
-		public IEnumerable<Product> Products { get; set; }
+		public List<Product> Products { get; set; }
 
 		#endregion
 	}
@@ -742,12 +742,12 @@ namespace DataModel
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
 		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
-		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; }
+		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
 	}
 
-	public static partial class NorthwindDBExtensions
+	public static partial class NorthwindDBStoredProcedures
 	{
 		#region Stored Procedures
 
@@ -1041,7 +1041,7 @@ namespace DataModel
 		[PrimaryKey,                                   Identity] public int       ID                       { get; set; } // int
 		[Column,                                       Nullable] public long?     bigintDataType           { get; set; } // bigint
 		[Column,                                       Nullable] public decimal?  numericDataType          { get; set; } // numeric(18, 0)
-		[Column,                                       Nullable] public Boolean?  bitDataType              { get; set; } // bit
+		[Column,                                       Nullable] public bool?     bitDataType              { get; set; } // bit
 		[Column,                                       Nullable] public short?    smallintDataType         { get; set; } // smallint
 		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal(18, 0)
 		[Column,                                       Nullable] public decimal?  smallmoneyDataType       { get; set; } // smallmoney
@@ -1106,7 +1106,7 @@ namespace DataModel
 	{
 		[PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
 		[Column,     Nullable] public byte[]    Binary_    { get; set; } // binary(50)
-		[Column,     Nullable] public Boolean?  Boolean_   { get; set; } // bit
+		[Column,     Nullable] public bool?     Boolean_   { get; set; } // bit
 		[Column,     Nullable] public sbyte?    Byte_      { get; set; } // tinyint
 		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // varbinary(50)
 		[Column,     Nullable] public string    Char_      { get; set; } // char(1)
@@ -1169,7 +1169,7 @@ namespace DataModel
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2(0)
-		[Column, Nullable] public Boolean?  BoolValue      { get; set; } // bit
+		[Column, Nullable] public bool?     BoolValue      { get; set; } // bit
 		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
 		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
@@ -1253,7 +1253,7 @@ namespace DataModel
 		[PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
-	public static partial class TestDataDBExtensions
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region Stored Procedures
 

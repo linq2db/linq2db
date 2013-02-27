@@ -6,6 +6,12 @@
 			beforeGenerateModel();
 			NotifyPropertyChangedImpl();
 		};
+
+		SetPropertyValueAction += (obj,prop,val) =>
+		{
+			if (prop == "IsNotifying")
+				obj.IsNotifying = (bool)val;
+		};
 	}
 #><#+
 bool ImplementNotifyPropertyChanging;
@@ -26,6 +32,9 @@ void NotifyPropertyChangedImpl()
 		else
 		{
 			var parent = (MemberGroup)prop.Parent;
+
+			parent.IsCompact = false;
+
 			parentMembers = parent.Members;
 
 			if (parent.IsPropertyGroup)
@@ -365,14 +374,6 @@ class NotifyingProperty : Property
 			Dependents.Add(name);
 		else
 			Dependents.AddRange(dependents);
-	}
-}
-
-partial class PartialHelper
-{
-	partial void Set(Property property)
-	{
-		property.IsNotifying = true;
 	}
 }
 #>
