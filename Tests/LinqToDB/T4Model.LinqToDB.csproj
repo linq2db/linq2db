@@ -37,9 +37,8 @@
       <HintPath>..\..\..\linq2db\Source\bin\Debug\linq2db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\Microsoft.SqlServer.Types.dll</HintPath>
       <Private>True</Private>
+      <HintPath>..\..\packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,8 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Northwind.generated.cs">
-      <DependentUpon>Northwind.tt</DependentUpon>
+    <Compile Include="SqlServer.generated.cs">
+      <DependentUpon>SqlServer.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
@@ -62,10 +61,11 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Northwind.tt">
+    <None Include="SqlServer.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Northwind.generated.cs</LastGenOutput>
+      <LastGenOutput>SqlServer.generated.cs</LastGenOutput>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
