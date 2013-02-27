@@ -333,10 +333,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DataProviders\Firebird\LinqToDB.Firebird.csproj">
-      <Project>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</Project>
-      <Name>LinqToDB.Firebird</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\DataProviders\Informix\LinqToDB.Informix.csproj">
       <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
       <Name>LinqToDB.Informix</Name>

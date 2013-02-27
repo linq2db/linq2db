@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
 
-	public class Firebird: IDataProviderFactory
+	public class FirebirdFactory: IDataProviderFactory
 	{
 		static readonly FirebirdDataProvider _firebirdDataProvider = new FirebirdDataProvider();
 
-		static Firebird()
+		static FirebirdFactory()
 		{
 			DataConnection.AddDataProvider(_firebirdDataProvider);
 		}

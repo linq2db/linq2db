@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Data;
 
-using FirebirdSql.Data.FirebirdClient;
-
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Mapping;
 	using SqlProvider;
 
-	public class FirebirdDataProvider : DataProviderBase
+	public class FirebirdDataProvider : DynamicDataProviderBase
 	{
 		public FirebirdDataProvider()
 			: this(ProviderName.Firebird, new FirebirdMappingSchema())
@@ -22,6 +20,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			SetTypes("FirebirdSql.Data.FirebirdClient", "FbConnection", "FbDataReader", "FbParameter");
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -34,13 +34,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		public override Type ConnectionType { get { return typeof(FbConnection);  } }
-		public override Type DataReaderType { get { return typeof(FbDataReader);  } }
-		
-		public override IDbConnection CreateConnection(string connectionString)
-		{
-			return new FbConnection(connectionString);
-		}
+//		public override IDbConnection CreateConnection(string connectionString)
+//		{
+//			Expression<Func<string,IDbConnection>> call = s => new FbConnection(s);
+//			return call.Compile()(connectionString);
+//			//return _createConnection(connectionString);
+//		}
 
 		public override ISqlProvider CreateSqlProvider()
 		{
@@ -68,6 +67,8 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
+		static Action<IDbDataParameter> _setTimeStamp;
+
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			switch (dataType)
@@ -78,7 +79,9 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.UInt64     : dataType = DataType.Decimal; break;
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
 				case DataType.DateTime   :
-				case DataType.DateTime2  : ((FbParameter)parameter).FbDbType = FbDbType.TimeStamp; return;
+				case DataType.DateTime2  :
+					(_setTimeStamp ?? (_setTimeStamp = GetSetParameter("FbDbType", "FbDbType", "TimeStamp")))(parameter);
+					return;
 			}
 
 			base.SetParameterType(parameter, dataType);

@@ -30,6 +30,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -48,6 +54,11 @@
     <Compile Include="DataProvider\Access\AccessFactory.cs" />
     <Compile Include="DataProvider\Access\AccessMappingSchema.cs" />
     <Compile Include="DataProvider\Access\AccessSqlProvider.cs" />
+    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdDataProvider.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdSqlProvider.cs" />
     <Compile Include="DataProvider\SchemaProvider\AssociationType.cs" />
     <Compile Include="DataProvider\SchemaProvider\ColumnSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\DatabaseSchema.cs" />
@@ -68,6 +79,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServerSchemaProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerVersion.cs" />
+    <Compile Include="Extensions\Tools.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
@@ -276,7 +288,9 @@
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="linq2db.snk" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

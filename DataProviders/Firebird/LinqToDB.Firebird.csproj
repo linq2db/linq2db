@@ -8,7 +8,7 @@
     <ProjectGuid>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LinqToDB.DataProvider</RootNamespace>
+    <RootNamespace>LinqToDB.DataProvider.Firebird</RootNamespace>
     <AssemblyName>linq2db.Firebird</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -86,10 +86,6 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=3.0.2.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -99,7 +95,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Firebird.cs" />
+    <Compile Include="FirebirdFactory.cs" />
     <Compile Include="FirebirdDataProvider.cs" />
     <Compile Include="FirebirdMappingSchema.cs" />
     <Compile Include="FirebirdSqlProvider.cs" />
@@ -127,9 +123,6 @@
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
