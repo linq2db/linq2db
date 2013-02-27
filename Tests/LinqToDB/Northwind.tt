@@ -2,9 +2,13 @@
 <#@ output extension=".generated.cs"                               #>
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"    #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"  #>
-<#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll"           #>
-<#@ assembly name="E:\Projects\Git\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll" #>
+<#@ assembly name="c:\Program Files (x86)\Microsoft SQL Server\100\SDK\Assemblies\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.AddUdtType(typeof(Microsoft.SqlServer.Types.SqlHierarchyId), "hierarchyid");
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.AddUdtType(typeof(Microsoft.SqlServer.Types.SqlGeography),   "geography");
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.AddUdtType(typeof(Microsoft.SqlServer.Types.SqlGeometry),    "geometry");
+
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
 	DatabaseName    = null;//"Northwind";
@@ -16,7 +20,7 @@
 //	GenerateBackReferences = false;
 //	GenerateAssociations = true;
 
-	var conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
+	var conn = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
 	LoadMetadata(conn);
 
@@ -29,7 +33,7 @@
 
 	DatabaseName = null;//"TestData";
 
-	conn = LinqToDB.DataProvider.SqlServer.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
+	conn = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 
 	LoadMetadata(conn);
 

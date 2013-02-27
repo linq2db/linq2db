@@ -749,8 +749,6 @@ namespace DataModel
 
 	public static partial class NorthwindDBStoredProcedures
 	{
-		#region Stored Procedures
-
 		#region TenMostExpensiveProducts
 
 		public partial class TenMostExpensiveProductsResult
@@ -873,8 +871,6 @@ namespace DataModel
 				new DataParameter("@CategoryName", @CategoryName),
 				new DataParameter("@OrdYear",      @OrdYear));
 		}
-
-		#endregion
 
 		#endregion
 	}
@@ -1255,8 +1251,6 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
-		#region Stored Procedures
-
 		#region Person_SelectByKey
 
 		public partial class Person_SelectByKeyResult
@@ -1522,14 +1516,10 @@ namespace DataModel
 		}
 
 		#endregion
-
-		#endregion
 	}
 
 	public static partial class SqlFunctions
 	{
-		#region SQL Functions
-
 		#region Scalar_ReturnParameter
 
 		[Sql.Function(Name="Scalar_ReturnParameter", ServerSideOnly=true)]
@@ -1537,8 +1527,6 @@ namespace DataModel
 		{
 			throw new InvalidOperationException();
 		}
-
-		#endregion
 
 		#endregion
 	}

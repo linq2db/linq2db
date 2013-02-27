@@ -200,9 +200,9 @@ void GenerateTypesFromMetadata()
 		Model.Usings.Add("LinqToDB.Data");
 		Model.Usings.Add("LinqToDB.Common");
 
-		var procs = new MemberGroup { Region = "Stored Procedures" };
+		var procs = new MemberGroup();
+		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
-		var funcs = new MemberGroup { Region = "SQL Functions" };
 
 		foreach (var p in Procedures.Values)
 		{

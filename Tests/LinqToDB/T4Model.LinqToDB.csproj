@@ -34,11 +34,7 @@
   <ItemGroup>
     <Reference Include="linq2db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="linq2db.SqlServer">
-      <HintPath>..\..\..\linq2db\DataProviders\SqlServer\bin\Debug\linq2db.SqlServer.dll</HintPath>
+      <HintPath>..\..\..\linq2db\Source\bin\Debug\linq2db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -63,7 +59,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Northwind.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Northwind.generated.cs</LastGenOutput>
