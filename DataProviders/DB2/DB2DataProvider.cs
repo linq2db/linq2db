@@ -4,7 +4,7 @@ using System.Data;
 using IBM.Data.DB2;
 using IBM.Data.DB2Types;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
 	using Mapping;

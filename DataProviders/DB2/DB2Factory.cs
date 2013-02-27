@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.DB2
 {
 	using Data;
 
-	public class DB2 : IDataProviderFactory
+	public class DB2Factory : IDataProviderFactory
 	{
 		static readonly DB2DataProvider _db2DataProvider = new DB2DataProvider();
 
-		static DB2()
+		static DB2Factory()
 		{
 			DataConnection.AddDataProvider(_db2DataProvider);
 		}

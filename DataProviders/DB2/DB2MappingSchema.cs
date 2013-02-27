@@ -2,7 +2,7 @@
 
 using IBM.Data.DB2Types;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 
