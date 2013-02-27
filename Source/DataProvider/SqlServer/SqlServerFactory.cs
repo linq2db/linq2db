@@ -2,11 +2,11 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
 
-	public class SqlServer : IDataProviderFactory
+	public class SqlServerFactory : IDataProviderFactory
 	{
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(
 			ProviderName.SqlServer2005, SqlServerVersion.v2005, new SqlServer2005MappingSchema());
@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(
 			ProviderName.SqlServer2012, SqlServerVersion.v2012, new SqlServer2012MappingSchema());
 
-		static SqlServer()
+		static SqlServerFactory()
 		{
 			DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);

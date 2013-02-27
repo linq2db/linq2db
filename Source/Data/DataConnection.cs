@@ -11,6 +11,7 @@ namespace LinqToDB.Data
 {
 	using Configuration;
 	using DataProvider;
+	using DataProvider.SqlServer;
 	using Mapping;
 
 	public partial class DataConnection : ICloneable
@@ -171,6 +172,8 @@ namespace LinqToDB.Data
 		static DataConnection()
 		{
 			var section = LinqToDBSection.Instance;
+
+			SqlServerFactory.GetDataProvider();
 
 			if (section != null)
 			{

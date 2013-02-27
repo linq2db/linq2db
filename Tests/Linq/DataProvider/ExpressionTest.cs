@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using NUnit.Framework;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.DataProvider
 {
@@ -15,7 +15,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(SqlServer.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(SqlServerFactory.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				conn.SetCommand("SELECT 1");
 

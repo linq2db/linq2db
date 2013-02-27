@@ -162,10 +162,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DataProviders\SqlServer\LinqToDB.SqlServer.csproj">
-      <Project>{13C31BB8-1B74-4156-A7BF-A6474DE62E07}</Project>
-      <Name>LinqToDB.SqlServer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>

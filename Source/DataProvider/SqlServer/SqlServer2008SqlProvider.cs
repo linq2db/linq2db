@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 

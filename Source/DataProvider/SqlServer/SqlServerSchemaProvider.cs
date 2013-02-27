@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;

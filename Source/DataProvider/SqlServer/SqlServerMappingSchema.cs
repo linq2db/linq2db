@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Mapping;
