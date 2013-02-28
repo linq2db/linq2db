@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db</id>
+		<version>0.0.1</version>
+		<title>Linq to Database</title>
+		<authors>Igor Tkachev</authors>
+		<owners />
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/LICENSE.MIT</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
+		<summary />
+		<tags>linq linq2db LinqToDB ORM database DB SqlServer Access</tags>
+	</metadata>
+	<files>
+		<file src="..\Source\bin\Release\linq2db.dll" target="lib\net40-full" />
+	</files>
+</package>

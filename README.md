@@ -1,7 +1,7 @@
 LINQ to DB
 ==========
 
-LINQ to SQL is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 
 Supported databases
 -------------------

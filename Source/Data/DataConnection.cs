@@ -20,21 +20,22 @@ namespace LinqToDB.Data
 	{
 		#region .ctor
 
-		public DataConnection() : this(DefaultConfiguration)
+		public DataConnection() : this(null)
 		{
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] string configurationString)
+		public DataConnection(string configurationString)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
-
 			InitConfig();
 
-			ConfigurationString = configurationString;
+			ConfigurationString = configurationString ?? DefaultConfiguration;
+
+			if (ConfigurationString == null)
+				throw new LinqToDBException("Configuration string is not provided.");
 
 			ConfigurationInfo ci;
 
-			if (_configurations.TryGetValue(configurationString, out ci))
+			if (_configurations.TryGetValue(ConfigurationString, out ci))
 			{
 				DataProvider     = ci.DataProvider;
 				_mappingSchema   = DataProvider.MappingSchema;

@@ -29,3 +29,4 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 linq2db.sln.docstates
 Tests/Linq/UserDataProviders.txt
+NuGet/*.nupkg
