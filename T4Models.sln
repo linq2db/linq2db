@@ -24,6 +24,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Tests", "Tests\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Wpf", "Tests\Wpf\T4Model.Wpf.csproj", "{12928697-5E5E-4935-B024-7DE232015EF7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0-79B3-44DE-8F39-030D855077DE}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\AddLinq2dbTool.txt = NuGet\AddLinq2dbTool.txt
+		NuGet\CopyMe.tt.txt = NuGet\CopyMe.tt.txt
+		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\Pack.bat = NuGet\Pack.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
