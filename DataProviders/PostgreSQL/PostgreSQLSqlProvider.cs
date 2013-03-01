@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Extensions;
 	using SqlBuilder;
 	using SqlProvider;
@@ -193,7 +194,7 @@ namespace LinqToDB.DataProvider
 
 		public override ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)
 		{
-			if (table.SequenceAttributes != null)
+			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
 				var attr = GetSequenceNameAttribute(table, false);
 	
@@ -203,10 +204,5 @@ namespace LinqToDB.DataProvider
 
 			return base.GetIdentityExpression(table, identityField, forReturning);
 		}
-
-		//protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
-		//{
-		//	BuildInsertOrUpdateQueryAsMerge(sb, null);
-		//}
 	}
 }

@@ -8,6 +8,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlBuilder;
@@ -2184,7 +2185,7 @@ namespace LinqToDB.SqlProvider
 
 			var attrs = table.SequenceAttributes;
 
-			if (attrs == null)
+			if (attrs.IsNullOrEmpty())
 				if (throwException)
 					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.Name);
 				else

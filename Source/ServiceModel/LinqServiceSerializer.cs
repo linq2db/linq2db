@@ -645,7 +645,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.PhysicalName);
 							Append(elem.ObjectType);
 
-							if (elem.SequenceAttributes == null)
+							if (elem.SequenceAttributes.IsNullOrEmpty())
 								Builder.Append(" -");
 							else
 							{

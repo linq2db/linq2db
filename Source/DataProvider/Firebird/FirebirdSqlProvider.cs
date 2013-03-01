@@ -9,6 +9,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Common;
 	using Extensions;
 	using SqlBuilder;
 	using SqlProvider;
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)
 		{
-			if (table.SequenceAttributes != null)
+			if (!table.SequenceAttributes.IsNullOrEmpty())
 				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
 
 			return base.GetIdentityExpression(table, identityField, forReturning);

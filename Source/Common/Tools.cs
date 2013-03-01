@@ -4,12 +4,17 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	static class Tools
+	public static class Tools
 	{
 		[StringFormatMethod("format")]
 		public static string Args(this string format, params object[] args)
 		{
 			return string.Format(format, args);
+		}
+
+		public static bool IsNullOrEmpty<T>(this T[] array)
+		{
+			return array == null || array.Length == 0;
 		}
 	}
 }
