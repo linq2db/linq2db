@@ -154,5 +154,36 @@ namespace Tests.Update
 					Assert.That(sql.IndexOf("(("), Is.GreaterThan(0));
 			}
 		}
+
+		[Test]
+		public void DeleteMany([DataContexts(
+			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 1 });
+				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 2 });
+
+				try
+				{
+					var q =
+						from p in db.Parent
+						where p.ParentID >= 1000
+						select p;
+
+					var n = q.SelectMany(p => p.Children).Delete();
+
+					Assert.That(n, Is.GreaterThanOrEqualTo(2));
+				}
+				finally
+				{
+					db.Child. Delete(c => c.ParentID >= 1000);
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 	}
 }

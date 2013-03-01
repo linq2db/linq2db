@@ -787,6 +787,7 @@ namespace LinqToDB.ServiceModel
 
 							var appendInsert = false;
 							var appendUpdate = false;
+							var appendDelete = false;
 							var appendSelect = false;
 
 							switch (elem.QueryType)
@@ -800,11 +801,16 @@ namespace LinqToDB.ServiceModel
 									appendUpdate = true;
 									break;
 
+								case QueryType.Delete         :
+									appendDelete = true;
+									appendSelect = true;
+									break;
+
 								case QueryType.Insert         :
 									appendInsert = true;
-									if (elem.From.Tables.Count == 0)
-										break;
-									goto default;
+									if (elem.From.Tables.Count != 0)
+										appendSelect = true;
+									break;
 
 								default                       :
 									appendSelect = true;
@@ -813,6 +819,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(appendInsert); if (appendInsert) Append(elem.Insert);
 							Append(appendUpdate); if (appendUpdate) Append(elem.Update);
+							Append(appendDelete); if (appendDelete) Append(elem.Delete);
 							Append(appendSelect); if (appendSelect) Append(elem.Select);
 
 							Append(elem.Where);
@@ -917,6 +924,13 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Keys);
 							Append(elem.Table);
 
+							break;
+						}
+
+					case QueryElementType.DeleteClause :
+						{
+							var elem = (SqlQuery.DeleteClause)e;
+							Append(elem.Table);
 							break;
 						}
 
@@ -1294,6 +1308,8 @@ namespace LinqToDB.ServiceModel
 							var insert             = readInsert ? Read<SqlQuery.InsertClause>() : null;
 							var readUpdate         = ReadBool();
 							var update             = readUpdate ? Read<SqlQuery.UpdateClause>() : null;
+							var readDelete         = ReadBool();
+							var delete             = readDelete ? Read<SqlQuery.DeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlQuery.SelectClause>() : new SqlQuery.SelectClause(null);
 							var where              = Read<SqlQuery.WhereClause>();
@@ -1310,6 +1326,7 @@ namespace LinqToDB.ServiceModel
 							query.Init(
 								insert,
 								update,
+								delete,
 								select,
 								from,
 								where,
@@ -1423,6 +1440,13 @@ namespace LinqToDB.ServiceModel
 							c.Keys. AddRange(keys);
 							obj = c;
 
+							break;
+						}
+
+					case QueryElementType.DeleteClause :
+						{
+							var table = Read<SqlTable>();
+							obj = new SqlQuery.DeleteClause { Table = table };
 							break;
 						}
 

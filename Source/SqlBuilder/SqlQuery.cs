@@ -57,6 +57,7 @@ namespace LinqToDB.SqlBuilder
 		internal void Init(
 			InsertClause       insert,
 			UpdateClause       update,
+			DeleteClause       delete,
 			SelectClause       select,
 			FromClause         from,
 			WhereClause        where,
@@ -70,6 +71,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			_insert              = insert;
 			_update              = update;
+			_delete             = delete;
 			_select              = select;
 			_from                = from;
 			_where               = where;
@@ -2427,6 +2429,89 @@ namespace LinqToDB.SqlBuilder
 
 		#endregion
 
+		#region DeleteClause
+
+		public class DeleteClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+		{
+			public SqlTable Table { get; set; }
+
+			#region Overrides
+
+#if OVERRIDETOSTRING
+
+			public override string ToString()
+			{
+				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			}
+
+#endif
+
+			#endregion
+
+			#region ICloneableElement Members
+
+			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				if (!doClone(this))
+					return this;
+
+				var clone = new DeleteClause();
+
+				if (Table != null)
+					clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
+
+				objectTree.Add(this, clone);
+
+				return clone;
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			[Obsolete]
+			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			{
+				if (Table != null)
+					((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
+
+				return null;
+			}
+
+			#endregion
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.DeleteClause; } }
+
+			StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+			{
+				sb.Append("DELETE FROM ");
+
+				if (Table != null)
+					((IQueryElement)Table).ToString(sb, dic);
+
+				sb.AppendLine();
+
+				return sb;
+			}
+
+			#endregion
+		}
+
+		private DeleteClause _delete;
+		public  DeleteClause  Delete
+		{
+			get { return _delete ?? (_delete = new DeleteClause()); }
+		}
+
+		public void ClearDelete()
+		{
+			_delete = null;
+		}
+
+		#endregion
+
 		#region FromClause
 
 		public class FromClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
@@ -3373,7 +3458,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				var sql = e as SqlQuery;
 
-				if (sql == null || sql.From.Tables.Count != 1 || !sql.IsSimple || sql._insert != null || sql._update != null)
+				if (sql == null || sql.From.Tables.Count != 1 || !sql.IsSimple || sql._insert != null || sql._update != null || sql._delete != null)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -3674,6 +3759,9 @@ namespace LinqToDB.SqlBuilder
 
 							if (_update != null)
 								visitor.VisitAll(Update, tableCollector);
+
+							if (_delete != null)
+								visitor.VisitAll(Delete, tableCollector);
 						}
 
 						if (findTable(join.Table))
@@ -4398,6 +4486,7 @@ namespace LinqToDB.SqlBuilder
 
 			if (IsInsert) _insert = (InsertClause)clone._insert.Clone(objectTree, doClone);
 			if (IsUpdate) _update = (UpdateClause)clone._update.Clone(objectTree, doClone);
+			if (IsDelete) _delete = (DeleteClause)clone._delete.Clone(objectTree, doClone);
 
 			_select  = new SelectClause (this, clone._select,  objectTree, doClone);
 			_from    = new FromClause   (this, clone._from,    objectTree, doClone);
@@ -4532,6 +4621,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
 			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
+			if (_delete != null) ((ISqlExpressionWalkable)_delete).Walk(skipColumns, func);
 
 			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
 			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);
