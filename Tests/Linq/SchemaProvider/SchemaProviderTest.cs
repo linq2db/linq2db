@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.DataProvider.SchemaProvider
+namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class SchemaProviderTest : DataProviderTestBase

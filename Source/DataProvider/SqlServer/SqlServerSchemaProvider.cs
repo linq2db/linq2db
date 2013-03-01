@@ -362,60 +362,67 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 
 				{
-					using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
+					try
 					{
-						var st = rd.Reader.GetSchemaTable();
-
-						if (st == null)
-							continue;
-
-						procedure.ResultTable = new TableSchema
+						using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
 						{
-							IsProcedureResult = true,
-							TypeName          = ToValidName(procedure.ProcedureName + "Result"),
-							ForeignKeys       = new List<ForeignKeySchema>(),
-							Columns           =
+							var st = rd.Reader.GetSchemaTable();
+
+							if (st == null)
+								continue;
+
+							procedure.ResultTable = new TableSchema
+							{
+								IsProcedureResult = true,
+								TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+								ForeignKeys       = new List<ForeignKeySchema>(),
+								Columns           =
+								(
+									from r in st.AsEnumerable()
+
+									let columnType = r.Field<string>("DataTypeName")
+									let columnName = r.Field<string>("ColumnName")
+									let isNullable = r.Field<bool>  ("AllowDBNull")
+
+									join dt in dataTypes
+										on columnType equals dt.Field<string>("TypeName") into g1
+									from dt in g1.DefaultIfEmpty()
+
+									let systemType = GetSystemType(columnType, dt)
+									let length     = r.Field<int> ("ColumnSize")
+									let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+									let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+									select new ColumnSchema
+									{
+										ColumnName = columnName,
+										ColumnType = GetDbType(columnType, dt, length, precision, scale),
+										IsNullable = isNullable,
+										MemberName = ToValidName(columnName),
+										MemberType = ToTypeName(systemType, isNullable),
+										SystemType = systemType ?? typeof(object),
+										DataType   = GetDataType(columnType),
+										IsIdentity = r.Field<bool>("IsIdentity"),
+									}
+								).ToList()
+							};
+
+							foreach (var column in procedure.ResultTable.Columns)
+								column.Table = procedure.ResultTable;
+
+							procedure.SimilarTables =
 							(
-								from r in st.AsEnumerable()
-
-								let columnType = r.Field<string>("DataTypeName")
-								let columnName = r.Field<string>("ColumnName")
-								let isNullable = r.Field<bool>  ("AllowDBNull")
-
-								join dt in dataTypes
-									on columnType equals dt.Field<string>("TypeName") into g1
-								from dt in g1.DefaultIfEmpty()
-
-								let systemType = GetSystemType(columnType, dt)
-								let length     = r.Field<int> ("ColumnSize")
-								let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
-								let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-
-								select new ColumnSchema
-								{
-									ColumnName = columnName,
-									ColumnType = GetDbType(columnType, dt, length, precision, scale),
-									IsNullable = isNullable,
-									MemberName = ToValidName(columnName),
-									MemberType = ToTypeName(systemType, isNullable),
-									SystemType = systemType ?? typeof(object),
-									DataType   = GetDataType(columnType),
-									IsIdentity = r.Field<bool>("IsIdentity"),
-								}
-							).ToList()
-						};
-
-						foreach (var column in procedure.ResultTable.Columns)
-							column.Table = procedure.ResultTable;
-
-						procedure.SimilarTables =
-						(
-							from t in tables
-							where t.Columns.Count == procedure.ResultTable.Columns.Count
-							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
-							select t
-						).ToList();
+								from t in tables
+								where t.Columns.Count == procedure.ResultTable.Columns.Count
+								let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
+								where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+								select t
+							).ToList();
+						}
+					}
+					catch (Exception ex)
+					{
+						procedure.ResultException = ex;
 					}
 				}
 			}

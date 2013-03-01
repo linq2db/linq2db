@@ -13,8 +13,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 		public bool   IsTableFunction { get; set; }
 		public bool   IsDefaultSchema { get; set; }
 
-		public TableSchema           ResultTable   { get; set; }
-		public List<TableSchema>     SimilarTables { get; set; }
-		public List<ParameterSchema> Parameters    { get; set; }
+		public TableSchema           ResultTable     { get; set; }
+		public Exception             ResultException { get; set; }
+		public List<TableSchema>     SimilarTables   { get; set; }
+		public List<ParameterSchema> Parameters      { get; set; }
 	}
 }
