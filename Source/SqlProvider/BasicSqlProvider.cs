@@ -1205,9 +1205,22 @@ namespace LinqToDB.SqlProvider
 			var firstValue = true;
 			var len        = sb.Length;
 			var hasNull    = false;
+			var count      = 0;
+			var longList   = false;
 
 			foreach (var value in values)
 			{
+				if (count++ >= SqlProviderFlags.MaxInListValuesCount)
+				{
+					count    = 1;
+					longList = true;
+
+					// start building next bucked
+					firstValue = true;
+					sb.Remove(sb.Length - 2, 2).Append(')');
+					sb.Append(" OR ");
+				}
+
 				var val = value;
 
 				if (val is IValueContainer)
@@ -1252,6 +1265,12 @@ namespace LinqToDB.SqlProvider
 					BuildPredicate(sb, new SqlQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot));
 					sb.Append(")");
 				}
+			}
+
+			if (longList && !hasNull)
+			{
+				sb.Insert(len, "(");
+				sb.Append(")");
 			}
 		}
 

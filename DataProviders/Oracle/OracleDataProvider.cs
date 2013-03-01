@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.MaxInListValuesCount = 1000;
+
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 

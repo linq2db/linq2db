@@ -35,6 +35,7 @@ namespace LinqToDB.DataProvider
 				IsCountSubQuerySupported  = true,
 				IsInsertOrUpdateSupported = true,
 				CanCombineParameters      = true,
+				MaxInListValuesCount      = int.MaxValue,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
