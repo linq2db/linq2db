@@ -31,6 +31,7 @@ bool     GenerateDatabaseName     = false;
 bool     GenerateConstructors     = true;
 bool     GenerateAssociations     = true;
 bool     GenerateBackReferences   = true;
+bool     ReplaceSimilarTables     = true;
 
 Class    DataContextObject;
 
@@ -167,11 +168,12 @@ void LoadServerMetadata(DataConnection dataConnection)
 								Description     = c.Description,
 							})
 					},
-				SimilarTables  = p.SimilarTables == null ? new List<Table>() :
+				ResultException = p.ResultException,
+				SimilarTables   = p.SimilarTables == null ? new List<Table>() :
 					p.SimilarTables
 						.Select(t => tables.Single(tbl => tbl.t == t).table)
 						.ToList(),
-				ProcParameters = p.Parameters
+				ProcParameters  = p.Parameters
 					.Select(pr => new Parameter
 					{
 						SchemaName    = pr.SchemaName,
@@ -191,7 +193,15 @@ void LoadServerMetadata(DataConnection dataConnection)
 		.ToList();
 
 	foreach (var p in procedures)
+	{
+		if (ReplaceSimilarTables)
+			if (p.proc.SimilarTables.Count() == 1 || p.proc.SimilarTables.Count(t => !t.IsView) == 1)
+				p.proc.ResultTable = p.proc.SimilarTables.Count() == 1 ?
+					p.proc.SimilarTables[0] :
+					p.proc.SimilarTables.First(t => !t.IsView);
+
 		Procedures.Add(p.key, p.proc);
+	}
 }
 
 string CheckType(Type type, string typeName)
@@ -337,9 +347,10 @@ public partial class Procedure : Method
 	public bool   IsTableFunction { get; set; }
 	public bool   IsDefaultSchema { get; set; }
 
-	public Table           ResultTable    { get; set; }
-	public List<Table>     SimilarTables  { get; set; }
-	public List<Parameter> ProcParameters { get; set; }
+	public Table           ResultTable     { get; set; }
+	public Exception       ResultException { get; set; }
+	public List<Table>     SimilarTables   { get; set; }
+	public List<Parameter> ProcParameters  { get; set; }
 }
 
 public class Parameter

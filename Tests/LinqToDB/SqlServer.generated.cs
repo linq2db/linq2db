@@ -17,8 +17,6 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlBuilder;
 
-using Microsoft.SqlServer.Types;
-
 namespace DataModel
 {
 	/// <summary>
@@ -914,16 +912,10 @@ namespace DataModel
 
 		#region GetParentByID
 
-		public partial class GetParentByIDResult
-		{
-			public int? ParentID { get; set; }
-			public int? Value1   { get; set; }
-		}
-
 		[Sql.TableFunction(Name="GetParentByID")]
-		public Table<GetParentByIDResult> GetParentByID(int? @id)
+		public Table<Parent> GetParentByID(int? @id)
 		{
-			return GetTable<GetParentByIDResult>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				@id);
 		}
 
@@ -1074,9 +1066,9 @@ namespace DataModel
 		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(0)
 		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(0)
 		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time(0)
-		[Column,     Nullable] public SqlHierarchyId? hierarchyidDataType    { get; set; } // hierarchyid
-		[Column,     Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
-		[Column,     Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
+		[Column,     Nullable] public object          hierarchyidDataType    { get; set; } // hierarchyid
+		[Column,     Nullable] public object          geographyDataType      { get; set; } // geography
+		[Column,     Nullable] public object          geometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Database="TestData", Name="BinaryData")]
@@ -1253,18 +1245,9 @@ namespace DataModel
 	{
 		#region Person_SelectByKey
 
-		public partial class Person_SelectByKeyResult
+		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectByKeyResult> Person_SelectByKey(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person_SelectByKeyResult>("[TestData]..[Person_SelectByKey]",
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
 				new DataParameter("@id", @id));
 		}
 
@@ -1272,36 +1255,18 @@ namespace DataModel
 
 		#region Person_SelectAll
 
-		public partial class Person_SelectAllResult
+		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectAllResult> Person_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Person_SelectAllResult>("[TestData]..[Person_SelectAll]");
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
 		}
 
 		#endregion
 
 		#region Person_SelectByName
 
-		public partial class Person_SelectByNameResult
+		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectByNameResult> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person_SelectByNameResult>("[TestData]..[Person_SelectByName]",
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
 				new DataParameter("@firstName", @firstName),
 				new DataParameter("@lastName",  @lastName));
 		}
@@ -1310,18 +1275,9 @@ namespace DataModel
 
 		#region Person_SelectListByName
 
-		public partial class Person_SelectListByNameResult
+		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Person_SelectListByNameResult> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person_SelectListByNameResult>("[TestData]..[Person_SelectListByName]",
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
 				new DataParameter("@firstName", @firstName),
 				new DataParameter("@lastName",  @lastName));
 		}
@@ -1500,18 +1456,9 @@ namespace DataModel
 
 		#region Scalar_ReturnParameterWithObject
 
-		public partial class Scalar_ReturnParameterWithObjectResult
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
 		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Scalar_ReturnParameterWithObjectResult> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Scalar_ReturnParameterWithObjectResult>("[TestData]..[Scalar_ReturnParameterWithObject]",
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
 				new DataParameter("@id", @id));
 		}
 
