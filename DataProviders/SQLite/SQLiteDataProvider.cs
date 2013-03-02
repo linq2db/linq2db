@@ -3,7 +3,7 @@ using System.Data;
 
 using System.Data.SQLite;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Mapping;
 	using SqlProvider;

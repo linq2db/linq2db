@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Data;
 
-	public class SQLite: IDataProviderFactory
+	public class SQLiteFactory: IDataProviderFactory
 	{
 		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
 
-		static SQLite()
+		static SQLiteFactory()
 		{
 			DataConnection.AddDataProvider(_SQLiteDataProvider);
 		}

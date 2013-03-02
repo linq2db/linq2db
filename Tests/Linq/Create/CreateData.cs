@@ -201,7 +201,7 @@ namespace Tests.Create
 
 		static void SQLiteAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes
@@ -223,7 +223,7 @@ namespace Tests.Create
 
 		static void InformixAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes

@@ -102,7 +102,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SQLite.cs" />
+    <Compile Include="SQLiteFactory.cs" />
     <Compile Include="SQLiteDataProvider.cs" />
     <Compile Include="SQLiteMappingSchema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

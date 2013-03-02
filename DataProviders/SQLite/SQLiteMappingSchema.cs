@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Mapping;
 
