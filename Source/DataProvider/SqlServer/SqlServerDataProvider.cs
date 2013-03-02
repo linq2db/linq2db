@@ -196,5 +196,31 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		#region BulkCopy
+
+		public override int BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, int maxBatchSize, System.Collections.Generic.IEnumerable<T> source)
+		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
+			var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var rd = new BulkCopyReader(ed, source);
+			var bc = dataConnection.Transaction == null ?
+				new SqlBulkCopy((SqlConnection)dataConnection.Connection) :
+				new SqlBulkCopy((SqlConnection)dataConnection.Connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction);
+
+			bc.BatchSize            = maxBatchSize;
+			bc.DestinationTableName = ed.TableName;
+
+			for (var i = 0; i < rd.Columns.Length; i++)
+				bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
+
+			bc.WriteToServer(rd);
+
+			return rd.Count;
+		}
+
+		#endregion
 	}
 }
