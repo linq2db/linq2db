@@ -69,6 +69,10 @@
     <Compile Include="DataProvider\SchemaProvider\ProcedureSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\SchemaProviderBase.cs" />
     <Compile Include="DataProvider\SchemaProvider\TableSchema.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteDataProvider.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteFactory.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteMappingSchema.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteSqlProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005MappingSchema.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2008MappingSchema.cs" />
@@ -292,9 +296,7 @@
   <ItemGroup>
     <None Include="linq2db.snk" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataProvider\SQLite\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
