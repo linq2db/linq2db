@@ -156,7 +156,7 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void DeleteMany([DataContexts(
+		public void DeleteMany1([DataContexts(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
 			)] string context)
@@ -182,6 +182,46 @@ namespace Tests.Update
 				{
 					db.Child. Delete(c => c.ParentID >= 1000);
 					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void DeleteMany2([DataContexts(
+			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Parent.    Insert(() => new Parent     { ParentID = 1001 });
+				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1});
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2});
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3});
+				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1});
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2});
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3});
+
+				try
+				{
+					var q =
+						from p in db.Parent
+						where p.ParentID >= 1000
+						select p;
+
+					var n1 = q.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)).Delete();
+					var n2 = q.SelectMany(p => p.Children).                                 Delete();
+
+					Assert.That(n1, Is.GreaterThanOrEqualTo(6));
+					Assert.That(n2, Is.GreaterThanOrEqualTo(2));
+				}
+				finally
+				{
+					db.GrandChild.Delete(c => c.ParentID >= 1000);
+					db.Child.     Delete(c => c.ParentID >= 1000);
+					db.Parent.    Delete(c => c.ParentID >= 1000);
 				}
 			}
 		}
