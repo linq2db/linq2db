@@ -16,5 +16,10 @@ namespace LinqToDB.Common
 		{
 			return array == null || array.Length == 0;
 		}
+
+		public static bool IsNullOrEmpty(this string str)
+		{
+			return string.IsNullOrEmpty(str);
+		}
 	}
 }

@@ -21,7 +21,6 @@ namespace Tests.DataProvider
 			ProviderName.Oracle,
 			ProviderName.PostgreSQL,
 			ProviderName.SqlCe,
-			ProviderName.SQLite,
 			ProviderName.Sybase, ExcludeLinqService=true)] string context)
 		{
 			using (var conn = new DataConnection(context))

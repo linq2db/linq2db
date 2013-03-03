@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data;
 
-using System.Data.SQLite;
-
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
-	public class SQLiteDataProvider : DataProviderBase
+	public class SQLiteDataProvider : DynamicDataProviderBase
 	{
 		public SQLiteDataProvider()
 			: this(ProviderName.SQLite, new SQLiteMappingSchema())
@@ -23,19 +22,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
-		}
 
-		public override Type ConnectionType { get { return typeof(SQLiteConnection); } }
-		public override Type DataReaderType { get { return typeof(SQLiteDataReader); } }
-		
-		public override IDbConnection CreateConnection(string connectionString )
-		{
-			return new SQLiteConnection(connectionString);
+			SetTypes("System.Data.SQLite", "SQLiteConnection", "SQLiteDataReader", "SQLiteParameter");
 		}
 
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new SQLiteSqlProvider(SqlProviderFlags);
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
+		{
+			return new SQLiteSchemaProvider();
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

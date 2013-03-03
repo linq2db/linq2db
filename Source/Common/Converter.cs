@@ -76,7 +76,7 @@ namespace LinqToDB.Common
 
 		public static object ChangeType(object value, Type conversionType, MappingSchema mappingSchema = null)
 		{
-			if (value == null)
+			if (value == null || value is DBNull)
 				return mappingSchema == null ?
 					DefaultValue.GetValue(conversionType) :
 					mappingSchema.GetDefaultValue(conversionType);
@@ -128,8 +128,10 @@ namespace LinqToDB.Common
 
 		public static T ChangeTypeTo<T>(object value, MappingSchema mappingSchema = null)
 		{
-			if (value == null)
-				return DefaultValue<T>.Value;
+			if (value == null || value is DBNull)
+				return mappingSchema == null ?
+					DefaultValue<T>.Value :
+					(T)mappingSchema.GetDefaultValue(typeof(T));
 
 			if (value.GetType() == typeof(T))
 				return (T)value;

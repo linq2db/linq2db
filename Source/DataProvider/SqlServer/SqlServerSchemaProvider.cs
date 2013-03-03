@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using System.Data.Common;
 using System.Linq;
 using System.Data;
 
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection)
 		{
-			var dbConnection = (SqlConnection)dataConnection.Connection;
+			var dbConnection = (DbConnection)dataConnection.Connection;
 			var dataTypes    = dbConnection.GetSchema("DataTypes").AsEnumerable().ToList();
 
 			#region Tables
