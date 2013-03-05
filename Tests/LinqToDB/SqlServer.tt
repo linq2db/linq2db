@@ -2,7 +2,7 @@
 <#@ output extension=".generated.cs"                               #>
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"    #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"  #>
-<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 //	NamespaceName   = "DataContext";
@@ -16,11 +16,17 @@
 //	GenerateBackReferences = false;
 //	GenerateAssociations = true;
 
+	GetSchemaOptions.GetTables = false;
+
+	var path = typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly.GetName().CodeBase;
+
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypesPath(path);
+
 	var conn = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
 	LoadMetadata(conn);
 
-	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+//	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
 	GenerateTypesFromMetadata();
 

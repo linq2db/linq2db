@@ -1,0 +1,21 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="$(SolutionDir)packages\System.Data.SQLite.1.0.84.0\lib\net40\System.Data.SQLite.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
+<#
+	AppDomain.CurrentDomain.AssemblyResolve += (_,args) =>
+	{
+//		WriteComment(this, "args.Name");
+		return null;
+	};	
+
+	NamespaceName = "SQLiteDataContext";
+
+	var connectionString = @"Data Source=..\..\linq2db\Database\TestData.sqlite";
+	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>

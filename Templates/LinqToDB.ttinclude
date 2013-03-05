@@ -11,9 +11,6 @@ Action AfterGenerateLinqToDBModel = () => {};
 
 void GenerateTypesFromMetadata()
 {
-	if (Tables.Count == 0)
-		return;
-
 	Model.Usings.Add("LinqToDB");
 	Model.Usings.Add("LinqToDB.Mapping");
 
@@ -28,7 +25,8 @@ void GenerateTypesFromMetadata()
 		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } });
 	}
 
-	DataContextObject.Members.Insert(0, props);
+	if (Tables.Count > 0)
+		DataContextObject.Members.Insert(0, props);
 
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.TypeName))
 	{

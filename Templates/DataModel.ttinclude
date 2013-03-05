@@ -40,10 +40,13 @@ bool SingularizeClassNames               = true;
 bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
+LinqToDB.DataProvider.SchemaProvider.GetSchemaOptions GetSchemaOptions =
+	new LinqToDB.DataProvider.SchemaProvider.GetSchemaOptions();
+
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
-	var db = sp.GetSchema(dataConnection);
+	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
 
 	if (DatabaseName == null && GenerateDatabaseName)
 		DatabaseName = db.Database;
