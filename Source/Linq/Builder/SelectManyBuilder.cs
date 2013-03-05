@@ -78,8 +78,8 @@ namespace LinqToDB.Linq.Builder
 				var table = (TableBuilder.TableContext)collection;
 
 				var join = table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ?
-					leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql) :
-					leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql);
+					(leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql)) :
+					(leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql));
 
 				join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
 

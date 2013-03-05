@@ -2667,7 +2667,7 @@ namespace LinqToDB.SqlBuilder
 				get { return _tables; }
 			}
 
-			IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
+			static IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
 			{
 				if (source.Source.ElementType == elementType)
 					yield return source.Source;
@@ -2685,6 +2685,33 @@ namespace LinqToDB.SqlBuilder
 			internal IEnumerable<ISqlTableSource> GetFromQueries()
 			{
 				return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SqlQuery));
+			}
+
+			static TableSource FindTableSource(TableSource source, SqlTable table)
+			{
+				if (source.Source == table)
+					return source;
+
+				foreach (var join in source.Joins)
+				{
+					var ts = FindTableSource(join.Table, table);
+					if (ts != null)
+						return ts;
+				}
+
+				return null;
+			}
+
+			public ISqlTableSource FindTableSource(SqlTable table)
+			{
+				foreach (var source in Tables)
+				{
+					var ts = FindTableSource(source, table);
+					if (ts != null)
+						return ts;
+				}
+
+				return null;
 			}
 
 			#region Overrides

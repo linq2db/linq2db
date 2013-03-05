@@ -19,8 +19,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
-		public SqlServerDataProvider(string name, SqlServerVersion version, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
+		public SqlServerDataProvider(string name, SqlServerVersion version)
+			: base(name, null)
 		{
 			Version = version;
 
@@ -58,6 +58,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		#region Overrides
+
+		static class MappingSchemaInstance
+		{
+			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
+			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
+			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+		}
+
+		public override MappingSchema MappingSchema
+		{
+			get
+			{
+				switch (Version)
+				{
+					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
+					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
+					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
+				}
+
+				return base.MappingSchema;
+			}
+		}
 
 		public override IDbConnection CreateConnection(string connectionString)
 		{

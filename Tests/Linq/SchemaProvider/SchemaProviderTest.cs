@@ -3,7 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-
+using LinqToDB.DataProvider.SqlServer;
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -23,6 +23,8 @@ namespace Tests.DataProvider
 			ProviderName.SqlCe,
 			ProviderName.Sybase, ExcludeLinqService=true)] string context)
 		{
+			SqlServerFactory.ResolveSqlTypesPath("");
+
 			using (var conn = new DataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();

@@ -288,6 +288,7 @@ namespace Tests
 				if (_parent == null)
 					using (var db = new TestDataConnection())
 					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
 						_parent = db.Parent.ToList();
 						db.Close();
 
@@ -399,8 +400,9 @@ namespace Tests
 				if (_child == null)
 					using (var db = new TestDataConnection())
 					{
+						db.Child.Delete(c => c.ParentID >= 1000);
 						_child = db.Child.ToList();
-						db.Clone();
+						db.Close();
 
 						foreach (var ch in _child)
 						{

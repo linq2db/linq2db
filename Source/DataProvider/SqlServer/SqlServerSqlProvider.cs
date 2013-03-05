@@ -108,7 +108,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDeleteClause(StringBuilder sb)
 		{
-			var table = SqlQuery.Delete.Table != null ? (ISqlTableSource)SqlQuery.Delete.Table : SqlQuery.From.Tables[0];
+			var table = SqlQuery.Delete.Table != null ?
+				(SqlQuery.From.FindTableSource(SqlQuery.Delete.Table) ?? SqlQuery.Delete.Table) :
+				SqlQuery.From.Tables[0];
 
 			AppendIndent(sb)
 				.Append("DELETE ")

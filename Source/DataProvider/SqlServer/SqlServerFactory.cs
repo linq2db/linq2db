@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -8,12 +11,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServerFactory : IDataProviderFactory
 	{
-		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(
-			ProviderName.SqlServer2005, SqlServerVersion.v2005, new SqlServer2005MappingSchema());
-		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(
-			ProviderName.SqlServer2008, SqlServerVersion.v2008, new SqlServer2008MappingSchema());
-		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(
-			ProviderName.SqlServer2012, SqlServerVersion.v2012, new SqlServer2012MappingSchema());
+		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
+		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
+		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
 
 		static SqlServerFactory()
 		{
@@ -63,6 +63,33 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2005.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2008.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
+		}
+
+		class AssemblyResolver
+		{
+			public string Path;
+
+			public Assembly Resolver(object sender, ResolveEventArgs args)
+			{
+				return args.Name == "Microsoft.SqlServer.Types" ? Assembly.LoadFile(System.IO.Path.Combine(Path, args.Name, ".dll")) : null;
+			}
+		}
+
+		public static void ResolveSqlTypesPath(string path)
+		{
+			ResolveEventHandler resolver = new AssemblyResolver { Path = path }.Resolver;
+
+#if FW4
+
+			var l = Expression.Lambda<Action>(Expression.Call(
+				Expression.Constant(AppDomain.CurrentDomain),
+				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),
+				Expression.Constant(resolver)));
+
+			l.Compile()();
+#else
+			AppDomain.CurrentDomain.AssemblyResolve += resolver;
+#endif
 		}
 
 		#region CreateDataConnection
