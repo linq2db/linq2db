@@ -6,6 +6,6 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 	public interface ISchemaProvider
 	{
-		DatabaseSchema GetSchema(DataConnection dataConnection);
+		DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null);
 	}
 }

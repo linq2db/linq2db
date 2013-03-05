@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		public abstract DatabaseSchema GetSchema(DataConnection dataConnection);
+		public abstract DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options);
 
 		protected string ToValidName(string name)
 		{

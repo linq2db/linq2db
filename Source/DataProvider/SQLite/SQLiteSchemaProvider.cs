@@ -12,8 +12,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		public override DatabaseSchema GetSchema(DataConnection dataConnection)
+		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			if (options == null)
+				options = new GetSchemaOptions();
+
 			var dbConnection = (DbConnection)dataConnection.Connection;
 			var dataTypes    = dbConnection.GetSchema("DataTypes").AsEnumerable().ToList();
 

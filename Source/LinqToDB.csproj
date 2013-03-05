@@ -64,6 +64,7 @@
     <Compile Include="DataProvider\SchemaProvider\ColumnSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\DatabaseSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\ForeignKeySchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\GetSchemaOptions.cs" />
     <Compile Include="DataProvider\SchemaProvider\ISchemaProvider.cs" />
     <Compile Include="DataProvider\SchemaProvider\ParameterSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\ProcedureSchema.cs" />

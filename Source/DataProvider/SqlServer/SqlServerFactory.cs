@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -71,12 +72,24 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public Assembly Resolver(object sender, ResolveEventArgs args)
 			{
-				return args.Name == "Microsoft.SqlServer.Types" ? Assembly.LoadFile(System.IO.Path.Combine(Path, args.Name, ".dll")) : null;
+				if (args.Name == "Microsoft.SqlServer.Types")
+				{
+					if (System.IO.File.Exists(Path))
+						return Assembly.LoadFile(Path);
+					return Assembly.LoadFile(System.IO.Path.Combine(Path, args.Name, ".dll"));
+				}
+
+				return null;
 			}
 		}
 
-		public static void ResolveSqlTypesPath(string path)
+		public static void ResolveSqlTypesPath([NotNull] string path)
 		{
+			if (path == null) throw new ArgumentNullException("path");
+
+			if (path.StartsWith("file:///"))
+				path = path.Substring("file:///".Length);
+
 			ResolveEventHandler resolver = new AssemblyResolver { Path = path }.Resolver;
 
 #if FW4
