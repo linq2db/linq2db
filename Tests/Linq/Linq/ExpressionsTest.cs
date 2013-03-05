@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -291,6 +293,29 @@ namespace Tests.Linq
 
 				q.ToList();
 			}
+		}
+
+		[Sql.ExpressionMethod("AssociationExpression")]
+		static IEnumerable<GrandChild> GrandChildren(Parent p)
+		{
+			throw new InvalidOperationException();
+		}
+
+		static Expression<Func<Parent,IEnumerable<GrandChild>>> AssociationExpression()
+		{
+			return parent => parent.Children.SelectMany(gc => gc.GrandChildren);
+		}
+
+		[Test]
+		public void AssociationMethodExpression([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					select p.Children.SelectMany(gc => gc.GrandChildren).Count()
+					,
+					from p in db.Parent
+					select GrandChildren(p).Count());
 		}
 	}
 }
