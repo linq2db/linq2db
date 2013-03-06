@@ -14,29 +14,51 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		protected void SetTypes(string assembly, string connectionType, string dataReaderType, string parameterType)
+		protected void SetTypes(string assemblyName, string connectionTypeName, string dataReaderTypeName, string parameterTypeName)
 		{
-			_connectionType = Type.GetType("{0}.{1}, {0}".Args(assembly, connectionType), true);
-			_dataReaderType = Type.GetType("{0}.{1}, {0}".Args(assembly, dataReaderType), true);
-			ParameterType   = Type.GetType("{0}.{1}, {0}".Args(assembly, parameterType),  true);
-
-			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string,IDbConnection>>(
-				Expression.New(_connectionType.GetConstructor(new[] { typeof(string) }), p),
-				p);
-
-			_createConnection = l.Compile();
+			_assemblyName       = assemblyName;
+			_connectionTypeName = connectionTypeName;
+			_dataReaderTypeName = dataReaderTypeName;
+			_parameterTypeName  = parameterTypeName;
 		}
 
-		Type _connectionType; public override Type ConnectionType { get { return _connectionType; } }
-		Type _dataReaderType; public override Type DataReaderType { get { return _dataReaderType; } }
+		string _assemblyName;
+		string _connectionTypeName;
+		string _dataReaderTypeName;
+		string _parameterTypeName;
 
-		public Type ParameterType { get; private set; }
+		private         Type _connectionType;
+		public override Type  ConnectionType
+		{
+			get { return _connectionType ?? (_connectionType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _connectionTypeName), true)); }
+		}
+
+		private         Type _dataReaderType;
+		public override Type  DataReaderType
+		{
+			get { return _dataReaderType ?? (_dataReaderType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _dataReaderTypeName), true)); }
+		}
+
+		private Type _parameterType;
+		public  Type  ParameterType
+		{
+			get { return _parameterType ?? (_parameterType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _parameterTypeName), true)); }
+		}
 
 		Func<string,IDbConnection> _createConnection;
 
 		public override IDbConnection CreateConnection(string connectionString)
 		{
+			if (_createConnection == null)
+			{
+				var p = Expression.Parameter(typeof(string));
+				var l = Expression.Lambda<Func<string,IDbConnection>>(
+					Expression.New(ConnectionType.GetConstructor(new[] { typeof(string) }), p),
+					p);
+
+				_createConnection = l.Compile();
+			}
+
 			return _createConnection(connectionString);
 		}
 

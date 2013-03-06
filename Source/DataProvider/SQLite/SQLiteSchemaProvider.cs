@@ -264,6 +264,7 @@ namespace LinqToDB.DataProvider.SQLite
 				case "char"             : return DataType.Char;
 				case "nchar"            : return DataType.NChar;
 				case "datetime"         : return DataType.DateTime;
+				case "datetime2"        : return DataType.DateTime2;
 				case "smalldate"        : return DataType.SmallDateTime;
 				case "timestamp"        : return DataType.Timestamp;
 				case "date"             : return DataType.Date;
@@ -285,14 +286,10 @@ namespace LinqToDB.DataProvider.SQLite
 			if (systemType != null)
 				return systemType;
 
-			/*
 			switch (columnType)
 			{
-				case "hierarchyid" :
-				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
+				case "datetime2" : return typeof(DateTime);
 			}
-			*/
 
 			return null;
 		}

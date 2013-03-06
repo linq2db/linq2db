@@ -3,8 +3,8 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServerFactory : IDataProviderFactory
 	{
+		#region Init
+
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
@@ -23,6 +25,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
 		}
+
+		#endregion
+
+		#region IDataProviderFactory Implementation
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
 		{
@@ -40,6 +46,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return _sqlServerDataProvider2008;
 		}
+
+		#endregion
+
+		#region Public Members
 
 		public static IDataProvider GetDataProvider(SqlServerVersion version = SqlServerVersion.v2008)
 		{
@@ -65,6 +75,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2008.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
 		}
+
+		#endregion
+
+		#region AssemblyResolver
 
 		class AssemblyResolver
 		{
@@ -104,6 +118,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			AppDomain.CurrentDomain.AssemblyResolve += resolver;
 #endif
 		}
+
+		#endregion
 
 		#region CreateDataConnection
 

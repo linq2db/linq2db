@@ -3,7 +3,7 @@
 	<metadata>
 		<id>linq2db</id>
 		<version>0.0.2</version>
-		<title>Linq to Database</title>
+		<title>LINQ to DB</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/LICENSE.MIT</licenseUrl>
