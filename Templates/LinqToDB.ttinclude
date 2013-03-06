@@ -263,7 +263,33 @@ void GenerateTypesFromMetadata()
 				if (p.ResultTable == null)
 					p.Body.Add(prefix + "dataConnection.ExecuteProc(" + spName);
 				else
-					p.Body.Add(prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName);
+				{
+					if (p.ResultTable.Columns.Values.Any(c => c.IsDuplicateOrEmpty))
+					{
+						p.Body.Add("var ms = dataConnection.MappingSchema;");
+						p.Body.Add("");
+						p.Body.Add(prefix + "dataConnection.QueryProc(dataReader =>");
+						p.Body.Add("\tnew " + p.ResultTable.TypeName);
+						p.Body.Add("\t{");
+
+						var n          = 0;
+						var maxNameLen = p.ResultTable.Columns.Values.Max(c => (int?)c.MemberName.Length) ?? 0;
+						var maxTypeLen = p.ResultTable.Columns.Values.Max(c => (int?)c.Type.      Length) ?? 0;
+
+						foreach (var c in p.ResultTable.Columns.Values)
+						{
+							p.Body.Add(string.Format("\t\t{0}{1} = Converter.ChangeTypeTo<{2}>{3}(dataReader.GetValue({4}), ms),",
+								c.MemberName, LenDiff(maxNameLen, c.MemberName), c.Type, LenDiff(maxTypeLen, c.Type), n++));
+						}
+
+						p.Body.Add("\t},");
+						p.Body.Add("\t" + spName);
+					}
+					else
+					{
+						p.Body.Add(prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName);
+					}
+				}
 
 				var maxLenSchema = p.ProcParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
 				var maxLenParam  = p.ProcParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;

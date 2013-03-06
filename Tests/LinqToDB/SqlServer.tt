@@ -16,7 +16,7 @@
 //	GenerateBackReferences = false;
 //	GenerateAssociations = true;
 
-	GetSchemaOptions.GetTables = false;
+//	GetSchemaOptions.GetProcedures = false;
 
 	var path = typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly.GetName().CodeBase;
 
@@ -26,7 +26,7 @@
 
 	LoadMetadata(conn);
 
-//	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
 	GenerateTypesFromMetadata();
 

@@ -154,7 +154,8 @@ void LoadServerMetadata(DataConnection dataConnection)
 						TypeName =
 							PluralizeClassNames   ? ToPlural  (p.ResultTable.TypeName) :
 							SingularizeClassNames ? ToSingular(p.ResultTable.TypeName) : p.ResultTable.TypeName,
-						Columns  = p.ResultTable.Columns.ToDictionary(
+						Columns  = ToDictionary(
+							p.ResultTable.Columns,
 							c => c.ColumnName,
 							c => new Column
 							{
@@ -169,6 +170,11 @@ void LoadServerMetadata(DataConnection dataConnection)
 								SkipOnInsert    = c.SkipOnInsert,
 								SkipOnUpdate    = c.SkipOnUpdate,
 								Description     = c.Description,
+							},
+							(c,n) =>
+							{
+								c.IsDuplicateOrEmpty = true;
+								return "$" + (c.MemberName = "Column" + n);
 							})
 					},
 				ResultException = p.ResultException,
@@ -205,6 +211,27 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 		Procedures.Add(p.key, p.proc);
 	}
+}
+
+Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
+{
+	var dic     = new Dictionary<string,TR>();
+	var current = 1;
+
+	foreach (var item in source)
+	{
+		var key = keyGetter(item);
+		var obj = objGetter(item);
+
+		if (string.IsNullOrEmpty(key) || dic.ContainsKey(key))
+			key = getKeyName(obj, current);
+
+		dic.Add(key, obj);
+
+		current++;
+	}
+
+	return dic;
 }
 
 string CheckType(Type type, string typeName)
@@ -289,6 +316,7 @@ public partial class Column : Property
 	public int       PrimaryKeyOrder;
 	public bool      SkipOnUpdate;
 	public bool      SkipOnInsert;
+	public bool      IsDuplicateOrEmpty;
 
 	public string MemberName
 	{
