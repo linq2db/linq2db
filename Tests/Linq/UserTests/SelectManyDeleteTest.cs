@@ -36,7 +36,7 @@ namespace Tests.UserTests
 	}
 
 	[TestFixture]
-	public class UserTest : TestBase
+	public class SelectManyDeleteTest : TestBase
 	{
 		[Test]
 		public void Test([DataContexts(

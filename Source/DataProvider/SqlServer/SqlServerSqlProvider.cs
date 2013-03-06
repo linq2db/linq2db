@@ -120,10 +120,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildUpdateTableName(StringBuilder sb)
 		{
-			if (SqlQuery.Update.Table != null && SqlQuery.Update.Table != SqlQuery.From.Tables[0].Source)
-				BuildPhysicalTable(sb, SqlQuery.Update.Table, null);
+			var table = SqlQuery.Update.Table != null ?
+				(SqlQuery.From.FindTableSource(SqlQuery.Update.Table) ?? SqlQuery.Update.Table) :
+				SqlQuery.From.Tables[0];
+
+			if (table is SqlTable)
+				BuildPhysicalTable(sb, table, null);
 			else
-				sb.Append(Convert(GetTableAlias(SqlQuery.From.Tables[0]), ConvertType.NameToQueryTableAlias));
+				sb.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
 		}
 
 		protected override void BuildUnicodeString(StringBuilder sb, string value)

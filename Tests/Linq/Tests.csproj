@@ -274,7 +274,8 @@
     <Compile Include="Linq\SelectScalar.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="Linq\WhereTest.cs" />
-    <Compile Include="UserTests\DeleteMany.cs" />
+    <Compile Include="UserTests\SelectManyDeleteTest.cs" />
+    <Compile Include="UserTests\SelectManyUpdateTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Data\Create Scripts\Access.sql">
