@@ -25,6 +25,18 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
+
+			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+				while (rd.Read())
+					yield return objectReader(rd);
+		}
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			connection.SetCommand(sql);

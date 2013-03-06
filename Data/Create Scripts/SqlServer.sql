@@ -580,3 +580,29 @@ CREATE TABLE IndexTable
 	CONSTRAINT IX_IndexTable UNIQUE NONCLUSTERED (UniqueField)
 )
 GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'SelectImplicitColumn')
+BEGIN DROP Procedure SelectImplicitColumn
+END
+GO
+
+CREATE PROCEDURE SelectImplicitColumn
+AS
+BEGIN
+	SELECT 123
+END
+GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'DuplicateColumnNames')
+BEGIN DROP Procedure DuplicateColumnNames
+END
+GO
+
+CREATE PROCEDURE DuplicateColumnNames
+AS
+BEGIN
+	SELECT 123 as id, '456' as id
+END
+GO
