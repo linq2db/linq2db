@@ -3,7 +3,7 @@
 	<metadata>
 		<id>linq2db.t4models</id>
 		<version>0.0.2</version>
-		<title>Linq to Database T4 Models</title>
+		<title>LINQ to DB T4 Models</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/LICENSE.MIT</licenseUrl>
