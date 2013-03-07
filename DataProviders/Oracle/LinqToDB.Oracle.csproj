@@ -86,8 +86,9 @@
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Oracle.DataAccess">
-      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
+    <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
+      <Private>True</Private>
+      <HintPath>..\..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -128,6 +129,9 @@
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
