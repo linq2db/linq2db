@@ -68,6 +68,8 @@ namespace LinqToDB.DataProvider
 
 		public virtual void InitCommand(DataConnection dataConnection)
 		{
+			dataConnection.Command.CommandType = CommandType.Text;
+
 			if (dataConnection.Command.Parameters.Count != 0)
 				dataConnection.Command.Parameters.Clear();
 		}
