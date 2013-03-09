@@ -132,7 +132,7 @@ namespace LinqToDB.Extensions
 			where T : Attribute
 		{
 			var attrs = GetAttributes<T>(type);
-			return attrs.Length > 0? attrs[0]: null;
+			return attrs.Length > 0 ? attrs[0] : null;
 		}
 
 		/// <summary>

@@ -22,9 +22,12 @@ namespace LinqToDB.Extensions
 
 			if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 			{
-				var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
+				if (value != null || systemType == underlyingType)
+				{
+					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType);
 
-				return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+					return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+				}
 			}
 
 			return new SqlValue(systemType, value);

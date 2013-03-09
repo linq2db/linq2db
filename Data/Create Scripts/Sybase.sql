@@ -83,7 +83,7 @@ CREATE TABLE LinqDataTypes
 	MoneyValue     decimal(10,4) NULL,
 	DateTimeValue  datetime      NULL,
 	DateTimeValue2 datetime      NULL,
-	BoolValue      bit,
+	BoolValue      bit           default(0),
 	GuidValue      char(36)      NULL,
 	BinaryValue    binary(500)   NULL,
 	SmallIntValue  smallint      NULL,

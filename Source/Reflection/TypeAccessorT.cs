@@ -19,8 +19,7 @@ namespace LinqToDB.Reflection
 
 			if (type.IsValueType)
 			{
-				var body = Expression.Constant(default(T));
-				_createInstance = Expression.Lambda<Func<T>>(body).Compile();
+				_createInstance = () => default(T);
 			}
 			else
 			{

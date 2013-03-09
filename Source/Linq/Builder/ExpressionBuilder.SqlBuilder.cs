@@ -1293,6 +1293,22 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			#region special case for char?
+
+			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int?) && right.NodeType == ExpressionType.Convert)
+			{
+				var convLeft  = left  as UnaryExpression;
+				var convRight = right as UnaryExpression;
+
+				if (convLeft != null && convRight != null && convLeft.Operand.Type == typeof(char?))
+				{
+					left  = convLeft.Operand;
+					right = Expression.Constant(ConvertTo<char?>.From(((ConstantExpression)convRight.Operand).Value));
+				}
+			}
+
+			#endregion
+
 			switch (nodeType)
 			{
 				case ExpressionType.Equal    :
@@ -1390,24 +1406,43 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertEnumConversion(IBuildContext context, Expression left, SqlQuery.Predicate.Operator op, Expression right)
 		{
-			UnaryExpression conv;
-			Expression      value;
+			Expression value;
+			Expression operand;
 
-			if (left.NodeType == ExpressionType.Convert)
+			if (left is MemberExpression)
 			{
-				conv  = (UnaryExpression)left;
-				value = right;
+				operand = left;
+				value   = right;
+			}
+			else if (left.NodeType == ExpressionType.Convert && ((UnaryExpression)left).Operand is MemberExpression)
+			{
+				operand = ((UnaryExpression)left).Operand;
+				value   = right;
+			}
+			else if (right is MemberExpression)
+			{
+				operand = right;
+				value   = left;
+			}
+			else if (right.NodeType == ExpressionType.Convert && ((UnaryExpression)right).Operand is MemberExpression)
+			{
+				operand = ((UnaryExpression)right).Operand;
+				value   = left;
+			}
+			else if (left.NodeType == ExpressionType.Convert)
+			{
+				operand = ((UnaryExpression)left).Operand;
+				value   = right;
 			}
 			else
 			{
-				conv  = (UnaryExpression)right;
+				operand = ((UnaryExpression)right).Operand;
 				value = left;
 			}
 
-			var operand = conv.Operand;
-			var type    = operand.Type;
+			var type = operand.Type;
 
-			if (!type.IsEnum)
+			if (!type.ToNullableUnderlying().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object>();
