@@ -618,6 +618,29 @@ namespace LinqToDB.Extensions
 				}
 			}
 
+			if (member2.DeclaringType.IsInterface && member1.Name.EndsWith(member2.Name))
+			{
+				if (member1 is PropertyInfo)
+				{
+					var isSubclass = member2.DeclaringType.IsAssignableFrom(member1.DeclaringType);
+
+					if (isSubclass)
+					{
+						var getter1 = ((PropertyInfo)member1).GetGetMethod();
+						var getter2 = ((PropertyInfo)member2).GetGetMethod();
+
+						var map = member1.DeclaringType.GetInterfaceMap(member2.DeclaringType);
+
+						foreach (var mi in map.InterfaceMethods)
+							if ((getter2 == null || (getter2.Name == mi.Name && getter2.DeclaringType == mi.DeclaringType)) &&
+							    (getter1 == null || (getter1.Name == mi.Name && getter1.DeclaringType == mi.DeclaringType)))
+							{
+								return true;
+							}
+					}
+				}
+			}
+
 			return false;
 		}
 

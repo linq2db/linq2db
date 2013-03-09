@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -49,6 +50,29 @@ namespace LinqToDB.Reflection
 				if (memberInfo.MemberType == MemberTypes.Field ||
 					memberInfo.MemberType == MemberTypes.Property && ((PropertyInfo)memberInfo).GetIndexParameters().Length == 0)
 					_members.Add(memberInfo);
+			}
+
+			// Add implicit iterface implementation properties support
+			// Or maybe we should support all private fields/properties?
+			//
+			var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods).ToList();
+
+			if (interfaceMethods.Count > 0)
+			{
+				foreach (var pi in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic))
+				{
+					if (pi.GetIndexParameters().Length == 0)
+					{
+						var getMethod = pi.GetGetMethod(true);
+						var setMethod = pi.GetSetMethod(true);
+
+						if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
+							(setMethod == null || interfaceMethods.Contains(setMethod)))
+						{
+							_members.Add(pi);
+						}
+					}
+				}
 			}
 
 			// ObjectFactory
