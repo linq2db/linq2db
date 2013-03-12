@@ -155,7 +155,6 @@ namespace Tests.Linq
 				q.ToList();
 
 				Assert.IsFalse(db.LastQuery.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
-
 			}
 		}
 
