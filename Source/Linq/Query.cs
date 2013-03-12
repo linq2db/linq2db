@@ -461,7 +461,7 @@ namespace LinqToDB.Linq
 
 		#region Inner Types
 
-		internal delegate TElement Mapper<TElement>(
+		internal delegate TElement Mapper<out TElement>(
 			Query<T>      query,
 			QueryContext  qc,
 			IDataContext  dc,
@@ -843,7 +843,7 @@ namespace LinqToDB.Linq
 							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
 						};
 
-						var keys   = sqlTable.GetKeys(true).Cast<SqlField>();
+						var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
 						var fields = sqlTable.Fields.Values.Where(f => f.IsUpdatable).Except(keys).ToList();
 
 						if (fields.Count == 0)

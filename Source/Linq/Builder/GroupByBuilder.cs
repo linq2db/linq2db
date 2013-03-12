@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 					_parameters   = parameters;
 					_itemReader   = itemReader;
 
-					if (Common.Configuration.Linq.PreloadGroups)
+					if (Configuration.Linq.PreloadGroups)
 					{
 						_items = GetItems();
 					}

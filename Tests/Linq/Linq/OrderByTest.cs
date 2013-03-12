@@ -156,7 +156,7 @@ namespace Tests.Linq
 
 				Assert.IsFalse(db.LastQuery.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
 
-			};
+			}
 		}
 
 		[Test]
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var expected = Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
+				var expected =    Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
 				var result   = db.Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
 			}

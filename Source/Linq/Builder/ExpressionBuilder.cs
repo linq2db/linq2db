@@ -556,10 +556,10 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertSingleOrFirst(Expression expr, MethodCallExpression call)
 		{
-			var param = Expression.Parameter(call.Type, "p");
+			var param    = Expression.Parameter(call.Type, "p");
 			var selector = expr.Transform(e => e == call ? param : e);
-			var method = GetQueriableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
-			var select = call.Method.DeclaringType == typeof(Enumerable) ?
+			var method   = GetQueriableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
+			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
 					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
@@ -567,14 +567,12 @@ namespace LinqToDB.Linq.Builder
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
 					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
 
-			call = (MethodCallExpression)OptimizeExpression(call);
+			call   = (MethodCallExpression)OptimizeExpression(call);
 			select = select.MakeGenericMethod(call.Type, expr.Type);
 			method = method.MakeGenericMethod(expr.Type);
 
 			return Expression.Call(null, method,
-				Expression.Call(null, select,
-					call.Arguments[0],
-					Expression.Lambda(selector, param)));
+				Expression.Call(null, select, call.Arguments[0], Expression.Lambda(selector, param)));
 		}
 
 		#endregion
@@ -668,8 +666,7 @@ namespace LinqToDB.Linq.Builder
 
 				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => Expression.PropertyOrField(c, "p"));
 
-				newBody = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
-
+				newBody   = newBody.Transform(ex => ReferenceEquals(ex, lparam) ? nparm : ex);
 				predicate = Expression.Lambda(newBody, parm);
 
 				var methodInfo = GetMethodInfo(method, "Select");

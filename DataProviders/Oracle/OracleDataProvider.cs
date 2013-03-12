@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Data;
-using System.Data.Common;
-using System.IO;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Xml;
 
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
@@ -173,7 +167,6 @@ namespace LinqToDB.DataProvider
 		{
 			dataConnection.Command = null;
 			((OracleCommand)dataConnection.Command).BindByName = true;
-			//base.InitCommand(dataConnection);
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

@@ -214,9 +214,8 @@ namespace LinqToDB.Linq.Builder
 			if (!query.GroupBy.IsEmpty && !subQuery.Where.IsEmpty)
 			{
 				var fromGroupBy = sequence.SqlQuery.Properties
-					.OfType<System.Tuple<string,SqlQuery>>()
-					.Where(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SqlQuery))
-					.Any();
+					.OfType<Tuple<string,SqlQuery>>()
+					.Any(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SqlQuery));
 
 				if (fromGroupBy)
 				{
@@ -1515,8 +1514,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null && ctx.IsExpression(left, 0, RequestFor.Object).Result ||
-						left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result)
+					if (ctx != null && 
+						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
+						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
 					{
 						return new SqlQuery.Predicate.Expr(new SqlValue(!isEqual));
 					}

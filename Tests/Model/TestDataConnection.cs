@@ -6,7 +6,6 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.SqlBuilder;
 
 namespace Tests.Model
@@ -86,7 +85,7 @@ namespace Tests.Model
 			throw new InvalidOperationException();
 		}
 
-		static Expression<Func<ITestDataContext, Child, IQueryable<Parent>>> Expression9()
+		static Expression<Func<ITestDataContext,Child,IQueryable<Parent>>> Expression9()
 		{
 			return (db, ch) =>
 				from p in db.Parent

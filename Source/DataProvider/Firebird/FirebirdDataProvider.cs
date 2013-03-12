@@ -34,13 +34,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-//		public override IDbConnection CreateConnection(string connectionString)
-//		{
-//			Expression<Func<string,IDbConnection>> call = s => new FbConnection(s);
-//			return call.Compile()(connectionString);
-//			//return _createConnection(connectionString);
-//		}
-
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new FirebirdSqlProvider(SqlProviderFlags);

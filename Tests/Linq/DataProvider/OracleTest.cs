@@ -73,35 +73,35 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestType(conn, "bigintDataType",           1000000L);
-				TestType(conn, "numericDataType",          9999999m);
-				TestType(conn, "bitDataType",              true);
-				TestType(conn, "smallintDataType",         (short)25555);
-				TestType(conn, "decimalDataType",          2222222m);
-				TestType(conn, "smallmoneyDataType",       100000m);
-				TestType(conn, "intDataType",              7777777);
-				TestType(conn, "tinyintDataType",          (sbyte)100);
-				TestType(conn, "moneyDataType",            100000m);
-				TestType(conn, "floatDataType",            20.31d);
-				TestType(conn, "realDataType",             16.2f);
+				TestType(conn, "bigintDataType",         1000000L);
+				TestType(conn, "numericDataType",        9999999m);
+				TestType(conn, "bitDataType",            true);
+				TestType(conn, "smallintDataType",       (short)25555);
+				TestType(conn, "decimalDataType",        2222222m);
+				TestType(conn, "smallmoneyDataType",     100000m);
+				TestType(conn, "intDataType",            7777777);
+				TestType(conn, "tinyintDataType",        (sbyte)100);
+				TestType(conn, "moneyDataType",          100000m);
+				TestType(conn, "floatDataType",          20.31d);
+				TestType(conn, "realDataType",           16.2f);
 
-				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
-				TestType(conn, "datetime2DataType",        new DateTime(2012, 12, 12, 12, 12, 12, 012));
-				TestType(conn, "datetimeoffsetDataType",   new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
-				TestType(conn, "localZoneDataType",        new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
+				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
+				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
+				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 
-				TestType(conn, "charDataType",             '1');
-				TestType(conn, "varcharDataType",          "234");
-				TestType(conn, "textDataType",             "567");
-				TestType(conn, "ncharDataType",            "23233");
-				TestType(conn, "nvarcharDataType",         "3323");
-				TestType(conn, "ntextDataType",            "111");
+				TestType(conn, "charDataType",           '1');
+				TestType(conn, "varcharDataType",        "234");
+				TestType(conn, "textDataType",           "567");
+				TestType(conn, "ncharDataType",          "23233");
+				TestType(conn, "nvarcharDataType",       "3323");
+				TestType(conn, "ntextDataType",          "111");
 
-				TestType(conn, "binaryDataType",           new byte[] { 0, 170 });
-				TestType(conn, "bfileDataType",            new byte[] { 49, 50, 51, 52, 53 });
+				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
+				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
 
-//				TestType(conn, "uriDataType",              "");
-				TestType(conn, "xmlDataType",              "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n");
+//				TestType(conn, "uriDataType",            "");
+				TestType(conn, "xmlDataType",            "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n");
 			}
 		}
 
