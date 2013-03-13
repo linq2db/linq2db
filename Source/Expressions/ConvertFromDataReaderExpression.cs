@@ -111,7 +111,7 @@ namespace LinqToDB.Expressions
 				if (!_columnConverters.TryGetValue(fromType, out func))
 				{
 					var parameter      = Parameter(typeof(IDataReader));
-					var dataReaderExpr = Convert(parameter, _dataContext.DataReaderType);
+					var dataReaderExpr = Convert(parameter, dataReader.GetType());
 
 					var expr = GetColumnReader(_dataContext, _mappingSchema, dataReader, _columnType, _columnIndex, dataReaderExpr);
 

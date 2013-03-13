@@ -484,9 +484,8 @@ namespace LinqToDB.Data
 			IDataReader    dataReader,
 			Func<Type,int,Expression,Expression> getMemberExpression)
 		{
-			var dataProvider   = dataConnection.DataProvider;
 			var parameter      = Expression.Parameter(typeof(IDataReader));
-			var dataReaderExpr = Expression.Convert(parameter, dataProvider.DataReaderType);
+			var dataReaderExpr = Expression.Convert(parameter, dataReader.GetType());
 
 			Expression expr;
 

@@ -24,6 +24,7 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
 
 			var providerListFile =

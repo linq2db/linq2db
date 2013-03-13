@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
 using System.Data.SqlClient;
@@ -10,6 +11,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -27,23 +29,31 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
-			SetProviderField<SqlDataReader,SqlBinary  ,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
-			SetProviderField<SqlDataReader,SqlBoolean ,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
-			SetProviderField<SqlDataReader,SqlByte    ,SqlByte    >((r,i) => r.GetSqlByte    (i));
-			SetProviderField<SqlDataReader,SqlDateTime,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
-			SetProviderField<SqlDataReader,SqlDecimal ,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
-			SetProviderField<SqlDataReader,SqlDouble  ,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
-			SetProviderField<SqlDataReader,SqlGuid    ,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
-			SetProviderField<SqlDataReader,SqlInt16   ,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
-			SetProviderField<SqlDataReader,SqlInt32   ,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
-			SetProviderField<SqlDataReader,SqlInt64   ,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
-			SetProviderField<SqlDataReader,SqlMoney   ,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
-			SetProviderField<SqlDataReader,SqlSingle  ,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
-			SetProviderField<SqlDataReader,SqlString  ,SqlString  >((r,i) => r.GetSqlString  (i));
-			SetProviderField<SqlDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
+			if (!Configuration.AvoidSpecificDataProviderAPI)
+			{
+				SetProviderField<SqlDataReader,SqlBinary  ,SqlBinary  >((r,i) => r.GetSqlBinary  (i));
+				SetProviderField<SqlDataReader,SqlBoolean ,SqlBoolean >((r,i) => r.GetSqlBoolean (i));
+				SetProviderField<SqlDataReader,SqlByte    ,SqlByte    >((r,i) => r.GetSqlByte    (i));
+				SetProviderField<SqlDataReader,SqlDateTime,SqlDateTime>((r,i) => r.GetSqlDateTime(i));
+				SetProviderField<SqlDataReader,SqlDecimal ,SqlDecimal >((r,i) => r.GetSqlDecimal (i));
+				SetProviderField<SqlDataReader,SqlDouble  ,SqlDouble  >((r,i) => r.GetSqlDouble  (i));
+				SetProviderField<SqlDataReader,SqlGuid    ,SqlGuid    >((r,i) => r.GetSqlGuid    (i));
+				SetProviderField<SqlDataReader,SqlInt16   ,SqlInt16   >((r,i) => r.GetSqlInt16   (i));
+				SetProviderField<SqlDataReader,SqlInt32   ,SqlInt32   >((r,i) => r.GetSqlInt32   (i));
+				SetProviderField<SqlDataReader,SqlInt64   ,SqlInt64   >((r,i) => r.GetSqlInt64   (i));
+				SetProviderField<SqlDataReader,SqlMoney   ,SqlMoney   >((r,i) => r.GetSqlMoney   (i));
+				SetProviderField<SqlDataReader,SqlSingle  ,SqlSingle  >((r,i) => r.GetSqlSingle  (i));
+				SetProviderField<SqlDataReader,SqlString  ,SqlString  >((r,i) => r.GetSqlString  (i));
+				SetProviderField<SqlDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
 
-			SetProviderField<SqlDataReader,DateTimeOffset>((r,i) => r.GetDateTimeOffset(i));
-			SetProviderField<SqlDataReader,TimeSpan>      ((r,i) => r.GetTimeSpan      (i));
+				SetProviderField<SqlDataReader,DateTimeOffset>((r,i) => r.GetDateTimeOffset(i));
+				SetProviderField<SqlDataReader,TimeSpan>      ((r,i) => r.GetTimeSpan      (i));
+			}
+			else
+			{
+				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
+				//SetProviderField<IDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
+			}
 		}
 
 		#endregion
@@ -222,25 +232,32 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region BulkCopy
 
 		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, int maxBatchSize, System.Collections.Generic.IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var rd = new BulkCopyReader(ed, source);
-			var bc = dataConnection.Transaction == null ?
-				new SqlBulkCopy((SqlConnection)dataConnection.Connection) :
-				new SqlBulkCopy((SqlConnection)dataConnection.Connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction);
+			var connection = dataConnection.Connection as SqlConnection;
 
-			bc.BatchSize            = maxBatchSize;
-			bc.DestinationTableName = ed.TableName;
+			if (connection != null)
+			{
+				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var rd = new BulkCopyReader(ed, source);
+				var bc = dataConnection.Transaction == null ?
+					new SqlBulkCopy(connection) :
+					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction);
 
-			for (var i = 0; i < rd.Columns.Length; i++)
-				bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
+				bc.BatchSize            = maxBatchSize;
+				bc.DestinationTableName = ed.TableName;
 
-			bc.WriteToServer(rd);
+				for (var i = 0; i < rd.Columns.Length; i++)
+					bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
 
-			return rd.Count;
+				bc.WriteToServer(rd);
+
+				return rd.Count;
+			}
+
+			return base.BulkCopy(dataConnection, maxBatchSize, source);
 		}
 
 		#endregion

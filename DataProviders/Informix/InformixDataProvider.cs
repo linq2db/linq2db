@@ -7,6 +7,7 @@ using IBM.Data.Informix;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -25,15 +26,18 @@ namespace LinqToDB.DataProvider
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
 
-			SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
+			if (!Configuration.AvoidSpecificDataProviderAPI)
+			{
+				SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
 
-			SetProviderField<IfxDataReader,IfxDecimal, decimal> ((r,i) => r.GetIfxDecimal (i));
-			SetProviderField<IfxDataReader,IfxDateTime,DateTime>((r,i) => r.GetIfxDateTime(i));
-			SetProviderField<IfxDataReader,IfxTimeSpan,TimeSpan>((r,i) => r.GetIfxTimeSpan(i));
+				SetProviderField<IfxDataReader,IfxDecimal, decimal> ((r,i) => r.GetIfxDecimal (i));
+				SetProviderField<IfxDataReader,IfxDateTime,DateTime>((r,i) => r.GetIfxDateTime(i));
+				SetProviderField<IfxDataReader,IfxTimeSpan,TimeSpan>((r,i) => r.GetIfxTimeSpan(i));
 
-			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+				SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
+				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
+				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			}
 		}
 
 		static float GetFloat(IDataReader dr, int idx)

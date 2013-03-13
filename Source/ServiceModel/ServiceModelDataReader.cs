@@ -216,8 +216,29 @@ namespace LinqToDB.ServiceModel
 				value = value.Substring(2);
 			}
 
+			if (value == null)
+				return null;
+
 			if (type.IsArray && type == typeof(byte[]))
-				return value == null ? null : ConvertTo<byte[]>.From(value);
+				return ConvertTo<byte[]>.From(value);
+
+			switch (Type.GetTypeCode(type))
+			{
+				case TypeCode.String   : return value;
+				case TypeCode.Double   : return double.  Parse(value, CultureInfo.InvariantCulture);
+				case TypeCode.Decimal  : return decimal. Parse(value, CultureInfo.InvariantCulture);
+				case TypeCode.Single   : return float.   Parse(value, CultureInfo.InvariantCulture);
+				case TypeCode.DateTime : return DateTime.Parse(value, CultureInfo.InvariantCulture);
+				case TypeCode.Object   :
+					if (type == typeof(double?))   return double.        Parse(value, CultureInfo.InvariantCulture);
+					if (type == typeof(decimal?))  return decimal.       Parse(value, CultureInfo.InvariantCulture);
+					if (type == typeof(float?))    return float.         Parse(value, CultureInfo.InvariantCulture);
+					if (type == typeof(DateTime?)) return DateTime.      Parse(value, CultureInfo.InvariantCulture);
+
+					if (type == typeof(DateTimeOffset) || type == typeof(DateTimeOffset?))
+						return DateTimeOffset.Parse(value, CultureInfo.InvariantCulture);
+					break;
+			}
 
 			return Converter.ChangeType(value, type, _mappingSchema);
 		}
