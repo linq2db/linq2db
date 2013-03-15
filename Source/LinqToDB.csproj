@@ -75,11 +75,11 @@
     <Compile Include="DataProvider\SQLite\SQLiteMappingSchema.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlProvider.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSchemaProvider.cs" />
-    <Compile Include="DataProvider\SqlServer\SqlServer2005MappingSchema.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2000SchemaProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2012SqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2000SqlProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlProvider.cs" />
-    <Compile Include="DataProvider\SqlServer\SqlServer2008MappingSchema.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2008SqlProvider.cs" />
-    <Compile Include="DataProvider\SqlServer\SqlServer2012MappingSchema.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerDataProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerFactory.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerMappingSchema.cs" />

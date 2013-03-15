@@ -335,7 +335,8 @@ namespace Tests.Linq
 		public void DateTime22(
 			[DataContexts(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
-				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase)]
+				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
+				ProviderName.SqlServer2000)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -357,7 +358,8 @@ namespace Tests.Linq
 		public void DateTime23(
 			[DataContexts(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
-				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase)]
+				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
+				ProviderName.SqlServer2000)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -382,7 +384,8 @@ namespace Tests.Linq
 		public void DateTime24(
 			[DataContexts(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
-				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase)]
+				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
+				ProviderName.SqlServer2000)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

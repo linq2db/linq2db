@@ -88,6 +88,7 @@ namespace Tests
 			ProviderName.SqlCe,
 			ProviderName.SQLite,
 			ProviderName.Access,
+			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			ProviderName.DB2,
 			ProviderName.Informix,

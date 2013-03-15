@@ -1,13 +1,459 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SchemaProvider
 {
+	using Common;
 	using Data;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		public abstract DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options);
+		public class DataTypeInfo
+		{
+			public string TypeName;
+			public string DataType;
+			public string CreateFormat;
+			public string CreateParameters;
+		}
+
+		public class TableInfo
+		{
+			public string TableID;
+			public string CatalogName;
+			public string SchemaName;
+			public string TableName;
+			public string Description;
+			public bool   IsDefaultSchema;
+			public bool   IsView;
+		}
+
+		public class PrimaryKeyInfo
+		{
+			public string TableID;
+			public string PrimaryKeyName;
+			public string ColumnName;
+			public int    Ordinal;
+		}
+
+		public class ColumnInfo
+		{
+			public string TableID;
+			public string Name;
+			public bool   IsNullable;
+			public int    Ordinal;
+			public string DataType;
+			public int    Length;
+			public int    Precision;
+			public int    Scale;
+			public string Description;
+			public bool   IsIdentity;
+			public bool   SkipOnInsert;
+			public bool   SkipOnUpdate;
+		}
+
+		public class ForeingKeyInfo
+		{
+			public string Name;
+			public string ThisTableID;
+			public string ThisColumn;
+			public string OtherTableID;
+			public string OtherColumn;
+			public int    Ordinal;
+		}
+
+		public class ProcedureInfo
+		{
+			public string ProcedureID;
+			public string CatalogName;
+			public string SchemaName;
+			public string ProcedureName;
+			public bool   IsFunction;
+			public bool   IsTableFunction;
+			public bool   IsDefaultSchema;
+		}
+
+		public class ProcedureParameterInfo
+		{
+			public string ProcedureID;
+			public int    Ordinal;
+			public string ParameterName;
+			public string DataType;
+			public int?   Length;
+			public int    Precision;
+			public int    Scale;
+			public bool   IsIn;
+			public bool   IsOut;
+			public bool   IsResult;
+		}
+
+		protected abstract DataType             GetDataType   (string columnType);
+		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
+		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
+		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
+		protected abstract List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection);
+
+		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			return null;
+		}
+
+		protected virtual List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			return null;
+		}
+
+		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			if (options == null)
+				options = new GetSchemaOptions();
+
+			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dataTypes    = GetDataTypes(dataConnection);
+
+			List<TableSchema>     tables;
+			List<ProcedureSchema> procedures;
+
+			if (options.GetTables)
+			{
+				tables = GetTables(dataConnection)
+					.Select(t => new TableSchema
+					{
+						ID              = t.TableID,
+						CatalogName     = t.CatalogName,
+						SchemaName      = t.SchemaName,
+						TableName       = t.TableName,
+						Description     = t.Description,
+						IsDefaultSchema = t.IsDefaultSchema,
+						IsView          = t.IsView,
+						TypeName        = ToValidName(t.TableName),
+						Columns         = new List<ColumnSchema>(),
+						ForeignKeys     = new List<ForeignKeySchema>()
+					})
+					.ToList();
+
+				var pks = GetPrimaryKeys(dataConnection);
+
+				#region Columns
+
+				var columns =
+					from c  in GetColumns(dataConnection)
+
+					join dt in dataTypes
+						on c.DataType equals dt.TypeName into g1
+					from dt in g1.DefaultIfEmpty()
+
+					join pk in pks
+						on c.TableID + "." + c.Name equals pk.TableID + "." + pk.ColumnName into g2
+					from pk in g2.DefaultIfEmpty()
+
+					join t  in tables on c.TableID equals t.ID
+
+					orderby c.Ordinal
+					select new { t, c, dt, pk };
+
+				foreach (var column in columns)
+				{
+					var columnType = column.c.DataType;
+					var systemType = GetSystemType(columnType, column.dt);
+					var isNullable = column.c.IsNullable;
+
+					column.t.Columns.Add(new ColumnSchema
+					{
+						Table           = column.t,
+						ColumnName      = column.c.Name,
+						ColumnType      = GetDbType(columnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+						IsNullable      = isNullable,
+						MemberName      = ToValidName(column.c.Name),
+						MemberType      = ToTypeName(systemType, isNullable),
+						SystemType      = systemType ?? typeof(object),
+						DataType        = GetDataType(columnType),
+						SkipOnInsert    = column.c.SkipOnInsert || column.c.IsIdentity,
+						SkipOnUpdate    = column.c.SkipOnUpdate || column.c.IsIdentity,
+						IsPrimaryKey    = column.pk != null,
+						PrimaryKeyOrder = column.pk != null ? column.pk.Ordinal : -1,
+						IsIdentity      = column.c.IsIdentity,
+						Description     = column.c.Description,
+					});
+				}
+
+				#endregion
+
+				#region FK
+
+				var fks = GetForeignKeys(dataConnection);
+
+				foreach (var fk in fks.OrderBy(f => f.Ordinal))
+				{
+					var thisTable   = (from t in tables             where t.ID         == fk.ThisTableID  select t).Single();
+					var otherTable  = (from t in tables             where t.ID         == fk.OtherTableID select t).Single();
+					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).Single();
+					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).Single();
+
+					var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.Name);
+
+					if (key == null)
+					{
+						key = new ForeignKeySchema
+						{
+							KeyName      = fk.Name,
+							MemberName   = fk.Name,
+							ThisTable    = thisTable,
+							OtherTable   = otherTable,
+							ThisColumns  = new List<ColumnSchema>(),
+							OtherColumns = new List<ColumnSchema>(),
+							CanBeNull    = true,
+						};
+						thisTable.ForeignKeys.Add(key);
+					}
+
+					key.ThisColumns. Add(thisColumn);
+					key.OtherColumns.Add(otherColumn);
+				}
+
+				#endregion
+			}
+			else
+				tables = new List<TableSchema>();
+
+			if (options.GetProcedures)
+			{
+				#region Procedures
+
+				var procs       = GetProcedures(dataConnection);
+				var procPparams = GetProcedureParameters(dataConnection);
+
+				if (procs != null)
+				{
+					procedures =
+					(
+						from sp in procs
+						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
+						into gr
+						select new ProcedureSchema
+						{
+							CatalogName     = sp.CatalogName,
+							SchemaName      = sp.SchemaName,
+							ProcedureName   = sp.ProcedureName,
+							MemberName      = ToValidName(sp.ProcedureName),
+							IsFunction      = sp.IsFunction,
+							IsTableFunction = sp.IsTableFunction,
+							IsDefaultSchema = sp.IsDefaultSchema,
+							Parameters      =
+							(
+								from pr in gr
+
+								join dt in dataTypes
+									on pr.DataType equals dt.TypeName into g1
+								from dt in g1.DefaultIfEmpty()
+
+								let systemType = GetSystemType(pr.DataType, dt)
+
+								orderby pr.Ordinal
+								select new ParameterSchema
+								{
+									SchemaName    = pr.ParameterName,
+									SchemaType    = GetDbType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale),
+									IsIn          = pr.IsIn,
+									IsOut         = pr.IsOut,
+									IsResult      = pr.IsResult,
+									Size          = pr.Length,
+									ParameterName = ToValidName(pr.ParameterName),
+									ParameterType = ToTypeName(systemType, true),
+									SystemType    = systemType ?? typeof(object),
+									DataType      = GetDataType(pr.DataType)
+								}
+							).ToList()
+						} into ps
+						where ps.Parameters.All(p => p.SchemaType != "table type")
+						select ps
+					).ToList();
+
+					var current = 1;
+
+					foreach (var procedure in procedures)
+					{
+						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
+						{
+							var commandText = "[{0}].[{1}].[{2}]".Args(
+								procedure.CatalogName, procedure.SchemaName, procedure.ProcedureName);
+
+							CommandType     commandType;
+							DataParameter[] parameters;
+
+							if (procedure.IsTableFunction)
+							{
+								commandText = "SELECT * FROM " + commandText + "(";
+
+								for (var i = 0; i < procedure.Parameters.Count; i++)
+								{
+									if (i != 0)
+										commandText += ",";
+									commandText += "NULL";
+								}
+
+								commandText += ")";
+								commandType = CommandType.Text;
+								parameters  = new DataParameter[0];
+							}
+							else
+							{
+								commandType = CommandType.StoredProcedure;
+								parameters  = procedure.Parameters.Select(p =>
+									new DataParameter
+									{
+										Name      = p.ParameterName,
+										Value     = DBNull.Value,
+										DataType  = p.DataType,
+										Size      = p.Size,
+										Direction =
+											p.IsIn ?
+												p.IsOut ?
+													ParameterDirection.InputOutput :
+													ParameterDirection.Input :
+												ParameterDirection.Output
+									}).ToArray();
+							}
+
+							{
+								try
+								{
+									using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
+									{
+										var st = rd.Reader.GetSchemaTable();
+
+										if (st == null)
+											continue;
+
+										procedure.ResultTable = new TableSchema
+										{
+											IsProcedureResult = true,
+											TypeName          = ToValidName(procedure.ProcedureName + "Result"),
+											ForeignKeys       = new List<ForeignKeySchema>(),
+											Columns           =
+											(
+												from r in st.AsEnumerable()
+
+												let columnType = r.Field<string>("DataTypeName")
+												let columnName = r.Field<string>("ColumnName")
+												let isNullable = r.Field<bool>  ("AllowDBNull")
+
+												join dt in dataTypes
+													on columnType equals dt.TypeName into g1
+												from dt in g1.DefaultIfEmpty()
+
+												let systemType = GetSystemType(columnType, dt)
+												let length     = r.Field<int> ("ColumnSize")
+												let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+												let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+												select new ColumnSchema
+												{
+													ColumnName = columnName,
+													ColumnType = GetDbType(columnType, dt, length, precision, scale),
+													IsNullable = isNullable,
+													MemberName = ToValidName(columnName),
+													MemberType = ToTypeName(systemType, isNullable),
+													SystemType = systemType ?? typeof(object),
+													DataType   = GetDataType(columnType),
+													IsIdentity = r.Field<bool>("IsIdentity"),
+												}
+											).ToList()
+										};
+
+										foreach (var column in procedure.ResultTable.Columns)
+											column.Table = procedure.ResultTable;
+
+										procedure.SimilarTables =
+										(
+											from t in tables
+											where t.Columns.Count == procedure.ResultTable.Columns.Count
+											let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
+											where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+											select t
+										).ToList();
+									}
+								}
+								catch (Exception ex)
+								{
+									procedure.ResultException = ex;
+								}
+							}
+						}
+
+						options.ProcedureLoadingProgress(procedures.Count, current++);
+					}
+				}
+				else
+					procedures = new List<ProcedureSchema>();
+
+				#endregion
+			}
+			else
+				procedures = new List<ProcedureSchema>();
+
+			return ProcessSchema(new DatabaseSchema
+			{
+				DataSource    = dbConnection.DataSource,
+				Database      = dbConnection.Database,
+				ServerVersion = dbConnection.ServerVersion,
+				Tables        = tables,
+				Procedures    = procedures,
+			});
+		}
+
+		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			return ((DbConnection)dataConnection.Connection).GetSchema("DataTypes").AsEnumerable()
+				.Select(t => new DataTypeInfo
+				{
+					TypeName         = t.Field<string>("TypeName"),
+					DataType         = t.Field<string>("DataType"),
+					CreateFormat     = t.Field<string>("CreateFormat"),
+					CreateParameters = t.Field<string>("CreateParameters"),
+				})
+				.ToList();
+		}
+
+		protected virtual Type GetSystemType(string columnType, DataTypeInfo dataType)
+		{
+			return dataType != null ? Type.GetType(dataType.DataType) : null;
+		}
+
+		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		{
+			var dbType = columnType;
+
+			if (dataType != null)
+			{
+				var format = dataType.CreateFormat;
+				var parms  = dataType.CreateParameters;
+
+				if (!string.IsNullOrWhiteSpace(format) && !string.IsNullOrWhiteSpace(parms))
+				{
+					var paramNames  = parms.Split(',');
+					var paramValues = new object[paramNames.Length];
+
+					for (var i = 0; i < paramNames.Length; i++)
+					{
+						switch (paramNames[i].Trim())
+						{
+							case "length"     :
+							case "max length" : paramValues[i] = length; break;
+							case "precision"  : paramValues[i] = prec;   break;
+							case "scale"      : paramValues[i] = scale;  break;
+						}
+					}
+
+					if (paramValues.All(v => v != null))
+						dbType = format.Args(paramValues);
+				}
+			}
+
+			return dbType;
+		}
 
 		protected string ToValidName(string name)
 		{

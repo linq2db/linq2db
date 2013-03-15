@@ -147,18 +147,19 @@ namespace Tests.Create
 			}
 		}
 
-		[Test] public void DB2       ([IncludeDataContexts(ProviderName.DB2)]           string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");        }
+		[Test] public void DB2       ([IncludeDataContexts(ProviderName.DB2)]           string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
 		[Test] public void Informix  ([IncludeDataContexts(ProviderName.Informix)]      string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
-		[Test] public void Oracle    ([IncludeDataContexts(ProviderName.Oracle)]        string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");     }
-		[Test] public void Firebird  ([IncludeDataContexts(ProviderName.Firebird)]      string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");   }
-		[Test] public void PostgreSQL([IncludeDataContexts(ProviderName.PostgreSQL)]    string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL"); }
-		[Test] public void MySql     ([IncludeDataContexts(ProviderName.MySql)]         string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");      }
-		[Test] public void Sql2005   ([IncludeDataContexts(ProviderName.SqlServer2005)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");  }
-		[Test] public void Sybase    ([IncludeDataContexts(ProviderName.Sybase)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");     }
-		[Test] public void Sql2008   ([IncludeDataContexts(ProviderName.SqlServer2008)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");  }
-		[Test] public void Sql2012   ([IncludeDataContexts(ProviderName.SqlServer2012)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");  }
-		[Test] public void SqlCe     ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");      }
-		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");      }
+		[Test] public void Oracle    ([IncludeDataContexts(ProviderName.Oracle)]        string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
+		[Test] public void Firebird  ([IncludeDataContexts(ProviderName.Firebird)]      string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
+		[Test] public void PostgreSQL([IncludeDataContexts(ProviderName.PostgreSQL)]    string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
+		[Test] public void MySql     ([IncludeDataContexts(ProviderName.MySql)]         string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test] public void Sql2000   ([IncludeDataContexts(ProviderName.SqlServer2000)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
+		[Test] public void Sql2005   ([IncludeDataContexts(ProviderName.SqlServer2005)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test] public void Sybase    ([IncludeDataContexts(ProviderName.Sybase)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
+		[Test] public void Sql2008   ([IncludeDataContexts(ProviderName.SqlServer2008)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test] public void Sql2012   ([IncludeDataContexts(ProviderName.SqlServer2012)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test] public void SqlCe     ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
+		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
 		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }

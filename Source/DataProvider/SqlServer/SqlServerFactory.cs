@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		#region Init
 
+		static readonly SqlServerDataProvider _sqlServerDataProvider2000 = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2005 = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
@@ -24,6 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
+			DataConnection.AddDataProvider(_sqlServerDataProvider2000);
 		}
 
 		#endregion
@@ -38,6 +40,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					switch (attributes.Get(i))
 					{
+						case "2000" : return _sqlServerDataProvider2000;
 						case "2005" : return _sqlServerDataProvider2005;
 						case "2012" : return _sqlServerDataProvider2012;
 					}
@@ -55,6 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (version)
 			{
+				case SqlServerVersion.v2000 : return _sqlServerDataProvider2000;
 				case SqlServerVersion.v2005 : return _sqlServerDataProvider2005;
 				case SqlServerVersion.v2012 : return _sqlServerDataProvider2012;
 			}
@@ -64,6 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void AddUdtType(Type type, string udtName)
 		{
+			_sqlServerDataProvider2000.AddUdtType(type, udtName);
 			_sqlServerDataProvider2005.AddUdtType(type, udtName);
 			_sqlServerDataProvider2008.AddUdtType(type, udtName);
 			_sqlServerDataProvider2012.AddUdtType(type, udtName);
@@ -71,6 +76,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void AddUdtType<T>(string udtName, T nullValue, DataType dataType = DataType.Undefined)
 		{
+			_sqlServerDataProvider2000.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2005.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2008.AddUdtType(udtName, nullValue, dataType);
 			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
@@ -127,6 +133,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (version)
 			{
+				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, connectionString);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connectionString);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connectionString);
 			}
@@ -138,6 +145,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (version)
 			{
+				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, connection);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, connection);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, connection);
 			}
@@ -149,6 +157,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (version)
 			{
+				case SqlServerVersion.v2000 : return new DataConnection(_sqlServerDataProvider2000, transaction);
 				case SqlServerVersion.v2005 : return new DataConnection(_sqlServerDataProvider2005, transaction);
 				case SqlServerVersion.v2012 : return new DataConnection(_sqlServerDataProvider2012, transaction);
 			}

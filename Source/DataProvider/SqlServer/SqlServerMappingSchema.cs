@@ -63,4 +63,36 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
 	}
+
+	public class SqlServer2000MappingSchema : MappingSchema
+	{
+		public SqlServer2000MappingSchema()
+			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
+		{
+		}
+	}
+
+	public class SqlServer2005MappingSchema : MappingSchema
+	{
+		public SqlServer2005MappingSchema()
+			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
+		{
+		}
+	}
+
+	public class SqlServer2008MappingSchema : MappingSchema
+	{
+		public SqlServer2008MappingSchema()
+			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
+		{
+		}
+	}
+
+	public class SqlServer2012MappingSchema : MappingSchema
+	{
+		public SqlServer2012MappingSchema()
+			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
+		{
+		}
+	}
 }

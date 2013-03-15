@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -34,14 +35,12 @@ namespace Tests.DataProvider
 					t => t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
 					t => t.Columns.ToDictionary(c => c.ColumnName));
 
-				switch (context)
-				{
-					case ProviderName.SqlServer2005 :
-					case ProviderName.SqlServer2008 :
-					case ProviderName.SqlServer2012 :
-						Assert.That(dbSchema.Tables.Single(t => t.TableName == "Parent"), Is.Not.Null);
-						break;
-				}
+				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName == "Parent");
+
+				Assert.That(table,               Is.Not.Null);
+				Assert.That(table.Columns.Count, Is.EqualTo(2));
+
+				Assert.That(dbSchema.Tables.Single(t => t.TableName == "Doctor").ForeignKeys.Count, Is.EqualTo(1));
 			}
 		}
 

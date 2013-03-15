@@ -26,6 +26,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			Version = version;
 
+			if (version == SqlServerVersion.v2000)
+			{
+				SqlProviderFlags.AcceptsTakeAsParameter   = false;
+				SqlProviderFlags.IsSkipSupported          = false;
+				SqlProviderFlags.IsCountSubQuerySupported = false;
+			}
+			else
+			{
+				SqlProviderFlags.IsApplyJoinSupported = true;
+			}
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
@@ -52,7 +63,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 			{
 				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
-				//SetProviderField<IDataReader,SqlXml     ,SqlXml     >((r,i) => r.GetSqlXml     (i));
 			}
 		}
 
@@ -71,6 +81,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
+			public static readonly SqlServer2000MappingSchema SqlServer2000MappingSchema = new SqlServer2000MappingSchema();
 			public static readonly SqlServer2005MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly SqlServer2008MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly SqlServer2012MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
@@ -82,6 +93,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				switch (Version)
 				{
+					case SqlServerVersion.v2000 : return MappingSchemaInstance.SqlServer2000MappingSchema;
 					case SqlServerVersion.v2005 : return MappingSchemaInstance.SqlServer2005MappingSchema;
 					case SqlServerVersion.v2008 : return MappingSchemaInstance.SqlServer2008MappingSchema;
 					case SqlServerVersion.v2012 : return MappingSchemaInstance.SqlServer2012MappingSchema;
@@ -98,14 +110,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override ISqlProvider CreateSqlProvider()
 		{
-			return Version == SqlServerVersion.v2005 ?
-				new SqlServer2005SqlProvider(SqlProviderFlags) as ISqlProvider:
-				new SqlServer2008SqlProvider(SqlProviderFlags);
+			switch (Version)
+			{
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlProvider(SqlProviderFlags);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlProvider(SqlProviderFlags);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlProvider(SqlProviderFlags);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlProvider(SqlProviderFlags);
+			}
+
+			throw new InvalidOperationException();
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SqlServerSchemaProvider();
+			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() as ISchemaProvider : new SqlServerSchemaProvider();
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
@@ -176,7 +194,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.UInt64        : parameter.DbType = DbType.Decimal; break;
 				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal; break;
 				case DataType.DateTime2     :
-					parameter.DbType = Version == SqlServerVersion.v2005 ? DbType.DateTime : DbType.DateTime2;
+					parameter.DbType =
+						Version == SqlServerVersion.v2000 || Version == SqlServerVersion.v2005 ?
+							DbType.DateTime :
+							DbType.DateTime2;
 					break;
 				case DataType.Text          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;          break;
 				case DataType.NText         : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;         break;

@@ -1400,7 +1400,9 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void Insert14([DataContexts(ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.Sybase)] string context)
+		public void Insert14([DataContexts(
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
+			ProviderName.SqlServer2005, ProviderName.Sybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

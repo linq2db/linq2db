@@ -7,11 +7,13 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlBuilder;
 	using SqlProvider;
 
-	public class SqlServer2005SqlProvider : SqlServerSqlProvider
+	public class SqlServer2000SqlProvider : SqlServerSqlProvider
 	{
-		public SqlServer2005SqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2000SqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
+
+		protected override string FirstFormat { get { return "TOP {0}"; } }
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
@@ -25,7 +27,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlProvider CreateSqlProvider()
 		{
-			return new SqlServer2005SqlProvider(SqlProviderFlags);
+			return new SqlServer2000SqlProvider(SqlProviderFlags);
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
@@ -42,7 +44,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override string  Name
 		{
-			get { return ProviderName.SqlServer2005; }
+			get { return ProviderName.SqlServer2000; }
 		}
 	}
 }

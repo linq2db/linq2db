@@ -310,6 +310,9 @@
     <Content Include="..\..\Data\Create Scripts\SqlServer.sql">
       <Link>Database\Create Scripts\SqlServer.sql</Link>
     </Content>
+    <Content Include="..\..\Data\Create Scripts\SqlServer2000.sql">
+      <Link>Database\Create Scripts\SqlServer2000.sql</Link>
+    </Content>
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
       <Link>Database\Create Scripts\Sybase.sql</Link>
     </Content>
