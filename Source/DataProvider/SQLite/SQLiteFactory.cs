@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
-using System.IO;
-using System.Linq.Expressions;
-using System.Reflection;
-
-using JetBrains.Annotations;
-
-using IOPath = System.IO.Path;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -32,43 +25,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return _SQLiteDataProvider;
 		}
 
-		#region AssemblyResolver
-
-		class AssemblyResolver
+		public static void ResolveSQLitePath(string path)
 		{
-			public string Path;
-
-			public Assembly Resolver(object sender, ResolveEventArgs args)
-			{
-				if (args.Name == "System.Data.SQLite")
-					return Assembly.LoadFile(File.Exists(Path) ? Path : IOPath.Combine(Path, args.Name, ".dll"));
-				return null;
-			}
+			new AssemblyResolver(path, "System.Data.SQLite");
 		}
-
-		public static void ResolveSQLitePath([NotNull] string path)
-		{
-			if (path == null) throw new ArgumentNullException("path");
-
-			if (path.StartsWith("file:///"))
-				path = path.Substring("file:///".Length);
-
-			ResolveEventHandler resolver = new AssemblyResolver { Path = path }.Resolver;
-
-#if FW4
-
-			var l = Expression.Lambda<Action>(Expression.Call(
-				Expression.Constant(AppDomain.CurrentDomain),
-				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),
-				Expression.Constant(resolver)));
-
-			l.Compile()();
-#else
-			AppDomain.CurrentDomain.AssemblyResolve += resolver;
-#endif
-		}
-
-		#endregion
 
 		#region CreateDataConnection
 

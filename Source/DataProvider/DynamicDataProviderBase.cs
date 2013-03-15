@@ -17,9 +17,9 @@ namespace LinqToDB.DataProvider
 		protected void SetTypes(string assemblyName, string connectionTypeName, string dataReaderTypeName, string parameterTypeName)
 		{
 			_assemblyName       = assemblyName;
-			_connectionTypeName = connectionTypeName;
-			_dataReaderTypeName = dataReaderTypeName;
-			_parameterTypeName  = parameterTypeName;
+			_connectionTypeName = "{0}.{1}, {0}".Args(_assemblyName, connectionTypeName);
+			_dataReaderTypeName = "{0}.{1}, {0}".Args(_assemblyName, dataReaderTypeName);
+			_parameterTypeName  = "{0}.{1}, {0}".Args(_assemblyName, parameterTypeName);
 		}
 
 		string _assemblyName;
@@ -27,22 +27,45 @@ namespace LinqToDB.DataProvider
 		string _dataReaderTypeName;
 		string _parameterTypeName;
 
+		static readonly object _sync = new object();
+
+		protected virtual void OnInitConnectionType()
+		{
+		}
+
+		void CreateConnectionType()
+		{
+			lock (_sync)
+			{
+				if (_connectionType == null)
+				{
+					_connectionType = Type.GetType(_connectionTypeName, true);
+					OnInitConnectionType();
+				}
+			}
+		}
+
 		private         Type _connectionType;
 		public override Type  ConnectionType
 		{
-			get { return _connectionType ?? (_connectionType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _connectionTypeName), true)); }
+			get
+			{
+				if (_connectionType == null)
+					CreateConnectionType();
+				return _connectionType;
+			}
 		}
 
 		private         Type _dataReaderType;
 		public override Type  DataReaderType
 		{
-			get { return _dataReaderType ?? (_dataReaderType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _dataReaderTypeName), true)); }
+			get { return _dataReaderType ?? (_dataReaderType = Type.GetType(_dataReaderTypeName, true)); }
 		}
 
 		private Type _parameterType;
 		public  Type  ParameterType
 		{
-			get { return _parameterType ?? (_parameterType = Type.GetType("{0}.{1}, {0}".Args(_assemblyName, _parameterTypeName), true)); }
+			get { return _parameterType ?? (_parameterType = Type.GetType(_parameterTypeName, true)); }
 		}
 
 		Func<string,IDbConnection> _createConnection;
