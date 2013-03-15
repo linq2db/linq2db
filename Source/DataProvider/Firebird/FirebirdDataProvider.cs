@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
 
-			SetTypes("FirebirdSql.Data.FirebirdClient", "FbConnection", "FbDataReader", "FbParameter");
+			SetTypes("FirebirdSql.Data.FirebirdClient", "FbConnection", "FbDataReader");
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -73,7 +73,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case DataType.VarNumeric : dataType = DataType.Decimal; break;
 				case DataType.DateTime   :
 				case DataType.DateTime2  :
-					(_setTimeStamp ?? (_setTimeStamp = GetSetParameter("FbDbType", "FbDbType", "TimeStamp")))(parameter);
+					//                                                ((FbParameter)parameter).FbDbType =  FbDbType.   TimeStamp;
+					(_setTimeStamp ?? (_setTimeStamp = GetSetParameter("FbParameter",         "FbDbType", "FbDbType", "TimeStamp")))(parameter);
 					return;
 			}
 

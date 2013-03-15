@@ -108,7 +108,7 @@ namespace LinqToDB.Mapping
 			if (_getter == null)
 			{
 				var objParam   = Expression.Parameter(typeof(object), "obj");
-				var getterExpr = MemberAccessor.Getter.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
+				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
 
 				var expr = MappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
 

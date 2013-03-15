@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.MySql
 {
 	using Data;
 
-	public class MySql : IDataProviderFactory
+	public class MySqlFactory : IDataProviderFactory
 	{
 		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
 
-		static MySql()
+		static MySqlFactory()
 		{
 			DataConnection.AddDataProvider(_mySqlDataProvider);
 		}
@@ -23,6 +23,11 @@ namespace LinqToDB.DataProvider
 		public static IDataProvider GetDataProvider()
 		{
 			return _mySqlDataProvider;
+		}
+
+		public static void ResolveMySqlPath(string path)
+		{
+			new AssemblyResolver(path, "MySql.Data");
 		}
 
 		#region CreateDataConnection

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.DataProvider
 {
@@ -14,18 +15,20 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		protected void SetTypes(string assemblyName, string connectionTypeName, string dataReaderTypeName, string parameterTypeName)
+		protected void SetTypes(string assemblyName, string connectionTypeName, string dataReaderTypeName)
 		{
-			_assemblyName       = assemblyName;
-			_connectionTypeName = "{0}.{1}, {0}".Args(_assemblyName, connectionTypeName);
-			_dataReaderTypeName = "{0}.{1}, {0}".Args(_assemblyName, dataReaderTypeName);
-			_parameterTypeName  = "{0}.{1}, {0}".Args(_assemblyName, parameterTypeName);
+			_connectionTypeName = "{0}.{1}, {0}".Args(assemblyName, connectionTypeName);
+			_dataReaderTypeName = "{0}.{1}, {0}".Args(assemblyName, dataReaderTypeName);
 		}
 
-		string _assemblyName;
+		protected void SetTypes(string connectionTypeName, string dataReaderTypeName)
+		{
+			_connectionTypeName = connectionTypeName;
+			_dataReaderTypeName = dataReaderTypeName;
+		}
+
 		string _connectionTypeName;
 		string _dataReaderTypeName;
-		string _parameterTypeName;
 
 		static readonly object _sync = new object();
 
@@ -62,12 +65,6 @@ namespace LinqToDB.DataProvider
 			get { return _dataReaderType ?? (_dataReaderType = Type.GetType(_dataReaderTypeName, true)); }
 		}
 
-		private Type _parameterType;
-		public  Type  ParameterType
-		{
-			get { return _parameterType ?? (_parameterType = Type.GetType(_parameterTypeName, true)); }
-		}
-
 		Func<string,IDbConnection> _createConnection;
 
 		public override IDbConnection CreateConnection(string connectionString)
@@ -85,8 +82,12 @@ namespace LinqToDB.DataProvider
 			return _createConnection(connectionString);
 		}
 
-		protected Action<IDbDataParameter> GetSetParameter(string propertyName, string dbTypeName, string valueName)
+		#region Expression Helpers
+
+		//                                                      ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
+		protected Action<IDbDataParameter> GetSetParameter(string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
+			var pType  = ConnectionType.Assembly.GetType(ConnectionType.Namespace + "." + parameterTypeName, true);
 			var dbType = ConnectionType.Assembly.GetType(ConnectionType.Namespace + "." + dbTypeName, true);
 			var value  = Enum.Parse(dbType, valueName);
 
@@ -94,12 +95,50 @@ namespace LinqToDB.DataProvider
 			var l = Expression.Lambda<Action<IDbDataParameter>>(
 				Expression.Assign(
 					Expression.PropertyOrField(
-						Expression.Convert(p, ParameterType),
+						Expression.Convert(p, pType),
 						propertyName),
 					Expression.Constant(value)),
 				p);
 
 			return l.Compile();
 		}
+
+		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
+		//
+		// protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
+		// {
+		//     ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
+		// }
+		protected void SetProviderField(Type fieldType, string methodName)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType }] =
+				Expression.Lambda(
+					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					dataReaderParameter,
+					indexParameter);
+		}
+
+		// SetToTypeField  <MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
+		// 
+		// protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
+		// {
+		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
+		// }
+		protected void SetToTypeField(Type toType, string methodName)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+
+			ReaderExpressions[new ReaderInfo { ToType = toType }] =
+				Expression.Lambda(
+					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					dataReaderParameter,
+					indexParameter);
+		}
+
+		#endregion
 	}
 }

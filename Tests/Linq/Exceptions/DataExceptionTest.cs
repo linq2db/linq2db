@@ -17,7 +17,8 @@ namespace Tests.Exceptions
 		{
 			try
 			{
-				using (var db = LinqToDB.DataProvider.MySql.CreateDataConnection("Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
+				using (var db = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(
+					"Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
 				{
 					db.GetTable<Person>().ToList();
 				}

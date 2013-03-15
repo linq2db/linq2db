@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
 
-			SetTypes("System.Data.SQLite", "SQLiteConnection", "SQLiteDataReader", "SQLiteParameter");
+			SetTypes("System.Data.SQLite", "SQLiteConnection", "SQLiteDataReader");
 		}
 
 		public override ISqlProvider CreateSqlProvider()

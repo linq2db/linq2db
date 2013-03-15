@@ -61,6 +61,10 @@
     <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlFactory.cs" />
+    <Compile Include="DataProvider\MySql\MySqlDataProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlMappingSchema.cs" />
+    <Compile Include="DataProvider\MySql\MySqlSqlProvider.cs" />
     <Compile Include="DataProvider\SchemaProvider\AssociationType.cs" />
     <Compile Include="DataProvider\SchemaProvider\ColumnSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\DatabaseSchema.cs" />
