@@ -18,7 +18,6 @@ namespace Tests.DataProvider
 			ProviderName.DB2,
 			ProviderName.Firebird,
 			ProviderName.Informix,
-			ProviderName.MySql,
 			ProviderName.Oracle,
 			ProviderName.PostgreSQL,
 			ProviderName.SqlCe,

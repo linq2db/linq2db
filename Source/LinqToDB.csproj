@@ -65,6 +65,7 @@
     <Compile Include="DataProvider\MySql\MySqlDataProvider.cs" />
     <Compile Include="DataProvider\MySql\MySqlMappingSchema.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlSchemaProvider.cs" />
     <Compile Include="DataProvider\SchemaProvider\AssociationType.cs" />
     <Compile Include="DataProvider\SchemaProvider\ColumnSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\DatabaseSchema.cs" />

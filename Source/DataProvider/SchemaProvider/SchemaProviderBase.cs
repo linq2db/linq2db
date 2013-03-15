@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SchemaProvider
@@ -11,6 +12,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
+		[DebuggerDisplay("TypeName = {TypeName}, DataType = {DataType}, CreateFormat = {CreateFormat}, CreateParameters = {CreateParameters}")]
 		public class DataTypeInfo
 		{
 			public string TypeName;
@@ -19,6 +21,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public string CreateParameters;
 		}
 
+		[DebuggerDisplay("CatalogName = {CatalogName}, SchemaName = {SchemaName}, TableName = {TableName}, IsDefaultSchema = {IsDefaultSchema}, IsView = {IsView}, Description = {Description}")]
 		public class TableInfo
 		{
 			public string TableID;
@@ -30,6 +33,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public bool   IsView;
 		}
 
+		[DebuggerDisplay("TableID = {TableID}, PrimaryKeyName = {PrimaryKeyName}, ColumnName = {ColumnName}, Ordinal = {Ordinal}")]
 		public class PrimaryKeyInfo
 		{
 			public string TableID;
@@ -45,6 +49,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public bool   IsNullable;
 			public int    Ordinal;
 			public string DataType;
+			public string ColumnType;
 			public int    Length;
 			public int    Precision;
 			public int    Scale;
@@ -164,7 +169,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					{
 						Table           = column.t,
 						ColumnName      = column.c.Name,
-						ColumnType      = GetDbType(columnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+						ColumnType      = column.c.ColumnType ?? GetDbType(columnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
 						IsNullable      = isNullable,
 						MemberName      = ToValidName(column.c.Name),
 						MemberType      = ToTypeName(systemType, isNullable),
@@ -406,7 +411,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			return ((DbConnection)dataConnection.Connection).GetSchema("DataTypes").AsEnumerable()
+			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+
+			return dts.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("TypeName"),

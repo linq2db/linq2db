@@ -14,11 +14,11 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
 			return
 			(
-				from t in dbConnection.GetSchema("Tables").AsEnumerable()
+				from t in tables.AsEnumerable()
 				where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
@@ -37,11 +37,13 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
 			var dbConnection = (DbConnection)dataConnection.Connection;
+			var pks          = dbConnection.GetSchema("IndexColumns");
+			var idxs         = dbConnection.GetSchema("Indexes");
 
 			return
 			(
-				from pk  in dbConnection.GetSchema("IndexColumns").AsEnumerable()
-				join idx in dbConnection.GetSchema("Indexes").     AsEnumerable()
+				from pk  in pks. AsEnumerable()
+				join idx in idxs.AsEnumerable()
 					on pk.Field<string>("CONSTRAINT_NAME") equals idx.Field<string>("INDEX_NAME")
 				where idx.Field<bool>("PRIMARY_KEY")
 				select new PrimaryKeyInfo
@@ -56,11 +58,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
-				from c in dbConnection.GetSchema("Columns").AsEnumerable()
+				from c in cs.AsEnumerable()
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
 				let dataType = c.Field<string>("DATA_TYPE")

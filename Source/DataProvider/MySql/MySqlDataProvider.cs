@@ -25,10 +25,10 @@ namespace LinqToDB.DataProvider.MySql
 		Type _mySqlDecimalType;
 		Type _mySqlDateTimeType;
 
-		Func<object, object> _mySqlDecimalValueGetter;
-		Func<object, object> _mySqlDateTimeValueGetter;
+		Func<object,object> _mySqlDecimalValueGetter;
+		Func<object,object> _mySqlDateTimeValueGetter;
 
-		protected override void OnInitConnectionType()
+		protected override void OnConnectionTypeCreated()
 		{
 			_mySqlDecimalType  = ConnectionType.Assembly.GetType("MySql.Data.Types.MySqlDecimal",  true);
 			_mySqlDateTimeType = ConnectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
@@ -48,6 +48,11 @@ namespace LinqToDB.DataProvider.MySql
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new MySqlSqlProvider(SqlProviderFlags);
+		}
+
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new MySqlSchemaProvider();
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

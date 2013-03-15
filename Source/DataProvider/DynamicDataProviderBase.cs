@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider
 
 		static readonly object _sync = new object();
 
-		protected virtual void OnInitConnectionType()
+		protected virtual void OnConnectionTypeCreated()
 		{
 		}
 
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider
 				if (_connectionType == null)
 				{
 					_connectionType = Type.GetType(_connectionTypeName, true);
-					OnInitConnectionType();
+					OnConnectionTypeCreated();
 				}
 			}
 		}
