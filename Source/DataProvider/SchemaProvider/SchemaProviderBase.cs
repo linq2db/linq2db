@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public bool   IsResult;
 		}
 
-		protected abstract DataType             GetDataType   (string columnType);
+		protected abstract DataType             GetDataType   (string dataType, string columnType);
 		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
 		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
 		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						MemberName      = ToValidName(column.c.Name),
 						MemberType      = ToTypeName(systemType, isNullable),
 						SystemType      = systemType ?? typeof(object),
-						DataType        = GetDataType(columnType),
+						DataType        = GetDataType(columnType, column.c.ColumnType),
 						SkipOnInsert    = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate    = column.c.SkipOnUpdate || column.c.IsIdentity,
 						IsPrimaryKey    = column.pk != null,
@@ -268,7 +268,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 									ParameterName = ToValidName(pr.ParameterName),
 									ParameterType = ToTypeName(systemType, true),
 									SystemType    = systemType ?? typeof(object),
-									DataType      = GetDataType(pr.DataType)
+									DataType      = GetDataType(pr.DataType, null)
 								}
 							).ToList()
 						} into ps
@@ -362,7 +362,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 													MemberName = ToValidName(columnName),
 													MemberType = ToTypeName(systemType, isNullable),
 													SystemType = systemType ?? typeof(object),
-													DataType   = GetDataType(columnType),
+													DataType   = GetDataType(columnType, null),
 													IsIdentity = r.Field<bool>("IsIdentity"),
 												}
 											).ToList()

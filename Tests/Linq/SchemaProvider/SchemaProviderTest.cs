@@ -34,12 +34,12 @@ namespace Tests.DataProvider
 					t => t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
 					t => t.Columns.ToDictionary(c => c.ColumnName));
 
-				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName == "Parent");
+				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName.ToLower() == "parent");
 
 				Assert.That(table,               Is.Not.Null);
 				Assert.That(table.Columns.Count, Is.EqualTo(2));
 
-				Assert.That(dbSchema.Tables.Single(t => t.TableName == "Doctor").ForeignKeys.Count, Is.EqualTo(1));
+				Assert.That(dbSchema.Tables.Single(t => t.TableName.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
 			}
 		}
 

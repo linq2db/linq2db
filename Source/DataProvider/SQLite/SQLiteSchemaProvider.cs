@@ -103,9 +103,9 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string columnType)
+		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (columnType)
+			switch (dataType)
 			{
 				case "smallint"         : return DataType.Int16;
 				case "int"              : return DataType.Int32;

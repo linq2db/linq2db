@@ -133,50 +133,46 @@ namespace LinqToDB.DataProvider.MySql
 					ThisColumn   = fk.Field<string>("COLUMN_NAME"),
 					OtherTableID = fk.Field<string>("REFERENCED_TABLE_SCHEMA") + ".." + fk.Field<string>("REFERENCED_TABLE_NAME"),
 					OtherColumn  = fk.Field<string>("REFERENCED_COLUMN_NAME"),
-					Ordinal      = fk.Field<int>   ("ORDINAL_POSITION"),
+					Ordinal      = Converter.ChangeTypeTo<int>(fk["ORDINAL_POSITION"]),
 				}
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string columnType)
+		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (columnType)
+			switch (dataType.ToUpper())
 			{
-				case "BIT"        : return DataType.UInt64;
-				case "BLOB"       : return DataType.UInt64; //System.Byte[]
-				case "TINYBLOB"   : return DataType.UInt64; //System.Byte[]
-				case "MEDIUMBLOB" : return DataType.UInt64; //System.Byte[]
-				case "LONGBLOB"   : return DataType.UInt64; //System.Byte[]
-				case "BINARY"     : return DataType.UInt64; //System.Byte[]
-				case "VARBINARY"  : return DataType.UInt64; //System.Byte[]
-				case "DATE"       : return DataType.UInt64; //System.DateTime
-				case "DATETIME"   : return DataType.UInt64; //System.DateTime
-				case "TIMESTAMP"  : return DataType.UInt64; //System.DateTime
-				case "TIME"       : return DataType.UInt64; //System.TimeSpan
-				case "CHAR"       : return DataType.UInt64; //System.String
-				case "NCHAR"      : return DataType.UInt64; //System.String
-				case "VARCHAR"    : return DataType.UInt64; //System.String
-				case "NVARCHAR"   : return DataType.UInt64; //System.String
-				case "SET"        : return DataType.UInt64; //System.String
-				case "ENUM"       : return DataType.UInt64; //System.String
-				case "TINYTEXT"   : return DataType.UInt64; //System.String
-				case "TEXT"       : return DataType.UInt64; //System.String
-				case "MEDIUMTEXT" : return DataType.UInt64; //System.String
-				case "LONGTEXT"   : return DataType.UInt64; //System.String
-				case "DOUBLE"     : return DataType.UInt64; //System.Double
-				case "FLOAT"      : return DataType.UInt64; //System.Single
-				case "TINYINT"    : return DataType.UInt64; //System.SByte
-//				case "SMALLINT"   : return DataType.UInt64; //System.Int16
-//				case "INT"        : return DataType.UInt64; //System.Int32
-//				case "YEAR"       : return DataType.UInt64; //System.Int32
-//				case "MEDIUMINT"  : return DataType.UInt64; //System.Int32
-//				case "BIGINT"     : return DataType.UInt64; //System.Int64
-//				case "DECIMAL"    : return DataType.UInt64; //System.Decimal
-//				case "TINY INT"   : return DataType.UInt64; //System.Byte
-//				case "SMALLINT"   : return DataType.UInt64; //System.UInt16
-//				case "MEDIUMINT"  : return DataType.UInt64; //System.UInt32
-//				case "INT"        : return DataType.UInt64; //System.UInt32
-//				case "BIGINT"     : return DataType.UInt64; //System.UInt64
+				case "bit"        : return DataType.UInt64;
+				case "blob"       : return DataType.Binary;
+				case "tinyblob"   : return DataType.Binary;
+				case "mediumblob" : return DataType.Binary;
+				case "longblob"   : return DataType.Binary;
+				case "binary"     : return DataType.Binary;
+				case "varbinary"  : return DataType.VarBinary;
+				case "date"       : return DataType.Date;
+				case "datetime"   : return DataType.DateTime;
+				case "timestamp"  : return DataType.Timestamp;
+				case "time"       : return DataType.Time;
+				case "char"       : return DataType.Char;
+				case "nchar"      : return DataType.NChar;
+				case "varchar"    : return DataType.VarChar;
+				case "nvarchar"   : return DataType.NVarChar;
+				case "set"        : return DataType.NVarChar;
+				case "enum"       : return DataType.NVarChar;
+				case "tinytext"   : return DataType.Text;
+				case "text"       : return DataType.Text;
+				case "mediumtext" : return DataType.Text;
+				case "longtext"   : return DataType.Text;
+				case "double"     : return DataType.Double;
+				case "float"      : return DataType.Single;
+				case "tinyint"    : return DataType.SByte;
+				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
+				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
+				case "year"       : return DataType.Int32;
+				case "mediumint"  : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
+				case "bigint"     : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64;
+				case "decimal"    : return DataType.Decimal;
+				case "tiny int"   : return DataType.Byte;
 			}
 
 			return DataType.Undefined;

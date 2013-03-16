@@ -169,9 +169,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string columnType)
+		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (columnType)
+			switch (dataType)
 			{
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
