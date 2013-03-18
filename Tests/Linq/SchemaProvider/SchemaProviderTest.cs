@@ -7,10 +7,10 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
-namespace Tests.DataProvider
+namespace Tests.SchemaProvider
 {
 	[TestFixture]
-	public class SchemaProviderTest : DataProviderTestBase
+	public class SchemaProviderTest : TestBase
 	{
 		[Test]
 		public void Test([DataContexts(
