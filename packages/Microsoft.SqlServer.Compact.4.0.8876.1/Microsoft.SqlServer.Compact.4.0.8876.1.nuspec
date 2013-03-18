@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.SqlServer.Compact</id>
+    <version>4.0.8876.1</version>
+    <title>Microsoft SQL Server Compact Edition</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <licenseUrl>http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>SQL Server Compact. An embedded SQL database.</description>
+    <summary>SQL Server Compact. An embedded SQL database.</summary>
+    <releaseNotes />
+    <copyright />
+    <language />
+    <references>
+      <reference file="System.Data.SqlServerCe.dll" />
+    </references>
+  </metadata>
+</package>
