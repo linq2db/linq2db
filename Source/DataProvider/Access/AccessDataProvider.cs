@@ -5,6 +5,7 @@ using System.Data.OleDb;
 namespace LinqToDB.DataProvider.Access
 {
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class AccessDataProvider : DataProviderBase
@@ -42,6 +43,11 @@ namespace LinqToDB.DataProvider.Access
 		public override IDbConnection CreateConnection(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
+		{
+			return new AccessSchemaProvider();
 		}
 
 		public override ISqlProvider CreateSqlProvider()

@@ -54,6 +54,7 @@
     <Compile Include="DataProvider\Access\AccessFactory.cs" />
     <Compile Include="DataProvider\Access\AccessMappingSchema.cs" />
     <Compile Include="DataProvider\Access\AccessSqlProvider.cs" />
+    <Compile Include="DataProvider\Access\AccessSchemaProvider.cs" />
     <Compile Include="DataProvider\AssemblyResolver.cs" />
     <Compile Include="DataProvider\BulkCopyReader.cs" />
     <Compile Include="DataProvider\DynamicDataProviderBase.cs" />

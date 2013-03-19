@@ -14,7 +14,6 @@ namespace Tests.SchemaProvider
 	{
 		[Test]
 		public void Test([DataContexts(
-			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
 			ProviderName.Informix,
