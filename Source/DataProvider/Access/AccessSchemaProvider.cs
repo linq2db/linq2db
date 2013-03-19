@@ -60,22 +60,18 @@ namespace LinqToDB.DataProvider.Access
 			return
 			(
 				from c in cs.AsEnumerable()
-				let tschema  = c.Field<string>("TABLE_SCHEMA")
-				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE")
+				join dt in DataTypes on c.Field<int>("DATA_TYPE") equals dt.ProviderDbType
 				select new ColumnInfo
 				{
-					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
-					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
-					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
-					SkipOnInsert = dataType == "timestamp",
-					SkipOnUpdate = dataType == "timestamp",
+					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME"),
+					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
+					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					DataType   = dt.TypeName,
+					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					IsIdentity = Converter.ChangeTypeTo<int>(c["COLUMN_FLAGS"]) == 90,
 				}
 			).ToList();
 		}

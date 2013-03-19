@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public string DataType;
 			public string CreateFormat;
 			public string CreateParameters;
+			public int    ProviderDbType;
 		}
 
 		[DebuggerDisplay("CatalogName = {CatalogName}, SchemaName = {SchemaName}, TableName = {TableName}, IsDefaultSchema = {IsDefaultSchema}, IsView = {IsView}, Description = {Description}")]
@@ -110,13 +111,16 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			return null;
 		}
 
+		protected List<DataTypeInfo> DataTypes;
+
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			if (options == null)
 				options = new GetSchemaOptions();
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
-			var dataTypes    = GetDataTypes(dataConnection);
+
+			DataTypes = GetDataTypes(dataConnection);
 
 			List<TableSchema>     tables;
 			List<ProcedureSchema> procedures;
@@ -146,7 +150,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				var columns =
 					from c  in GetColumns(dataConnection)
 
-					join dt in dataTypes
+					join dt in DataTypes
 						on c.DataType equals dt.TypeName into g1
 					from dt in g1.DefaultIfEmpty()
 
@@ -250,7 +254,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 							(
 								from pr in gr
 
-								join dt in dataTypes
+								join dt in DataTypes
 									on pr.DataType equals dt.TypeName into g1
 								from dt in g1.DefaultIfEmpty()
 
@@ -345,7 +349,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 												let columnName = r.Field<string>("ColumnName")
 												let isNullable = r.Field<bool>  ("AllowDBNull")
 
-												join dt in dataTypes
+												join dt in DataTypes
 													on columnType equals dt.TypeName into g1
 												from dt in g1.DefaultIfEmpty()
 
@@ -420,6 +424,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					DataType         = t.Field<string>("DataType"),
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
+					ProviderDbType   = t.Field<int>   ("ProviderDbType"),
 				})
 				.ToList();
 		}

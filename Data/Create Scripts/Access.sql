@@ -6,27 +6,27 @@ DROP TABLE Person
 GO
 
 CREATE TABLE Person (
-	PersonID                Int IDENTITY,
-	FirstName               Text(50) NOT NULL,
-	LastName                Text(50) NOT NULL,
-	MiddleName              Text(50),
-	Gender                  Text(1) NOT NULL,
+	PersonID   Int IDENTITY,
+	FirstName  Text(50) NOT NULL,
+	LastName   Text(50) NOT NULL,
+	MiddleName Text(50),
+	Gender     Text(1) NOT NULL,
 
 	CONSTRAINT PK_Peson PRIMARY KEY (PersonID)
 )
 GO
 
 CREATE TABLE Doctor (
-	PersonID                Int NOT NULL,
-	Taxonomy                Text(50) NOT NULL,
+	PersonID Int NOT NULL,
+	Taxonomy Text(50) NOT NULL,
 
-	CONSTRAINT OK_Doctor PRIMARY KEY (PersonID)
+	CONSTRAINT PK_Doctor PRIMARY KEY (PersonID)
 )
 GO
 
 CREATE TABLE Patient (
-	PersonID                Int NOT NULL,
-	Diagnosis               Text(255) NOT NULL,
+	PersonID  Int NOT NULL,
+	Diagnosis Text(255) NOT NULL,
 
 	CONSTRAINT PK_Patient PRIMARY KEY (PersonID)
 )
