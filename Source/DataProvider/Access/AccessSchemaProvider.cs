@@ -78,22 +78,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
-
-			return
-			(
-				from fk in fks.AsEnumerable()
-				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
-				select new ForeingKeyInfo
-				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"),
-					ThisTableID  = fk.Field<string>("TABLE_CATALOG")   + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"),
-					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG") + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"),
-					Ordinal      = fk.Field<int>("FKEY_FROM_ORDINAL_POSITION"),
-				}
-			).ToList();
+			return new List<ForeingKeyInfo>();
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)
