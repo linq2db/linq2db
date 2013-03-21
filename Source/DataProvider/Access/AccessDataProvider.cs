@@ -72,7 +72,10 @@ namespace LinqToDB.DataProvider.Access
 				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
 				//
 				case DataType.DateTime   :
-				case DataType.DateTime2  : ((OleDbParameter)parameter).OleDbType = OleDbType.Date; return;
+				case DataType.DateTime2  : ((OleDbParameter)parameter).OleDbType = OleDbType.Date;         return;
+
+				case DataType.Text       : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarChar;  return;
+				case DataType.NText      : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarWChar; return;
 
 				//case DataType.Int32      : ((OleDbParameter)parameter).OleDbType = OleDbType.Integer; return;
 			}

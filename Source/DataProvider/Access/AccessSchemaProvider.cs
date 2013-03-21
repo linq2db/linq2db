@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.Linq;
 using System.Data;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -83,7 +84,6 @@ namespace LinqToDB.DataProvider.Access
 			return new List<ForeingKeyInfo>();
 		}
 
-		/*
 		List<ProcedureInfo> _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
@@ -98,14 +98,17 @@ namespace LinqToDB.DataProvider.Access
 				let name    = p.Field<string>("PROCEDURE_NAME")
 				select new ProcedureInfo
 				{
-					ProcedureID     = catalog + "." + schema + "." + name,
-					CatalogName     = catalog,
-					SchemaName      = schema,
-					ProcedureName   = name,
-					IsDefaultSchema = schema.IsNullOrEmpty()
+					ProcedureID         = catalog + "." + schema + "." + name,
+					CatalogName         = catalog,
+					SchemaName          = schema,
+					ProcedureName       = name,
+					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
 				}
 			).ToList();
 		}
+
+		static Regex _paramsExp;
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
@@ -113,39 +116,69 @@ namespace LinqToDB.DataProvider.Access
 
 			foreach (var procedure in _procedures)
 			{
-				var cmd = (OleDbCommand)dataConnection.Command;
+				if (_paramsExp == null)
+					_paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-				cmd.CommandText = procedure.ProcedureName;
-				cmd.CommandType = CommandType.StoredProcedure;
+				var match      = _paramsExp.Match(procedure.ProcedureDefinition);
+				var names      = match.Groups["name"].Captures;
+				var types      = match.Groups["type"].Captures;
+				var separators = new[] {' ', '(', ',', ')'};
 
-				OleDbCommandBuilder.DeriveParameters(cmd);
+				for (var i = 0; i < names.Count; ++i)
+				{
+					var  paramName = names[i].Value;
+					var  rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+					var  dataType  = rawType[0];
+					byte precision = 0;
+					byte scale     = 0;
+					var  size      = 0;
 
-				var n = 0;
+					if (rawType.Length > 2)
+					{
+						precision = ConvertTo<byte>.From(rawType[1]);
+						scale     = ConvertTo<byte>.From(rawType[2]);
+					}
+					else if (rawType.Length > 1)
+					{
+						size      = ConvertTo<int>.From(rawType[1]);
+					}
 
-				list.AddRange(
-					from OleDbParameter parameter in cmd.Parameters
-					select new ProcedureParameterInfo
+					list.Add(new ProcedureParameterInfo
 					{
 						ProcedureID   = procedure.ProcedureID,
-						ParameterName = parameter.ParameterName,
-						IsIn          = parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Input,
-						IsOut         = parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Output,
-						Length        = parameter.Size,
-						Precision     = parameter.Precision,
-						Scale         = parameter.Scale,
-						Ordinal       = ++n,
-						IsResult      = parameter.Direction == ParameterDirection.ReturnValue,
-						DataType      = "Short"
+						ParameterName = paramName,
+						IsIn          = true,
+						IsOut         = false,
+						Length        = size,
+						Precision     = precision,
+						Scale         = scale,
+						Ordinal       = i + 1,
+						IsResult      = false,
+						DataType      = dataType
 					});
+				}
 			}
 
 			return list;
 		}
-		*/
+
+		protected override Type GetSystemType(string columnType, DataTypeInfo dataType)
+		{
+			if (dataType == null)
+			{
+				switch (columnType.ToLower())
+				{
+					case "text" : return typeof(string);
+					default     : throw new InvalidOperationException();
+				}
+			}
+
+			return base.GetSystemType(columnType, dataType);
+		}
 
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (dataType)
+			switch (dataType.ToLower())
 			{
 				case "short"      : return DataType.Int16;
 				case "long"       : return DataType.Int32;
@@ -159,6 +192,7 @@ namespace LinqToDB.DataProvider.Access
 				case "bigbinary"  : return DataType.Binary;
 				case "longbinary" : return DataType.Binary;
 				case "varbinary"  : return DataType.VarBinary;
+				case "text"       : return DataType.NText;
 				case "longtext"   : return DataType.NText;
 				case "varchar"    : return DataType.VarChar;
 				case "decimal"    : return DataType.Decimal;

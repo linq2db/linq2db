@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SchemaProvider
 {
@@ -79,6 +80,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public bool   IsFunction;
 			public bool   IsTableFunction;
 			public bool   IsDefaultSchema;
+			public string ProcedureDefinition;
 		}
 
 		public class ProcedureParameterInfo
@@ -231,6 +233,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			{
 				#region Procedures
 
+				var sqlProvider = dataConnection.DataProvider.CreateSqlProvider();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
 
@@ -286,8 +289,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					{
 						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 						{
-							var commandText = "[{0}].[{1}].[{2}]".Args(
-								procedure.CatalogName, procedure.SchemaName, procedure.ProcedureName);
+							var commandText = sqlProvider.BuildTableName(
+								new StringBuilder(),
+								procedure.CatalogName, procedure.SchemaName, procedure.ProcedureName).ToString();
 
 							CommandType     commandType;
 							DataParameter[] parameters;
@@ -314,7 +318,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 									new DataParameter
 									{
 										Name      = p.ParameterName,
-										Value     = DBNull.Value,
+										Value     = null,
 										DataType  = p.DataType,
 										Size      = p.Size,
 										Direction =
@@ -576,7 +580,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						if (name.EndsWith("_BackReference"))
 							name = name.Substring(0, name.Length - "_BackReference".Length);
 
-						name = string.Join("", name.Split('_').Where(_ => _.Length > 0 && _ != t.TableName).ToArray());
+						name = string.Join("", name.Split('_')
+							.Where(_ => _.Length > 0 && _ != t.TableName)
+							.ToArray());
 					}
 
 					if (name.Length != 0 &&
