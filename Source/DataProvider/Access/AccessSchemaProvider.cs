@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.OleDb;
 using System.Linq;
 using System.Data;
 
@@ -30,6 +31,7 @@ namespace LinqToDB.DataProvider.Access
 					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = schema.IsNullOrEmpty(),
+					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
 				}
 			).ToList();
 		}
@@ -81,68 +83,88 @@ namespace LinqToDB.DataProvider.Access
 			return new List<ForeingKeyInfo>();
 		}
 
+		/*
+		List<ProcedureInfo> _procedures;
+
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+
+			return _procedures =
+			(
+				from p in ps.AsEnumerable()
+				let catalog = p.Field<string>("PROCEDURE_CATALOG")
+				let schema  = p.Field<string>("PROCEDURE_SCHEMA")
+				let name    = p.Field<string>("PROCEDURE_NAME")
+				select new ProcedureInfo
+				{
+					ProcedureID     = catalog + "." + schema + "." + name,
+					CatalogName     = catalog,
+					SchemaName      = schema,
+					ProcedureName   = name,
+					IsDefaultSchema = schema.IsNullOrEmpty()
+				}
+			).ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			var list = new List<ProcedureParameterInfo>();
+
+			foreach (var procedure in _procedures)
+			{
+				var cmd = (OleDbCommand)dataConnection.Command;
+
+				cmd.CommandText = procedure.ProcedureName;
+				cmd.CommandType = CommandType.StoredProcedure;
+
+				OleDbCommandBuilder.DeriveParameters(cmd);
+
+				var n = 0;
+
+				list.AddRange(
+					from OleDbParameter parameter in cmd.Parameters
+					select new ProcedureParameterInfo
+					{
+						ProcedureID   = procedure.ProcedureID,
+						ParameterName = parameter.ParameterName,
+						IsIn          = parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Input,
+						IsOut         = parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Output,
+						Length        = parameter.Size,
+						Precision     = parameter.Precision,
+						Scale         = parameter.Scale,
+						Ordinal       = ++n,
+						IsResult      = parameter.Direction == ParameterDirection.ReturnValue,
+						DataType      = "Short"
+					});
+			}
+
+			return list;
+		}
+		*/
+
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
 			switch (dataType)
 			{
-				case "smallint"         : return DataType.Int16;
-				case "int"              : return DataType.Int32;
-				case "real"             : return DataType.Single;
-				case "float"            : return DataType.Double;
-				case "double"           : return DataType.Double;
-				case "money"            : return DataType.Money;
-				case "currency"         : return DataType.Money;
-				case "decimal"          : return DataType.Decimal;
-				case "numeric"          : return DataType.Decimal;
-				case "bit"              : return DataType.Boolean;
-				case "yesno"            : return DataType.Boolean;
-				case "logical"          : return DataType.Boolean;
-				case "bool"             : return DataType.Boolean;
-				case "boolean"          : return DataType.Boolean;
-				case "tinyint"          : return DataType.Byte;
-				case "integer"          : return DataType.Int64;
-				case "counter"          : return DataType.Int64;
-				case "autoincrement"    : return DataType.Int64;
-				case "identity"         : return DataType.Int64;
-				case "long"             : return DataType.Int64;
-				case "bigint"           : return DataType.Int64;
-				case "binary"           : return DataType.Binary;
-				case "varbinary"        : return DataType.VarBinary;
-				case "blob"             : return DataType.VarBinary;
-				case "image"            : return DataType.Image;
-				case "general"          : return DataType.VarBinary;
-				case "oleobject"        : return DataType.VarBinary;
-				case "varchar"          : return DataType.VarChar;
-				case "nvarchar"         : return DataType.NVarChar;
-				case "memo"             : return DataType.Text;
-				case "longtext"         : return DataType.Text;
-				case "note"             : return DataType.Text;
-				case "text"             : return DataType.Text;
-				case "ntext"            : return DataType.NText;
-				case "string"           : return DataType.Char;
-				case "char"             : return DataType.Char;
-				case "nchar"            : return DataType.NChar;
-				case "datetime"         : return DataType.DateTime;
-				case "datetime2"        : return DataType.DateTime2;
-				case "smalldate"        : return DataType.SmallDateTime;
-				case "timestamp"        : return DataType.Timestamp;
-				case "date"             : return DataType.Date;
-				case "time"             : return DataType.Time;
-				case "uniqueidentifier" : return DataType.Guid;
-				case "guid"             : return DataType.Guid;
+				case "short"      : return DataType.Int16;
+				case "long"       : return DataType.Int32;
+				case "single"     : return DataType.Single;
+				case "double"     : return DataType.Double;
+				case "currency"   : return DataType.Money;
+				case "datetime"   : return DataType.DateTime;
+				case "bit"        : return DataType.Boolean;
+				case "byte"       : return DataType.Byte;
+				case "guid"       : return DataType.Guid;
+				case "bigbinary"  : return DataType.Binary;
+				case "longbinary" : return DataType.Binary;
+				case "varbinary"  : return DataType.VarBinary;
+				case "longtext"   : return DataType.NText;
+				case "varchar"    : return DataType.VarChar;
+				case "decimal"    : return DataType.Decimal;
 			}
 
 			return DataType.Undefined;
-		}
-
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType)
-		{
-			switch (columnType)
-			{
-				case "datetime2" : return typeof(DateTime);
-			}
-
-			return base.GetSystemType(columnType, dataType);
 		}
 	}
 }
