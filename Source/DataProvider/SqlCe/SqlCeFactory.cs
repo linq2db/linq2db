@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlCe
 {
 	using Data;
 
-	public class SqlCe: IDataProviderFactory
+	public class SqlCeFactory : IDataProviderFactory
 	{
 		static readonly SqlCeDataProvider _sqlCeDataProvider = new SqlCeDataProvider();
 
-		static SqlCe()
+		static SqlCeFactory()
 		{
 			DataConnection.AddDataProvider(_sqlCeDataProvider);
 		}

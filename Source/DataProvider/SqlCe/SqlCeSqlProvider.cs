@@ -2,7 +2,7 @@
 using System.Data;
 using System.Text;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
 	using SqlBuilder;

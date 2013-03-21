@@ -192,7 +192,7 @@ namespace Tests
 
 		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
 		{
-			var person = persons.ToList().Where(p => p.ID == id).First();
+			var person = persons.ToList().First(p => p.ID == id);
 
 			Assert.AreEqual(id, person.ID);
 			Assert.AreEqual(firstName, person.FirstName);

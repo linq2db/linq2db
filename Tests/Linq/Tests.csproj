@@ -356,10 +356,6 @@
       <Project>{5A556D57-0D68-433B-AD78-02849583582B}</Project>
       <Name>LinqToDB.PostgreSQL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\SqlCe\LinqToDB.SqlCe.csproj">
-      <Project>{85E90F57-8DE1-4912-8414-28578F4D71CD}</Project>
-      <Name>LinqToDB.SqlCe</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\DataProviders\Sybase\LinqToDB.Sybase.csproj">
       <Project>{6CD8CC3D-643D-4D09-8660-A26085C44FBC}</Project>
       <Name>LinqToDB.Sybase</Name>
