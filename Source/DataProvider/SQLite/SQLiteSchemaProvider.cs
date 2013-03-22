@@ -103,6 +103,11 @@ namespace LinqToDB.DataProvider.SQLite
 			).ToList();
 		}
 
+		protected override string GetDatabaseName(DbConnection dbConnection)
+		{
+			return dbConnection.DataSource;
+		}
+
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
 			switch (dataType)

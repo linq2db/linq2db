@@ -75,6 +75,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSqlProvider(SqlProviderFlags);
 		}
 
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new SqlCeSchemaProvider();
+		}
+
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)

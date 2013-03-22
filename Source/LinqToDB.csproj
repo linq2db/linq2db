@@ -77,6 +77,7 @@
     <Compile Include="DataProvider\SchemaProvider\ProcedureSchema.cs" />
     <Compile Include="DataProvider\SchemaProvider\SchemaProviderBase.cs" />
     <Compile Include="DataProvider\SchemaProvider\TableSchema.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeSchemaProvider.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeFactory.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeDataProvider.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeMappingSchema.cs" />

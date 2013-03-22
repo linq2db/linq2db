@@ -409,12 +409,22 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 			return ProcessSchema(new DatabaseSchema
 			{
-				DataSource    = dbConnection.DataSource,
-				Database      = dbConnection.Database,
+				DataSource    = GetDataSourceName(dbConnection),
+				Database      = GetDatabaseName  (dbConnection),
 				ServerVersion = dbConnection.ServerVersion,
 				Tables        = tables,
 				Procedures    = procedures,
 			});
+		}
+
+		protected virtual string GetDataSourceName(DbConnection dbConnection)
+		{
+			return dbConnection.DataSource;
+		}
+
+		protected virtual string GetDatabaseName(DbConnection dbConnection)
+		{
+			return dbConnection.Database;
 		}
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
@@ -580,7 +590,8 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						if (name.EndsWith("_BackReference"))
 							name = name.Substring(0, name.Length - "_BackReference".Length);
 
-						name = string.Join("", name.Split('_')
+						name = string.Join("", name
+							.Split('_')
 							.Where(_ => _.Length > 0 && _ != t.TableName)
 							.ToArray());
 					}

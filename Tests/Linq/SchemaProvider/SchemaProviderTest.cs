@@ -19,7 +19,6 @@ namespace Tests.SchemaProvider
 			ProviderName.Informix,
 			ProviderName.Oracle,
 			ProviderName.PostgreSQL,
-			ProviderName.SqlCe,
 			ProviderName.Sybase, ExcludeLinqService=true)] string context)
 		{
 			SqlServerFactory.ResolveSqlTypesPath("");

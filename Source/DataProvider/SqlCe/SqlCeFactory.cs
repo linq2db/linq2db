@@ -25,6 +25,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			return _sqlCeDataProvider;
 		}
 
+		public static void ResolveSqlCePath(string path)
+		{
+			new AssemblyResolver(path, "System.Data.SqlServerCe");
+		}
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)

@@ -29,7 +29,7 @@ CREATE TABLE Doctor
 (
 	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
 	Taxonomy nvarchar(50) NOT NULL,
-	FOREIGN KEY(PersonID) REFERENCES Person(PersonID)
+	CONSTRAINT FK_Doctor_Person FOREIGN KEY(PersonID) REFERENCES Person(PersonID)
 );
 
 INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
