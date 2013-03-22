@@ -3,17 +3,15 @@
 <#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\System.Data.SQLite.x86.1.0.84.0\lib\net40\System.Data.SQLite.dll" #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
+<#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SQLiteDataContext";
 
 	var path = typeof(System.Data.SQLite.SQLiteConnection).Assembly.GetName().CodeBase;
 
-	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLitePath(
-//		@"E:\Projects\Git\T4Models\packages\System.Data.SQLite.x86.1.0.84.0\lib\net40\System.Data.SQLite.dll");
-		path);
+	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLitePath(path);
 
-	var connectionString = @"Data Source=E:\Projects\Git\linq2db\Data\TestData.sqlite";
+	var connectionString = @"Data Source=C:\Projects\LinqToDB\Data\TestData.sqlite";
 	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);

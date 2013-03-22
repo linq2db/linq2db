@@ -12,11 +12,11 @@ using LinqToDB.Mapping;
 namespace SQLiteDataContext
 {
 	/// <summary>
-	/// Database       : main
+	/// Database       : TestData
 	/// Data Source    : TestData
 	/// Server Version : 3.7.15.2
 	/// </summary>
-	public partial class mainDB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public Table<AllType>      AllTypes       { get { return this.GetTable<AllType>(); } }
 		public Table<Child>        Children       { get { return this.GetTable<Child>(); } }
@@ -29,11 +29,11 @@ namespace SQLiteDataContext
 		public Table<Person>       People         { get { return this.GetTable<Person>(); } }
 		public Table<TestIdentity> TestIdentities { get { return this.GetTable<TestIdentity>(); } }
 
-		public mainDB()
+		public TestDataDB()
 		{
 		}
 
-		public mainDB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 		}
@@ -79,6 +79,16 @@ namespace SQLiteDataContext
 	{
 		[PrimaryKey, NotNull] public long   PersonID { get; set; } // integer
 		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_0_0
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Person 00 { get; set; }
+
+		#endregion
 	}
 
 	[Table("Dual")]
@@ -132,6 +142,16 @@ namespace SQLiteDataContext
 		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public string Gender     { get; set; } // char(1)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_0_0_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Doctor Doctor00 { get; set; }
+
+		#endregion
 	}
 
 	[Table("TestIdentity")]

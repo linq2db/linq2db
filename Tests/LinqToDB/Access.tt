@@ -1,0 +1,16 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
+<#
+	NamespaceName = "AccessDataContext";
+
+	var path = typeof(System.Data.OleDb.OleDbConnection).Assembly.GetName().CodeBase;
+
+	var connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Projects\LinqToDB\Data\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True";
+	var dataConnection   = LinqToDB.DataProvider.Access.AccessFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>

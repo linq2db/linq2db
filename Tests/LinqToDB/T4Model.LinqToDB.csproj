@@ -32,9 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="linq2db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\linq2db\Source\bin\Debug\linq2db.dll</HintPath>
+    <Reference Include="linq2db">
+      <HintPath>..\..\..\LinqToDB\Source\bin\Debug\linq2db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -65,6 +64,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Access.generated.cs">
+      <DependentUpon>Access.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="SqlCe.generated.cs">
+      <DependentUpon>SqlCe.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="MySql.generated.cs">
       <DependentUpon>MySql.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -86,6 +95,14 @@
   <ItemGroup>
     <None Include="App.config">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="Access.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Access.generated.cs</LastGenOutput>
+    </None>
+    <None Include="SqlCe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SqlCe.generated.cs</LastGenOutput>
     </None>
     <None Include="MySql.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
