@@ -15,5 +15,11 @@
 	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
+
+	foreach (var t in Tables.Values)
+		foreach (var fk in t.ForeignKeys.Values)
+			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
+				fk.MemberName = "FK_" + fk.MemberName;
+
 	GenerateModel();
 #>

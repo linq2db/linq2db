@@ -86,7 +86,7 @@ namespace SQLiteDataContext
 		/// FK_Doctor_0_0
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public Person 00 { get; set; }
+		public Person FK_00 { get; set; }
 
 		#endregion
 	}
