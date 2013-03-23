@@ -581,6 +581,14 @@ namespace LinqToDB.Extensions
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
+		public static bool IsNullableHasValueMember(this MemberInfo member)
+		{
+			return
+				member.Name == "HasValue" &&
+				member.DeclaringType.IsGenericType &&
+				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+		}
+
 		public static bool EqualsTo(this MemberInfo member1, MemberInfo member2, Type declaringType = null	)
 		{
 			if (ReferenceEquals(member1, member2))

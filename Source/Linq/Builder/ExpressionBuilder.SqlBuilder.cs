@@ -72,7 +72,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							var ma = (MemberExpression)expr;
 
-							if (ma.Member.IsNullableValueMember())
+							if (ma.Member.IsNullableValueMember() ||
+							    ma.Member.IsNullableHasValueMember())
 								break;
 
 							if (Expressions.ConvertMember(MappingSchema, ma.Member) == null)
