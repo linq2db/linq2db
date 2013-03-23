@@ -281,11 +281,11 @@ namespace Tests.DataProvider
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				Assert.That(conn.Execute<DateTime>(
-					"SELECT Cast('2012-12-12 13:12:12.012 +05:00' as datetimeoffset)"),
+					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
 					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 
 				Assert.That(conn.Execute<DateTime?>(
-					"SELECT Cast('2012-12-12 13:12:12.012 +05:00' as datetimeoffset)"),
+					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
 					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 
 				Assert.That(conn.Execute<DateTimeOffset>(
