@@ -20,11 +20,12 @@
 		Name    = "TestClass1",
 		Members =
 		{
-			new EditableProperty ("long",   "EditableLong1") { InitValue = "12345", CustomValidation = true },
-			new EditableProperty ("int",    "EditableInt1")  { CustomValidation = true },
-			new EditableProperty ("int",    "EditableInt3")  { Dependents = { "EditableInt1", "EditableInt3" } },
+			new EditableProperty ("long",   "EditableLong1")   { InitValue = "12345", CustomValidation = true },
+			new EditableProperty ("int",    "EditableInt1")    { CustomValidation = true },
+			new EditableProperty ("int",    "EditableInt3")    { Dependents = { "EditableInt1", "EditableInt3" } },
+			new EditableProperty ("double", "EditableDouble1") { IsDirtyText = "Math.Abs({0} - {1}) <= 16 * Double.Epsilon * Math.Max(Math.Abs({0}), Math.Abs({1}))" },
 			new NotifyingProperty("string", "NotifiedProp1", "NotifiedProp2", "NotifiedProp3"),
-			new NotifyingProperty("int",    "NotifiedProp2") { InitValue = "1" },
+			new NotifyingProperty("int",    "NotifiedProp2")   { InitValue = "1" },
 			new NotifyingProperty("long",   "NotifiedProp3").InitGetter("1"),
 			new NotifyingProperty("string", "IDProp3"),
 			new MemberGroup

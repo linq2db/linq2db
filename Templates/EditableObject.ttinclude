@@ -84,7 +84,8 @@ void EditableObjectImpl()
 
 		var ac = new Method  ("void", "Accept" + name + "Changes", null, new[] { string.Format("_original{0} = _current{0};", name) });
 		var rc = new Method  ("void", "Reject" + name + "Changes", null, new[] { string.Format("{0} = _original{0};", name) });
-		var id = new Property("bool", "Is" + name + "Dirty").InitGetter(string.Format("_current{0} != _original{0}", name));
+		var id = new Property("bool", "Is" + name + "Dirty")
+			.InitGetter(string.Format(prop.IsDirtyText, "_current" + name, "_original" + name));
 
 		gr.Members.Add(new MemberGroup
 		{
@@ -214,7 +215,8 @@ void EditableObjectImpl()
 
 partial class Property
 {
-	public bool IsEditable;
+	public bool   IsEditable;
+	public string IsDirtyText = "{0} != {1}";
 }
 
 class EditableProperty : Property
