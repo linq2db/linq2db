@@ -2,7 +2,7 @@
 using System.Data;
 using System.Text;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlBuilder;
 	using SqlProvider;
@@ -11,9 +11,6 @@ namespace LinqToDB.DataProvider
 	{
 		public SybaseSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsSubQueryTakeSupported  = false;
-			SqlProviderFlags.IsCountSubQuerySupported = false;
-			SqlProviderFlags.CanCombineParameters     = false;
 		}
 
 		protected override void BuildGetIdentity(StringBuilder sb)

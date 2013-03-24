@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 using Sybase.Data.AseClient;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Mapping;
 	using SqlProvider;
@@ -22,8 +22,11 @@ namespace LinqToDB.DataProvider
 		protected SybaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter = false;
-			SqlProviderFlags.IsSkipSupported        = false;
+			SqlProviderFlags.AcceptsTakeAsParameter   = false;
+			SqlProviderFlags.IsSkipSupported          = false;
+			SqlProviderFlags.IsSubQueryTakeSupported  = false;
+			SqlProviderFlags.IsCountSubQuerySupported = false;
+			SqlProviderFlags.CanCombineParameters     = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());

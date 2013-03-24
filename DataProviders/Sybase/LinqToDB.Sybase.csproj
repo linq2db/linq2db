@@ -100,7 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sybase.cs" />
+    <Compile Include="SybaseFactory.cs" />
     <Compile Include="SybaseDataProvider.cs" />
     <Compile Include="SybaseMappingSchema.cs" />
     <Compile Include="SybaseSqlProvider.cs" />

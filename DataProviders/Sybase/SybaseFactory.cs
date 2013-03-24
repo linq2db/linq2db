@@ -2,15 +2,15 @@
 using System.Collections.Specialized;
 using System.Data;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 
-	public class Sybase : IDataProviderFactory
+	public class SybaseFactory : IDataProviderFactory
 	{
 		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
 
-		static Sybase()
+		static SybaseFactory()
 		{
 			DataConnection.AddDataProvider(_sybaseDataProvider);
 		}
