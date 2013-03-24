@@ -69,6 +69,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Sybase.generated.cs">
+      <DependentUpon>Sybase.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="SqlCe.generated.cs">
       <DependentUpon>SqlCe.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -99,6 +104,10 @@
     <None Include="Access.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Access.generated.cs</LastGenOutput>
+    </None>
+    <None Include="Sybase.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Sybase.generated.cs</LastGenOutput>
     </None>
     <None Include="SqlCe.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

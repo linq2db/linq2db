@@ -1,0 +1,19 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
+<#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
+<#
+	NamespaceName = "SybaseDataContext";
+
+	var path = typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly.GetName().CodeBase;
+
+	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCePath(path);
+
+	var connectionString = @"Data Source=C:\Projects\LinqToDB\Data\TestData.sdf";
+	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>
