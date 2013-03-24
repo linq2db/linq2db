@@ -8,6 +8,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public class SybaseFactory : IDataProviderFactory
 	{
+		public static string AssemblyName = "Sybase.AdoNet2.AseClient";
+
 		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
 
 		static SybaseFactory()

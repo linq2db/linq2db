@@ -34,6 +34,14 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
+		static Action<IDbDataParameter> _setTimeStamp;
+
+		protected override void OnConnectionTypeCreated()
+		{
+			//                             ((FbParameter)parameter).FbDbType =  FbDbType.   TimeStamp;
+			_setTimeStamp = GetSetParameter("FbParameter",         "FbDbType", "FbDbType", "TimeStamp");
+		}
+
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new FirebirdSqlProvider(SqlProviderFlags);
@@ -59,8 +67,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
-
-		static Action<IDbDataParameter> _setTimeStamp;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{

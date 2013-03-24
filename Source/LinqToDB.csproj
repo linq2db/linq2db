@@ -99,6 +99,10 @@
     <Compile Include="DataProvider\SqlServer\SqlServerSqlProvider.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerVersion.cs" />
     <Compile Include="Common\Tools.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseDataProvider.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseFactory.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseMappingSchema.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseSqlProvider.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
