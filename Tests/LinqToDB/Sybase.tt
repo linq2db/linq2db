@@ -2,12 +2,12 @@
 <#@ output extension=".generated.cs"                              #>
 <#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
+<#@ assembly name="$(SolutionDir)Redist\Sybase\Sybase.AdoNet2.AseClient.dll" #>
 <#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SybaseDataContext";
 
-	var path = typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly.GetName().CodeBase;
+	var path = typeof(Sybase.Data.AseClient.AseConnection).Assembly.GetName().CodeBase;
 
 	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCePath(path);
 
