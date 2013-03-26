@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
 	using SqlBuilder;
