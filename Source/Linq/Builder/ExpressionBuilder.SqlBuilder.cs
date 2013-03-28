@@ -2145,7 +2145,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			List<Expression> ignoredMembers = null;
 
-			return null == expr.Find((Expression pi) =>
+			return null == expr.Find(pi =>
 			{
 				if (ignoredMembers != null)
 				{
