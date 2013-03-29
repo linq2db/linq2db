@@ -47,10 +47,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 #if DEBUG
-			public string _sqlQueryText { get { return this.SqlQuery == null ? "" : this.SqlQuery.SqlText; } }
+			public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
 #endif
 
-			public ExpressionBuilder Builder    { get; set; }
+			public ExpressionBuilder Builder    { get; private set; }
 			public Expression        Expression { get; set; }
 			public SqlQuery          SqlQuery   { get; set; }
 			public IBuildContext     Parent     { get; set; }
