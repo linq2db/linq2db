@@ -1369,11 +1369,6 @@ namespace LinqToDB.SqlProvider
 						var column = (SqlQuery.Column)expr;
 
 #if DEBUG
-						//if (column.ToString() == "t8.ParentID")
-						//{
-						//    column.ToString();
-						//}
-
 						var sql = SqlQuery.SqlText;
 #endif
 
@@ -3287,7 +3282,6 @@ namespace LinqToDB.SqlProvider
 									{
 										subQuery.GroupBy.Expr((SqlField)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
-										break;
 									}
 
 									break;
@@ -3300,7 +3294,6 @@ namespace LinqToDB.SqlProvider
 									{
 										subQuery.GroupBy.Expr((SqlQuery.Column)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
-										break;
 									}
 
 									break;
@@ -3370,7 +3363,7 @@ namespace LinqToDB.SqlProvider
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource /*&& subQuery.From.IsChild((ISqlTableSource)e)*/)
+							if (e is ISqlTableSource)
 								allTables.Add((ISqlTableSource)e);
 						});
 
@@ -3451,7 +3444,6 @@ namespace LinqToDB.SqlProvider
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
 											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
-											break;
 										}
 
 										break;
@@ -3465,7 +3457,6 @@ namespace LinqToDB.SqlProvider
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlQuery.Column)e);
 											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
-											break;
 										}
 
 										break;
