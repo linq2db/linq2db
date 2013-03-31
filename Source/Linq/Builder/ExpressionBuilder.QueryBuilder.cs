@@ -275,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 					DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
-					ParametersParam,
+					ParametersParam
 				});
 
 			return mapper;

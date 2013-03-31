@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 							ExpressionBuilder.DataContextParam,
 							ExpressionBuilder.DataReaderParam,
 							ExpressionBuilder.ExpressionParam,
-							ExpressionBuilder.ParametersParam,
+							ExpressionBuilder.ParametersParam
 						});
 
 					return Expression.Call(
@@ -293,7 +293,7 @@ namespace LinqToDB.Linq.Builder
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
 							Expression.Constant(keyReader.Compile()),
-							Expression.Constant(itemReader),
+							Expression.Constant(itemReader)
 						});
 				}
 
@@ -540,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 				return IsExpressionResult.False;
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext _context)
+			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				var expr = SqlQuery.Select.Columns[index].Expression;
 
@@ -599,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 
 						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", this.SqlQuery));
+						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", SqlQuery));
 
 						return ctx;
 					}

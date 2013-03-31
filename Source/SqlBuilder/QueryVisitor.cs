@@ -1152,7 +1152,7 @@ namespace LinqToDB.SqlBuilder
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SqlQuery.DeleteClause { Table = t ?? s.Table };
+							newElement = new SqlQuery.DeleteClause { Table = t };
 						}
 
 						break;

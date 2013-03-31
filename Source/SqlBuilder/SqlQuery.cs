@@ -783,11 +783,11 @@ namespace LinqToDB.SqlBuilder
 				public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2)
 					: base(exp1, SqlBuilder.Precedence.Comparison)
 				{
-					this.Operator = op;
-					Expr2 = exp2;
+					Operator = op;
+					Expr2    = exp2;
 				}
 
-				public new Operator   Operator { get; private set; }
+				public new Operator   Operator { get; private  set; }
 				public ISqlExpression Expr2    { get; internal set; }
 
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
@@ -810,7 +810,7 @@ namespace LinqToDB.SqlBuilder
 
 					if (!objectTree.TryGetValue(this, out clone))
 						objectTree.Add(this, clone = new ExprExpr(
-							(ISqlExpression)Expr1.Clone(objectTree, doClone), this.Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone)));
+							(ISqlExpression)Expr1.Clone(objectTree, doClone), Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone)));
 
 					return clone;
 				}
@@ -826,7 +826,7 @@ namespace LinqToDB.SqlBuilder
 
 					string op;
 
-					switch (this.Operator)
+					switch (Operator)
 					{
 						case Operator.Equal         : op = "=";  break;
 						case Operator.NotEqual      : op = "<>"; break;

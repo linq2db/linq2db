@@ -501,13 +501,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var method = (MethodInfo)mi;
 					var args   = method.GetGenericArguments();
-					var names  = args.Select(t => t.Name).ToArray();
+					var names  = args.Select(t => (object)t.Name).ToArray();
 					var name   = attr.MethodName.Args(names);
 
-					if (name != attr.MethodName)
-						expr = Expression.Call(mi.DeclaringType, name, Array<Type>.Empty);
-					else
-						expr = Expression.Call(mi.DeclaringType, name, args);
+					expr = Expression.Call(
+						mi.DeclaringType,
+						name,
+						name != attr.MethodName ? Array<Type>.Empty : args);
 				}
 				else
 				{

@@ -83,17 +83,7 @@ namespace LinqToDB.Linq.Builder
 			public int            FieldIndex;
 			public ISqlExpression Sql;
 
-			static object CheckNullValue(object value, object context)
-			{
-				if (value == null || value is DBNull)
-					throw new InvalidOperationException(
-						"Function {0} returns non-nullable value, but result is NULL. Use nullable version of the function instead."
-						.Args(context));
-
-				return value;
-			}
-
-			static int CheckNullValue2(IDataReader reader, object context)
+			static int CheckNullValue(IDataRecord reader, object context)
 			{
 				if (reader.IsDBNull(0))
 					throw new InvalidOperationException(
@@ -126,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue2(null, null)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(null, null)), ExpressionBuilder.DataReaderParam, Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex));
 				}
 
@@ -142,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
 				}
 
-				throw new NotImplementedException();
+				throw new InvalidOperationException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
@@ -156,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 						});
 				}
 
-				throw new NotImplementedException();
+				throw new InvalidOperationException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)

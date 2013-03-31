@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
+		public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
 
 		public MethodCallExpression MethodCall;
 #endif
@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags)
 		{
 			return Builder.ConvertExpressions(this, expression, flags)
-				.Select<SqlInfo,SqlInfo>(CheckExpression)
+				.Select (CheckExpression)
 				.ToArray();
 		}
 
@@ -812,7 +812,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			if (!ReferenceEquals(context.SqlQuery, this.SqlQuery))
+			if (!ReferenceEquals(context.SqlQuery, SqlQuery))
 				index = SqlQuery.Select.Add(context.SqlQuery.Select.Columns[index]);
 
 			return Parent == null ? index : Parent.ConvertToParentIndex(index, this);

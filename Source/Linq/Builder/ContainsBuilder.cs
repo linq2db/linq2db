@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 					return new[] { new SqlInfo { Query = query, Sql = sql } };
 				}
 
-				throw new NotImplementedException();
+				throw new InvalidOperationException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
@@ -91,12 +91,12 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new NotImplementedException();
+				throw new InvalidOperationException();
 			}
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				throw new InvalidOperationException();
 			}
 
 			ISqlExpression _subQuerySql;
@@ -118,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 
 					SqlQuery.Condition cond;
 
-					if (Sequence.SqlQuery != this.SqlQuery &&
+					if (Sequence.SqlQuery != SqlQuery &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{

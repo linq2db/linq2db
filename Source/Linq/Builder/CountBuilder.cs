@@ -146,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var query = context.SqlQuery;
 
-				if (query == this.SqlQuery)
+				if (query == SqlQuery)
 				{
 					var col = query.Select.Columns[query.Select.Columns.Count - 1];
 

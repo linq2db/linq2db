@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
 						ExpressionBuilder.ParametersParam,
-						_counterParam,
+						_counterParam
 					});
 
 				query.SetQuery(mapper);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 using JetBrains.Annotations;
 
@@ -12,9 +13,9 @@ namespace LinqToDB.Common
 			return string.Format(format, args);
 		}
 
-		public static bool IsNullOrEmpty<T>(this T[] array)
+		public static bool IsNullOrEmpty(this ICollection array)
 		{
-			return array == null || array.Length == 0;
+			return array == null || array.Count == 0;
 		}
 
 		public static bool IsNullOrEmpty(this string str)

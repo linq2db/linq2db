@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 #if DEBUG
-		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
+		public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
 #endif
 
 		public IBuildContext     Parent   { get; set; }

@@ -53,8 +53,11 @@ namespace LinqToDB.Expressions
 			{
 				var l = (LambdaExpression)ex;
 
-				     if (l.Parameters.Count == 1) ex = l.GetBody(dataReaderExpr);
-				else if (l.Parameters.Count == 2) ex = l.GetBody(dataReaderExpr, Constant(idx));
+				switch (l.Parameters.Count)
+				{
+					case 1 : ex = l.GetBody(dataReaderExpr);                break;
+					case 2 : ex = l.GetBody(dataReaderExpr, Constant(idx)); break;
+				}
 			}
 
 			var conv = mappingSchema.GetConvertExpression(ex.Type, type, false);

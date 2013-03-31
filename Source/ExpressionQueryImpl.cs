@@ -21,7 +21,7 @@ namespace LinqToDB
 
 		public override string ToString()
 		{
-			return base.SqlText;
+			return SqlText;
 		}
 
 //#endif
