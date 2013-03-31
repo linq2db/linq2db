@@ -233,7 +233,7 @@ namespace Tests.Create
 					WHERE ID = 2",
 					new
 					{
-						blob = new byte[] { 1, 2, },
+						blob = new byte[] { 1, 2 },
 					});
 			}
 		}

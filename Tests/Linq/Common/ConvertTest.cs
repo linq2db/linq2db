@@ -2,7 +2,6 @@
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
-using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;

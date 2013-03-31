@@ -76,7 +76,7 @@ namespace Tests.DataProvider
 						"cint",
 						"ccur",
 						"cdbl",
-						"csng",
+						"csng"
 					}.Except(skipTypes))
 				{
 					var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
