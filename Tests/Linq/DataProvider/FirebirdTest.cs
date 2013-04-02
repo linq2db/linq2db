@@ -71,7 +71,7 @@ namespace Tests.DataProvider
 					"int",
 					"decimal(18)",
 					"float",
-					"real",
+					"real"
 				}.Except(skipTypes))
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;

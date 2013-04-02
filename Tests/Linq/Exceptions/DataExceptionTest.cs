@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using LinqToDB;
 using MySql.Data.MySqlClient;
 
 using NUnit.Framework;
@@ -10,10 +10,10 @@ namespace Tests.Exceptions
 	using Model;
 
 	[TestFixture]
-	public class DataExceptionTest
+	public class DataExceptionTest : TestBase
 	{
 		[Test]
-		public void ParameterPrefixTest()
+		public void ParameterPrefixTest([IncludeDataContexts(ProviderName.MySql)] string context)
 		{
 			try
 			{

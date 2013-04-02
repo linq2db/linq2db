@@ -35,6 +35,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247-BCCD-4C39-B714-39CDF10904E9}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
+		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 	EndProjectSection
 EndProject
