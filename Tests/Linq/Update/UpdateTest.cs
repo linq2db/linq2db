@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Data;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 #region ReSharper disable
@@ -441,6 +443,52 @@ namespace Tests.Update
 			using (var ctx = new TestDataConnection())
 			{
 				_updateQuery(ctx, 12345, "54321");
+			}
+		}
+
+		[Table("LinqDataTypes")]
+		class Table1
+		{
+			[Column] public int  ID;
+			[Column] public bool BoolValue;
+
+			[Association(ThisKey = "ID", OtherKey = "ParentID", CanBeNull = false)]
+			public List<Table2> Tables2;
+		}
+
+		[Table("Parent")]
+		class Table2
+		{
+			[Column] public int  ParentID;
+			[Column] public bool Value1;
+
+			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
+			public Table1 Table1;
+		}
+
+		[Test]
+		public void UpdateAssociation5([DataContexts(
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite,
+			ExcludeLinqService=true)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ids = new[] { 10000, 20000 };
+
+				db.GetTable<Table2>()
+					.Where (x => ids.Contains(x.ParentID))
+					.Select(x => x.Table1)
+					.Distinct()
+					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1))
+					.Update();
+
+				var idx = db.LastQuery.IndexOf("INNER JOIN");
+
+				Assert.That(idx, Is.Not.EqualTo(-1));
+
+				idx = db.LastQuery.IndexOf("INNER JOIN", idx + 1);
+
+				Assert.That(idx, Is.EqualTo(-1));
 			}
 		}
 	}

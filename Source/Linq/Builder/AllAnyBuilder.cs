@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CopyTable = true });
 
 			if (methodCall.Arguments.Count == 2)
 			{

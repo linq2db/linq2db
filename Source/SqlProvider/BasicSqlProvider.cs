@@ -243,7 +243,7 @@ namespace LinqToDB.SqlProvider
 				var addAlias = true;
 
 				AppendIndent(sb);
-				BuildColumn(sb, col, ref addAlias);
+				BuildColumnExpression(sb, col.Expression, col.Alias, ref addAlias);
 
 				if (!_skipAlias && addAlias && col.Alias != null)
 					sb.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
@@ -257,9 +257,9 @@ namespace LinqToDB.SqlProvider
 			sb.AppendLine();
 		}
 
-		protected virtual void BuildColumn(StringBuilder sb, SqlQuery.Column col, ref bool addAlias)
+		protected virtual void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
 		{
-			BuildExpression(sb, col.Expression, true, true, col.Alias, ref addAlias);
+			BuildExpression(sb, expr, true, true, alias, ref addAlias);
 		}
 
 		#endregion
@@ -317,7 +317,10 @@ namespace LinqToDB.SqlProvider
 				AppendIndent(sb);
 				BuildExpression(sb, expr.Column, false, true);
 				sb.Append(" = ");
-				BuildExpression(sb, expr.Expression);
+
+				var addAlias = false;
+
+				BuildColumnExpression(sb, expr.Expression, null, ref addAlias);
 			}
 
 			Indent--;
