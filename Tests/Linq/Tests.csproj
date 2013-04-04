@@ -280,6 +280,7 @@
     <Compile Include="UserTests\CompareNullableChars.cs" />
     <Compile Include="UserTests\SelectManyDeleteTest.cs" />
     <Compile Include="UserTests\SelectManyUpdateTest.cs" />
+    <Compile Include="UserTests\UnnecessaryInnerJoinTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Data\Create Scripts\Access.sql">
