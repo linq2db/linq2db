@@ -15,7 +15,7 @@ namespace Tests.Update
 	using Model;
 
 	[TestFixture]
-	public class DmlTest : TestBase
+	public class InsertTest : TestBase
 	{
 		[Test]
 		public void DistinctInsert1([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
