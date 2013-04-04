@@ -245,6 +245,7 @@
     <Compile Include="DataProvider\OracleTest.cs" />
     <Compile Include="Linq\TableFunctionTest.cs" />
     <Compile Include="Linq\VisualBasicTest.cs" />
+    <Compile Include="Update\UpdateTest.cs" />
     <Compile Include="Update\DeleteTest.cs" />
     <Compile Include="Update\DmlTest.cs" />
     <Compile Include="Linq\ExpressionsTest.cs" />
