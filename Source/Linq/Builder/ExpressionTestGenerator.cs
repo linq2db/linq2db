@@ -828,7 +828,7 @@ using System.Linq.Expressions;
 
 using NUnit.Framework;
 {0}
-namespace Data.Linq
+namespace Tests.UserTests
 {{
 	[TestFixture]
 	public class UserTest : TestBase
@@ -838,7 +838,9 @@ namespace Data.Linq
 		{{
 			// {1}
 			using (var db = GetDataContext(context))
+			{{
 				{2};
+			}}
 		}}
 	}}
 }}

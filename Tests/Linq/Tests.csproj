@@ -277,6 +277,7 @@
     <Compile Include="Linq\SelectScalar.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="Linq\WhereTest.cs" />
+    <Compile Include="UserTests\CompareNullableChars.cs" />
     <Compile Include="UserTests\SelectManyDeleteTest.cs" />
     <Compile Include="UserTests\SelectManyUpdateTest.cs" />
   </ItemGroup>
