@@ -30,7 +30,7 @@ namespace Tests.UserTests
 	public class CompareNullableChars : TestBase
 	{
 		[Test]
-		public void Test([DataContexts(ExcludeLinqService=true)] string context)
+		public void Test([IncludeDataContexts(ProviderName.Access)] string context)
 		{
 			using (var db = new SqlServerDataRepository(context))
 			{

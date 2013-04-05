@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -35,11 +36,11 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([DataContextsAttribute(ExcludeLinqService=true)] string context)
+		public void Test()
 		{
 			var ids = new long[] { 1, 2, 3 };
 
-			using (var db = new DataConnection(context))
+			using (var db = new TestDataConnection())
 			{
 				var q =
 					from engineeringConnector in db.GetTable<EngineeringConnectorRecord>()
