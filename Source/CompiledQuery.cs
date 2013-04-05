@@ -95,7 +95,7 @@ namespace LinqToDB
 						break;
 
 					case ExpressionType.MemberAccess :
-						if (pi.Type.IsGenericType && pi.Type.GetGenericTypeDefinition() == typeof(Table<>))
+						if (typeof(ITable<>).IsSameOrParentOf(pi.Type))
 						{
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)

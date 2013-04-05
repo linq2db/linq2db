@@ -99,14 +99,14 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod("Count6Expression")]
-		static int Count6(Table<Child> c, Parent p)
+		static int Count6(ITable<Child> c, Parent p)
 		{
 			return (_count6Expression ?? (_count6Expression = Count6Expression().Compile()))(c, p);
 		}
 
-		static Func<Table<Child>,Parent,int> _count6Expression;
+		static Func<ITable<Child>,Parent,int> _count6Expression;
 
-		static Expression<Func<Table<Child>,Parent,int>> Count6Expression()
+		static Expression<Func<ITable<Child>,Parent,int>> Count6Expression()
 		{
 			return (ch, p) => ch.Where(c => c.ParentID == p.ParentID).Count();
 		}
@@ -121,14 +121,14 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod("Count7Expression")]
-		static int Count7(Table<Child> ch, Parent p, int n)
+		static int Count7(ITable<Child> ch, Parent p, int n)
 		{
 			return (_count7Expression ?? (_count7Expression = Count7Expression().Compile()))(ch, p, n);
 		}
 
-		static Func<Table<Child>,Parent,int,int> _count7Expression;
+		static Func<ITable<Child>,Parent,int,int> _count7Expression;
 
-		static Expression<Func<Table<Child>,Parent,int,int>> Count7Expression()
+		static Expression<Func<ITable<Child>,Parent,int,int>> Count7Expression()
 		{
 			return (ch, p, n) => Sql.AsSql(ch.Where(c => c.ParentID == p.ParentID).Count() + n);
 		}

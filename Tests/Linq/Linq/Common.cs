@@ -225,7 +225,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		public Table<Person> People2(TestDataConnection db)
+		public ITable<Person> People2(TestDataConnection db)
 		{
 			return db.GetTable<Person>();
 		}
@@ -449,7 +449,7 @@ namespace Tests.Linq
 
 	static class Extender
 	{
-		public static Table<Person> People(this DataConnection db)
+		public static ITable<Person> People(this DataConnection db)
 		{
 			return db.GetTable<Person>();
 		}

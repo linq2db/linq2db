@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 						var mc = (MethodCallExpression)expression;
 
 						if (mc.Method.Name == "GetTable")
-							if (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition() == typeof(Table<>))
+							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 								return action(2, null);
 
 						var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.MemberAccess:
 
-					if (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition() == typeof(Table<>))
+					if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 						return action(3, null);
 
 					// Looking for association.
@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
 
-				if (!mc.Method.ReturnType.IsGenericType || mc.Method.ReturnType.GetGenericTypeDefinition() != typeof(Table<>))
+				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return Table<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];

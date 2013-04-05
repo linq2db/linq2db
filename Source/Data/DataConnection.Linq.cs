@@ -17,19 +17,19 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection : IDataContext
 	{
-		public Table<T> GetTable<T>()
+		public ITable<T> GetTable<T>()
 			where T : class
 		{
 			return new Table<T>(this);
 		}
 
-		public Table<T> GetTable<T>(bool dispose)
+		public ITable<T> GetTable<T>(bool dispose)
 			where T : class
 		{
 			return new Table<T>(new DataContextInfo(this, dispose));
 		}
 
-		public Table<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
+		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
 			where T : class
 		{
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);

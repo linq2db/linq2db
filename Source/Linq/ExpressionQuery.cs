@@ -8,12 +8,11 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB
+namespace LinqToDB.Linq
 {
 	using Extensions;
-	using Linq;
 
-	public abstract class ExpressionQuery<T> : IOrderedQueryable<T>, IQueryProvider
+	abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
 		#region Init
 

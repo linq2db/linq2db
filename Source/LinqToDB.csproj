@@ -50,6 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Linq\ExpressionQuery.cs" />
+    <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
     <Compile Include="DataProvider\Access\AccessFactory.cs" />
     <Compile Include="DataProvider\Access\AccessMappingSchema.cs" />
@@ -216,12 +218,12 @@
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Linq\DefaultDataContextInfo.cs" />
-    <Compile Include="ExpressionQuery.cs" />
+    <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
     <Compile Include="Linq\IDataContextInfo.cs" />
-    <Compile Include="IExpressionQuery.cs" />
+    <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
     <Compile Include="Linq\IUpdateable.cs" />
@@ -240,7 +242,7 @@
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
-    <Compile Include="TableT.cs" />
+    <Compile Include="Linq\TableT.cs" />
     <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
     <Compile Include="SqlBuilder\IChild.cs" />
