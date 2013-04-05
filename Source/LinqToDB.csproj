@@ -229,7 +229,7 @@
     <Compile Include="Linq\LinqException.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="Linq\MemberInfoComparer.cs" />
-    <Compile Include="Sql\Sql.ExpressionMethodAttribute.cs" />
+    <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />

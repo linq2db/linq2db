@@ -73,13 +73,13 @@ namespace Tests.Model
 			return string.Join("\n\n", commands);
 		}
 
-		[Sql.ExpressionMethod("Expression9")]
+		[ExpressionMethod("Expression9")]
 		static public IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.ExpressionMethod("Expression9")]
+		[ExpressionMethod("Expression9")]
 		public IQueryable<Parent> GetParent10(Child ch)
 		{
 			throw new InvalidOperationException();
