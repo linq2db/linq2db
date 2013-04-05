@@ -28,7 +28,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.PostgreSQL", "Data
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".doc", ".doc", "{751CE0BA-690F-42BF-94C7-C8276F8A84CF}"
 	ProjectSection(SolutionItems) = preProject
-		LICENSE.MIT = LICENSE.MIT
+		MIT-LICENSE.txt = MIT-LICENSE.txt
 		README.md = README.md
 	EndProjectSection
 EndProject
