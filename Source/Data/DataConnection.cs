@@ -402,7 +402,7 @@ namespace LinqToDB.Data
 			var command = Connection.CreateCommand();
 
 			if (_commandTimeout.HasValue)
-				_command.CommandTimeout = _commandTimeout.Value;
+				command.CommandTimeout = _commandTimeout.Value;
 
 			if (Transaction != null)
 				command.Transaction = Transaction;
