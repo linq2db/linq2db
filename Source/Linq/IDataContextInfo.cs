@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Linq
+﻿using System;
+
+namespace LinqToDB.Linq
 {
 	using Mapping;
 	using SqlProvider;
