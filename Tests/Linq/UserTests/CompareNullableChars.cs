@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		{
 		}
 
-		public Table<EngineeringCircuitEndRecord> EngineeringCircuitEnds { get { return this.GetTable<EngineeringCircuitEndRecord>(); } }
+		public ITable<EngineeringCircuitEndRecord> EngineeringCircuitEnds { get { return this.GetTable<EngineeringCircuitEndRecord>(); } }
 	}
 
 	[TestFixture]

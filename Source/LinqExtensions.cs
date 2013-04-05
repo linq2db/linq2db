@@ -13,7 +13,7 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		static public Table<T> TableName<T>([NotNull] this Table<T> table, [NotNull] string name)
+		static public ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -26,7 +26,7 @@ namespace LinqToDB
 			return table;
 		}
 
-		static public Table<T> DatabaseName<T>([NotNull] this Table<T> table, [NotNull] string name)
+		static public ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -39,7 +39,7 @@ namespace LinqToDB
 			return table;
 		}
 
-		static public Table<T> OwnerName<T>([NotNull] this Table<T> table, [NotNull] string name)
+		static public ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -106,7 +106,7 @@ namespace LinqToDB
 
 		public static int Update<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
-			[NotNull]                Table<TTarget>                    target,
+			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
 			if (source == null) throw new ArgumentNullException("source");
@@ -285,7 +285,7 @@ namespace LinqToDB
 		#region Insert
 
 		public static int Insert<T>(
-			[NotNull]                this Table<T>       target,
+			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter)
 		{
 			if (target == null) throw new ArgumentNullException("target");
@@ -301,7 +301,7 @@ namespace LinqToDB
 		}
 
 		public static object InsertWithIdentity<T>(
-			[NotNull]                this Table<T>       target,
+			[NotNull]                this ITable<T>      target,
 			[NotNull, InstantHandle] Expression<Func<T>> setter)
 		{
 			if (target == null) throw new ArgumentNullException("target");
@@ -323,7 +323,7 @@ namespace LinqToDB
 			public IQueryable<T> Query;
 		}
 
-		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, [NotNull] Table<T> target)
+		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, [NotNull] ITable<T> target)
 		{
 			if (target == null) throw new ArgumentNullException("target");
 
@@ -339,7 +339,7 @@ namespace LinqToDB
 		}
 
 		public static IValueInsertable<T> Value<T,TV>(
-			[NotNull]                this Table<T>          source,
+			[NotNull]                this ITable<T>         source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> field,
 			[NotNull, InstantHandle] Expression<Func<TV>>   value)
 		{
@@ -359,7 +359,7 @@ namespace LinqToDB
 		}
 
 		public static IValueInsertable<T> Value<T,TV>(
-			[NotNull]                this Table<T>          source,
+			[NotNull]                this ITable<T>         source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> field,
 			TV                                              value)
 		{
@@ -448,7 +448,7 @@ namespace LinqToDB
 
 		public static int Insert<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
-			[NotNull]                Table<TTarget>                    target,
+			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
 			if (source == null) throw new ArgumentNullException("source");
@@ -464,7 +464,7 @@ namespace LinqToDB
 
 		public static object InsertWithIdentity<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
-			[NotNull]                Table<TTarget>                    target,
+			[NotNull]                ITable<TTarget>                   target,
 			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
 			if (source == null) throw new ArgumentNullException("source");
@@ -485,7 +485,7 @@ namespace LinqToDB
 
 		public static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(
 			[NotNull] this IQueryable<TSource> source,
-			[NotNull] Table<TTarget>           target)
+			[NotNull] ITable<TTarget>          target)
 		{
 			if (target == null) throw new ArgumentNullException("target");
 
@@ -590,7 +590,7 @@ namespace LinqToDB
 		#region InsertOrUpdate
 
 		public static int InsertOrUpdate<T>(
-			[NotNull]                this Table<T>         target,
+			[NotNull]                this ITable<T>        target,
 			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
 			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter)
 		{
@@ -608,7 +608,7 @@ namespace LinqToDB
 		}
 
 		public static int InsertOrUpdate<T>(
-			[NotNull]                this Table<T>         target,
+			[NotNull]                this ITable<T>        target,
 			[NotNull, InstantHandle] Expression<Func<T>>   insertSetter,
 			[NotNull, InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
 			[NotNull, InstantHandle] Expression<Func<T>>   keySelector)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -255,7 +256,7 @@ namespace Tests.Linq
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
 
-				var sql = ((ExpressionQuery<Parent222>)q).SqlText;
+				var sql = ((IExpressionQuery<Parent222>)q).SqlText;
 				Assert.IsNotEmpty(sql);
 			}
 		}

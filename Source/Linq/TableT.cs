@@ -1,10 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
-namespace LinqToDB
+namespace LinqToDB.Linq
 {
-	using Linq;
-
-	public class Table<T> : ExpressionQuery<T>, ITable
+	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
 	{
 		public Table(IDataContextInfo dataContextInfo, Expression expression)
 		{

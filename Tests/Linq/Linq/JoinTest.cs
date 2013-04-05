@@ -632,7 +632,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.Parent
-						join ch in new Table<CountedChild>(db) on p.ParentID equals ch.ParentID into lj1
+						join ch in db.GetTable<CountedChild>() on p.ParentID equals ch.ParentID into lj1
 						from ch in lj1.DefaultIfEmpty()
 					where ch == null
 					select new { p, ch, ch1 = ch };

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.ServiceModel
 {
 	using Common;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlBuilder;
@@ -96,7 +97,7 @@ namespace LinqToDB.ServiceModel
 				(
 					from p in typeof(T).GetProperties()
 					let t   = p.PropertyType
-					where t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Table<>)
+					where typeof(ITable<>).IsSameOrParentOf(t)
 					let tt  = t.GetGenericArguments()[0]
 					let tbl = new SqlTable(_mappingSchema, tt)
 					where tbl.Fields.Values.Any(f => f.IsPrimaryKey)
