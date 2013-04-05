@@ -79,7 +79,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.ParentID > 0 && p.Children.Any(c => c.ParentID > 0 && c.ParentID > 3)));
 		}
 
-		[Sql.ExpressionMethod("SelectAnyExpression")]
+		[ExpressionMethod("SelectAnyExpression")]
 		static bool SelectAny(Parent p)
 		{
 			return p.Children.Any(c => c.ParentID > 0 && c.ParentID > 3);
