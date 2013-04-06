@@ -626,7 +626,7 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			if (member2.DeclaringType.IsInterface && member1.Name.EndsWith(member2.Name))
+			if (member2.DeclaringType.IsInterface && !member1.DeclaringType.IsInterface && member1.Name.EndsWith(member2.Name))
 			{
 				if (member1 is PropertyInfo)
 				{

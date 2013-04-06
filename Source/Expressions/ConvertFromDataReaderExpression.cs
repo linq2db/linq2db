@@ -105,7 +105,7 @@ namespace LinqToDB.Expressions
 				//var value = dataReader.GetValue(_columnIndex);
 
 				if (dataReader.IsDBNull(_columnIndex))
-					return null;
+					return _defaultValue;
 
 				var fromType = dataReader.GetFieldType(_columnIndex);
 
