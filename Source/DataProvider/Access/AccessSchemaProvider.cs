@@ -7,12 +7,24 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.IO;
+
 	using Common;
 	using Data;
 	using SchemaProvider;
 
 	class AccessSchemaProvider : SchemaProviderBase
 	{
+		protected override string GetDatabaseName(DbConnection dbConnection)
+		{
+			var name = base.GetDatabaseName(dbConnection);
+
+			if (name.IsNullOrEmpty())
+				name = Path.GetFileNameWithoutExtension(GetDataSourceName(dbConnection));
+
+			return name;
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
