@@ -10,6 +10,8 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
 
+		public static bool AlwaysCheckDbNull = true;
+
 		static SQLiteFactory()
 		{
 			DataConnection.AddDataProvider(_SQLiteDataProvider);

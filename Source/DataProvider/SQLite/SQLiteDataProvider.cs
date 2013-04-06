@@ -36,6 +36,14 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSchemaProvider();
 		}
 
+		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		{
+			if (SQLiteFactory.AlwaysCheckDbNull)
+				return true;
+
+			return base.IsDBNullAllowed(reader, idx);
+		}
+
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			base.SetParameter(parameter, "@" + name, dataType, value);
