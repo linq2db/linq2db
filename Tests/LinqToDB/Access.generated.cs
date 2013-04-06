@@ -16,35 +16,35 @@ using LinqToDB.Mapping;
 namespace AccessDataContext
 {
 	/// <summary>
-	/// Database       : 
-	/// Data Source    : C:\Projects\LinqToDB\Data\TestData.mdb
+	/// Database       : TestData
+	/// Data Source    : E:\Projects\Git\linq2db\Data\TestData.mdb
 	/// Server Version : 04.00.0000
 	/// </summary>
-	public partial class DB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public Table<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
-		public Table<Child>               Children             { get { return this.GetTable<Child>(); } }
-		public Table<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
-		public Table<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
-		public Table<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
-		public Table<GrandChild>          GrandChilds          { get { return this.GetTable<GrandChild>(); } }
-		public Table<LinqDataType>        LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
-		public Table<LinqDataTypesQuery>  LinqDataTypesQueries { get { return this.GetTable<LinqDataTypesQuery>(); } }
-		public Table<LinqDataTypesQuery1> LinqDataTypesQuery1  { get { return this.GetTable<LinqDataTypesQuery1>(); } }
-		public Table<LinqDataTypesQuery2> LinqDataTypesQuery2  { get { return this.GetTable<LinqDataTypesQuery2>(); } }
-		public Table<Parent>              Parents              { get { return this.GetTable<Parent>(); } }
-		public Table<Patient>             Patients             { get { return this.GetTable<Patient>(); } }
-		public Table<Patient_SelectAll>   Patient_SelectAll    { get { return this.GetTable<Patient_SelectAll>(); } }
-		public Table<Person>              People               { get { return this.GetTable<Person>(); } }
-		public Table<Person_SelectAll>    Person_SelectAll     { get { return this.GetTable<Person_SelectAll>(); } }
-		public Table<Scalar_DataReader>   Scalar_DataReader    { get { return this.GetTable<Scalar_DataReader>(); } }
-		public Table<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>               Children             { get { return this.GetTable<Child>(); } }
+		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
+		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
+		public ITable<GrandChild>          GrandChilds          { get { return this.GetTable<GrandChild>(); } }
+		public ITable<LinqDataType>        LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<LinqDataTypesQuery>  LinqDataTypesQueries { get { return this.GetTable<LinqDataTypesQuery>(); } }
+		public ITable<LinqDataTypesQuery1> LinqDataTypesQuery1  { get { return this.GetTable<LinqDataTypesQuery1>(); } }
+		public ITable<LinqDataTypesQuery2> LinqDataTypesQuery2  { get { return this.GetTable<LinqDataTypesQuery2>(); } }
+		public ITable<Parent>              Parents              { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>             Patients             { get { return this.GetTable<Patient>(); } }
+		public ITable<Patient_SelectAll>   Patient_SelectAll    { get { return this.GetTable<Patient_SelectAll>(); } }
+		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
+		public ITable<Person_SelectAll>    Person_SelectAll     { get { return this.GetTable<Person_SelectAll>(); } }
+		public ITable<Scalar_DataReader>   Scalar_DataReader    { get { return this.GetTable<Scalar_DataReader>(); } }
+		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
 
-		public DB()
+		public TestDataDB()
 		{
 		}
 
-		public DB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 		}
@@ -194,7 +194,7 @@ namespace AccessDataContext
 		[PrimaryKey, Identity] public int ID { get; set; } // Long
 	}
 
-	public static partial class DBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region Patient_SelectByName
 

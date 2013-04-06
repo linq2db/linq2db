@@ -31,7 +31,7 @@ void GenerateTypesFromMetadata()
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.TypeName))
 	{
 		var dcProp = new Property(
-			string.Format("Table<{0}>", t.TypeName),
+			string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
 			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
 			null);
