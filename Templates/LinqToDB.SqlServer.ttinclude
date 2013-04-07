@@ -120,7 +120,7 @@ void GenerateSqlServerTypes()
 						}
 					}
 				},
-				new Method("Table<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
 					new[] { "string field", "string text" },
 					new[]
 					{
@@ -133,7 +133,7 @@ void GenerateSqlServerTypes()
 				{
 					Attributes = { new Attribute("FreeTextTableExpression") }
 				},
-				new Method("Table<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
+				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
 					new[] { "Expression<Func<TTable,string>> fieldSelector", "string text" },
 					new[]
 					{

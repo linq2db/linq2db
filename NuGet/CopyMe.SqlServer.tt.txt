@@ -1,0 +1,47 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModel
+					Northwind.tt
+
+		2. Modify the connectionString below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="Northwind" providerName="System.Data.SqlClient" 
+					connectionString="Data Source=.;Database=Northwind;Integrated Security=SSPI" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+		using (var db = new NorthwindDB())
+		{
+			var q =
+				from c in db.Customers
+				select c;
+
+			foreach (var c in q)
+				Console.WriteLine(c.ContactName);
+		}
+	*/
+
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypes(
+		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
+
+	NamespaceName = "DataContext";
+
+	var connectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
+	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>
