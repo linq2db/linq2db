@@ -21,7 +21,7 @@ namespace Tests.SchemaProvider
 			ProviderName.PostgreSQL,
 			ProviderName.Sybase, ExcludeLinqService=true)] string context)
 		{
-			SqlServerFactory.ResolveSqlTypesPath("");
+			SqlServerFactory.ResolveSqlTypes("");
 
 			using (var conn = new DataConnection(context))
 			{

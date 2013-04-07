@@ -20,6 +20,22 @@ namespace LinqToDB.DataProvider
 			if (_path.StartsWith("file:///"))
 				_path = _path.Substring("file:///".Length);
 
+			SetResolver();
+		}
+
+		public AssemblyResolver([NotNull] Assembly assembly, [NotNull] string resolveName)
+		{
+			if (assembly    == null) throw new ArgumentNullException("assembly");
+			if (resolveName == null) throw new ArgumentNullException("resolveName");
+
+			_assembly    = assembly;
+			_resolveName = resolveName;
+
+			SetResolver();
+		}
+
+		void SetResolver()
+		{
 			ResolveEventHandler resolver = Resolver;
 
 #if FW4
@@ -35,13 +51,14 @@ namespace LinqToDB.DataProvider
 #endif
 		}
 
-		readonly string _path;
-		readonly string _resolveName;
+		readonly string   _path;
+		readonly string   _resolveName;
+		         Assembly _assembly;
 
 		public Assembly Resolver(object sender, ResolveEventArgs args)
 		{
 			if (args.Name == _resolveName)
-				return Assembly.LoadFile(File.Exists(_path) ? _path : Path.Combine(_path, args.Name, ".dll"));
+				return _assembly ?? (_assembly = Assembly.LoadFile(File.Exists(_path) ? _path : Path.Combine(_path, args.Name, ".dll")));
 			return null;
 		}
 	}

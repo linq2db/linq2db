@@ -82,47 +82,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerDataProvider2012.AddUdtType(udtName, nullValue, dataType);
 		}
 
-		#endregion
-
-		#region AssemblyResolver
-
-		class AssemblyResolver
+		public static void ResolveSqlTypes([NotNull] string path)
 		{
-			public string Path;
-
-			public Assembly Resolver(object sender, ResolveEventArgs args)
-			{
-				if (args.Name == "Microsoft.SqlServer.Types")
-				{
-					if (System.IO.File.Exists(Path))
-						return Assembly.LoadFile(Path);
-					return Assembly.LoadFile(System.IO.Path.Combine(Path, args.Name, ".dll"));
-				}
-
-				return null;
-			}
+			new AssemblyResolver(path, "Microsoft.SqlServer.Types");
 		}
 
-		public static void ResolveSqlTypesPath([NotNull] string path)
+		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			if (path == null) throw new ArgumentNullException("path");
-
-			if (path.StartsWith("file:///"))
-				path = path.Substring("file:///".Length);
-
-			ResolveEventHandler resolver = new AssemblyResolver { Path = path }.Resolver;
-
-#if FW4
-
-			var l = Expression.Lambda<Action>(Expression.Call(
-				Expression.Constant(AppDomain.CurrentDomain),
-				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),
-				Expression.Constant(resolver)));
-
-			l.Compile()();
-#else
-			AppDomain.CurrentDomain.AssemblyResolve += resolver;
-#endif
+			new AssemblyResolver(assembly, "Microsoft.SqlServer.Types");
 		}
 
 		#endregion
