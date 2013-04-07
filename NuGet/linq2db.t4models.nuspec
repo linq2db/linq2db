@@ -6,7 +6,7 @@
 		<title>LINQ to DB T4 Models</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
-		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/LICENSE.MIT</licenseUrl>
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>T4 templates to generate data models for LINQ to DB.</description>

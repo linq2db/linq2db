@@ -6,7 +6,7 @@
 		<title>LINQ to SqlServer</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
-		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/LICENSE.MIT</licenseUrl>
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>LINQ to SqlServer is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
