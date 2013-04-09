@@ -65,20 +65,20 @@ namespace LinqToDB.DataProvider.Sybase
 			_setTimestamp     = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "TimeStamp");
 		}
 
-		static Action<IDbDataParameter> _setUInt16;//: ((AseParameter)parameter).AseDbType = AseDbType.UnsignedSmallInt; break;
-		static Action<IDbDataParameter> _setUInt32        ;//: ((AseParameter)parameter).AseDbType = AseDbType.UnsignedInt;      break;
-		static Action<IDbDataParameter> _setUInt64        ;//: ((AseParameter)parameter).AseDbType = AseDbType.UnsignedBigInt;   break;
-		static Action<IDbDataParameter> _setText          ;//: ((AseParameter)parameter).AseDbType = AseDbType.Text;             break;
-		static Action<IDbDataParameter> _setNText         ;//: ((AseParameter)parameter).AseDbType = AseDbType.Unitext;          break;
-		static Action<IDbDataParameter> _setBinary        ;//: ((AseParameter)parameter).AseDbType = AseDbType.Binary;           break;
-		static Action<IDbDataParameter> _setVarBinary     ;//: ((AseParameter)parameter).AseDbType = AseDbType.VarBinary;        break;
-		static Action<IDbDataParameter> _setImage         ;//: ((AseParameter)parameter).AseDbType = AseDbType.Image;            break;
-		static Action<IDbDataParameter> _setMoney         ;//: ((AseParameter)parameter).AseDbType = AseDbType.Money;            break;
-		static Action<IDbDataParameter> _setSmallMoney    ;//: ((AseParameter)parameter).AseDbType = AseDbType.SmallMoney;       break;
-		static Action<IDbDataParameter> _setDate          ;//: ((AseParameter)parameter).AseDbType = AseDbType.Date;             break;
-		static Action<IDbDataParameter> _setTime          ;//: ((AseParameter)parameter).AseDbType = AseDbType.Time;             break;
-		static Action<IDbDataParameter> _setSmallDateTime ;//: ((AseParameter)parameter).AseDbType = AseDbType.SmallDateTime;    break;
-		static Action<IDbDataParameter> _setTimestamp     ;//: ((AseParameter)parameter).AseDbType = AseDbType.TimeStamp;        break;
+		static Action<IDbDataParameter> _setUInt16;
+		static Action<IDbDataParameter> _setUInt32;
+		static Action<IDbDataParameter> _setUInt64;
+		static Action<IDbDataParameter> _setText;
+		static Action<IDbDataParameter> _setNText;
+		static Action<IDbDataParameter> _setBinary;
+		static Action<IDbDataParameter> _setVarBinary;
+		static Action<IDbDataParameter> _setImage;
+		static Action<IDbDataParameter> _setMoney;
+		static Action<IDbDataParameter> _setSmallMoney;
+		static Action<IDbDataParameter> _setDate;
+		static Action<IDbDataParameter> _setTime;
+		static Action<IDbDataParameter> _setSmallDateTime;
+		static Action<IDbDataParameter> _setTimestamp;
 
 		#endregion
 
