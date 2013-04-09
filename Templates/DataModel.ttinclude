@@ -29,6 +29,7 @@ string[] DatabaseQuote            = null;
 
 bool     GenerateDatabaseName     = false;
 bool     GenerateConstructors     = true;
+string   DefaultConfiguration     = null;
 bool     GenerateAssociations     = true;
 bool     GenerateBackReferences   = true;
 bool     ReplaceSimilarTables     = true;

@@ -21,7 +21,10 @@ void GenerateTypesFromMetadata()
 
 	if (GenerateConstructors)
 	{
-		DataContextObject.Members.Add(new Method(null, DataContextObject.Name));
+		if (DefaultConfiguration == null)
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name));
+		else
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
 		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } });
 	}
 
