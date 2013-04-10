@@ -7,10 +7,10 @@ del *.nupkg
 
 copy /b AddLinq2dbTool.txt + ..\Templates\LinqToDB.ttinclude LinqToDB.ttinclude
 
-NuGet Pack linq2db.t4models.nuspec
+..\Redist\NuGet Pack linq2db.t4models.nuspec
 rem rename linq2db.t4models.*.nupkg linq2db.t4models.nupkg
 
-NuGet Pack linq2db.SqlServer.nuspec
-NuGet Pack linq2db.Access.nuspec
+..\Redist\NuGet Pack linq2db.SqlServer.nuspec
+..\Redist\NuGet Pack linq2db.Access.nuspec
 
 del LinqToDB.ttinclude

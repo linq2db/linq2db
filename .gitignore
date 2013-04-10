@@ -30,3 +30,4 @@ _ReSharper*/
 
 Tests/T4Model.Silverlight.Web/ClientBin/
 NuGet/*.nupkg
+!Redist/NuGet.exe

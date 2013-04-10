@@ -34,6 +34,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
+		NuGet\Push.bat = NuGet\Push.bat
 	EndProjectSection
 EndProject
 Global
