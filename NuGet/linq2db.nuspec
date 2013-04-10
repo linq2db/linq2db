@@ -16,8 +16,5 @@
 	</metadata>
 	<files>
 		<file src="..\Source\bin\Release\linq2db.dll" target="lib\net40-full" />
-		<file src="Icon_details.png"                  target="" />
-		<file src="Icon_dialog.png"                   target="" />
-		<file src="Icon_list.png"                     target="" />
 	</files>
 </package>
