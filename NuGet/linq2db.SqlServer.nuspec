@@ -8,6 +8,7 @@
 		<owners />
 		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<description>LINQ to SqlServer is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
 		<summary />
@@ -20,8 +21,5 @@
 	</metadata>
 	<files>
 		<file src="CopyMe.SqlServer.tt.txt" target="content\LinqToDB.Templates" />
-		<file src="..\..\linq2db\NuGet\Icon_details.png"         target="" />
-		<file src="..\..\linq2db\NuGet\Icon_dialog.png"          target="" />
-		<file src="..\..\linq2db\NuGet\Icon_list.png"            target="" />
 	</files>
 </package>
