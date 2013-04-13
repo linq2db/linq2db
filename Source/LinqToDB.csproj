@@ -138,7 +138,7 @@
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="Linq\ITable.cs" />
-    <Compile Include="ExpressionQueryImpl.cs" />
+    <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>

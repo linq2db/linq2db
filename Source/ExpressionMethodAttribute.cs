@@ -1,7 +1,5 @@
 ﻿using System;
 
-// ReSharper disable CheckNamespace
-
 namespace LinqToDB
 {
 	[AttributeUsageAttribute(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
