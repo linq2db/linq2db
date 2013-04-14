@@ -571,18 +571,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr);
 		}
 
-#if FW3
-		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression)
-		{
-			return ConvertToSql(context, expression, false);
-		}
-#endif
-
-		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap
-#if !FW3
-			= false
-#endif
-			)
+		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
 			if (CanBeConstant(expression))
 				return BuildConstant(expression);
