@@ -278,7 +278,10 @@ namespace LinqToDB.Data
 		{
 			if (dataProviderName == null) throw new ArgumentNullException("dataProviderName");
 
-			return _dataProviders[dataProviderName];
+			IDataProvider provider;
+			if (_dataProviders.TryGetValue(dataProviderName, out provider))
+				return _dataProviders[dataProviderName];
+			throw new ArgumentException("Unsupported provider '{0}'".Args(dataProviderName), "dataProviderName");
 		}
 
 		class ConfigurationInfo
