@@ -12,11 +12,12 @@ namespace LinqToDB.DataProvider
 
 	public interface IDataProvider
 	{
-		string           Name             { get; }
-		Type             ConnectionType   { get; }
-		Type             DataReaderType   { get; }
-		MappingSchema    MappingSchema    { get; }
-		SqlProviderFlags SqlProviderFlags { get; }
+		string           Name                { get; }
+		string           ConnectionNamespace { get; }
+		Type             ConnectionType      { get; }
+		Type             DataReaderType      { get; }
+		MappingSchema    MappingSchema       { get; }
+		SqlProviderFlags SqlProviderFlags    { get; }
 
 		IDbConnection    CreateConnection   (string connectionString);
 		ISqlProvider     CreateSqlProvider  ();

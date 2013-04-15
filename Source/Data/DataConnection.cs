@@ -215,7 +215,7 @@ namespace LinqToDB.Data
 					dataProvider = _dataProviders[configuration];
 				else
 				{
-					var providers = _dataProviders.Where(dp => dp.Value.ConnectionType.Namespace == providerName).ToList();
+					var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
 					switch (providers.Count)
 					{

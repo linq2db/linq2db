@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -25,9 +28,16 @@ namespace LinqToDB.DataProvider.MySql
 			return _mySqlDataProvider;
 		}
 
-		public static void ResolveMySqlPath(string path)
+		public static void ResolveMySqlPath([NotNull] string path)
 		{
+			if (path == null) throw new ArgumentNullException("path");
 			new AssemblyResolver(path, "MySql.Data");
+		}
+
+		public static void ResolveSqlTypes([NotNull] Assembly assembly)
+		{
+			if (assembly == null) throw new ArgumentNullException("assembly");
+			new AssemblyResolver(assembly, "MySql.Data");
 		}
 
 		#region CreateDataConnection

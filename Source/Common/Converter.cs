@@ -143,7 +143,7 @@ namespace LinqToDB.Common
 
 			if (!ExprHolder<T>.Converters.TryGetValue(from, out l))
 			{
-				var li = ConvertInfo.Default.Get(value.GetType(), to) ?? ConvertInfo.Default.Create(mappingSchema, value.GetType(), to);
+				var li = ConvertInfo.Default.Get(from, to) ?? ConvertInfo.Default.Create(mappingSchema, from, to);
 				var b  = li.CheckNullLambda.Body;
 				var ps = li.CheckNullLambda.Parameters;
 

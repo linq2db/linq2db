@@ -57,11 +57,12 @@ namespace LinqToDB.DataProvider
 
 		#region Public Members
 
-		public          string           Name             { get; private set; }
-		public abstract Type             ConnectionType   { get; }
-		public abstract Type             DataReaderType   { get; }
-		public virtual  MappingSchema    MappingSchema    { get; private set; }
-		public          SqlProviderFlags SqlProviderFlags { get; private set; }
+		public          string           Name                { get; private set; }
+		public virtual  string           ConnectionNamespace { get { return ConnectionType.Namespace; } }
+		public abstract Type             ConnectionType      { get; }
+		public abstract Type             DataReaderType      { get; }
+		public virtual  MappingSchema    MappingSchema       { get; private set; }
+		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
 		public abstract IDbConnection    CreateConnection (string connectionString);
 		public abstract ISqlProvider     CreateSqlProvider();

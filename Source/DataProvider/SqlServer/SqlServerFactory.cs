@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
-using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -84,11 +83,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] string path)
 		{
+			if (path == null) throw new ArgumentNullException("path");
 			new AssemblyResolver(path, "Microsoft.SqlServer.Types");
 		}
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
+			if (assembly == null) throw new ArgumentNullException("assembly");
 			new AssemblyResolver(assembly, "Microsoft.SqlServer.Types");
 		}
 
