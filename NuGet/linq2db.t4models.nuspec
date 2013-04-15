@@ -16,9 +16,6 @@
 	</metadata>
 	<files>
 		<file src="..\..\linq2db\Source\bin\Release\linq2db.dll" target="tools" />
-		<file src="..\..\linq2db\NuGet\Icon_details.png"         target="" />
-		<file src="..\..\linq2db\NuGet\Icon_dialog.png"          target="" />
-		<file src="..\..\linq2db\NuGet\Icon_list.png"            target="" />
 		<file src="..\Templates\DataModel.ttinclude"             target="content\LinqToDB.Templates" />
 		<file src="..\Templates\EditableObject.ttinclude"        target="content\LinqToDB.Templates" />
 		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"    target="content\LinqToDB.Templates" />

@@ -3,7 +3,7 @@
 <#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
-<#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SqlCeDataContext";
 
@@ -11,7 +11,7 @@
 
 	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCePath(path);
 
-	var connectionString = @"Data Source=C:\Projects\LinqToDB\Data\TestData.sdf";
+	var connectionString = @"Data Source=E:\Projects\Git\linq2db\Data\TestData.sdf";
 	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
