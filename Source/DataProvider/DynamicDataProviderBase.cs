@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase : DataProviderBase
@@ -14,54 +13,37 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
-		protected void SetTypes(string assemblyName, string connectionTypeName, string dataReaderTypeName)
-		{
-			_connectionTypeName = "{0}.{1}, {0}".Args(assemblyName, connectionTypeName);
-			_dataReaderTypeName = "{0}.{1}, {0}".Args(assemblyName, dataReaderTypeName);
-		}
-
-		protected void SetTypes(string connectionTypeName, string dataReaderTypeName)
-		{
-			_connectionTypeName = connectionTypeName;
-			_dataReaderTypeName = dataReaderTypeName;
-		}
-
-		string _connectionTypeName;
-		string _dataReaderTypeName;
+		protected abstract string ConnectionTypeName { get; }
+		protected abstract string DataReaderTypeName { get; }
 
 		static readonly object _sync = new object();
 
-		protected virtual void OnConnectionTypeCreated()
+		protected virtual void OnConnectionTypeCreated(Type connectionType)
 		{
 		}
 
-		void CreateConnectionType()
-		{
-			lock (_sync)
-			{
-				if (_connectionType == null)
-				{
-					_connectionType = Type.GetType(_connectionTypeName, true);
-					OnConnectionTypeCreated();
-				}
-			}
-		}
+		volatile Type _connectionType;
 
-		private         Type _connectionType;
-		public override Type  ConnectionType
+		private Type GetConnectionType()
 		{
-			get
-			{
-				if (_connectionType == null)
-					CreateConnectionType();
-				return _connectionType;
-			}
+			if (_connectionType == null)
+				lock (_sync)
+					if (_connectionType == null)
+					{
+						var connectionType = Type.GetType(ConnectionTypeName, true);
+
+						OnConnectionTypeCreated(connectionType);
+
+						_connectionType = connectionType;
+					}
+
+			return _connectionType;
 		}
 
 		private         Type _dataReaderType;
 		public override Type  DataReaderType
 		{
-			get { return _dataReaderType ?? (_dataReaderType = Type.GetType(_dataReaderTypeName, true)); }
+			get { return _dataReaderType ?? (_dataReaderType = Type.GetType(DataReaderTypeName, true)); }
 		}
 
 		Func<string,IDbConnection> _createConnection;
@@ -72,7 +54,7 @@ namespace LinqToDB.DataProvider
 			{
 				var p = Expression.Parameter(typeof(string));
 				var l = Expression.Lambda<Func<string,IDbConnection>>(
-					Expression.New(ConnectionType.GetConstructor(new[] { typeof(string) }), p),
+					Expression.New(GetConnectionType().GetConstructor(new[] { typeof(string) }), p),
 					p);
 
 				_createConnection = l.Compile();
@@ -83,11 +65,13 @@ namespace LinqToDB.DataProvider
 
 		#region Expression Helpers
 
-		//                                                      ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
-		protected Action<IDbDataParameter> GetSetParameter(string parameterTypeName, string propertyName, string dbTypeName, string valueName)
+		protected Action<IDbDataParameter> GetSetParameter(
+			Type connectionType,
+			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
+			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var pType  = ConnectionType.Assembly.GetType(ConnectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = ConnectionType.Assembly.GetType(ConnectionType.Namespace + "." + dbTypeName, true);
+			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(connectionType.Namespace + "." + dbTypeName, true);
 			var value  = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));

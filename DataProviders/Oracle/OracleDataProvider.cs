@@ -150,8 +150,8 @@ namespace LinqToDB.DataProvider
 				TimeSpan.Parse(tstz.TimeZone.TrimStart('+')));
 		}
 
-		public override Type ConnectionType { get { return typeof(OracleConnection); } }
-		public override Type DataReaderType { get { return typeof(OracleDataReader); } }
+		public override string ConnectionNamespace { get { return typeof(OracleConnection).Namespace; } }
+		public override Type   DataReaderType      { get { return typeof(OracleDataReader);           } }
 		
 		public override IDbConnection CreateConnection(string connectionString )
 		{

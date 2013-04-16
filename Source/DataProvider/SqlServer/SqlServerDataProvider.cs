@@ -70,8 +70,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Public Properties
 
-		public override Type ConnectionType { get { return typeof(SqlConnection);  } }
-		public override Type DataReaderType { get { return typeof(SqlDataReader);  } }
+		public override string ConnectionNamespace { get { return typeof(SqlConnection).Namespace; } }
+		public override Type   DataReaderType      { get { return typeof(SqlDataReader);           } }
 
 		public SqlServerVersion Version { get; private set; }
 

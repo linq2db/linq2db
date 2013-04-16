@@ -4,6 +4,8 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Reflection;
+
 	using Data;
 
 	public class SqlCeFactory : IDataProviderFactory
@@ -28,6 +30,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static void ResolveSqlCePath(string path)
 		{
 			new AssemblyResolver(path, "System.Data.SqlServerCe");
+		}
+
+		public static void ResolveSqlCePath(Assembly assembly)
+		{
+			new AssemblyResolver(assembly, "System.Data.SqlServerCe");
 		}
 
 		#region CreateDataConnection

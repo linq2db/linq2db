@@ -34,8 +34,8 @@ namespace LinqToDB.DataProvider
 			SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
 		}
 
-		public override Type ConnectionType { get { return typeof(NpgsqlConnection); } }
-		public override Type DataReaderType { get { return typeof(NpgsqlDataReader); } }
+		public override string ConnectionNamespace { get { return typeof(NpgsqlConnection).Namespace; } }
+		public override Type   DataReaderType      { get { return typeof(NpgsqlDataReader);           } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

@@ -5,6 +5,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -31,11 +32,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
-
-			SetTypes(
-				"Sybase.Data.AseClient.AseConnection, " + SybaseFactory.AssemblyName,
-				"Sybase.Data.AseClient.AseDataReader, " + SybaseFactory.AssemblyName);
 		}
+
+		public    override string ConnectionNamespace { get { return SybaseFactory.AssemblyName; } }
+		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseDataReader"); } }
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
 		{
@@ -47,22 +48,22 @@ namespace LinqToDB.DataProvider.Sybase
 			return value;
 		}
 
-		protected override void OnConnectionTypeCreated()
+		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_setUInt16        = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "UnsignedSmallInt");
-			_setUInt32        = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "UnsignedInt");
-			_setUInt64        = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "UnsignedBigInt");
-			_setText          = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Text");
-			_setNText         = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Unitext");
-			_setBinary        = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Binary");
-			_setVarBinary     = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "VarBinary");
-			_setImage         = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Image");
-			_setMoney         = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Money");
-			_setSmallMoney    = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "SmallMoney");
-			_setDate          = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Date");
-			_setTime          = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "Time");
-			_setSmallDateTime = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "SmallDateTime");
-			_setTimestamp     = GetSetParameter("AseParameter", "AseDbType", "AseDbType", "TimeStamp");
+			_setUInt16        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedSmallInt");
+			_setUInt32        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedInt");
+			_setUInt64        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "UnsignedBigInt");
+			_setText          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Text");
+			_setNText         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Unitext");
+			_setBinary        = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Binary");
+			_setVarBinary     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "VarBinary");
+			_setImage         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Image");
+			_setMoney         = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Money");
+			_setSmallMoney    = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallMoney");
+			_setDate          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Date");
+			_setTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time");
+			_setSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime");
+			_setTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp");
 		}
 
 		static Action<IDbDataParameter> _setUInt16;

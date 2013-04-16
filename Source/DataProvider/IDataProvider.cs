@@ -14,7 +14,6 @@ namespace LinqToDB.DataProvider
 	{
 		string           Name                { get; }
 		string           ConnectionNamespace { get; }
-		Type             ConnectionType      { get; }
 		Type             DataReaderType      { get; }
 		MappingSchema    MappingSchema       { get; }
 		SqlProviderFlags SqlProviderFlags    { get; }

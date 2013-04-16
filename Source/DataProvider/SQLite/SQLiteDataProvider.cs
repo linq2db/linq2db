@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -22,9 +23,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
-
-			SetTypes("System.Data.SQLite", "SQLiteConnection", "SQLiteDataReader");
 		}
+
+		public    override string ConnectionNamespace { get { return "System.Data.SQLite"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteDataReader"); } }
 
 		public override ISqlProvider CreateSqlProvider()
 		{

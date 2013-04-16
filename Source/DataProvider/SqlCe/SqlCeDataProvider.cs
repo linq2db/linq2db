@@ -7,6 +7,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -23,22 +24,24 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsSubQueryColumnSupported = false;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
-
-			SetTypes("System.Data.SqlServerCe", "SqlCeConnection", "SqlCeDataReader");
 		}
 
-		protected override void OnConnectionTypeCreated()
+		public    override string ConnectionNamespace { get { return "System.Data.SqlServerCe"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SqlCeConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SqlCeDataReader"); } }
+
+		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_setNText     = GetSetParameter(SqlDbType.NText);
-			_setNChar     = GetSetParameter(SqlDbType.NChar);
-			_setNVarChar  = GetSetParameter(SqlDbType.NVarChar);
-			_setTimestamp = GetSetParameter(SqlDbType.Timestamp);
-			_setBinary    = GetSetParameter(SqlDbType.Binary);
-			_setVarBinary = GetSetParameter(SqlDbType.VarBinary);
-			_setImage     = GetSetParameter(SqlDbType.Image);
-			_setDateTime  = GetSetParameter(SqlDbType.DateTime );
-			_setMoney     = GetSetParameter(SqlDbType.Money);
-			_setBoolean   = GetSetParameter(SqlDbType.Bit);
+			_setNText     = GetSetParameter(connectionType, SqlDbType.NText);
+			_setNChar     = GetSetParameter(connectionType, SqlDbType.NChar);
+			_setNVarChar  = GetSetParameter(connectionType, SqlDbType.NVarChar);
+			_setTimestamp = GetSetParameter(connectionType, SqlDbType.Timestamp);
+			_setBinary    = GetSetParameter(connectionType, SqlDbType.Binary);
+			_setVarBinary = GetSetParameter(connectionType, SqlDbType.VarBinary);
+			_setImage     = GetSetParameter(connectionType, SqlDbType.Image);
+			_setDateTime  = GetSetParameter(connectionType, SqlDbType.DateTime );
+			_setMoney     = GetSetParameter(connectionType, SqlDbType.Money);
+			_setBoolean   = GetSetParameter(connectionType, SqlDbType.Bit);
 		}
 
 		static Action<IDbDataParameter> _setNText;
@@ -52,9 +55,9 @@ namespace LinqToDB.DataProvider.SqlCe
 		static Action<IDbDataParameter> _setMoney;
 		static Action<IDbDataParameter> _setBoolean;
 
-		Action<IDbDataParameter> GetSetParameter(SqlDbType value)
+		static Action<IDbDataParameter> GetSetParameter(Type connectionType, SqlDbType value)
 		{
-			var pType  = ConnectionType.Assembly.GetType(ConnectionType.Namespace + ".SqlCeParameter", true);
+			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + ".SqlCeParameter", true);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var l = Expression.Lambda<Action<IDbDataParameter>>(

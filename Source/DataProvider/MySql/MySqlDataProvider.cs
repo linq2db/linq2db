@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
@@ -17,10 +18,11 @@ namespace LinqToDB.DataProvider.MySql
 		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SetTypes(
-				"MySql.Data.MySqlClient.MySqlConnection, MySql.Data",
-				"MySql.Data.MySqlClient.MySqlDataReader, MySql.Data");
 		}
+
+		public    override string ConnectionNamespace { get { return "MySql.Data"; } }
+		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "MySql.Data.MySqlClient.MySqlConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "MySql.Data.MySqlClient.MySqlDataReader"); } }
 
 		Type _mySqlDecimalType;
 		Type _mySqlDateTimeType;
@@ -28,10 +30,10 @@ namespace LinqToDB.DataProvider.MySql
 		Func<object,object> _mySqlDecimalValueGetter;
 		Func<object,object> _mySqlDateTimeValueGetter;
 
-		protected override void OnConnectionTypeCreated()
+		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_mySqlDecimalType  = ConnectionType.Assembly.GetType("MySql.Data.Types.MySqlDecimal",  true);
-			_mySqlDateTimeType = ConnectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
+			_mySqlDecimalType  = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDecimal",  true);
+			_mySqlDateTimeType = connectionType.Assembly.GetType("MySql.Data.Types.MySqlDateTime", true);
 
 			_mySqlDecimalValueGetter  = TypeAccessor.GetAccessor(_mySqlDecimalType) ["Value"].Getter;
 			_mySqlDateTimeValueGetter = TypeAccessor.GetAccessor(_mySqlDateTimeType)["Value"].Getter;

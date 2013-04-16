@@ -44,8 +44,8 @@ namespace LinqToDB.DataProvider.DB2
 			SetProviderField<DB2DataReader,DB2RowId,       byte[]>   ((r,i) => r.GetDB2RowId       (i));
 		}
 
-		public override Type ConnectionType { get { return typeof(DB2Connection); } }
-		public override Type DataReaderType { get { return typeof(DB2DataReader); } }
+		public override string ConnectionNamespace { get { return typeof(DB2Connection).Namespace; } }
+		public override Type   DataReaderType      { get { return typeof(DB2DataReader);    } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{

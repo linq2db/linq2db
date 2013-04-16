@@ -85,8 +85,8 @@ namespace LinqToDB.DataProvider
 			return value;
 		}
 
-		public override Type ConnectionType { get { return typeof(IfxConnection); } }
-		public override Type DataReaderType { get { return typeof(IfxDataReader); } }
+		public override string ConnectionNamespace { get { return typeof(IfxConnection).Namespace; } }
+		public override Type   DataReaderType      { get { return typeof(IfxDataReader);    } }
 		
 		public override IDbConnection CreateConnection(string connectionString)
 		{
