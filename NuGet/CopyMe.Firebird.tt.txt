@@ -1,0 +1,47 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net35\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModel
+					MyDatabase.tt
+
+		2. Modify the connectionString below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="DataSource=DBHost;Database=C:\Data\TestData.fdb;User Id=SYSDBA;Password=masterkey" providerName="Firebird" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+		using (var db = new MyDatabaseDB())
+		{
+			var q =
+				from c in db.Customers
+				select c;
+
+			foreach (var c in q)
+				Console.WriteLine(c.ContactName);
+		}
+	*/
+
+	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(
+		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
+
+	NamespaceName = "DataContext";
+
+	var databaseName     = @"C:\Data\MyDatabase.fdb";
+	var connectionString = @"DataSource=DBHost;Database=" + databaseName + ";User Id=SYSDBA;Password=masterkey";
+	var dataConnection   = LinqToDB.DataProvider.Firebird.FirebirdFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>

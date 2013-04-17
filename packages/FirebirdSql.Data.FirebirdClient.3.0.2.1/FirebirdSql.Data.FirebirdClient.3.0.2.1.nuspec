@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>FirebirdSql.Data.FirebirdClient</id>
+    <version>3.0.2.1</version>
+    <title>Firebird ADO.NET Data provider</title>
+    <authors>FirebirdSQL</authors>
+    <owners>FirebirdSQL</owners>
+    <licenseUrl>http://firebird.svn.sourceforge.net/viewvc/firebird/NETProvider/trunk/NETProvider/license.txt</licenseUrl>
+    <projectUrl>http://www.firebirdsql.org/en/net-provider/</projectUrl>
+    <iconUrl>http://www.firebirdsql.org/file/about/ds-firebird-logo-64.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Firebird ADO.NET Data provider</description>
+    <releaseNotes />
+    <copyright />
+    <language />
+    <tags>firebird firebirsql firebirdclient adonet database</tags>
+    <references>
+      <reference file="FirebirdSql.Data.FirebirdClient.dll" />
+    </references>
+  </metadata>
+</package>
