@@ -1,0 +1,46 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModel
+					MyDatabase.tt
+
+		2. Modify the connectionString below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Data Source=MyDatabase.sdf" providerName="System.Data.SqlServerCe" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+		using (var db = new MyDatabaseDB())
+		{
+			var q =
+				from c in db.Customers
+				select c;
+
+			foreach (var c in q)
+				Console.WriteLine(c.ContactName);
+		}
+	*/
+
+	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(
+		typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
+
+	NamespaceName = "DataContext";
+
+	var connectionString = @"Data Source=MyDatabase.sdf";
+	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>
