@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -23,6 +24,16 @@ namespace LinqToDB.DataProvider.Firebird
 		public static IDataProvider GetDataProvider()
 		{
 			return _firebirdDataProvider;
+		}
+
+		public static void ResolveFirebird(string path)
+		{
+			new AssemblyResolver(path, "FirebirdSql.Data.FirebirdClient");
+		}
+
+		public static void ResolveFirebird(Assembly assembly)
+		{
+			new AssemblyResolver(assembly, "FirebirdSql.Data.FirebirdClient");
 		}
 
 		#region CreateDataConnection
