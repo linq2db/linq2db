@@ -27,12 +27,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			return _sqlCeDataProvider;
 		}
 
-		public static void ResolveSqlCePath(string path)
+		public static void ResolveSqlCe(string path)
 		{
 			new AssemblyResolver(path, "System.Data.SqlServerCe");
 		}
 
-		public static void ResolveSqlCePath(Assembly assembly)
+		public static void ResolveSqlCe(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, "System.Data.SqlServerCe");
 		}
