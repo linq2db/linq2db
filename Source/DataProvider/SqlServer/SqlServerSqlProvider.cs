@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
+		protected virtual  bool BuildAlternativeSql { get { return true; } }
+
 		protected override string FirstFormat
 		{
 			get { return SqlQuery.Select.SkipValue == null ? "TOP ({0})" : null; }
@@ -22,7 +24,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildSql(StringBuilder sb)
 		{
-			AlternativeBuildSql(sb, true, base.BuildSql);
+			if (BuildAlternativeSql)
+				AlternativeBuildSql(sb, true, base.BuildSql);
+			else
+				base.BuildSql(sb);
 		}
 
 		protected override void BuildGetIdentity(StringBuilder sb)
@@ -34,13 +39,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildOrderByClause(StringBuilder sb)
 		{
-			if (!NeedSkip)
+			if (!BuildAlternativeSql || !NeedSkip)
 				base.BuildOrderByClause(sb);
 		}
 
 		protected override IEnumerable<SqlQuery.Column> GetSelectedColumns()
 		{
-			if (NeedSkip && !SqlQuery.OrderBy.IsEmpty)
+			if (BuildAlternativeSql && NeedSkip && !SqlQuery.OrderBy.IsEmpty)
 				return AlternativeGetSelectedColumns(base.GetSelectedColumns);
 			return base.GetSelectedColumns();
 		}
