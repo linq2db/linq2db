@@ -4,6 +4,8 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Reflection;
+
 	using Data;
 
 	public class SybaseFactory : IDataProviderFactory
@@ -25,6 +27,16 @@ namespace LinqToDB.DataProvider.Sybase
 		public static IDataProvider GetDataProvider()
 		{
 			return _sybaseDataProvider;
+		}
+
+		public static void ResolveSybase(string path)
+		{
+			new AssemblyResolver(path, "Sybase.Data.AseClient");
+		}
+
+		public static void ResolveSybase(Assembly assembly)
+		{
+			new AssemblyResolver(assembly, "Sybase.Data.AseClient");
 		}
 
 		#region CreateDataConnection
