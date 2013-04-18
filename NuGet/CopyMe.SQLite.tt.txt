@@ -36,7 +36,7 @@
 	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLite(
 		typeof(System.Data.SQLite.SQLiteConnection).Assembly);
 
-	NamespaceName = "DataContext";
+	NamespaceName = "DataModel";
 
 	var connectionString = @"Data Source=MyDatabase.sqlite";
 	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);

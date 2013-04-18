@@ -36,7 +36,7 @@
 	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(
 		typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
 
-	NamespaceName = "DataContext";
+	NamespaceName = "DataModel";
 
 	var connectionString = @"Data Source=MyDatabase.sdf";
 	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);

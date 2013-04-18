@@ -33,7 +33,7 @@
 		}
 	*/
 
-	NamespaceName = "DataContext";
+	NamespaceName = "DataModel";
 
 	var connectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
 	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);

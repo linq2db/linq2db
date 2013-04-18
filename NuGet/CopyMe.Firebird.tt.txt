@@ -36,7 +36,7 @@
 	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(
 		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
 
-	NamespaceName = "DataContext";
+	NamespaceName = "DataModel";
 
 	var databaseName     = @"C:\Data\MyDatabase.fdb";
 	var connectionString = @"DataSource=DBHost;Database=" + databaseName + ";User Id=SYSDBA;Password=masterkey";
