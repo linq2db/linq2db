@@ -7,10 +7,13 @@
 		BaseDataContextClass = "LinqToDB.Data.DataConnection";
 #>
 <#+
+Action BeforeGenerateLinqToDBModel = () => {};
 Action AfterGenerateLinqToDBModel = () => {};
 
 void GenerateTypesFromMetadata()
 {
+	BeforeGenerateLinqToDBModel();
+
 	Model.Usings.Add("LinqToDB");
 	Model.Usings.Add("LinqToDB.Mapping");
 

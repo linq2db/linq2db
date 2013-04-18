@@ -1,8 +1,7 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                                  #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(SolutionDir)packages\linq2db.SQLite.0.0.4\tools\System.Data.SQLite.dll" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"                        #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"            #>
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SQLite.ttinclude"      #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
 		1. Copy this file to a folder where you would like to generate your data model,
@@ -42,11 +41,5 @@
 	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
-
-	foreach (var t in Tables.Values)
-		foreach (var fk in t.ForeignKeys.Values)
-			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
-				fk.MemberName = "FK_" + fk.MemberName;
-
 	GenerateModel();
 #>
