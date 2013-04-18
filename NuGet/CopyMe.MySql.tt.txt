@@ -1,0 +1,46 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                          #>
+<#@ output extension=".generated.cs"                                                 #>
+<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"                #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"    #>
+<#
+	/*
+		1. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModel
+					MyDatabase.tt
+
+		2. Modify the connectionString below to connect to your database.
+
+		3. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Server=MyServer;Port=3306;Database=MyDatabase;Uid=root;Pwd=TestPassword;charset=utf8;" providerName="MySql.Data.MySqlClient" />
+			</connectionStrings>
+
+		4. To access your database use the following code:
+
+		using (var db = new MyDatabaseDB())
+		{
+			var q =
+				from c in db.Customers
+				select c;
+
+			foreach (var c in q)
+				Console.WriteLine(c.ContactName);
+		}
+	*/
+
+	LinqToDB.DataProvider.MySql.MySqlFactory.ResolveMySql(
+		typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);
+
+	NamespaceName = "DataContext";
+
+	var connectionString = @"Server=MyServer;Port=3306;Database=MyDatabase;Uid=root;Pwd=TestPassword;charset=utf8;";
+	var dataConnection   = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>

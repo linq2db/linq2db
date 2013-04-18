@@ -18,17 +18,17 @@ namespace MySqlDataContext
 	/// </summary>
 	public partial class testdataDB : LinqToDB.Data.DataConnection
 	{
-		public Table<alltype>      alltypes       { get { return this.GetTable<alltype>(); } }
-		public Table<binarydata>   binarydatas    { get { return this.GetTable<binarydata>(); } }
-		public Table<child>        children       { get { return this.GetTable<child>(); } }
-		public Table<datatypetest> datatypetests  { get { return this.GetTable<datatypetest>(); } }
-		public Table<doctor>       doctors        { get { return this.GetTable<doctor>(); } }
-		public Table<grandchild>   grandchilds    { get { return this.GetTable<grandchild>(); } }
-		public Table<linqdatatype> linqdatatypes  { get { return this.GetTable<linqdatatype>(); } }
-		public Table<parent>       parents        { get { return this.GetTable<parent>(); } }
-		public Table<patient>      patients       { get { return this.GetTable<patient>(); } }
-		public Table<person>       people         { get { return this.GetTable<person>(); } }
-		public Table<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
+		public ITable<alltype>      alltypes       { get { return this.GetTable<alltype>(); } }
+		public ITable<binarydata>   binarydatas    { get { return this.GetTable<binarydata>(); } }
+		public ITable<child>        children       { get { return this.GetTable<child>(); } }
+		public ITable<datatypetest> datatypetests  { get { return this.GetTable<datatypetest>(); } }
+		public ITable<doctor>       doctors        { get { return this.GetTable<doctor>(); } }
+		public ITable<grandchild>   grandchilds    { get { return this.GetTable<grandchild>(); } }
+		public ITable<linqdatatype> linqdatatypes  { get { return this.GetTable<linqdatatype>(); } }
+		public ITable<parent>       parents        { get { return this.GetTable<parent>(); } }
+		public ITable<patient>      patients       { get { return this.GetTable<patient>(); } }
+		public ITable<person>       people         { get { return this.GetTable<person>(); } }
+		public ITable<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
 
 		public testdataDB()
 		{

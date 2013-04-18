@@ -7,7 +7,7 @@
 <#
 	NamespaceName = "SqlCeDataContext";
 
-	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCePath(typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
+	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
 
 	var connectionString = @"Data Source=E:\Projects\Git\linq2db\Data\TestData.sdf";
 	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
