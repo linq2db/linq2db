@@ -20,9 +20,9 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public    override string ConnectionNamespace { get { return "MySql.Data"; } }
-		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "MySql.Data.MySqlClient.MySqlConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "MySql.Data.MySqlClient.MySqlDataReader"); } }
+		public    override string ConnectionNamespace { get { return "MySql.Data.MySqlClient"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, MySql.Data".Args(ConnectionNamespace, "MySqlConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, MySql.Data".Args(ConnectionNamespace, "MySqlDataReader"); } }
 
 		Type _mySqlDecimalType;
 		Type _mySqlDateTimeType;

@@ -28,13 +28,13 @@ namespace LinqToDB.DataProvider.MySql
 			return _mySqlDataProvider;
 		}
 
-		public static void ResolveMySqlPath([NotNull] string path)
+		public static void ResolveMySql([NotNull] string path)
 		{
 			if (path == null) throw new ArgumentNullException("path");
 			new AssemblyResolver(path, "MySql.Data");
 		}
 
-		public static void ResolveSqlTypes([NotNull] Assembly assembly)
+		public static void ResolveMySql([NotNull] Assembly assembly)
 		{
 			if (assembly == null) throw new ArgumentNullException("assembly");
 			new AssemblyResolver(assembly, "MySql.Data");
