@@ -5,8 +5,9 @@ cd ..\..\t4Models\NuGet
 
 del *.nupkg
 
-copy /b AddLinq2dbTool.txt + ..\Templates\LinqToDB.ttinclude        LinqToDB.ttinclude
-copy /b AddSQLiteTool.txt  + ..\Templates\LinqToDB.SQLite.ttinclude LinqToDB.SQLite.ttinclude
+copy /b AddTool.Linq2db.txt + ..\Templates\LinqToDB.ttinclude        LinqToDB.ttinclude
+copy /b AddTool.SQLite.txt  + ..\Templates\LinqToDB.SQLite.ttinclude LinqToDB.SQLite.ttinclude
+copy /b AddTool.MySql.txt   + ..\Templates\LinqToDB.MySql.ttinclude  LinqToDB.MySql.ttinclude
 
 ..\Redist\NuGet Pack linq2db.t4models.nuspec
 rem rename linq2db.t4models.*.nupkg linq2db.t4models.nupkg
@@ -18,4 +19,4 @@ rem ..\Redist\NuGet Pack linq2db.Firebird.nuspec
 ..\Redist\NuGet Pack linq2db.SQLite.nuspec
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec
 
-del LinqToDB.ttinclude
+del *.ttinclude

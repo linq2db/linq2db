@@ -1,8 +1,7 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                          #>
-<#@ output extension=".generated.cs"                                                 #>
-<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"                #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"    #>
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.MySql.ttinclude"       #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
 		1. Copy this file to a folder where you would like to generate your data model,
