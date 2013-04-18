@@ -12,11 +12,11 @@ using LinqToDB.Mapping;
 namespace MySqlDataContext
 {
 	/// <summary>
-	/// Database       : testdata
+	/// Database       : TestData
 	/// Data Source    : DBHost
 	/// Server Version : 5.5.28
 	/// </summary>
-	public partial class testdataDB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<alltype>      alltypes       { get { return this.GetTable<alltype>(); } }
 		public ITable<binarydata>   binarydatas    { get { return this.GetTable<binarydata>(); } }
@@ -30,11 +30,11 @@ namespace MySqlDataContext
 		public ITable<person>       people         { get { return this.GetTable<person>(); } }
 		public ITable<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
 
-		public testdataDB()
+		public TestDataDB()
 		{
 		}
 
-		public testdataDB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 		}

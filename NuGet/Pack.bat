@@ -14,6 +14,7 @@ rem rename linq2db.t4models.*.nupkg linq2db.t4models.nupkg
 rem ..\Redist\NuGet Pack linq2db.Firebird.nuspec
 ..\Redist\NuGet Pack linq2db.MySql.nuspec
 ..\Redist\NuGet Pack linq2db.SqlCe.nuspec
+..\Redist\NuGet Pack linq2db.SQLite.nuspec
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec
 
 del LinqToDB.ttinclude

@@ -11,7 +11,7 @@
 
 	LinqToDB.DataProvider.MySql.MySqlFactory.ResolveMySql(typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);
 
-	var connectionString = @"Server=DBHost;Port=3306;Database=testdata;Uid=root;Pwd=TestPassword;charset=utf8;";
+	var connectionString = @"Server=DBHost;Port=3306;Database=TestData;Uid=root;Pwd=TestPassword;charset=utf8;";
 	var dataConnection   = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);

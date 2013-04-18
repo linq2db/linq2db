@@ -18,16 +18,16 @@ namespace SQLiteDataContext
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public Table<AllType>      AllTypes       { get { return this.GetTable<AllType>(); } }
-		public Table<Child>        Children       { get { return this.GetTable<Child>(); } }
-		public Table<Doctor>       Doctors        { get { return this.GetTable<Doctor>(); } }
-		public Table<Dual>         Duals          { get { return this.GetTable<Dual>(); } }
-		public Table<GrandChild>   GrandChilds    { get { return this.GetTable<GrandChild>(); } }
-		public Table<LinqDataType> LinqDataTypes  { get { return this.GetTable<LinqDataType>(); } }
-		public Table<Parent>       Parents        { get { return this.GetTable<Parent>(); } }
-		public Table<Patient>      Patients       { get { return this.GetTable<Patient>(); } }
-		public Table<Person>       People         { get { return this.GetTable<Person>(); } }
-		public Table<TestIdentity> TestIdentities { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<AllType>      AllTypes       { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>        Children       { get { return this.GetTable<Child>(); } }
+		public ITable<Doctor>       Doctors        { get { return this.GetTable<Doctor>(); } }
+		public ITable<Dual>         Duals          { get { return this.GetTable<Dual>(); } }
+		public ITable<GrandChild>   GrandChilds    { get { return this.GetTable<GrandChild>(); } }
+		public ITable<LinqDataType> LinqDataTypes  { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>       Parents        { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>      Patients       { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>       People         { get { return this.GetTable<Person>(); } }
+		public ITable<TestIdentity> TestIdentities { get { return this.GetTable<TestIdentity>(); } }
 
 		public TestDataDB()
 		{
