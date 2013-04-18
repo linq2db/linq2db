@@ -175,11 +175,11 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			var section = LinqToDBSection.Instance;
-
 			SqlServerFactory.GetDataProvider();
 			AccessFactory.   GetDataProvider();
 			SqlCeFactory.    GetDataProvider();
+
+			var section = LinqToDBSection.Instance;
 
 			if (section != null)
 			{
@@ -197,6 +197,14 @@ namespace LinqToDB.Data
 			}
 		}
 
+		readonly static List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
+			new List<Func<ConnectionStringSettings,IDataProvider>>();
+
+		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)
+		{
+			_providerDetectors.Add(providerDetector);
+		}
+
 		static void InitConnectionStrings()
 		{
 			var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
@@ -206,24 +214,26 @@ namespace LinqToDB.Data
 				var configuration    = css.Name;
 				var connectionString = css.ConnectionString;
 				var providerName     = css.ProviderName;
+				var dataProvider     = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
 
-				IDataProvider dataProvider;
-
-				if (string.IsNullOrEmpty(providerName))
-					dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-				else if (_dataProviders.ContainsKey(providerName))
-					dataProvider = _dataProviders[providerName];
-				else if (_dataProviders.ContainsKey(configuration))
-					dataProvider = _dataProviders[configuration];
-				else
+				if (dataProvider == null)
 				{
-					var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
-
-					switch (providers.Count)
+					if (string.IsNullOrEmpty(providerName))
+						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+					else if (_dataProviders.ContainsKey(providerName))
+						dataProvider = _dataProviders[providerName];
+					else if (_dataProviders.ContainsKey(configuration))
+						dataProvider = _dataProviders[configuration];
+					else
 					{
-						case 0  : dataProvider = defaultDataProvider;                                        break;
-						case 1  : dataProvider = providers[0].Value;                                         break;
-						default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+
+						switch (providers.Count)
+						{
+							case 0  : dataProvider = defaultDataProvider;                                        break;
+							case 1  : dataProvider = providers[0].Value;                                         break;
+							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+						}
 					}
 				}
 

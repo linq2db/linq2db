@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Data.SqlClient;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using System.Configuration;
+	using System.Data.SqlClient;
+	using System.IO;
+
 	using Data;
 
 	public class SqlServerFactory : IDataProviderFactory
@@ -25,6 +30,57 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2000);
+
+			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+
+		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		{
+			if (css.ElementInformation.Source == null ||
+			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+				return null;
+
+			switch (css.ProviderName)
+			{
+				case ""                      :
+				case null                    :
+
+					if (css.Name == "SqlServer")
+						goto case "SqlServer";
+					break;
+
+				case "SqlServer"             :
+				case "System.Data.SqlClient" :
+
+					if (css.Name.Contains("2000") ||
+					    css.Name.Contains("2005") ||
+					    css.Name.Contains("2008") ||
+					    css.Name.Contains("2012"))
+						break;
+
+					try
+					{
+						using (var conn = new SqlConnection(css.ConnectionString))
+						{
+							conn.Open();
+
+							switch (conn.ServerVersion.Split('.')[0])
+							{
+								case  "8" : return _sqlServerDataProvider2000;
+								case  "9" :	return _sqlServerDataProvider2005;
+								case "10" :	return _sqlServerDataProvider2008;
+								case "11" : return _sqlServerDataProvider2012;
+							}
+						}
+					}
+					catch (Exception)
+					{
+					}
+
+					break;
+			}
+
+			return null;
 		}
 
 		#endregion
