@@ -3,16 +3,14 @@
 <#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)Redist\Sybase\Sybase.AdoNet2.AseClient.dll" #>
-<#@ assembly name="C:\Projects\LinqToDB\Source\bin\Debug\linq2db.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SybaseDataContext";
 
-	var path = typeof(Sybase.Data.AseClient.AseConnection).Assembly.GetName().CodeBase;
+	LinqToDB.DataProvider.Sybase.SybaseFactory.ResolveSybase(typeof(Sybase.Data.AseClient.AseConnection).Assembly);
 
-	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCePath(path);
-
-	var connectionString = @"Data Source=C:\Projects\LinqToDB\Data\TestData.sdf";
-	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
+	var connectionString = @"Data Source=DBHost2008;Port=5000;Database=TestData;Uid=sa;Password=TestPassword";
+	var dataConnection   = LinqToDB.DataProvider.Sybase.SybaseFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
 	GenerateModel();
