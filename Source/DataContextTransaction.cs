@@ -20,7 +20,7 @@ namespace LinqToDB
 
 		public void BeginTransaction()
 		{
-			var db = DataContext.GetDBManager();
+			var db = DataContext.GetDataConnection();
 
 			db.BeginTransaction();
 
@@ -32,7 +32,7 @@ namespace LinqToDB
 
 		public void BeginTransaction(IsolationLevel level)
 		{
-			var db = DataContext.GetDBManager();
+			var db = DataContext.GetDataConnection();
 
 			db.BeginTransaction(level);
 
@@ -46,7 +46,7 @@ namespace LinqToDB
 		{
 			if (_transactionCounter > 0)
 			{
-				var db = DataContext.GetDBManager();
+				var db = DataContext.GetDataConnection();
 
 				db.CommitTransaction();
 
@@ -64,7 +64,7 @@ namespace LinqToDB
 		{
 			if (_transactionCounter > 0)
 			{
-				var db = DataContext.GetDBManager();
+				var db = DataContext.GetDataConnection();
 
 				db.RollbackTransaction();
 
@@ -82,7 +82,7 @@ namespace LinqToDB
 		{
 			if (_transactionCounter > 0)
 			{
-				var db = DataContext.GetDBManager();
+				var db = DataContext.GetDataConnection();
 
 				db.RollbackTransaction();
 

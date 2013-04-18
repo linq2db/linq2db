@@ -37,18 +37,11 @@ namespace LinqToDB.Data
 			if (ConfigurationString == null)
 				throw new LinqToDBException("Configuration string is not provided.");
 
-			ConfigurationInfo ci;
+			var ci = GetConfigurationInfo(ConfigurationString);
 
-			if (_configurations.TryGetValue(ConfigurationString, out ci))
-			{
-				DataProvider     = ci.DataProvider;
-				_mappingSchema   = DataProvider.MappingSchema;
-				ConnectionString = ci.ConnectionString;
-			}
-			else
-			{
-				throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
-			}
+			DataProvider     = ci.DataProvider;
+			ConnectionString = ci.ConnectionString;
+			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
@@ -292,14 +285,11 @@ namespace LinqToDB.Data
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
 
-		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string dataProviderName)
+		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string configurationString)
 		{
-			if (dataProviderName == null) throw new ArgumentNullException("dataProviderName");
+			InitConfig();
 
-			IDataProvider provider;
-			if (_dataProviders.TryGetValue(dataProviderName, out provider))
-				return _dataProviders[dataProviderName];
-			throw new ArgumentException("Unsupported provider '{0}'".Args(dataProviderName), "dataProviderName");
+			return GetConfigurationInfo(configurationString).DataProvider;
 		}
 
 		class ConfigurationInfo
@@ -312,6 +302,16 @@ namespace LinqToDB.Data
 
 			public readonly string        ConnectionString;
 			public readonly IDataProvider DataProvider;
+		}
+
+		static ConfigurationInfo GetConfigurationInfo(string configurationString)
+		{
+			ConfigurationInfo ci;
+
+			if (_configurations.TryGetValue(configurationString ?? DefaultConfiguration, out ci))
+				return ci;
+
+			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
