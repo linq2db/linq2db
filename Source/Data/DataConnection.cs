@@ -15,6 +15,7 @@ namespace LinqToDB.Data
 	using DataProvider.Access;
 	using DataProvider.Firebird;
 	using DataProvider.MySql;
+	using DataProvider.SQLite;
 	using DataProvider.SqlCe;
 	using DataProvider.SqlServer;
 	using Mapping;
@@ -182,6 +183,7 @@ namespace LinqToDB.Data
 			SqlCeFactory.    GetDataProvider();
 			FirebirdFactory. GetDataProvider();
 			MySqlFactory.    GetDataProvider();
+			SQLiteFactory.   GetDataProvider();
 
 			var section = LinqToDBSection.Instance;
 

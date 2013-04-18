@@ -4,6 +4,8 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using System.Reflection;
+
 	using Data;
 
 	public class SQLiteFactory: IDataProviderFactory
@@ -27,9 +29,14 @@ namespace LinqToDB.DataProvider.SQLite
 			return _SQLiteDataProvider;
 		}
 
-		public static void ResolveSQLitePath(string path)
+		public static void ResolveSQLite(string path)
 		{
 			new AssemblyResolver(path, "System.Data.SQLite");
+		}
+
+		public static void ResolveSQLite(Assembly assembly)
+		{
+			new AssemblyResolver(assembly, "System.Data.SQLite");
 		}
 
 		#region CreateDataConnection
