@@ -304,5 +304,22 @@ namespace Tests.Linq
 					              Parent    .Select(p => new { p.ParentID, Value = 2            }),
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
+
+
+		public class     Entity    { public int Id { get; set; } }
+		public interface IDocument { int Id { get; set; } }
+		public class     Document : Entity, IDocument { }
+
+		[Test]
+		public void TestMethod()
+		{
+			using (var db = new TestDataConnection())
+			{
+				IQueryable<IDocument> query = db.GetTable<Document>();
+				var idsQuery = query.Select(s => s.Id);
+				var str = idsQuery.ToString(); // Exception
+				Assert.IsNotNull(str);
+			}
+		}
 	}
 }

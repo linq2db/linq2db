@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member))
+								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
 									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
 									{
