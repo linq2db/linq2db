@@ -19,6 +19,7 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="CopyMe.Access.tt.txt" target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Access.ttinclude" target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Access.tt.txt"                   target="content\LinqToDB.Templates" />
 	</files>
 </package>
