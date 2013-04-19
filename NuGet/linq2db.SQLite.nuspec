@@ -21,6 +21,7 @@
 	</metadata>
 	<files>
 		<file src="..\packages\System.Data.SQLite.x86.1.0.84.0\lib\net40\System.Data.SQLite.dll" target="tools" />
+		<file src="LinqToDB.SQLite.ttinclude"                                                    target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SQLite.tt.txt"                                                         target="content\LinqToDB.Templates" />
 	</files>
 </package>

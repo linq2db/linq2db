@@ -23,8 +23,6 @@
 		<file src="..\Templates\PluralizationService.ttinclude"  target="content\LinqToDB.Templates" />
 		<file src="..\Templates\T4Model.ttinclude"               target="content\LinqToDB.Templates" />
 		<file src="..\Templates\Validation.ttinclude"            target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.MySql.ttinclude"                     target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.SQLite.ttinclude"                    target="content\LinqToDB.Templates" />
 		<file src="LinqToDB.ttinclude"                           target="content\LinqToDB.Templates" />
 		<file src="CopyMe.tt.txt"                                target="content\LinqToDB.Templates" />
 	</files>
