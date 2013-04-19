@@ -1,5 +1,8 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
+	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLite(
+		typeof(System.Data.SQLite.SQLiteConnection).Assembly);
+
 	{
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
 		BeforeGenerateLinqToDBModel = () =>
@@ -16,5 +19,27 @@ void ConvertSQLiteMetadata()
 		foreach (var fk in t.ForeignKeys.Values)
 			if (fk.MemberName.Length == 0 || char.IsDigit(fk.MemberName[0]))
 				fk.MemberName = "FK_" + fk.MemberName;
+}
+
+LinqToDB.Data.DataConnection GetSQLiteConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
+{
+	return GetSQLiteConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
+}
+
+void LoadMetadata(string connectionString)
+{
+	var dataConnection = GetSQLiteConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadMetadata(string path, string database)
+{
+	var dataConnection = GetSQLiteConnection(path, database);
+	LoadMetadata(dataConnection);
 }
 #>

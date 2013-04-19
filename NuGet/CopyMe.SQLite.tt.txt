@@ -32,14 +32,8 @@
 		}
 	*/
 
-	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLite(
-		typeof(System.Data.SQLite.SQLiteConnection).Assembly);
-
 	NamespaceName = "DataModel";
 
-	var connectionString = @"Data Source=MyDatabase.sqlite";
-	var dataConnection   = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadMetadata(@"C:\Data", "MyDatabase.sqlite");
 	GenerateModel();
 #>
