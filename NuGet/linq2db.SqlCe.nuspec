@@ -20,6 +20,8 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="CopyMe.SqlCe.tt.txt" target="content\LinqToDB.Templates" />
+		<file src="..\packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" target="tools" />
+		<file src="LinqToDB.SqlCe.ttinclude"                                                                 target="content\LinqToDB.Templates" />
+		<file src="CopyMe.SqlCe.tt.txt"                                                                      target="content\LinqToDB.Templates" />
 	</files>
 </package>

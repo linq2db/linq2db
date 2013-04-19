@@ -1,7 +1,6 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                       #>
 <#@ output extension=".generated.cs"                                              #>
-<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlCe.ttinclude"       #>
 <#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
@@ -33,14 +32,8 @@
 		}
 	*/
 
-	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(
-		typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
-
 	NamespaceName = "DataModel";
 
-	var connectionString = @"Data Source=MyDatabase.sdf";
-	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadMetadata(@"C:\Data", "MyDatabase.sdf");
 	GenerateModel();
 #>

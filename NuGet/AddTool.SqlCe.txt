@@ -1,0 +1,1 @@
+<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
