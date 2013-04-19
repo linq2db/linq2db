@@ -34,6 +34,6 @@
 
 	NamespaceName = "DataModel";
 
-	LoadMetadata(@"C:\Data", "MyDatabase.sqlite");
+	LoadSQLiteMetadata(@"C:\Data", "MyDatabase.sqlite");
 	GenerateModel();
 #>

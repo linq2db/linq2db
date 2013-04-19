@@ -34,6 +34,6 @@
 
 	NamespaceName = "DataModel";
 
-	LoadMetadata(@"C:\Data", "MyDatabase.sdf");
+	LoadSqlCeMetadata(@"C:\Data", "MyDatabase.sdf");
 	GenerateModel();
 #>

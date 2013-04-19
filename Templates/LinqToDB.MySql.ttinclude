@@ -16,13 +16,13 @@ LinqToDB.Data.DataConnection GetMySqlConnection(string server, string database, 
 		server, database, uid, password));
 }
 
-void LoadMetadata(string connectionString)
+void LoadMySqlMetadata(string connectionString)
 {
 	var dataConnection = GetMySqlConnection(connectionString);
 	LoadMetadata(dataConnection);
 }
 
-void LoadMetadata(string server, string database, string uid, string password)
+void LoadMySqlMetadata(string server, string database, string uid, string password)
 {
 	var dataConnection = GetMySqlConnection(server, database, uid, password);
 	LoadMetadata(dataConnection);

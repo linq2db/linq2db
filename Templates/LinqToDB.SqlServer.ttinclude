@@ -164,13 +164,13 @@ LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string databa
 	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
 }
 
-void LoadMetadata(string connectionString)
+void LoadSqlServerMetadata(string connectionString)
 {
 	var dataConnection = GetSqlServerConnection(connectionString);
 	LoadMetadata(dataConnection);
 }
 
-void LoadMetadata(string server, string database)
+void LoadSqlServerMetadata(string server, string database)
 {
 	var dataConnection = GetSqlServerConnection(server, database);
 	LoadMetadata(dataConnection);

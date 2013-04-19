@@ -34,6 +34,6 @@
 
 	NamespaceName = "DataModel";
 
-	LoadMetadata("MyServer", "MyDatabase", "root", "TestPassword");
+	LoadMySqlMetadata("MyServer", "MyDatabase", "root", "TestPassword");
 	GenerateModel();
 #>

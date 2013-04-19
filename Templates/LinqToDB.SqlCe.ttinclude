@@ -14,13 +14,13 @@ LinqToDB.Data.DataConnection GetSqlCeConnection(string path, string database)
 	return GetSqlCeConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
 }
 
-void LoadMetadata(string connectionString)
+void LoadSqlCeMetadata(string connectionString)
 {
 	var dataConnection = GetSqlCeConnection(connectionString);
 	LoadMetadata(dataConnection);
 }
 
-void LoadMetadata(string path, string database)
+void LoadSqlCeMetadata(string path, string database)
 {
 	var dataConnection = GetSqlCeConnection(path, database);
 	LoadMetadata(dataConnection);

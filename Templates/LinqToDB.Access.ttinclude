@@ -12,13 +12,13 @@ LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 		System.IO.Path.Combine(path, database)));
 }
 
-void LoadMetadata(string connectionString)
+void LoadAccessMetadata(string connectionString)
 {
 	var dataConnection = GetAccessConnection(connectionString);
 	LoadMetadata(dataConnection);
 }
 
-void LoadMetadata(string path, string database)
+void LoadAccessMetadata(string path, string database)
 {
 	var dataConnection = GetAccessConnection(path, database);
 	LoadMetadata(dataConnection);

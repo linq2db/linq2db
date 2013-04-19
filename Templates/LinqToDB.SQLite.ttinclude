@@ -31,13 +31,13 @@ LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
 	return GetSQLiteConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
 }
 
-void LoadMetadata(string connectionString)
+void LoadSQLiteMetadata(string connectionString)
 {
 	var dataConnection = GetSQLiteConnection(connectionString);
 	LoadMetadata(dataConnection);
 }
 
-void LoadMetadata(string path, string database)
+void LoadSQLiteMetadata(string path, string database)
 {
 	var dataConnection = GetSQLiteConnection(path, database);
 	LoadMetadata(dataConnection);
