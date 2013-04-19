@@ -18,12 +18,10 @@
 		<file src="..\..\linq2db\Source\bin\Release\linq2db.dll" target="tools" />
 		<file src="..\Templates\DataModel.ttinclude"             target="content\LinqToDB.Templates" />
 		<file src="..\Templates\EditableObject.ttinclude"        target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"    target="content\LinqToDB.Templates" />
 		<file src="..\Templates\NotifyPropertyChanged.ttinclude" target="content\LinqToDB.Templates" />
 		<file src="..\Templates\PluralizationService.ttinclude"  target="content\LinqToDB.Templates" />
 		<file src="..\Templates\T4Model.ttinclude"               target="content\LinqToDB.Templates" />
 		<file src="..\Templates\Validation.ttinclude"            target="content\LinqToDB.Templates" />
 		<file src="LinqToDB.ttinclude"                           target="content\LinqToDB.Templates" />
-		<file src="CopyMe.tt.txt"                                target="content\LinqToDB.Templates" />
 	</files>
 </package>

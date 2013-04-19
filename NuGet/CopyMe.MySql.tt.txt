@@ -8,10 +8,10 @@
 		   rename it, and delete .txt extension. For example:
 
 			MyProject
-				DataModel
+				DataModels
 					MyDatabase.tt
 
-		2. Modify the connectionString below to connect to your database.
+		2. Modify the connection settings below to connect to your database.
 
 		3. Add connection string to the web/app.config file:
 

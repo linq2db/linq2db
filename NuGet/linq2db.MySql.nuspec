@@ -21,7 +21,7 @@
 	</metadata>
 	<files>
 		<file src="..\packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll" target="tools" />
-		<file src="LinqToDB.MySql.ttinclude"                     target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.MySql.ttinclude"                              target="content\LinqToDB.Templates" />
 		<file src="CopyMe.MySql.tt.txt"                                   target="content\LinqToDB.Templates" />
 	</files>
 </package>

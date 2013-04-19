@@ -1,6 +1,5 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                       #>
 <#@ output extension=".generated.cs"                                              #>
-<#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll" #>
 <#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   #>
 <#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
@@ -9,10 +8,10 @@
 		   rename it, and delete .txt extension. For example:
 
 			MyProject
-				DataModel
+				DataModels
 					Northwind.tt
 
-		2. Modify the connectionString below to connect to your database.
+		2. Modify the connection settings below to connect to your database.
 
 		3. Add connection string to the web/app.config file:
 
@@ -34,14 +33,8 @@
 		}
 	*/
 
-	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypes(
-		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
-
 	NamespaceName = "DataModel";
 
-	var connectionString = "Data Source=.;Database=Northwind;Integrated Security=SSPI";
-	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadMetadata(".", "Northwind");
 	GenerateModel();
 #>

@@ -32,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\AddTool.linq2db.txt = NuGet\AddTool.linq2db.txt
 		NuGet\AddTool.MySql.txt = NuGet\AddTool.MySql.txt
 		NuGet\AddTool.SQLite.txt = NuGet\AddTool.SQLite.txt
+		NuGet\AddTool.SqlServer.txt = NuGet\AddTool.SqlServer.txt
 		NuGet\CopyMe.Access.tt.txt = NuGet\CopyMe.Access.tt.txt
 		NuGet\CopyMe.Firebird.tt.txt = NuGet\CopyMe.Firebird.tt.txt
 		NuGet\CopyMe.MySql.tt.txt = NuGet\CopyMe.MySql.tt.txt

@@ -20,6 +20,8 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="CopyMe.SqlServer.tt.txt" target="content\LinqToDB.Templates" />
+		<file src="..\packages\Microsoft.SqlServer.Types.10.50.1600.1\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="LinqToDB.SqlServer.ttinclude"                                                               target="content\LinqToDB.Templates" />
+		<file src="CopyMe.SqlServer.tt.txt"                                                                    target="content\LinqToDB.Templates" />
 	</files>
 </package>

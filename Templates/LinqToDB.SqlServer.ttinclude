@@ -1,5 +1,8 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
+	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypes(
+		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
+
 	{
 		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
 		AfterGenerateLinqToDBModel = () =>
@@ -150,4 +153,27 @@ void GenerateSqlServerTypes()
 		}
 	);
 }
+
+LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database)
+{
+	return GetSqlServerConnection(string.Format("Data Source={0};Database={1};Integrated Security=SSPI", server, database));
+}
+
+void LoadMetadata(string connectionString)
+{
+	var dataConnection = GetSqlServerConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadMetadata(string server, string database)
+{
+	var dataConnection = GetSqlServerConnection(server, database);
+	LoadMetadata(dataConnection);
+}
+
 #>
