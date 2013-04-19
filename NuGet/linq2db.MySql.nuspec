@@ -10,7 +10,10 @@
 		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
 		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>LINQ to MySql is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
+		<description>
+			LINQ to MySql is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			This package includes a T4 template to generate data models for MySql database and references to the linq2db and MySql.Data nugets.
+		</description>
 		<summary />
 		<tags>linq linq2db MySql LinqToDB ORM database DB</tags>
 		<dependencies>
