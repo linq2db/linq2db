@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />

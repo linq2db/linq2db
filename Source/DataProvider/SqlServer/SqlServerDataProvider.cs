@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() as ISchemaProvider : new SqlServerSchemaProvider();
+			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider() : new SqlServerSchemaProvider();
 		}
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();

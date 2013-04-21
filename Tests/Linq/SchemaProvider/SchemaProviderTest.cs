@@ -14,12 +14,13 @@ namespace Tests.SchemaProvider
 	{
 		[Test]
 		public void Test([DataContexts(
+			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
 			ProviderName.Informix,
 			ProviderName.Oracle,
 			ProviderName.PostgreSQL,
-			ProviderName.Sybase, ExcludeLinqService=true)] string context)
+			ExcludeLinqService=true)] string context)
 		{
 			SqlServerFactory.ResolveSqlTypes("");
 

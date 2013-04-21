@@ -31,12 +31,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public static void ResolveSybase(string path)
 		{
-			new AssemblyResolver(path, "Sybase.Data.AseClient");
+			new AssemblyResolver(path, AssemblyName);
 		}
 
 		public static void ResolveSybase(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, "Sybase.Data.AseClient");
+			new AssemblyResolver(assembly, AssemblyName);
 		}
 
 		#region CreateDataConnection

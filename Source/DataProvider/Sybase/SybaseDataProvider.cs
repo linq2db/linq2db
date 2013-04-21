@@ -90,6 +90,11 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlProvider(SqlProviderFlags);
 		}
 
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new SybaseSchemaProvider();
+		}
+
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)

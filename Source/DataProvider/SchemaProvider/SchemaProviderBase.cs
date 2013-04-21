@@ -217,6 +217,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 							OtherColumns = new List<ColumnSchema>(),
 							CanBeNull    = true,
 						};
+
 						thisTable.ForeignKeys.Add(key);
 					}
 

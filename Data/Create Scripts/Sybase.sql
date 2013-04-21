@@ -96,7 +96,8 @@ GO
 DROP TABLE TestIdentity
 GO
 
-CREATE TABLE TestIdentity (
+CREATE TABLE TestIdentity
+(
 	ID int IDENTITY CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
 )
 GO
