@@ -18,13 +18,7 @@
 
 //	GetSchemaOptions.GetProcedures = false;
 
-	var path = typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly.GetName().CodeBase;
-
-	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypesPath(path);
-
-	var conn = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection("Data Source=.;Database=Northwind;Integrated Security=SSPI");
-
-	LoadMetadata(conn);
+	LoadSqlServerMetadata("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
 	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
 
@@ -35,9 +29,6 @@
 
 	DatabaseName = null;//"TestData";
 
-	conn = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
-
-	LoadMetadata(conn);
-
+	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;");
 	GenerateModel();
 #>

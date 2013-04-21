@@ -1,17 +1,14 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\LinqToDB.Sybase.ttinclude"             #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)Redist\Sybase\Sybase.AdoNet2.AseClient.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Redist\Sybase\Sybase.AdoNet2.AseClient.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SybaseDataContext";
 
-	LinqToDB.DataProvider.Sybase.SybaseFactory.ResolveSybase(typeof(Sybase.Data.AseClient.AseConnection).Assembly);
+	GenerateSybaseSystemTables = false;
 
-	var connectionString = @"Data Source=DBHost2008;Port=5000;Database=TestData;Uid=sa;Password=TestPassword";
-	var dataConnection   = LinqToDB.DataProvider.Sybase.SybaseFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadSybaseMetadata("DBHost2008", "5000", "TestData", "sa", "TestPassword");
 	GenerateModel();
 #>
