@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Access</id>
-		<version>0.0.5</version>
+		<version>0.0.6</version>
 		<title>LINQ to Access</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
