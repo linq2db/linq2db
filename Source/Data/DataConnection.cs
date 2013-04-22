@@ -18,6 +18,8 @@ namespace LinqToDB.Data
 	using DataProvider.SQLite;
 	using DataProvider.SqlCe;
 	using DataProvider.SqlServer;
+	using DataProvider.Sybase;
+
 	using Mapping;
 
 	public partial class DataConnection : ICloneable
@@ -177,6 +179,7 @@ namespace LinqToDB.Data
 			FirebirdFactory. GetDataProvider();
 			MySqlFactory.    GetDataProvider();
 			SQLiteFactory.   GetDataProvider();
+			SybaseFactory.   GetDataProvider();
 
 			var section = LinqToDBSection.Instance;
 
