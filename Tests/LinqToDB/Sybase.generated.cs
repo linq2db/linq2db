@@ -28,6 +28,7 @@ namespace SybaseDataContext
 		public ITable<Parent>         Parents         { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>        Patients        { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>         People          { get { return this.GetTable<Person>(); } }
+		public ITable<SysObject>      SysObjects      { get { return this.GetTable<SysObject>(); } }
 		public ITable<sysquerymetric> sysquerymetrics { get { return this.GetTable<sysquerymetric>(); } }
 		public ITable<TestIdentity>   TestIdentities  { get { return this.GetTable<TestIdentity>(); } }
 
@@ -205,6 +206,32 @@ namespace SybaseDataContext
 		public Patient Patient { get; set; }
 
 		#endregion
+	}
+
+	[Table("sysobjects")]
+	public partial class SysObject
+	{
+		[Column, NotNull    ] public string   name      { get; set; } // varchar
+		[Column, NotNull    ] public int      id        { get; set; } // int
+		[Column, NotNull    ] public int      uid       { get; set; } // int
+		[Column, NotNull    ] public string   type      { get; set; } // char
+		[Column, NotNull    ] public short    userstat  { get; set; } // smallint
+		[Column, NotNull    ] public short    sysstat   { get; set; } // smallint
+		[Column, NotNull    ] public short    indexdel  { get; set; } // smallint
+		[Column, NotNull    ] public short    schemacnt { get; set; } // smallint
+		[Column, NotNull    ] public int      sysstat2  { get; set; } // int
+		[Column, NotNull    ] public DateTime crdate    { get; set; } // datetime
+		[Column, NotNull    ] public DateTime expdate   { get; set; } // datetime
+		[Column, NotNull    ] public int      deltrig   { get; set; } // int
+		[Column, NotNull    ] public int      instrig   { get; set; } // int
+		[Column, NotNull    ] public int      updtrig   { get; set; } // int
+		[Column, NotNull    ] public int      seltrig   { get; set; } // int
+		[Column, NotNull    ] public int      ckfirst   { get; set; } // int
+		[Column, NotNull    ] public short    cache     { get; set; } // smallint
+		[Column,    Nullable] public int      audflags  { get; set; } // int
+		[Column, NotNull    ] public int      objspare  { get; set; } // int
+		[Column,    Nullable] public byte[]   versionts { get; set; } // binary
+		[Column, NotNull    ] public string   loginame  { get; set; } // varchar
 	}
 
 	// View

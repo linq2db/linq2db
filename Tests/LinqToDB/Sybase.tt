@@ -7,7 +7,7 @@
 <#
 	NamespaceName = "SybaseDataContext";
 
-	GenerateSybaseSystemTables = false;
+	GenerateSybaseSystemTables = true;
 
 	LoadSybaseMetadata("DBHost2008", "5000", "TestData", "sa", "TestPassword");
 	GenerateModel();

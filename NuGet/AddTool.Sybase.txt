@@ -1,0 +1,1 @@
+<#@ assembly name="$(SolutionDir)packages\linq2db.Sybase.0.0.5\tools\Sybase.AdoNet2.AseClient.dll" #>
