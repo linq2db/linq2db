@@ -281,6 +281,7 @@
     <Compile Include="UserTests\GroupBySubqueryTest.cs" />
     <Compile Include="UserTests\SelectManyDeleteTest.cs" />
     <Compile Include="UserTests\SelectManyUpdateTest.cs" />
+    <Compile Include="UserTests\UnknownSqlTest.cs" />
     <Compile Include="UserTests\UnnecessaryInnerJoinTest.cs" />
   </ItemGroup>
   <ItemGroup>
