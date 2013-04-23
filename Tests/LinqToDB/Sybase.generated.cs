@@ -5,8 +5,12 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
+using System.Data;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 namespace SybaseDataContext
@@ -264,5 +268,244 @@ namespace SybaseDataContext
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // int
+	}
+
+	public static partial class TestDataDBStoredProcedures
+	{
+		#region OutRefEnumTest
+
+		public partial class OutRefEnumTestResult
+		{
+		}
+
+		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this DataConnection dataConnection, string str, out string outputStr, out string inputOutputStr)
+		{
+			var ret = dataConnection.QueryProc<OutRefEnumTestResult>("[OutRefEnumTest]",
+				new DataParameter("str", str));
+
+			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
+			inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region OutRefTest
+
+		public partial class OutRefTestResult
+		{
+		}
+
+		public static IEnumerable<OutRefTestResult> OutRefTest(this DataConnection dataConnection, int? ID, out int? outputID, out int? inputOutputID, string str, out string outputStr, out string inputOutputStr)
+		{
+			var ret = dataConnection.QueryProc<OutRefTestResult>("[OutRefTest]",
+				new DataParameter("ID",  ID),
+				new DataParameter("str", str));
+
+			outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputID"]).      Value);
+			inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["inputOutputID"]). Value);
+			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
+			inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["inputOutputStr"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Patient_SelectAll
+
+		public partial class Patient_SelectAllResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+			public string Diagnosis  { get; set; }
+		}
+
+		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Patient_SelectAllResult>("[Patient_SelectAll]");
+		}
+
+		#endregion
+
+		#region Patient_SelectByName
+
+		public partial class Patient_SelectByNameResult
+		{
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+			public string Diagnosis  { get; set; }
+		}
+
+		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
+		{
+			return dataConnection.QueryProc<Patient_SelectByNameResult>("[Patient_SelectByName]",
+				new DataParameter("firstName", firstName),
+				new DataParameter("lastName",  lastName));
+		}
+
+		#endregion
+
+		#region Person_Delete
+
+		public partial class Person_DeleteResult
+		{
+		}
+
+		public static IEnumerable<Person_DeleteResult> Person_Delete(this DataConnection dataConnection, int? PersonID)
+		{
+			return dataConnection.QueryProc<Person_DeleteResult>("[Person_Delete]",
+				new DataParameter("PersonID", PersonID));
+		}
+
+		#endregion
+
+		#region Person_Insert
+
+		public partial class Person_InsertResult
+		{
+			public int? PersonID { get; set; }
+		}
+
+		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender)
+		{
+			return dataConnection.QueryProc<Person_InsertResult>("[Person_Insert]",
+				new DataParameter("FirstName",  FirstName),
+				new DataParameter("LastName",   LastName),
+				new DataParameter("MiddleName", MiddleName),
+				new DataParameter("Gender",     Gender));
+		}
+
+		#endregion
+
+		#region Person_Insert_OutputParameter
+
+		public partial class Person_Insert_OutputParameterResult
+		{
+		}
+
+		public static IEnumerable<Person_Insert_OutputParameterResult> Person_Insert_OutputParameter(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender, out int? PersonID)
+		{
+			var ret = dataConnection.QueryProc<Person_Insert_OutputParameterResult>("[Person_Insert_OutputParameter]",
+				new DataParameter("FirstName",  FirstName),
+				new DataParameter("LastName",   LastName),
+				new DataParameter("MiddleName", MiddleName),
+				new DataParameter("Gender",     Gender));
+
+			PersonID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Person_SelectAll
+
+		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person>("[Person_SelectAll]");
+		}
+
+		#endregion
+
+		#region Person_SelectByKey
+
+		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? id)
+		{
+			return dataConnection.QueryProc<Person>("[Person_SelectByKey]",
+				new DataParameter("id", id));
+		}
+
+		#endregion
+
+		#region Person_SelectByName
+
+		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
+		{
+			return dataConnection.QueryProc<Person>("[Person_SelectByName]",
+				new DataParameter("firstName", firstName),
+				new DataParameter("lastName",  lastName));
+		}
+
+		#endregion
+
+		#region Person_SelectListByName
+
+		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string firstName, string lastName)
+		{
+			return dataConnection.QueryProc<Person>("[Person_SelectListByName]",
+				new DataParameter("firstName", firstName),
+				new DataParameter("lastName",  lastName));
+		}
+
+		#endregion
+
+		#region Person_Update
+
+		public partial class Person_UpdateResult
+		{
+		}
+
+		public static IEnumerable<Person_UpdateResult> Person_Update(this DataConnection dataConnection, int? PersonID, string FirstName, string LastName, string MiddleName, string Gender)
+		{
+			return dataConnection.QueryProc<Person_UpdateResult>("[Person_Update]",
+				new DataParameter("PersonID",   PersonID),
+				new DataParameter("FirstName",  FirstName),
+				new DataParameter("LastName",   LastName),
+				new DataParameter("MiddleName", MiddleName),
+				new DataParameter("Gender",     Gender));
+		}
+
+		#endregion
+
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int    intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[Scalar_DataReader]");
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public partial class Scalar_OutputParameterResult
+		{
+		}
+
+		public static IEnumerable<Scalar_OutputParameterResult> Scalar_OutputParameter(this DataConnection dataConnection, out int? outputInt, out string outputString)
+		{
+			var ret = dataConnection.QueryProc<Scalar_OutputParameterResult>("[Scalar_OutputParameter]");
+
+			outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputInt"]).   Value);
+			outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? id)
+		{
+			return dataConnection.QueryProc<Person>("[Scalar_ReturnParameterWithObject]",
+				new DataParameter("id", id));
+		}
+
+		#endregion
 	}
 }

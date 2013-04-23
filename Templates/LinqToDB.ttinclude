@@ -260,8 +260,10 @@ void GenerateTypesFromMetadata()
 				if      (p.Schema     != null) spName += "[" + p.Schema     + "].";
 				else if (DatabaseName != null) spName += ".";
 
+				var inputParameters = p.ProcParameters.Where(pp => pp.IsIn).ToList();
+
 				spName += "[" + p.ProcedureName + "]\"";
-				spName += p.ProcParameters.Count == 0 ? ");" : ",";
+				spName += inputParameters.Count == 0 ? ");" : ",";
 
 				var hasOut = p.ProcParameters.Any(pr => pr.IsOut);
 				var prefix = hasOut ? "var ret = " : "return ";
@@ -297,13 +299,13 @@ void GenerateTypesFromMetadata()
 					}
 				}
 
-				var maxLenSchema = p.ProcParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
-				var maxLenParam  = p.ProcParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-				var maxLenType   = p.ProcParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
+				var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
+				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
+				var maxLenType   = inputParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
 
-				for (var i = 0; i < p.ProcParameters.Count; i++)
+				for (var i = 0; i < inputParameters.Count; i++)
 				{
-					var pr = p.ProcParameters[i];
+					var pr = inputParameters[i];
 
 					var str = string.Format("\tnew DataParameter(\"{0}\", {1}{2})",
 						pr.SchemaName,
@@ -321,13 +323,17 @@ void GenerateTypesFromMetadata()
 						str += " }";
 					}
 
-					str += i + 1 == p.ProcParameters.Count ? ");" : ",";
+					str += i + 1 == inputParameters.Count ? ");" : ",";
 
 					p.Body.Add(str);
 				}
 
 				if (hasOut)
 				{
+					maxLenSchema = p.ProcParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
+					maxLenParam  = p.ProcParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
+					maxLenType   = p.ProcParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
+
 					p.Body.Add("");
 
 					foreach (var pr in p.ProcParameters.Where(_ => _.IsOut))

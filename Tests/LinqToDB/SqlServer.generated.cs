@@ -764,46 +764,6 @@ namespace DataModel
 
 		#endregion
 
-		#region EmployeeSalesByCountry
-
-		public partial class EmployeeSalesByCountryResult
-		{
-			public string    Country     { get; set; }
-			public string    LastName    { get; set; }
-			public string    FirstName   { get; set; }
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  SaleAmount  { get; set; }
-		}
-
-		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
-				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date",    @Ending_Date));
-		}
-
-		#endregion
-
-		#region SalesByYear
-
-		public partial class SalesByYearResult
-		{
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  Subtotal    { get; set; }
-			public string    Year        { get; set; }
-		}
-
-		public static IEnumerable<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
-				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date",    @Ending_Date));
-		}
-
-		#endregion
-
 		#region CustOrdersDetail
 
 		public partial class CustOrdersDetailResult
