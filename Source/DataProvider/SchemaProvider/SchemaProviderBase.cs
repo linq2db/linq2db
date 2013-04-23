@@ -319,7 +319,10 @@ namespace LinqToDB.DataProvider.SchemaProvider
 									new DataParameter
 									{
 										Name      = p.ParameterName,
-										Value     = p.SystemType == typeof(string) ? "" : DefaultValue.GetValue(p.SystemType),
+										Value     =
+											p.SystemType == typeof(string)   ? "" :
+											p.SystemType == typeof(DateTime) ? DateTime.Now :
+												DefaultValue.GetValue(p.SystemType),
 										DataType  = p.DataType,
 										Size      = p.Size,
 										Direction =
