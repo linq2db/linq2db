@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 									new DataParameter
 									{
 										Name      = p.ParameterName,
-										Value     = null,
+										Value     = p.SystemType == typeof(string) ? "" : DefaultValue.GetValue(p.SystemType),
 										DataType  = p.DataType,
 										Size      = p.Size,
 										Direction =
@@ -346,35 +346,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 											IsProcedureResult = true,
 											TypeName          = ToValidName(procedure.ProcedureName + "Result"),
 											ForeignKeys       = new List<ForeignKeySchema>(),
-											Columns           =
-											(
-												from r in st.AsEnumerable()
-
-												let columnType = r.Field<string>("DataTypeName")
-												let columnName = r.Field<string>("ColumnName")
-												let isNullable = r.Field<bool>  ("AllowDBNull")
-
-												join dt in DataTypes
-													on columnType equals dt.TypeName into g1
-												from dt in g1.DefaultIfEmpty()
-
-												let systemType = GetSystemType(columnType, dt)
-												let length     = r.Field<int> ("ColumnSize")
-												let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
-												let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-
-												select new ColumnSchema
-												{
-													ColumnName = columnName,
-													ColumnType = GetDbType(columnType, dt, length, precision, scale),
-													IsNullable = isNullable,
-													MemberName = ToValidName(columnName),
-													MemberType = ToTypeName(systemType, isNullable),
-													SystemType = systemType ?? typeof(object),
-													DataType   = GetDataType(columnType, null),
-													IsIdentity = r.Field<bool>("IsIdentity"),
-												}
-											).ToList()
+											Columns           = GetProcedureResultColumns(st)
 										};
 
 										foreach (var column in procedure.ResultTable.Columns)
@@ -416,6 +388,39 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				Tables        = tables,
 				Procedures    = procedures,
 			});
+		}
+
+		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let columnType = r.Field<string>("DataTypeName")
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+
+				join dt in DataTypes
+					on columnType equals dt.TypeName into g1
+				from dt in g1.DefaultIfEmpty()
+
+				let systemType = GetSystemType(columnType, dt)
+				let length     = r.Field<int> ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+				select new ColumnSchema
+				{
+					ColumnName = columnName,
+					ColumnType = GetDbType(columnType, dt, length, precision, scale),
+					IsNullable = isNullable,
+					MemberName = ToValidName(columnName),
+					MemberType = ToTypeName(systemType, isNullable),
+					SystemType = systemType ?? typeof(object),
+					DataType   = GetDataType(columnType, null),
+					IsIdentity = r.Field<bool>("IsIdentity"),
+				}
+			).ToList();
 		}
 
 		protected virtual string GetDataSourceName(DbConnection dbConnection)

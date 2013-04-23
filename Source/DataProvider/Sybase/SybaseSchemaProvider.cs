@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
+	using System.Data;
+	using System.Data.Common;
+
+	using Common;
+
 	using Data;
 	using SchemaProvider;
 
@@ -146,6 +150,88 @@ namespace LinqToDB.DataProvider.Sybase
 			sql = "SELECT * FROM (" + sql + ") as t WHERE ThisColumn IS NOT NULL";
 
 			return dataConnection.Query<ForeingKeyInfo>(sql).ToList();
+		}
+
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+
+			return
+			(
+				from p in ps.AsEnumerable()
+				let catalog = p.Field<string>("SPECIFIC_CATALOG")
+				let schema  = p.Field<string>("SPECIFIC_SCHEMA")
+				let name    = p.Field<string>("SPECIFIC_NAME").TrimEnd('\0')
+				select new ProcedureInfo
+				{
+					ProcedureID         = catalog + "." + schema + "." + name,
+					CatalogName         = catalog,
+					SchemaName          = schema,
+					ProcedureName       = name,
+					IsDefaultSchema     = schema == "dbo"
+				}
+			).ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+
+			return
+			(
+				from p in ps.AsEnumerable()
+				let catalog = p.Field<string>("SPECIFIC_CATALOG")
+				let schema  = p.Field<string>("SPECIFIC_SCHEMA")
+				let name    = p.Field<string>("SPECIFIC_NAME")
+				let mode    = p.Field<string>("PARAMETER_MODE")
+				where mode != "RETURN"
+				select new ProcedureParameterInfo
+				{
+					ProcedureID   = catalog + "." + schema + "." + name,
+					ParameterName = p.Field<string>("PARAMETER_NAME").TrimStart('@'),
+					IsIn          = mode == "IN"  || mode == "INOUT",
+					IsOut         = mode == "OUT" || mode == "INOUT",
+					//Length        = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
+					Precision     = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_PRECISION")),
+					Scale         = Converter.ChangeTypeTo<int>(p.Field<object>("NUMERIC_SCALE")),
+					Ordinal       = Converter.ChangeTypeTo<int>(p.Field<object>("ORDINAL_POSITION")),
+					IsResult      = p.Field<string>("IS_RESULT") == "YES",
+					DataType      = p.Field<string>("DATA_TYPE")
+				}
+			).ToList();
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+//				let columnType = r.Field<string>("DataTypeName")
+				let columnName = r.Field<string>("ColumnName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+
+//				join dt in DataTypes
+//					on columnType equals dt.TypeName into g1
+//				from dt in g1.DefaultIfEmpty()
+
+				let systemType = r.Field<Type>("DataType")
+				let length     = r.Field<int> ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+				select new ColumnSchema
+				{
+					ColumnName = columnName,
+					//ColumnType = GetDbType(columnType, dt, length, precision, scale),
+					IsNullable = isNullable,
+					MemberName = ToValidName(columnName),
+					MemberType = ToTypeName(systemType, isNullable),
+					SystemType = systemType ?? typeof(object),
+//					DataType   = GetDataType(columnType, null),
+					IsIdentity = r.Field<bool>("IsIdentity"),
+				}
+			).ToList();
 		}
 	}
 }
