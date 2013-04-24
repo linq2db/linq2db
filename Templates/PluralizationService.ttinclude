@@ -10,7 +10,7 @@
 <#+
 static class Pluralization
 {
-	static PluralizationService _service = PluralizationService.CreateService(CultureInfo.CurrentCulture);
+	static PluralizationService _service = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
 
 	public static Dictionary<string,string> Dictionary = new Dictionary<string,string>
 	{
