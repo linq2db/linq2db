@@ -199,7 +199,7 @@ void EditableObjectImpl()
 							IsCompact = true,
 							Members   =
 							{
-								new Method("void", "BeginEdit",  null, new[] { "_isEditing = true;" })                       { IsVirtual = true },
+								new Method("void", "BeginEdit",  null, new[] { "AcceptChanges();", "_isEditing = true;"   }) { IsVirtual = true },
 								new Method("void", "CancelEdit", null, new[] { "_isEditing = false;", "RejectChanges();", }) { IsVirtual = true },
 								new Method("void", "EndEdit",    null, new[] { "_isEditing = false;", "AcceptChanges();", }) { IsVirtual = true },
 							}
