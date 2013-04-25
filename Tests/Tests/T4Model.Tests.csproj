@@ -41,6 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EditableModelTest.generated.cs">
+      <DependentUpon>EditableModelTest.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="ModelTest.cs" />
     <Compile Include="ModelTest.generated.cs">
       <AutoGen>True</AutoGen>
@@ -50,6 +55,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="EditableModelTest.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>EditableModelTest.generated.cs</LastGenOutput>
+    </None>
     <None Include="ModelTest.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ModelTest.generated.cs</LastGenOutput>

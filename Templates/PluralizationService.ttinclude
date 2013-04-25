@@ -12,7 +12,7 @@ static class Pluralization
 {
 	public static string CultureInfo = "en-US";
 
-	static PluralizationService _service = PluralizationService.CreateService(PluralizationCultureInfo);
+	static PluralizationService _service = PluralizationService.CreateService(CultureInfo);
 
 	public static Dictionary<string,string> Dictionary = new Dictionary<string,string>
 	{
