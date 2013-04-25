@@ -10,7 +10,9 @@
 <#+
 static class Pluralization
 {
-	static PluralizationService _service = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
+	public static string CultureInfo = "en-US";
+
+	static PluralizationService _service = PluralizationService.CreateService(PluralizationCultureInfo);
 
 	public static Dictionary<string,string> Dictionary = new Dictionary<string,string>
 	{
@@ -56,6 +58,9 @@ static class Pluralization
 
 	public static string ToPlural(string str)
 	{
+		if (_service == null)
+			_service = PluralizationService.CreateService(PluralizationCultureInfo);
+
 		string ret;
 
 		if (Dictionary.TryGetValue(str, out ret))
@@ -66,6 +71,9 @@ static class Pluralization
 
 	public static string ToSingular(string str)
 	{
+		if (_service == null)
+			_service = PluralizationService.CreateService(PluralizationCultureInfo);
+
 		var ret = Dictionary.Where(dic => dic.Value == str).Select(dic => dic.Key).FirstOrDefault();
 
 		return ret ?? (_service.IsSingular(str) ? str : _service.Singularize(str));
