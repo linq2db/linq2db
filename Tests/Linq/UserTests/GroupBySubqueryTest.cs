@@ -12,68 +12,59 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class GroupBySubqueryTest : TestBase
 	{
-		[Table(Name = "EngineeringCircuitEnd")]
-		public class EngineeringCircuitEndRecord
+		class Table1
 		{
-			[PrimaryKey(1)]
-			[Identity] public long EngineeringCircuitID { get; set; }
+			public long Field1 { get; set; }
+			public int  Field2 { get; set; }
 
-			[Column] public long EngineeringConnectorID     { get; set; }
-			[Column] public int  EngineeringCircuitNumberID { get; set; }
+			[Nullable]
+			public int? Field3 { get; set; }
 
-			[Column, Nullable]
-			public int? ServiceCircuitID { get; set; }
+			[Association(ThisKey = "Field1", OtherKey = "Field1", CanBeNull = false)]
+			public Table3 Ref1 { get; set; }
 
-			[Association(ThisKey = "EngineeringConnectorID", OtherKey = "EngineeringConnectorID", CanBeNull = false)]
-			public EngineeringConnectorRecord EngineeringConnectoRef { get; set; }
+			[Association(ThisKey = "Field3", OtherKey = "Field3", CanBeNull = true)]
+			public Table5 Ref2 { get; set; }
 
-			[Association(ThisKey = "ServiceCircuitID", OtherKey = "ServiceCircuitID", CanBeNull = true)]
-			public ServiceCircuitEndRecord ServiceCircuitRef { get; set; }
-
-			[Association(ThisKey = "EngineeringCircuitNumberID", OtherKey = "EngineeringCircuitNumberID", CanBeNull = true)]
-			public EngineeringCircuitNumberRecord EngineeringCircuitNumberRef { get; set; }
+			[Association(ThisKey = "Field2", OtherKey = "Field2", CanBeNull = true)]
+			public Table2 Ref3 { get; set; }
 		}
 
-		[Table(Name = "EngineeringCircuitNumber")]
-		public class EngineeringCircuitNumberRecord
+		class Table2
 		{
-			[Column] public int    EngineeringCircuitNumberID { get; set; }
-			[Column] public string EngineeringCircuitNumber   { get; set; }
+			public int    Field2 { get; set; }
+			public string Field4 { get; set; }
 		}
 
-		[Table(Name = "EngineeringConnector")]
-		public class EngineeringConnectorRecord
+		class Table3
 		{
-			[Column] public int  HarnessID   { get; set; }
-			[Column] public long EngineeringConnectorID { get; set; }
+			public int  Field5 { get; set; }
+			public long Field1 { get; set; }
 
-			[AssociationAttribute(ThisKey = "HarnessID", OtherKey = "HarnessID", CanBeNull = false)]
-			public HarnessRecord HarnessRef { get; set; }
+			[AssociationAttribute(ThisKey = "Field5", OtherKey = "Field5", CanBeNull = false)]
+			public Table4 Ref4 { get; set; }
 		}
 
-		[Table(Name = "Harness")]
-		public class HarnessRecord
+		class Table4
 		{
-			[Column] public int HarnessID  { get; set; }
-			[Column] public int RevisionID { get; set; }
+			public int Field5 { get; set; }
+			public int Field6 { get; set; }
 		}
 
-		[Table(Name = "ServiceCircuitEnd")]
-		public class ServiceCircuitEndRecord
+		public class Table5
 		{
 			[Nullable]
-			[Column] public int? ServiceCircuitID  { get; set; }
-			[Column] public int  ServiceFunctionID { get; set; }
+			public int? Field3 { get; set; }
+			public int  Field7 { get; set; }
 
-			[Association(ThisKey = "ServiceFunctionID", OtherKey = "ServiceFunctionID", CanBeNull = true)]
-			public ServiceFunctionNameRecord ServiceFunctionRef { get; set; }
+			[Association(ThisKey = "Field7", OtherKey = "Field7", CanBeNull = true)]
+			public Table6 Ref5 { get; set; }
 		}
 
-		[Table(Name = "ServiceFunctionNames")]
-		public class ServiceFunctionNameRecord
+		public class Table6
 		{
-			[Column] public int    ServiceFunctionID    { get; set; }
-			[Column] public string ServiceFunctionNames { get; set; }
+			public int    Field7 { get; set; }
+			public string Field8 { get; set; }
 		}
 
 		[Test]
@@ -82,13 +73,12 @@ namespace Tests.UserTests
 			using (var db = new TestDataConnection())
 			{
 				var q = (
-					from engineeringCircuitEnd in db.GetTable<EngineeringCircuitEndRecord>()
-					where engineeringCircuitEnd.ServiceCircuitID != null
+					from t1 in db.GetTable<Table1>()
+					where t1.Field3 != null
 					select new
 					{
-						RevisionId = engineeringCircuitEnd.EngineeringConnectoRef.HarnessRef.RevisionID,
-						engineeringCircuitEnd.EngineeringCircuitNumberRef.EngineeringCircuitNumber,
-						ServiceFunction = engineeringCircuitEnd.ServiceCircuitRef.ServiceFunctionRef.ServiceFunctionNames ?? string.Empty
+						t1.Ref1.Ref4.Field6, t1.Ref3.Field4,
+						Field1 = t1.Ref2.Ref5.Field8 ?? string.Empty
 					}
 				).Distinct();
 
@@ -96,10 +86,10 @@ namespace Tests.UserTests
 
 				var q2 =
 					from t3 in q
-					group t3 by new { t3.RevisionId, t3.EngineeringCircuitNumber }
+					group t3 by new { t3.Field6, t3.Field4 }
 					into g
 					where g.Count() > 1
-					select new { g.Key.RevisionId, g.Key.EngineeringCircuitNumber, Count = g.Count() };
+					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
 
 				var sql2 = q2.ToString();
 
@@ -107,7 +97,7 @@ namespace Tests.UserTests
 
 				Assert.That(idx, Is.GreaterThanOrEqualTo(0));
 
-				idx = sql2.IndexOf("ServiceFunctionNames", idx);
+				idx = sql2.IndexOf("Field8", idx);
 
 				Assert.That(idx, Is.GreaterThanOrEqualTo(0));
 			}

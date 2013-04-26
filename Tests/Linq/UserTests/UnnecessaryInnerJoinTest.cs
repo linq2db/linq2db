@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -13,26 +12,22 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class UnnecessaryInnerJoinTest : TestBase
 	{
-		[Table(Name = "EngineeringCircuitEnd")]
-		public class EngineeringCircuitEndRecord
+		class Table1
 		{
 			[PrimaryKey(1)]
 			[Identity]
-			public Int64 EngineeringCircuitID { get; set; }
-
-			[Column]
-			public Int64 EngineeringConnectorID { get; set; }
+			public Int64 Field1 { get; set; }
+			public Int64 Field2 { get; set; }
 		}
 
-		[Table(Name = "EngineeringConnector")]
-		public class EngineeringConnectorRecord
+		class Table2
 		{
-			[Association(ThisKey = "EngineeringConnectorID", OtherKey = "EngineeringConnectorID", CanBeNull = false)]
-			public List<EngineeringCircuitEndRecord> EngineeringCircuits { get; set; }
-
 			[PrimaryKey(1)]
 			[Identity]
-			public Int64 EngineeringConnectorID { get; set; }
+			public Int64 Field2 { get; set; }
+
+			[Association(ThisKey = "Field2", OtherKey = "Field2", CanBeNull = false)]
+			public List<Table1> Field3 { get; set; }
 		}
 
 		[Test]
@@ -43,9 +38,9 @@ namespace Tests.UserTests
 			using (var db = new TestDataConnection())
 			{
 				var q =
-					from engineeringConnector in db.GetTable<EngineeringConnectorRecord>()
-					where engineeringConnector.EngineeringCircuits.Any(x => ids.Contains(x.EngineeringCircuitID))
-					select new { engineeringConnector.EngineeringConnectorID };
+					from t1 in db.GetTable<Table2>()
+					where t1.Field3.Any(x => ids.Contains(x.Field1))
+					select new { t1.Field2 };
 
 				var sql = q.ToString();
 

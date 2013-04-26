@@ -9,36 +9,35 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	[Table(Name = "EngineeringCircuitEnd")]
-	public class EngineeringCircuitEndRecord
-	{
-		[PrimaryKey(1)]
-		[Identity]         public Int64 EngineeringCircuitID { get; set; }
-		[Column, Nullable] public Char? Gender               { get; set; }
-	}
-
-	public class SqlServerDataRepository : DataConnection
-	{
-		public SqlServerDataRepository(string configurationString) : base(configurationString)
-		{
-		}
-
-		public ITable<EngineeringCircuitEndRecord> EngineeringCircuitEnds { get { return this.GetTable<EngineeringCircuitEndRecord>(); } }
-	}
-
 	[TestFixture]
 	public class CompareNullableChars : TestBase
 	{
-		[Test]
-		public void Test([IncludeDataContexts(ProviderName.Access)] string context)
+		class Table1
 		{
-			using (var db = new SqlServerDataRepository(context))
+			[PrimaryKey(1)]
+			[Identity] public Int64 Field1 { get; set; }
+			[Nullable] public Char? Foeld2 { get; set; }
+		}
+
+		class Repository : DataConnection
+		{
+			public Repository(string configurationString) : base(configurationString)
+			{
+			}
+
+			public ITable<Table1> Table1 { get { return this.GetTable<Table1>(); } }
+		}
+
+		[Test]
+		public void Test()
+		{
+			using (var db = new Repository(ProviderName.Access))
 			{
 				var q =
-					from current  in db.EngineeringCircuitEnds
-					from previous in db.EngineeringCircuitEnds
-					where current.Gender == previous.Gender
-					select new { CurrentId = current.EngineeringCircuitID, PreviousId = previous.EngineeringCircuitID };
+					from current  in db.Table1
+					from previous in db.Table1
+					where current.Foeld2 == previous.Foeld2
+					select new { current.Field1, Field2 = previous.Field1 };
 
 				var sql = q.ToString();
 			}
