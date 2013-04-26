@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 							var into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SqlQuery()));
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							sequence.SqlQuery.ResolveWeakJoins();
+							sequence.SqlQuery.ResolveWeakJoins(new List<ISqlTableSource>());
 							sequence.SqlQuery.Select.Columns.Clear();
 
 							BuildSetter(

@@ -756,12 +756,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinTest2()
+		public void LeftJoinTest2([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
 
-			using (var db = GetDataContext(ProviderName.SQLite))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p1 in db.Patient

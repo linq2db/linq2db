@@ -3203,7 +3203,7 @@ namespace LinqToDB.SqlBuilder
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
 			SetAliases();
 
@@ -3544,7 +3544,7 @@ namespace LinqToDB.SqlBuilder
 			});
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
+		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
 		{
 			OptimizeSearchCondition(Where. SearchCondition);
 			OptimizeSearchCondition(Having.SearchCondition);
@@ -3562,14 +3562,14 @@ namespace LinqToDB.SqlBuilder
 				if (sql != null && sql != this)
 				{
 					sql.ParentSql = this;
-					sql.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+					sql.FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						IsParameterDependent = true;
 				}
 			});
 
-			ResolveWeakJoins();
+			ResolveWeakJoins(tables);
 			OptimizeColumns();
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
@@ -3727,10 +3727,8 @@ namespace LinqToDB.SqlBuilder
 				OrderBy.Items.Clear();
 		}
 
-		internal void ResolveWeakJoins()
+		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
 		{
-			List<ISqlTableSource> tables = null;
-
 			Func<TableSource,bool> findTable = null; findTable = table =>
 			{
 				if (tables.Contains(table.Source))
@@ -3753,6 +3751,8 @@ namespace LinqToDB.SqlBuilder
 				return false;
 			};
 
+			var areTablesCollected = false;
+
 			ForEachTable(table =>
 			{
 				for (var i = 0; i < table.Joins.Count; i++)
@@ -3761,9 +3761,9 @@ namespace LinqToDB.SqlBuilder
 
 					if (join.IsWeak)
 					{
-						if (tables == null)
+						if (!areTablesCollected)
 						{
-							tables = new List<ISqlTableSource>();
+							areTablesCollected = true;
 
 							Action<IQueryElement> tableCollector = expr =>
 							{
@@ -3799,7 +3799,6 @@ namespace LinqToDB.SqlBuilder
 						{
 							table.Joins.RemoveAt(i);
 							i--;
-							continue;
 						}
 					}
 				}
