@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -35,12 +36,12 @@ namespace LinqToDB.Linq.Builder
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 			var sql            = collection.SqlQuery;
 
-			var sequenceTable  = sequence.SqlQuery.From.Tables[0].Source;
+			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SqlQuery.From.Tables[0].GetTables());
 			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SqlQuery);
 			var crossApply     = null != new QueryVisitor().Find(sql, e =>
-				e == sequenceTable ||
-				e.ElementType == QueryElementType.SqlField && sequenceTable == ((SqlField)e).Table ||
-				e.ElementType == QueryElementType.Column   && sequenceTable == ((SqlQuery.Column)e).Parent);
+				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
+				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
+				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlQuery.Column)e).Parent));
 
 			if (collection is JoinBuilder.GroupJoinSubQueryContext)
 			{

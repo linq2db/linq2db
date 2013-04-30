@@ -422,6 +422,15 @@ namespace LinqToDB.SqlBuilder
 					((SqlQuery)Source).ForEachTable(action, visitedQueries);
 			}
 
+			public IEnumerable<ISqlTableSource> GetTables()
+			{
+				yield return Source;
+
+				foreach (var join in Joins)
+					foreach (var table in join.Table.GetTables())
+						yield return table;
+			}
+
 			public int GetJoinNumber()
 			{
 				var n = Joins.Count;
@@ -3789,6 +3798,19 @@ namespace LinqToDB.SqlBuilder
 
 							if (_delete != null)
 								visitor.VisitAll(Delete, tableCollector);
+
+							visitor.VisitAll(From, expr =>
+							{
+								var tbl = expr as SqlTable;
+
+								if (tbl != null && tbl.TableArguments != null)
+								{
+									var v = new QueryVisitor();
+
+									foreach (var arg in tbl.TableArguments)
+										v.VisitAll(arg, tableCollector);
+								}
+							});
 						}
 
 						if (findTable(join.Table))
@@ -3970,6 +3992,9 @@ namespace LinqToDB.SqlBuilder
 		void OptimizeApply(TableSource tableSource, JoinedTable joinTable, bool isApplySupported, bool optimizeColumns)
 		{
 			var joinSource = joinTable.Table;
+
+			if (isApplySupported && joinTable.Condition.Conditions.Count == 0)
+				return;
 
 			foreach (var join in joinSource.Joins)
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)

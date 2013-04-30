@@ -796,5 +796,20 @@ namespace Tests.Linq
 				var list = q.ToList();
 			}
 		}
+
+
+		[Test]
+		public void ApplyJoin([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from ch in db.Child
+					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
+					select p;
+
+				q.ToList();
+			}
+		}
 	}
 }
