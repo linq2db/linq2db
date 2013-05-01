@@ -50,8 +50,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
-			var idxs         = dbConnection.GetSchema("Indexes");
+			var idxs = ((DbConnection)dataConnection.Connection).GetSchema("Indexes");
 
 			return
 			(

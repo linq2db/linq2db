@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="ITableT.cs" />

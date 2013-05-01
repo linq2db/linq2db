@@ -50,6 +50,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlProvider(SqlProviderFlags);
 		}
 
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new FirebirdSchemaProvider();
+		}
+
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			return true;
