@@ -582,10 +582,11 @@ namespace LinqToDB.SqlBuilder
 		{
 			public JoinedTable(JoinType joinType, TableSource table, bool isWeak, SearchCondition searchCondition)
 			{
-				JoinType  = joinType;
-				Table     = table;
-				IsWeak    = isWeak;
-				Condition = searchCondition;
+				JoinType        = joinType;
+				Table           = table;
+				IsWeak          = isWeak;
+				Condition       = searchCondition;
+				CanConvertApply = true;
 			}
 
 			public JoinedTable(JoinType joinType, TableSource table, bool isWeak)
@@ -598,10 +599,11 @@ namespace LinqToDB.SqlBuilder
 			{
 			}
 
-			public JoinType        JoinType  { get; set; }
-			public TableSource     Table     { get; set; }
-			public SearchCondition Condition { get; private set; }
-			public bool            IsWeak    { get; set; }
+			public JoinType        JoinType        { get; set; }
+			public TableSource     Table           { get; set; }
+			public SearchCondition Condition       { get; private set; }
+			public bool            IsWeak          { get; set; }
+			public bool            CanConvertApply { get; set; }
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -3993,12 +3995,12 @@ namespace LinqToDB.SqlBuilder
 		{
 			var joinSource = joinTable.Table;
 
-			if (isApplySupported && joinTable.Condition.Conditions.Count == 0)
-				return;
-
 			foreach (var join in joinSource.Joins)
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
 					OptimizeApply(joinSource, join, isApplySupported, optimizeColumns);
+
+			if (isApplySupported && !joinTable.CanConvertApply)
+				return;
 
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{

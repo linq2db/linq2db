@@ -83,6 +83,7 @@ namespace LinqToDB.Linq.Builder
 					(leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql));
 
 				join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
+				join.JoinedTable.CanConvertApply = false;
 
 				sql.Where.SearchCondition.Conditions.Clear();
 
