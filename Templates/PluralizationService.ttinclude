@@ -1,5 +1,4 @@
 <#@ assembly name="System.Data.Entity.Design"                          #>
-<#@ import namespace="System.Globalization"                            #>
 <#@ import namespace="System.Data.Entity.Design.PluralizationServices" #>
 <#
 	{
@@ -10,9 +9,9 @@
 <#+
 static class Pluralization
 {
-	public static string CultureInfo = "en-US";
+	public static string CultureInfo = "en";
 
-	static PluralizationService _service = PluralizationService.CreateService(CultureInfo);
+	static PluralizationService _service;
 
 	public static Dictionary<string,string> Dictionary = new Dictionary<string,string>
 	{
@@ -59,7 +58,7 @@ static class Pluralization
 	public static string ToPlural(string str)
 	{
 		if (_service == null)
-			_service = PluralizationService.CreateService(PluralizationCultureInfo);
+			_service = PluralizationService.CreateService(System.Globalization.CultureInfo.GetCultureInfo(CultureInfo));
 
 		string ret;
 
@@ -72,7 +71,7 @@ static class Pluralization
 	public static string ToSingular(string str)
 	{
 		if (_service == null)
-			_service = PluralizationService.CreateService(PluralizationCultureInfo);
+			_service = PluralizationService.CreateService(System.Globalization.CultureInfo.GetCultureInfo(CultureInfo));
 
 		var ret = Dictionary.Where(dic => dic.Value == str).Select(dic => dic.Key).FirstOrDefault();
 

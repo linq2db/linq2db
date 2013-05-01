@@ -1223,16 +1223,16 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public Doctor Doctor { get; set; }
-
-		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Patient Patient { get; set; }
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Doctor Doctor { get; set; }
 
 		#endregion
 	}
