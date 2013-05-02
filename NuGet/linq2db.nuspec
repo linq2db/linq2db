@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>0.0.6</version>
+		<version>0.0.7</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
