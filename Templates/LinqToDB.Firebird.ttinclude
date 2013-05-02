@@ -1,0 +1,41 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(
+		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
+#>
+<#+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.Firebird.FirebirdFactory.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database)
+{
+	return GetFirebirdConnection(server, database, "SYSDBA", "masterkey");
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database, string uid, string password)
+{
+	return GetFirebirdConnection(string.Format(
+		"DataSource={0};Database={1};User Id={2};Password={3}",
+		server, database, uid, password));
+}
+
+void LoadFirebirdMetadata(string connectionString)
+{
+	var dataConnection = GetFirebirdConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadFirebirdMetadata(string server, string database, string uid, string password)
+{
+	var dataConnection = GetFirebirdConnection(server, database, uid, password);
+	LoadMetadata(dataConnection);
+}
+
+void LoadFirebirdMetadata(string server, string database)
+{
+	var dataConnection = GetFirebirdConnection(server, database);
+	LoadMetadata(dataConnection);
+}
+#>

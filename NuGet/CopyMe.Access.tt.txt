@@ -22,15 +22,15 @@
 
 		4. To access your database use the following code:
 
-		using (var db = new MyDatabaseDB())
-		{
-			var q =
-				from c in db.Customers
-				select c;
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
 
-			foreach (var c in q)
-				Console.WriteLine(c.ContactName);
-		}
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
 	*/
 
 	NamespaceName = "DataModel";

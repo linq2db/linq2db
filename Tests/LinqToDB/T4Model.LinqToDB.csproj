@@ -74,6 +74,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Firebird.generated.cs">
+      <DependentUpon>Firebird.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="Sybase.generated.cs">
       <DependentUpon>Sybase.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -109,6 +114,10 @@
     <None Include="Access.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Access.generated.cs</LastGenOutput>
+    </None>
+    <None Include="Firebird.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Firebird.generated.cs</LastGenOutput>
     </None>
     <None Include="Sybase.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

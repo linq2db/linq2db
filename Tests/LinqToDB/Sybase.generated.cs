@@ -399,7 +399,7 @@ namespace SybaseDataContext
 				new DataParameter("MiddleName", MiddleName),
 				new DataParameter("Gender",     Gender));
 
-			PersonID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).  Value);
+			PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).Value);
 
 			return ret;
 		}

@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\DataModel.ttinclude = Templates\DataModel.ttinclude
 		Templates\EditableObject.ttinclude = Templates\EditableObject.ttinclude
 		Templates\LinqToDB.Access.ttinclude = Templates\LinqToDB.Access.ttinclude
+		Templates\LinqToDB.Firebird.ttinclude = Templates\LinqToDB.Firebird.ttinclude
 		Templates\LinqToDB.MySql.ttinclude = Templates\LinqToDB.MySql.ttinclude
 		Templates\LinqToDB.SqlCe.ttinclude = Templates\LinqToDB.SqlCe.ttinclude
 		Templates\LinqToDB.SQLite.ttinclude = Templates\LinqToDB.SQLite.ttinclude
@@ -32,6 +33,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0-79B3-44DE-8F39-030D855077DE}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		NuGet\AddTool.Firebird.txt = NuGet\AddTool.Firebird.txt
 		NuGet\AddTool.linq2db.txt = NuGet\AddTool.linq2db.txt
 		NuGet\AddTool.MySql.txt = NuGet\AddTool.MySql.txt
 		NuGet\AddTool.SqlCe.txt = NuGet\AddTool.SqlCe.txt

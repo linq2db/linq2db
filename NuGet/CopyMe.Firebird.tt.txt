@@ -1,7 +1,6 @@
 <#@ template language="C#" debug="True" hostSpecific="True"                       #>
 <#@ output extension=".generated.cs"                                              #>
-<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net35\FirebirdSql.Data.FirebirdClient.dll" #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.ttinclude"             #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Firebird.ttinclude"    #>
 <#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
 <#
 	/*
@@ -17,31 +16,24 @@
 		3. Add connection string to the web/app.config file:
 
 			<connectionStrings>
-				<add name="MyDatabase" connectionString="DataSource=DBHost;Database=C:\Data\TestData.fdb;User Id=SYSDBA;Password=masterkey" providerName="Firebird" />
+				<add name="MyDatabase" connectionString="DataSource=MyServer;Database=C:\Data\MyDatabase.fdb;User Id=SYSDBA;Password=masterkey" providerName="Firebird" />
 			</connectionStrings>
 
 		4. To access your database use the following code:
 
-		using (var db = new MyDatabaseDB())
-		{
-			var q =
-				from c in db.Customers
-				select c;
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
 
-			foreach (var c in q)
-				Console.WriteLine(c.ContactName);
-		}
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
 	*/
-
-	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(
-		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
 
 	NamespaceName = "DataModel";
 
-	var databaseName     = @"C:\Data\MyDatabase.fdb";
-	var connectionString = @"DataSource=DBHost;Database=" + databaseName + ";User Id=SYSDBA;Password=masterkey";
-	var dataConnection   = LinqToDB.DataProvider.Firebird.FirebirdFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadFirebirdMetadata("MyServer", @"C:\Data\MyDatabase.fdb");
 	GenerateModel();
 #>

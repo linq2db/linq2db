@@ -260,12 +260,13 @@ void GenerateTypesFromMetadata()
 				if      (p.Schema     != null) spName += "[" + p.Schema     + "].";
 				else if (DatabaseName != null) spName += ".";
 
-				var inputParameters = p.ProcParameters.Where(pp => pp.IsIn).ToList();
+				var inputParameters  = p.ProcParameters.Where(pp => pp.IsIn). ToList();
+				var outputParameters = p.ProcParameters.Where(pp => pp.IsOut).ToList();
 
 				spName += "[" + p.ProcedureName + "]\"";
 				spName += inputParameters.Count == 0 ? ");" : ",";
 
-				var hasOut = p.ProcParameters.Any(pr => pr.IsOut);
+				var hasOut = outputParameters.Any(pr => pr.IsOut);
 				var prefix = hasOut ? "var ret = " : "return ";
 
 				if (p.ResultTable == null)
@@ -330,9 +331,9 @@ void GenerateTypesFromMetadata()
 
 				if (hasOut)
 				{
-					maxLenSchema = p.ProcParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
-					maxLenParam  = p.ProcParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-					maxLenType   = p.ProcParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
+					maxLenSchema = outputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
+					maxLenParam  = outputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
+					maxLenType   = outputParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
 
 					p.Body.Add("");
 

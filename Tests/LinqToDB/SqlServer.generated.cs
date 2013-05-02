@@ -1315,7 +1315,7 @@ namespace DataModel
 				new DataParameter("@Gender",     @Gender),
 				new DataParameter("@PersonID",   @PersonID)   { Direction = ParameterDirection.InputOutput });
 
-			@PersonID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).  Value);
+			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
 
 			return ret;
 		}

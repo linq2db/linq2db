@@ -20,6 +20,8 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="CopyMe.Firebird.tt.txt" target="content\LinqToDB.Templates" />
+		<file src="..\packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" target="tools" />
+		<file src="LinqToDB.Firebird.ttinclude" target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Firebird.tt.txt"      target="content\LinqToDB.Templates" />
 	</files>
 </package>
