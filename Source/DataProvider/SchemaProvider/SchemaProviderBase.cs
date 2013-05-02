@@ -337,13 +337,10 @@ namespace LinqToDB.DataProvider.SchemaProvider
 							{
 								try
 								{
-									using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
+									var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+
+									if (st != null)
 									{
-										var st = rd.Reader.GetSchemaTable();
-
-										if (st == null)
-											continue;
-
 										procedure.ResultTable = new TableSchema
 										{
 											IsProcedureResult = true,
@@ -357,7 +354,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 										procedure.SimilarTables =
 										(
-											from t in tables
+											from  t in tables
 											where t.Columns.Count == procedure.ResultTable.Columns.Count
 											let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
 											where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
@@ -391,6 +388,14 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				Tables        = tables,
 				Procedures    = procedures,
 			});
+		}
+
+		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
+			{
+				return rd.Reader.GetSchemaTable();
+			}
 		}
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)

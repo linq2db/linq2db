@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Firebird
 					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = schema == "SYSDBA",
-					IsView          = false,
+					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description     = t.Field<string>("DESCRIPTION")
 				}
 			).ToList();
@@ -63,11 +63,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
-				from c in cs.AsEnumerable()
+				from c in tcs.AsEnumerable()
 				join dt in DataTypes on c.Field<string>("COLUMN_DATA_TYPE") equals dt.TypeName
 				select new ColumnInfo
 				{
@@ -89,20 +89,28 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			var fks  = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
 			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
 
-			return new List<ForeingKeyInfo>();
+			return
+			(
+				from c in cols.AsEnumerable()
+				select new ForeingKeyInfo
+				{
+					Name         = c.Field<string>("CONSTRAINT_NAME"),
+					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
+					ThisColumn   = c.Field<string>("COLUMN_NAME"),
+					OtherTableID = c.Field<string>("REFERENCED_TABLE_CATALOG") + "." + c.Field<string>("REFERENCED_TABLE_SCHEMA") + "." + c.Field<string>("REFERENCED_TABLE_NAME"),
+					OtherColumn  = c.Field<string>("REFERENCED_COLUMN_NAME"),
+					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
+				}
+			).ToList();
 		}
 
-		List<ProcedureInfo> _procedures;
-
-		/*
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
 			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
 
-			return _procedures =
+			return
 			(
 				from p in ps.AsEnumerable()
 				let catalog = p.Field<string>("PROCEDURE_CATALOG")
@@ -115,24 +123,96 @@ namespace LinqToDB.DataProvider.Firebird
 					SchemaName          = schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = schema.IsNullOrEmpty(),
-					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
+					ProcedureDefinition = p.Field<string>("SOURCE")
 				}
 			).ToList();
 		}
-		*/
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType)
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
 		{
-//			if (dataType == null)
-//			{
-//				switch (columnType.ToLower())
-//				{
-//					case "text" : return typeof(string);
-//					default     : throw new InvalidOperationException();
-//				}
-//			}
+			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
 
-			return base.GetSystemType(columnType, dataType);
+			return
+			(
+				from pp in pps.AsEnumerable()
+				let catalog   = pp.Field<string>("PROCEDURE_CATALOG")
+				let schema    = pp.Field<string>("PROCEDURE_SCHEMA")
+				let name      = pp.Field<string>("PROCEDURE_NAME")
+				let direction = ConvertTo<int>.From(pp["PARAMETER_DIRECTION"])
+				select new ProcedureParameterInfo
+				{
+					ProcedureID   = catalog + "." + schema + "." + name,
+					ParameterName = pp.Field<string>("PARAMETER_NAME"),
+					DataType      = pp.Field<string>("PARAMETER_DATA_TYPE"),
+					Ordinal       = Converter.ChangeTypeTo<int>(pp["ORDINAL_POSITION"]) + (direction - 1) * 1000,
+					Length        = Converter.ChangeTypeTo<int>(pp["PARAMETER_SIZE"]),
+					Precision     = Converter.ChangeTypeTo<int>(pp["NUMERIC_PRECISION"]),
+					Scale         = Converter.ChangeTypeTo<int>(pp["NUMERIC_SCALE"]),
+					IsIn          = direction == 1,
+					IsOut         = direction == 2,
+				}
+			).ToList();
+		}
+
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
+		{
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let systemType   = r.Field<Type>("DataType")
+				let columnName   = r.Field<string>("ColumnName")
+				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
+				let dataType     = DataTypes.FirstOrDefault(t => t.ProviderDbType == providerType)
+				let columnType   = dataType == null ? null : dataType.TypeName
+				let length       = r.Field<int> ("ColumnSize")
+				let precision    = Converter.ChangeTypeTo<int> (r["NumericPrecision"])
+				let scale        = Converter.ChangeTypeTo<int> (r["NumericScale"])
+				let isNullable   = Converter.ChangeTypeTo<bool>(r["AllowDBNull"])
+
+				select new ColumnSchema
+				{
+					ColumnType = GetDbType(columnType, dataType, length, precision, scale),
+					ColumnName = columnName,
+					IsNullable = isNullable,
+					MemberName = ToValidName(columnName),
+					MemberType = ToTypeName(systemType, isNullable),
+					SystemType = systemType ?? typeof(object),
+					DataType   = GetDataType(columnType, null),
+				}
+			).ToList();
+		}
+
+		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			try
+			{
+				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+			}
+			catch (Exception ex)
+			{
+				if (ex.Message.Contains("SQL error code = -84")) // procedure XXX does not return any values
+					return null;
+				throw;
+			}
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var dataTypes = base.GetDataTypes(dataConnection);
+
+			foreach (var dataType in dataTypes)
+			{
+				if (dataType.CreateFormat.IsNullOrEmpty() && !dataType.CreateParameters.IsNullOrEmpty())
+				{
+					dataType.CreateFormat =
+						dataType.TypeName + "(" +
+						string.Join(",", dataType.CreateParameters.Split(',').Select((_,i) => "{" + i + "}")) +
+						")";
+				}
+			}
+
+			return dataTypes;
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)

@@ -3,6 +3,8 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
@@ -26,13 +28,15 @@ namespace LinqToDB.DataProvider.Firebird
 			return _firebirdDataProvider;
 		}
 
-		public static void ResolveFirebird(string path)
+		public static void ResolveFirebird([NotNull] string path)
 		{
+			if (path == null) throw new ArgumentNullException("path");
 			new AssemblyResolver(path, "FirebirdSql.Data.FirebirdClient");
 		}
 
-		public static void ResolveFirebird(Assembly assembly)
+		public static void ResolveFirebird([NotNull] Assembly assembly)
 		{
+			if (assembly == null) throw new ArgumentNullException("assembly");
 			new AssemblyResolver(assembly, "FirebirdSql.Data.FirebirdClient");
 		}
 
