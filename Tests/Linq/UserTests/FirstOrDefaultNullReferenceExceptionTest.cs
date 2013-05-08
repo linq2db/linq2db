@@ -63,6 +63,7 @@ namespace Tests.UserTests
 						c1 = t3.Table2s.SelectMany(x => x.Table1s).Count(),
 					};
 
+				query.FirstOrDefault(p => p.c2 > 1);
 				query.FirstOrDefault();
 			}
 		}
