@@ -146,7 +146,7 @@ select new Product
 Creating your POCOs
 ----------------
 
-In the previous example we assign an entire `Category` object to our product, but what if want all the fields in our `Product` class, but we don't want to specify every field by hand? Unfortunately, we **cannot** write this:
+In the previous example we assign an entire `Category` object to our product, but what if we want all the fields in our `Product` class, but we don't want to specify every field by hand? Unfortunately, we **cannot** write this:
 
 ```c#
 from p in db.Product
