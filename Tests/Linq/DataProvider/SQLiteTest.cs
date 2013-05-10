@@ -155,7 +155,7 @@ namespace Tests.DataProvider
 				TestNumeric(conn, int.MinValue,      DataType.Int32);
 				TestNumeric(conn, int.MaxValue,      DataType.Int32);
 				TestNumeric(conn, long.MinValue,     DataType.Int64);
-				TestNumeric(conn, long.MaxValue,     DataType.Int64,     "float real");
+				TestNumeric(conn, long.MaxValue,     DataType.Int64,      "float real");
 
 				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);

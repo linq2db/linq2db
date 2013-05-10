@@ -447,12 +447,7 @@ namespace Tests.Update
 
 					var arr = new byte[] { 1, 2, 3, 4 };
 
-					db.Insert(new LinqDataTypesArrayTest
-					{
-						ID          = 1001,
-						BoolValue   = true,
-						BinaryValue = arr,
-					});
+					db.Insert(new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
 					var res = types.Single(t => t.ID == 1001).BinaryValue;
 

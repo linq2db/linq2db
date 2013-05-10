@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
+    <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
@@ -228,7 +229,7 @@
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
-    <Compile Include="Linq\IUpdateable.cs" />
+    <Compile Include="Linq\IUpdatable.cs" />
     <Compile Include="Linq\IValueInsertable.cs" />
     <Compile Include="Linq\LinqException.cs" />
     <Compile Include="LinqExtensions.cs" />
