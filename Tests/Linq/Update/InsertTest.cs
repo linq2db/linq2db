@@ -349,16 +349,16 @@ namespace Tests.Update
 			}
 		}
 
-		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		[Table("LinqDataTypes")]
 		public class LinqDataTypesArrayTest
 		{
-			public int      ID;
-			public decimal  MoneyValue;
-			public DateTime DateTimeValue;
-			public bool     BoolValue;
-			public Guid     GuidValue;
-			public byte[]   BinaryValue;
-			public short    SmallIntValue;
+			[Column] public int       ID;
+			[Column] public decimal   MoneyValue;
+			[Column] public DateTime? DateTimeValue;
+			[Column] public bool      BoolValue;
+			[Column] public Guid      GuidValue;
+			[Column] public byte[]    BinaryValue;
+			[Column] public short     SmallIntValue;
 		}
 
 		[Test]
@@ -366,10 +366,10 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
+				var types = db.GetTable<LinqDataTypesArrayTest>();
+
 				try
 				{
-					var types = db.GetTable<LinqDataTypesArrayTest>();
-
 					types.Delete(t => t.ID > 1000);
 					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = null });
 
@@ -377,7 +377,7 @@ namespace Tests.Update
 				}
 				finally
 				{
-					db.GetTable<LinqDataTypesArrayTest>().Delete(t => t.ID > 1000);
+					types.Delete(t => t.ID > 1000);
 				}
 			}
 		}
@@ -387,10 +387,10 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
+				var types = db.GetTable<LinqDataTypesArrayTest>();
+
 				try
 				{
-					var types = db.GetTable<LinqDataTypesArrayTest>();
-
 					types.Delete(t => t.ID > 1000);
 
 					byte[] arr = null;
@@ -403,7 +403,64 @@ namespace Tests.Update
 				}
 				finally
 				{
-					db.GetTable<LinqDataTypesArrayTest>().Delete(t => t.ID > 1000);
+					types.Delete(t => t.ID > 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertArray3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var types = db.GetTable<LinqDataTypesArrayTest>();
+
+				try
+				{
+					types.Delete(t => t.ID > 1000);
+
+					var arr = new byte[] { 1, 2, 3, 4 };
+
+					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
+
+					var res = types.Single(t => t.ID == 1001).BinaryValue;
+
+					Assert.That(res, Is.EqualTo(arr));
+				}
+				finally
+				{
+					types.Delete(t => t.ID > 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertArray4([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var types = db.GetTable<LinqDataTypesArrayTest>();
+
+				try
+				{
+					types.Delete(t => t.ID > 1000);
+
+					var arr = new byte[] { 1, 2, 3, 4 };
+
+					db.Insert(new LinqDataTypesArrayTest
+					{
+						ID          = 1001,
+						BoolValue   = true,
+						BinaryValue = arr,
+					});
+
+					var res = types.Single(t => t.ID == 1001).BinaryValue;
+
+					Assert.That(res, Is.EqualTo(arr));
+				}
+				finally
+				{
+					types.Delete(t => t.ID > 1000);
 				}
 			}
 		}
