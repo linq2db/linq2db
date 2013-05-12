@@ -68,20 +68,20 @@ namespace LinqToDB.DataProvider.Oracle
 			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",       true);
 			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",     true);
 
-			SetProviderField(_oracleBFile,        "GetOracleBFile");
-			SetProviderField(_oracleBinary,       "GetOracleBinary");
-			SetProviderField(_oracleBlob,         "GetOracleBlob");
-			SetProviderField(_oracleClob,         "GetOracleClob");
-			SetProviderField(_oracleDate,         "GetOracleDate");
-			SetProviderField(_oracleDecimal,      "GetOracleDecimal");
-			SetProviderField(_oracleIntervalDS,   "GetOracleIntervalDS");
-			SetProviderField(_oracleIntervalYM,   "GetOracleIntervalYM");
-			SetProviderField(_oracleRef,          "GetOracleRef");
-			SetProviderField(_oracleString,       "GetOracleString");
-			SetProviderField(_oracleTimeStamp,    "GetOracleTimeStamp");
-			SetProviderField(_oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
-			SetProviderField(_oracleTimeStampTZ,  "GetOracleTimeStampTZ");
-			SetProviderField(_oracleXmlType,      "GetOracleXmlType");
+			SetProviderField(_oracleBFile,           _oracleBFile,        "GetOracleBFile");
+			SetProviderField(_oracleBinary,          _oracleBinary,       "GetOracleBinary");
+			SetProviderField(_oracleBlob,            _oracleBlob,         "GetOracleBlob");
+			SetProviderField(_oracleClob,            _oracleClob,         "GetOracleClob");
+			SetProviderField(_oracleDate,            _oracleDate,         "GetOracleDate");
+			SetProviderField(_oracleDecimal,         _oracleDecimal,      "GetOracleDecimal");
+			SetProviderField(_oracleIntervalDS,      _oracleIntervalDS,   "GetOracleIntervalDS");
+			SetProviderField(_oracleIntervalYM,      _oracleIntervalYM,   "GetOracleIntervalYM");
+			SetProviderField(_oracleRef,             _oracleRef,          "GetOracleRef");
+			SetProviderField(_oracleString,          _oracleString,       "GetOracleString");
+			SetProviderField(_oracleTimeStamp,       _oracleTimeStamp,    "GetOracleTimeStamp");
+			SetProviderField(_oracleTimeStampLTZ,    _oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
+			SetProviderField(_oracleTimeStampTZ,     _oracleTimeStampTZ,  "GetOracleTimeStampTZ");
+			SetProviderField(_oracleXmlType,         _oracleXmlType,      "GetOracleXmlType");
 
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Oracle
 							new[] { tstz },
 							new Expression[]
 							{
-								Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter),
+								Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter)),
 								Expression.New(
 									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
 									Expression.PropertyOrField(tstz, "Year"),
@@ -144,11 +144,13 @@ namespace LinqToDB.DataProvider.Oracle
 							new[] { tstz },
 							new Expression[]
 							{
-								Expression.Call(
-									Expression.Call(dataReaderParameter, "GetOracleTimeStampLTZ", null, indexParameter),
-									"ToOracleTimeStampTZ",
-									null,
-									null),
+								Expression.Assign(
+									tstz,
+									Expression.Call(
+										Expression.Call(dataReaderParameter, "GetOracleTimeStampLTZ", null, indexParameter),
+										"ToOracleTimeStampTZ",
+										null,
+										null)),
 								Expression.New(
 									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
 									Expression.PropertyOrField(tstz, "Year"),

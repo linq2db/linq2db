@@ -109,8 +109,8 @@ namespace LinqToDB.DataProvider
 					indexParameter);
 		}
 
-		// SetToTypeField  <MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
-		// 
+		// SetToTypeField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
+		//
 		// protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
 		// {
 		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
@@ -121,6 +121,24 @@ namespace LinqToDB.DataProvider
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
 
 			ReaderExpressions[new ReaderInfo { ToType = toType }] =
+				Expression.Lambda(
+					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					dataReaderParameter,
+					indexParameter);
+		}
+
+		// SetProviderField<OracleDataReader,OracleBFile,OracleBFile>((r,i) => r.GetOracleBFile(i));
+		//
+		// protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
+		// {
+		//     ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
+		// }
+		protected void SetProviderField(Type toType, Type fieldType, string methodName)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+
+			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
