@@ -21,6 +21,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
 		{
+			for (var i = 0; i < attributes.Count; i++)
+				if (attributes.GetKey(i) == "assemblyName")
+					AssemblyName = attributes.Get(i);
+
 			return _sybaseDataProvider;
 		}
 

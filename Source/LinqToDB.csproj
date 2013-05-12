@@ -51,6 +51,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
+    <Compile Include="DataProvider\Oracle\OracleFactory.cs" />
+    <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
+    <Compile Include="DataProvider\Oracle\OracleSqlProvider.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />

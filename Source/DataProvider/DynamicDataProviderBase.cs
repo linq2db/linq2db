@@ -22,6 +22,11 @@ namespace LinqToDB.DataProvider
 		{
 		}
 
+		protected void EnsureConnection()
+		{
+			GetConnectionType();
+		}
+
 		volatile Type _connectionType;
 
 		private Type GetConnectionType()

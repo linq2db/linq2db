@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider
 
 		static DateTimeOffset GetOracleTimeStampTZ(OracleDataReader rd, int idx)
 		{
-			var tstz = rd.GetOracleTimeStampTZ(idx);
+			OracleTimeStampTZ tstz = rd.GetOracleTimeStampTZ(idx);
 			return new DateTimeOffset(
 				tstz.Year, tstz.Month,  tstz.Day,
 				tstz.Hour, tstz.Minute, tstz.Second, (int)tstz.Millisecond,
@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider
 
 		static DateTimeOffset GetOracleTimeStampLTZ(OracleDataReader rd, int idx)
 		{
-			var tstz = rd.GetOracleTimeStampLTZ(idx).ToOracleTimeStampTZ();
+			OracleTimeStampTZ tstz = rd.GetOracleTimeStampLTZ(idx).ToOracleTimeStampTZ();
 			return new DateTimeOffset(
 				tstz.Year, tstz.Month,  tstz.Day,
 				tstz.Hour, tstz.Minute, tstz.Second, (int)tstz.Millisecond,
