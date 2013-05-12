@@ -1,7 +1,6 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLite(
-		typeof(System.Data.SQLite.SQLiteConnection).Assembly);
+	LinqToDB.DataProvider.SQLite.SQLiteFactory.ResolveSQLite(typeof(System.Data.SQLite.SQLiteConnection).Assembly);
 
 	{
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
