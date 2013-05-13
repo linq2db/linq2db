@@ -8,12 +8,18 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+#if MANAGED_ORACLE
+using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
+#else
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
+#endif
 
 namespace Tests.DataProvider
 {
@@ -73,20 +79,20 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-//				TestType(conn, "bigintDataType",         1000000L);
-//				TestType(conn, "numericDataType",        9999999m);
-//				TestType(conn, "bitDataType",            true);
-//				TestType(conn, "smallintDataType",       (short)25555);
-//				TestType(conn, "decimalDataType",        2222222m);
-//				TestType(conn, "smallmoneyDataType",     100000m);
-//				TestType(conn, "intDataType",            7777777);
-//				TestType(conn, "tinyintDataType",        (sbyte)100);
-//				TestType(conn, "moneyDataType",          100000m);
-//				TestType(conn, "floatDataType",          20.31d);
-//				TestType(conn, "realDataType",           16.2f);
-//
-//				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
-//				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
+				TestType(conn, "bigintDataType",         1000000L);
+				TestType(conn, "numericDataType",        9999999m);
+				TestType(conn, "bitDataType",            true);
+				TestType(conn, "smallintDataType",       (short)25555);
+				TestType(conn, "decimalDataType",        2222222m);
+				TestType(conn, "smallmoneyDataType",     100000m);
+				TestType(conn, "intDataType",            7777777);
+				TestType(conn, "tinyintDataType",        (sbyte)100);
+				TestType(conn, "moneyDataType",          100000m);
+				TestType(conn, "floatDataType",          20.31d);
+				TestType(conn, "realDataType",           16.2f);
+
+				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-4, 0, 0)));
 
@@ -100,8 +106,8 @@ namespace Tests.DataProvider
 				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
 
-//				TestType(conn, "uriDataType",            "");
-				TestType(conn, "xmlDataType",            "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n");
+				if (OracleFactory.IsXmlTypeSupported)
+					TestType(conn, "xmlDataType",        "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n");
 			}
 		}
 
@@ -397,12 +403,15 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
 				Assert.That(conn.Execute<OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Execute<OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+
+#if !MANAGED_ORACLE
 				Assert.That(conn.Execute<OracleXmlType>  ("SELECT XMLTYPE('<xml/>')         FROM sys.dual").Value, Is.EqualTo("<xml/>\n"));
 
 				var xmlType = new OracleXmlType((OracleConnection)conn.Connection, "<xml/>");
 
 				Assert.That(conn.Execute<OracleXmlType>(PathThroughSql, new DataParameter("p", xmlType)).              Value, Is.EqualTo("<xml/>\n"));
 				Assert.That(conn.Execute<OracleXmlType>(PathThroughSql, new DataParameter("p", xmlType, DataType.Xml)).Value, Is.EqualTo("<xml/>\n"));
+#endif
 			}
 		}
 
@@ -424,20 +433,23 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			if (OracleFactory.IsXmlTypeSupported)
 			{
-				Assert.That(conn.Execute<string>     ("SELECT XMLTYPE('<xml/>') FROM sys.dual"),            Is.EqualTo("<xml/>\n"));
-				Assert.That(conn.Execute<XDocument>  ("SELECT XMLTYPE('<xml/>') FROM sys.dual").ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>("SELECT XMLTYPE('<xml/>') FROM sys.dual").InnerXml,   Is.EqualTo("<xml />"));
+				using (var conn = new DataConnection(context))
+				{
+					Assert.That(conn.Execute<string>     ("SELECT XMLTYPE('<xml/>') FROM sys.dual"),            Is.EqualTo("<xml/>\n"));
+					Assert.That(conn.Execute<XDocument>  ("SELECT XMLTYPE('<xml/>') FROM sys.dual").ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>("SELECT XMLTYPE('<xml/>') FROM sys.dual").InnerXml,   Is.EqualTo("<xml />"));
 
-				var xdoc = XDocument.Parse("<xml/>");
-				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
+					var xdoc = XDocument.Parse("<xml/>");
+					var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
-				Assert.That(conn.Execute<XDocument>  (PathThroughSql, DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XmlDocument>(PathThroughSql, DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  (PathThroughSql, new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-				Assert.That(conn.Execute<XDocument>  (PathThroughSql, new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo("<xml/>"));
+					Assert.That(conn.Execute<XDocument>  (PathThroughSql, DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XmlDocument>(PathThroughSql, DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>  (PathThroughSql, new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+					Assert.That(conn.Execute<XDocument>  (PathThroughSql, new DataParameter("p", xml)). ToString(), Is.EqualTo("<xml />"));
+				}
 			}
 		}
 

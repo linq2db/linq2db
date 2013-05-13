@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.IO;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Reflection;
-
 	using Data;
 
 	public class OracleFactory : IDataProviderFactory
@@ -16,6 +16,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static OracleFactory()
 		{
+			try
+			{
+				var path = typeof(OracleFactory).Assembly.CodeBase.Replace("file:///", "");
+
+				path = Path.GetDirectoryName(path);
+
+				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
+					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
+						AssemblyName = "Oracle.ManagedDataAccess";
+			}
+			catch (Exception)
+			{
+			}
+
 			DataConnection.AddDataProvider(_oracleDataProvider);
 		}
 
@@ -41,6 +55,11 @@ namespace LinqToDB.DataProvider.Oracle
 		public static void ResolveOracle(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, AssemblyName);
+		}
+
+		public static bool IsXmlTypeSupported
+		{
+			get { return _oracleDataProvider.IsXmlTypeSupported; }
 		}
 
 		#region CreateDataConnection

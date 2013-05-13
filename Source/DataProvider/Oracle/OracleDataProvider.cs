@@ -59,14 +59,35 @@ namespace LinqToDB.DataProvider.Oracle
 			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",       true);
 			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",    true);
 			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",    true);
-			_oracleRef          = connectionType.Assembly.GetType(typesNamespace + "OracleRef",           true);
 			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",     true);
 			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",        true);
 			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",     true);
 			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ",  true);
 			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",   true);
-			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",       true);
-			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",     true);
+
+			try
+			{
+				_oracleRef = connectionType.Assembly.GetType(typesNamespace + "OracleRef", true);
+			}
+			catch (Exception)
+			{
+			}
+
+			try
+			{
+				_oracleXmlType = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType", true);
+			}
+			catch (Exception)
+			{
+			}
+
+			try
+			{
+				_oracleXmlStream = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream", true);
+			}
+			catch (Exception)
+			{
+			}
 
 			SetProviderField(_oracleBFile,           _oracleBFile,        "GetOracleBFile");
 			SetProviderField(_oracleBinary,          _oracleBinary,       "GetOracleBinary");
@@ -76,12 +97,16 @@ namespace LinqToDB.DataProvider.Oracle
 			SetProviderField(_oracleDecimal,         _oracleDecimal,      "GetOracleDecimal");
 			SetProviderField(_oracleIntervalDS,      _oracleIntervalDS,   "GetOracleIntervalDS");
 			SetProviderField(_oracleIntervalYM,      _oracleIntervalYM,   "GetOracleIntervalYM");
-			SetProviderField(_oracleRef,             _oracleRef,          "GetOracleRef");
 			SetProviderField(_oracleString,          _oracleString,       "GetOracleString");
 			SetProviderField(_oracleTimeStamp,       _oracleTimeStamp,    "GetOracleTimeStamp");
 			SetProviderField(_oracleTimeStampLTZ,    _oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
 			SetProviderField(_oracleTimeStampTZ,     _oracleTimeStampTZ,  "GetOracleTimeStampTZ");
-			SetProviderField(_oracleXmlType,         _oracleXmlType,      "GetOracleXmlType");
+
+			if (_oracleRef != null)
+				SetProviderField(_oracleRef, _oracleRef, "GetOracleRef");
+
+			if (_oracleXmlType != null)
+				SetProviderField(_oracleXmlType, _oracleXmlType, "GetOracleXmlType");
 
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
@@ -239,14 +264,20 @@ namespace LinqToDB.DataProvider.Oracle
 			MappingSchema.AddScalarType(_oracleDecimal,      GetNullValue(_oracleDecimal),      true, DataType.Decimal);
 			MappingSchema.AddScalarType(_oracleIntervalDS,   GetNullValue(_oracleIntervalDS),   true, DataType.Time);       // ?
 			MappingSchema.AddScalarType(_oracleIntervalYM,   GetNullValue(_oracleIntervalYM),   true, DataType.Date);       // ?
-			MappingSchema.AddScalarType(_oracleRef,          GetNullValue(_oracleRef),          true, DataType.Binary);     // ?
 			MappingSchema.AddScalarType(_oracleRefCursor,    GetNullValue(_oracleRefCursor),    true, DataType.Binary);     // ?
 			MappingSchema.AddScalarType(_oracleString,       GetNullValue(_oracleString),       true, DataType.NVarChar);
 			MappingSchema.AddScalarType(_oracleTimeStamp,    GetNullValue(_oracleTimeStamp),    true, DataType.DateTime2);
 			MappingSchema.AddScalarType(_oracleTimeStampLTZ, GetNullValue(_oracleTimeStampLTZ), true, DataType.DateTimeOffset);
 			MappingSchema.AddScalarType(_oracleTimeStampTZ,  GetNullValue(_oracleTimeStampTZ),  true, DataType.DateTimeOffset);
-			MappingSchema.AddScalarType(_oracleXmlStream,    GetNullValue(_oracleXmlStream),    true, DataType.Xml);        // ?
-			MappingSchema.AddScalarType(_oracleXmlType,      GetNullValue(_oracleXmlType),      true, DataType.Xml);
+
+			if (_oracleRef != null)
+				MappingSchema.AddScalarType(_oracleRef, GetNullValue(_oracleRef), true, DataType.Binary); // ?
+
+			if (_oracleXmlType != null)
+				MappingSchema.AddScalarType(_oracleXmlType, GetNullValue(_oracleXmlType), true, DataType.Xml);
+
+			if (_oracleXmlStream != null)
+				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
 		}
 
 		static object GetNullValue(Type type)
@@ -258,6 +289,11 @@ namespace LinqToDB.DataProvider.Oracle
 		public    override string ConnectionNamespace { get { return OracleFactory.AssemblyName + ".Client"; } }
 		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleConnection"); } }
 		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleDataReader"); } }
+
+		public bool IsXmlTypeSupported
+		{
+			get { return _oracleXmlType != null; }
+		}
 
 		public override ISqlProvider CreateSqlProvider()
 		{
