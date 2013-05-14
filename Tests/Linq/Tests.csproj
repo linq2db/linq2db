@@ -356,10 +356,6 @@
       <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
       <Name>LinqToDB.DB2</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\PostgreSQL\LinqToDB.PostgreSQL.csproj">
-      <Project>{5A556D57-0D68-433B-AD78-02849583582B}</Project>
-      <Name>LinqToDB.PostgreSQL</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>

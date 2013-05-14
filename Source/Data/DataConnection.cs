@@ -16,6 +16,7 @@ namespace LinqToDB.Data
 	using DataProvider.Firebird;
 	using DataProvider.MySql;
 	using DataProvider.Oracle;
+	using DataProvider.PostgreSQL;
 	using DataProvider.SQLite;
 	using DataProvider.SqlCe;
 	using DataProvider.SqlServer;
@@ -174,14 +175,15 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			SqlServerFactory.GetDataProvider();
-			AccessFactory.   GetDataProvider();
-			SqlCeFactory.    GetDataProvider();
-			FirebirdFactory. GetDataProvider();
-			MySqlFactory.    GetDataProvider();
-			SQLiteFactory.   GetDataProvider();
-			SybaseFactory.   GetDataProvider();
-			OracleFactory.   GetDataProvider();
+			SqlServerFactory. GetDataProvider();
+			AccessFactory.    GetDataProvider();
+			SqlCeFactory.     GetDataProvider();
+			FirebirdFactory.  GetDataProvider();
+			MySqlFactory.     GetDataProvider();
+			SQLiteFactory.    GetDataProvider();
+			SybaseFactory.    GetDataProvider();
+			OracleFactory.    GetDataProvider();
+			PostgreSQLFactory.GetDataProvider();
 
 			var section = LinqToDBSection.Instance;
 

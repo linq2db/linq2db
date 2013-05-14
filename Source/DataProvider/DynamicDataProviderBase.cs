@@ -75,8 +75,8 @@ namespace LinqToDB.DataProvider
 			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
 			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
 		{
-			var pType  = connectionType.Assembly.GetType(connectionType.Namespace + "." + parameterTypeName, true);
-			var dbType = connectionType.Assembly.GetType(connectionType.Namespace + "." + dbTypeName, true);
+			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
 			var value  = Enum.Parse(dbType, valueName);
 
 			var p = Expression.Parameter(typeof(IDbDataParameter));
@@ -137,12 +137,13 @@ namespace LinqToDB.DataProvider
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+			var methodCall          = Expression.Call(dataReaderParameter, methodName, null, indexParameter) as Expression;
+
+			if (methodCall.Type != toType)
+				methodCall = Expression.Convert(methodCall, toType);
 
 			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType }] =
-				Expression.Lambda(
-					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
-					dataReaderParameter,
-					indexParameter);
+				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 		}
 
 		#endregion

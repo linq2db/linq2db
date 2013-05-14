@@ -201,6 +201,23 @@ namespace LinqToDB.Mapping
 			return (Func<TFrom,TTo>)li.Delegate;
 		}
 
+		public void SetConvertExpression(
+			[JetBrains.Annotations.NotNull] Type fromType,
+			[JetBrains.Annotations.NotNull] Type toType,
+			[JetBrains.Annotations.NotNull] LambdaExpression expr,
+			bool addNullCheck = true)
+		{
+			if (fromType == null) throw new ArgumentNullException("fromType");
+			if (toType   == null) throw new ArgumentNullException("toType");
+			if (expr     == null) throw new ArgumentNullException("expr");
+
+			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+				AddNullCheck(expr) :
+				expr;
+
+			_schemas[0].SetConvertInfo(fromType, toType, new ConvertInfo.LambdaInfo(ex, expr, null, false));
+		}
+
 		public void SetConvertExpression<TFrom,TTo>(
 			[JetBrains.Annotations.NotNull] Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)

@@ -57,6 +57,10 @@
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLFactory.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLDataProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlProvider.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
@@ -325,6 +329,7 @@
   <ItemGroup>
     <None Include="linq2db.snk" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

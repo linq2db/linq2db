@@ -11,7 +11,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;

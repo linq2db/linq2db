@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Linq.Expressions;
-
 	using Common;
-
 	using Data;
-
 	using Expressions;
-
 	using Mapping;
 	using SqlProvider;
 
