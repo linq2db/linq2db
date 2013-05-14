@@ -274,13 +274,9 @@ namespace SybaseDataContext
 	{
 		#region OutRefEnumTest
 
-		public partial class OutRefEnumTestResult
+		public static int OutRefEnumTest(this DataConnection dataConnection, string str, out string outputStr, out string inputOutputStr)
 		{
-		}
-
-		public static IEnumerable<OutRefEnumTestResult> OutRefEnumTest(this DataConnection dataConnection, string str, out string outputStr, out string inputOutputStr)
-		{
-			var ret = dataConnection.QueryProc<OutRefEnumTestResult>("[OutRefEnumTest]",
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
 				new DataParameter("str", str));
 
 			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
@@ -293,13 +289,9 @@ namespace SybaseDataContext
 
 		#region OutRefTest
 
-		public partial class OutRefTestResult
+		public static int OutRefTest(this DataConnection dataConnection, int? ID, out int? outputID, out int? inputOutputID, string str, out string outputStr, out string inputOutputStr)
 		{
-		}
-
-		public static IEnumerable<OutRefTestResult> OutRefTest(this DataConnection dataConnection, int? ID, out int? outputID, out int? inputOutputID, string str, out string outputStr, out string inputOutputStr)
-		{
-			var ret = dataConnection.QueryProc<OutRefTestResult>("[OutRefTest]",
+			var ret = dataConnection.ExecuteProc("[OutRefTest]",
 				new DataParameter("ID",  ID),
 				new DataParameter("str", str));
 
@@ -355,13 +347,9 @@ namespace SybaseDataContext
 
 		#region Person_Delete
 
-		public partial class Person_DeleteResult
+		public static int Person_Delete(this DataConnection dataConnection, int? PersonID)
 		{
-		}
-
-		public static IEnumerable<Person_DeleteResult> Person_Delete(this DataConnection dataConnection, int? PersonID)
-		{
-			return dataConnection.QueryProc<Person_DeleteResult>("[Person_Delete]",
+			return dataConnection.ExecuteProc("[Person_Delete]",
 				new DataParameter("PersonID", PersonID));
 		}
 
@@ -387,13 +375,9 @@ namespace SybaseDataContext
 
 		#region Person_Insert_OutputParameter
 
-		public partial class Person_Insert_OutputParameterResult
+		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender, out int? PersonID)
 		{
-		}
-
-		public static IEnumerable<Person_Insert_OutputParameterResult> Person_Insert_OutputParameter(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender, out int? PersonID)
-		{
-			var ret = dataConnection.QueryProc<Person_Insert_OutputParameterResult>("[Person_Insert_OutputParameter]",
+			var ret = dataConnection.ExecuteProc("Person_Insert_OutputParameter",
 				new DataParameter("FirstName",  FirstName),
 				new DataParameter("LastName",   LastName),
 				new DataParameter("MiddleName", MiddleName),
@@ -449,13 +433,9 @@ namespace SybaseDataContext
 
 		#region Person_Update
 
-		public partial class Person_UpdateResult
+		public static int Person_Update(this DataConnection dataConnection, int? PersonID, string FirstName, string LastName, string MiddleName, string Gender)
 		{
-		}
-
-		public static IEnumerable<Person_UpdateResult> Person_Update(this DataConnection dataConnection, int? PersonID, string FirstName, string LastName, string MiddleName, string Gender)
-		{
-			return dataConnection.QueryProc<Person_UpdateResult>("[Person_Update]",
+			return dataConnection.ExecuteProc("[Person_Update]",
 				new DataParameter("PersonID",   PersonID),
 				new DataParameter("FirstName",  FirstName),
 				new DataParameter("LastName",   LastName),
@@ -482,13 +462,9 @@ namespace SybaseDataContext
 
 		#region Scalar_OutputParameter
 
-		public partial class Scalar_OutputParameterResult
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, out int? outputInt, out string outputString)
 		{
-		}
-
-		public static IEnumerable<Scalar_OutputParameterResult> Scalar_OutputParameter(this DataConnection dataConnection, out int? outputInt, out string outputString)
-		{
-			var ret = dataConnection.QueryProc<Scalar_OutputParameterResult>("[Scalar_OutputParameter]");
+			var ret = dataConnection.ExecuteProc("[Scalar_OutputParameter]");
 
 			outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputInt"]).   Value);
 			outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
@@ -502,7 +478,7 @@ namespace SybaseDataContext
 
 		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? id)
 		{
-			return dataConnection.QueryProc<Person>("[Scalar_ReturnParameterWithObject]",
+			return dataConnection.QueryProc<Person>("Scalar_ReturnParameterWithObject",
 				new DataParameter("id", id));
 		}
 

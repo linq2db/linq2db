@@ -48,6 +48,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll</HintPath>
     </Reference>
+    <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
+      <HintPath>..\..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite, Version=1.0.85.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
@@ -71,6 +74,11 @@
   <ItemGroup>
     <Compile Include="Access.generated.cs">
       <DependentUpon>Access.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Oracle.generated.cs">
+      <DependentUpon>Oracle.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
@@ -114,6 +122,10 @@
     <None Include="Access.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Access.generated.cs</LastGenOutput>
+    </None>
+    <None Include="Oracle.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Oracle.generated.cs</LastGenOutput>
     </None>
     <None Include="Firebird.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

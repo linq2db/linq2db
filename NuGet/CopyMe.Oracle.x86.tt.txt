@@ -1,0 +1,41 @@
+<#@ template language="C#" debug="True" hostSpecific="True"                       #>
+<#@ output extension=".generated.cs"                                              #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.x86.ttinclude"  #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#
+	/*
+		1. Download and install Oracle data provider for .NET (http://www.oracle.com/technetwork/topics/dotnet/downloads/index.html).
+
+		2. Copy this file to a folder where you would like to generate your data model,
+		   rename it, and delete .txt extension. For example:
+
+			MyProject
+				DataModels
+					MyDatabase.tt
+
+		3. Modify the connection settings below to connect to your database.
+
+		4. Add connection string to the web/app.config file:
+
+			<connectionStrings>
+				<add name="MyDatabase" connectionString="Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=MyServer)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=MyDatabase)));User Id=MyUser;Password=MyPassword;" providerName="Oracle" />
+			</connectionStrings>
+
+		5. To access your database use the following code:
+
+			using (var db = new MyDatabaseDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
+
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+	*/
+
+	NamespaceName = "DataModel";
+
+	LoadOracleMetadata("MyServer", "1521", "MyDatabase", "MyUser", "MyPassword");
+	GenerateModel();
+#>

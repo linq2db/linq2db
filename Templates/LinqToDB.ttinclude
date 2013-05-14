@@ -254,16 +254,18 @@ void GenerateTypesFromMetadata()
 			}
 			else
 			{
-				var spName = "\"";
-
-				if      (DatabaseName != null) spName += "[" + DatabaseName + "].";
-				if      (p.Schema     != null) spName += "[" + p.Schema     + "].";
-				else if (DatabaseName != null) spName += ".";
+				var spName = "\"" + 
+					SqlProvider.BuildTableName(
+						new System.Text.StringBuilder(),
+						(string)SqlProvider.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						(string)SqlProvider.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToOwner),
+						(string)SqlProvider.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+					).ToString() +
+					 "\"";
 
 				var inputParameters  = p.ProcParameters.Where(pp => pp.IsIn). ToList();
 				var outputParameters = p.ProcParameters.Where(pp => pp.IsOut).ToList();
 
-				spName += "[" + p.ProcedureName + "]\"";
 				spName += inputParameters.Count == 0 ? ");" : ",";
 
 				var hasOut = outputParameters.Any(pr => pr.IsOut);
@@ -318,7 +320,7 @@ void GenerateTypesFromMetadata()
 						str += LenDiff(maxLenParam, pr.ParameterName);
 						str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
 
-						if (pr.Size != null)
+						if (pr.Size != null && pr.Size.Value != 0)
 							str += ", Size = " + pr.Size.Value;
 
 						str += " }";
