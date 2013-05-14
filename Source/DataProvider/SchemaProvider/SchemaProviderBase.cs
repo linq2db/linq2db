@@ -480,10 +480,13 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					{
 						switch (paramNames[i].Trim())
 						{
+							case "size"       :
 							case "length"     :
 							case "max length" : paramValues[i] = length; break;
 							case "precision"  : paramValues[i] = prec;   break;
 							case "scale"      : paramValues[i] = scale;  break;
+							default:
+								break;
 						}
 					}
 
@@ -505,7 +508,10 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				return string.Join("", ss.ToArray());
 			}
 
-			return name;
+			return name
+				.Replace('$', '_')
+				.Replace('#', '_')
+				;
 		}
 
 		protected string ToTypeName(Type type, bool isNullable)

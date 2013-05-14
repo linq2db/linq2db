@@ -51,43 +51,22 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var typesNamespace = OracleFactory.AssemblyName + ".Types.";
 
-			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",         true);
-			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",        true);
-			_oracleBlob         = connectionType.Assembly.GetType(typesNamespace + "OracleBlob",          true);
-			_oracleClob         = connectionType.Assembly.GetType(typesNamespace + "OracleClob",          true);
-			_oracleDate         = connectionType.Assembly.GetType(typesNamespace + "OracleDate",          true);
-			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",       true);
-			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",    true);
-			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",    true);
-			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",     true);
-			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",        true);
-			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",     true);
-			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ",  true);
-			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",   true);
-
-			try
-			{
-				_oracleRef = connectionType.Assembly.GetType(typesNamespace + "OracleRef", true);
-			}
-			catch (Exception)
-			{
-			}
-
-			try
-			{
-				_oracleXmlType = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType", true);
-			}
-			catch (Exception)
-			{
-			}
-
-			try
-			{
-				_oracleXmlStream = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream", true);
-			}
-			catch (Exception)
-			{
-			}
+			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
+			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
+			_oracleBlob         = connectionType.Assembly.GetType(typesNamespace + "OracleBlob",         true);
+			_oracleClob         = connectionType.Assembly.GetType(typesNamespace + "OracleClob",         true);
+			_oracleDate         = connectionType.Assembly.GetType(typesNamespace + "OracleDate",         true);
+			_oracleDecimal      = connectionType.Assembly.GetType(typesNamespace + "OracleDecimal",      true);
+			_oracleIntervalDS   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalDS",   true);
+			_oracleIntervalYM   = connectionType.Assembly.GetType(typesNamespace + "OracleIntervalYM",   true);
+			_oracleRefCursor    = connectionType.Assembly.GetType(typesNamespace + "OracleRefCursor",    true);
+			_oracleString       = connectionType.Assembly.GetType(typesNamespace + "OracleString",       true);
+			_oracleTimeStamp    = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStamp",    true);
+			_oracleTimeStampLTZ = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampLTZ", true);
+			_oracleTimeStampTZ  = connectionType.Assembly.GetType(typesNamespace + "OracleTimeStampTZ",  true);
+			_oracleRef          = connectionType.Assembly.GetType(typesNamespace + "OracleRef",          false);
+			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",      false);
+			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",    false);
 
 			SetProviderField(_oracleBFile,           _oracleBFile,        "GetOracleBFile");
 			SetProviderField(_oracleBinary,          _oracleBinary,       "GetOracleBinary");
@@ -298,6 +277,11 @@ namespace LinqToDB.DataProvider.Oracle
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new OracleSqlProvider(SqlProviderFlags);
+		}
+
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new OracleSchemaProvider();
 		}
 
 		Action<DataConnection> _setBindByName;

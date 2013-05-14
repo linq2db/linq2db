@@ -145,5 +145,11 @@ namespace LinqToDB.Mapping
 		}
 
 		#endregion
+
+		#region Options
+
+		public StringComparison? ColumnComparisonOption;
+
+		#endregion
 	}
 }

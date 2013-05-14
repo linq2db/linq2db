@@ -755,6 +755,29 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region Options
+
+		public StringComparison ColumnComparisonOption
+		{
+			get
+			{
+				if (_schemas[0].ColumnComparisonOption == null)
+				{
+					_schemas[0].ColumnComparisonOption = _schemas
+						.Select        (s => s.ColumnComparisonOption)
+						.FirstOrDefault(s => s != null)
+						??
+						StringComparison.Ordinal;
+				}
+
+				return _schemas[0].ColumnComparisonOption.Value;
+			}
+
+			set { _schemas[0].ColumnComparisonOption = value; }
+		}
+
+		#endregion
+
 		#region EntityDescriptor
 
 		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;

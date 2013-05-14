@@ -530,7 +530,8 @@ namespace LinqToDB.Data
 					var members =
 					(
 						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m => m.ColumnName == n.name)
+						let   member = td.Columns.FirstOrDefault(m => 
+							string.Compare(m.ColumnName, n.name, dataConnection.MappingSchema.ColumnComparisonOption) == 0)
 						where member != null
 						select new
 						{
