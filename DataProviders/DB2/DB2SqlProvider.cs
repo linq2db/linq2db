@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
-					if (QuoteIdentifiers)
+					if (value != null && QuoteIdentifiers)
 					{
 						var name = value.ToString();
 

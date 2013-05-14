@@ -227,6 +227,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case ConvertType.NameToDatabase:
 				case ConvertType.NameToOwner:
 				case ConvertType.NameToQueryTable:
+					if (value != null)
 					{
 						var name = value.ToString();
 
@@ -235,9 +236,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 						if (name.IndexOf('.') > 0)
 							value = string.Join("].[", name.Split('.'));
+
+						return "[" + value + "]";
 					}
 
-					return "[" + value + "]";
+					break;
 
 				case ConvertType.SprocParameterToName:
 					if (value != null)

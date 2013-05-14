@@ -84,17 +84,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 
 			return
 			(
 				from c in tcs.AsEnumerable()
-				join dt in DataTypes on c.Field<string>("DATATYPE") equals dt.TypeName
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("OWNER") + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
-					DataType     = dt.TypeName,
+					DataType     = c.Field<string>("DATATYPE"),
 					IsNullable   = Converter.ChangeTypeTo<string>(c["NULLABLE"]) == "Y",
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ID"]),
 					Length       = Converter.ChangeTypeTo<int> (c["LENGTH"]),
@@ -193,16 +192,25 @@ namespace LinqToDB.DataProvider.Oracle
 				case "NUMBER" :
 					if (prec == 0) return columnType;
 					break;
-
-				case "INTERVAL DAY TO SECOND"         :
-				case "INTERVAL YEAR TO MONTH"         :
-				case "TIMESTAMP"                      :
-				case "TIMESTAMP WITH LOCAL TIME ZONE" :
-				case "TIMESTAMP WITH TIME ZONE"       :
-					break;
 			}
 
 			return base.GetDbType(columnType, dataType, length, prec, scale);
+		}
+
+		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		{
+			if (columnType == "NUMBER" && precision > 0 && scale == 0)
+			{
+				if (precision <  3) return typeof(sbyte);
+				if (precision <  5) return typeof(short);
+				if (precision < 10) return typeof(int);
+				if (precision < 20) return typeof(long);
+			}
+
+			if (columnType.StartsWith("TIMESTAMP"))
+				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
+
+			return base.GetSystemType(columnType, dataType, length, precision, scale);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)
@@ -227,12 +235,14 @@ namespace LinqToDB.DataProvider.Oracle
 				case "NUMBER"                         : return DataType.Decimal;
 				case "NVARCHAR2"                      : return DataType.NVarChar;
 				case "RAW"                            : return DataType.Binary;
-				case "TIMESTAMP"                      : return DataType.DateTime2;
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return DataType.DateTimeOffset;
-				case "TIMESTAMP WITH TIME ZONE"       : return DataType.DateTimeOffset;
 				case "VARCHAR2"                       : return DataType.VarChar;
 				case "XMLTYPE"                        : return DataType.Xml;
 				case "ROWID"                          : return DataType.VarChar;
+				default:
+					if (dataType.StartsWith("TIMESTAMP"))
+						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
+
+					break;
 			}
 
 			return DataType.Undefined;

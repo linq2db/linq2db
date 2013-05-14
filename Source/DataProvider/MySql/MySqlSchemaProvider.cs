@@ -178,14 +178,14 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType)
+		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
 		{
 			switch (columnType)
 			{
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(columnType, dataType);
+			return base.GetSystemType(columnType, dataType, length, precision, scale);
 		}
 	}
 }

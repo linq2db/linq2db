@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType)
+		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
 		{
 			if (dataType == null)
 			{
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.Access
 				}
 			}
 
-			return base.GetSystemType(columnType, dataType);
+			return base.GetSystemType(columnType, dataType, length, precision, scale);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)

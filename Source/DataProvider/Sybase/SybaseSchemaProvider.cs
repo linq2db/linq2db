@@ -201,19 +201,21 @@ namespace LinqToDB.DataProvider.Sybase
 			).ToList();
 		}
 
+		protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+		{
+			var dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+
+			return dt.AsEnumerable().Any() ? dt : null;
+		}
+
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
 			return
 			(
 				from r in resultTable.AsEnumerable()
 
-//				let columnType = r.Field<string>("DataTypeName")
 				let columnName = r.Field<string>("ColumnName")
 				let isNullable = r.Field<bool>  ("AllowDBNull")
-
-//				join dt in DataTypes
-//					on columnType equals dt.TypeName into g1
-//				from dt in g1.DefaultIfEmpty()
 
 				let systemType = r.Field<Type>("DataType")
 				let length     = r.Field<int> ("ColumnSize")
@@ -223,12 +225,10 @@ namespace LinqToDB.DataProvider.Sybase
 				select new ColumnSchema
 				{
 					ColumnName = columnName,
-					//ColumnType = GetDbType(columnType, dt, length, precision, scale),
 					IsNullable = isNullable,
 					MemberName = ToValidName(columnName),
 					MemberType = ToTypeName(systemType, isNullable),
 					SystemType = systemType ?? typeof(object),
-//					DataType   = GetDataType(columnType, null),
 					IsIdentity = r.Field<bool>("IsIdentity"),
 				}
 			).ToList();

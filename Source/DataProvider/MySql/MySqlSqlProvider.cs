@@ -206,9 +206,6 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override object Convert(object value, ConvertType convertType)
 		{
-			if (value == null)
-				throw new ArgumentNullException("value");
-
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
@@ -257,6 +254,7 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToOwner     :
 				case ConvertType.NameToQueryTable:
+					if (value != null)
 					{
 						var name = value.ToString();
 						if (name.Length > 0 && name[0] == '`')
@@ -267,6 +265,8 @@ namespace LinqToDB.DataProvider.MySql
 
 						return "`" + value + "`";
 					}
+
+					break;
 			}
 
 			return value;
