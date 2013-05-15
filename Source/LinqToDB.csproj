@@ -57,6 +57,7 @@
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLFactory.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLDataProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />

@@ -139,6 +139,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSqlProvider(SqlProviderFlags);
 		}
 
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new PostgreSQLSchemaProvider();
+		}
+
 		static Action<IDbDataParameter> _setVarBinary;
 		static Action<IDbDataParameter> _setBoolean;
 		static Action<IDbDataParameter> _setXml;

@@ -16,7 +16,6 @@ namespace Tests.SchemaProvider
 		public void Test([DataContexts(
 			ProviderName.DB2,
 			ProviderName.Informix,
-			ProviderName.PostgreSQL,
 			ExcludeLinqService=true)] string context)
 		{
 			SqlServerFactory.ResolveSqlTypes("");

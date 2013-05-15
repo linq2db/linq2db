@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected PostgreSQLMappingSchema(string configuration) : base(configuration)
 		{
+			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+
 			SetDataType(typeof(string), DataType.Undefined);
 		}
 	}
