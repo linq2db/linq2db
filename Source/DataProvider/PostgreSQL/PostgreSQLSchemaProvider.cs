@@ -182,6 +182,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					*/
 				}
 			}
+
+			return new List<ForeingKeyInfo>();
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
