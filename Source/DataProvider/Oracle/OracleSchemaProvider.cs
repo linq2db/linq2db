@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 				from t in tables.AsEnumerable()
 				let schema  = t.Field<string>("OWNER")
 				let name    = t.Field<string>("TABLE_NAME")
-				where schema == _currentUser
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
 				select new TableInfo
 				{
 					TableID         = schema + '.' + name,
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 				from t in views.AsEnumerable()
 				let schema  = t.Field<string>("OWNER")
 				let name    = t.Field<string>("VIEW_NAME")
-				where schema == _currentUser
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
 				select new TableInfo
 				{
 					TableID         = schema + '.' + name,
@@ -132,10 +132,8 @@ namespace LinqToDB.DataProvider.Oracle
 							PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
 					WHERE 
 						FKCON.CONSTRAINT_TYPE = 'R'          AND
-						FKCON.R_OWNER         = :currentUser AND
 						FKCOLS.POSITION       = PKCOLS.POSITION
-					",
-					new { currentUser = _currentUser })
+					")
 				.ToList();
 		}
 
@@ -148,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 				from p in ps.AsEnumerable()
 				let schema  = p.Field<string>("OWNER")
 				let name    = p.Field<string>("OBJECT_NAME")
-				where schema == _currentUser
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
 				select new ProcedureInfo
 				{
 					ProcedureID     = schema + "." + name,
@@ -169,7 +167,7 @@ namespace LinqToDB.DataProvider.Oracle
 				let schema    = pp.Field<string>("OWNER")
 				let name      = pp.Field<string>("OBJECT_NAME")
 				let direction = pp.Field<string>("IN_OUT")
-				where schema == _currentUser
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
 				select new ProcedureParameterInfo
 				{
 					ProcedureID   = schema + "." + name,

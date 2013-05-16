@@ -38,20 +38,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			return
-				dataConnection.Query<TableInfo>(@"
-					SELECT
-						table_catalog || '.' || table_schema || '.' || table_name as TableID,
-						table_catalog                                             as CatalogName,
-						table_schema                                              as SchemaName,
-						table_name                                                as TableName,
-						table_schema = 'public'                                   as IsDefaultSchema,
-						table_type = 'VIEW'                                       as IsView
-					FROM
-						information_schema.tables
-					WHERE
-						table_schema NOT IN ('pg_catalog','information_schema')")
-				.ToList();
+			var sql = (@"
+				SELECT
+					table_catalog || '.' || table_schema || '.' || table_name as TableID,
+					table_catalog                                             as CatalogName,
+					table_schema                                              as SchemaName,
+					table_name                                                as TableName,
+					table_schema = 'public'                                   as IsDefaultSchema,
+					table_type = 'VIEW'                                       as IsView
+				FROM
+					information_schema.tables");
+
+			if (ExcludedSchemas.Length != 0 || IncludedSchemas.Length != 0)
+				sql += @"
+				WHERE
+					table_schema NOT IN ('pg_catalog','information_schema')";
+
+			return dataConnection.Query<TableInfo>(sql).ToList();
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)

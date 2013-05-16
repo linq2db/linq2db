@@ -114,11 +114,16 @@ namespace LinqToDB.DataProvider.SchemaProvider
 		}
 
 		protected List<DataTypeInfo> DataTypes;
+		protected string[]           IncludedSchemas;
+		protected string[]           ExcludedSchemas;
 
-		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options)
+		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
 			if (options == null)
 				options = new GetSchemaOptions();
+
+			IncludedSchemas = options.IncludedSchemas ?? new string[0];
+			ExcludedSchemas = options.ExcludedSchemas ?? new string[0];
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
 
@@ -129,8 +134,13 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 			if (options.GetTables)
 			{
-				tables = GetTables(dataConnection)
-					.Select(t => new TableSchema
+				tables =
+				(
+					from t in GetTables(dataConnection)
+					where
+						(IncludedSchemas.Length == 0 ||  IncludedSchemas.Contains(t.SchemaName)) &&
+						(ExcludedSchemas.Length == 0 || !ExcludedSchemas.Contains(t.SchemaName))
+					select new TableSchema
 					{
 						ID              = t.TableID,
 						CatalogName     = t.CatalogName,
@@ -142,8 +152,8 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						TypeName        = ToValidName(t.TableName),
 						Columns         = new List<ColumnSchema>(),
 						ForeignKeys     = new List<ForeignKeySchema>()
-					})
-					.ToList();
+					}
+				).ToList();
 
 				var pks = GetPrimaryKeys(dataConnection);
 
@@ -198,8 +208,12 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
-					var thisTable   = (from t in tables             where t.ID         == fk.ThisTableID  select t).Single();
-					var otherTable  = (from t in tables             where t.ID         == fk.OtherTableID select t).Single();
+					var thisTable  = (from t in tables where t.ID == fk.ThisTableID  select t).FirstOrDefault();
+					var otherTable = (from t in tables where t.ID == fk.OtherTableID select t).FirstOrDefault();
+
+					if (thisTable == null || otherTable == null)
+						continue;
+
 					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).Single();
 					var otherColumn = (from c in otherTable.Columns where c.ColumnName == fk.OtherColumn  select c).Single();
 
@@ -243,6 +257,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					procedures =
 					(
 						from sp in procs
+						where
+							(IncludedSchemas.Length == 0 ||  IncludedSchemas.Contains(sp.SchemaName)) &&
+							(ExcludedSchemas.Length == 0 || !ExcludedSchemas.Contains(sp.SchemaName))
 						join p  in procPparams on sp.ProcedureID equals p.ProcedureID
 						into gr
 						select new ProcedureSchema
@@ -505,12 +522,14 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				var ss = name.Split(' ')
 					.Where (s => s.Trim().Length > 0)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
-				return string.Join("", ss.ToArray());
+
+				name = string.Join("", ss.ToArray());
 			}
 
 			return name
 				.Replace('$', '_')
 				.Replace('#', '_')
+				.Replace('-', '_')
 				;
 		}
 
