@@ -33,6 +33,7 @@ string   DefaultConfiguration     = null;
 bool     GenerateAssociations     = true;
 bool     GenerateBackReferences   = true;
 bool     ReplaceSimilarTables     = true;
+bool     IncludeDefaultSchema     = true;
 
 Class    DataContextObject;
 
@@ -72,7 +73,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
 			table = new Table
 			{
-				Schema                  = t.IsDefaultSchema ? null : t.SchemaName,
+				Schema                  = (t.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(t.SchemaName)? null : t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                =
@@ -147,7 +148,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			key = p.IsDefaultSchema ? p.ProcedureName : p.SchemaName + "." + p.ProcedureName,
 			proc = new Procedure
 			{
-				Schema          = p.IsDefaultSchema ? null : p.SchemaName,
+				Schema          = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
 				ProcedureName   = p.ProcedureName,
 				Name            = p.MemberName,
 				IsFunction      = p.IsFunction,
