@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override void InitCommand(DataConnection dataConnection)
 		{
-			dataConnection.Command = null;
+			dataConnection.DisposeCommand();
 			base.InitCommand(dataConnection);
 		}
 

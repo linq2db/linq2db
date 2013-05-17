@@ -377,11 +377,7 @@ namespace LinqToDB.Data
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
 
-			if (_command != null)
-			{
-				_command.Dispose();
-				_command = null;
-			}
+			DisposeCommand();
 
 			if (Transaction != null && _closeTransaction)
 			{
@@ -436,6 +432,15 @@ namespace LinqToDB.Data
 				command.Transaction = Transaction;
 
 			return command;
+		}
+
+		public void DisposeCommand()
+		{
+			if (_command != null)
+			{
+				_command.Dispose();
+				_command = null;
+			}
 		}
 
 		#endregion

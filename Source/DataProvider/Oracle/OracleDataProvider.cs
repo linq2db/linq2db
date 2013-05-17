@@ -284,7 +284,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override void InitCommand(DataConnection dataConnection)
 		{
-			dataConnection.Command = null;
+			dataConnection.DisposeCommand();
 
 			if (_setBindByName == null)
 				EnsureConnection();
