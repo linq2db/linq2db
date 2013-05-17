@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new PostgreSQLSchemaProvider();
+			return new PostgreSQLSchemaProvider(this);
 		}
 
 		static Action<IDbDataParameter> _setVarBinary;

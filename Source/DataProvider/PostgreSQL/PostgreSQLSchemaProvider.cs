@@ -1,17 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
-using System.Data;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
 	using Data;
 	using SchemaProvider;
 
 	class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
+		PostgreSQLDataProvider _dataProvider;
+
+		public PostgreSQLSchemaProvider(PostgreSQLDataProvider dataProvider)
+		{
+			_dataProvider = dataProvider;
+		}
 //		protected override string GetDataSourceName(DbConnection dbConnection)
 //		{
 //			return ((dynamic)dbConnection).HostName;
@@ -26,15 +29,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new[]
 			{
-				new DataTypeInfo
-				{
-					TypeName = "", DataType = null, CreateFormat = "", CreateParameters = "", ProviderDbType = 0,
-				}
-				
+				new DataTypeInfo { TypeName = "name",    DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "oid",     DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "xid",     DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "regproc", DataType = typeof(object).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "text",    DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
 			}.ToList();
 		}
-
-		string _currentUser;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
@@ -78,8 +79,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			return
-				dataConnection.Query<ColumnInfo>(@"
+			var sql = @"
 					SELECT
 						table_catalog || '.' || table_schema || '.' || table_name           as TableID,
 						column_name                                                         as Name,
@@ -93,10 +93,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						is_generated <> 'NEVER'                                             as SkipOnInsert,
 						is_updatable = 'NO'                                                 as SkipOnUpdate
 					FROM
-						information_schema.columns
+						information_schema.columns";
+
+			if (ExcludedSchemas.Length != 0 || IncludedSchemas.Length != 0)
+				sql += @"
 					WHERE
-						table_schema NOT IN ('pg_catalog','information_schema')")
-				.ToList();
+						table_schema NOT IN ('pg_catalog','information_schema')";
+
+			return dataConnection.Query<ColumnInfo>(sql).ToList();
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
@@ -112,8 +116,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				}, @"
 				SELECT
 					pg_constraint.conname,
-					pg_constraint.conrelid,
-					pg_constraint.confrelid,
+					current_database() || '.' || this_schema.nspname  || '.' || this_table.relname,
+					current_database() || '.' || other_schema.nspname || '.' || other_table.relname,
 					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[01]),
 					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[02]),
 					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[03]),
@@ -148,117 +152,82 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[16])
 				FROM
 					pg_constraint
+						JOIN pg_class as this_table ON this_table.oid = pg_constraint.conrelid
+							JOIN pg_namespace as this_schema ON this_table.relnamespace = this_schema.oid
+						JOIN pg_class as other_table ON other_table.oid = pg_constraint.confrelid
+							JOIN pg_namespace as other_schema ON other_table.relnamespace = other_schema.oid
 				WHERE
 					pg_constraint.contype = 'f'")
 				.ToList();
 
-
-			{
-				foreach (var item in data)
-				{
-					/*
-					var name            = Convert.ToString(item.name);
-					var thisTableID     = Convert.ToInt32 (rd["ThisTable"]);
-					var otherTableID    = Convert.ToInt32 (rd["OtherTable"]);
-
-					var thisTable   = (from t in tables  where t.ID == thisTableID  select t.Table).Single();
-					var otherTable  = (from t in tables  where t.ID == otherTableID select t.Table).Single();
-
-					thisTable.ForeignKeys.Add(name, new ForeignKey { KeyName = name, MemberName = name, OtherTable = otherTable });
-
-					for (int i = 1; i <= 16; i++)
-					{
-						if (rd.IsDBNull(rd.GetOrdinal("ThisColumn"  + i)))
-							break;
-
-						var thisColumnName  = Convert.ToString(rd["ThisColumn"  + i]);
-						var otherColumnName = Convert.ToString(rd["OtherColumn" + i]);
-
-						var thisColumn  = (from c in columns where c.ID == thisTableID  && c.Column.ColumnName == thisColumnName  select c.Column).Single();
-						var otherColumn = (from c in columns where c.ID == otherTableID && c.Column.ColumnName == otherColumnName select c.Column).Single();
-
-						var key = thisTable.ForeignKeys[name];
-
-						key.ThisColumns. Add(thisColumn);
-						key.OtherColumns.Add(otherColumn);
-					}
-					*/
-				}
-			}
-
-			return new List<ForeingKeyInfo>();
-		}
-
-		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
-		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
-
 			return
 			(
-				from p in ps.AsEnumerable()
-				let schema  = p.Field<string>("OWNER")
-				let name    = p.Field<string>("OBJECT_NAME")
-				where schema == _currentUser
-				select new ProcedureInfo
-				{
-					ProcedureID     = schema + "." + name,
-					SchemaName      = schema,
-					ProcedureName   = name,
-					IsDefaultSchema = schema == _currentUser,
-				}
-			).ToList();
-		}
+				from item in data
 
-		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
-		{
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+				let name         = Convert.ToString(item.name)
+				let thisTableID  = Convert.ToString (item.thisTable)
+				let otherTableID = Convert.ToString (item.otherTable)
 
-			return
-			(
-				from pp in pps.AsEnumerable()
-				let schema    = pp.Field<string>("OWNER")
-				let name      = pp.Field<string>("OBJECT_NAME")
-				let direction = pp.Field<string>("IN_OUT")
-				where schema == _currentUser
-				select new ProcedureParameterInfo
+				from col in item.thisColumns
+					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
+					.Select((cs,i) => new { cs.thisColumn, cs.otherColumn, ordinal = i})
+				where col.thisColumn != null && !(col.thisColumn is DBNull)
+				select new ForeingKeyInfo
 				{
-					ProcedureID   = schema + "." + name,
-					ParameterName = pp.Field<string>("ARGUMENT_NAME"),
-					DataType      = pp.Field<string>("DATA_TYPE"),
-					Ordinal       = Converter.ChangeTypeTo<int>(pp["POSITION"]),
-					Length        = Converter.ChangeTypeTo<int>(pp["DATA_LENGTH"]),
-					Precision     = Converter.ChangeTypeTo<int>(pp["DATA_PRECISION"]),
-					Scale         = Converter.ChangeTypeTo<int>(pp["DATA_SCALE"]),
-					IsIn          = direction.StartsWith("IN"),
-					IsOut         = direction.EndsWith("OUT"),
+					Name         = name,
+					ThisTableID  = thisTableID,
+					OtherTableID = otherTableID,
+					ThisColumn   = Convert.ToString(col.thisColumn),
+					OtherColumn  = Convert.ToString(col.otherColumn),
+					Ordinal      = col.ordinal
 				}
 			).ToList();
 		}
 
 		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
 		{
-			switch (columnType)
-			{
-				case "NUMBER" :
-					if (prec == 0) return columnType;
-					break;
-			}
+switch (columnType)
+{
+	case "name" :
+	case "regproc" :
+	case "text" :
+	case "oid"  : break;
+	default:
+		break;
+}
+
+//			switch (columnType)
+//			{
+//				case "NUMBER" :
+//					if (prec == 0) return columnType;
+//					break;
+//			}
 
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
 		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
 		{
-			if (columnType == "NUMBER" && precision > 0 && scale == 0)
-			{
-				if (precision <  3) return typeof(sbyte);
-				if (precision <  5) return typeof(short);
-				if (precision < 10) return typeof(int);
-				if (precision < 20) return typeof(long);
-			}
+switch (columnType)
+{
+	case "name" :
+	case "regproc" :
+	case "text" :
+	case "oid"  : break;
+	default:
+		break;
+}
 
-			if (columnType.StartsWith("TIMESTAMP"))
-				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
+//			if (columnType == "NUMBER" && precision > 0 && scale == 0)
+//			{
+//				if (precision <  3) return typeof(sbyte);
+//				if (precision <  5) return typeof(short);
+//				if (precision < 10) return typeof(int);
+//				if (precision < 20) return typeof(long);
+//			}
+//
+//			if (columnType.StartsWith("TIMESTAMP"))
+//				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
 			return base.GetSystemType(columnType, dataType, length, precision, scale);
 		}
@@ -267,34 +236,74 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (dataType)
 			{
-				case "OBJECT"                         : return DataType.Variant;
-				case "BFILE"                          : return DataType.VarBinary;
-				case "BINARY_DOUBLE"                  : return DataType.Double;
-				case "BINARY_FLOAT"                   : return DataType.Single;
-				case "BLOB"                           : return DataType.Binary;
-				case "CHAR"                           : return DataType.Char;
-				case "CLOB"                           : return DataType.Text;
-				case "DATE"                           : return DataType.DateTime;
-				case "FLOAT"                          : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND"         : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH"         : return DataType.Int64;
-				case "LONG"                           : return DataType.Text;
-				case "LONG RAW"                       : return DataType.Binary;
-				case "NCHAR"                          : return DataType.NChar;
-				case "NCLOB"                          : return DataType.NText;
-				case "NUMBER"                         : return DataType.Decimal;
-				case "NVARCHAR2"                      : return DataType.NVarChar;
-				case "RAW"                            : return DataType.Binary;
-				case "VARCHAR2"                       : return DataType.VarChar;
-				case "XMLTYPE"                        : return DataType.Xml;
-				case "ROWID"                          : return DataType.VarChar;
+				case "name"                           :
+				case "regproc"                        :
+				case "oid"                            : break;
+				case "text"                           : return DataType.Text;
+//				case "BFILE"                          : return DataType.VarBinary;
+//				case "BINARY_DOUBLE"                  : return DataType.Double;
+//				case "BINARY_FLOAT"                   : return DataType.Single;
+//				case "BLOB"                           : return DataType.Binary;
+//				case "CHAR"                           : return DataType.Char;
+//				case "CLOB"                           : return DataType.Text;
+//				case "DATE"                           : return DataType.DateTime;
+//				case "FLOAT"                          : return DataType.Decimal;
+//				case "INTERVAL DAY TO SECOND"         : return DataType.Time;
+//				case "INTERVAL YEAR TO MONTH"         : return DataType.Int64;
+//				case "LONG"                           : return DataType.Text;
+//				case "LONG RAW"                       : return DataType.Binary;
+//				case "NCHAR"                          : return DataType.NChar;
+//				case "NCLOB"                          : return DataType.NText;
+//				case "NUMBER"                         : return DataType.Decimal;
+//				case "NVARCHAR2"                      : return DataType.NVarChar;
+//				case "RAW"                            : return DataType.Binary;
+//				case "VARCHAR2"                       : return DataType.VarChar;
+//				case "XMLTYPE"                        : return DataType.Xml;
+//				case "ROWID"                          : return DataType.VarChar;
 				default:
-					if (dataType.StartsWith("TIMESTAMP"))
-						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
-
+//					if (dataType.StartsWith("TIMESTAMP"))
+//						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
+//
 					break;
 			}
 
+/*
+"char"
+ARRAY
+USER-DEFINED
+abstime
+anyarray
+bigint
+bit
+boolean
+box
+bytea
+character
+character varying
+circle
+date
+double precision
+inet
+integer
+interval
+lseg
+macaddr
+money
+numeric
+path
+pg_node_tree
+point
+polygon
+real
+smallint
+time with time zone
+time without time zone
+timestamp with time zone
+timestamp without time zone
+uuid
+xid
+xml
+*/
 			return DataType.Undefined;
 		}
 	}
