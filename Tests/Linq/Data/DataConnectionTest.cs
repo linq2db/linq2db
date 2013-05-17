@@ -9,6 +9,8 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class DataConnectionTest : TestBase
 	{
@@ -58,6 +60,17 @@ namespace Tests.Data
 					var sdp = conn.DataProvider;
 					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 				}
+			}
+		}
+
+		[Test]
+		public void EnumExecuteScalarTest()
+		{
+			using (var dbm = new DataConnection())
+			{
+				var gender = dbm.Execute<Gender>("select 'M'");
+
+				Assert.That(gender, Is.EqualTo(Gender.Male));
 			}
 		}
 	}
