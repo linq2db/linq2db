@@ -105,6 +105,459 @@ INSERT INTO Doctor  (PersonID,  Taxonomy)  VALUES (PersonSeq.CURRVAL, 'Psychiatr
 INSERT INTO Patient (PersonID,  Diagnosis) VALUES (PersonSeq.CURRVAL, 'Hallucination with Paranoid Bugs'' Delirium of Persecution')
 /
 
+-- Person_Delete
+
+CREATE OR REPLACE 
+PROCEDURE Person_Delete(pPersonID IN NUMBER) IS
+BEGIN
+DELETE FROM
+	Person
+WHERE
+	PersonID = pPersonID;
+END;
+/
+
+-- Person_Insert
+
+CREATE OR REPLACE 
+PROCEDURE Person_Insert_OutputParameter
+	( pFirstName  IN NVARCHAR2
+	, pLastName   IN NVARCHAR2
+	, pMiddleName IN NVARCHAR2
+	, pGender     IN CHAR
+	, pPersonID   OUT NUMBER
+	) IS
+BEGIN
+INSERT INTO Person
+	( LastName,  FirstName,  MiddleName,  Gender)
+VALUES
+	(pLastName, pFirstName, pMiddleName, pGender)
+RETURNING
+	PersonID
+INTO
+	pPersonID;
+END;
+/
+
+CREATE OR REPLACE 
+FUNCTION Person_Insert
+	( pFirstName  IN NVARCHAR2
+	, pLastName   IN NVARCHAR2
+	, pMiddleName IN NVARCHAR2
+	, pGender     IN CHAR
+	)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+	lPersonID NUMBER;
+BEGIN
+INSERT INTO Person
+	( LastName,  FirstName,  MiddleName,  Gender)
+VALUES
+	(pLastName, pFirstName, pMiddleName, pGender)
+RETURNING
+	PersonID
+INTO
+	lPersonID;
+
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person
+	WHERE
+		PersonID = lPersonID;
+RETURN
+	retCursor;
+END;
+/
+
+-- Person_SelectAll
+
+CREATE OR REPLACE 
+FUNCTION Person_SelectAll
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person;
+RETURN
+	retCursor;
+END;
+/
+
+-- Person_SelectAllByGender
+
+CREATE OR REPLACE 
+FUNCTION Person_SelectAllByGender(pGender IN CHAR)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person
+	WHERE
+		Gender = pGender;
+RETURN
+	retCursor;
+END;
+/
+
+-- Person_SelectByKey
+
+CREATE OR REPLACE 
+FUNCTION Person_SelectByKey(pID IN NUMBER)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person
+	WHERE
+		PersonID = pID;
+RETURN
+	retCursor;
+END;
+/
+
+-- Person_SelectByName
+
+CREATE OR REPLACE 
+FUNCTION Person_SelectByName
+	( pFirstName IN NVARCHAR2
+	, pLastName  IN NVARCHAR2
+	)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person
+	WHERE
+		FirstName = pFirstName AND LastName = pLastName;
+RETURN
+	retCursor;
+END;
+/
+
+-- Person_SelectListByName
+
+CREATE OR REPLACE 
+FUNCTION Person_SelectListByName
+	( pFirstName IN NVARCHAR2
+	, pLastName  IN NVARCHAR2
+	)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		PersonID, Firstname, Lastname, Middlename, Gender     
+	FROM
+		Person
+	WHERE
+		FirstName LIKE pFirstName AND LastName LIKE pLastName;
+RETURN
+	retCursor;
+END;
+/
+
+CREATE OR REPLACE 
+PROCEDURE Person_Update
+	( pPersonID   IN NUMBER
+	, pFirstName  IN NVARCHAR2
+	, pLastName   IN NVARCHAR2
+	, pMiddleName IN NVARCHAR2
+	, pGender     IN CHAR
+	) IS
+BEGIN
+UPDATE
+	Person
+SET
+	LastName   = pLastName,
+	FirstName  = pFirstName,
+	MiddleName = pMiddleName,
+	Gender     = pGender
+WHERE
+	PersonID   = pPersonID;
+END;
+/
+
+-- Patient_SelectAll
+
+CREATE OR REPLACE 
+FUNCTION Patient_SelectAll
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID;
+RETURN
+	retCursor;
+END;
+/
+
+
+-- Patient_SelectByName
+
+CREATE OR REPLACE 
+FUNCTION Patient_SelectByName
+	( pFirstName IN NVARCHAR2
+	, pLastName  IN NVARCHAR2
+	)
+RETURN SYS_REFCURSOR IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID
+	AND FirstName = pFirstName AND LastName = pLastName;
+RETURN
+	retCursor;
+END;
+/
+
+-- BinaryData Table
+
+CREATE SEQUENCE BinaryDataSeq
+/
+
+CREATE TABLE BinaryData
+	( BinaryDataID                 NUMBER NOT NULL PRIMARY KEY
+	, Stamp                        TIMESTAMP DEFAULT SYSDATE NOT NULL
+	, Data                         BLOB NOT NULL
+	)
+/
+
+-- Insert Trigger for Binarydata
+
+CREATE OR REPLACE TRIGGER BinaryData_Add
+BEFORE INSERT
+ON BinaryData
+FOR EACH ROW
+BEGIN
+SELECT
+	BinaryDataSeq.NEXTVAL
+INTO
+	:NEW.BinaryDataID
+FROM
+	dual;
+END;
+/
+
+-- OutRefTest
+
+CREATE OR REPLACE 
+PROCEDURE OutRefTest
+	( pID             IN     NUMBER
+	, pOutputID       OUT    NUMBER
+	, pInputOutputID  IN OUT NUMBER
+	, pStr            IN     NVARCHAR2
+	, pOutputStr      OUT    NVARCHAR2
+	, pInputOutputStr IN OUT NVARCHAR2
+	) IS
+BEGIN
+	pOutputID       := pID;
+	pInputOutputID  := pID + pInputOutputID;
+	pOutputStr      := pStr;
+	pInputOutputStr := pStr || pInputOutputStr;
+END;
+/
+
+CREATE OR REPLACE 
+PROCEDURE OutRefEnumTest
+	( pStr            IN     NVARCHAR2
+	, pOutputStr      OUT    NVARCHAR2
+	, pInputOutputStr IN OUT NVARCHAR2
+	) IS
+BEGIN
+	pOutputStr      := pStr;
+	pInputOutputStr := pStr || pInputOutputStr;
+END;
+/
+
+-- ArrayTest
+
+CREATE OR REPLACE 
+PROCEDURE ArrayTest
+	( pIntArray            IN     DBMS_UTILITY.NUMBER_ARRAY
+	, pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
+	, pInputOutputIntArray IN OUT DBMS_UTILITY.NUMBER_ARRAY
+	, pStrArray            IN     DBMS_UTILITY.NAME_ARRAY
+	, pOutputStrArray      OUT    DBMS_UTILITY.NAME_ARRAY
+	, pInputOutputStrArray IN OUT DBMS_UTILITY.NAME_ARRAY
+	) IS
+BEGIN
+pOutputIntArray := pIntArray;
+
+FOR i IN pIntArray.FIRST..pIntArray.LAST LOOP
+	pInputOutputIntArray(i) := pInputOutputIntArray(i) + pIntArray(i);
+END LOOP;
+
+pOutputStrArray := pStrArray;
+
+FOR i IN pStrArray.FIRST..pStrArray.LAST LOOP
+	pInputOutputStrArray(i) := pInputOutputStrArray(i) || pStrArray(i);
+END LOOP;
+END;
+/
+
+CREATE OR REPLACE 
+PROCEDURE ScalarArray
+	( pOutputIntArray      OUT    DBMS_UTILITY.NUMBER_ARRAY
+	) IS
+BEGIN
+FOR i IN 1..5 LOOP
+	pOutputIntArray(i) := i;
+END LOOP;
+END;
+/
+
+-- ResultSetTest
+
+CREATE OR REPLACE 
+PROCEDURE RESULTSETTEST
+	( mr OUT SYS_REFCURSOR
+	, sr OUT SYS_REFCURSOR
+	) IS
+BEGIN
+OPEN mr FOR
+	SELECT       1 as MasterID FROM dual
+	UNION SELECT 2 as MasterID FROM dual;
+OPEN sr FOR
+	SELECT       4 SlaveID, 1 as MasterID FROM dual
+	UNION SELECT 5 SlaveID, 2 as MasterID FROM dual
+	UNION SELECT 6 SlaveID, 2 as MasterID FROM dual
+	UNION SELECT 7 SlaveID, 1 as MasterID FROM dual;
+END;
+/
+
+-- ExecuteScalarTest
+
+CREATE OR REPLACE 
+FUNCTION Scalar_DataReader
+RETURN SYS_REFCURSOR
+IS
+	retCursor SYS_REFCURSOR;
+BEGIN
+OPEN retCursor FOR
+	SELECT
+		12345 intField, '54321' stringField 
+	FROM
+		DUAL;
+RETURN
+	retCursor;
+END;
+/
+
+CREATE OR REPLACE 
+PROCEDURE Scalar_OutputParameter
+	( pOutputInt    OUT BINARY_INTEGER
+	, pOutputString OUT NVARCHAR2
+	) IS
+BEGIN
+	pOutputInt := 12345;
+	pOutputString := '54321';
+END;
+/
+
+CREATE OR REPLACE 
+FUNCTION Scalar_ReturnParameter
+RETURN BINARY_INTEGER IS
+BEGIN
+RETURN
+	12345;
+END;
+/
+
+-- Data Types test
+
+CREATE SEQUENCE DataTypeTestSeq
+/
+
+CREATE TABLE DataTypeTest
+(
+	DataTypeID      INTEGER      NOT NULL PRIMARY KEY,
+	Binary_         RAW(50)          NULL,
+	Boolean_        NUMBER(1,0)      NULL,
+	Byte_           NUMBER(3,0)      NULL,
+	Bytes_          BLOB             NULL,
+	Char_           NCHAR            NULL,
+	DateTime_       DATE             NULL,
+	Decimal_        NUMBER(19,5)     NULL,
+	Double_         DOUBLE PRECISION NULL,
+	Guid_           RAW(16)          NULL,
+	Int16_          NUMBER(5,0)      NULL,
+	Int32_          NUMBER(10,0)     NULL,
+	Int64_          NUMBER(20,0)     NULL,
+	Money_          NUMBER           NULL,
+	SByte_          NUMBER(3,0)      NULL,
+	Single_         FLOAT            NULL,
+	Stream_         BLOB             NULL,
+	String_         NVARCHAR2(50)    NULL,
+	UInt16_         NUMBER(5,0)      NULL,
+	UInt32_         NUMBER(10,0)     NULL,
+	UInt64_         NUMBER(20,0)     NULL,
+	Xml_            XMLTYPE          NULL
+)
+/
+
+-- Insert Trigger for DataTypeTest
+
+CREATE OR REPLACE TRIGGER DataTypeTest_Add
+BEFORE INSERT
+ON DataTypeTest
+FOR EACH ROW
+BEGIN
+SELECT
+	DataTypeTestSeq.NEXTVAL
+INTO
+	:NEW.DataTypeID
+FROM
+	dual;
+END;
+/
+
+INSERT INTO DataTypeTest
+	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
+	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
+	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,     Xml_)
+VALUES
+	(   NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL,
+	    NULL,          NULL,     NULL,       NULL,    NULL,      NULL,     NULL)
+/
+
+INSERT INTO DataTypeTest
+	(Binary_,      Boolean_,    Byte_,     Bytes_,   Char_, DateTime_, Decimal_,
+	 Double_,         Guid_,   Int16_,     Int32_,  Int64_,    Money_,   SByte_,
+	 Single_,       Stream_,  String_,    UInt16_, UInt32_,   UInt64_,
+	 Xml_)
+VALUES
+	(SYS_GUID(),          1,      255, SYS_GUID(),     'B',   SYSDATE, 12345.67,
+	   1234.567, SYS_GUID(),    32767,      32768, 1000000,   12.3456,      127,
+	   1234.123, SYS_GUID(), 'string',      32767,   32768, 200000000,
+	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>'))
+/
+
+
 
 CREATE TABLE Parent      (ParentID int, Value1 int)
 /
