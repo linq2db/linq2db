@@ -352,10 +352,6 @@
       <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
       <Name>LinqToDB.Informix</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\DB2\LinqToDB.DB2.csproj">
-      <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
-      <Name>LinqToDB.DB2</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>

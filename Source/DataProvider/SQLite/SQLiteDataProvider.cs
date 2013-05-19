@@ -29,6 +29,10 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteConnection"); } }
 		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteDataReader"); } }
 
+		protected override void OnConnectionTypeCreated(Type connectionType)
+		{
+		}
+
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new SQLiteSqlProvider(SqlProviderFlags);

@@ -18,9 +18,7 @@ namespace LinqToDB.DataProvider
 
 		static readonly object _sync = new object();
 
-		protected virtual void OnConnectionTypeCreated(Type connectionType)
-		{
-		}
+		protected abstract void OnConnectionTypeCreated(Type connectionType);
 
 		protected void EnsureConnection()
 		{
