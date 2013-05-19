@@ -9,17 +9,19 @@
 
 	LinqToDB.DataProvider.Oracle.OracleFactory.ResolveOracle(typeof(Oracle.DataAccess.Client.OracleConnection).Assembly);
 
-	var connectionString = @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=SYSMAN;Password=TestPassword;";
+	var connectionString = @"Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=DBHost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=TestData)));User Id=TestUser;Password=TestPassword;";
 	var dataConnection   = LinqToDB.DataProvider.Oracle.OracleFactory.CreateDataConnection(connectionString);
+
+//	GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };
 
 	LoadMetadata(dataConnection);
 
-	foreach (var t in Tables.Values)
-		if (t.IsView)
-		{
-			t.TypeName                += "_VIEW";
-			t.DataContextPropertyName += "_VIEW";
-		}
+//	foreach (var t in Tables.Values)
+//		if (t.IsView)
+//		{
+//			t.TypeName                += "_VIEW";
+//			t.DataContextPropertyName += "_VIEW";
+//		}
 
 	GenerateModel();
 #>
