@@ -113,6 +113,7 @@ namespace LinqToDB.Data
 		public static DataParameter NText         (string name, string         value) { return new DataParameter { DataType = DataType.NText,          Name = name, Value = value, }; }
 		public static DataParameter Binary        (string name, byte[]         value) { return new DataParameter { DataType = DataType.Binary,         Name = name, Value = value, }; }
 		public static DataParameter Binary        (string name, Binary         value) { return new DataParameter { DataType = DataType.Binary,         Name = name, Value = value, }; }
+		public static DataParameter Blob          (string name, byte[]         value) { return new DataParameter { DataType = DataType.Blob,           Name = name, Value = value, }; }
 		public static DataParameter VarBinary     (string name, byte[]         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
 		public static DataParameter VarBinary     (string name, Binary         value) { return new DataParameter { DataType = DataType.VarBinary,      Name = name, Value = value, }; }
 		public static DataParameter Image         (string name, byte[]         value) { return new DataParameter { DataType = DataType.Image,          Name = name, Value = value, }; }

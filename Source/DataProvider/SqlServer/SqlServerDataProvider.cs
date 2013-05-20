@@ -163,6 +163,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case DataType.Image      :
 				case DataType.Binary     :
+				case DataType.Blob       :
 				case DataType.VarBinary  :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
@@ -202,6 +203,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Text          : ((SqlParameter)parameter).SqlDbType = SqlDbType.Text;          break;
 				case DataType.NText         : ((SqlParameter)parameter).SqlDbType = SqlDbType.NText;         break;
 				case DataType.Binary        : ((SqlParameter)parameter).SqlDbType = SqlDbType.Binary;        break;
+				case DataType.Blob          :
 				case DataType.VarBinary     : ((SqlParameter)parameter).SqlDbType = SqlDbType.VarBinary;     break;
 				case DataType.Image         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Image;         break;
 				case DataType.Money         : ((SqlParameter)parameter).SqlDbType = SqlDbType.Money;         break;

@@ -93,12 +93,14 @@ namespace LinqToDB.DataProvider.DB2
 			MappingSchema.AddScalarType(_db2String,       GetNullValue(_db2String),       true, DataType.NVarChar);
 			MappingSchema.AddScalarType(_db2Clob,         GetNullValue(_db2Clob),         true, DataType.NText);
 			MappingSchema.AddScalarType(_db2Binary,       GetNullValue(_db2Binary),       true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_db2Blob,         GetNullValue(_db2Blob),         true, DataType.VarBinary);
+			MappingSchema.AddScalarType(_db2Blob,         GetNullValue(_db2Blob),         true, DataType.Blob);
 			MappingSchema.AddScalarType(_db2Date,         GetNullValue(_db2Date),         true, DataType.Date);
 			MappingSchema.AddScalarType(_db2Time,         GetNullValue(_db2Time),         true, DataType.Time);
 			MappingSchema.AddScalarType(_db2TimeStamp,    GetNullValue(_db2TimeStamp),    true, DataType.DateTime2);
 			MappingSchema.AddScalarType(_db2Xml,          GetNullValue(_db2Xml),          true, DataType.Xml);
 			MappingSchema.AddScalarType(_db2RowId,        GetNullValue(_db2RowId),        true, DataType.VarBinary);
+
+			_setBlob = GetSetParameter(connectionType, "DB2Parameter", "DB2Type", "DB2Type", "Blob");
 		}
 
 		static object GetNullValue(Type type)
@@ -121,6 +123,8 @@ namespace LinqToDB.DataProvider.DB2
 			dataConnection.DisposeCommand();
 			base.InitCommand(dataConnection);
 		}
+
+		static Action<IDbDataParameter> _setBlob;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -169,6 +173,10 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.VarBinary  :
 					if (value is Guid) value = ((Guid)value).ToByteArray();
 					break;
+				case DataType.Blob       :
+					base.SetParameter(parameter, "@" + name, dataType, value);
+					_setBlob(parameter);
+					return;
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);

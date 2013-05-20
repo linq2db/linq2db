@@ -193,6 +193,7 @@ namespace LinqToDB.DataProvider
 			{
 				case DataType.Image     :
 				case DataType.Binary    :
+				case DataType.Blob      :
 				case DataType.VarBinary :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
@@ -222,6 +223,7 @@ namespace LinqToDB.DataProvider
 				case DataType.VarChar        : dbType = DbType.AnsiString;            break;
 				case DataType.NChar          : dbType = DbType.StringFixedLength;     break;
 				case DataType.NVarChar       : dbType = DbType.String;                break;
+				case DataType.Blob           :
 				case DataType.VarBinary      : dbType = DbType.Binary;                break;
 				case DataType.Boolean        : dbType = DbType.Boolean;               break;
 				case DataType.SByte          : dbType = DbType.SByte;                 break;

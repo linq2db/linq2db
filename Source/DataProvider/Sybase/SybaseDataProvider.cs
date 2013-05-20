@@ -142,6 +142,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Text          : _setText         (parameter);               break;
 				case DataType.NText         : _setNText        (parameter);               break;
 				case DataType.Binary        : _setBinary       (parameter);               break;
+				case DataType.Blob          :
 				case DataType.VarBinary     : _setVarBinary    (parameter);               break;
 				case DataType.Image         : _setImage        (parameter);               break;
 				case DataType.Money         : _setMoney        (parameter);               break;

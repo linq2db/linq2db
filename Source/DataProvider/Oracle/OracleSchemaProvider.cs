@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case "BFILE"                          : return DataType.VarBinary;
 				case "BINARY_DOUBLE"                  : return DataType.Double;
 				case "BINARY_FLOAT"                   : return DataType.Single;
-				case "BLOB"                           : return DataType.Binary;
+				case "BLOB"                           : return DataType.Blob;
 				case "CHAR"                           : return DataType.Char;
 				case "CLOB"                           : return DataType.Text;
 				case "DATE"                           : return DataType.DateTime;

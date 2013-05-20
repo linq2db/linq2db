@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.MySql
 			switch (dataType.ToUpper())
 			{
 				case "bit"        : return DataType.UInt64;
-				case "blob"       : return DataType.Binary;
+				case "blob"       : return DataType.Blob;
 				case "tinyblob"   : return DataType.Binary;
 				case "mediumblob" : return DataType.Binary;
 				case "longblob"   : return DataType.Binary;

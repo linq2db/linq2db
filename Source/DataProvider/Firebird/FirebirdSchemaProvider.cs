@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				case "array"            : return DataType.VarBinary;
 				case "bigint"           : return DataType.Int64;
-				case "blob"             : return DataType.VarBinary;
+				case "blob"             : return DataType.Blob;
 				case "char"             : return DataType.NChar;
 				case "date"             : return DataType.Date;
 				case "decimal"          : return DataType.Decimal;
