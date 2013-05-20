@@ -12,15 +12,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Configuration;
 	using DataProvider;
-	using DataProvider.Access;
-	using DataProvider.Firebird;
-	using DataProvider.MySql;
-	using DataProvider.Oracle;
-	using DataProvider.PostgreSQL;
-	using DataProvider.SQLite;
-	using DataProvider.SqlCe;
-	using DataProvider.SqlServer;
-	using DataProvider.Sybase;
 
 	using Mapping;
 
@@ -175,15 +166,16 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			SqlServerFactory. GetDataProvider();
-			AccessFactory.    GetDataProvider();
-			SqlCeFactory.     GetDataProvider();
-			FirebirdFactory.  GetDataProvider();
-			MySqlFactory.     GetDataProvider();
-			SQLiteFactory.    GetDataProvider();
-			SybaseFactory.    GetDataProvider();
-			OracleFactory.    GetDataProvider();
-			PostgreSQLFactory.GetDataProvider();
+			LinqToDB.DataProvider.SqlServer. SqlServerFactory. GetDataProvider();
+			LinqToDB.DataProvider.Access.    AccessFactory.    GetDataProvider();
+			LinqToDB.DataProvider.SqlCe.     SqlCeFactory.     GetDataProvider();
+			LinqToDB.DataProvider.Firebird.  FirebirdFactory.  GetDataProvider();
+			LinqToDB.DataProvider.MySql.     MySqlFactory.     GetDataProvider();
+			LinqToDB.DataProvider.SQLite.    SQLiteFactory.    GetDataProvider();
+			LinqToDB.DataProvider.Sybase.    SybaseFactory.    GetDataProvider();
+			LinqToDB.DataProvider.Oracle.    OracleFactory.    GetDataProvider();
+			LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.GetDataProvider();
+			LinqToDB.DataProvider.DB2.       DB2Factory.       GetDataProvider();
 
 			var section = LinqToDBSection.Instance;
 
