@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
-		Type _bitString;
+		internal Type BitStringType;
 		Type _npgsqlInterval;
 		Type _npgsqlTime;
 		Type _npgsqlTimeTZ;
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_bitString         = connectionType.Assembly.GetType("NpgsqlTypes.BitString",         true);
+			BitStringType      = connectionType.Assembly.GetType("NpgsqlTypes.BitString",         true);
 			_npgsqlInterval    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInterval",    true);
 			_npgsqlTime        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTime",        true);
 			_npgsqlTimeTZ      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeTZ",      true);
@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_npgsqlPoint       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPoint",       true);
 			_npgsqlPolygon     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
-			SetProviderField(_bitString,         _bitString,         "GetBitString");
+			SetProviderField(BitStringType,      BitStringType,      "GetBitString");
 			SetProviderField(_npgsqlInterval,    _npgsqlInterval,    "GetInterval");
 			SetProviderField(_npgsqlTime,        _npgsqlTime,        "GetTime");
 			SetProviderField(_npgsqlTimeTZ,      _npgsqlTimeTZ,      "GetTimeTZ");
@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Xml");
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
 
-			MappingSchema.AddScalarType(_bitString);
+			MappingSchema.AddScalarType(BitStringType);
 			MappingSchema.AddScalarType(_npgsqlBox);
 			MappingSchema.AddScalarType(_npgsqlCircle);
 			MappingSchema.AddScalarType(_npgsqlDate);

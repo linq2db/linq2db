@@ -29,11 +29,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new[]
 			{
-				new DataTypeInfo { TypeName = "name",    DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "oid",     DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "xid",     DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "regproc", DataType = typeof(object).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "text",    DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "character varying", DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "name",              DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "oid",               DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "xid",               DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "smallint",          DataType = typeof(short). FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "integer",           DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "bigint",            DataType = typeof(long).  FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "real",              DataType = typeof(float).  FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "boolean",           DataType = typeof(bool).  FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "regproc",           DataType = typeof(object).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "text",              DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
+				new DataTypeInfo { TypeName = "bit",               DataType = PostgreSQLFactory.GetBitStringType().FullName, CreateFormat = "bit({0})", CreateParameters = "size" },
 			}.ToList();
 		}
 
@@ -188,9 +195,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 switch (columnType)
 {
+	case "ARRAY" :
 	case "name" :
 	case "regproc" :
 	case "text" :
+	case "xid"  :
+	case "character varying"  :
+	case "smallint"  :
+	case "bigint"  :
+	case "integer"  :
+	case "boolean"  :
+	case "real"  :
 	case "oid"  : break;
 	default:
 		break;
@@ -210,9 +225,17 @@ switch (columnType)
 		{
 switch (columnType)
 {
+	case "ARRAY" :
 	case "name" :
 	case "regproc" :
 	case "text" :
+	case "bigint" :
+	case "smallint" :
+	case "real" :
+	case "xid" :
+	case "integer" :
+	case "boolean" :
+	case "character varying" :
 	case "oid"  : break;
 	default:
 		break;
@@ -236,30 +259,18 @@ switch (columnType)
 		{
 			switch (dataType)
 			{
+				case "ARRAY"                          :
 				case "name"                           :
 				case "regproc"                        :
+				case "xid"                            :
 				case "oid"                            : break;
 				case "text"                           : return DataType.Text;
-//				case "BFILE"                          : return DataType.VarBinary;
-//				case "BINARY_DOUBLE"                  : return DataType.Double;
-//				case "BINARY_FLOAT"                   : return DataType.Single;
-//				case "BLOB"                           : return DataType.Binary;
-//				case "CHAR"                           : return DataType.Char;
-//				case "CLOB"                           : return DataType.Text;
-//				case "DATE"                           : return DataType.DateTime;
-//				case "FLOAT"                          : return DataType.Decimal;
-//				case "INTERVAL DAY TO SECOND"         : return DataType.Time;
-//				case "INTERVAL YEAR TO MONTH"         : return DataType.Int64;
-//				case "LONG"                           : return DataType.Text;
-//				case "LONG RAW"                       : return DataType.Binary;
-//				case "NCHAR"                          : return DataType.NChar;
-//				case "NCLOB"                          : return DataType.NText;
-//				case "NUMBER"                         : return DataType.Decimal;
-//				case "NVARCHAR2"                      : return DataType.NVarChar;
-//				case "RAW"                            : return DataType.Binary;
-//				case "VARCHAR2"                       : return DataType.VarChar;
-//				case "XMLTYPE"                        : return DataType.Xml;
-//				case "ROWID"                          : return DataType.VarChar;
+				case "smallint"                       : return DataType.Int16;
+				case "integer"                        : return DataType.Int32;
+				case "bigint"                         : return DataType.Int64;
+				case "real"                           : return DataType.Single;
+				case "boolean"                        : return DataType.Boolean;
+				case "character varying"              : return DataType.VarChar;
 				default:
 //					if (dataType.StartsWith("TIMESTAMP"))
 //						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
@@ -269,22 +280,16 @@ switch (columnType)
 
 /*
 "char"
-ARRAY
 USER-DEFINED
 abstime
 anyarray
-bigint
-bit
-boolean
 box
 bytea
 character
-character varying
 circle
 date
 double precision
 inet
-integer
 interval
 lseg
 macaddr
@@ -294,14 +299,12 @@ path
 pg_node_tree
 point
 polygon
-real
-smallint
+
 time with time zone
 time without time zone
 timestamp with time zone
 timestamp without time zone
 uuid
-xid
 xml
 */
 			return DataType.Undefined;

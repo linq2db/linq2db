@@ -37,6 +37,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			new AssemblyResolver(assembly, "Npgsql");
 		}
 
+		public static Type GetBitStringType()
+		{
+			return _postgreSQLDataProvider.BitStringType;
+		}
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
