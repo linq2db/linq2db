@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
-using System.Data.SqlClient;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -10,7 +9,6 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using System.Configuration;
 	using System.Data.SqlClient;
-	using System.IO;
 
 	using Data;
 
@@ -23,8 +21,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly SqlServerDataProvider _sqlServerDataProvider2008 = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008);
 		static readonly SqlServerDataProvider _sqlServerDataProvider2012 = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012);
 
+		public static bool AutoDetectProvider { get; set; }
+
 		static SqlServerFactory()
 		{
+			AutoDetectProvider = true;
+
 			DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
@@ -58,23 +60,26 @@ namespace LinqToDB.DataProvider.SqlServer
 					    css.Name.Contains("2012"))
 						break;
 
-					try
+					if (AutoDetectProvider)
 					{
-						using (var conn = new SqlConnection(css.ConnectionString))
+						try
 						{
-							conn.Open();
-
-							switch (conn.ServerVersion.Split('.')[0])
+							using (var conn = new SqlConnection(css.ConnectionString))
 							{
-								case  "8" : return _sqlServerDataProvider2000;
-								case  "9" :	return _sqlServerDataProvider2005;
-								case "10" :	return _sqlServerDataProvider2008;
-								case "11" : return _sqlServerDataProvider2012;
+								conn.Open();
+
+								switch (conn.ServerVersion.Split('.')[0])
+								{
+									case  "8" : return _sqlServerDataProvider2000;
+									case  "9" :	return _sqlServerDataProvider2005;
+									case "10" :	return _sqlServerDataProvider2008;
+									case "11" : return _sqlServerDataProvider2012;
+								}
 							}
 						}
-					}
-					catch (Exception)
-					{
+						catch (Exception)
+						{
+						}
 					}
 
 					break;
