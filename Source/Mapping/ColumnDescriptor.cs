@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	using Expressions;
 	using Reflection;
 
-	class ColumnDescriptor
+	public class ColumnDescriptor
 	{
 		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberAccessor memberAccessor)
 		{

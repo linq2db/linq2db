@@ -28,17 +28,17 @@ namespace LinqToDB.SqlBuilder
 			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
-		public   Type             SystemType       { get; set; }
-		public   string           Alias            { get; set; }
-		public   string           Name             { get; set; }
-		public   bool             Nullable         { get; set; }
-		public   bool             IsPrimaryKey     { get; set; }
-		public   int              PrimaryKeyOrder  { get; set; }
-		public   bool             IsIdentity       { get; set; }
-		public   bool             IsInsertable     { get; set; }
-		public   bool             IsUpdatable      { get; set; }
-		public   ISqlTableSource  Table            { get; private set; }
-		internal ColumnDescriptor ColumnDescriptor { get; set; }
+		public Type             SystemType       { get; set; }
+		public string           Alias            { get; set; }
+		public string           Name             { get; set; }
+		public bool             Nullable         { get; set; }
+		public bool             IsPrimaryKey     { get; set; }
+		public int              PrimaryKeyOrder  { get; set; }
+		public bool             IsIdentity       { get; set; }
+		public bool             IsInsertable     { get; set; }
+		public bool             IsUpdatable      { get; set; }
+		public ISqlTableSource  Table            { get; private set; }
+		public ColumnDescriptor ColumnDescriptor { get; set; }
 
 		private string _physicalName;
 		public  string  PhysicalName

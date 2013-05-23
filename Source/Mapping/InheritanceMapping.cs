@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Mapping
 {
-	class InheritanceMapping
+	public class InheritanceMapping
 	{
 		public object           Code;
 		public bool             IsDefault;

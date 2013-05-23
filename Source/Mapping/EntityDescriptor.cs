@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
-	using Reflection;
+	using Common;
 	using Linq;
+	using Reflection;
 
-	class EntityDescriptor
+	public class EntityDescriptor
 	{
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
