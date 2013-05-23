@@ -9,38 +9,44 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
-		PostgreSQLDataProvider _dataProvider;
-
-		public PostgreSQLSchemaProvider(PostgreSQLDataProvider dataProvider)
-		{
-			_dataProvider = dataProvider;
-		}
-//		protected override string GetDataSourceName(DbConnection dbConnection)
-//		{
-//			return ((dynamic)dbConnection).HostName;
-//		}
-//
-//		protected override string GetDatabaseName(DbConnection dbConnection)
-//		{
-//			return ((dynamic)dbConnection).DatabaseName;
-//		}
-
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new[]
 			{
-				new DataTypeInfo { TypeName = "character varying", DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "name",              DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "oid",               DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "xid",               DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "smallint",          DataType = typeof(short). FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "integer",           DataType = typeof(int).   FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "bigint",            DataType = typeof(long).  FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "real",              DataType = typeof(float).  FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "boolean",           DataType = typeof(bool).  FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "regproc",           DataType = typeof(object).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "text",              DataType = typeof(string).FullName, CreateFormat = "", CreateParameters = "" },
-				new DataTypeInfo { TypeName = "bit",               DataType = PostgreSQLFactory.GetBitStringType().FullName, CreateFormat = "bit({0})", CreateParameters = "size" },
+				new DataTypeInfo { TypeName = "name",              DataType = typeof(string).                             FullName },
+				new DataTypeInfo { TypeName = "oid",               DataType = typeof(int).                                FullName },
+				new DataTypeInfo { TypeName = "xid",               DataType = typeof(int).                                FullName },
+				new DataTypeInfo { TypeName = "smallint",          DataType = typeof(short).                              FullName },
+				new DataTypeInfo { TypeName = "integer",           DataType = typeof(int).                                FullName },
+				new DataTypeInfo { TypeName = "bigint",            DataType = typeof(long).                               FullName },
+				new DataTypeInfo { TypeName = "real",              DataType = typeof(float).                              FullName },
+				new DataTypeInfo { TypeName = "double precision",  DataType = typeof(double).                             FullName },
+				new DataTypeInfo { TypeName = "boolean",           DataType = typeof(bool).                               FullName },
+				new DataTypeInfo { TypeName = "regproc",           DataType = typeof(object).                             FullName },
+				new DataTypeInfo { TypeName = "money",             DataType = typeof(decimal).                            FullName },
+				new DataTypeInfo { TypeName = "text",              DataType = typeof(string).                             FullName },
+				new DataTypeInfo { TypeName = "xml",               DataType = typeof(string).                             FullName },
+				new DataTypeInfo { TypeName = "date",              DataType = typeof(DateTime).                           FullName },
+				new DataTypeInfo { TypeName = "bytea",             DataType = typeof(byte[]).                             FullName },
+				new DataTypeInfo { TypeName = "uuid",              DataType = typeof(Guid).                               FullName },
+				new DataTypeInfo { TypeName = "inet",              DataType = PostgreSQLFactory.GetNpgsqlInetType().      FullName },
+				new DataTypeInfo { TypeName = "point",             DataType = PostgreSQLFactory.GetNpgsqlPointType().     FullName },
+				new DataTypeInfo { TypeName = "lseg",              DataType = PostgreSQLFactory.GetNpgsqlLSegType().      FullName },
+				new DataTypeInfo { TypeName = "box",               DataType = PostgreSQLFactory.GetNpgsqlBoxType().       FullName },
+				new DataTypeInfo { TypeName = "path",              DataType = PostgreSQLFactory.GetNpgsqlPathType().      FullName },
+				new DataTypeInfo { TypeName = "polygon",           DataType = PostgreSQLFactory.GetNpgsqlPolygonType().   FullName },
+				new DataTypeInfo { TypeName = "circle",            DataType = PostgreSQLFactory.GetNpgsqlCircleType().    FullName },
+				new DataTypeInfo { TypeName = "macaddr",           DataType = PostgreSQLFactory.GetNpgsqlMacAddressType().FullName },
+
+				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).                           FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).                           FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).                          FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "bit",                         DataType = PostgreSQLFactory.GetBitStringType().     FullName, CreateFormat = "bit({0})",                          CreateParameters = "size"      },
+				new DataTypeInfo { TypeName = "interval",                    DataType = PostgreSQLFactory.GetNpgsqlIntervalType().FullName, CreateFormat = "interval({0})",                     CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "time with time zone",         DataType = PostgreSQLFactory.GetNpgsqlTimeType().    FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "time without time zone",      DataType = PostgreSQLFactory.GetNpgsqlTimeTZType().  FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).                   FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).                         FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
 		}
 
@@ -57,7 +63,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				FROM
 					information_schema.tables");
 
-			if (ExcludedSchemas.Length != 0 || IncludedSchemas.Length != 0)
+			if (ExcludedSchemas.Length == 0 && IncludedSchemas.Length == 0)
 				sql += @"
 				WHERE
 					table_schema NOT IN ('pg_catalog','information_schema')";
@@ -102,7 +108,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					FROM
 						information_schema.columns";
 
-			if (ExcludedSchemas.Length != 0 || IncludedSchemas.Length != 0)
+			if (ExcludedSchemas.Length == 0 || IncludedSchemas.Length == 0)
 				sql += @"
 					WHERE
 						table_schema NOT IN ('pg_catalog','information_schema')";
@@ -191,122 +197,39 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
-		{
-switch (columnType)
-{
-	case "ARRAY" :
-	case "name" :
-	case "regproc" :
-	case "text" :
-	case "xid"  :
-	case "character varying"  :
-	case "smallint"  :
-	case "bigint"  :
-	case "integer"  :
-	case "boolean"  :
-	case "real"  :
-	case "oid"  : break;
-	default:
-		break;
-}
-
-//			switch (columnType)
-//			{
-//				case "NUMBER" :
-//					if (prec == 0) return columnType;
-//					break;
-//			}
-
-			return base.GetDbType(columnType, dataType, length, prec, scale);
-		}
-
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
-		{
-switch (columnType)
-{
-	case "ARRAY" :
-	case "name" :
-	case "regproc" :
-	case "text" :
-	case "bigint" :
-	case "smallint" :
-	case "real" :
-	case "xid" :
-	case "integer" :
-	case "boolean" :
-	case "character varying" :
-	case "oid"  : break;
-	default:
-		break;
-}
-
-//			if (columnType == "NUMBER" && precision > 0 && scale == 0)
-//			{
-//				if (precision <  3) return typeof(sbyte);
-//				if (precision <  5) return typeof(short);
-//				if (precision < 10) return typeof(int);
-//				if (precision < 20) return typeof(long);
-//			}
-//
-//			if (columnType.StartsWith("TIMESTAMP"))
-//				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
-
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
-		}
-
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
 			switch (dataType)
 			{
-				case "ARRAY"                          :
-				case "name"                           :
-				case "regproc"                        :
-				case "xid"                            :
-				case "oid"                            : break;
+				case "character"                      : return DataType.NChar;
 				case "text"                           : return DataType.Text;
 				case "smallint"                       : return DataType.Int16;
 				case "integer"                        : return DataType.Int32;
 				case "bigint"                         : return DataType.Int64;
 				case "real"                           : return DataType.Single;
+				case "double precision"               : return DataType.Double;
+				case "bytea"                          : return DataType.Binary;
 				case "boolean"                        : return DataType.Boolean;
-				case "character varying"              : return DataType.VarChar;
-				default:
-//					if (dataType.StartsWith("TIMESTAMP"))
-//						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
-//
-					break;
+				case "numeric"                        : return DataType.Decimal;
+				case "money"                          : return DataType.Money;
+				case "uuid"                           : return DataType.Guid;
+				case "character varying"              : return DataType.NVarChar;
+				case "timestamp with time zone"       : return DataType.DateTimeOffset;
+				case "timestamp without time zone"    : return DataType.DateTime2;
+				case "time with time zone"            : return DataType.Time;
+				case "time without time zone"         : return DataType.Time;
+				case "date"                           : return DataType.Date;
+				case "xml"                            : return DataType.Xml;
+				case "point"                          : return DataType.Udt;
+				case "lseg"                           : return DataType.Udt;
+				case "box"                            : return DataType.Udt;
+				case "circle"                         : return DataType.Udt;
+				case "path"                           : return DataType.Udt;
+				case "polygon"                        : return DataType.Udt;
+				case "macaddr"                        : return DataType.Udt;
+				case "USER-DEFINED"                   : return DataType.Udt;
 			}
 
-/*
-"char"
-USER-DEFINED
-abstime
-anyarray
-box
-bytea
-character
-circle
-date
-double precision
-inet
-interval
-lseg
-macaddr
-money
-numeric
-path
-pg_node_tree
-point
-polygon
-
-time with time zone
-time without time zone
-timestamp with time zone
-timestamp without time zone
-uuid
-xml
-*/
 			return DataType.Undefined;
 		}
 	}

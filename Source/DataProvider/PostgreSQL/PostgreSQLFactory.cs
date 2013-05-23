@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return _postgreSQLDataProvider;
 		}
 
-		public static void ResolveOracle(string path)
+		public static void ResolvePostgreSQL(string path)
 		{
 			new AssemblyResolver(path, "Npgsql");
 		}
@@ -37,10 +37,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			new AssemblyResolver(assembly, "Npgsql");
 		}
 
-		public static Type GetBitStringType()
-		{
-			return _postgreSQLDataProvider.BitStringType;
-		}
+		public static Type GetBitStringType       () { return _postgreSQLDataProvider.BitStringType;        }
+		public static Type GetNpgsqlIntervalType  () { return _postgreSQLDataProvider.NpgsqlIntervalType;   }
+		public static Type GetNpgsqlInetType      () { return _postgreSQLDataProvider.NpgsqlInetType;       }
+		public static Type GetNpgsqlTimeTZType    () { return _postgreSQLDataProvider.NpgsqlTimeTZType;     }
+		public static Type GetNpgsqlTimeType      () { return _postgreSQLDataProvider.NpgsqlTimeType;       }
+		public static Type GetNpgsqlPointType     () { return _postgreSQLDataProvider.NpgsqlPointType;      }
+		public static Type GetNpgsqlLSegType      () { return _postgreSQLDataProvider.NpgsqlLSegType;       }
+		public static Type GetNpgsqlBoxType       () { return _postgreSQLDataProvider.NpgsqlBoxType;        }
+		public static Type GetNpgsqlPathType      () { return _postgreSQLDataProvider.NpgsqlPathType;       }
+		public static Type GetNpgsqlPolygonType   () { return _postgreSQLDataProvider.NpgsqlPolygonType;    }
+		public static Type GetNpgsqlCircleType    () { return _postgreSQLDataProvider.NpgsqlCircleType;     }
+		public static Type GetNpgsqlMacAddressType() { return _postgreSQLDataProvider.NpgsqlMacAddressType; }
 
 		#region CreateDataConnection
 

@@ -116,14 +116,16 @@ namespace LinqToDB.DataProvider.SchemaProvider
 		protected List<DataTypeInfo> DataTypes;
 		protected string[]           IncludedSchemas;
 		protected string[]           ExcludedSchemas;
+		protected bool               GenerateChar1AsString;
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
 			if (options == null)
 				options = new GetSchemaOptions();
 
-			IncludedSchemas = options.IncludedSchemas ?? new string[0];
-			ExcludedSchemas = options.ExcludedSchemas ?? new string[0];
+			IncludedSchemas       = options.IncludedSchemas ?? new string[0];
+			ExcludedSchemas       = options.ExcludedSchemas ?? new string[0];
+			GenerateChar1AsString = options.GenerateChar1AsString;
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
 
@@ -476,7 +478,12 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 		protected virtual Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
 		{
-			return dataType != null ? Type.GetType(dataType.DataType) : null;
+			var systemType = dataType != null ? Type.GetType(dataType.DataType) : null;
+
+			if (length == 1 && !GenerateChar1AsString && systemType == typeof(string))
+				systemType = typeof(char);
+
+			return systemType;
 		}
 
 		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
@@ -502,12 +509,10 @@ namespace LinqToDB.DataProvider.SchemaProvider
 							case "max length" : paramValues[i] = length; break;
 							case "precision"  : paramValues[i] = prec;   break;
 							case "scale"      : paramValues[i] = scale;  break;
-							default:
-								break;
 						}
 					}
 
-					if (paramValues.All(v => v != null))
+					if (paramValues.All(v => v != null && (int)v != 0))
 						dbType = format.Args(paramValues);
 				}
 			}
@@ -553,6 +558,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 				case "Single"  : memberType = "float";   break;
 				case "Double"  : memberType = "double";  break;
 				case "String"  : memberType = "string";  break;
+				case "Char"    : memberType = "char";    break;
 				case "Object"  : memberType = "object";  break;
 			}
 

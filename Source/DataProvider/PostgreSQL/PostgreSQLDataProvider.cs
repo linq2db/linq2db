@@ -23,48 +23,49 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		internal Type BitStringType;
-		Type _npgsqlInterval;
-		Type _npgsqlTime;
-		Type _npgsqlTimeTZ;
+		internal Type NpgsqlIntervalType;
+		internal Type NpgsqlInetType;
+		internal Type NpgsqlTimeType;
+		internal Type NpgsqlTimeTZType;
+		internal Type NpgsqlPointType;
+		internal Type NpgsqlLSegType;
+		internal Type NpgsqlBoxType;
+		internal Type NpgsqlPathType;
+		internal Type NpgsqlPolygonType;
+		internal Type NpgsqlCircleType;
+		internal Type NpgsqlMacAddressType;
+
 		Type _npgsqlTimeStamp;
 		Type _npgsqlTimeStampTZ;
 		Type _npgsqlDate;
-		Type _npgsqlInet;
-		Type _npgsqlMacAddress;
-		Type _npgsqlBox;
-		Type _npgsqlCircle;
-		Type _npgsqlLSeg;
-		Type _npgsqlPath;
-		Type _npgsqlPoint;
-		Type _npgsqlPolygon;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
 			BitStringType      = connectionType.Assembly.GetType("NpgsqlTypes.BitString",         true);
-			_npgsqlInterval    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInterval",    true);
-			_npgsqlTime        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTime",        true);
-			_npgsqlTimeTZ      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeTZ",      true);
+			NpgsqlIntervalType = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInterval",    true);
+			NpgsqlInetType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInet",        true);
+			NpgsqlTimeType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTime",        true);
+			NpgsqlTimeTZType   = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeTZ",      true);
+			NpgsqlPointType    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPoint",       true);
+			NpgsqlLSegType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlLSeg",        true);
+			NpgsqlBoxType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlBox",         true);
+			NpgsqlPathType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPath",        true);
 			_npgsqlTimeStamp   = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStamp",   true);
 			_npgsqlTimeStampTZ = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", true);
 			_npgsqlDate        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDate",        true);
-			_npgsqlInet        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInet",        true);
-			_npgsqlMacAddress  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  true);
-			_npgsqlBox         = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlBox",         true);
-			_npgsqlCircle      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
-			_npgsqlLSeg        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlLSeg",        true);
-			_npgsqlPath        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPath",        true);
-			_npgsqlPoint       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPoint",       true);
-			_npgsqlPolygon     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
+			NpgsqlMacAddressType  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  true);
+			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
+			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
 			SetProviderField(BitStringType,      BitStringType,      "GetBitString");
-			SetProviderField(_npgsqlInterval,    _npgsqlInterval,    "GetInterval");
-			SetProviderField(_npgsqlTime,        _npgsqlTime,        "GetTime");
-			SetProviderField(_npgsqlTimeTZ,      _npgsqlTimeTZ,      "GetTimeTZ");
+			SetProviderField(NpgsqlIntervalType, NpgsqlIntervalType, "GetInterval");
+			SetProviderField(NpgsqlInetType,     NpgsqlInetType,     "GetProviderSpecificValue");
+			SetProviderField(NpgsqlTimeType,     NpgsqlTimeType,     "GetTime");
+			SetProviderField(NpgsqlTimeTZType,   NpgsqlTimeTZType,   "GetTimeTZ");
 			SetProviderField(_npgsqlTimeStamp,   _npgsqlTimeStamp,   "GetTimeStamp");
 			SetProviderField(_npgsqlTimeStampTZ, _npgsqlTimeStampTZ, "GetTimeStampTZ");
 			SetProviderField(_npgsqlDate,        _npgsqlDate,        "GetDate");
-			SetProviderField(_npgsqlInet,        _npgsqlInet,        "GetProviderSpecificValue");
-			SetProviderField(_npgsqlMacAddress,  _npgsqlMacAddress,  "GetProviderSpecificValue");
+			SetProviderField(NpgsqlMacAddressType,  NpgsqlMacAddressType,  "GetProviderSpecificValue");
 
 			{
 				// SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
@@ -87,20 +88,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
 
 			MappingSchema.AddScalarType(BitStringType);
-			MappingSchema.AddScalarType(_npgsqlBox);
-			MappingSchema.AddScalarType(_npgsqlCircle);
+			MappingSchema.AddScalarType(NpgsqlInetType);
+			MappingSchema.AddScalarType(NpgsqlIntervalType);
+			MappingSchema.AddScalarType(NpgsqlPointType);
+			MappingSchema.AddScalarType(NpgsqlTimeType);
+			MappingSchema.AddScalarType(NpgsqlTimeTZType);
+			MappingSchema.AddScalarType(NpgsqlLSegType);
+			MappingSchema.AddScalarType(NpgsqlBoxType);
+			MappingSchema.AddScalarType(NpgsqlPathType);
+			MappingSchema.AddScalarType(NpgsqlCircleType);
 			MappingSchema.AddScalarType(_npgsqlDate);
-			MappingSchema.AddScalarType(_npgsqlInet);
-			MappingSchema.AddScalarType(_npgsqlInterval);
-			MappingSchema.AddScalarType(_npgsqlLSeg);
-			MappingSchema.AddScalarType(_npgsqlMacAddress);
-			MappingSchema.AddScalarType(_npgsqlPath);
-			MappingSchema.AddScalarType(_npgsqlPoint);
-			MappingSchema.AddScalarType(_npgsqlPolygon);
-			MappingSchema.AddScalarType(_npgsqlTime);
+			MappingSchema.AddScalarType(NpgsqlMacAddressType);
+			MappingSchema.AddScalarType(NpgsqlPolygonType);
 			MappingSchema.AddScalarType(_npgsqlTimeStamp);
 			MappingSchema.AddScalarType(_npgsqlTimeStampTZ);
-			MappingSchema.AddScalarType(_npgsqlTimeTZ);
 
 			{
 				// SetConvertExpression<NpgsqlTimeStampTZ,DateTimeOffset>(
@@ -141,7 +142,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new PostgreSQLSchemaProvider(this);
+			return new PostgreSQLSchemaProvider();
 		}
 
 		static Action<IDbDataParameter> _setVarBinary;
