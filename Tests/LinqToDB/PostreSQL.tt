@@ -1,0 +1,20 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                     #>
+<#@ output extension=".generated.cs"                                            #>
+<#@ include file="..\..\Templates\LinqToDB.PostgreSQL.ttinclude"                #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude"               #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.12.1\lib\net40\Npgsql.dll" #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.12.1\lib\net40\Mono.Security.dll" #>
+<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll"        #>
+<#
+	NamespaceName = "PostreSQLDataContext";
+
+	var path = typeof(Npgsql.NpgsqlConnection).Assembly.GetName().CodeBase;
+
+	LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.ResolvePostgreSQL(path);
+
+	var connectionString = @"Server=DBHost;Port=5432;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;Protocol=3;";
+	var dataConnection   = LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.CreateDataConnection(connectionString);
+
+	LoadMetadata(dataConnection);
+	GenerateModel();
+#>
