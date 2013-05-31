@@ -102,7 +102,7 @@ namespace Tests.Linq
 			}
 		}
 
-		enum TestValue
+		public enum TestValue
 		{
 			Value1 = 1,
 		}
@@ -119,6 +119,20 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
+		}
+
+		internal class LinqDataTypes
+		{
+			public TestValue ID;
+		}
+
+		[Test]
+		public void Enum812([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				db.GetTable<LinqDataTypes>()
+					.Where(p => p.ID == TestValue.Value1)
+					.Count();
 		}
 
 		[Test]
