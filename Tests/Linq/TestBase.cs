@@ -39,8 +39,6 @@ namespace Tests
 
 			DataConnection.TurnTraceSwitchOn();
 
-			PostgreSQLSqlProvider.QuoteIdentifiers = true;
-
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)

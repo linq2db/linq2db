@@ -66,6 +66,7 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLDataProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />

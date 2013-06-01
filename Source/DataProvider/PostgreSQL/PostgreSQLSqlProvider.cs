@@ -4,6 +4,8 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Linq;
+
 	using Common;
 	using Extensions;
 	using SqlBuilder;
@@ -152,7 +154,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildFromClause(sb);
 		}
 
-		public static bool QuoteIdentifiers;
+		public static IdentifierQuoteMode IdentifierQuoteMode = IdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
 		{
@@ -162,14 +164,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
-					if (value != null && QuoteIdentifiers)
+					if (value != null && IdentifierQuoteMode != IdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
 							return value;
 
-						return '"' + name + '"';
+						if (IdentifierQuoteMode == IdentifierQuoteMode.Quote || value.ToString().Any(char.IsUpper))
+							return '"' + name + '"';
 					}
 
 					break;
