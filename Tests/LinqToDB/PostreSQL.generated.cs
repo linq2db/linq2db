@@ -5,6 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -78,18 +79,28 @@ namespace PostreSQLDataContext
 		[Column,     Nullable] public string          xmldatatype         { get; set; } // xml
 	}
 
-	[Table(Schema="public", Name="\"Child\"")]
+	[Table(Schema="public", Name="Child")]
 	public partial class Child
 	{
-		[Column("\"ParentID\""), Nullable] public int? ParentID { get; set; } // integer
-		[Column("\"ChildID\""),  Nullable] public int? ChildID  { get; set; } // integer
+		[Column, Nullable] public int? ParentID { get; set; } // integer
+		[Column, Nullable] public int? ChildID  { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="\"Doctor\"")]
+	[Table(Schema="public", Name="Doctor")]
 	public partial class Doctor
 	{
-		[Column("\"PersonID\""), NotNull] public int    PersonID { get; set; } // integer
-		[Column("\"Taxonomy\""), NotNull] public string Taxonomy { get; set; } // character varying(50)
+		[Column, NotNull] public int    PersonID { get; set; } // integer
+		[Column, NotNull] public string Taxonomy { get; set; } // character varying(50)
+
+		#region Associations
+
+		/// <summary>
+		/// Doctor_PersonID_fkey
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Person PersonIDfkey { get; set; }
+
+		#endregion
 	}
 
 	[Table(Schema="public", Name="entity")]
@@ -98,77 +109,103 @@ namespace PostreSQLDataContext
 		[Column, NotNull] public string the_name { get; set; } // character varying(255)
 	}
 
-	[Table(Schema="public", Name="\"GrandChild\"")]
+	[Table(Schema="public", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column("\"ParentID\""),     Nullable] public int? ParentID     { get; set; } // integer
-		[Column("\"ChildID\""),      Nullable] public int? ChildID      { get; set; } // integer
-		[Column("\"GrandChildID\""), Nullable] public int? GrandChildID { get; set; } // integer
+		[Column, Nullable] public int? ParentID     { get; set; } // integer
+		[Column, Nullable] public int? ChildID      { get; set; } // integer
+		[Column, Nullable] public int? GrandChildID { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="\"LinqDataTypes\"")]
+	[Table(Schema="public", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column("\"ID\""),             Nullable] public int?      ID             { get; set; } // integer
-		[Column("\"MoneyValue\""),     Nullable] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
-		[Column("\"DateTimeValue\""),  Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
-		[Column("\"DateTimeValue2\""), Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
-		[Column("\"BoolValue\""),      Nullable] public bool?     BoolValue      { get; set; } // boolean
-		[Column("\"GuidValue\""),      Nullable] public Guid?     GuidValue      { get; set; } // uuid
-		[Column("\"BinaryValue\""),    Nullable] public byte[]    BinaryValue    { get; set; } // bytea
-		[Column("\"SmallIntValue\""),  Nullable] public short?    SmallIntValue  { get; set; } // smallint
-		[Column("\"IntValue\""),       Nullable] public int?      IntValue       { get; set; } // integer
-		[Column("\"BigIntValue\""),    Nullable] public long?     BigIntValue    { get; set; } // bigint
+		[Column, Nullable] public int?      ID             { get; set; } // integer
+		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // numeric(10,4)
+		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // timestamp (6) without time zone
+		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // timestamp (6) without time zone
+		[Column, Nullable] public bool?     BoolValue      { get; set; } // boolean
+		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uuid
+		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // bytea
+		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
+		[Column, Nullable] public int?      IntValue       { get; set; } // integer
+		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
 	}
 
-	[Table(Schema="public", Name="\"Parent\"")]
+	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
-		[Column("\"ParentID\""), Nullable] public int? ParentID { get; set; } // integer
-		[Column("\"Value1\""),   Nullable] public int? Value1   { get; set; } // integer
+		[Column, Nullable] public int? ParentID { get; set; } // integer
+		[Column, Nullable] public int? Value1   { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="\"Patient\"")]
+	[Table(Schema="public", Name="Patient")]
 	public partial class Patient
 	{
-		[Column("\"PersonID\""),  NotNull] public int    PersonID  { get; set; } // integer
-		[Column("\"Diagnosis\""), NotNull] public string Diagnosis { get; set; } // character varying(256)
+		[Column, NotNull] public int    PersonID  { get; set; } // integer
+		[Column, NotNull] public string Diagnosis { get; set; } // character varying(256)
+
+		#region Associations
+
+		/// <summary>
+		/// Patient_PersonID_fkey
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Person PersonIDfkey { get; set; }
+
+		#endregion
 	}
 
-	[Table(Schema="public", Name="\"Person\"")]
+	[Table(Schema="public", Name="Person")]
 	public partial class Person
 	{
-		[Column("\"PersonID\""),   PrimaryKey,  Identity] public int    PersonID   { get; set; } // integer
-		[Column("\"FirstName\""),  NotNull              ] public string FirstName  { get; set; } // character varying(50)
-		[Column("\"LastName\""),   NotNull              ] public string LastName   { get; set; } // character varying(50)
-		[Column("\"MiddleName\""),    Nullable          ] public string MiddleName { get; set; } // character varying(50)
-		[Column("\"Gender\""),     NotNull              ] public char   Gender     { get; set; } // character(1)
+		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // integer
+		[Column,     NotNull    ] public string FirstName  { get; set; } // character varying(50)
+		[Column,     NotNull    ] public string LastName   { get; set; } // character varying(50)
+		[Column,        Nullable] public string MiddleName { get; set; } // character varying(50)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // character(1)
+
+		#region Associations
+
+		/// <summary>
+		/// Doctor_PersonID_fkey_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public IEnumerable<Doctor> DoctorPersonIDfkeys { get; set; }
+
+		/// <summary>
+		/// Patient_PersonID_fkey_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public IEnumerable<Patient> PatientPersonIDfkeys { get; set; }
+
+		#endregion
 	}
 
-	[Table(Schema="public", Name="\"SequenceTest1\"")]
+	[Table(Schema="public", Name="SequenceTest1")]
 	public partial class SequenceTest1
 	{
-		[Column("\"ID\""),    PrimaryKey,  NotNull] public int    ID    { get; set; } // integer
-		[Column("\"Value\""),    Nullable         ] public string Value { get; set; } // character varying(50)
+		[PrimaryKey, NotNull    ] public int    ID    { get; set; } // integer
+		[Column,        Nullable] public string Value { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="\"SequenceTest2\"")]
+	[Table(Schema="public", Name="SequenceTest2")]
 	public partial class SequenceTest2
 	{
-		[Column("\"ID\""),    PrimaryKey, Identity] public int    ID    { get; set; } // integer
-		[Column("\"Value\""), Nullable            ] public string Value { get; set; } // character varying(50)
+		[PrimaryKey, Identity] public int    ID    { get; set; } // integer
+		[Column,     Nullable] public string Value { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="\"SequenceTest3\"")]
+	[Table(Schema="public", Name="SequenceTest3")]
 	public partial class SequenceTest3
 	{
-		[Column("\"ID\""),    PrimaryKey, Identity] public int    ID    { get; set; } // integer
-		[Column("\"Value\""), Nullable            ] public string Value { get; set; } // character varying(50)
+		[PrimaryKey, Identity] public int    ID    { get; set; } // integer
+		[Column,     Nullable] public string Value { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="\"TestIdentity\"")]
+	[Table(Schema="public", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
-		[Column("\"ID\""), PrimaryKey, Identity] public int ID { get; set; } // integer
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 }
