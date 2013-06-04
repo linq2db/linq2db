@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.PostgreSQL</id>
+		<version>0.0.8</version>
+		<title>LINQ to PostgreSQL</title>
+		<authors>Igor Tkachev</authors>
+		<owners />
+		<licenseUrl>https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt</licenseUrl>
+		<projectUrl>https://github.com/linq2db/linq2db</projectUrl>
+		<iconUrl>http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320</iconUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+			LINQ to PostgreSQL is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			This package includes a T4 template to generate data models for PostgreSQL database and references to the linq2db and Npgsql nugets.
+		</description>
+		<summary />
+		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB</tags>
+		<dependencies>
+			<dependency id="Npgsql"           />
+			<dependency id="linq2db"          />
+			<dependency id="linq2db.t4models" />
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="..\packages\Npgsql.2.0.12.1\lib\net40\Npgsql.dll"        target="tools" />
+		<file src="..\packages\Npgsql.2.0.12.1\lib\net40\Mono.Security.dll" target="tools" />
+		<file src="LinqToDB.PostgreSQL.ttinclude"                           target="content\LinqToDB.Templates" />
+		<file src="CopyMe.PostgreSQL.tt.txt"                                target="content\LinqToDB.Templates" />
+	</files>
+</package>
