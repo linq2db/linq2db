@@ -1,1 +1,1 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.SqlServer.0.0.8\tools\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="$(SolutionDir)packages\linq2db.SqlServer.0.0.9\tools\Microsoft.SqlServer.Types.dll" #>

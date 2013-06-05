@@ -1,1 +1,1 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.Firebird.0.0.8\tools\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ assembly name="$(SolutionDir)packages\linq2db.Firebird.0.0.9\tools\FirebirdSql.Data.FirebirdClient.dll" #>

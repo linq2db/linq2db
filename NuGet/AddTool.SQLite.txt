@@ -1,1 +1,1 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.SQLite.0.0.8\tools\System.Data.SQLite.dll" #>
+<#@ assembly name="$(SolutionDir)packages\linq2db.SQLite.0.0.9\tools\System.Data.SQLite.dll" #>
