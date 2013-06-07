@@ -7,6 +7,8 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the plus side you get more control and faster access to your data.
 
+Code examples and demos can be found [here] (https://github.com/linq2db/examples).
+
 Let's get started
 -----------------
 
