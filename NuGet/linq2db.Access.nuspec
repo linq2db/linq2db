@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Access</id>
-		<version>0.0.9</version>
+		<version>0.1.0</version>
 		<title>LINQ to Access</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -22,7 +22,7 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\Templates\LinqToDB.Access.ttinclude" target="content\LinqToDB.Templates" />
-		<file src="CopyMe.Access.tt.txt"                   target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.Access.Tools.ttinclude" target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Access.tt.txt"            target="content\LinqToDB.Templates" />
 	</files>
 </package>

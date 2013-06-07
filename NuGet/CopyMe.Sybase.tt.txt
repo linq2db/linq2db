@@ -1,7 +1,7 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                       #>
-<#@ output extension=".generated.cs"                                              #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Sybase.ttinclude"      #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Sybase.Tools.ttinclude" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"  #>
 <#
 	/*
 		1. Download and install Sybase data provider for .NET (http://www.sybase.com/developer).

@@ -1,21 +1,15 @@
 cd ..\..\linq2db\Source
 call Compile.bat
 
-cd ..\..\linq2db.t4models\NuGet
+cd ..\..\linq2db.t4models\ToolsGenerator
+
+%windir%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe ToolsGenerator.csproj /property:Configuration=Release
+
+cd ..\NuGet
 
 del *.nupkg
 
-copy /b AddTool.Linq2db.txt        + ..\Templates\LinqToDB.ttinclude            LinqToDB.ttinclude
-copy /b AddTool.SQLite.txt         + ..\Templates\LinqToDB.SQLite.ttinclude     LinqToDB.SQLite.ttinclude
-copy /b AddTool.PostgreSQL.txt     + ..\Templates\LinqToDB.PostgreSQL.ttinclude LinqToDB.PostgreSQL.ttinclude
-copy /b AddTool.Firebird.txt       + ..\Templates\LinqToDB.Firebird.ttinclude   LinqToDB.Firebird.ttinclude
-copy /b AddTool.MySql.txt          + ..\Templates\LinqToDB.MySql.ttinclude      LinqToDB.MySql.ttinclude
-copy /b AddTool.SqlCe.txt          + ..\Templates\LinqToDB.SqlCe.ttinclude      LinqToDB.SqlCe.ttinclude
-copy /b AddTool.SqlServer.txt      + ..\Templates\LinqToDB.SqlServer.ttinclude  LinqToDB.SqlServer.ttinclude
-copy /b AddTool.Sybase.txt         + ..\Templates\LinqToDB.Sybase.ttinclude     LinqToDB.Sybase.ttinclude
-copy /b AddTool.Oracle.x86.txt     + ..\Templates\LinqToDB.Oracle.ttinclude     LinqToDB.Oracle.x86.ttinclude
-copy /b AddTool.Oracle.x64.txt     + ..\Templates\LinqToDB.Oracle.ttinclude     LinqToDB.Oracle.x64.ttinclude
-copy /b AddTool.Oracle.Managed.txt + ..\Templates\LinqToDB.Oracle.ttinclude     LinqToDB.Oracle.Managed.ttinclude
+..\ToolsGenerator\bin\Release\ToolsGenerator.exe
 
 ..\Redist\NuGet Pack linq2db.t4models.nuspec
 

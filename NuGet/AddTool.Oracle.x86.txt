@@ -1,1 +1,0 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.Oracle.x86.0.0.9\tools\Oracle.DataAccess.dll" #>

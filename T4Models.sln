@@ -34,17 +34,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "T4Model.Wpf", "Tests\Wpf\T4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0-79B3-44DE-8F39-030D855077DE}"
 	ProjectSection(SolutionItems) = preProject
-		NuGet\AddTool.Firebird.txt = NuGet\AddTool.Firebird.txt
-		NuGet\AddTool.linq2db.txt = NuGet\AddTool.linq2db.txt
-		NuGet\AddTool.MySql.txt = NuGet\AddTool.MySql.txt
-		NuGet\AddTool.Oracle.Managed.txt = NuGet\AddTool.Oracle.Managed.txt
-		NuGet\AddTool.Oracle.x64.txt = NuGet\AddTool.Oracle.x64.txt
-		NuGet\AddTool.Oracle.x86.txt = NuGet\AddTool.Oracle.x86.txt
-		NuGet\AddTool.PostgreSQL.txt = NuGet\AddTool.PostgreSQL.txt
-		NuGet\AddTool.SqlCe.txt = NuGet\AddTool.SqlCe.txt
-		NuGet\AddTool.SQLite.txt = NuGet\AddTool.SQLite.txt
-		NuGet\AddTool.SqlServer.txt = NuGet\AddTool.SqlServer.txt
-		NuGet\AddTool.Sybase.txt = NuGet\AddTool.Sybase.txt
 		NuGet\CopyMe.Access.tt.txt = NuGet\CopyMe.Access.tt.txt
 		NuGet\CopyMe.Firebird.tt.txt = NuGet\CopyMe.Firebird.tt.txt
 		NuGet\CopyMe.MySql.tt.txt = NuGet\CopyMe.MySql.tt.txt
@@ -72,6 +61,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\Push.bat = NuGet\Push.bat
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolsGenerator", "ToolsGenerator\ToolsGenerator.csproj", "{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -133,6 +124,16 @@ Global
 		{12928697-5E5E-4935-B024-7DE232015EF7}.Release|Mixed Platforms.Build.0 = Release|x86
 		{12928697-5E5E-4935-B024-7DE232015EF7}.Release|x86.ActiveCfg = Release|x86
 		{12928697-5E5E-4935-B024-7DE232015EF7}.Release|x86.Build.0 = Release|x86
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F2AD4C5B-56A3-4CFF-AC97-A4D1D9B424B7}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

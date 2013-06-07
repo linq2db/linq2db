@@ -1,1 +1,0 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.MySql.0.0.9\tools\MySql.Data.dll" #>

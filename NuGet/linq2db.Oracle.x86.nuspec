@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Oracle.x86</id>
-		<version>0.0.9</version>
+		<version>0.1.0</version>
 		<title>LINQ to Oracle (ODP.NET) x86</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -25,7 +25,7 @@
 	</metadata>
 	<files>
 		<file src="..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll" target="tools" />
-		<file src="LinqToDB.Oracle.x86.ttinclude" target="content\LinqToDB.Templates" />
-		<file src="CopyMe.Oracle.x86.tt.txt"      target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.Oracle.x86.Tools.ttinclude" target="content\LinqToDB.Templates" />
+		<file src="CopyMe.Oracle.x86.tt.txt"            target="content\LinqToDB.Templates" />
 	</files>
 </package>

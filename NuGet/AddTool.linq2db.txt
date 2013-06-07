@@ -1,1 +1,0 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.t4models.0.0.9\tools\linq2db.dll" #>

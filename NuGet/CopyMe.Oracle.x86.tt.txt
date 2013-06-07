@@ -1,7 +1,7 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                       #>
-<#@ output extension=".generated.cs"                                              #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.x86.ttinclude"  #>
-<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                            #>
+<#@ output extension=".generated.cs"                                                   #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.Oracle.x86.Tools.ttinclude" #>
+<#@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"      #>
 <#
 	/*
 		1. Download and install Oracle data provider for .NET (http://www.oracle.com/technetwork/topics/dotnet/downloads/index.html).

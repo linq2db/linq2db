@@ -1,2 +1,0 @@
-<#@ assembly name="$(SolutionDir)packages\linq2db.PostgreSQL.0.0.9\tools\Npgsql.dll"        #>
-<#@ assembly name="$(SolutionDir)packages\linq2db.PostgreSQL.0.0.9\tools\Mono.Security.dll" #>
