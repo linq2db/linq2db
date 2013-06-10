@@ -79,12 +79,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var len  = parameters.Length - start;
 			var name = start == 0 ? "IIF" : "CASE";
+			var cond = parameters[start];
+
+			if (start == 0 && SqlExpression.NeedsEqual(cond))
+			{
+				cond = new SqlQuery.SearchCondition(
+					new SqlQuery.Condition(
+						false,
+						new SqlQuery.Predicate.ExprExpr(cond, SqlQuery.Predicate.Operator.Equal, new SqlValue(1))));
+			}
 
 			if (len == 3)
-				return new SqlFunction(systemType, name, parameters[start], parameters[start + 1], parameters[start + 2]);
+				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 
 			return new SqlFunction(systemType, name,
-				parameters[start],
+				cond,
 				parameters[start + 1],
 				ConvertCase(systemType, parameters, start + 2));
 		}
