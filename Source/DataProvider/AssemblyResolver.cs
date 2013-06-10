@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider
 			ResolveEventHandler resolver = Resolver;
 
 #if FW4
-
 			var l = Expression.Lambda<Action>(Expression.Call(
 				Expression.Constant(AppDomain.CurrentDomain),
 				typeof(AppDomain).GetEvent("AssemblyResolve").GetAddMethod(),

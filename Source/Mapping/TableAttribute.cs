@@ -20,4 +20,5 @@ namespace LinqToDB.Mapping
 		public string Schema                    { get; set; }
 		public string Database                  { get; set; }
 		public bool   IsColumnAttributeRequired { get; set; }
-	}}
+	}
+}
