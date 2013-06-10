@@ -254,6 +254,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return expr;
 		}
 
+		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func);
+			base.BuildFunction(sb, func);
+		}
+
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
 			switch (type.SqlDbType)

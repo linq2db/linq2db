@@ -797,7 +797,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void ApplyJoin([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{

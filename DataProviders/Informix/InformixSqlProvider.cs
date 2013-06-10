@@ -178,6 +178,12 @@ namespace LinqToDB.DataProvider
 			return expr;
 		}
 
+		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func);
+			base.BuildFunction(sb, func);
+		}
+
 		public virtual object ConvertBooleanValue(bool value)
 		{
 			return value ? 't' : 'f';

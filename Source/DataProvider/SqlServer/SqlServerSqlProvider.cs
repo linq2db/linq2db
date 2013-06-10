@@ -150,7 +150,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return func;
 		}
 
-
 		protected override void BuildDeleteClause(StringBuilder sb)
 		{
 			var table = SqlQuery.Delete.Table != null ?

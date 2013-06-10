@@ -40,6 +40,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func);
+			base.BuildFunction(sb, func);
+		}
+
 		public override string  Name
 		{
 			get { return ProviderName.SqlServer2005; }

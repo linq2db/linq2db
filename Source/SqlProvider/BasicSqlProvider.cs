@@ -2180,6 +2180,38 @@ namespace LinqToDB.SqlProvider
 			return sqlQuery;
 		}
 
+		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
+		{
+			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SearchCondition : return true;
+				}
+			}
+
+			return false;
+		}
+
+		protected SqlFunction ConvertFunctionParameters(SqlFunction func)
+		{
+			if (func.Name == "CASE" &&
+				func.Parameters.Select((p,i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
+			{
+				return new SqlFunction(
+					func.SystemType,
+					func.Name,
+					func.Precedence,
+					func.Parameters.Select((p,i) =>
+						IsBooleanParameter(p, func.Parameters.Length, i) ?
+							ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))) :
+							p
+					).ToArray());
+			}
+
+			return func;
+		}
+
 		#endregion
 
 		#region Helpers

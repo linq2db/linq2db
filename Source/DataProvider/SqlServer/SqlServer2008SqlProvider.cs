@@ -3,6 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using SqlBuilder;
 	using SqlProvider;
 
 	public class SqlServer2008SqlProvider : SqlServerSqlProvider
@@ -20,6 +21,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			BuildInsertOrUpdateQueryAsMerge(sb, null);
 			sb.AppendLine(";");
+		}
+
+		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		{
+			func = ConvertFunctionParameters(func);
+			base.BuildFunction(sb, func);
 		}
 
 		public override string  Name

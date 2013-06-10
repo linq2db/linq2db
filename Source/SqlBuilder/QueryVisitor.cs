@@ -832,14 +832,14 @@ namespace LinqToDB.SqlBuilder
 
 		#region Convert
 
-		public T Convert<T>(T element, Func<IQueryElement, IQueryElement> action)
+		public T Convert<T>(T element, Func<IQueryElement,IQueryElement> action)
 			where T : class, IQueryElement
 		{
 			_visitedElements.Clear();
 			return (T)ConvertInternal(element, action) ?? element;
 		}
 
-		IQueryElement ConvertInternal(IQueryElement element, Func<IQueryElement, IQueryElement> action)
+		IQueryElement ConvertInternal(IQueryElement element, Func<IQueryElement,IQueryElement> action)
 		{
 			if (element == null)
 				return null;

@@ -46,10 +46,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
 		{
+			func = ConvertFunctionParameters(func);
+
 			switch (func.Name)
 			{
-				case "CASE"      : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
-				case "Coalesce"  :
+				case "CASE"     : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
+				case "Coalesce" :
 
 					if (func.Parameters.Length > 2)
 					{
@@ -73,17 +75,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildFunction(sb, func);
 		}
 
-		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
+		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
 		{
-			var len = parameters.Length - start;
-
-			if (len < 3)
-				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
+			var len  = parameters.Length - start;
+			var name = start == 0 ? "IIF" : "CASE";
 
 			if (len == 3)
-				return new SqlFunction(systemType, "IIF", parameters[start], parameters[start + 1], parameters[start + 2]);
+				return new SqlFunction(systemType, name, parameters[start], parameters[start + 1], parameters[start + 2]);
 
-			return new SqlFunction(systemType, "IIF", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
+			return new SqlFunction(systemType, name,
+				parameters[start],
+				parameters[start + 1],
+				ConvertCase(systemType, parameters, start + 2));
 		}
 	}
 }
