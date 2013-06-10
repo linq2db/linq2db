@@ -44,6 +44,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public int    Ordinal;
 		}
 
+		[DebuggerDisplay("TableID = {TableID}, Name = {Name}, Ordinal = {Ordinal}")]
 		public class ColumnInfo
 		{
 			public string TableID;

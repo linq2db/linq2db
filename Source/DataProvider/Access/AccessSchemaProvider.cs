@@ -25,6 +25,37 @@ namespace LinqToDB.DataProvider.Access
 			return name;
 		}
 
+		protected override List<SchemaProviderBase.DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var dts = base.GetDataTypes(dataConnection);
+
+			if (dts.All(dt => dt.ProviderDbType != 128))
+			{
+				dts.Add(new DataTypeInfo
+				{
+					TypeName         = "image",
+					DataType         = typeof(byte[]).FullName,
+					CreateFormat     = "image({0})",
+					CreateParameters = "length",
+					ProviderDbType   = 128
+				});
+			}
+
+			if (dts.All(dt => dt.ProviderDbType != 130))
+			{
+				dts.Add(new DataTypeInfo
+				{
+					TypeName         = "text",
+					DataType         = typeof(string).FullName,
+					CreateFormat     = "text({0})",
+					CreateParameters = "length",
+					ProviderDbType   = 130
+				});
+			}
+
+			return dts;
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
@@ -74,13 +105,15 @@ namespace LinqToDB.DataProvider.Access
 			(
 				from c in cs.AsEnumerable()
 				join dt in DataTypes on c.Field<int>("DATA_TYPE") equals dt.ProviderDbType
+				//into gdt
+				//from dt in gdt.DefaultIfEmpty()
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME"),
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType   = dt.TypeName,
+					DataType   = dt != null ? dt.TypeName : null,
 					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
 					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
 					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
