@@ -14,7 +14,6 @@ namespace Tests.SchemaProvider
 	{
 		[Test]
 		public void Test([DataContexts(
-			ProviderName.DB2,
 			ProviderName.Informix,
 			ExcludeLinqService=true)] string context)
 		{

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Linq.Expressions;
-
 	using Data;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class DB2DataProvider : DynamicDataProviderBase
@@ -116,6 +116,11 @@ namespace LinqToDB.DataProvider.DB2
 		public override ISqlProvider CreateSqlProvider()
 		{
 			return new DB2SqlProvider(SqlProviderFlags);
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
+		{
+			return new DB2SchemaProvider();
 		}
 
 		public override void InitCommand(DataConnection dataConnection)

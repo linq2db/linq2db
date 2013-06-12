@@ -54,6 +54,7 @@
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
     <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
+    <Compile Include="DataProvider\DB2\DB2SchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlProvider.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />

@@ -26,12 +26,12 @@ namespace LinqToDB.DataProvider.DB2
 			return _db2DataProvider;
 		}
 
-		public static void ResolveOracle(string path)
+		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, "IBM.Data.DB2");
 		}
 
-		public static void ResolveOracle(Assembly assembly)
+		public static void ResolveDB2(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, "IBM.Data.DB2");
 		}
