@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.Access
 			return name;
 		}
 
-		protected override List<SchemaProviderBase.DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			var dts = base.GetDataTypes(dataConnection);
 
