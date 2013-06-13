@@ -503,7 +503,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim())
+						switch (paramNames[i].Trim().ToLower())
 						{
 							case "size"       :
 							case "length"     :
