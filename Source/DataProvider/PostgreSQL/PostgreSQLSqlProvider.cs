@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildFromClause(sb);
 		}
 
-		public static IdentifierQuoteMode IdentifierQuoteMode = IdentifierQuoteMode.Auto;
+		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
 		{
@@ -164,14 +164,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
-					if (value != null && IdentifierQuoteMode != IdentifierQuoteMode.None)
+					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
 							return value;
 
-						if (IdentifierQuoteMode == IdentifierQuoteMode.Quote || value.ToString().Any(char.IsUpper))
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote || value.ToString().Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 
