@@ -27,13 +27,12 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		static readonly string[] _systemSchemas = new[]
-		{
-			"SYSPUBLIC", "SYSIBM", "SYSCAT", "SYSIBMADM", "SYSSTAT", "SYSTOOLS"
-		};
+		string _currenSchema;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
+			_currenSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
 			return
@@ -44,9 +43,7 @@ namespace LinqToDB.DataProvider.DB2
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
-				where
-					ExcludedSchemas.Length != 0 || IncludedSchemas.Length != 0 ||
-					ExcludedSchemas.Length == 0 && IncludedSchemas.Length == 0 && !_systemSchemas.Contains(schema)
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currenSchema
 				select new TableInfo
 				{
 					TableID         = catalog + '.' + schema + '.' + name,
@@ -305,6 +302,7 @@ namespace LinqToDB.DataProvider.DB2
 					};
 				},
 				@"SELECT PROCSCHEMA, PROCNAME FROM SYSCAT.PROCEDURES")
+				.Where(p => IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || p.SchemaName == _currenSchema)
 				.ToList();
 		}
 
