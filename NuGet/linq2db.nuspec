@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>0.1.0</version>
+		<version>0.1.1</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -14,7 +14,7 @@
 		<summary />
 		<tags>
 			linq linq2db LinqToDB ORM database DB SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
-			Oracle ODP PostgreSQL
+			Oracle ODP PostgreSQL DB2
 		</tags>
 	</metadata>
 	<files>

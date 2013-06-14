@@ -291,9 +291,11 @@ namespace LinqToDB.DataProvider.DB2
 						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
-							return value;
+							return name;
 
-						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote || value.ToString().Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+							name.StartsWith("_") ||
+							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 

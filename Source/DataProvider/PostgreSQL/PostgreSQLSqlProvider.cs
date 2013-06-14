@@ -169,9 +169,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
-							return value;
+							return name;
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote || value.ToString().Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote || name.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 
