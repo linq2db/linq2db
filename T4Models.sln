@@ -36,6 +36,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0-79B3-44DE-8F39-030D855077DE}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet\CopyMe.Access.tt.txt = NuGet\CopyMe.Access.tt.txt
+		NuGet\CopyMe.DB2.tt.txt = NuGet\CopyMe.DB2.tt.txt
 		NuGet\CopyMe.Firebird.tt.txt = NuGet\CopyMe.Firebird.tt.txt
 		NuGet\CopyMe.MySql.tt.txt = NuGet\CopyMe.MySql.tt.txt
 		NuGet\CopyMe.Oracle.Managed.tt.txt = NuGet\CopyMe.Oracle.Managed.tt.txt
@@ -48,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\CopyMe.Sybase.tt.txt = NuGet\CopyMe.Sybase.tt.txt
 		NuGet\CopyMe.tt.txt = NuGet\CopyMe.tt.txt
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
 		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec

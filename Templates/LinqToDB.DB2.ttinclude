@@ -5,7 +5,6 @@
 #><#+
 LinqToDB.Data.DataConnection GetDB2Connection(string connectionString)
 {
-	//var conn = new IBM.Data.DB2.DB2Connection("Server=DBHost:50000;Database=TESTDATA;UID=Administrator;PWD=TestPassword;");
 	var conn = new IBM.Data.DB2.DB2Connection(connectionString);
 	return LinqToDB.DataProvider.DB2.DB2Factory.CreateDataConnection(conn);
 }
