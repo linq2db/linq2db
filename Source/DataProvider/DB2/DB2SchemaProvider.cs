@@ -287,5 +287,63 @@ namespace LinqToDB.DataProvider.DB2
 
 			return base.GetDataSourceName(dbConnection);
 		}
+
+		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
+		{
+			return dataConnection
+				.Query(rd =>
+				{
+					var schema = rd.GetString(0).Trim();
+					var name   = rd.GetString(1).Trim();
+
+					return new ProcedureInfo
+					{
+						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + name,
+						CatalogName   = dataConnection.Connection.Database,
+						SchemaName    = schema,
+						ProcedureName = name,
+					};
+				},
+				@"SELECT PROCSCHEMA, PROCNAME FROM SYSCAT.PROCEDURES")
+				.ToList();
+		}
+
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection)
+		{
+			return dataConnection
+				.Query(rd =>
+				{
+					var schema   = rd.GetString(0).Trim();
+					var procname = rd.GetString(1).Trim();
+					var length   = ConvertTo<int>.From(rd["LENGTH"]);
+					var mode     = rd.GetString(4);
+
+					return new ProcedureParameterInfo
+					{
+						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
+						ParameterName = rd.GetString(2),
+						DataType      = rd.GetString(3),
+						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
+						Length        = length,
+						Precision     = length,
+						Scale         = ConvertTo<int>.From(rd["SCALE"]),
+						IsIn          = mode.Contains("IN"),
+						IsOut         = mode.Contains("OUT"),
+						IsResult      = false
+					};
+				}, @"
+					SELECT
+						PROCSCHEMA,
+						PROCNAME,
+						PARMNAME,
+						TYPENAME,
+						PARM_MODE,
+
+						ORDINAL,
+						LENGTH,
+						SCALE
+					FROM SYSCAT.PROCPARMS")
+				.ToList();
+		}
 	}
 }

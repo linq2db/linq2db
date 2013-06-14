@@ -3,6 +3,8 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Linq;
+
 	using Extensions;
 	using SqlBuilder;
 	using SqlProvider;
@@ -258,7 +260,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) sb.Append(" THEN 1 ELSE 0 END");
 		}
 
-		public static bool QuoteIdentifiers = true;
+		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
 		{
@@ -284,14 +286,15 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
-					if (value != null && QuoteIdentifiers)
+					if (value != null && IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
 							return value;
 
-						return '"' + name + '"';
+						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote || value.ToString().Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + name + '"';
 					}
 
 					break;

@@ -207,3 +207,8 @@ VALUES
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 )
 GO
+
+CREATE OR REPLACE VIEW PersonView
+AS
+SELECT * FROM "Person"
+GO
