@@ -63,6 +63,16 @@ namespace AccessDataContext
 		[Column,   Nullable] public double?   floatDataType            { get; set; } // Double
 		[Column,   Nullable] public float?    realDataType             { get; set; } // Single
 		[Column,   Nullable] public DateTime? datetimeDataType         { get; set; } // DateTime
+		[Column,   Nullable] public char?     charDataType             { get; set; } // text(1)
+		[Column,   Nullable] public string    varcharDataType          { get; set; } // text(20)
+		[Column,   Nullable] public string    textDataType             { get; set; } // text
+		[Column,   Nullable] public string    ncharDataType            { get; set; } // text(20)
+		[Column,   Nullable] public string    nvarcharDataType         { get; set; } // text(20)
+		[Column,   Nullable] public string    ntextDataType            { get; set; } // text
+		[Column,   Nullable] public byte[]    binaryDataType           { get; set; } // image(10)
+		[Column,   Nullable] public byte[]    varbinaryDataType        { get; set; } // image(510)
+		[Column,   Nullable] public byte[]    imageDataType            { get; set; } // image
+		[Column,   Nullable] public byte[]    oleObjectDataType        { get; set; } // image
 		[Column,   Nullable] public Guid?     uniqueidentifierDataType { get; set; } // GUID
 	}
 
@@ -77,8 +87,11 @@ namespace AccessDataContext
 	public partial class DataTypeTest
 	{
 		[PrimaryKey, Identity] public int       DataTypeID { get; set; } // Long
+		[Column,     Nullable] public byte[]    Binary_    { get; set; } // image
 		[Column,     Nullable] public int?      Boolean_   { get; set; } // Long
 		[Column,     Nullable] public byte?     Byte_      { get; set; } // Byte
+		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // image
+		[Column,     Nullable] public char?     Char_      { get; set; } // text(1)
 		[Column,     Nullable] public DateTime? DateTime_  { get; set; } // DateTime
 		[Column,     Nullable] public decimal?  Decimal_   { get; set; } // Currency
 		[Column,     Nullable] public double?   Double_    { get; set; } // Double
@@ -89,20 +102,25 @@ namespace AccessDataContext
 		[Column,     Nullable] public decimal?  Money_     { get; set; } // Currency
 		[Column,     Nullable] public byte?     SByte_     { get; set; } // Byte
 		[Column,     Nullable] public float?    Single_    { get; set; } // Single
+		[Column,     Nullable] public byte[]    Stream_    { get; set; } // image
+		[Column,     Nullable] public string    String_    { get; set; } // text(50)
 		[Column,     Nullable] public short?    UInt16_    { get; set; } // Short
 		[Column,     Nullable] public int?      UInt32_    { get; set; } // Long
 		[Column,     Nullable] public int?      UInt64_    { get; set; } // Long
+		[Column,     Nullable] public string    Xml_       { get; set; } // text
 	}
 
 	[Table("Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, Identity] public int PersonID { get; set; } // Long
+		[PrimaryKey, Identity] public int    PersonID { get; set; } // Long
+		[Column,     NotNull ] public string Taxonomy { get; set; } // text(50)
 	}
 
 	[Table("Dual")]
 	public partial class Dual
 	{
+		[Column, Nullable] public string Dummy { get; set; } // text(10)
 	}
 
 	[Table("GrandChild")]
@@ -122,6 +140,7 @@ namespace AccessDataContext
 		[Column,   Nullable] public DateTime? DateTimeValue2 { get; set; } // DateTime
 		[Identity          ] public bool      BoolValue      { get; set; } // Bit
 		[Column,   Nullable] public Guid?     GuidValue      { get; set; } // GUID
+		[Column,   Nullable] public byte[]    BinaryValue    { get; set; } // image
 		[Column,   Nullable] public short?    SmallIntValue  { get; set; } // Short
 		[Column,   Nullable] public int?      IntValue       { get; set; } // Long
 		[Column,   Nullable] public int?      BigIntValue    { get; set; } // Long
@@ -158,34 +177,49 @@ namespace AccessDataContext
 	[Table("Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, Identity] public int PersonID { get; set; } // Long
+		[PrimaryKey, Identity] public int    PersonID  { get; set; } // Long
+		[Column,     NotNull ] public string Diagnosis { get; set; } // text(255)
 	}
 
 	// View
 	[Table("Patient_SelectAll")]
 	public partial class Patient_SelectAll
 	{
-		[Identity] public int PersonID { get; set; } // Long
+		[Identity          ] public int    PersonID   { get; set; } // Long
+		[Column,   Nullable] public string FirstName  { get; set; } // text(50)
+		[Column,   Nullable] public string LastName   { get; set; } // text(50)
+		[Column,   Nullable] public string MiddleName { get; set; } // text(50)
+		[Column,   Nullable] public char?  Gender     { get; set; } // text(1)
+		[Column,   Nullable] public string Diagnosis  { get; set; } // text(255)
 	}
 
 	[Table("Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity] public int PersonID { get; set; } // Long
+		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // Long
+		[Column,     NotNull    ] public string FirstName  { get; set; } // text(50)
+		[Column,     NotNull    ] public string LastName   { get; set; } // text(50)
+		[Column,        Nullable] public string MiddleName { get; set; } // text(50)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // text(1)
 	}
 
 	// View
 	[Table("Person_SelectAll")]
 	public partial class Person_SelectAll
 	{
-		[Identity] public int PersonID { get; set; } // Long
+		[Identity          ] public int    PersonID   { get; set; } // Long
+		[Column,   Nullable] public string FirstName  { get; set; } // text(50)
+		[Column,   Nullable] public string LastName   { get; set; } // text(50)
+		[Column,   Nullable] public string MiddleName { get; set; } // text(50)
+		[Column,   Nullable] public char?  Gender     { get; set; } // text(1)
 	}
 
 	// View
 	[Table("Scalar_DataReader")]
 	public partial class Scalar_DataReader
 	{
-		[Column, Nullable] public int? intField { get; set; } // Long
+		[Column, Nullable] public int?   intField    { get; set; } // Long
+		[Column, Nullable] public string stringField { get; set; } // text(255)
 	}
 
 	[Table("TestIdentity")]

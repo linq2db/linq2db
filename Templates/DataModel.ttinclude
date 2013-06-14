@@ -215,7 +215,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 					p.proc.SimilarTables[0] :
 					p.proc.SimilarTables.First(t => !t.IsView);
 
-		Procedures.Add(p.key, p.proc);
+		Procedures[p.key] = p.proc;
 	}
 }
 
