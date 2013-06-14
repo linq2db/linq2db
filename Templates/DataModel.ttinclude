@@ -287,6 +287,99 @@ void LoadMetadata(DataConnection dataConnection)
 	}
 }
 
+Table GetTable(string name)
+{
+	Table tbl;
+
+	if (Tables.TryGetValue(name, out tbl))
+		return tbl;
+
+	WriteLine("#error Table '" + name +  "' not found.");
+	WriteLine("/*");
+	WriteLine("\tExisting tables:");
+	WriteLine("");
+
+	foreach (var key in Tables.Keys)
+		WriteLine("\t" + key);
+
+	WriteLine(" */");
+
+	throw new ArgumentException("Table '" + name +  "' not found.");
+}
+
+Procedure GetProcedure(string name)
+{
+	Procedure proc;
+
+	if (Procedures.TryGetValue(name, out proc))
+		return proc;
+
+	WriteLine("#error Procedure '" + name +  "' not found.");
+	WriteLine("");
+	WriteLine("/*");
+	WriteLine("\tExisting procedures:");
+	WriteLine("");
+
+	foreach (var key in Procedures.Keys)
+		WriteLine("\t" + key);
+
+	WriteLine(" */");
+
+	throw new ArgumentException("Procedure '" + name +  "' not found.");
+}
+
+Column GetColumn(string tableName, string columnName)
+{
+	var tbl = GetTable(tableName);
+
+	Column col;
+
+	if (tbl.Columns.TryGetValue(columnName, out col))
+		return col;
+
+	WriteLine("#error Column '" + tableName + "'.'" + columnName +  "' not found.");
+	WriteLine("");
+	WriteLine("/*");
+	WriteLine("\tExisting '" + tableName + "'columns:");
+	WriteLine("");
+
+	foreach (var key in tbl.Columns.Keys)
+		WriteLine("\t" + key);
+
+	WriteLine(" */");
+
+	throw new ArgumentException("Column '" + tableName + "'.'" + columnName +  "' not found.");
+}
+
+ForeignKey GetFK(string tableName, string fkName)
+{
+	return GetForeignKey(tableName, fkName);
+}
+
+ForeignKey GetForeignKey(string tableName, string fkName)
+{
+	var tbl = GetTable(tableName);
+
+	ForeignKey col;
+
+	if (tbl.ForeignKeys.TryGetValue(fkName, out col))
+		return col;
+
+	WriteLine("#error FK '" + tableName + "'.'" + fkName +  "' not found.");
+	WriteLine("");
+	WriteLine("/*");
+	WriteLine("\tExisting '" + tableName + "'FKs:");
+	WriteLine("");
+
+	foreach (var key in tbl.ForeignKeys.Keys)
+		WriteLine("\t" + key);
+
+	WriteLine(" */");
+
+	throw new ArgumentException("FK '" + tableName + "'.'" + fkName +  "' not found.");
+}
+
+
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();
 Dictionary<string,Procedure> Procedures = new Dictionary<string,Procedure>();
 

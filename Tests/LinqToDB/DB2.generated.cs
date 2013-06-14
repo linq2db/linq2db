@@ -6,8 +6,11 @@
 //---------------------------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Data;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 namespace DB2DataContext
@@ -198,5 +201,18 @@ namespace DB2DataContext
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
+	}
+
+	public static partial class TESTDATADBStoredProcedures
+	{
+		#region PERSON_SELECTBYKEY
+
+		public static IEnumerable<Person> PERSON_SELECTBYKEY(this DataConnection dataConnection, int? ID)
+		{
+			return dataConnection.QueryProc<Person>("ADMINISTRATOR.PERSON_SELECTBYKEY",
+				new DataParameter("ID", ID));
+		}
+
+		#endregion
 	}
 }

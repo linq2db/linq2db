@@ -13,5 +13,11 @@
 	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
 
 	LoadDB2Metadata("DBHost", "50000", "TESTDATA", "Administrator", "TestPassword");
+
+	GetProcedure("ADMINISTRATOR.PERSON_SELECTBYKEY").ResultTable = GetTable("ADMINISTRATOR.Person");
+
+	//GetColumn("ADMINISTRATOR.Person", "ID").MemberName = "122";
+	//GetFK    ("ADMINISTRATOR.Person", "ID1").MemberName = "122";
+
 	GenerateModel();
 #>
