@@ -125,6 +125,7 @@
     <Reference Include="IBM.Data.Informix, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -349,10 +350,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DataProviders\Informix\LinqToDB.Informix.csproj">
-      <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
-      <Name>LinqToDB.Informix</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>

@@ -89,6 +89,24 @@ namespace LinqToDB.DataProvider
 			return l.Compile();
 		}
 
+		// SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
+		//
+		// protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
+		// {
+		//     ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
+		// }
+		protected void SetField(Type fieldType, string dataTypeName, string methodName)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int),    "i");
+
+			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] =
+				Expression.Lambda(
+					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
+					dataReaderParameter,
+					indexParameter);
+		}
+
 		// SetProviderField<MySqlDataReader,MySqlDecimal> ((r,i) => r.GetMySqlDecimal (i));
 		//
 		// protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)

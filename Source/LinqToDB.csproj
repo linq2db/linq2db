@@ -58,6 +58,10 @@
     <Compile Include="DataProvider\DB2\DB2SqlProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
+    <Compile Include="DataProvider\Informix\InformixFactory.cs" />
+    <Compile Include="DataProvider\Informix\InformixDataProvider.cs" />
+    <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
+    <Compile Include="DataProvider\Informix\InformixSqlProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleFactory.cs" />
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
