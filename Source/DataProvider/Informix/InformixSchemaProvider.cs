@@ -80,9 +80,14 @@ namespace LinqToDB.DataProvider.Informix
 			return DataType.Undefined;
 		}
 
+		protected override string GetDbType(string columnType, SchemaProviderBase.DataTypeInfo dataType, int length, int prec, int scale)
+		{
+			return base.GetDbType(columnType, dataType, length, prec, scale);
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			return dataConnection.Query<TableInfo>(@"
+			var tables = dataConnection.Query<TableInfo>(@"
 				SELECT
 					tabid         as TableID,
 					tabname       as TableName,
@@ -93,6 +98,8 @@ namespace LinqToDB.DataProvider.Informix
 				WHERE
 					tabid >= 100")
 				.ToList();
+
+			return tables;
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
@@ -116,15 +123,10 @@ namespace LinqToDB.DataProvider.Informix
 				new { datetype = "MINUTE",      start_point = 11, end_point = 13 },
 				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "SECOND",      start_point = 13, end_point = 15 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "FRACTION(1)", start_point = 15, end_point = 16 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "FRACTION(2)", start_point = 16, end_point = 17 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "FRACTION(3)", start_point = 17, end_point = 18 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "FRACTION(4)", start_point = 18, end_point = 19 },
-				new { datetype = "",            start_point =  0, end_point =  0 },
 				new { datetype = "FRACTION(5)", start_point = 19, end_point = 20 },
 			};
 
@@ -169,7 +171,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = c.DataType + " TO " + arr[i].datetype;
+				c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
 			}
 			else // # isn't the default
 			{
@@ -179,7 +181,7 @@ namespace LinqToDB.DataProvider.Informix
 				// add in the extra
 				k = k + len;
  
-				c.ColumnType = c.DataType + " (" + k + ") TO " + arr[i].datetype;
+				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
 				c.Precision = 5;
 			}
 		}
@@ -209,7 +211,7 @@ namespace LinqToDB.DataProvider.Informix
 					{
 						case    0 :
 							c.DataType = "CHAR";
-							c.Length = len / 256;
+							c.Length = len;
 							break;
 						case    1 : c.DataType = "SMALLINT";         break;
 						case    2 : c.DataType = "INTEGER";          break;
@@ -218,7 +220,8 @@ namespace LinqToDB.DataProvider.Informix
 						case    5 :
 							c.DataType  = "DECIMAL";
 							c.Precision = len / 256;
-							c.Scale     = len % 256;
+							if (c.Precision >= len % 256)
+								c.Scale = len % 256;
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -228,7 +231,8 @@ namespace LinqToDB.DataProvider.Informix
 						case    8 :
 							c.DataType  = "MONEY";
 							c.Precision = len / 256;
-							c.Scale     = len % 256;
+							if (c.Precision >= len % 256)
+								c.Scale = len % 256;
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
@@ -239,7 +243,7 @@ namespace LinqToDB.DataProvider.Informix
 						case   12 : c.DataType = "TEXT";             break;
 						case   13 :
 							c.DataType = "VARCHAR";
-							c.Length   = len / 256;
+							c.Length   = len;
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
@@ -247,11 +251,11 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   15 :
 							c.DataType = "NCHAR";
-							c.Length   = len / 256;
+							c.Length   = len;
 							break;
 						case   16 :
 							c.DataType = "NVARCHAR";
-							c.Length   = len / 256;
+							c.Length   = len;
 							break;
 						case   17 : c.DataType = "INT8";             break;
 						case   18 : c.DataType = "SERIAL8";          break;
@@ -262,12 +266,12 @@ namespace LinqToDB.DataProvider.Informix
 						case   23 : c.DataType = "COLLECTION";       break;
 						case   40 : // Variable-length opaque type
 							c.DataType = "LVARCHAR";
-							c.Length   = len / 256;
+							c.Length   = len;
 							break;
 						case   41 : c.DataType = "BOOLEAN";          break; // Fixed-length opaque type
 						case   43 :
 							c.DataType = "LVARCHAR";
-							c.Length   = len / 256;
+							c.Length   = len;
 							break;
 						case   45 : c.DataType = "BOOLEAN";          break;
 						case   52 : c.DataType = "BIGINT";           break;

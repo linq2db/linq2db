@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected InformixMappingSchema(string configuration) : base(configuration)
 		{
+			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 		}
 	}
 }
