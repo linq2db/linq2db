@@ -7,7 +7,6 @@ using System.Linq;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
-
 	using Data;
 	using SchemaProvider;
 

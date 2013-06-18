@@ -13,9 +13,7 @@ namespace Tests.SchemaProvider
 	public class SchemaProviderTest : TestBase
 	{
 		[Test]
-		public void Test([DataContexts(
-			ProviderName.Informix,
-			ExcludeLinqService=true)] string context)
+		public void Test([DataContexts(ExcludeLinqService=true)] string context)
 		{
 			SqlServerFactory.ResolveSqlTypes("");
 

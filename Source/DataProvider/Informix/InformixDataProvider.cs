@@ -135,6 +135,11 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlProvider(SqlProviderFlags);
 		}
 
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new InformixSchemaProvider();
+		}
+
 		Func<TimeSpan,object> _newIfxTimeSpan;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

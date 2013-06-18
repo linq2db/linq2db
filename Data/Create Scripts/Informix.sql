@@ -179,3 +179,11 @@ VALUES
 	interval(12:12:12) hour to second
 )
 GO
+
+DROP VIEW PersonView
+GO
+
+CREATE VIEW PersonView
+AS
+SELECT * FROM Person
+GO
