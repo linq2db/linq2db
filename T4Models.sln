@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\LinqToDB.Access.ttinclude = Templates\LinqToDB.Access.ttinclude
 		Templates\LinqToDB.DB2.ttinclude = Templates\LinqToDB.DB2.ttinclude
 		Templates\LinqToDB.Firebird.ttinclude = Templates\LinqToDB.Firebird.ttinclude
+		Templates\LinqToDB.Informix.ttinclude = Templates\LinqToDB.Informix.ttinclude
 		Templates\LinqToDB.MySql.ttinclude = Templates\LinqToDB.MySql.ttinclude
 		Templates\LinqToDB.Oracle.ttinclude = Templates\LinqToDB.Oracle.ttinclude
 		Templates\LinqToDB.PostgreSQL.ttinclude = Templates\LinqToDB.PostgreSQL.ttinclude

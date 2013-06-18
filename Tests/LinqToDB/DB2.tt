@@ -7,9 +7,6 @@
 <#
 	NamespaceName = "DB2DataContext";
 
-	var conn = new IBM.Data.DB2.DB2Connection("Server=DBHost:50000;Database=TESTDATA;UID=Administrator;PWD=TestPassword;Pooling=false;Connection Lifetime=60;Connection Reset=false;");
-	conn.Open();
-
 	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
 
 	LoadDB2Metadata("DBHost", "50000", "TESTDATA", "Administrator", "TestPassword");

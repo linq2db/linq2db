@@ -86,6 +86,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Informix.generated.cs">
+      <DependentUpon>Informix.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="DB2.generated.cs">
       <DependentUpon>DB2.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -141,6 +146,10 @@
     <None Include="Access.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Access.generated.cs</LastGenOutput>
+    </None>
+    <None Include="Informix.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Informix.generated.cs</LastGenOutput>
     </None>
     <None Include="DB2.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

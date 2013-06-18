@@ -53,12 +53,12 @@ namespace FirebirdDataContext
 		[PrimaryKey, NotNull    ] public int       ID                { get; set; } // integer
 		[Column,        Nullable] public long?     BIGINTDATATYPE    { get; set; } // bigint
 		[Column,        Nullable] public short?    SMALLINTDATATYPE  { get; set; } // smallint
-		[Column,        Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // decimal(18,0)
+		[Column,        Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // decimal
 		[Column,        Nullable] public int?      INTDATATYPE       { get; set; } // integer
 		[Column,        Nullable] public float?    FLOATDATATYPE     { get; set; } // float
 		[Column,        Nullable] public float?    REALDATATYPE      { get; set; } // float
 		[Column,        Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // timestamp
-		[Column,        Nullable] public string    CHARDATATYPE      { get; set; } // char(1)
+		[Column,        Nullable] public char?     CHARDATATYPE      { get; set; } // char(1)
 		[Column,        Nullable] public string    VARCHARDATATYPE   { get; set; } // varchar(20)
 		[Column,        Nullable] public string    TEXTDATATYPE      { get; set; } // blob sub_type 1
 		[Column,        Nullable] public string    NCHARDATATYPE     { get; set; } // char(20)
@@ -86,17 +86,17 @@ namespace FirebirdDataContext
 	{
 		[PrimaryKey, NotNull    ] public int       DATATYPEID { get; set; } // integer
 		[Column,        Nullable] public byte[]    BINARY_    { get; set; } // blob
-		[Column,        Nullable] public string    BOOLEAN_   { get; set; } // char(1)
+		[Column,        Nullable] public char?     BOOLEAN_   { get; set; } // char(1)
 		[Column,        Nullable] public short?    BYTE_      { get; set; } // smallint
 		[Column,        Nullable] public byte[]    BYTES_     { get; set; } // blob
-		[Column,        Nullable] public string    CHAR_      { get; set; } // char(1)
+		[Column,        Nullable] public char?     CHAR_      { get; set; } // char(1)
 		[Column,        Nullable] public DateTime? DATETIME_  { get; set; } // timestamp
 		[Column,        Nullable] public decimal?  DECIMAL_   { get; set; } // decimal(10,2)
 		[Column,        Nullable] public double?   DOUBLE_    { get; set; } // double precision
 		[Column,        Nullable] public string    GUID_      { get; set; } // char(38)
 		[Column,        Nullable] public short?    INT16_     { get; set; } // smallint
 		[Column,        Nullable] public int?      INT32_     { get; set; } // integer
-		[Column,        Nullable] public decimal?  INT64_     { get; set; } // numeric(11,0)
+		[Column,        Nullable] public decimal?  INT64_     { get; set; } // numeric
 		[Column,        Nullable] public decimal?  MONEY_     { get; set; } // decimal(18,4)
 		[Column,        Nullable] public short?    SBYTE_     { get; set; } // smallint
 		[Column,        Nullable] public float?    SINGLE_    { get; set; } // float
@@ -104,7 +104,7 @@ namespace FirebirdDataContext
 		[Column,        Nullable] public string    STRING_    { get; set; } // varchar(50)
 		[Column,        Nullable] public short?    UINT16_    { get; set; } // smallint
 		[Column,        Nullable] public int?      UINT32_    { get; set; } // integer
-		[Column,        Nullable] public decimal?  UINT64_    { get; set; } // numeric(11,0)
+		[Column,        Nullable] public decimal?  UINT64_    { get; set; } // numeric
 		[Column,        Nullable] public string    XML_       { get; set; } // char(1000)
 	}
 
@@ -117,10 +117,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_7829
+		/// INTEG_8139
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public PERSON INTEG7829 { get; set; }
+		public PERSON INTEG8139 { get; set; }
 
 		#endregion
 	}
@@ -146,7 +146,7 @@ namespace FirebirdDataContext
 		[Column, Nullable] public decimal?  MONEYVALUE     { get; set; } // decimal(10,4)
 		[Column, Nullable] public DateTime? DATETIMEVALUE  { get; set; } // timestamp
 		[Column, Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // timestamp
-		[Column, Nullable] public string    BOOLVALUE      { get; set; } // char(1)
+		[Column, Nullable] public char?     BOOLVALUE      { get; set; } // char(1)
 		[Column, Nullable] public string    GUIDVALUE      { get; set; } // char(38)
 		[Column, Nullable] public byte[]    BINARYVALUE    { get; set; } // blob
 		[Column, Nullable] public short?    SMALLINTVALUE  { get; set; } // smallint
@@ -170,10 +170,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_7832
+		/// INTEG_8142
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public PERSON INTEG7832 { get; set; }
+		public PERSON INTEG8142 { get; set; }
 
 		#endregion
 	}
@@ -185,21 +185,21 @@ namespace FirebirdDataContext
 		[Column,     NotNull    ] public string FIRSTNAME  { get; set; } // varchar(50)
 		[Column,     NotNull    ] public string LASTNAME   { get; set; } // varchar(50)
 		[Column,        Nullable] public string MIDDLENAME { get; set; } // varchar(50)
-		[Column,     NotNull    ] public string GENDER     { get; set; } // char(1)
+		[Column,     NotNull    ] public char   GENDER     { get; set; } // char(1)
 
 		#region Associations
 
 		/// <summary>
-		/// INTEG_7829_BackReference
+		/// INTEG_8139_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public IEnumerable<DOCTOR> INTEG7829 { get; set; }
+		public IEnumerable<DOCTOR> INTEG8139 { get; set; }
 
 		/// <summary>
-		/// INTEG_7832_BackReference
+		/// INTEG_8142_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public IEnumerable<PATIENT> INTEG7832 { get; set; }
+		public IEnumerable<PATIENT> INTEG8142 { get; set; }
 
 		#endregion
 	}
@@ -212,7 +212,7 @@ namespace FirebirdDataContext
 		[Column, Nullable] public string FIRSTNAME  { get; set; } // varchar(50)
 		[Column, Nullable] public string LASTNAME   { get; set; } // varchar(50)
 		[Column, Nullable] public string MIDDLENAME { get; set; } // varchar(50)
-		[Column, Nullable] public string GENDER     { get; set; } // char(1)
+		[Column, Nullable] public char?  GENDER     { get; set; } // char(1)
 	}
 
 	[Table("SEQUENCETEST")]
@@ -292,7 +292,7 @@ namespace FirebirdDataContext
 			public string DIAGNOSIS  { get; set; }
 		}
 
-		public static IEnumerable<PATIENT_SELECTALLResult> PATIENT_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out string GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PATIENT_SELECTALLResult> PATIENT_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PATIENT_SELECTALLResult>("PATIENT_SELECTALL");
 
@@ -300,7 +300,7 @@ namespace FirebirdDataContext
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
 			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
@@ -318,7 +318,7 @@ namespace FirebirdDataContext
 			public string DIAGNOSIS  { get; set; }
 		}
 
-		public static IEnumerable<PATIENT_SELECTBYNAMEResult> PATIENT_SELECTBYNAME(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out string GENDER, out string DIAGNOSIS)
+		public static IEnumerable<PATIENT_SELECTBYNAMEResult> PATIENT_SELECTBYNAME(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, out int? PERSONID, out string MIDDLENAME, out char? GENDER, out string DIAGNOSIS)
 		{
 			var ret = dataConnection.QueryProc<PATIENT_SELECTBYNAMEResult>("PATIENT_SELECTBYNAME",
 				new DataParameter("FIRSTNAME", FIRSTNAME),
@@ -326,7 +326,7 @@ namespace FirebirdDataContext
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 			DIAGNOSIS  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["DIAGNOSIS"]). Value);
 
 			return ret;
@@ -351,7 +351,7 @@ namespace FirebirdDataContext
 			public int? PERSONID { get; set; }
 		}
 
-		public static IEnumerable<PERSON_INSERTResult> PERSON_INSERT(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, string GENDER, out int? PERSONID)
+		public static IEnumerable<PERSON_INSERTResult> PERSON_INSERT(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PERSON_INSERTResult>("PERSON_INSERT",
 				new DataParameter("FIRSTNAME",  FIRSTNAME),
@@ -373,7 +373,7 @@ namespace FirebirdDataContext
 			public int? PERSONID { get; set; }
 		}
 
-		public static IEnumerable<PERSON_INSERT_OUTPUTPARAMETERResult> PERSON_INSERT_OUTPUTPARAMETER(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, string GENDER, out int? PERSONID)
+		public static IEnumerable<PERSON_INSERT_OUTPUTPARAMETERResult> PERSON_INSERT_OUTPUTPARAMETER(this DataConnection dataConnection, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var ret = dataConnection.QueryProc<PERSON_INSERT_OUTPUTPARAMETERResult>("PERSON_INSERT_OUTPUTPARAMETER",
 				new DataParameter("FIRSTNAME",  FIRSTNAME),
@@ -390,15 +390,24 @@ namespace FirebirdDataContext
 
 		#region PERSON_SELECTALL
 
-		public static IEnumerable<PERSON> PERSON_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out string GENDER)
+		public partial class PERSON_SELECTALLResult
 		{
-			var ret = dataConnection.QueryProc<PERSON>("PERSON_SELECTALL");
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+		}
+
+		public static IEnumerable<PERSON_SELECTALLResult> PERSON_SELECTALL(this DataConnection dataConnection, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		{
+			var ret = dataConnection.QueryProc<PERSON_SELECTALLResult>("PERSON_SELECTALL");
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
 			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -407,16 +416,25 @@ namespace FirebirdDataContext
 
 		#region PERSON_SELECTBYKEY
 
-		public static IEnumerable<PERSON> PERSON_SELECTBYKEY(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out string GENDER)
+		public partial class PERSON_SELECTBYKEYResult
 		{
-			var ret = dataConnection.QueryProc<PERSON>("PERSON_SELECTBYKEY",
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+		}
+
+		public static IEnumerable<PERSON_SELECTBYKEYResult> PERSON_SELECTBYKEY(this DataConnection dataConnection, int? ID, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		{
+			var ret = dataConnection.QueryProc<PERSON_SELECTBYKEYResult>("PERSON_SELECTBYKEY",
 				new DataParameter("ID", ID));
 
 			PERSONID   = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).  Value);
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
 			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -425,9 +443,18 @@ namespace FirebirdDataContext
 
 		#region PERSON_SELECTBYNAME
 
-		public static IEnumerable<PERSON> PERSON_SELECTBYNAME(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out string GENDER)
+		public partial class PERSON_SELECTBYNAMEResult
 		{
-			var ret = dataConnection.QueryProc<PERSON>("PERSON_SELECTBYNAME",
+			public int?   PERSONID   { get; set; }
+			public string FIRSTNAME  { get; set; }
+			public string LASTNAME   { get; set; }
+			public string MIDDLENAME { get; set; }
+			public string GENDER     { get; set; }
+		}
+
+		public static IEnumerable<PERSON_SELECTBYNAMEResult> PERSON_SELECTBYNAME(this DataConnection dataConnection, string IN_FIRSTNAME, string IN_LASTNAME, out int? PERSONID, out string FIRSTNAME, out string LASTNAME, out string MIDDLENAME, out char? GENDER)
+		{
+			var ret = dataConnection.QueryProc<PERSON_SELECTBYNAMEResult>("PERSON_SELECTBYNAME",
 				new DataParameter("IN_FIRSTNAME", IN_FIRSTNAME),
 				new DataParameter("IN_LASTNAME",  IN_LASTNAME));
 
@@ -435,7 +462,7 @@ namespace FirebirdDataContext
 			FIRSTNAME  = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["FIRSTNAME"]). Value);
 			LASTNAME   = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["LASTNAME"]).  Value);
 			MIDDLENAME = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["MIDDLENAME"]).Value);
-			GENDER     = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
+			GENDER     = Converter.ChangeTypeTo<char?> (((IDbDataParameter)dataConnection.Command.Parameters["GENDER"]).    Value);
 
 			return ret;
 		}
@@ -444,7 +471,7 @@ namespace FirebirdDataContext
 
 		#region PERSON_UPDATE
 
-		public static int PERSON_UPDATE(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, string GENDER)
+		public static int PERSON_UPDATE(this DataConnection dataConnection, int? PERSONID, string FIRSTNAME, string LASTNAME, string MIDDLENAME, char? GENDER)
 		{
 			return dataConnection.ExecuteProc("PERSON_UPDATE",
 				new DataParameter("PERSONID",   PERSONID),
