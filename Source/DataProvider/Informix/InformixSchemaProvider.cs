@@ -80,14 +80,9 @@ namespace LinqToDB.DataProvider.Informix
 			return DataType.Undefined;
 		}
 
-		protected override string GetDbType(string columnType, SchemaProviderBase.DataTypeInfo dataType, int length, int prec, int scale)
-		{
-			return base.GetDbType(columnType, dataType, length, prec, scale);
-		}
-
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			var tables = dataConnection.Query<TableInfo>(@"
+			return dataConnection.Query<TableInfo>(@"
 				SELECT
 					tabid         as TableID,
 					tabname       as TableName,
@@ -98,8 +93,6 @@ namespace LinqToDB.DataProvider.Informix
 				WHERE
 					tabid >= 100")
 				.ToList();
-
-			return tables;
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)

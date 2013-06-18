@@ -29,7 +29,9 @@ GO
 CREATE TABLE Doctor
 (
 	PersonID int          NOT NULL,
-	Taxonomy nvarchar(50) NOT NULL
+	Taxonomy nvarchar(50) NOT NULL,
+	FOREIGN KEY (PersonID)
+	REFERENCES Person (PersonID)
 )
 GO
 
