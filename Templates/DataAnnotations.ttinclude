@@ -54,5 +54,6 @@ partial class Property
 	public string DisplayName;
 	public bool   IsRequired;
 	public int    StringLength;
+
 }
 #>
