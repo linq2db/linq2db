@@ -8,6 +8,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlBuilder;
@@ -242,7 +243,7 @@ namespace LinqToDB.SqlProvider
 				var addAlias = true;
 
 				AppendIndent(sb);
-				BuildColumn(sb, col, ref addAlias);
+				BuildColumnExpression(sb, col.Expression, col.Alias, ref addAlias);
 
 				if (!_skipAlias && addAlias && col.Alias != null)
 					sb.Append(" as ").Append(Convert(col.Alias, ConvertType.NameToQueryFieldAlias));
@@ -256,9 +257,9 @@ namespace LinqToDB.SqlProvider
 			sb.AppendLine();
 		}
 
-		protected virtual void BuildColumn(StringBuilder sb, SqlQuery.Column col, ref bool addAlias)
+		protected virtual void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
 		{
-			BuildExpression(sb, col.Expression, true, true, col.Alias, ref addAlias);
+			BuildExpression(sb, expr, true, true, alias, ref addAlias);
 		}
 
 		#endregion
@@ -316,7 +317,10 @@ namespace LinqToDB.SqlProvider
 				AppendIndent(sb);
 				BuildExpression(sb, expr.Column, false, true);
 				sb.Append(" = ");
-				BuildExpression(sb, expr.Expression);
+
+				var addAlias = false;
+
+				BuildColumnExpression(sb, expr.Expression, null, ref addAlias);
 			}
 
 			Indent--;
@@ -1204,9 +1208,22 @@ namespace LinqToDB.SqlProvider
 			var firstValue = true;
 			var len        = sb.Length;
 			var hasNull    = false;
+			var count      = 0;
+			var longList   = false;
 
 			foreach (var value in values)
 			{
+				if (count++ >= SqlProviderFlags.MaxInListValuesCount)
+				{
+					count    = 1;
+					longList = true;
+
+					// start building next bucked
+					firstValue = true;
+					sb.Remove(sb.Length - 2, 2).Append(')');
+					sb.Append(" OR ");
+				}
+
 				var val = value;
 
 				if (val is IValueContainer)
@@ -1251,6 +1268,12 @@ namespace LinqToDB.SqlProvider
 					BuildPredicate(sb, new SqlQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot));
 					sb.Append(")");
 				}
+			}
+
+			if (longList && !hasNull)
+			{
+				sb.Insert(len, "(");
+				sb.Append(")");
 			}
 		}
 
@@ -1319,7 +1342,7 @@ namespace LinqToDB.SqlProvider
 									SqlQuery.GetTableSource(field.Table);
 #endif
 
-									throw new SqlException(string.Format("Table {0} not found.", field.Table));
+									throw new SqlException("Table '{0}' not found.", field.Table);
 								}
 
 								var table = GetTableAlias(ts);
@@ -1329,7 +1352,7 @@ namespace LinqToDB.SqlProvider
 									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
 
 								if (string.IsNullOrEmpty(table))
-									throw new SqlException(string.Format("Table {0} should have an alias.", field.Table));
+									throw new SqlException("Table {0} should have an alias.", field.Table);
 
 								addAlias = alias != field.PhysicalName;
 
@@ -1349,11 +1372,6 @@ namespace LinqToDB.SqlProvider
 						var column = (SqlQuery.Column)expr;
 
 #if DEBUG
-						//if (column.ToString() == "t8.ParentID")
-						//{
-						//    column.ToString();
-						//}
-
 						var sql = SqlQuery.SqlText;
 #endif
 
@@ -1365,13 +1383,13 @@ namespace LinqToDB.SqlProvider
 							table = SqlQuery.GetTableSource(column.Parent);
 #endif
 
-							throw new SqlException(string.Format("Table not found for '{0}'.", column));
+							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
 						var tableAlias = GetTableAlias(table) ?? GetTablePhysicalName(column.Parent, null);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							throw new SqlException(string.Format("Table {0} should have an alias.", column.Parent));
+							throw new SqlException("Table {0} should have an alias.", column.Parent);
 
 						addAlias = alias != column.Alias;
 
@@ -2162,6 +2180,38 @@ namespace LinqToDB.SqlProvider
 			return sqlQuery;
 		}
 
+		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
+		{
+			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SearchCondition : return true;
+				}
+			}
+
+			return false;
+		}
+
+		protected SqlFunction ConvertFunctionParameters(SqlFunction func)
+		{
+			if (func.Name == "CASE" &&
+				func.Parameters.Select((p,i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
+			{
+				return new SqlFunction(
+					func.SystemType,
+					func.Name,
+					func.Precedence,
+					func.Parameters.Select((p,i) =>
+						IsBooleanParameter(p, func.Parameters.Length, i) ?
+							ConvertExpression(new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))) :
+							p
+					).ToArray());
+			}
+
+			return func;
+		}
+
 		#endregion
 
 		#region Helpers
@@ -2184,7 +2234,7 @@ namespace LinqToDB.SqlProvider
 
 			var attrs = table.SequenceAttributes;
 
-			if (attrs == null)
+			if (attrs.IsNullOrEmpty())
 				if (throwException)
 					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.Name);
 				else
@@ -3267,7 +3317,6 @@ namespace LinqToDB.SqlProvider
 									{
 										subQuery.GroupBy.Expr((SqlField)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
-										break;
 									}
 
 									break;
@@ -3280,7 +3329,6 @@ namespace LinqToDB.SqlProvider
 									{
 										subQuery.GroupBy.Expr((SqlQuery.Column)e);
 										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
-										break;
 									}
 
 									break;
@@ -3350,7 +3398,7 @@ namespace LinqToDB.SqlProvider
 
 						new QueryVisitor().Visit(subQuery, e =>
 						{
-							if (e is ISqlTableSource /*&& subQuery.From.IsChild((ISqlTableSource)e)*/)
+							if (e is ISqlTableSource)
 								allTables.Add((ISqlTableSource)e);
 						});
 
@@ -3431,7 +3479,6 @@ namespace LinqToDB.SqlProvider
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlField)e);
 											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
-											break;
 										}
 
 										break;
@@ -3445,7 +3492,6 @@ namespace LinqToDB.SqlProvider
 											if (isAggregated)
 												subQuery.GroupBy.Expr((SqlQuery.Column)e);
 											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
-											break;
 										}
 
 										break;

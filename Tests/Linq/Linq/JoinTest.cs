@@ -632,7 +632,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.Parent
-						join ch in new Table<CountedChild>(db) on p.ParentID equals ch.ParentID into lj1
+						join ch in db.GetTable<CountedChild>() on p.ParentID equals ch.ParentID into lj1
 						from ch in lj1.DefaultIfEmpty()
 					where ch == null
 					select new { p, ch, ch1 = ch };
@@ -756,12 +756,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinTest2()
+		public void LeftJoinTest2([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
 
-			using (var db = GetDataContext(ProviderName.SQLite))
+			using (var db = GetDataContext(context))
 			{
 				var q =
 					from p1 in db.Patient
@@ -794,6 +794,20 @@ namespace Tests.Linq
 				}
 
 				var list = q.ToList();
+			}
+		}
+
+		[Test]
+		public void ApplyJoin([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from ch in db.Child
+					from p in new Model.Functions(db).GetParentByID(ch.Parent.ParentID)
+					select p;
+
+				q.ToList();
 			}
 		}
 	}

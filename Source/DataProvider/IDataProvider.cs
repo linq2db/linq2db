@@ -7,15 +7,16 @@ namespace LinqToDB.DataProvider
 {
 	using Data;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public interface IDataProvider
 	{
-		string           Name             { get; }
-		Type             ConnectionType   { get; }
-		Type             DataReaderType   { get; }
-		MappingSchema    MappingSchema    { get; }
-		SqlProviderFlags SqlProviderFlags { get; }
+		string           Name                { get; }
+		string           ConnectionNamespace { get; }
+		Type             DataReaderType      { get; }
+		MappingSchema    MappingSchema       { get; }
+		SqlProviderFlags SqlProviderFlags    { get; }
 
 		IDbConnection    CreateConnection   (string connectionString);
 		ISqlProvider     CreateSqlProvider  ();
@@ -25,6 +26,7 @@ namespace LinqToDB.DataProvider
 		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
 		void             SetParameter       (IDbDataParameter parameter, string name, DataType dataType, object value);
 
+		ISchemaProvider  GetSchemaProvider  ();
 		int              BulkCopy<T>        (DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source);
 	}
 }

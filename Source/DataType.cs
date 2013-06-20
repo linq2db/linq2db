@@ -53,6 +53,11 @@ namespace LinqToDB
 		VarBinary,
 
 		/// <summary>
+		/// Binary large object.
+		/// </summary>
+		Blob,
+
+		/// <summary>
 		/// A variable-length stream of binary data ranging from 0 to 2 31 -1 (or 2,147,483,647) bytes.
 		/// </summary>
 		Image,

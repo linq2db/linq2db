@@ -14,6 +14,7 @@ namespace LinqToDB.DataProvider
 	using Data;
 	using Expressions;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public abstract class DataProviderBase : IDataProvider
@@ -34,6 +35,7 @@ namespace LinqToDB.DataProvider
 				IsCountSubQuerySupported  = true,
 				IsInsertOrUpdateSupported = true,
 				CanCombineParameters      = true,
+				MaxInListValuesCount      = int.MaxValue,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -55,17 +57,19 @@ namespace LinqToDB.DataProvider
 
 		#region Public Members
 
-		public          string           Name             { get; private set; }
-		public abstract Type             ConnectionType   { get; }
-		public abstract Type             DataReaderType   { get; }
-		public virtual  MappingSchema    MappingSchema    { get; private set; }
-		public          SqlProviderFlags SqlProviderFlags { get; private set; }
+		public          string           Name                { get; private set; }
+		public abstract string           ConnectionNamespace { get; }
+		public abstract Type             DataReaderType      { get; }
+		public virtual  MappingSchema    MappingSchema       { get; private set; }
+		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
 		public abstract IDbConnection    CreateConnection (string connectionString);
 		public abstract ISqlProvider     CreateSqlProvider();
 
 		public virtual void InitCommand(DataConnection dataConnection)
 		{
+			dataConnection.Command.CommandType = CommandType.Text;
+
 			if (dataConnection.Command.Parameters.Count != 0)
 				dataConnection.Command.Parameters.Clear();
 		}
@@ -189,6 +193,7 @@ namespace LinqToDB.DataProvider
 			{
 				case DataType.Image     :
 				case DataType.Binary    :
+				case DataType.Blob      :
 				case DataType.VarBinary :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
@@ -203,6 +208,11 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
+		public virtual ISchemaProvider GetSchemaProvider()
+		{
+			throw new NotImplementedException();
+		}
+
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
 			DbType dbType;
@@ -213,6 +223,7 @@ namespace LinqToDB.DataProvider
 				case DataType.VarChar        : dbType = DbType.AnsiString;            break;
 				case DataType.NChar          : dbType = DbType.StringFixedLength;     break;
 				case DataType.NVarChar       : dbType = DbType.String;                break;
+				case DataType.Blob           :
 				case DataType.VarBinary      : dbType = DbType.Binary;                break;
 				case DataType.Boolean        : dbType = DbType.Boolean;               break;
 				case DataType.SByte          : dbType = DbType.SByte;                 break;

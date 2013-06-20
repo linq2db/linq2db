@@ -168,6 +168,7 @@ CREATE TABLE AllTypes
 	bitDataType         bit(3)                       NULL,
 	enumDataType        enum('Green', 'Red', 'Blue') NULL,
 	setDataType         set('one', 'two')            NULL,
+	intUnsignedDataType int unsigned                 NULL,
 
 	CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED (ID)
 )

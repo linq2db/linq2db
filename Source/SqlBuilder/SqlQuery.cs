@@ -57,6 +57,7 @@ namespace LinqToDB.SqlBuilder
 		internal void Init(
 			InsertClause       insert,
 			UpdateClause       update,
+			DeleteClause       delete,
 			SelectClause       select,
 			FromClause         from,
 			WhereClause        where,
@@ -70,6 +71,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			_insert              = insert;
 			_update              = update;
+			_delete             = delete;
 			_select              = select;
 			_from                = from;
 			_where               = where;
@@ -420,6 +422,15 @@ namespace LinqToDB.SqlBuilder
 					((SqlQuery)Source).ForEachTable(action, visitedQueries);
 			}
 
+			public IEnumerable<ISqlTableSource> GetTables()
+			{
+				yield return Source;
+
+				foreach (var join in Joins)
+					foreach (var table in join.Table.GetTables())
+						yield return table;
+			}
+
 			public int GetJoinNumber()
 			{
 				var n = Joins.Count;
@@ -571,10 +582,11 @@ namespace LinqToDB.SqlBuilder
 		{
 			public JoinedTable(JoinType joinType, TableSource table, bool isWeak, SearchCondition searchCondition)
 			{
-				JoinType  = joinType;
-				Table     = table;
-				IsWeak    = isWeak;
-				Condition = searchCondition;
+				JoinType        = joinType;
+				Table           = table;
+				IsWeak          = isWeak;
+				Condition       = searchCondition;
+				CanConvertApply = true;
 			}
 
 			public JoinedTable(JoinType joinType, TableSource table, bool isWeak)
@@ -587,10 +599,11 @@ namespace LinqToDB.SqlBuilder
 			{
 			}
 
-			public JoinType        JoinType  { get; set; }
-			public TableSource     Table     { get; set; }
-			public SearchCondition Condition { get; private set; }
-			public bool            IsWeak    { get; set; }
+			public JoinType        JoinType        { get; set; }
+			public TableSource     Table           { get; set; }
+			public SearchCondition Condition       { get; private set; }
+			public bool            IsWeak          { get; set; }
+			public bool            CanConvertApply { get; set; }
 
 			public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
 			{
@@ -781,11 +794,11 @@ namespace LinqToDB.SqlBuilder
 				public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2)
 					: base(exp1, SqlBuilder.Precedence.Comparison)
 				{
-					this.Operator = op;
-					Expr2 = exp2;
+					Operator = op;
+					Expr2    = exp2;
 				}
 
-				public new Operator   Operator { get; private set; }
+				public new Operator   Operator { get; private  set; }
 				public ISqlExpression Expr2    { get; internal set; }
 
 				protected override void Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
@@ -808,7 +821,7 @@ namespace LinqToDB.SqlBuilder
 
 					if (!objectTree.TryGetValue(this, out clone))
 						objectTree.Add(this, clone = new ExprExpr(
-							(ISqlExpression)Expr1.Clone(objectTree, doClone), this.Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone)));
+							(ISqlExpression)Expr1.Clone(objectTree, doClone), Operator, (ISqlExpression)Expr2.Clone(objectTree, doClone)));
 
 					return clone;
 				}
@@ -824,7 +837,7 @@ namespace LinqToDB.SqlBuilder
 
 					string op;
 
-					switch (this.Operator)
+					switch (Operator)
 					{
 						case Operator.Equal         : op = "=";  break;
 						case Operator.NotEqual      : op = "<>"; break;
@@ -2427,6 +2440,89 @@ namespace LinqToDB.SqlBuilder
 
 		#endregion
 
+		#region DeleteClause
+
+		public class DeleteClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+		{
+			public SqlTable Table { get; set; }
+
+			#region Overrides
+
+#if OVERRIDETOSTRING
+
+			public override string ToString()
+			{
+				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			}
+
+#endif
+
+			#endregion
+
+			#region ICloneableElement Members
+
+			public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				if (!doClone(this))
+					return this;
+
+				var clone = new DeleteClause();
+
+				if (Table != null)
+					clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
+
+				objectTree.Add(this, clone);
+
+				return clone;
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			[Obsolete]
+			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			{
+				if (Table != null)
+					((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
+
+				return null;
+			}
+
+			#endregion
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.DeleteClause; } }
+
+			StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+			{
+				sb.Append("DELETE FROM ");
+
+				if (Table != null)
+					((IQueryElement)Table).ToString(sb, dic);
+
+				sb.AppendLine();
+
+				return sb;
+			}
+
+			#endregion
+		}
+
+		private DeleteClause _delete;
+		public  DeleteClause  Delete
+		{
+			get { return _delete ?? (_delete = new DeleteClause()); }
+		}
+
+		public void ClearDelete()
+		{
+			_delete = null;
+		}
+
+		#endregion
+
 		#region FromClause
 
 		public class FromClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
@@ -2582,7 +2678,7 @@ namespace LinqToDB.SqlBuilder
 				get { return _tables; }
 			}
 
-			IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
+			static IEnumerable<ISqlTableSource> GetJoinTables(TableSource source, QueryElementType elementType)
 			{
 				if (source.Source.ElementType == elementType)
 					yield return source.Source;
@@ -2600,6 +2696,33 @@ namespace LinqToDB.SqlBuilder
 			internal IEnumerable<ISqlTableSource> GetFromQueries()
 			{
 				return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SqlQuery));
+			}
+
+			static TableSource FindTableSource(TableSource source, SqlTable table)
+			{
+				if (source.Source == table)
+					return source;
+
+				foreach (var join in source.Joins)
+				{
+					var ts = FindTableSource(join.Table, table);
+					if (ts != null)
+						return ts;
+				}
+
+				return null;
+			}
+
+			public ISqlTableSource FindTableSource(SqlTable table)
+			{
+				foreach (var source in Tables)
+				{
+					var ts = FindTableSource(source, table);
+					if (ts != null)
+						return ts;
+				}
+
+				return null;
 			}
 
 			#region Overrides
@@ -3091,7 +3214,7 @@ namespace LinqToDB.SqlBuilder
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+			FinalizeAndValidateInternal(isApplySupported, optimizeColumns, new List<ISqlTableSource>());
 			ResolveFields();
 			SetAliases();
 
@@ -3373,7 +3496,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				var sql = e as SqlQuery;
 
-				if (sql == null || sql.From.Tables.Count != 1 || !sql.IsSimple || sql._insert != null || sql._update != null)
+				if (sql == null || sql.From.Tables.Count != 1 || !sql.IsSimple || sql._insert != null || sql._update != null || sql._delete != null)
 					return;
 
 				var table = sql.From.Tables[0];
@@ -3432,7 +3555,7 @@ namespace LinqToDB.SqlBuilder
 			});
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns)
+		void FinalizeAndValidateInternal(bool isApplySupported, bool optimizeColumns, List<ISqlTableSource> tables)
 		{
 			OptimizeSearchCondition(Where. SearchCondition);
 			OptimizeSearchCondition(Having.SearchCondition);
@@ -3450,14 +3573,14 @@ namespace LinqToDB.SqlBuilder
 				if (sql != null && sql != this)
 				{
 					sql.ParentSql = this;
-					sql.FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+					sql.FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						IsParameterDependent = true;
 				}
 			});
 
-			ResolveWeakJoins();
+			ResolveWeakJoins(tables);
 			OptimizeColumns();
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
@@ -3615,10 +3738,8 @@ namespace LinqToDB.SqlBuilder
 				OrderBy.Items.Clear();
 		}
 
-		internal void ResolveWeakJoins()
+		internal void ResolveWeakJoins(List<ISqlTableSource> tables)
 		{
-			List<ISqlTableSource> tables = null;
-
 			Func<TableSource,bool> findTable = null; findTable = table =>
 			{
 				if (tables.Contains(table.Source))
@@ -3641,6 +3762,8 @@ namespace LinqToDB.SqlBuilder
 				return false;
 			};
 
+			var areTablesCollected = false;
+
 			ForEachTable(table =>
 			{
 				for (var i = 0; i < table.Joins.Count; i++)
@@ -3649,9 +3772,9 @@ namespace LinqToDB.SqlBuilder
 
 					if (join.IsWeak)
 					{
-						if (tables == null)
+						if (!areTablesCollected)
 						{
-							tables = new List<ISqlTableSource>();
+							areTablesCollected = true;
 
 							Action<IQueryElement> tableCollector = expr =>
 							{
@@ -3674,6 +3797,22 @@ namespace LinqToDB.SqlBuilder
 
 							if (_update != null)
 								visitor.VisitAll(Update, tableCollector);
+
+							if (_delete != null)
+								visitor.VisitAll(Delete, tableCollector);
+
+							visitor.VisitAll(From, expr =>
+							{
+								var tbl = expr as SqlTable;
+
+								if (tbl != null && tbl.TableArguments != null)
+								{
+									var v = new QueryVisitor();
+
+									foreach (var arg in tbl.TableArguments)
+										v.VisitAll(arg, tableCollector);
+								}
+							});
 						}
 
 						if (findTable(join.Table))
@@ -3684,7 +3823,6 @@ namespace LinqToDB.SqlBuilder
 						{
 							table.Joins.RemoveAt(i);
 							i--;
-							continue;
 						}
 					}
 				}
@@ -3861,6 +3999,9 @@ namespace LinqToDB.SqlBuilder
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
 					OptimizeApply(joinSource, join, isApplySupported, optimizeColumns);
 
+			if (isApplySupported && !joinTable.CanConvertApply)
+				return;
+
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SqlQuery)joinSource.Source;
@@ -4023,7 +4164,7 @@ namespace LinqToDB.SqlBuilder
 
 			var alias = desiredAlias;
 
-			if (string.IsNullOrEmpty(desiredAlias))
+			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 30)
 			{
 				desiredAlias = defaultAlias;
 				alias        = defaultAlias + "1";
@@ -4398,6 +4539,7 @@ namespace LinqToDB.SqlBuilder
 
 			if (IsInsert) _insert = (InsertClause)clone._insert.Clone(objectTree, doClone);
 			if (IsUpdate) _update = (UpdateClause)clone._update.Clone(objectTree, doClone);
+			if (IsDelete) _delete = (DeleteClause)clone._delete.Clone(objectTree, doClone);
 
 			_select  = new SelectClause (this, clone._select,  objectTree, doClone);
 			_from    = new FromClause   (this, clone._from,    objectTree, doClone);
@@ -4532,6 +4674,7 @@ namespace LinqToDB.SqlBuilder
 		{
 			if (_insert != null) ((ISqlExpressionWalkable)_insert).Walk(skipColumns, func);
 			if (_update != null) ((ISqlExpressionWalkable)_update).Walk(skipColumns, func);
+			if (_delete != null) ((ISqlExpressionWalkable)_delete).Walk(skipColumns, func);
 
 			((ISqlExpressionWalkable)Select) .Walk(skipColumns, func);
 			((ISqlExpressionWalkable)From)   .Walk(skipColumns, func);

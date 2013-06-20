@@ -34,6 +34,7 @@ namespace LinqToDB.SqlBuilder
 			InsertClause,
 			UpdateClause,
 				SetExpression,
+			DeleteClause,
 			FromClause,
 			WhereClause,
 			GroupByClause,

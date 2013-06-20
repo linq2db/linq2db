@@ -9,8 +9,6 @@ namespace LinqToDB.Configuration
 	/// </summary>
 	internal class LinqToDBSection : ConfigurationSection
 	{
-		private const string SectionName = "linq2db";
-
 		static readonly ConfigurationPropertyCollection _properties               = new ConfigurationPropertyCollection();
 		static readonly ConfigurationProperty           _propDataProviders        = new ConfigurationProperty("dataProviders",        typeof(DataProviderElementCollection), new DataProviderElementCollection(), ConfigurationPropertyOptions.None);
 		static readonly ConfigurationProperty           _propDefaultConfiguration = new ConfigurationProperty("defaultConfiguration", typeof(string),                        null,                                ConfigurationPropertyOptions.None);
@@ -32,7 +30,7 @@ namespace LinqToDB.Configuration
 				{
 					try
 					{
-						_instance = (LinqToDBSection)ConfigurationManager.GetSection(SectionName);
+						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db");
 					}
 					catch (SecurityException)
 					{

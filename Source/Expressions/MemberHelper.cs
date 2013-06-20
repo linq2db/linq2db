@@ -13,6 +13,9 @@ namespace LinqToDB.Expressions
 			if (ex is UnaryExpression)
 				ex = ((UnaryExpression)ex).Operand;
 
+			if (ex.NodeType == ExpressionType.New)
+				return ((NewExpression)ex).Constructor;
+
 			return
 				ex is MemberExpression     ? ((MemberExpression)    ex).Member :
 				ex is MethodCallExpression ? ((MethodCallExpression)ex).Method :
@@ -44,6 +47,16 @@ namespace LinqToDB.Expressions
 		{
 			var mi = GetMemeberInfo(func);
 			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethod() : (MethodInfo)mi;
+		}
+
+		public static ConstructorInfo ConstructorOf<T>(Expression<Func<T,object>> func)
+		{
+			return (ConstructorInfo)GetMemeberInfo(func);
+		}
+
+		public static ConstructorInfo ConstructorOf(Expression<Func<object>> func)
+		{
+			return (ConstructorInfo)GetMemeberInfo(func);
 		}
 	}
 }

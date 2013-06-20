@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
+	using Data;
+	using Expressions;
 	using Reflection;
 
-	class ColumnDescriptor
+	public class ColumnDescriptor
 	{
 		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute columnAttribute, MemberAccessor memberAccessor)
 		{
@@ -96,5 +100,39 @@ namespace LinqToDB.Mapping
 		public bool           IsPrimaryKey    { get; private set; }
 		public int            PrimaryKeyOrder { get; private set; }
 		public bool           CanBeNull       { get; private set; }
+
+		Func<object,object> _getter;
+
+		public virtual object GetValue(object obj)
+		{
+			if (_getter == null)
+			{
+				var objParam   = Expression.Parameter(typeof(object), "obj");
+				var getterExpr = MemberAccessor.GetterExpression.GetBody(Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type));
+
+				var expr = MappingSchema.GetConvertExpression(MemberType, typeof(DataParameter), createDefault : false);
+
+				if (expr != null)
+				{
+					getterExpr = expr.GetBody(getterExpr);
+				}
+				else
+				{
+					var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, MemberType);
+
+					if (type != null)
+					{
+						expr = MappingSchema.GetConvertExpression(MemberType, type);
+						getterExpr = expr.GetBody(getterExpr);
+					}
+				}
+
+				var getter = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+
+				_getter = getter.Compile();
+			}
+
+			return _getter(obj);
+		}
 	}
 }

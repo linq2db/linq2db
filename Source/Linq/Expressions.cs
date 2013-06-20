@@ -665,29 +665,29 @@ namespace LinqToDB.Linq
 				{ M(() => Math.Min((UInt32) 0, (UInt32) 0)), L<UInt32, UInt32, UInt32> ((v1,v2) => v1 < v2 ? v1 : v2) },
 				{ M(() => Math.Min((UInt64) 0, (UInt64) 0)), L<UInt64, UInt64, UInt64> ((v1,v2) => v1 < v2 ? v1 : v2) },
 
-				{ M(() => Math.Pow        (0,0)), L<Double,Double,Double>((Double x,Double y) => Sql.Power(x, y).Value ) },
+				{ M(() => Math.Pow        (0,0) ), L<Double,Double,Double>    ((Double x,Double y) => Sql.Power(x, y).Value ) },
 
-				{ M(() => Sql.Round       (0m)  ), L<Decimal?,Decimal?>   ((Decimal? d)      => Sql.Round(d, 0)) },
-				{ M(() => Sql.Round       (0.0) ), L<Double?,Double?>   ((Double? d)      => Sql.Round(d, 0)) },
+				{ M(() => Sql.Round       (0m)  ), L<Decimal?,Decimal?>       ((Decimal? d)          => Sql.Round(d, 0)) },
+				{ M(() => Sql.Round       (0.0) ), L<Double?, Double?>        ((Double?  d)          => Sql.Round(d, 0)) },
 
-				{ M(() => Sql.RoundToEven(0m)   ), L<Decimal?,Decimal?>   ((Decimal? d)      => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
-				{ M(() => Sql.RoundToEven(0.0)  ), L<Double?,Double?>   ((Double? d)      => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
+				{ M(() => Sql.RoundToEven(0m)   ), L<Decimal?,Decimal?>       ((Decimal? d)          => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
+				{ M(() => Sql.RoundToEven(0.0)  ), L<Double?, Double?>        ((Double?  d)          => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
 
 				{ M(() => Sql.RoundToEven(0m, 0)), L<Decimal?,Int32?,Decimal?>((Decimal? d,Int32? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n)) },
-				{ M(() => Sql.RoundToEven(0.0,0)), L<Double?,Int32?,Double?>((Double? d,Int32? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n)) },
+				{ M(() => Sql.RoundToEven(0.0,0)), L<Double?, Int32?,Double?> ((Double?  d,Int32? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n)) },
 
-				{ M(() => Math.Round     (0m)   ), L<Decimal,Decimal>     ( d    => Sql.RoundToEven(d).Value ) },
-				{ M(() => Math.Round     (0.0)  ), L<Double,Double>     ( d    => Sql.RoundToEven(d).Value ) },
+				{ M(() => Math.Round     (0m)   ), L<Decimal,Decimal>         ( d    => Sql.RoundToEven(d).Value ) },
+				{ M(() => Math.Round     (0.0)  ), L<Double, Double>          ( d    => Sql.RoundToEven(d).Value ) },
 
 				{ M(() => Math.Round     (0m, 0)), L<Decimal,Int32,Decimal>   ((d,n) => Sql.RoundToEven(d, n).Value ) },
-				{ M(() => Math.Round     (0.0,0)), L<Double,Int32,Double>   ((d,n) => Sql.RoundToEven(d, n).Value ) },
+				{ M(() => Math.Round     (0.0,0)), L<Double, Int32,Double>    ((d,n) => Sql.RoundToEven(d, n).Value ) },
 
 #if !SILVERLIGHT
-				{ M(() => Math.Round (0m,    MidpointRounding.ToEven)), L<Decimal,  MidpointRounding,Decimal>((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d).  Value : Sql.Round(d).  Value ) },
-				{ M(() => Math.Round (0.0,   MidpointRounding.ToEven)), L<Double,  MidpointRounding,Double>((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d).  Value : Sql.Round(d).  Value ) },
+				{ M(() => Math.Round (0m,    MidpointRounding.ToEven)), L<Decimal,MidpointRounding,Decimal>      ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d).  Value : Sql.Round(d).  Value ) },
+				{ M(() => Math.Round (0.0,   MidpointRounding.ToEven)), L<Double, MidpointRounding,Double>       ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d).  Value : Sql.Round(d).  Value ) },
 
 				{ M(() => Math.Round (0m, 0, MidpointRounding.ToEven)), L<Decimal,Int32,MidpointRounding,Decimal>((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n).Value : Sql.Round(d,n).Value ) },
-				{ M(() => Math.Round (0.0,0, MidpointRounding.ToEven)), L<Double,Int32,MidpointRounding,Double>((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n).Value : Sql.Round(d,n).Value ) },
+				{ M(() => Math.Round (0.0,0, MidpointRounding.ToEven)), L<Double, Int32,MidpointRounding,Double> ((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n).Value : Sql.Round(d,n).Value ) },
 #endif
 
 				{ M(() => Math.Sign  ((Decimal)0)), L<Decimal,Int32>(p => Sql.Sign(p).Value ) },
@@ -733,6 +733,19 @@ namespace LinqToDB.Linq
 				{ M(() => Sql.Log(0.0,0)), L<Double?,Double?,Double?>((m,n) => Sql.Log(n) / Sql.Log(m)) },
 				{ M(() => Sql.Sinh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / 2) },
 				{ M(() => Sql.Tanh(0)   ), L<Double?,Double?>   ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v))) },
+			}},
+
+			#endregion
+
+			#region SqlServer2000
+
+			{ ProviderName.SqlServer2000, new Dictionary<MemberInfo,LambdaExpression> {
+				{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), L<Int32?,Int32?,Int32?,Int32?,Int32?,Int32?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
+					y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
+					h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120)) },
+				{ M(() => DateTime.Parse("")), L<String,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ) },
+				{ M(() => Sql.RoundToEven(0m) ), L<Decimal?,Decimal?>((Decimal? d) => d - Sql.Floor(d) == 0.5m && (long)Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
+				{ M(() => Sql.RoundToEven(0.0)), L<Double?, Double?> ((Double?  d) => d - Sql.Floor(d) == 0.5  && (long)Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d)) },
 			}},
 
 			#endregion
@@ -1000,8 +1013,8 @@ namespace LinqToDB.Linq
 				{ M(() => Sql.Degrees((SByte?)  0)), L<SByte?,  SByte?>  ((SByte?   v) => (SByte?)  AccessInt(AccessInt(v.Value) * (180 / Math.PI))) },
 				{ M(() => Sql.Degrees((Single?) 0)), L<Single?, Single?> ((Single?  v) => (Single?)          (          v.Value  * (180 / Math.PI))) },
 
-				{ M(() => Sql.Round      (0m)   ), L<Decimal?,Decimal?>   ((Decimal? d)   => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0)) },
-				{ M(() => Sql.Round      (0.0)  ), L<Double?,Double?>   ((Double? d)   => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0)) },
+				{ M(() => Sql.Round      (0m)   ), L<Decimal?,Decimal?>  ((Decimal? d) => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0)) },
+				{ M(() => Sql.Round      (0.0)  ), L<Double?, Double?>   ((Double?  d) => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0)) },
 				{ M(() => Sql.Round      (0m, 0)), L<Decimal?,Int32?,Decimal?>((Decimal? v,Int32? p)=> (Decimal?)(
 					p == 1 ? Sql.Round(v * 10) / 10 :
 					p == 2 ? Sql.Round(v * 10) / 10 :
@@ -1016,16 +1029,16 @@ namespace LinqToDB.Linq
 					p == 4 ? Sql.Round(v * 10) / 10 :
 					p == 5 ? Sql.Round(v * 10) / 10 :
 					         Sql.Round(v * 10) / 10)) },
-				{ M(() => Sql.RoundToEven(0m)   ), L<Decimal?,Decimal?>   ( v   => AccessRound(v, 0))},
-				{ M(() => Sql.RoundToEven(0.0)  ), L<Double?,Double?>   ( v   => AccessRound(v, 0))},
+				{ M(() => Sql.RoundToEven(0m)   ), L<Decimal?,Decimal?>       ( v   => AccessRound(v, 0))},
+				{ M(() => Sql.RoundToEven(0.0)  ), L<Double?, Double?>        ( v   => AccessRound(v, 0))},
 				{ M(() => Sql.RoundToEven(0m, 0)), L<Decimal?,Int32?,Decimal?>((v,p)=> AccessRound(v, p))},
-				{ M(() => Sql.RoundToEven(0.0,0)), L<Double?,Int32?,Double?>((v,p)=> AccessRound(v, p))},
+				{ M(() => Sql.RoundToEven(0.0,0)), L<Double?, Int32?,Double?> ((v,p)=> AccessRound(v, p))},
 
 				{ M(() => Sql.Sinh(0)), L<Double?,Double?>( v => (Sql.Exp(v) - Sql.Exp(-v)) / 2) },
 				{ M(() => Sql.Tanh(0)), L<Double?,Double?>( v => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v))) },
 
 				{ M(() => Sql.Truncate(0m)),  L<Decimal?,Decimal?>((Decimal? v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v)) },
-				{ M(() => Sql.Truncate(0.0)), L<Double?,Double?>((Double? v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v)) },
+				{ M(() => Sql.Truncate(0.0)), L<Double?,Double?>  ((Double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v)) },
 			}},
 
 			#endregion

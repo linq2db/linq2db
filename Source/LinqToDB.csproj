@@ -30,10 +30,18 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Data.Services" />
     <Reference Include="System.ServiceModel" />
@@ -43,6 +51,86 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
+    <Compile Include="DataProvider\DB2\DB2Factory.cs" />
+    <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
+    <Compile Include="DataProvider\DB2\DB2SchemaProvider.cs" />
+    <Compile Include="DataProvider\DB2\DB2SqlProvider.cs" />
+    <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
+    <Compile Include="DataProvider\Informix\InformixFactory.cs" />
+    <Compile Include="DataProvider\Informix\InformixDataProvider.cs" />
+    <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
+    <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
+    <Compile Include="DataProvider\Informix\InformixSqlProvider.cs" />
+    <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />
+    <Compile Include="DataProvider\Oracle\OracleFactory.cs" />
+    <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
+    <Compile Include="DataProvider\Oracle\OracleSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLFactory.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLDataProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
+    <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
+    <Compile Include="Linq\ExpressionQuery.cs" />
+    <Compile Include="ITableT.cs" />
+    <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
+    <Compile Include="DataProvider\Access\AccessFactory.cs" />
+    <Compile Include="DataProvider\Access\AccessMappingSchema.cs" />
+    <Compile Include="DataProvider\Access\AccessSqlProvider.cs" />
+    <Compile Include="DataProvider\Access\AccessSchemaProvider.cs" />
+    <Compile Include="DataProvider\AssemblyResolver.cs" />
+    <Compile Include="DataProvider\BulkCopyReader.cs" />
+    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdDataProvider.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdSqlProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlFactory.cs" />
+    <Compile Include="DataProvider\MySql\MySqlDataProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlMappingSchema.cs" />
+    <Compile Include="DataProvider\MySql\MySqlSqlProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlSchemaProvider.cs" />
+    <Compile Include="DataProvider\SchemaProvider\AssociationType.cs" />
+    <Compile Include="DataProvider\SchemaProvider\ColumnSchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\DatabaseSchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\ForeignKeySchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\GetSchemaOptions.cs" />
+    <Compile Include="DataProvider\SchemaProvider\ISchemaProvider.cs" />
+    <Compile Include="DataProvider\SchemaProvider\ParameterSchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\ProcedureSchema.cs" />
+    <Compile Include="DataProvider\SchemaProvider\SchemaProviderBase.cs" />
+    <Compile Include="DataProvider\SchemaProvider\TableSchema.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeSchemaProvider.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeFactory.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeDataProvider.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeMappingSchema.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeSqlProvider.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteDataProvider.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteFactory.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteMappingSchema.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteSqlProvider.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteSchemaProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2000SchemaProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2012SqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2000SqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2005SqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2008SqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerDataProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerFactory.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerMappingSchema.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerSchemaProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerSqlProvider.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerVersion.cs" />
+    <Compile Include="Common\Tools.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseDataProvider.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseFactory.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseMappingSchema.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseSqlProvider.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
@@ -76,7 +164,7 @@
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="Linq\ITable.cs" />
-    <Compile Include="ExpressionQueryImpl.cs" />
+    <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -156,20 +244,20 @@
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
     <Compile Include="Linq\DefaultDataContextInfo.cs" />
-    <Compile Include="ExpressionQuery.cs" />
+    <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="IDataContext.cs" />
     <Compile Include="Linq\IDataContextInfo.cs" />
-    <Compile Include="IExpressionQuery.cs" />
+    <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
-    <Compile Include="Linq\IUpdateable.cs" />
+    <Compile Include="Linq\IUpdatable.cs" />
     <Compile Include="Linq\IValueInsertable.cs" />
     <Compile Include="Linq\LinqException.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="Linq\MemberInfoComparer.cs" />
-    <Compile Include="Sql\Sql.ExpressionMethodAttribute.cs" />
+    <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
@@ -180,7 +268,7 @@
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
-    <Compile Include="TableT.cs" />
+    <Compile Include="Linq\TableT.cs" />
     <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
     <Compile Include="SqlBuilder\IChild.cs" />
@@ -250,6 +338,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="linq2db.snk" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

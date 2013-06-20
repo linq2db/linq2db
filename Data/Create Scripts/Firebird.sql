@@ -13,6 +13,8 @@ DROP PROCEDURE Scalar_DataReader;             COMMIT;
 DROP PROCEDURE Scalar_OutputParameter;        COMMIT;
 DROP PROCEDURE Scalar_ReturnParameter;        COMMIT;
 
+DROP VIEW PersonView;                         COMMIT;
+
 DROP TRIGGER CREATE_BinaryDataID;             COMMIT;
 DROP TRIGGER CHANGE_BinaryData;               COMMIT;
 DROP TRIGGER CREATE_PersonID;                 COMMIT;
@@ -90,7 +92,7 @@ CREATE TABLE Doctor
 (
 	PersonID INTEGER     NOT NULL,
 	Taxonomy VARCHAR(50) NOT NULL,
-		FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
+		CONSTRAINT FK_Doctor_Person FOREIGN KEY (PersonID) REFERENCES Person (PersonID)
 			ON DELETE CASCADE
 )
 COMMIT;
@@ -340,4 +342,326 @@ AS BEGIN
 END
 COMMIT;
 
+
+CREATE VIEW PersonView
+AS
+    SELECT * FROM Person
+COMMIT;
+
+
+-- Person_SelectByKey
+
+CREATE PROCEDURE Person_SelectByKey(id INTEGER)
+RETURNS (
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+AS
+BEGIN
+	SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
+	WHERE PersonID = :id
+	INTO
+		:PersonID,
+		:FirstName,
+		:LastName,
+		:MiddleName,
+		:Gender;
+	SUSPEND;
+END
+COMMIT;
+
+-- Person_SelectAll
+
+CREATE PROCEDURE Person_SelectAll
+RETURNS (
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+AS
+BEGIN
+	FOR 
+		SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
+		INTO
+			:PersonID,
+			:FirstName,
+			:LastName,
+			:MiddleName,
+			:Gender
+	DO SUSPEND;
+END
+COMMIT;
+
+-- Person_SelectByName
+
+CREATE PROCEDURE Person_SelectByName (
+	in_FirstName VARCHAR(50),
+	in_LastName  VARCHAR(50)
+	)
+RETURNS (
+	PersonID   int,
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+AS
+BEGIN
+
+	FOR SELECT PersonID, FirstName, LastName, MiddleName, Gender FROM Person 
+		WHERE FirstName LIKE :in_FirstName and LastName LIKE :in_LastName
+	INTO
+		:PersonID,
+		:FirstName,
+		:LastName,
+		:MiddleName,
+		:Gender 
+	DO SUSPEND;
+END
+COMMIT;
+
+-- Person_Insert
+
+CREATE PROCEDURE Person_Insert(
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+RETURNS (PersonID INTEGER)
+AS
+BEGIN
+	INSERT INTO Person
+		( LastName,  FirstName,  MiddleName,  Gender)
+	VALUES
+		(:LastName, :FirstName, :MiddleName, :Gender);
+
+	SELECT MAX(PersonID) FROM person
+		INTO :PersonID;
+	SUSPEND;
+END
+COMMIT;
+
+-- Person_Insert_OutputParameter
+
+CREATE PROCEDURE Person_Insert_OutputParameter(
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+RETURNS (PersonID INTEGER)
+AS
+BEGIN
+	INSERT INTO Person
+		( LastName,  FirstName,  MiddleName,  Gender)
+	VALUES
+		(:LastName, :FirstName, :MiddleName, :Gender);
+
+	SELECT max(PersonID) FROM person
+	INTO :PersonID;
+	SUSPEND;
+END
+COMMIT;
+
+-- Person_Update
+
+CREATE PROCEDURE Person_Update(
+	PersonID   INTEGER,
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1)
+	)
+AS
+BEGIN
+	UPDATE
+		Person
+	SET
+		LastName   = :LastName,
+		FirstName  = :FirstName,
+		MiddleName = :MiddleName,
+		Gender     = :Gender
+	WHERE
+		PersonID = :PersonID;
+END
+COMMIT;
+
+-- Person_Delete
+
+CREATE PROCEDURE Person_Delete(
+	PersonID INTEGER
+	)
+AS
+BEGIN
+	DELETE FROM Person WHERE PersonID = :PersonID;
+END
+COMMIT;
+
+-- Patient_SelectAll
+
+CREATE PROCEDURE Patient_SelectAll
+RETURNS (
+	PersonID   int,
+	FirstName  VARCHAR(50),
+	LastName   VARCHAR(50),
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1),
+	Diagnosis  VARCHAR(256)
+	)
+AS
+BEGIN
+	FOR 
+		SELECT
+			Person.PersonID,
+			FirstName,
+			LastName,
+			MiddleName,
+			Gender,
+			Patient.Diagnosis
+		FROM
+			Patient, Person
+		WHERE
+			Patient.PersonID = Person.PersonID
+		INTO
+			:PersonID,
+			:FirstName,
+			:LastName,
+			:MiddleName,
+			:Gender,
+			:Diagnosis
+	DO SUSPEND;
+END
+COMMIT;
+
+-- Patient_SelectByName
+
+CREATE PROCEDURE Patient_SelectByName(
+	FirstName VARCHAR(50),
+	LastName  VARCHAR(50)
+	)
+RETURNS (
+	PersonID   int,
+	MiddleName VARCHAR(50),
+	Gender     CHAR(1),
+	Diagnosis  VARCHAR(256)
+	)
+AS
+BEGIN
+	FOR 
+		SELECT
+			Person.PersonID, 
+			MiddleName,
+			Gender,
+			Patient.Diagnosis
+		FROM
+			Patient, Person
+		WHERE
+			Patient.PersonID = Person.PersonID
+			and FirstName = :FirstName and LastName = :LastName
+		INTO
+			:PersonID,
+			:MiddleName,
+			:Gender,
+			:Diagnosis
+	DO SUSPEND;
+END
+COMMIT;
+
+
+-- OutRefTest
+
+/*
+Fake input parameters are used to "emulate" input/output parameters.
+Each inout parameter should be defined in RETURNS(...) section
+and allso have a "mirror" in input section, mirror name shoul be:
+FdpDataProvider.InOutInputParameterPrefix + [parameter name]
+ex:
+in_inputOutputID is input mirror FOR inout parameter inputOutputID
+*/
+CREATE PROCEDURE OutRefTest(
+	ID					INTEGER,
+	in_inputOutputID	INTEGER,
+	str					VARCHAR(50),
+	in_inputOutputStr	VARCHAR(50)
+	)
+RETURNS(
+	inputOutputID  INTEGER,
+	inputOutputStr VARCHAR(50),
+	outputID       INTEGER,
+	outputStr      VARCHAR(50)
+	)
+AS
+BEGIN
+	outputID       = ID;
+	inputOutputID  = ID + in_inputOutputID;
+	outputStr      = str;
+	inputOutputStr = str || in_inputOutputStr;
+	SUSPEND;
+END
+COMMIT;
+
+-- OutRefEnumTest
+
+CREATE PROCEDURE OutRefEnumTest(
+		str					VARCHAR(50),
+		in_inputOutputStr	VARCHAR(50)
+		)
+RETURNS (
+	inputOutputStr VARCHAR(50),
+	outputStr      VARCHAR(50)
+	)
+AS
+BEGIN
+	outputStr      = str;
+	inputOutputStr = str || in_inputOutputStr;
+	SUSPEND;
+END
+COMMIT;
+
+-- ExecuteScalarTest
+
+CREATE PROCEDURE Scalar_DataReader
+RETURNS(
+	intField	INTEGER,
+	stringField	VARCHAR(50)
+	)
+AS
+BEGIN
+	intField = 12345;
+	stringField = '54321';
+	SUSPEND;
+END
+COMMIT;
+
+CREATE PROCEDURE Scalar_OutputParameter
+RETURNS (
+	outputInt      INTEGER,
+	outputString   VARCHAR(50)
+	)
+AS
+BEGIN
+	outputInt = 12345;
+	outputString = '54321';
+	SUSPEND;
+END
+COMMIT;
+
+/*
+"Return_Value" is the name for ReturnValue "emulating"
+may be changed: FdpDataProvider.ReturnParameterName
+*/
+CREATE PROCEDURE Scalar_ReturnParameter
+RETURNS (Return_Value INTEGER)
+AS
+BEGIN
+	Return_Value = 12345;
+	SUSPEND;
+END
+COMMIT;
 

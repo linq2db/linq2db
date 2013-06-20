@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 							var into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SqlQuery()));
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							sequence.SqlQuery.ResolveWeakJoins();
+							sequence.SqlQuery.ResolveWeakJoins(new List<ISqlTableSource>());
 							sequence.SqlQuery.Select.Columns.Clear();
 
 							BuildSetter(
@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			return new UpdateContext(buildInfo.Parent, sequence);
 		}
 
-		void CheckAssociation(IBuildContext sequence)
+		static void CheckAssociation(IBuildContext sequence)
 		{
 			var ctx = sequence as SelectContext;
 
@@ -112,6 +112,18 @@ namespace LinqToDB.Linq.Builder
 				{
 					var atc = (TableBuilder.AssociatedTableContext)res.Context;
 					sequence.SqlQuery.Update.Table = atc.SqlTable;
+				}
+				else
+				{
+					res = ctx.IsExpression(null, 0, RequestFor.Table);
+
+					if (res.Result && res.Context is TableBuilder.TableContext)
+					{
+						var tc = (TableBuilder.TableContext)res.Context;
+
+						if (sequence.SqlQuery.From.Tables.Count == 0 || sequence.SqlQuery.From.Tables[0].Source != tc.SqlQuery)
+							sequence.SqlQuery.Update.Table = tc.SqlTable;
+					}
 				}
 			}
 		}

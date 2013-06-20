@@ -8,6 +8,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 
@@ -33,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException(string.Format("Explicit construction of entity type '{0}' in group by is not allowed.", body.Type));
+					throw new NotSupportedException("Explicit construction of entity type '{0}' in group by is not allowed.".Args(body.Type));
 			}
 
 			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
@@ -153,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 					_parameters   = parameters;
 					_itemReader   = itemReader;
 
-					if (Common.Configuration.Linq.PreloadGroups)
+					if (Configuration.Linq.PreloadGroups)
 					{
 						_items = GetItems();
 					}
@@ -258,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 					var keyExpr         = context._key.BuildExpression(null, 0);
 					var dataReaderLocal = context.Builder.DataReaderLocal;
 
-					if (keyExpr.Find(e => e == dataReaderLocal) != null)
+					if (!Configuration.AvoidSpecificDataProviderAPI && keyExpr.Find(e => e == dataReaderLocal) != null)
 					{
 						keyExpr = Expression.Block(
 							new[] { context.Builder.DataReaderLocal },
@@ -277,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 							ExpressionBuilder.DataContextParam,
 							ExpressionBuilder.DataReaderParam,
 							ExpressionBuilder.ExpressionParam,
-							ExpressionBuilder.ParametersParam,
+							ExpressionBuilder.ParametersParam
 						});
 
 					return Expression.Call(
@@ -292,7 +293,7 @@ namespace LinqToDB.Linq.Builder
 							ExpressionBuilder.ExpressionParam,
 							ExpressionBuilder.ParametersParam,
 							Expression.Constant(keyReader.Compile()),
-							Expression.Constant(itemReader),
+							Expression.Constant(itemReader)
 						});
 				}
 
@@ -539,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 				return IsExpressionResult.False;
 			}
 
-			public override int ConvertToParentIndex(int index, IBuildContext _context)
+			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
 				var expr = SqlQuery.Select.Columns[index].Expression;
 
@@ -598,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 
 						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", this.SqlQuery));
+						ctx.SqlQuery.Properties.Add(Tuple.Create("from_group_by", SqlQuery));
 
 						return ctx;
 					}

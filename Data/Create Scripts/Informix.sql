@@ -29,7 +29,9 @@ GO
 CREATE TABLE Doctor
 (
 	PersonID int          NOT NULL,
-	Taxonomy nvarchar(50) NOT NULL
+	Taxonomy nvarchar(50) NOT NULL,
+	FOREIGN KEY (PersonID)
+	REFERENCES Person (PersonID)
 )
 GO
 
@@ -178,4 +180,12 @@ VALUES
 	datetime(2012-12-12 12:12:12) year to second,
 	interval(12:12:12) hour to second
 )
+GO
+
+DROP VIEW PersonView
+GO
+
+CREATE VIEW PersonView
+AS
+SELECT * FROM Person
 GO

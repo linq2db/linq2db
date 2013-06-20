@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -492,13 +491,13 @@ namespace Tests.Model
 		}
 
 		[Sql.TableFunction(Name="GetParentByID")]
-		public Table<Parent> GetParentByID(int? id)
+		public ITable<Parent> GetParentByID(int? id)
 		{
 			return _ctx.GetTable<Parent>(this, (MethodInfo)(MethodBase.GetCurrentMethod()), id);
 		}
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
-		public Table<T> WithTabLock<T>()
+		public ITable<T> WithTabLock<T>()
 			where T : class 
 		{
 			return _ctx.GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));

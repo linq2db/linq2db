@@ -22,6 +22,33 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SqlQuery.QueryType = QueryType.Delete;
 
+			// Check association.
+			//
+			var ctx = sequence as SelectContext;
+
+			if (ctx != null && ctx.IsScalar)
+			{
+				var res = ctx.IsExpression(null, 0, RequestFor.Association);
+
+				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				{
+					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					sequence.SqlQuery.Delete.Table = atc.SqlTable;
+				}
+				else
+				{
+					res = ctx.IsExpression(null, 0, RequestFor.Table);
+
+					if (res.Result && res.Context is TableBuilder.TableContext)
+					{
+						var tc = (TableBuilder.TableContext)res.Context;
+
+						if (sequence.SqlQuery.From.Tables.Count == 0 || sequence.SqlQuery.From.Tables[0].Source != tc.SqlQuery)
+							sequence.SqlQuery.Delete.Table = tc.SqlTable;
+					}
+				}
+			}
+
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 

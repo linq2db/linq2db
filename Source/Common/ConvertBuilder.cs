@@ -205,8 +205,8 @@ namespace LinqToDB.Common
 							Expression.Call(
 								_throwLinqToDBException,
 								Expression.Constant(
-									string.Format("Mapping ambiguity. MapValue({0}) attribute is defined for both '{1}.{2}' and '{1}.{3}'.",
-										ambiguityMapping.Key, to.FullName, enums[0].value, enums[1].value))),
+									"Mapping ambiguity. MapValue({0}) attribute is defined for both '{1}.{2}' and '{1}.{3}'."
+										.Args(ambiguityMapping.Key, to.FullName, enums[0].value, enums[1].value))),
 								to);
 					}
 
@@ -233,8 +233,8 @@ namespace LinqToDB.Common
 						Expression.Call(
 							_throwLinqToDBException,
 							Expression.Constant(
-								string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
-									to.FullName, field.OrigValue, from.FullName))),
+								"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
+									.Args(to.FullName, field.OrigValue, from.FullName))),
 							to);
 				}
 			}
@@ -296,8 +296,8 @@ namespace LinqToDB.Common
 							Expression.Call(
 								_throwLinqToDBException,
 								Expression.Constant(
-									string.Format("Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute.",
-										from.FullName, field.Field.Name, to.FullName))),
+									"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
+										.Args(from.FullName, field.Field.Name, to.FullName))),
 								to);
 					}
 				}
@@ -354,7 +354,7 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBException,
 									Expression.Constant(
-										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.".Args(
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,

@@ -53,7 +53,7 @@ namespace LinqToDB.Metadata
 				}
 
 				if (stream == null)
-					throw new MetadataException(string.Format("Could not find file '{0}'.", xmlFile));
+					throw new MetadataException("Could not find file '{0}'.".Args(xmlFile));
 				else
 					using (stream)
 						_types = LoadStream(stream, xmlFile);
@@ -116,8 +116,7 @@ namespace LinqToDB.Metadata
 				var aname = t.Attribute("Name");
 
 				if (aname == null)
-					throw new MetadataException(
-						string.Format("'{0}': Element 'Type' has to have 'Name' attribute.", fileName));
+					throw new MetadataException("'{0}': Element 'Type' has to have 'Name' attribute.".Args(fileName));
 
 				var tname = aname.Value;
 

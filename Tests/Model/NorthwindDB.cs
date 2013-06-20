@@ -7,8 +7,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Linq;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.SqlBuilder;
 using LinqToDB.SqlProvider;
 
@@ -20,19 +19,19 @@ namespace Tests.Model
 		{
 		}
 
-		public Table<Northwind.Category>            Category            { get { return GetTable<Northwind.Category>();            } }
-		public Table<Northwind.Customer>            Customer            { get { return GetTable<Northwind.Customer>();            } }
-		public Table<Northwind.Employee>            Employee            { get { return GetTable<Northwind.Employee>();            } }
-		public Table<Northwind.EmployeeTerritory>   EmployeeTerritory   { get { return GetTable<Northwind.EmployeeTerritory>();   } }
-		public Table<Northwind.OrderDetail>         OrderDetail         { get { return GetTable<Northwind.OrderDetail>();         } }
-		public Table<Northwind.Order>               Order               { get { return GetTable<Northwind.Order>();               } }
-		public Table<Northwind.Product>             Product             { get { return GetTable<Northwind.Product>();             } }
-		public Table<Northwind.ActiveProduct>       ActiveProduct       { get { return GetTable<Northwind.ActiveProduct>();       } }
-		public Table<Northwind.DiscontinuedProduct> DiscontinuedProduct { get { return GetTable<Northwind.DiscontinuedProduct>(); } }
-		public Table<Northwind.Region>              Region              { get { return GetTable<Northwind.Region>();              } }
-		public Table<Northwind.Shipper>             Shipper             { get { return GetTable<Northwind.Shipper>();             } }
-		public Table<Northwind.Supplier>            Supplier            { get { return GetTable<Northwind.Supplier>();            } }
-		public Table<Northwind.Territory>           Territory           { get { return GetTable<Northwind.Territory>();           } }
+		public ITable<Northwind.Category>            Category            { get { return GetTable<Northwind.Category>();            } }
+		public ITable<Northwind.Customer>            Customer            { get { return GetTable<Northwind.Customer>();            } }
+		public ITable<Northwind.Employee>            Employee            { get { return GetTable<Northwind.Employee>();            } }
+		public ITable<Northwind.EmployeeTerritory>   EmployeeTerritory   { get { return GetTable<Northwind.EmployeeTerritory>();   } }
+		public ITable<Northwind.OrderDetail>         OrderDetail         { get { return GetTable<Northwind.OrderDetail>();         } }
+		public ITable<Northwind.Order>               Order               { get { return GetTable<Northwind.Order>();               } }
+		public ITable<Northwind.Product>             Product             { get { return GetTable<Northwind.Product>();             } }
+		public ITable<Northwind.ActiveProduct>       ActiveProduct       { get { return GetTable<Northwind.ActiveProduct>();       } }
+		public ITable<Northwind.DiscontinuedProduct> DiscontinuedProduct { get { return GetTable<Northwind.DiscontinuedProduct>(); } }
+		public ITable<Northwind.Region>              Region              { get { return GetTable<Northwind.Region>();              } }
+		public ITable<Northwind.Shipper>             Shipper             { get { return GetTable<Northwind.Shipper>();             } }
+		public ITable<Northwind.Supplier>            Supplier            { get { return GetTable<Northwind.Supplier>();            } }
+		public ITable<Northwind.Territory>           Territory           { get { return GetTable<Northwind.Territory>();           } }
 		
 #if !MONO
 		
@@ -54,7 +53,7 @@ namespace Tests.Model
 				var aargs  = sqlArgs.ToArray();
 				var arr    = ConvertArgs(member, aargs).ToList();
 				var method = (MethodInfo)member;
-				var sp     = new SqlServer2008SqlProvider(SqlServer.GetDataProvider(SqlServerVersion.v2008).SqlProviderFlags);
+				var sp     = new SqlServer2008SqlProvider(SqlServerFactory.GetDataProvider().SqlProviderFlags);
 
 				{
 					var ttype  = method.GetGenericArguments()[0];
@@ -96,7 +95,7 @@ namespace Tests.Model
 		}
 
 		[FreeTextTableExpressionAttribute]
-		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
 			return GetTable<FreeTextKey<TKey>>(
 				this,
@@ -106,7 +105,7 @@ namespace Tests.Model
 		}
 
 		[FreeTextTableExpressionAttribute]
-		public Table<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
+		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
 			return GetTable<FreeTextKey<TKey>>(
 				this,

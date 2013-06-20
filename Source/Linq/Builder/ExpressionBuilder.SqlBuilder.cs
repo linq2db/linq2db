@@ -72,7 +72,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							var ma = (MemberExpression)expr;
 
-							if (ma.Member.IsNullableValueMember())
+							if (ma.Member.IsNullableValueMember() ||
+							    ma.Member.IsNullableHasValueMember())
 								break;
 
 							if (Expressions.ConvertMember(MappingSchema, ma.Member) == null)
@@ -214,9 +215,8 @@ namespace LinqToDB.Linq.Builder
 			if (!query.GroupBy.IsEmpty && !subQuery.Where.IsEmpty)
 			{
 				var fromGroupBy = sequence.SqlQuery.Properties
-					.OfType<System.Tuple<string,SqlQuery>>()
-					.Where(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SqlQuery))
-					.Any();
+					.OfType<Tuple<string,SqlQuery>>()
+					.Any(p => p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SqlQuery));
 
 				if (fromGroupBy)
 				{
@@ -571,18 +571,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr);
 		}
 
-#if FW3
-		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression)
-		{
-			return ConvertToSql(context, expression, false);
-		}
-#endif
-
-		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap
-#if !FW3
-			= false
-#endif
-			)
+		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
 			if (CanBeConstant(expression))
 				return BuildConstant(expression);
@@ -1293,6 +1282,22 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			#region special case for char?
+
+//			if (left.NodeType == ExpressionType.Convert && left.Type == typeof(int?) && right.NodeType == ExpressionType.Convert)
+//			{
+//				var convLeft  = left  as UnaryExpression;
+//				var convRight = right as UnaryExpression;
+//
+//				if (convLeft != null && convRight != null && convLeft.Operand.Type == typeof(char?))
+//				{
+//					left  = convLeft.Operand;
+//					right = Expression.Constant(ConvertTo<char?>.From(((ConstantExpression)convRight.Operand).Value));
+//				}
+//			}
+
+			#endregion
+
 			switch (nodeType)
 			{
 				case ExpressionType.Equal    :
@@ -1390,24 +1395,43 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate ConvertEnumConversion(IBuildContext context, Expression left, SqlQuery.Predicate.Operator op, Expression right)
 		{
-			UnaryExpression conv;
-			Expression      value;
+			Expression value;
+			Expression operand;
 
-			if (left.NodeType == ExpressionType.Convert)
+			if (left is MemberExpression)
 			{
-				conv  = (UnaryExpression)left;
-				value = right;
+				operand = left;
+				value   = right;
+			}
+			else if (left.NodeType == ExpressionType.Convert && ((UnaryExpression)left).Operand is MemberExpression)
+			{
+				operand = ((UnaryExpression)left).Operand;
+				value   = right;
+			}
+			else if (right is MemberExpression)
+			{
+				operand = right;
+				value   = left;
+			}
+			else if (right.NodeType == ExpressionType.Convert && ((UnaryExpression)right).Operand is MemberExpression)
+			{
+				operand = ((UnaryExpression)right).Operand;
+				value   = left;
+			}
+			else if (left.NodeType == ExpressionType.Convert)
+			{
+				operand = ((UnaryExpression)left).Operand;
+				value   = right;
 			}
 			else
 			{
-				conv  = (UnaryExpression)right;
+				operand = ((UnaryExpression)right).Operand;
 				value = left;
 			}
 
-			var operand = conv.Operand;
-			var type    = operand.Type;
+			var type = operand.Type;
 
-			if (!type.IsEnum)
+			if (!type.ToNullableUnderlying().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object>();
@@ -1480,8 +1504,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var ctx = GetContext(context, left);
 
-					if (ctx != null && ctx.IsExpression(left, 0, RequestFor.Object).Result ||
-						left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result)
+					if (ctx != null && 
+						(ctx.IsExpression(left, 0, RequestFor.Object).Result ||
+						 left.NodeType == ExpressionType.Parameter && ctx.IsExpression(left, 0, RequestFor.Field).Result))
 					{
 						return new SqlQuery.Predicate.Expr(new SqlValue(!isEqual));
 					}
@@ -2109,7 +2134,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			List<Expression> ignoredMembers = null;
 
-			return null == expr.Find((Expression pi) =>
+			return null == expr.Find(pi =>
 			{
 				if (ignoredMembers != null)
 				{
@@ -2155,24 +2180,15 @@ namespace LinqToDB.Linq.Builder
 							var ctx = GetContext(context, pi);
 
 							if (ctx == null)
-							{
 								if (canBeCompiled)
 									return !CanBeCompiled(pi);
-							}
-							else
-							{
-								if (pi.NodeType == ExpressionType.Parameter)
-								{
-									
-								}
-							}
 
 							break;
 						}
 
 					case ExpressionType.Call         :
 						{
-							var e = pi as MethodCallExpression;
+							var e = (MethodCallExpression)pi;
 
 							if (e.Method.DeclaringType != typeof(Enumerable))
 							{
@@ -2188,6 +2204,35 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.TypeIs       : return canBeCompiled;
 					case ExpressionType.TypeAs       :
 					case ExpressionType.New          : return true;
+
+					case ExpressionType.NotEqual     :
+					case ExpressionType.Equal        :
+						{
+							var e = (BinaryExpression)pi;
+
+							Expression obj = null;
+
+							if (e.Left.NodeType == ExpressionType.Constant && ((ConstantExpression)e.Left).Value == null)
+								obj = e.Right;
+							else if (e.Right.NodeType == ExpressionType.Constant && ((ConstantExpression)e.Right).Value == null)
+								obj = e.Left;
+
+							if (obj != null)
+							{
+								var ctx = GetContext(context, obj);
+
+								if (ctx != null)
+								{
+									if (ctx.IsExpression(obj, 0, RequestFor.Table).      Result ||
+									    ctx.IsExpression(obj, 0, RequestFor.Association).Result)
+									{
+										ignoredMembers = obj.GetMembers();
+									}
+								}
+							}
+
+							break;
+						}
 				}
 
 				return false;

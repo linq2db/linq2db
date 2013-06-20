@@ -10,6 +10,7 @@ SQLite
 --Firebird
 --Informix
 --SqlServer
+--SqlServer.2000
 --SqlServer.2005
 --SqlServer.2008
 --SqlServer.2012

@@ -38,7 +38,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;MOBILE1;MANAGED_ORACLE1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
@@ -117,13 +117,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll</HintPath>
     </Reference>
-    <Reference Include="IBM.Data.DB2, Version=9.0.0.2, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=MSIL">
+    <Reference Include="IBM.Data.DB2, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="IBM.Data.Informix, Version=3.0.0.2, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=MSIL">
+    <Reference Include="IBM.Data.Informix, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=10.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -133,9 +135,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Npgsql.2.0.12.1\lib\net40\Mono.Security.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data, Version=6.6.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+    <Reference Include="MySql.Data, Version=6.6.5.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\MySql.Data.6.6.4\lib\net40\MySql.Data.dll</HintPath>
+      <HintPath>..\..\packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql, Version=2.0.12.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -148,15 +150,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="Oracle.DataAccess, Version=2.102.4.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
+      <Private>True</Private>
+      <HintPath>..\..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
     </Reference>
     <Reference Include="policy.2.0.Npgsql">
       <HintPath>..\..\packages\Npgsql.2.0.12.1\lib\net40\policy.2.0.Npgsql.dll</HintPath>
     </Reference>
-    <Reference Include="Sybase.AdoNet2.AseClient, Version=1.15.192.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
+    <Reference Include="Sybase.AdoNet2.AseClient, Version=2.157.401.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\Sybase\Sybase.AdoNet2.AseClient.dll</HintPath>
       <Private>False</Private>
@@ -170,13 +171,13 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Data.Services" />
-    <Reference Include="System.Data.SQLite, Version=1.0.84.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+    <Reference Include="System.Data.SQLite, Version=1.0.86.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\System.Data.SQLite.1.0.84.0\lib\net40\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\..\packages\System.Data.SQLite.1.0.86.0\lib\net40\System.Data.SQLite.dll</HintPath>
     </Reference>
-    <Reference Include="System.Data.SQLite.Linq, Version=1.0.84.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.86.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\System.Data.SQLite.1.0.84.0\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
+      <HintPath>..\..\packages\System.Data.SQLite.1.0.86.0\lib\net40\System.Data.SQLite.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -204,6 +205,10 @@
     <Compile Include="DataProvider\MySqlTest.cs" />
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
+    <Compile Include="Data\ProcedureTest.cs" />
+    <Compile Include="Linq\EnumMapping.cs" />
+    <Compile Include="Linq\ExplicitInterfaceTest.cs" />
+    <Compile Include="SchemaProvider\SchemaProviderTest.cs" />
     <Compile Include="DataProvider\SybaseTest.cs" />
     <Compile Include="DataProvider\SQLiteTest.cs" />
     <Compile Include="DataProvider\ExpressionTest.cs" />
@@ -242,8 +247,9 @@
     <Compile Include="DataProvider\OracleTest.cs" />
     <Compile Include="Linq\TableFunctionTest.cs" />
     <Compile Include="Linq\VisualBasicTest.cs" />
+    <Compile Include="Update\UpdateTest.cs" />
     <Compile Include="Update\DeleteTest.cs" />
-    <Compile Include="Update\DmlTest.cs" />
+    <Compile Include="Update\InsertTest.cs" />
     <Compile Include="Linq\ExpressionsTest.cs" />
     <Compile Include="Linq\MathFunctions.cs" />
     <Compile Include="Exceptions\Inheritance.cs" />
@@ -273,6 +279,15 @@
     <Compile Include="Linq\SelectScalar.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="Linq\WhereTest.cs" />
+    <Compile Include="UserTests\CompareNullableChars.cs" />
+    <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTest.cs" />
+    <Compile Include="UserTests\GroupBySubqueryTest.cs" />
+    <Compile Include="UserTests\LetTest.cs" />
+    <Compile Include="UserTests\MultiPartIdentifierTest.cs" />
+    <Compile Include="UserTests\SelectManyDeleteTest.cs" />
+    <Compile Include="UserTests\SelectManyUpdateTest.cs" />
+    <Compile Include="UserTests\UnknownSqlTest.cs" />
+    <Compile Include="UserTests\UnnecessaryInnerJoinTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Data\Create Scripts\Access.sql">
@@ -305,6 +320,9 @@
     <Content Include="..\..\Data\Create Scripts\SqlServer.sql">
       <Link>Database\Create Scripts\SqlServer.sql</Link>
     </Content>
+    <Content Include="..\..\Data\Create Scripts\SqlServer2000.sql">
+      <Link>Database\Create Scripts\SqlServer2000.sql</Link>
+    </Content>
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
       <Link>Database\Create Scripts\Sybase.sql</Link>
     </Content>
@@ -332,50 +350,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DataProviders\Access\LinqToDB.Access.csproj">
-      <Project>{e8687813-3aa8-415f-b749-8a11b1a70d88}</Project>
-      <Name>LinqToDB.Access</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\Firebird\LinqToDB.Firebird.csproj">
-      <Project>{C1F8C201-BBD9-44F4-884C-CFF8CC960B68}</Project>
-      <Name>LinqToDB.Firebird</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\Informix\LinqToDB.Informix.csproj">
-      <Project>{B1DEA25C-7667-471B-BBAD-64D017FDD104}</Project>
-      <Name>LinqToDB.Informix</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\DB2\LinqToDB.DB2.csproj">
-      <Project>{86BF4F10-3606-4016-9919-84C3335813B6}</Project>
-      <Name>LinqToDB.DB2</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\MySql\LinqToDB.MySql.csproj">
-      <Project>{3578AF4C-CBFF-4A38-88F5-E86AC990AFBD}</Project>
-      <Name>LinqToDB.MySql</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\Oracle\LinqToDB.Oracle.csproj">
-      <Project>{2B5287F2-A6AC-4D5A-B0A8-01C06144824D}</Project>
-      <Name>LinqToDB.Oracle</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\PostgreSQL\LinqToDB.PostgreSQL.csproj">
-      <Project>{5A556D57-0D68-433B-AD78-02849583582B}</Project>
-      <Name>LinqToDB.PostgreSQL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\SqlCe\LinqToDB.SqlCe.csproj">
-      <Project>{85E90F57-8DE1-4912-8414-28578F4D71CD}</Project>
-      <Name>LinqToDB.SqlCe</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\SQLite\LinqToDB.SQLite.csproj">
-      <Project>{3E414663-B673-47A8-AB59-0E08FE43DA86}</Project>
-      <Name>LinqToDB.SQLite</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\SqlServer\LinqToDB.SqlServer.csproj">
-      <Project>{13c31bb8-1b74-4156-a7bf-a6474de62e07}</Project>
-      <Name>LinqToDB.SqlServer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\DataProviders\Sybase\LinqToDB.Sybase.csproj">
-      <Project>{6CD8CC3D-643D-4D09-8660-A26085C44FBC}</Project>
-      <Name>LinqToDB.Sybase</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
       <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
       <Name>LinqToDB</Name>

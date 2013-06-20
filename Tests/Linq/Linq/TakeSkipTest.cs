@@ -151,7 +151,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipCount([DataContexts(ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
+		public void SkipCount([DataContexts(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -193,7 +193,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTake4([DataContexts(ProviderName.SQLite, ProviderName.Sybase, ProviderName.Access)] string context)
+		public void SkipTake4([DataContexts(ProviderName.SQLite, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -243,7 +243,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTake6([DataContexts(ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
+		public void SkipTake6([DataContexts(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -253,7 +253,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTakeCount([DataContexts(ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
+		public void SkipTakeCount([DataContexts(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(

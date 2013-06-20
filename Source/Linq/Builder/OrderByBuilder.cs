@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 
 	class OrderByBuilder : MethodCallBuilder
@@ -26,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					throw new NotSupportedException(string.Format("Explicit construction of entity type '{0}' in order by is not allowed.", body.Type));
+					throw new NotSupportedException("Explicit construction of entity type '{0}' in order by is not allowed.".Args(body.Type));
 			}
 
 			return true;

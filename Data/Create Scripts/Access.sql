@@ -1,3 +1,24 @@
+DROP Procedure Person_SelectByKey
+GO
+DROP Procedure Person_SelectAll
+GO
+DROP Procedure Person_SelectByName
+GO
+DROP Procedure Person_SelectListByName
+GO
+DROP Procedure Person_Insert
+GO
+DROP Procedure Person_Update
+GO
+DROP Procedure Person_Delete
+GO
+DROP Procedure Patient_SelectAll
+GO
+DROP Procedure Patient_SelectByName
+GO
+DROP Procedure Scalar_DataReader
+GO
+
 DROP TABLE Doctor
 GO
 DROP TABLE Patient
@@ -5,28 +26,31 @@ GO
 DROP TABLE Person
 GO
 
-CREATE TABLE Person (
-	PersonID                Int IDENTITY,
-	FirstName               Text(50) NOT NULL,
-	LastName                Text(50) NOT NULL,
-	MiddleName              Text(50),
-	Gender                  Text(1) NOT NULL,
+CREATE TABLE Person
+(
+	PersonID   Int IDENTITY,
+	FirstName  Text(50) NOT NULL,
+	LastName   Text(50) NOT NULL,
+	MiddleName Text(50),
+	Gender     Text(1) NOT NULL,
 
 	CONSTRAINT PK_Peson PRIMARY KEY (PersonID)
 )
 GO
 
-CREATE TABLE Doctor (
-	PersonID                Int NOT NULL,
-	Taxonomy                Text(50) NOT NULL,
+CREATE TABLE Doctor
+(
+	PersonID Int NOT NULL,
+	Taxonomy Text(50) NOT NULL,
 
-	CONSTRAINT OK_Doctor PRIMARY KEY (PersonID)
+	CONSTRAINT PK_Doctor PRIMARY KEY (PersonID)
 )
 GO
 
-CREATE TABLE Patient (
-	PersonID                Int NOT NULL,
-	Diagnosis               Text(255) NOT NULL,
+CREATE TABLE Patient
+(
+	PersonID  Int NOT NULL,
+	Diagnosis Text(255) NOT NULL,
 
 	CONSTRAINT PK_Patient PRIMARY KEY (PersonID)
 )
@@ -65,6 +89,107 @@ CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int)
 GO
 
 
+CREATE Procedure Person_SelectByKey(
+	[@id] Long)
+AS
+	SELECT * FROM Person WHERE PersonID = [@id];
+GO
+
+CREATE Procedure Person_SelectAll
+AS
+	SELECT * FROM Person;
+GO
+
+CREATE Procedure Person_SelectByName(
+	[@firstName] Text(50),
+	[@lastName]  Text(50))
+AS
+SELECT
+	*
+FROM
+	Person
+WHERE
+	FirstName = [@firstName] AND LastName = [@lastName];
+GO
+
+CREATE Procedure Person_SelectListByName(
+	[@firstName] Text(50),
+	[@lastName]  Text(50))
+AS
+SELECT
+	*
+FROM
+	Person
+WHERE
+	FirstName like [@firstName] AND LastName like [@lastName];
+GO
+
+CREATE Procedure Person_Insert(
+	[@FirstName]  Text(50),
+	[@MiddleName] Text(50),
+	[@LastName]   Text(50),
+	[@Gender]     Text(1))
+AS
+INSERT INTO Person
+	(FirstName, MiddleName, LastName, Gender)
+VALUES
+	([@FirstName], [@MiddleName], [@LastName], [@Gender]);
+GO
+
+CREATE Procedure Person_Update(
+	[@id]         Long,
+	[@PersonID]   Long,
+	[@FirstName]  Text(50),
+	[@MiddleName] Text(50),
+	[@LastName]   Text(50),
+	[@Gender]     Text(1))
+AS
+UPDATE
+	Person
+SET
+	LastName   = [@LastName],
+	FirstName  = [@FirstName],
+	MiddleName = [@MiddleName],
+	Gender     = [@Gender]
+WHERE
+	PersonID = [@id];
+GO
+
+CREATE Procedure Person_Delete(
+	[@PersonID] Long)
+AS
+DELETE FROM Person WHERE PersonID = [@PersonID];
+GO
+
+CREATE Procedure Patient_SelectAll
+AS
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID;
+GO
+
+CREATE Procedure Patient_SelectByName(
+	[@firstName] Text(50),
+	[@lastName]  Text(50))
+AS
+SELECT
+	Person.*, Patient.Diagnosis
+FROM
+	Patient, Person
+WHERE
+	Patient.PersonID = Person.PersonID
+	AND FirstName = [@firstName] AND LastName = [@lastName];
+GO
+
+CREATE Procedure Scalar_DataReader
+AS
+	SELECT 12345 AS intField, "54321" AS stringField;
+GO
+
+
 DROP TABLE LinqDataTypes
 GO
 
@@ -87,7 +212,8 @@ GO
 DROP TABLE TestIdentity
 GO
 
-CREATE TABLE TestIdentity (
+CREATE TABLE TestIdentity
+(
 	ID Int IDENTITY,
 	CONSTRAINT PK_TestIdentity PRIMARY KEY (ID)
 )

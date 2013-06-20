@@ -192,7 +192,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataContexts(ProviderName.SqlCe, ProviderName.Oracle, ProviderName.Sybase, ProviderName.Access)] string context)
+		public void GroupBy23([DataContexts(
+			ProviderName.SqlCe, ProviderName.Oracle,
+			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

@@ -76,6 +76,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<Binary>        (conn, "varbinaryDataType", DataType.VarBinary).ToArray(), Is.EqualTo(new byte[] {  99, 100, 101 }));
 				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.Binary),              Is.EqualTo(new byte[] { 100, 101, 102 }));
 				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.VarBinary),           Is.EqualTo(new byte[] { 100, 101, 102 }));
+				Assert.That(TestType<byte[]>        (conn, "blobDataType",      DataType.Blob),                Is.EqualTo(new byte[] { 100, 101, 102 }));
 
 				Assert.That(TestType<ulong?>        (conn, "bitDataType"),                                     Is.EqualTo(5));
 				Assert.That(TestType<string>        (conn, "enumDataType"),                                    Is.EqualTo("Green"));

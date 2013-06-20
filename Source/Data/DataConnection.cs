@@ -9,38 +9,34 @@ using System.Threading;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Configuration;
 	using DataProvider;
+
 	using Mapping;
 
 	public partial class DataConnection : ICloneable
 	{
 		#region .ctor
 
-		public DataConnection() : this(DefaultConfiguration)
+		public DataConnection() : this(null)
 		{
 		}
 
-		public DataConnection([JetBrains.Annotations.NotNull] string configurationString)
+		public DataConnection(string configurationString)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
-
 			InitConfig();
 
-			ConfigurationString = configurationString;
+			ConfigurationString = configurationString ?? DefaultConfiguration;
 
-			ConfigurationInfo ci;
+			if (ConfigurationString == null)
+				throw new LinqToDBException("Configuration string is not provided.");
 
-			if (_configurations.TryGetValue(configurationString, out ci))
-			{
-				DataProvider     = ci.DataProvider;
-				_mappingSchema   = DataProvider.MappingSchema;
-				ConnectionString = ci.ConnectionString;
-			}
-			else
-			{
-				throw new LinqToDBException(string.Format("Configuration '{0}' is not defined.", configurationString));
-			}
+			var ci = GetConfigurationInfo(ConfigurationString);
+
+			DataProvider     = ci.DataProvider;
+			ConnectionString = ci.ConnectionString;
+			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
@@ -170,6 +166,18 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
+			LinqToDB.DataProvider.SqlServer. SqlServerFactory. GetDataProvider();
+			LinqToDB.DataProvider.Access.    AccessFactory.    GetDataProvider();
+			LinqToDB.DataProvider.SqlCe.     SqlCeFactory.     GetDataProvider();
+			LinqToDB.DataProvider.Firebird.  FirebirdFactory.  GetDataProvider();
+			LinqToDB.DataProvider.MySql.     MySqlFactory.     GetDataProvider();
+			LinqToDB.DataProvider.SQLite.    SQLiteFactory.    GetDataProvider();
+			LinqToDB.DataProvider.Sybase.    SybaseFactory.    GetDataProvider();
+			LinqToDB.DataProvider.Oracle.    OracleFactory.    GetDataProvider();
+			LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.GetDataProvider();
+			LinqToDB.DataProvider.DB2.       DB2Factory.       GetDataProvider();
+			LinqToDB.DataProvider.Informix.  InformixFactory.  GetDataProvider();
+
 			var section = LinqToDBSection.Instance;
 
 			if (section != null)
@@ -188,6 +196,14 @@ namespace LinqToDB.Data
 			}
 		}
 
+		readonly static List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
+			new List<Func<ConnectionStringSettings,IDataProvider>>();
+
+		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)
+		{
+			_providerDetectors.Add(providerDetector);
+		}
+
 		static void InitConnectionStrings()
 		{
 			var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
@@ -197,24 +213,26 @@ namespace LinqToDB.Data
 				var configuration    = css.Name;
 				var connectionString = css.ConnectionString;
 				var providerName     = css.ProviderName;
+				var dataProvider     = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
 
-				IDataProvider dataProvider;
-
-				if (string.IsNullOrEmpty(providerName))
-					dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-				else if (_dataProviders.ContainsKey(providerName))
-					dataProvider = _dataProviders[providerName];
-				else if (_dataProviders.ContainsKey(configuration))
-					dataProvider = _dataProviders[configuration];
-				else
+				if (dataProvider == null)
 				{
-					var providers = _dataProviders.Where(dp => dp.Value.ConnectionType.Namespace == providerName).ToList();
-
-					switch (providers.Count)
+					if (string.IsNullOrEmpty(providerName))
+						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+					else if (_dataProviders.ContainsKey(providerName))
+						dataProvider = _dataProviders[providerName];
+					else if (_dataProviders.ContainsKey(configuration))
+						dataProvider = _dataProviders[configuration];
+					else
 					{
-						case 0  : dataProvider = defaultDataProvider;                                        break;
-						case 1  : dataProvider = providers[0].Value;                                         break;
-						default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+
+						switch (providers.Count)
+						{
+							case 0  : dataProvider = defaultDataProvider;                                        break;
+							case 1  : dataProvider = providers[0].Value;                                         break;
+							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+						}
 					}
 				}
 
@@ -267,11 +285,11 @@ namespace LinqToDB.Data
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
 
-		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string dataProviderName)
+		public static IDataProvider GetDataProvider([JetBrains.Annotations.NotNull] string configurationString)
 		{
-			if (dataProviderName == null) throw new ArgumentNullException("dataProviderName");
+			InitConfig();
 
-			return _dataProviders[dataProviderName];
+			return GetConfigurationInfo(configurationString).DataProvider;
 		}
 
 		class ConfigurationInfo
@@ -284,6 +302,16 @@ namespace LinqToDB.Data
 
 			public readonly string        ConnectionString;
 			public readonly IDataProvider DataProvider;
+		}
+
+		static ConfigurationInfo GetConfigurationInfo(string configurationString)
+		{
+			ConfigurationInfo ci;
+
+			if (_configurations.TryGetValue(configurationString ?? DefaultConfiguration, out ci))
+				return ci;
+
+			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
@@ -306,7 +334,7 @@ namespace LinqToDB.Data
 			if (_configurations.TryGetValue(configurationString, out ci))
 				return ci.ConnectionString;
 
-			throw new LinqToDBException(string.Format("Configuration '{0}' is not defined.", configurationString));
+			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
 		#endregion
@@ -342,11 +370,7 @@ namespace LinqToDB.Data
 			if (OnClosing != null)
 				OnClosing(this, EventArgs.Empty);
 
-			if (_command != null)
-			{
-				_command.Dispose();
-				_command = null;
-			}
+			DisposeCommand();
 
 			if (Transaction != null && _closeTransaction)
 			{
@@ -395,12 +419,21 @@ namespace LinqToDB.Data
 			var command = Connection.CreateCommand();
 
 			if (_commandTimeout.HasValue)
-				_command.CommandTimeout = _commandTimeout.Value;
+				command.CommandTimeout = _commandTimeout.Value;
 
 			if (Transaction != null)
 				command.Transaction = Transaction;
 
 			return command;
+		}
+
+		public void DisposeCommand()
+		{
+			if (_command != null)
+			{
+				_command.Dispose();
+				_command = null;
+			}
 		}
 
 		#endregion

@@ -27,8 +27,9 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 DROP TABLE IF EXISTS Doctor;
 CREATE TABLE Doctor
 (
-	PersonID integer      NOT NULL CONSTRAINT PK_Doctor        PRIMARY KEY,
-	Taxonomy nvarchar(50) NOT NULL
+	PersonID integer      NOT NULL CONSTRAINT PK_Doctor PRIMARY KEY,
+	Taxonomy nvarchar(50) NOT NULL,
+	CONSTRAINT FK_Doctor_Person FOREIGN KEY(PersonID) REFERENCES Person(PersonID)
 );
 
 INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
@@ -39,7 +40,7 @@ INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 DROP TABLE IF EXISTS Patient;
 CREATE TABLE Patient
 (
-	PersonID  integer       NOT NULL CONSTRAINT PK_Patient        PRIMARY KEY,
+	PersonID  integer       NOT NULL CONSTRAINT PK_Patient PRIMARY KEY,
 	Diagnosis nvarchar(256) NOT NULL
 );
 INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs'' Delirium of Persecution');

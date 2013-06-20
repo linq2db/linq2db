@@ -95,7 +95,7 @@ namespace LinqToDB.Reflection
 							expr = Expression.MakeMemberAccess(expr, info.member);
 					}
 
-					Getter = Expression.Lambda(expr, objParam);
+					GetterExpression = Expression.Lambda(expr, objParam);
 				}
 
 				// Build setter.
@@ -158,13 +158,13 @@ namespace LinqToDB.Reflection
 							expr = Expression.Assign(expr, valueParam);
 						}
 
-						Setter = Expression.Lambda(expr, objParam, valueParam);
+						SetterExpression = Expression.Lambda(expr, objParam, valueParam);
 					}
 					else
 					{
 						var fakeParam = Expression.Parameter(typeof(int));
 
-						Setter = Expression.Lambda(
+						SetterExpression = Expression.Lambda(
 							Expression.Block(
 								new[] { fakeParam },
 								new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
@@ -196,12 +196,12 @@ namespace LinqToDB.Reflection
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
 
-			Getter = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
+			GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
 
 			if (HasSetter)
 			{
-				Setter = Expression.Lambda(
-					Expression.Assign(Getter.Body, valueParam),
+				SetterExpression = Expression.Lambda(
+					Expression.Assign(GetterExpression.Body, valueParam),
 					objParam,
 					valueParam);
 			}
@@ -209,7 +209,7 @@ namespace LinqToDB.Reflection
 			{
 				var fakeParam = Expression.Parameter(typeof(int));
 
-				Setter = Expression.Lambda(
+				SetterExpression = Expression.Lambda(
 					Expression.Block(
 						new[] { fakeParam },
 						new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
@@ -221,30 +221,32 @@ namespace LinqToDB.Reflection
 		void SetExpressions()
 		{
 			var objParam   = Expression.Parameter(typeof(object), "obj");
-			var getterExpr = Getter.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
+			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
 			var getter     = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
-			_getter = getter.Compile();
+			Getter = getter.Compile();
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
-			var setterExpr = Setter.GetBody(
+			var setterExpr = SetterExpression.GetBody(
 				Expression.Convert(objParam,   TypeAccessor.Type),
 				Expression.Convert(valueParam, Type));
 			var setter = Expression.Lambda<Action<object,object>>(setterExpr, objParam, valueParam);
 
-			_setter = setter.Compile();
+			Setter = setter.Compile();
 		}
 
 		#region Public Properties
 
-		public MemberInfo       MemberInfo    { get; private set; }
-		public TypeAccessor     TypeAccessor  { get; private set; }
-		public bool             HasGetter     { get; private set; }
-		public bool             HasSetter     { get; private set; }
-		public Type             Type          { get; private set; }
-		public bool             IsComplex     { get; private set; }
-		public LambdaExpression Getter        { get; private set; }
-		public LambdaExpression Setter        { get; private set; }
+		public MemberInfo            MemberInfo       { get; private set; }
+		public TypeAccessor          TypeAccessor     { get; private set; }
+		public bool                  HasGetter        { get; private set; }
+		public bool                  HasSetter        { get; private set; }
+		public Type                  Type             { get; private set; }
+		public bool                  IsComplex        { get; private set; }
+		public LambdaExpression      GetterExpression { get; private set; }
+		public LambdaExpression      SetterExpression { get; private set; }
+		public Func  <object,object> Getter           { get; private set; }
+		public Action<object,object> Setter           { get; private set; }
 
 		public string Name
 		{
@@ -285,17 +287,14 @@ namespace LinqToDB.Reflection
 
 		#region Set/Get Value
 
-		Func  <object,object> _getter;
-		Action<object,object> _setter;
-
 		public virtual object GetValue(object o)
 		{
-			return _getter(o);
+			return Getter(o);
 		}
 
 		public virtual void SetValue(object o, object value)
 		{
-			_setter(o, value);
+			Setter(o, value);
 		}
 
 		#endregion

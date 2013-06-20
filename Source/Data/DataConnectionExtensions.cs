@@ -25,6 +25,18 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
+
+			SetParameters(connection, parameters);
+
+			using (var rd = connection.Command.ExecuteReader())
+				while (rd.Read())
+					yield return objectReader(rd);
+		}
+
 		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			connection.SetCommand(sql);
@@ -62,6 +74,16 @@ namespace LinqToDB.Data
 		public static IEnumerable<T> Query<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
 			connection.SetCommand(sql);
+
+			SetParameters(connection, parameters);
+
+			return ExecuteQuery<T>(connection);
+		}
+
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
 
 			SetParameters(connection, parameters);
 
@@ -145,6 +167,16 @@ namespace LinqToDB.Data
 		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
 		{
 			connection.SetCommand(sql);
+
+			SetParameters(connection, parameters);
+
+			return connection.Command.ExecuteNonQuery();
+		}
+
+		public static int ExecuteProc(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+			connection.Command.CommandType = CommandType.StoredProcedure;
 
 			SetParameters(connection, parameters);
 
@@ -260,6 +292,22 @@ namespace LinqToDB.Data
 			SetParameters(connection, dps);
 
 			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+		}
+
+		public static DataReader ExecuteReader(
+			this DataConnection    connection,
+			string                 sql,
+			CommandType            commandType,
+			CommandBehavior        commandBehavior,
+			params DataParameter[] parameters)
+		{
+			connection.SetCommand(sql);
+
+			connection.Command.CommandType = commandType;
+
+			SetParameters(connection, parameters);
+
+			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader(commandBehavior) };
 		}
 
 		static IEnumerable<T> ExecuteQuery<T>(DataConnection connection, IDataReader rd, string sql)
@@ -436,9 +484,8 @@ namespace LinqToDB.Data
 			IDataReader    dataReader,
 			Func<Type,int,Expression,Expression> getMemberExpression)
 		{
-			var dataProvider   = dataConnection.DataProvider;
 			var parameter      = Expression.Parameter(typeof(IDataReader));
-			var dataReaderExpr = Expression.Convert(parameter, dataProvider.DataReaderType);
+			var dataReaderExpr = Expression.Convert(parameter, dataReader.GetType());
 
 			Expression expr;
 
@@ -483,7 +530,8 @@ namespace LinqToDB.Data
 					var members =
 					(
 						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m => m.ColumnName == n.name)
+						let   member = td.Columns.FirstOrDefault(m => 
+							string.Compare(m.ColumnName, n.name, dataConnection.MappingSchema.ColumnComparisonOption) == 0)
 						where member != null
 						select new
 						{
@@ -529,6 +577,9 @@ namespace LinqToDB.Data
 
 				if (dataType == DataType.Undefined && value != null)
 					dataType = dataConnection.MappingSchema.GetDataType(value.GetType());
+
+				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
+				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
 
 				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
 				dataConnection.Command.Parameters.Add(p);

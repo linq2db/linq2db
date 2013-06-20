@@ -5,17 +5,19 @@ using NUnit.Framework;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class DataConnectionTest : TestBase
 	{
 		[Test]
 		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(SqlServer.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(SqlServerFactory.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);
@@ -58,6 +60,17 @@ namespace Tests.Data
 					var sdp = conn.DataProvider;
 					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 				}
+			}
+		}
+
+		[Test]
+		public void EnumExecuteScalarTest()
+		{
+			using (var dbm = new DataConnection())
+			{
+				var gender = dbm.Execute<Gender>("select 'M'");
+
+				Assert.That(gender, Is.EqualTo(Gender.Male));
 			}
 		}
 	}

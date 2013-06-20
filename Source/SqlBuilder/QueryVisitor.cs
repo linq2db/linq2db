@@ -201,6 +201,13 @@ namespace LinqToDB.SqlBuilder
 						break;
 					}
 
+				case QueryElementType.DeleteClause:
+					{
+						if (((SqlQuery.DeleteClause)element).Table != null)
+							Visit1(((SqlQuery.DeleteClause)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
@@ -271,13 +278,18 @@ namespace LinqToDB.SqlBuilder
 								Visit1(q.Update);
 								break;
 
+							case QueryType.Delete :
+								Visit1(q.Delete);
+								Visit1(q.Select);
+								break;
+
 							case QueryType.Insert :
 								Visit1(q.Insert);
 
-								if (q.From.Tables.Count == 0)
-									break;
-
-								goto default;
+								if (q.From.Tables.Count != 0)
+									Visit1(q.Select);
+			
+								break;
 
 							default :
 								Visit1(q.Select);
@@ -494,6 +506,13 @@ namespace LinqToDB.SqlBuilder
 						break;
 					}
 
+				case QueryElementType.DeleteClause:
+					{
+						if (((SqlQuery.DeleteClause)element).Table != null)
+							Visit2(((SqlQuery.DeleteClause)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
@@ -564,13 +583,18 @@ namespace LinqToDB.SqlBuilder
 								Visit2(q.Update);
 								break;
 
+							case QueryType.Delete :
+								Visit2(q.Delete);
+								Visit2(q.Select);
+								break;
+
 							case QueryType.Insert :
 								Visit2(q.Insert);
 
-								if (q.From.Tables.Count == 0)
-									break;
+								if (q.From.Tables.Count != 0)
+									Visit2(q.Select);
 
-								goto default;
+								break;
 
 							default :
 								Visit2(q.Select);
@@ -770,6 +794,12 @@ namespace LinqToDB.SqlBuilder
 							Find(sc.Keys,  find);
 					}
 
+				case QueryElementType.DeleteClause:
+					{
+						var sc = (SqlQuery.DeleteClause)element;
+						return Find(sc.Table, find);
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						var sc = (SqlQuery.SelectClause)element;
@@ -802,14 +832,14 @@ namespace LinqToDB.SqlBuilder
 
 		#region Convert
 
-		public T Convert<T>(T element, Func<IQueryElement, IQueryElement> action)
+		public T Convert<T>(T element, Func<IQueryElement,IQueryElement> action)
 			where T : class, IQueryElement
 		{
 			_visitedElements.Clear();
 			return (T)ConvertInternal(element, action) ?? element;
 		}
 
-		IQueryElement ConvertInternal(IQueryElement element, Func<IQueryElement, IQueryElement> action)
+		IQueryElement ConvertInternal(IQueryElement element, Func<IQueryElement,IQueryElement> action)
 		{
 			if (element == null)
 				return null;
@@ -1082,8 +1112,8 @@ namespace LinqToDB.SqlBuilder
 
 						if (t != null && !ReferenceEquals(s.Into, t) || i != null && !ReferenceEquals(s.Items, i))
 						{
-							var sc = new SqlQuery.InsertClause();
-							sc.Into = t ?? sc.Into;
+							var sc = new SqlQuery.InsertClause { Into = t ?? s.Into };
+
 							sc.Items.AddRange(i ?? s.Items);
 							sc.WithIdentity = s.WithIdentity;
 
@@ -1104,12 +1134,25 @@ namespace LinqToDB.SqlBuilder
 							i != null && !ReferenceEquals(s.Items, i) ||
 							k != null && !ReferenceEquals(s.Keys,  k))
 						{
-							var sc = new SqlQuery.UpdateClause();
-							sc.Table = t ?? sc.Table;
+							var sc = new SqlQuery.UpdateClause { Table = t ?? s.Table };
+
 							sc.Items.AddRange(i ?? s.Items);
 							sc.Keys. AddRange(k ?? s.Keys);
 
 							newElement = sc;
+						}
+
+						break;
+					}
+
+				case QueryElementType.DeleteClause:
+					{
+						var s = (SqlQuery.DeleteClause)element;
+						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+
+						if (t != null && !ReferenceEquals(s.Table, t))
+						{
+							newElement = new SqlQuery.DeleteClause { Table = t };
 						}
 
 						break;
@@ -1264,6 +1307,7 @@ namespace LinqToDB.SqlBuilder
 						var sc = (SqlQuery.SelectClause) ConvertInternal(q.Select,  action) ?? q.Select;
 						var ic = q.IsInsert ? ((SqlQuery.InsertClause)ConvertInternal(q.Insert, action) ?? q.Insert) : null;
 						var uc = q.IsUpdate ? ((SqlQuery.UpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
+						var dc = q.IsDelete ? ((SqlQuery.DeleteClause)ConvertInternal(q.Delete, action) ?? q.Delete) : null;
 						var wc = (SqlQuery.WhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
 						var gc = (SqlQuery.GroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
 						var hc = (SqlQuery.WhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
@@ -1285,7 +1329,7 @@ namespace LinqToDB.SqlBuilder
 							}
 						}
 
-						nq.Init(ic, uc, sc, fc, wc, gc, hc, oc, us, (SqlQuery)parent, q.IsParameterDependent, ps);
+						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us, (SqlQuery)parent, q.IsParameterDependent, ps);
 
 						_visitedElements[q] = action(nq) ?? nq;
 

@@ -48,6 +48,32 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression param)
 		{
+			if (methodCall.Arguments.Count == 2)
+			{
+				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0]);
+
+				if (info != null)
+				{
+					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Parameter  = param;
+
+					return info;
+				}
+			}
+			else
+			{
+				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null);
+
+				if (info != null)
+				{
+					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
+					info.Parameter  = param;
+
+					return info;
+				}
+			}
+
 			return null;
 		}
 

@@ -1522,5 +1522,42 @@ namespace Tests.Linq
 					db.Doctor.GroupBy(s => s.PersonID).Select(s => s.Select(d => d.Taxonomy).First()));
 			}
 		}
+
+		[Test]
+		public void CalcMember([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from parent in Parent
+					from child  in Person
+					where child.ID == parent.ParentID
+					let data = new
+					{
+						parent.Value1,
+						Value = child.FirstName == "John" ? child.FirstName : "a"
+					}
+					group data by data.Value into groupedData
+					select new
+					{
+						groupedData.Key,
+						Count = groupedData.Count()
+					},
+					from parent in db.Parent
+					from child  in db.Person
+					where child.ID == parent.ParentID
+					let data = new
+					{
+						parent.Value1,
+						Value = child.FirstName == "John" ? child.FirstName : "a"
+					}
+					group data by data.Value into groupedData
+					select new
+					{
+						groupedData.Key,
+						Count = groupedData.Count()
+					});
+			}
+		}
 	}
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 
 using LinqToDB.Data;
-using LinqToDB.ServiceModel;
 
 namespace Tests.Model
 {

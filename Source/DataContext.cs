@@ -18,8 +18,8 @@ namespace LinqToDB
 
 		public DataContext(string configurationString)
 		{
-			ConfigurationString = configurationString;
 			DataProvider        = DataConnection.GetDataProvider(configurationString);
+			ConfigurationString = configurationString ?? DataConnection.DefaultConfiguration;
 			ContextID           = DataProvider.Name;
 			MappingSchema       = DataProvider.MappingSchema;
 		}
@@ -62,20 +62,11 @@ namespace LinqToDB
 
 		internal int LockDbManagerCounter;
 
-		string         _connectionString;
 		DataConnection _dataConnection;
 
-		internal DataConnection GetDBManager()
+		internal DataConnection GetDataConnection()
 		{
-			if (_dataConnection == null)
-			{
-				if (_connectionString == null)
-					_connectionString = DataConnection.GetConnectionString(ConfigurationString);
-
-				_dataConnection = new DataConnection(DataProvider, _connectionString);
-			}
-
-			return _dataConnection;
+			return _dataConnection ?? (_dataConnection = new DataConnection(ConfigurationString));
 		}
 
 		internal void ReleaseQuery()
@@ -111,25 +102,25 @@ namespace LinqToDB
 
 		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
-			var ctx = GetDBManager() as IDataContext;
+			var ctx = GetDataConnection() as IDataContext;
 			return ctx.SetQuery(queryContext);
 		}
 
 		int IDataContext.ExecuteNonQuery(object query)
 		{
-			var ctx = GetDBManager() as IDataContext;
+			var ctx = GetDataConnection() as IDataContext;
 			return ctx.ExecuteNonQuery(query);
 		}
 
 		object IDataContext.ExecuteScalar(object query)
 		{
-			var ctx = GetDBManager() as IDataContext;
+			var ctx = GetDataConnection() as IDataContext;
 			return ctx.ExecuteScalar(query);
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
-			var ctx = GetDBManager() as IDataContext;
+			var ctx = GetDataConnection() as IDataContext;
 			return ctx.ExecuteReader(query);
 		}
 
@@ -148,7 +139,7 @@ namespace LinqToDB
 			if (_dataConnection != null)
 				return ((IDataContext)_dataConnection).GetSqlText(query);
 
-			var ctx = GetDBManager() as IDataContext;
+			var ctx = GetDataConnection() as IDataContext;
 			var str = ctx.GetSqlText(query);
 
 			ReleaseQuery();

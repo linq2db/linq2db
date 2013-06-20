@@ -7,19 +7,20 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Extensions;
 	using Linq;
 
 	public static class DataExtensions
 	{
 		#region Table Helpers
 
-		static public Table<T> GetTable<T>(this IDataContext dataContext)
+		static public ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
 			return new Table<T>(dataContext);
 		}
 
-		static public Table<T> GetTable<T>(
+		static public ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,
 			[NotNull] MethodInfo methodInfo,
@@ -29,7 +30,7 @@ namespace LinqToDB
 			if (methodInfo == null) throw new ArgumentNullException("methodInfo");
 			if (parameters == null) throw new ArgumentNullException("parameters");
 
-			if (!typeof(Table<T>).IsAssignableFrom(methodInfo.ReturnType))
+			if (!typeof(ITable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqException(
 					"Method '{0}.{1}' must return type 'Table<{2}>'",
 					methodInfo.Name, methodInfo.DeclaringType.FullName, typeof(T).FullName);

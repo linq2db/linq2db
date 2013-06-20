@@ -16,31 +16,31 @@ namespace Tests.DataProvider
 		protected string PassValueSql = "SELECT ID FROM {1} WHERE {0} = @p";
 
 		protected T TestType<T>(DataConnection conn, string fieldName,
-			DataType dataType = DataType.Undefined,
-			string tableName  = "AllTypes",
-			bool skipPass          = false,
-			bool skipNull          = false,
-			bool skipDefinedNull   = false,
-			bool skipDefaultNull   = false,
-			bool skipUndefinedNull = false,
-			bool skipNotNull       = false,
-			bool skipDefined       = false,
-			bool skipDefault       = false,
-			bool skipUndefined     = false)
+			DataType dataType          = DataType.Undefined,
+			string   tableName         = "AllTypes",
+			bool     skipPass          = false,
+			bool     skipNull          = false,
+			bool     skipDefinedNull   = false,
+			bool     skipDefaultNull   = false,
+			bool     skipUndefinedNull = false,
+			bool     skipNotNull       = false,
+			bool     skipDefined       = false,
+			bool     skipDefault       = false,
+			bool     skipUndefined     = false)
 		{
-			string sql;
-			T      value;
-			int?   id;
-
 			var type = typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>) ?
 				typeof(T).GetGenericArguments()[0] : typeof(T);
 
 			// Get NULL value.
 			//
 			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, (object)type.Name, dataType);
-			sql   = string.Format(GetNullSql,  fieldName, tableName);
-			value = conn.Execute<T>(sql);
+
+			var sql   = string.Format(GetNullSql,  fieldName, tableName);
+			var value = conn.Execute<T>(sql);
+
 			Assert.That(value, Is.EqualTo(conn.MappingSchema.GetDefaultValue(typeof(T))));
+
+			int? id;
 
 			if (!skipNull && !skipPass && PassNullSql != null)
 			{

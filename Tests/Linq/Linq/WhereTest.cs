@@ -985,12 +985,12 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Types
 					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
-					where pp.Value != 0
+					where pp.Value != 0 && pp.Value != 7
 					select pp.Value
 					,
 					from p in db.Types
 					select new { Value = Math.Round(p.MoneyValue, 2) } into pp
-					where pp.Value != 0
+					where pp.Value != 0 && pp.Value != 7
 					select pp.Value);
 		}
 

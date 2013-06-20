@@ -71,7 +71,7 @@ namespace Tests.DataProvider
 					"int",
 					"decimal(18)",
 					"float",
-					"real",
+					"real"
 				}.Except(skipTypes))
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
@@ -268,10 +268,13 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as blob) FROM Dual"), Is.EqualTo(new Binary(arr2)));
 
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Binary   ("p", arr1)),             Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Blob     ("p", arr1)),             Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.VarBinary("p", arr1)),             Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Create   ("p", arr1)),             Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Blob     ("p", null)),             Is.EqualTo(null));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.VarBinary("p", null)),             Is.EqualTo(null));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Binary   ("p", new byte[0])),      Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Blob     ("p", new byte[0])),      Is.EqualTo(new byte[0]));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.VarBinary("p", new byte[0])),      Is.EqualTo(new byte[0]));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Image    ("p", new byte[0])),      Is.EqualTo(new byte[0]));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM Dual", DataParameter.Image    ("p", arr2)),             Is.EqualTo(arr2));

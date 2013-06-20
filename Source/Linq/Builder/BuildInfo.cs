@@ -30,6 +30,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext Parent       { get; set; }
 		public Expression    Expression   { get; set; }
 		public SqlQuery      SqlQuery     { get; set; }
+		public bool          CopyTable    { get; set; }
 
 		public bool          IsSubQuery   { get { return Parent != null; } }
 

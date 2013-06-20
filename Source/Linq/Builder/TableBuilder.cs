@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 						var mc = (MethodCallExpression)expression;
 
 						if (mc.Method.Name == "GetTable")
-							if (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition() == typeof(Table<>))
+							if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 								return action(2, null);
 
 						var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.MemberAccess:
 
-					if (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition() == typeof(Table<>))
+					if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 						return action(3, null);
 
 					// Looking for association.
@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
 
-				if (!mc.Method.ReturnType.IsGenericType || mc.Method.ReturnType.GetGenericTypeDefinition() != typeof(Table<>))
+				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return Table<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
@@ -274,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 
 					exprs.AddRange(
 						members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-							m.Column.MemberAccessor.Setter.GetBody(obj, m.Expr)));
+							m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
 
 					exprs.Add(obj);
 
@@ -578,11 +578,13 @@ namespace LinqToDB.Linq.Builder
 					case RequestFor.Table       :
 					case RequestFor.Object      :
 						{
-							var table = FindTable(expression, level, false);
-							return new IsExpressionResult(
+							var table   = FindTable(expression, level, false);
+							var isTable =
 								table       != null &&
 								table.Field == null &&
-								(expression == null || expression.GetLevelExpression(table.Level) == expression));
+								(expression == null || expression.GetLevelExpression(table.Level) == expression);
+
+							return new IsExpressionResult(isTable, isTable ? table.Table : null);
 						}
 
 					case RequestFor.Expression :
@@ -703,7 +705,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess)
 						{
-							var association = (AssociatedTableContext)GetAssociation(expression, level).Table;
+							var tableLevel  = GetAssociation(expression, level);
+							var association = (AssociatedTableContext)tableLevel.Table;
 
 							if (association.IsList)
 							{
@@ -714,6 +717,9 @@ namespace LinqToDB.Linq.Builder
 
 								buildInfo.IsAssociationBuilt = true;
 
+								if (tableLevel.IsNew || buildInfo.CopyTable)
+									association.ParentAssociationJoin.IsWeak = true;
+
 								return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 							}
 						}
@@ -721,6 +727,11 @@ namespace LinqToDB.Linq.Builder
 						{
 							var association = GetAssociation(levelExpression, level);
 							((AssociatedTableContext)association.Table).ParentAssociationJoin.IsWeak = false;
+
+//							var paj         = ((AssociatedTableContext)association.Table).ParentAssociationJoin;
+//
+//							paj.IsWeak = paj.IsWeak && buildInfo.CopyTable;
+
 							return association.Table.GetContext(expression, level + 1, buildInfo);
 						}
 					}
@@ -814,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member))
+								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
 									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
 									{
@@ -871,6 +882,7 @@ namespace LinqToDB.Linq.Builder
 				public TableContext Table;
 				public SqlField     Field;
 				public int          Level;
+				public bool         IsNew;
 			}
 
 			TableLevel FindTable(Expression expression, int level, bool throwException)
@@ -914,6 +926,7 @@ namespace LinqToDB.Linq.Builder
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
 						var memberExpression = (MemberExpression)levelExpression;
+						var isNew = false;
 
 						AssociatedTableContext tableAssociation;
 
@@ -926,13 +939,15 @@ namespace LinqToDB.Linq.Builder
 
 							tableAssociation = q.FirstOrDefault();
 
+							isNew = true;
+
 							_associations.Add(memberExpression.Member, tableAssociation);
 						}
 
 						if (tableAssociation != null)
 						{
 							if (levelExpression == expression)
-								return new TableLevel { Table = tableAssociation, Level = level };
+								return new TableLevel { Table = tableAssociation, Level = level, IsNew = isNew };
 
 							var al = tableAssociation.GetAssociation(expression, level + 1);
 
@@ -941,7 +956,7 @@ namespace LinqToDB.Linq.Builder
 
 							var field = tableAssociation.GetField(expression, level + 1, false);
 
-							return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1 };
+							return new TableLevel { Table = tableAssociation, Field = field, Level = field == null ? level : level + 1, IsNew = isNew };
 						}
 					}
 				}

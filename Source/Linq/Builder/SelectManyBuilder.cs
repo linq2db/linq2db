@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -35,12 +36,12 @@ namespace LinqToDB.Linq.Builder
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 			var sql            = collection.SqlQuery;
 
-			var sequenceTable  = sequence.SqlQuery.From.Tables[0].Source;
+			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SqlQuery.From.Tables[0].GetTables());
 			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SqlQuery);
 			var crossApply     = null != new QueryVisitor().Find(sql, e =>
-				e == sequenceTable ||
-				e.ElementType == QueryElementType.SqlField && sequenceTable == ((SqlField)e).Table ||
-				e.ElementType == QueryElementType.Column   && sequenceTable == ((SqlQuery.Column)e).Parent);
+				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
+				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
+				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlQuery.Column)e).Parent));
 
 			if (collection is JoinBuilder.GroupJoinSubQueryContext)
 			{
@@ -78,10 +79,11 @@ namespace LinqToDB.Linq.Builder
 				var table = (TableBuilder.TableContext)collection;
 
 				var join = table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ?
-					leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql) :
-					leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql);
+					(leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql)) :
+					(leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql));
 
 				join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
+				join.JoinedTable.CanConvertApply = false;
 
 				sql.Where.SearchCondition.Conditions.Clear();
 

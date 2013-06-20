@@ -118,6 +118,25 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CoalesceLike([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Person
+					where
+						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
+							false :
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+					select p,
+					from p in db.Person
+					where
+						(p.FirstName == null ? (bool?)null : (bool?)p.FirstName.StartsWith("Jo")) == null ?
+							false :
+							(p.FirstName == null ? (bool?)null : p.FirstName.StartsWith("Jo")).Value
+					select p);
+		}
+
+		[Test]
 		public void PreferServerFunc1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -225,7 +244,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		public Table<Person> People2(TestDataConnection db)
+		public ITable<Person> People2(TestDataConnection db)
 		{
 			return db.GetTable<Person>();
 		}
@@ -449,7 +468,7 @@ namespace Tests.Linq
 
 	static class Extender
 	{
-		public static Table<Person> People(this DataConnection db)
+		public static ITable<Person> People(this DataConnection db)
 		{
 			return db.GetTable<Person>();
 		}

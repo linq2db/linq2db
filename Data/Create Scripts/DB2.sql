@@ -27,11 +27,39 @@ GO
 CREATE TABLE "Doctor"
 (
 	"PersonID" INTEGER     NOT NULL,
-	"Taxonomy" VARCHAR(50) NOT NULL
+	"Taxonomy" VARCHAR(50) NOT NULL,
+	FOREIGN KEY "FK_Doctor_Person" ("PersonID")
+	REFERENCES "Person"
 )
 GO
 
 INSERT INTO "Doctor" ("PersonID", "Taxonomy") VALUES (1, 'Psychiatry')
+GO
+
+
+-- FkTest
+DROP TABLE MasterTable
+GO
+
+DROP TABLE SlaveTable
+GO
+
+CREATE TABLE MasterTable
+(
+	ID1 INTEGER NOT NULL,
+	ID2 INTEGER NOT NULL,
+	PRIMARY KEY (ID1,ID2)
+)
+GO
+
+CREATE TABLE SlaveTable
+(
+	ID1    INTEGER NOT NULL,
+	"ID 2222222222222222222222  22" INTEGER NOT NULL,
+	"ID 2222222222222222"           INTEGER NOT NULL,
+	FOREIGN KEY FK_SlaveTable_MasterTable ("ID 2222222222222222222222  22", ID1)
+	REFERENCES MasterTable
+)
 GO
 
 -- Patient Table Extension
@@ -178,4 +206,20 @@ VALUES
 
 	'<root><element strattr="strvalue" intattr="12345"/></root>'
 )
+GO
+
+CREATE OR REPLACE VIEW PersonView
+AS
+SELECT * FROM "Person"
+GO
+
+CREATE OR REPLACE Procedure Person_SelectByKey(in ID integer)
+RESULT SETS 1
+LANGUAGE SQL
+BEGIN
+	DECLARE C1 CURSOR FOR
+		SELECT * FROM "Person" WHERE "PersonID" = ID;
+
+	OPEN C1;
+END
 GO

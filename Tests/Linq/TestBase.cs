@@ -11,7 +11,6 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
@@ -24,6 +23,7 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
 
 			var providerListFile =
@@ -37,8 +37,6 @@ namespace Tests
 					.Where (s => s.Length > 0 && !s.StartsWith("--")));
 
 			DataConnection.TurnTraceSwitchOn();
-
-			PostgreSQLSqlProvider.QuoteIdentifiers = true;
 
 			LinqService.TypeResolver = str =>
 			{
@@ -87,6 +85,7 @@ namespace Tests
 			ProviderName.SqlCe,
 			ProviderName.SQLite,
 			ProviderName.Access,
+			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			ProviderName.DB2,
 			ProviderName.Informix,
@@ -190,7 +189,7 @@ namespace Tests
 
 		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
 		{
-			var person = persons.ToList().Where(p => p.ID == id).First();
+			var person = persons.ToList().First(p => p.ID == id);
 
 			Assert.AreEqual(id, person.ID);
 			Assert.AreEqual(firstName, person.FirstName);
@@ -288,6 +287,7 @@ namespace Tests
 				if (_parent == null)
 					using (var db = new TestDataConnection())
 					{
+						db.Parent.Delete(c => c.ParentID >= 1000);
 						_parent = db.Parent.ToList();
 						db.Close();
 
@@ -399,8 +399,9 @@ namespace Tests
 				if (_child == null)
 					using (var db = new TestDataConnection())
 					{
+						db.Child.Delete(c => c.ParentID >= 1000);
 						_child = db.Child.ToList();
-						db.Clone();
+						db.Close();
 
 						foreach (var ch in _child)
 						{

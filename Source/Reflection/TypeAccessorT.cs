@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
+	using Common;
 	using Extensions;
 
 	public class TypeAccessor<T> : TypeAccessor
@@ -17,8 +19,7 @@ namespace LinqToDB.Reflection
 
 			if (type.IsValueType)
 			{
-				var body = Expression.Constant(default(T));
-				_createInstance = Expression.Lambda<Func<T>>(body).Compile();
+				_createInstance = () => default(T);
 			}
 			else
 			{
@@ -50,6 +51,29 @@ namespace LinqToDB.Reflection
 					_members.Add(memberInfo);
 			}
 
+			// Add explicit iterface implementation properties support
+			// Or maybe we should support all private fields/properties?
+			//
+			var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods).ToList();
+
+			if (interfaceMethods.Count > 0)
+			{
+				foreach (var pi in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic))
+				{
+					if (pi.GetIndexParameters().Length == 0)
+					{
+						var getMethod = pi.GetGetMethod(true);
+						var setMethod = pi.GetSetMethod(true);
+
+						if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
+							(setMethod == null || interfaceMethods.Contains(setMethod)))
+						{
+							_members.Add(pi);
+						}
+					}
+				}
+			}
+
 			// ObjectFactory
 			//
 			var attr = type.GetFirstAttribute<ObjectFactoryAttribute>();
@@ -60,12 +84,12 @@ namespace LinqToDB.Reflection
 
 		static T ThrowException()
 		{
-			throw new LinqToDBException(string.Format("The '{0}' type must have default or init constructor.", typeof(T).FullName));
+			throw new LinqToDBException("The '{0}' type must have default or init constructor.".Args(typeof(T).FullName));
 		}
 
 		static T ThrowAbstractException()
 		{
-			throw new LinqToDBException(string.Format("Cant create an instance of abstract class '{0}'.", typeof(T).FullName));
+			throw new LinqToDBException("Cant create an instance of abstract class '{0}'.".Args(typeof(T).FullName));
 		}
 
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();

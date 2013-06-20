@@ -5,8 +5,12 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+// ReSharper disable ReturnValueOfPureMethodIsNotUsed
+
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class OrderByTest : TestBase
 	{
@@ -137,6 +141,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderBy6([DataContexts(ExcludeLinqService = true)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var q =
+					from person in db.Person
+					join patient in db.Patient on person.ID equals patient.PersonID into g
+					from patient in g.DefaultIfEmpty()
+					orderby person.MiddleName // if comment this line then "Diagnosis" is not selected.
+					select new { person.ID, PatientID = patient != null ? (int?)patient.PersonID : null };
+
+				q.ToList();
+
+				Assert.IsFalse(db.LastQuery.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
+			}
+		}
+
+		[Test]
 		public void OrderBySelf1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -226,7 +248,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var expected = Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
+				var expected =    Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
 				var result   = db.Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
 				Assert.IsTrue(result.ToList().SequenceEqual(expected));
 			}

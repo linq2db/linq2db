@@ -275,7 +275,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub2([DataContexts(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase, ProviderName.Informix)]
+			ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

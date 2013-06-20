@@ -7,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Reflection
 {
+	using Common;
+
 	[DebuggerDisplay("Type = {Type}")]
 	public abstract class TypeAccessor
 	{
@@ -27,7 +29,7 @@ namespace LinqToDB.Reflection
 		[DebuggerStepThrough]
 		public virtual object CreateInstance()
 		{
-			throw new LinqToDBException(string.Format("The '{0}' type must have public default or init constructor.", Type.Name));
+			throw new LinqToDBException("The '{0}' type must have public default or init constructor.".Args(Type.Name));
 		}
 
 		[DebuggerStepThrough]

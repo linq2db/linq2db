@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
@@ -10,6 +11,7 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	using LinqToDB.Common;
 	using Extensions;
 	using Linq;
 	using SqlBuilder;
@@ -149,6 +151,7 @@ namespace LinqToDB
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(                  "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
 
+		[Sql.Property(PN.SqlServer2000, "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2005, "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
@@ -163,6 +166,7 @@ namespace LinqToDB
 		[Sql.Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(                  "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
 
+		[Sql.Property(PN.SqlServer2000, "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2005, "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "Datetime",       ServerSideOnly=true)]
 		[Sql.Property(                  "Date",           ServerSideOnly=true)] public static DateTime       Date                              { get { return DateTime.Now; } }
@@ -335,6 +339,12 @@ namespace LinqToDB
 			return str == null || value == null || startLocation == null || length == null ?
 				null :
 				str.Remove(startLocation.Value - 1, length.Value).Insert(startLocation.Value - 1, value);
+		}
+
+		[Sql.Function(ServerSideOnly = true)]
+		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
+		{
+			throw new NotImplementedException();
 		}
 
 		[Sql.Function]
@@ -551,9 +561,8 @@ namespace LinqToDB
 			{
 				var part = (DateParts)((SqlValue)args[_datePartIndex]).Value;
 				var pstr = _partMapping != null ? _partMapping[(int)part] : part.ToString();
-				var str  = string.Format(Expression, pstr ?? part.ToString());
+				var str  = Expression.Args(pstr ?? part.ToString());
 				var type = member.GetMemberType();
-
 
 				return _isExpression ?
 					                new SqlExpression(type, str, Precedence, ConvertArgs(member, args)) :

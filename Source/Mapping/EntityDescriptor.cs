@@ -4,10 +4,11 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
-	using Reflection;
+	using Common;
 	using Linq;
+	using Reflection;
 
-	class EntityDescriptor
+	public class EntityDescriptor
 	{
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
 		{
@@ -104,7 +105,7 @@ namespace LinqToDB.Mapping
 		void SetColumn(ColumnAttribute attr)
 		{
 			if (attr.MemberName == null)
-				throw new LinqToDBException(string.Format("The Column attribute of the '{0}' type must have MemberName.", TypeAccessor.Type));
+				throw new LinqToDBException("The Column attribute of the '{0}' type must have MemberName.".Args(TypeAccessor.Type));
 
 			if (attr.MemberName.IndexOf('.') < 0)
 			{

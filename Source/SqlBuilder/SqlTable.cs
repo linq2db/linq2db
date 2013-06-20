@@ -24,14 +24,14 @@ namespace LinqToDB.SqlBuilder
 			SqlField[] fields,
 			SqlTableType sqlTableType, ISqlExpression[] tableArguments)
 		{
-			_sourceID           = id;
-			Name                = name;
-			Alias               = alias;
-			Database            = database;
-			Owner               = owner;
-			PhysicalName        = physicalName;
-			ObjectType          = objectType;
-			_sequenceAttributes = sequenceAttributes;
+			_sourceID          = id;
+			Name               = name;
+			Alias              = alias;
+			Database           = database;
+			Owner              = owner;
+			PhysicalName       = physicalName;
+			ObjectType         = objectType;
+			SequenceAttributes = sequenceAttributes;
 
 			_fields  = new ChildContainer<ISqlTableSource,SqlField>(this);
 			_fields.AddRange(fields);
@@ -90,7 +90,7 @@ namespace LinqToDB.SqlBuilder
 			{
 				var cd = ed[identityField.Name];
 
-				_sequenceAttributes = mappingSchema.GetAttributes<SequenceNameAttribute>(
+				SequenceAttributes = mappingSchema.GetAttributes<SequenceNameAttribute>(
 					cd.MemberAccessor.MemberInfo, a => a.Configuration);
 			}
 		}
@@ -106,13 +106,13 @@ namespace LinqToDB.SqlBuilder
 
 		public SqlTable(SqlTable table) : this()
 		{
-			Alias               = table.Alias;
-			Database            = table.Database;
-			Owner               = table.Owner;
-			Name                = table.Name;
-			PhysicalName        = table.PhysicalName;
-			ObjectType          = table.ObjectType;
-			_sequenceAttributes = table._sequenceAttributes;
+			Alias              = table.Alias;
+			Database           = table.Database;
+			Owner              = table.Owner;
+			Name               = table.Name;
+			PhysicalName       = table.PhysicalName;
+			ObjectType         = table.ObjectType;
+			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields.Values)
 				Fields.Add(new SqlField(field));
@@ -123,13 +123,13 @@ namespace LinqToDB.SqlBuilder
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
 		{
-			Alias               = table.Alias;
-			Database            = table.Database;
-			Owner               = table.Owner;
-			Name                = table.Name;
-			PhysicalName        = table.PhysicalName;
-			ObjectType          = table.ObjectType;
-			_sequenceAttributes = table._sequenceAttributes;
+			Alias              = table.Alias;
+			Database           = table.Database;
+			Owner              = table.Owner;
+			Name               = table.Name;
+			PhysicalName       = table.PhysicalName;
+			ObjectType         = table.ObjectType;
+			SequenceAttributes = table.SequenceAttributes;
 
 			Fields.AddRange(fields);
 
@@ -179,11 +179,7 @@ namespace LinqToDB.SqlBuilder
 		readonly ChildContainer<ISqlTableSource,SqlField> _fields;
 		public   ChildContainer<ISqlTableSource,SqlField>  Fields { get { return _fields; } }
 
-		private SequenceNameAttribute[] _sequenceAttributes;
-		public  SequenceNameAttribute[]  SequenceAttributes
-		{
-			get { return _sequenceAttributes; }
-		}
+		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
 
 		private SqlField _all;
 		public  SqlField  All
@@ -256,14 +252,14 @@ namespace LinqToDB.SqlBuilder
 			{
 				var table = new SqlTable
 				{
-					Name                = Name,
-					Alias               = Alias,
-					Database            = Database,
-					Owner               = Owner,
-					PhysicalName        = PhysicalName,
-					ObjectType          = ObjectType,
-					SqlTableType        = SqlTableType,
-					_sequenceAttributes = _sequenceAttributes,
+					Name               = Name,
+					Alias              = Alias,
+					Database           = Database,
+					Owner              = Owner,
+					PhysicalName       = PhysicalName,
+					ObjectType         = ObjectType,
+					SqlTableType       = SqlTableType,
+					SequenceAttributes = SequenceAttributes,
 				};
 
 				table._fields.Clear();

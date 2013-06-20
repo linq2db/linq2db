@@ -1,9 +1,7 @@
-
 #ignore thumbnails created by windows
 Thumbs.db
 #Ignore files build by Visual Studio
 *.obj
-#*.exe
 *.pdb
 *.user
 *.aps
@@ -29,3 +27,6 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 linq2db.sln.docstates
 Tests/Linq/UserDataProviders.txt
+NuGet/*.nupkg
+!*.dll
+!*.exe

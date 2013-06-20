@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using LinqToDB;
 using MySql.Data.MySqlClient;
 
 using NUnit.Framework;
@@ -10,14 +10,15 @@ namespace Tests.Exceptions
 	using Model;
 
 	[TestFixture]
-	public class DataExceptionTest
+	public class DataExceptionTest : TestBase
 	{
 		[Test]
-		public void ParameterPrefixTest()
+		public void ParameterPrefixTest([IncludeDataContexts(ProviderName.MySql)] string context)
 		{
 			try
 			{
-				using (var db = LinqToDB.DataProvider.MySql.CreateDataConnection("Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
+				using (var db = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(
+					"Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
 				{
 					db.GetTable<Person>().ToList();
 				}

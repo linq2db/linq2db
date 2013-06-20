@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 #if DEBUG
-		public string _sqlQueryText { get { return this.SqlQuery == null ? "" : SqlQuery.SqlText; } }
+		public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
 
 		public MethodCallExpression MethodCall;
 #endif
@@ -136,8 +136,6 @@ namespace LinqToDB.Linq.Builder
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
 											{
-												var sequence = GetSequence(memberExpression, 0);
-
 												return memberExpression.Transform(e =>
 												{
 													if (!ReferenceEquals(e, memberExpression))
@@ -145,7 +143,10 @@ namespace LinqToDB.Linq.Builder
 														switch (e.NodeType)
 														{
 															case ExpressionType.MemberAccess :
-																if (!sequence.IsExpression(e, 0, RequestFor.Object).Result &&
+																var sequence = GetSequence(memberExpression, 0);
+
+																if (sequence != null &&
+																	!sequence.IsExpression(e, 0, RequestFor.Object).Result &&
 																	!sequence.IsExpression(e, 0, RequestFor.Field). Result)
 																{
 																	var info = ConvertToIndex(e, 0, ConvertFlags.Field).Single();
@@ -338,6 +339,11 @@ namespace LinqToDB.Linq.Builder
 										return GetSequence(expression, level).ConvertToSql(null, 0, flags);
 
 									break;
+
+								default:
+									if (level == 0)
+										return Builder.ConvertExpressions(this, expression, flags);
+									break;
 							}
 
 							break;
@@ -375,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags)
 		{
 			return Builder.ConvertExpressions(this, expression, flags)
-				.Select<SqlInfo,SqlInfo>(CheckExpression)
+				.Select (CheckExpression)
 				.ToArray();
 		}
 
@@ -812,7 +818,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			if (!ReferenceEquals(context.SqlQuery, this.SqlQuery))
+			if (!ReferenceEquals(context.SqlQuery, SqlQuery))
 				index = SqlQuery.Select.Add(context.SqlQuery.Select.Columns[index]);
 
 			return Parent == null ? index : Parent.ConvertToParentIndex(index, this);
@@ -855,7 +861,10 @@ namespace LinqToDB.Linq.Builder
 				var levelExpression = expression.GetLevelExpression(level);
 
 				if (!ReferenceEquals(levelExpression, expression))
-					return action(GetSequence(expression, level), expression, level + 1);
+				{
+					var ctx = GetSequence(expression, level);
+					return ctx == null ? defaultAction() : action(ctx, expression, Sequence.Contains(ctx) ? level + 1 : 0);
+				}
 
 				if (expression.NodeType == ExpressionType.Parameter)
 				{
@@ -894,13 +903,23 @@ namespace LinqToDB.Linq.Builder
 			var memberExpression = Members[levelExpression.Member];
 			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
 			var sequence         = GetSequence  (expression, level);
+			var nextLevel        = 1;
 
 			if (sequence != null)
 			{
-				var parameter = Lambda.Parameters[Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence)];
+				var idx = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
 
-				if (ReferenceEquals(memberExpression, parameter) && ReferenceEquals(levelExpression, expression))
-					return action(1, sequence, null, 0, memberExpression);
+				if (idx >= 0)
+				{
+					var parameter = Lambda.Parameters[idx];
+
+					if (ReferenceEquals(memberExpression, parameter) && ReferenceEquals(levelExpression, expression))
+						return action(1, sequence, null, 0, memberExpression);
+				}
+				else
+				{
+					nextLevel = 0;
+				}
 			}
 
 			switch (memberExpression.NodeType)
@@ -908,7 +927,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess :
 				case ExpressionType.Parameter    :
 					if (sequence != null)
-						return action(2, sequence, newExpression, 1, memberExpression);
+						return action(2, sequence, newExpression, nextLevel, memberExpression);
 					throw new NotImplementedException();
 
 				case ExpressionType.New          :
@@ -932,7 +951,7 @@ namespace LinqToDB.Linq.Builder
 
 		IBuildContext GetSequence(Expression expression, int level)
 		{
-			if (Sequence.Length == 1)
+			if (Sequence.Length == 1 && Sequence[0].Parent == null)
 				return Sequence[0];
 
 			Expression root = null;
@@ -956,10 +975,6 @@ namespace LinqToDB.Linq.Builder
 							if (root.NodeType != ExpressionType.Parameter)
 								return null;
 
-							for (var i = 0; i < Lambda.Parameters.Count; i++)
-								if (ReferenceEquals(root, Lambda.Parameters[i]))
-									return Sequence[i];
-
 							break;
 						}
 
@@ -976,7 +991,17 @@ namespace LinqToDB.Linq.Builder
 					if (ReferenceEquals(root, Lambda.Parameters[i]))
 						return Sequence[i];
 
-			throw new NotImplementedException();
+			foreach (var context in Sequence)
+			{
+				if (context.Parent != null)
+				{
+					var ctx = Builder.GetContext(context, root);
+					if (ctx != null)
+						return ctx;
+				}
+			}
+
+			return null;
 		}
 
 		static Expression GetExpression(Expression expression, Expression levelExpression, Expression memberExpression)
