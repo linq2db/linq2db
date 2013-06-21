@@ -1,4 +1,4 @@
-﻿<#
+<#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
 		BeforeGenerateModel = () =>
