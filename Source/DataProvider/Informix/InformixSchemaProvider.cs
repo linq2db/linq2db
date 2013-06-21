@@ -95,9 +95,62 @@ namespace LinqToDB.DataProvider.Informix
 				.ToList();
 		}
 
+		List<PrimaryKeyInfo> _pks;
+
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			return new List<PrimaryKeyInfo>();
+			return _pks =
+			(
+				from pk in dataConnection.Query(
+					rd =>
+					{
+						var arr = new string[16];
+
+						for (var i = 0; i < arr.Length; i++)
+						{
+							var value = rd["col" + (i + 1)];
+							arr[i] = value is DBNull ? null : (string)value;
+						}
+
+						return new
+						{
+							TableID        = rd["tabid"].ToString(),
+							PrimaryKeyName = (string)rd["idxname"],
+							arr
+						};
+					}, @"
+						SELECT
+							t.tabid,
+							x.idxname,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
+						FROM systables t
+							JOIN sysindexes x ON t.tabid = x.tabid
+						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
+				from c in pk.arr.Select((c,i) => new { c, i })
+				where c.c != null
+				select new PrimaryKeyInfo
+				{
+					TableID        = pk.TableID,
+					PrimaryKeyName = pk.PrimaryKeyName,
+					ColumnName     = c.c,
+					Ordinal        = c.i
+				}
+			).ToList();
 		}
 
 		static void SetDate(ColumnInfo c, int num)
@@ -283,7 +336,61 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return new List<ForeingKeyInfo>();
+			return
+			(
+				from fk in dataConnection.Query(
+					rd =>
+					{
+						var arr = new string[16];
+
+						for (var i = 0; i < arr.Length; i++)
+						{
+							var value = rd["col" + (i + 1)];
+							arr[i] = value is DBNull ? null : (string)value;
+						}
+
+						return new
+						{
+							TableID        = rd["tabid"].ToString(),
+							PrimaryKeyName = (string)rd["idxname"],
+							arr
+						};
+					}, @"
+						SELECT
+							t.tabid,
+							x.idxname,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
+						FROM systables t
+							JOIN sysindexes x ON t.tabid = x.tabid
+						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
+				from c in fk.arr.Select((c,i) => new { c, i })
+				where c.c != null
+				join pk in _pks on new { fk.TableID, c.i } equals new { pk.TableID, i = pk.Ordinal }
+				select new ForeingKeyInfo
+				{
+					Name         = fk.PrimaryKeyName.Trim(),
+					ThisTableID  = fk.TableID,
+					ThisColumn   = c.c,
+					OtherTableID = pk.TableID,
+					OtherColumn  = pk.ColumnName,
+					Ordinal      = c.i
+				}
+			).ToList();
 		}
 	}
 }

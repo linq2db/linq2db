@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						key = new ForeignKeySchema
 						{
 							KeyName      = fk.Name,
-							MemberName   = fk.Name,
+							MemberName   = ToValidName(fk.Name),
 							ThisTable    = thisTable,
 							OtherTable   = otherTable,
 							ThisColumns  = new List<ColumnSchema>(),
@@ -531,6 +531,9 @@ namespace LinqToDB.DataProvider.SchemaProvider
 
 				name = string.Join("", ss.ToArray());
 			}
+
+			if (name.Length > 0 && char.IsDigit(name[0]))
+				name = "_" + name;
 
 			return name
 				.Replace('$', '_')
