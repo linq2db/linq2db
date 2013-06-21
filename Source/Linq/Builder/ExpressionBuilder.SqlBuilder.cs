@@ -699,7 +699,9 @@ namespace LinqToDB.Linq.Builder
 							s = SqlDataType.GetDataType(t);
 						}
 
-						if (e.Type == t || t.IsEnum && Enum.GetUnderlyingType(t) == e.Type)
+						if (e.Type == t ||
+							t.IsEnum && Enum.GetUnderlyingType(t) == e.Type ||
+							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 							return o;
 
 						return Convert(
