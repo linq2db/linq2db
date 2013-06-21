@@ -1062,14 +1062,27 @@ public partial class Property : MemberBase
 
 static Action<GeneratedTextTransformation,Method,bool> WriteMethod = (tt,m,compact) =>
 {
-	var am  = m.AccessModifier.ToString().ToLower();
-	var mdf = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsOverride ? " override" : m.IsStatic ? " static" : "";
+	var am1  = m.AccessModifier.ToString().ToLower();
+	var len1 = m.AccessModifierLen;
+	var am2  = "";
+	var len2 = 0;
+	var mdf  = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsOverride ? " override" : m.IsStatic ? " static" : "";
+	var mlen = m.ModifierLen;
 
-	tt.Write("{0}{1}{2}{3}{4}{5}{6} {7}",
-		am,     LenDiff(m.AccessModifierLen, am),
-		mdf,    LenDiff(m.ModifierLen,       mdf),
+	if (am1 == "partial" && mdf.Length > 0)
+	{
+		am2 = " " + am1; len2 = len1 + 1;
+		am1 = "";        len1 = 0;
+		mdf = mdf.Trim();
+		mlen--;
+	}
+
+	tt.Write("{0}{1}{2}{3}{4}{5}{6}{7}{8} {9}",
+		am1,    LenDiff(len1, am1),
+		mdf,    LenDiff(mlen, mdf),
+		am2,    LenDiff(len2, am2),
 		m.Type == null ? "" : " ",
-		m.Type, LenDiff(m.TypeLen,           m.Type ?? ""),
+		m.Type, LenDiff(m.TypeLen,     m.Type ?? ""),
 		m.Name);
 
 	Action writeComment = () =>
