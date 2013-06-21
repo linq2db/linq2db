@@ -63,7 +63,6 @@ namespace LinqToDB.DataProvider.DB2
 			_db2Xml          = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
 			_db2RowId        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
 
-
 			SetProviderField(_db2Int64,        typeof(Int64),    "GetDB2Int64");
 			SetProviderField(_db2Int32,        typeof(Int32),    "GetDB2Int32");
 			SetProviderField(_db2Int16,        typeof(Int16),    "GetDB2Int16");
