@@ -14,7 +14,7 @@
 		};
 	}
 #><#+
-bool ImplementNotifyPropertyChanging;
+public bool ImplementNotifyPropertyChanging;
 
 void NotifyPropertyChangedImpl()
 {
