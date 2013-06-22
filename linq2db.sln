@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247
 		NuGet\Push.bat = NuGet\Push.bat
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Silverlight.4", "Source\LinqToDB.Silverlight.4.csproj", "{F6E0D509-3B88-4453-8B06-967BBB9229D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D11617AB-9F88-4C74-8ABD-F8580DB4B01B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6E0D509-3B88-4453-8B06-967BBB9229D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6E0D509-3B88-4453-8B06-967BBB9229D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6E0D509-3B88-4453-8B06-967BBB9229D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6E0D509-3B88-4453-8B06-967BBB9229D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

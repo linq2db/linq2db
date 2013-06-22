@@ -17,4 +17,7 @@ using LinqToDB;
 [assembly: AssemblyFileVersion     (LinqToDBConstants.FullVersionString)]
 [assembly: CLSCompliant            (true)]
 [assembly: NeutralResourcesLanguage("en-US")]
+
+#if !SILVERLIGHT
 [assembly: AllowPartiallyTrustedCallers]
+#endif
