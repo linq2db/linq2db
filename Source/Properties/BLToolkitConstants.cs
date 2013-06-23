@@ -8,6 +8,6 @@ namespace LinqToDB
 
 		public const string ProductName        = "Linq to DB";
 		public const string ProductDescription = "Linq to DB";
-		public const string Copyright          = "\xA9 2011-2012 www.linq2db.net";
+		public const string Copyright          = "\xA9 2011-2013 www.linq2db.net";
 	}
 }
