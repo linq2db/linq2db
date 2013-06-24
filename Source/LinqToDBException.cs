@@ -10,7 +10,7 @@ namespace LinqToDB
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
-	[Serializable] 
+	[Serializable]
 	public class LinqToDBException : Exception
 	{
 		/// <summary>
