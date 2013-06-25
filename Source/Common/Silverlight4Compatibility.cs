@@ -6,4 +6,10 @@ namespace System
 	class SerializableAttribute : Attribute
 	{
 	}
+
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false )]
+	[Runtime.InteropServices.ComVisible(true)] 
+	sealed public class AllowPartiallyTrustedCallersAttribute : Attribute
+	{
+	}
 }
