@@ -113,6 +113,14 @@ namespace LinqToDB.Common
 		{
 			if (from == typeof(string) && to.IsEnum)
 			{
+#if SL4
+				return
+					Expression.Call(
+						MemberHelper.MethodOf(() => Enum.Parse(to, "", true)),
+						Expression.Constant(to),
+						p,
+						Expression.Constant(true));
+#else
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
 
@@ -149,6 +157,7 @@ namespace LinqToDB.Common
 					cases.ToArray());
 
 				return expr;
+#endif
 			}
 
 			return null;
@@ -220,7 +229,7 @@ namespace LinqToDB.Common
 							.Select(f =>
 								Expression.SwitchCase(
 									Expression.Constant(f.value),
-									f.attrs.Select(a => Expression.Constant(a, @from))))
+									f.attrs.Select(a => Expression.Constant(a, @from)) as IEnumerable<Expression>))
 							.ToArray());
 
 					return expr;

@@ -83,18 +83,23 @@ namespace System
 
 		namespace Concurrent
 		{
-			internal class ConcurrentDictionary<TKey, TValue> : Dictionary<TKey,TValue>
+			internal class ConcurrentDictionary<TKey,TValue> : Dictionary<TKey,TValue>
 			{
-				public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
+				public TValue GetOrAdd(TKey key, Func<TKey,TValue> valueFactory)
 				{
-					if ((object) key == null)
+					if ((object)key == null)
 						throw new ArgumentNullException("key");
+
 					if (valueFactory == null)
 						throw new ArgumentNullException("valueFactory");
+
 					TValue resultingValue;
-					if (this.TryGetValue(key, out resultingValue))
+
+					if (TryGetValue(key, out resultingValue))
 						return resultingValue;
-					this.TryAddInternal(key, valueFactory(key), false, true, out resultingValue);
+
+					this[key] = resultingValue = valueFactory(key);
+
 					return resultingValue;
 				}
 			}
