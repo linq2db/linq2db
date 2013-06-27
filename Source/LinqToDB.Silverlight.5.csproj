@@ -47,6 +47,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core">
@@ -55,10 +56,69 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Net" />
     <Reference Include="System.Windows.Browser" />
+    <Reference Include="System.Xml.Linq, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ArrayT.cs" />
+    <Compile Include="Common\Configuration.cs" />
+    <Compile Include="Common\ConvertBuilder.cs" />
+    <Compile Include="Common\Converter.cs" />
+    <Compile Include="Common\ConvertInfo.cs" />
+    <Compile Include="Common\ConvertT.cs" />
+    <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\Option.cs" />
+    <Compile Include="Common\Silverlight5Compatibility.cs" />
+    <Compile Include="Common\Tools.cs" />
+    <Compile Include="DataType.cs" />
+    <Compile Include="Data\DataParameter.cs" />
+    <Compile Include="Expressions\ChangeTypeExpression.cs" />
+    <Compile Include="Expressions\DefaultValueExpression.cs" />
+    <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\MemberHelper.cs" />
+    <Compile Include="Expressions\TransformInfo.cs" />
+    <Compile Include="Extensions\MappingExtensions.cs" />
+    <Compile Include="Extensions\ReflectionExtensions.cs" />
+    <Compile Include="LinqToDBException.cs" />
+    <Compile Include="Linq\LinqException.cs" />
+    <Compile Include="Mapping\AssociationAttribute.cs" />
+    <Compile Include="Mapping\AssociationDescriptor.cs" />
+    <Compile Include="Mapping\ColumnAttribute.cs" />
+    <Compile Include="Mapping\ColumnDescriptor.cs" />
+    <Compile Include="Mapping\EntityDescriptor.cs" />
+    <Compile Include="Mapping\IdentityAttribute.cs" />
+    <Compile Include="Mapping\InheritanceMapping.cs" />
+    <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
+    <Compile Include="Mapping\MappingSchema.cs" />
+    <Compile Include="Mapping\MappingSchemaInfo.cs" />
+    <Compile Include="Mapping\MapValue.cs" />
+    <Compile Include="Mapping\MapValueAttribute.cs" />
+    <Compile Include="Mapping\NotColumnAttribute.cs" />
+    <Compile Include="Mapping\NotNullAttribute.cs" />
+    <Compile Include="Mapping\NullableAttribute.cs" />
+    <Compile Include="Mapping\PrimaryKeyAttribute.cs" />
+    <Compile Include="Mapping\ScalarTypeAttribute.cs" />
+    <Compile Include="Mapping\SequenceNameAttribute.cs" />
+    <Compile Include="Mapping\TableAttribute.cs" />
+    <Compile Include="Metadata\AttributeReader.cs" />
+    <Compile Include="Metadata\IMetadataReader.cs" />
+    <Compile Include="Metadata\MetadataReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\BLToolkitConstants.cs" />
+    <Compile Include="Properties\JetBrains.Annotations.cs" />
+    <Compile Include="Reflection\IObjectFactory.cs" />
+    <Compile Include="Reflection\MemberAccessor.cs" />
+    <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
+    <Compile Include="Reflection\TypeAccessor.cs" />
+    <Compile Include="Reflection\TypeAccessorT.cs" />
+    <Compile Include="SqlBuilder\ICloneableElement.cs" />
+    <Compile Include="SqlBuilder\IQueryElement.cs" />
+    <Compile Include="SqlBuilder\ISqlExpression.cs" />
+    <Compile Include="SqlBuilder\ISqlExpressionWalkable.cs" />
+    <Compile Include="SqlBuilder\IValueContainer.cs" />
+    <Compile Include="SqlBuilder\Precedence.cs" />
+    <Compile Include="SqlBuilder\QueryElementType.cs" />
+    <Compile Include="SqlBuilder\SqlValue.cs" />
+    <Compile Include="Sql\Sql.EnumAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>

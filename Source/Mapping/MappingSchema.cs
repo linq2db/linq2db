@@ -618,7 +618,9 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(Guid),            DataType.Guid);
 				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
+#if !SILVERLIGHT
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
+#endif
 				AddScalarType(typeof(XDocument),       DataType.Xml);
 				AddScalarType(typeof(bool),            DataType.Boolean);
 				AddScalarType(typeof(bool?),           DataType.Boolean);
@@ -758,7 +760,7 @@ namespace LinqToDB.Mapping
 					from f in underlyingType.GetFields()
 					where (f.Attributes & EnumField) == EnumField
 					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration)
-					select new MapValue(Enum.Parse(underlyingType, f.Name), attrs)
+					select new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs)
 				).ToArray();
 
 				if (fields.Any(f => f.MapValues.Length > 0))

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Common
 {
@@ -12,7 +13,7 @@ namespace LinqToDB.Common
 
 	static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
+		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int), Thread.CurrentThread.CurrentCulture));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
@@ -113,14 +114,14 @@ namespace LinqToDB.Common
 			if (from == typeof(string) && to.IsEnum)
 			{
 				var values = Enum.GetValues(to);
-				var names  = Enum.GetNames(to);
+				var names  = Enum.GetNames (to);
 
 				var dic = new Dictionary<string,object>();
 
 				for (var i = 0; i < values.Length; i++)
 				{
 					var val = values.GetValue(i);
-					var lv  = (long)Convert.ChangeType(val, typeof(long));
+					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture);
 
 					dic[lv.ToString()] = val;
 
@@ -276,7 +277,7 @@ namespace LinqToDB.Common
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
 							Expression.Constant(f.Attrs.Value ?? mappingSchema.GetDefaultValue(to), to),
-							Expression.Constant(Enum.Parse(@from, f.Field.Name))));
+							Expression.Constant(Enum.Parse(@from, f.Field.Name, false))));
 
 						var expr = Expression.Switch(
 							expression,
@@ -368,8 +369,8 @@ namespace LinqToDB.Common
 					if (dic.Count > 0)
 					{
 						var cases = dic.Select(f => Expression.SwitchCase(
-							Expression.Constant(Enum.Parse(@to,   f.Key.  Field.Name)),
-							Expression.Constant(Enum.Parse(@from, f.Value.Field.Name))));
+							Expression.Constant(Enum.Parse(@to,   f.Key.  Field.Name, false)),
+							Expression.Constant(Enum.Parse(@from, f.Value.Field.Name, false))));
 
 						var expr = Expression.Switch(
 							expression,
