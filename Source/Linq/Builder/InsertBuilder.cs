@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Collections.Generic;
+
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 
@@ -77,7 +79,11 @@ namespace LinqToDB.Linq.Builder
 
 			var insert = sequence.SqlQuery.Insert;
 
-			var q = insert.Into.Fields.Values.Except(insert.Items.Select(e => e.Column))
+			var q = insert.Into.Fields.Values
+#if SL4
+				.Cast<ISqlExpression>()
+#endif
+				.Except(insert.Items.Select(e => e.Column))
 				.OfType<SqlField>()
 				.Where(f => f.IsIdentity);
 

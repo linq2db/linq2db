@@ -29,6 +29,7 @@ namespace LinqToDB.Metadata
 
 			try
 			{
+#if !SILVERLIGHT
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);
@@ -40,6 +41,7 @@ namespace LinqToDB.Metadata
 					if (File.Exists(combinePath))
 						streamReader = File.OpenText(combinePath);
 				}
+#endif
 
 				var embedded = streamReader == null;
 				var stream   = embedded ? assembly.GetManifestResourceStream(xmlFile) : streamReader.BaseStream;

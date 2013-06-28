@@ -45,6 +45,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System.Runtime.Serialization" />
@@ -69,17 +75,91 @@
     <Compile Include="Common\Option.cs" />
     <Compile Include="Common\Silverlight5Compatibility.cs" />
     <Compile Include="Common\Tools.cs" />
+    <Compile Include="CompiledQuery.cs" />
+    <Compile Include="DataExtensions.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataParameter.cs" />
+    <Compile Include="ExpressionMethodAttribute.cs" />
     <Compile Include="Expressions\ChangeTypeExpression.cs" />
+    <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
     <Compile Include="Extensions\MappingExtensions.cs" />
     <Compile Include="Extensions\ReflectionExtensions.cs" />
+    <Compile Include="IDataContext.cs" />
+    <Compile Include="ITableT.cs" />
+    <Compile Include="LinqExtensions.cs" />
     <Compile Include="LinqToDBException.cs" />
+    <Compile Include="Linq\Builder\AggregationBuilder.cs" />
+    <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
+    <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
+    <Compile Include="Linq\Builder\BuildInfo.cs" />
+    <Compile Include="Linq\Builder\CastBuilder.cs" />
+    <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
+    <Compile Include="Linq\Builder\ContainsBuilder.cs" />
+    <Compile Include="Linq\Builder\ConvertFlags.cs" />
+    <Compile Include="Linq\Builder\CountBuilder.cs" />
+    <Compile Include="Linq\Builder\DefaultIfEmptyBuilder.cs" />
+    <Compile Include="Linq\Builder\DeleteBuilder.cs" />
+    <Compile Include="Linq\Builder\DistinctBuilder.cs" />
+    <Compile Include="Linq\Builder\ExpressionBuilder.cs" />
+    <Compile Include="Linq\Builder\ExpressionBuilder.QueryBuilder.cs" />
+    <Compile Include="Linq\Builder\ExpressionBuilder.SqlBuilder.cs" />
+    <Compile Include="Linq\Builder\ExpressionContext.cs" />
+    <Compile Include="Linq\Builder\ExpressionHoder.cs" />
+    <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
+    <Compile Include="Linq\Builder\FirstSingleBuilder.cs" />
+    <Compile Include="Linq\Builder\GroupByBuilder.cs" />
+    <Compile Include="Linq\Builder\IBuildContext.cs" />
+    <Compile Include="Linq\Builder\InsertBuilder.cs" />
+    <Compile Include="Linq\Builder\InsertOrUpdateBuilder.cs" />
+    <Compile Include="Linq\Builder\IntersectBuilder.cs" />
+    <Compile Include="Linq\Builder\ISequenceBuilder.cs" />
+    <Compile Include="Linq\Builder\IsExpressionResult.cs" />
+    <Compile Include="Linq\Builder\JoinBuilder.cs" />
+    <Compile Include="Linq\Builder\MethodCallBuilder.cs" />
+    <Compile Include="Linq\Builder\OfTypeBuilder.cs" />
+    <Compile Include="Linq\Builder\OrderByBuilder.cs" />
+    <Compile Include="Linq\Builder\PassThroughBuilder.cs" />
+    <Compile Include="Linq\Builder\PassThroughContext.cs" />
+    <Compile Include="Linq\Builder\RequestFor.cs" />
+    <Compile Include="Linq\Builder\ScalarSelectBuilder.cs" />
+    <Compile Include="Linq\Builder\SelectBuilder.cs" />
+    <Compile Include="Linq\Builder\SelectContext.cs" />
+    <Compile Include="Linq\Builder\SelectManyBuilder.cs" />
+    <Compile Include="Linq\Builder\SequenceContextBase.cs" />
+    <Compile Include="Linq\Builder\SequenceConvertInfo.cs" />
+    <Compile Include="Linq\Builder\SequenceConvertPath.cs" />
+    <Compile Include="Linq\Builder\SqlInfo.cs" />
+    <Compile Include="Linq\Builder\SubQueryContext.cs" />
+    <Compile Include="Linq\Builder\TableAttributeBuilder.cs" />
+    <Compile Include="Linq\Builder\TableBuilder.cs" />
+    <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
+    <Compile Include="Linq\Builder\UpdateBuilder.cs" />
+    <Compile Include="Linq\Builder\WhereBuilder.cs" />
+    <Compile Include="Linq\CompiledTableT.cs" />
+    <Compile Include="Linq\DataContextInfo.cs" />
+    <Compile Include="Linq\ExpressionQuery.cs" />
+    <Compile Include="Linq\ExpressionQueryImpl.cs" />
+    <Compile Include="Linq\Expressions.cs" />
+    <Compile Include="Linq\IDataContextInfo.cs" />
+    <Compile Include="Linq\IExpressionQuery.cs" />
+    <Compile Include="Linq\IExpressionQueryT.cs" />
+    <Compile Include="Linq\IQueryContext.cs" />
+    <Compile Include="Linq\ISelectInsertable.cs" />
+    <Compile Include="Linq\ITable.cs" />
+    <Compile Include="Linq\IUpdatable.cs" />
+    <Compile Include="Linq\IValueInsertable.cs" />
     <Compile Include="Linq\LinqException.cs" />
+    <Compile Include="Linq\MemberInfoComparer.cs" />
+    <Compile Include="Linq\Query.cs" />
+    <Compile Include="Linq\QueryableAccessor.cs" />
+    <Compile Include="Linq\QueryContext.cs" />
+    <Compile Include="Linq\ReflectionHelper.cs" />
+    <Compile Include="Linq\TableT.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />
     <Compile Include="Mapping\AssociationDescriptor.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
@@ -99,27 +179,68 @@
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
+    <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
+    <Compile Include="Metadata\MetadataException.cs" />
     <Compile Include="Metadata\MetadataReader.cs" />
+    <Compile Include="Metadata\MetaMemberInfo.cs" />
+    <Compile Include="Metadata\MetaTypeInfo.cs" />
+    <Compile Include="Metadata\XmlAttributeReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />
+    <Compile Include="ProviderName.cs" />
     <Compile Include="Reflection\IObjectFactory.cs" />
     <Compile Include="Reflection\MemberAccessor.cs" />
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
+    <Compile Include="SqlBuilder\ChildContainer.cs" />
+    <Compile Include="SqlBuilder\Extensions.cs" />
+    <Compile Include="SqlBuilder\IChild.cs" />
     <Compile Include="SqlBuilder\ICloneableElement.cs" />
     <Compile Include="SqlBuilder\IQueryElement.cs" />
     <Compile Include="SqlBuilder\ISqlExpression.cs" />
     <Compile Include="SqlBuilder\ISqlExpressionWalkable.cs" />
+    <Compile Include="SqlBuilder\ISqlPredicate.cs" />
+    <Compile Include="SqlBuilder\ISqlTableSource.cs" />
     <Compile Include="SqlBuilder\IValueContainer.cs" />
     <Compile Include="SqlBuilder\Precedence.cs" />
     <Compile Include="SqlBuilder\QueryElementType.cs" />
+    <Compile Include="SqlBuilder\QueryType.cs" />
+    <Compile Include="SqlBuilder\QueryVisitor.cs" />
+    <Compile Include="SqlBuilder\SqlBinaryExpression.cs" />
+    <Compile Include="SqlBuilder\SqlDataType.cs" />
+    <Compile Include="SqlBuilder\SqlException.cs" />
+    <Compile Include="SqlBuilder\SqlExpression.cs" />
+    <Compile Include="SqlBuilder\SqlField.cs" />
+    <Compile Include="SqlBuilder\SqlFunction.cs" />
+    <Compile Include="SqlBuilder\SqlParameter.cs" />
+    <Compile Include="SqlBuilder\SqlQuery.cs" />
+    <Compile Include="SqlBuilder\SqlTable.cs" />
+    <Compile Include="SqlBuilder\SqlTableT.cs" />
+    <Compile Include="SqlBuilder\SqlTableType.cs" />
     <Compile Include="SqlBuilder\SqlValue.cs" />
+    <Compile Include="SqlProvider\BasicSqlProvider.cs" />
+    <Compile Include="SqlProvider\ConvertType.cs" />
+    <Compile Include="SqlProvider\ISqlProvider.cs" />
+    <Compile Include="SqlProvider\SqlProviderFlags.cs" />
+    <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
+    <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.FunctionAttribute.cs" />
+    <Compile Include="Sql\Sql.PropertyAttribute.cs" />
+    <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
+    <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="linq2db.snk" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>

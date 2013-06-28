@@ -35,7 +35,7 @@ namespace LinqToDB.Metadata
 						Expression.Convert(
 							Expression.MemberInit(
 								Expression.New(ctor),
-								Values.Select(k =>
+								(IEnumerable<MemberBinding>)Values.Select(k =>
 								{
 									var member = type.GetMember(k.Key)[0];
 									var mtype   = member.GetMemberType();

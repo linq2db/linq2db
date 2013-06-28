@@ -261,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
-					members.Where(m => !m.Column.MemberAccessor.IsComplex).Select(m => Expression.Bind(
+					(IEnumerable<MemberBinding>)members.Where(m => !m.Column.MemberAccessor.IsComplex).Select(m => Expression.Bind(
 						m.Column.Storage == null ?
 							m.Column.MemberAccessor.MemberInfo :
 							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,

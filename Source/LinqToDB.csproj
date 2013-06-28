@@ -58,6 +58,9 @@
     <Compile Include="DataProvider\DB2\DB2SqlProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
+    <Compile Include="DataProvider\IDataProvider.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DataProvider\Informix\InformixFactory.cs" />
     <Compile Include="DataProvider\Informix\InformixDataProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
@@ -76,6 +79,9 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
+    <Compile Include="Linq\DefaultDataContextInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
@@ -149,7 +155,6 @@
     <Compile Include="Configuration\ElementBase.cs" />
     <Compile Include="Configuration\ElementCollectionBase.cs" />
     <Compile Include="DataProvider\DataProviderBase.cs" />
-    <Compile Include="DataProvider\IDataProvider.cs" />
     <Compile Include="DataProvider\IDataProviderFactory.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataConnection.Linq.cs" />
@@ -243,7 +248,6 @@
     <Compile Include="DataContext.cs" />
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="DataContextTransaction.cs" />
-    <Compile Include="Linq\DefaultDataContextInfo.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="DataExtensions.cs" />

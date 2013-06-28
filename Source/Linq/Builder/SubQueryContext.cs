@@ -58,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Lambda(
 								Expression.New(
 									ne.Constructor,
-									ne.Members.Select(m => Expression.MakeMemberAccess(p, m)),
+									(IEnumerable<Expression>)ne.Members.Select(m => Expression.MakeMemberAccess(p, m)),
 									ne.Members),
 								p),
 							this);
@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.Lambda(
 								Expression.MemberInit(
 									mi.NewExpression,
-									mi.Bindings
+									(IEnumerable<MemberBinding>)mi.Bindings
 										.OfType<MemberAssignment>()
 										.Select(ma => Expression.Bind(ma.Member, Expression.MakeMemberAccess(p, ma.Member)))),
 									p),
