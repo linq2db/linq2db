@@ -54,6 +54,7 @@
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core">
@@ -196,6 +197,19 @@
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
+    <Compile Include="ServiceModel\Async\ILinqService.cs" />
+    <Compile Include="ServiceModel\Async\ILinqSoapService.cs" />
+    <Compile Include="ServiceModel\ILinqService.cs" />
+    <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="ServiceModel\LinqServiceQuery.cs" />
+    <Compile Include="ServiceModel\LinqServiceResult.cs" />
+    <Compile Include="ServiceModel\LinqServiceSerializer.cs" />
+    <Compile Include="ServiceModel\LinqSoapServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\RemoteDataContextBase.cs" />
+    <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
+    <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
+    <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
     <Compile Include="SqlBuilder\IChild.cs" />
