@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
-using JetBrains.Annotations;
 
 namespace System
 {
@@ -13,77 +9,11 @@ namespace System
 	{
 	}
 
-	[ComVisible(true)]
-	interface ICloneable
-	{
-		object Clone();
-	}
-
 	namespace Collections
 	{
-		using Generic;
-
-		public class Comparer : IComparer
-		{
-			readonly CompareInfo _compareInfo; 
-
-			public static readonly Comparer Default          = new Comparer(CultureInfo.CurrentCulture);
-			public static readonly Comparer DefaultInvariant = new Comparer(CultureInfo.InvariantCulture); 
-
-			private const String CompareInfoName = "CompareInfo";
-
-			public Comparer([NotNull] CultureInfo culture)
-			{
-				if (culture == null) throw new ArgumentNullException("culture");
-				_compareInfo = culture.CompareInfo;
-			}
-
-			public int Compare(object a, object b)
-			{
-				if (a == b)    return  0;
-				if (a == null) return -1;
-				if (b == null) return  1;
-
-				if (_compareInfo != null) {
-					var sa = a as String;
-					var sb = b as String;
-
-					if (sa != null && sb != null)
-						return _compareInfo.Compare(sa, sb);
-				} 
-
-				var ia = a as IComparable;
-
-				if (ia != null)
-					return ia.CompareTo(b);
-
-				throw new ArgumentException("Object should implement IComparable interface.");
-			}
-		}
-
-		namespace Generic
-		{
-			public static class Extensions
-			{
-				public static List<TOutput> ConvertAll<T,TOutput>(this List<T> input,  Converter<T,TOutput> converter)
-				{
-					var list = new List<TOutput>(input.Count);
-
-					list.AddRange(from T t in input select converter(t));
-
-					return list;
-				}
-
-				public static bool Exists<T>(this List<T> list, Predicate<T> match)
-				{
-					return list.Any(item => match(item));
-				}
-			}
-		}
-
 		namespace Concurrent
 		{
-			internal class ConcurrentDictionary<TKey,TValue> : Dictionary<TKey,TValue>
+			internal class ConcurrentDictionary<TKey,TValue> : Generic.Dictionary<TKey,TValue>
 			{
 				public TValue GetOrAdd(TKey key, Func<TKey,TValue> valueFactory)
 				{
@@ -103,27 +33,6 @@ namespace System
 					return resultingValue;
 				}
 			}
-		}
-	}
-
-	namespace ComponentModel
-	{
-		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Event | AttributeTargets.Class | AttributeTargets.Method)]
-		public class DisplayNameAttribute : Attribute
-		{
-			public static readonly DisplayNameAttribute Default = new DisplayNameAttribute();
-
-			public DisplayNameAttribute()
-			{
-				DisplayName = string.Empty;
-			}
- 
-			public DisplayNameAttribute(string displayName)
-			{
-				DisplayName = displayName;
-			}
-
-			public string DisplayName{ get; set; }
 		}
 	}
 
@@ -347,14 +256,6 @@ namespace System
 						s = s * t;
 					}
 				}
-			}
-		}
-
-		namespace SqlTypes
-		{
-			public interface INullable
-			{
-				bool IsNull { get; }
 			}
 		}
 

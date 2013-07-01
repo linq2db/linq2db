@@ -544,7 +544,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var expr = SqlQuery.Select.Columns[index].Expression;
 
-				if (!SqlQuery.GroupBy.Items.Exists(_ => ReferenceEquals(_, expr) || (expr is SqlQuery.Column && ReferenceEquals(_, ((SqlQuery.Column)expr).Expression))))
+				if (!SqlQuery.GroupBy.Items.Any(_ => ReferenceEquals(_, expr) || (expr is SqlQuery.Column && ReferenceEquals(_, ((SqlQuery.Column)expr).Expression))))
 					SqlQuery.GroupBy.Items.Add(expr);
 
 				return base.ConvertToParentIndex(index, this);

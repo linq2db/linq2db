@@ -500,7 +500,7 @@ namespace LinqToDB.SqlBuilder
 
 					objectTree.Add(this, clone = ts);
 
-					ts._joins.AddRange(_joins.ConvertAll(jt => (JoinedTable)jt.Clone(objectTree, doClone)));
+					ts._joins.AddRange(_joins.Select(jt => (JoinedTable)jt.Clone(objectTree, doClone)));
 				}
 
 				return clone;
@@ -1097,7 +1097,7 @@ namespace LinqToDB.SqlBuilder
 						objectTree.Add(this, clone = new InList(
 							(ISqlExpression)Expr1.Clone(objectTree, doClone),
 							IsNot,
-							_values.ConvertAll(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
+							_values.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
 					}
 
 					return clone;
@@ -1464,7 +1464,7 @@ namespace LinqToDB.SqlBuilder
 
 					objectTree.Add(this, clone = sc);
 
-					sc._conditions.AddRange(_conditions.ConvertAll(c => (Condition)c.Clone(objectTree, doClone)));
+					sc._conditions.AddRange(_conditions.Select(c => (Condition)c.Clone(objectTree, doClone)));
 				}
 
 				return clone;
@@ -1799,7 +1799,7 @@ namespace LinqToDB.SqlBuilder
 				Predicate<ICloneableElement> doClone)
 				: base(sqlQuery)
 			{
-				_columns.AddRange(clone._columns.ConvertAll(c => (Column)c.Clone(objectTree, doClone)));
+				_columns.AddRange(clone._columns.Select(c => (Column)c.Clone(objectTree, doClone)));
 				IsDistinct = clone.IsDistinct;
 				TakeValue  = clone.TakeValue == null ? null : (ISqlExpression)clone.TakeValue.Clone(objectTree, doClone);
 				SkipValue  = clone.SkipValue == null ? null : (ISqlExpression)clone.SkipValue.Clone(objectTree, doClone);
@@ -2584,7 +2584,7 @@ namespace LinqToDB.SqlBuilder
 				Predicate<ICloneableElement> doClone)
 				: base(sqlQuery)
 			{
-				_tables.AddRange(clone._tables.ConvertAll(ts => (TableSource)ts.Clone(objectTree, doClone)));
+				_tables.AddRange(clone._tables.Select(ts => (TableSource)ts.Clone(objectTree, doClone)));
 			}
 
 			internal FromClause(IEnumerable<TableSource> tables)
@@ -2918,7 +2918,7 @@ namespace LinqToDB.SqlBuilder
 				Predicate<ICloneableElement> doClone)
 				: base(sqlQuery)
 			{
-				_items.AddRange(clone._items.ConvertAll(e => (ISqlExpression)e.Clone(objectTree, doClone)));
+				_items.AddRange(clone._items.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)));
 			}
 
 			internal GroupByClause(IEnumerable<ISqlExpression> items) : base(null)
@@ -3037,7 +3037,7 @@ namespace LinqToDB.SqlBuilder
 				Predicate<ICloneableElement> doClone)
 				: base(sqlQuery)
 			{
-				_items.AddRange(clone._items.ConvertAll(item => (OrderByItem)item.Clone(objectTree, doClone)));
+				_items.AddRange(clone._items.Select(item => (OrderByItem)item.Clone(objectTree, doClone)));
 			}
 
 			internal OrderByClause(IEnumerable<OrderByItem> items) : base(null)
@@ -3311,7 +3311,7 @@ namespace LinqToDB.SqlBuilder
 						var idx = q.Select.Add(field);
 
 						if (n != q.Select.Columns.Count)
-							if (!q.GroupBy.IsEmpty || q.Select.Columns.Exists(c => IsAggregationFunction(c.Expression)))
+							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(c => IsAggregationFunction(c.Expression)))
 								q.GroupBy.Items.Add(field);
 
 						return q.Select.Columns[idx];
@@ -3919,8 +3919,8 @@ namespace LinqToDB.SqlBuilder
 				return childSource;
 
 			var isColumnsOK =
-				(allColumns && !query.Select.Columns.Exists(c => IsAggregationFunction(c.Expression))) ||
-				!query.Select.Columns.Exists(c => CheckColumn(c, c.Expression, query, optimizeValues, optimizeColumns));
+				(allColumns && !query.Select.Columns.Any(c => IsAggregationFunction(c.Expression))) ||
+				!query.Select.Columns.Any(c => CheckColumn(c, c.Expression, query, optimizeValues, optimizeColumns));
 
 			if (!isColumnsOK)
 				return childSource;
@@ -4005,7 +4005,7 @@ namespace LinqToDB.SqlBuilder
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SqlQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Exists(c => IsAggregationFunction(c.Expression));
+				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
 
 				if (isApplySupported && (isAgg || sql.Select.TakeValue != null || sql.Select.SkipValue != null))
 					return;
@@ -4548,7 +4548,7 @@ namespace LinqToDB.SqlBuilder
 			_having  = new WhereClause  (this, clone._having,  objectTree, doClone);
 			_orderBy = new OrderByClause(this, clone._orderBy, objectTree, doClone);
 
-			_parameters.AddRange(clone._parameters.ConvertAll(p => (SqlParameter)p.Clone(objectTree, doClone)));
+			_parameters.AddRange(clone._parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
 
 			new QueryVisitor().Visit(this, expr =>

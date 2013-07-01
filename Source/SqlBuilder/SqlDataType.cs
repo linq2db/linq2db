@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
+
+#if !SILVERLIGHT
+using System.Data.SqlTypes;
+#endif
 
 namespace LinqToDB.SqlBuilder
 {
@@ -331,8 +334,11 @@ namespace LinqToDB.SqlBuilder
 		public static bool CanBeNull(Type type)
 		{
 			if (type.IsValueType == false ||
-				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
-				typeof(INullable).IsSameOrParentOf(type))
+				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+#if !SILVERLIGHT
+				|| typeof(INullable).IsSameOrParentOf(type)
+#endif
+				)
 				return true;
 
 			return false;
