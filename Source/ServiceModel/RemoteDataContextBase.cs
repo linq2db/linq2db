@@ -6,10 +6,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
+	using Expressions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
