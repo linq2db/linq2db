@@ -870,6 +870,9 @@ namespace LinqToDB.Linq
 							ei.Queries[0].Parameters.Add(param);
 
 							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+
+							if (field.Nullable)
+								sqlQuery.IsParameterDependent = true;
 						}
 
 						ei.SetNonQueryQuery();
@@ -922,6 +925,9 @@ namespace LinqToDB.Linq
 							ei.Queries[0].Parameters.Add(param);
 
 							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+
+							if (field.Nullable)
+								sqlQuery.IsParameterDependent = true;
 						}
 
 						ei.SetNonQueryQuery();

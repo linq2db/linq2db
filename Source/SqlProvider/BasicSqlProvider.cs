@@ -943,9 +943,9 @@ namespace LinqToDB.SqlProvider
 								{
 									ISqlExpression e = null;
 
-									if (expr.Expr1 is SqlValue && ((SqlValue)expr.Expr1).Value == null)
+									if (expr.Expr1 is IValueContainer && ((IValueContainer)expr.Expr1).Value == null)
 										e = expr.Expr2;
-									else if (expr.Expr2 is SqlValue && ((SqlValue)expr.Expr2).Value == null)
+									else if (expr.Expr2 is IValueContainer && ((IValueContainer)expr.Expr2).Value == null)
 										e = expr.Expr1;
 
 									if (e != null)
