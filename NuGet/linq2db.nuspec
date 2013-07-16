@@ -13,8 +13,7 @@
 		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
 		<summary />
 		<tags>
-			linq linq2db LinqToDB ORM database DB SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
-			Oracle ODP PostgreSQL DB2 Informix
+			linq linq2db LinqToDB ORM database DB SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix
 		</tags>
 	</metadata>
 	<files>
