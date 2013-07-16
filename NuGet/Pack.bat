@@ -25,5 +25,6 @@ del *.nupkg
 ..\Redist\NuGet Pack linq2db.Oracle.x64.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.Managed.nuspec
 ..\Redist\NuGet Pack linq2db.DB2.nuspec
+..\Redist\NuGet Pack linq2db.Informix.nuspec
 
 del *.ttinclude

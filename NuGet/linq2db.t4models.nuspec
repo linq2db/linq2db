@@ -32,6 +32,7 @@
 		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"    target="content\LinqToDB.Templates" />
 		<file src="..\Templates\LinqToDB.Sybase.ttinclude"       target="content\LinqToDB.Templates" />
 		<file src="..\Templates\LinqToDB.DB2.ttinclude"          target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Informix.ttinclude"     target="content\LinqToDB.Templates" />
 		<file src="..\Templates\LinqToDB.ttinclude"              target="content\LinqToDB.Templates" />
 		<file src="..\Templates\NotifyPropertyChanged.ttinclude" target="content\LinqToDB.Templates" />
 		<file src="..\Templates\PluralizationService.ttinclude"  target="content\LinqToDB.Templates" />

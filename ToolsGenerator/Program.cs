@@ -43,17 +43,11 @@ namespace ToolsGenerator
 			CreateProviderFile (nugetDir, "SqlServer",                "Microsoft.SqlServer.Types.dll");
 			CreateProviderFile (nugetDir, "Sybase",                   "Sybase.AdoNet2.AseClient.dll");
 			CreateProviderFile (nugetDir, "DB2",                      "IBM.Data.DB2.dll");
+			CreateProviderFile (nugetDir, "Informix",                 "IBM.Data.Informix.dll");
 			CreateProviderFile (nugetDir, "PostgreSQL",               "Npgsql.dll", "Mono.Security.dll");
 
 			CreateProviderFile(nugetDir, "SqlCe",
 				@"<#@ assembly name=""$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll"" #>");
-
-			/*
-copy /b AddTool.SQLite.txt         + ..\Templates\LinqToDB.SQLite.ttinclude     LinqToDB.SQLite.ttinclude
-copy /b AddTool.PostgreSQL.txt     + ..\Templates\LinqToDB.PostgreSQL.ttinclude LinqToDB.PostgreSQL.ttinclude
-copy /b AddTool.SqlServer.txt      + ..\Templates\LinqToDB.SqlServer.ttinclude  LinqToDB.SqlServer.ttinclude
-copy /b AddTool.Sybase.txt         + ..\Templates\LinqToDB.Sybase.ttinclude     LinqToDB.Sybase.ttinclude
-			 */
 
 			return 0;
 		}

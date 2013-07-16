@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.MySql</id>
-		<version>0.1.0</version>
+		<version>0.1.2</version>
 		<title>LINQ to MySql</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -23,7 +23,7 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll" target="tools" />
+		<file src="..\packages\MySql.Data.6.7.4\lib\net40\MySql.Data.dll" target="tools" />
 		<file src="LinqToDB.MySql.Tools.ttinclude"                        target="content\LinqToDB.Templates" />
 		<file src="CopyMe.MySql.tt.txt"                                   target="content\LinqToDB.Templates" />
 	</files>
