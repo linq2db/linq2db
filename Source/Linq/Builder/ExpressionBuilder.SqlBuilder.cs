@@ -511,19 +511,13 @@ namespace LinqToDB.Linq.Builder
 						return expr.Arguments
 							.Select((arg,i) =>
 							{
-								var info = ConvertExpressions(context, arg, queryConvertFlag)[0];
-								//var sql = ConvertToSql(context, arg);
-								var mi   = expr.Members[i];
-
+								var mi = expr.Members[i];
 								if (mi is MethodInfo)
 									mi = ((MethodInfo)mi).GetPropertyInfo();
 
-								//return new SqlInfo { Sql = sql, Member = mi };
-
-								info.Member = mi;
-
-								return info;
+								return ConvertExpressions(context, arg, queryConvertFlag).Select(si => si.Clone(mi));
 							})
+							.SelectMany(si => si)
 							.ToArray();
 					}
 
@@ -540,19 +534,13 @@ namespace LinqToDB.Linq.Builder
 							.OrderBy(b => dic[b.Member])
 							.Select (a =>
 							{
-								var info = ConvertExpressions(context, a.Expression, queryConvertFlag)[0];
-								//var sql = ConvertToSql(context, a.Expression);
-								var mi  = a.Member;
-
+								var mi = a.Member;
 								if (mi is MethodInfo)
 									mi = ((MethodInfo)mi).GetPropertyInfo();
 
-								//return new SqlInfo { Sql = sql, Member = mi };
-
-								info.Member = mi;
-
-								return info;
+								return ConvertExpressions(context, a.Expression, queryConvertFlag).Select(si => si.Clone(mi));
 							})
+							.SelectMany(si => si)
 							.ToArray();
 					}
 			}
@@ -1568,10 +1556,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				isNull = right is ConstantExpression && ((ConstantExpression)right).Value == null;
-				lcols  =
-					(from m in lmembers
-					select new { sql = ConvertToSql(leftContext, m.Value), member = m.Key } into mm
-					select new SqlInfo { Sql = mm.sql, Member = mm.member }).ToArray();
+				lcols  = lmembers.Select(m => new SqlInfo(m.Key) { Sql = ConvertToSql(leftContext, m.Value) }).ToArray();
 			}
 			else
 			{
@@ -1605,21 +1590,23 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var lcol in lcols)
 			{
-				if (lcol.Member == null)
+				if (lcol.Members.Count == 0)
 					throw new InvalidOperationException();
 
 				ISqlExpression rcol = null;
 
+				var lmember = lcol.Members[lcol.Members.Count - 1];
+
 				if (sr)
 				{
-					var info = rightContext.ConvertToSql(Expression.MakeMemberAccess(right, lcol.Member), 0, ConvertFlags.Field).Single();
+					var info = rightContext.ConvertToSql(Expression.MakeMemberAccess(right, lmember), 0, ConvertFlags.Field).Single();
 					rcol = info.Sql;
 				}
 				else
 				{
 					if (rmembers.Count != 0)
 					{
-						var info = rightContext.ConvertToSql(rmembers[lcol.Member], 0, ConvertFlags.Field)[0];
+						var info = rightContext.ConvertToSql(rmembers[lmember], 0, ConvertFlags.Field)[0];
 						rcol = info.Sql;
 					}
 				}
@@ -1627,7 +1614,7 @@ namespace LinqToDB.Linq.Builder
 				var rex =
 					isNull ?
 						MappingSchema.GetSqlValue(right.Type, null) :
-						rcol ?? GetParameter(right, lcol.Member);
+						rcol ?? GetParameter(right, lmember);
 
 				var predicate = Convert(leftContext, new SqlQuery.Predicate.ExprExpr(
 					lcol.Sql,
@@ -1791,11 +1778,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = ConvertExpressions(context, arg, ConvertFlags.Key);
 
-				if (sql.Length == 1 && sql[0].Member == null)
+				if (sql.Length == 1 && sql[0].Members.Count == 0)
 					expr = sql[0].Sql;
 				else
 					expr = new SqlExpression(
-						"\x1" + string.Join(",", sql.Select(s => s.Member.Name).ToArray()),
+						"\x1" + string.Join(",", sql.Select(s => s.Members[s.Members.Count - 1].Name).ToArray()),
 						sql.Select(s => s.Sql).ToArray());
 			}
 

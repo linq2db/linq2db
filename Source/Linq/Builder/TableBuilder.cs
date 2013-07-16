@@ -469,7 +469,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (table.Field == null)
 								return table.Table.SqlTable.Fields.Values
-									.Select(f => new SqlInfo { Sql = f, Member = f.ColumnDescriptor.MemberInfo })
+									.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f })
 									.ToArray();
 
 							break;
@@ -485,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 									from f in table.Table.SqlTable.Fields.Values
 									where f.IsPrimaryKey
 									orderby f.PrimaryKeyOrder
-									select new SqlInfo { Sql = f, Member = f.ColumnDescriptor.MemberInfo };
+									select new SqlInfo(f.ColumnDescriptor.MemberInfo) { Sql = f };
 
 								var key = q.ToArray();
 
@@ -502,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 							if (table.Field != null)
 								return new[]
 								{
-									new SqlInfo { Sql = table.Field, Member = table.Field.ColumnDescriptor.MemberInfo }
+									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
 							break;

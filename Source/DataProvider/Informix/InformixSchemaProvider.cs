@@ -345,7 +345,7 @@ namespace LinqToDB.DataProvider.Informix
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value1 = rd["ThisCol" + (i + 1)];
+							var value1 = rd["ThisCol"  + (i + 1)];
 							var value2 = rd["OtherCol" + (i + 1)];
 
 							arr[i] = new[]

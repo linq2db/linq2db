@@ -189,11 +189,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var n = SqlQuery.Select.Add(idx.Sql);
 
-						return new SqlInfo
+						return new SqlInfo(idx.Members)
 						{
-							Sql    = SqlQuery.Select.Columns[n],
-							Member = idx.Member,
-							Index  = n
+							Sql   = SqlQuery.Select.Columns[n],
+							Index = n
 						};
 					})
 					.ToArray();
