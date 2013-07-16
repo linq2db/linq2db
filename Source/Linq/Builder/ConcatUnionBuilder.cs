@@ -101,8 +101,8 @@ namespace LinqToDB.Linq.Builder
 						MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Member)
 					};
 
-					if (sequence1.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-						throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
+					//if (sequence1.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
+					//	throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
 
 					members.Add(new UnionMember { Member = member, Info1 = info });
 				}
@@ -114,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 
 					var em = members.FirstOrDefault(m =>
 						m.Member.SequenceInfo != null &&
-						m.Member.SequenceInfo.Member == info.Member);
+						m.Member.SequenceInfo.Member.EqualsTo(info.Member));
 
 					if (em == null)
 					{
@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 					//member.Info1.Index = i;
 					//member.Info2.Index = i;
 
-					_members.Add(member.Member.MemberExpression.Member, member.Member);
+					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
 
 				foreach (var key in sequence1.ColumnIndexes.Keys.ToList())

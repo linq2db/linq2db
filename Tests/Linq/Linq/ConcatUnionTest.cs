@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
+
 	using Model;
 
 	[TestFixture]
@@ -491,6 +493,135 @@ namespace Tests.Linq
 					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,           ch = (Child)null }).Union(
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent)null, ch = p2.Children.First() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
+		}
+
+		[Test]
+		public void ObjectUnion1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
+					(from p2 in    Parent where p2.ParentID <= 3 select p2)),
+					(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select p2)));
+		}
+
+		//////[Test]
+		public void ObjectUnion2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
+					(from p2 in    Parent where p2.ParentID <= 3 select (Parent)null)),
+					(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent)null)));
+		}
+
+		[Test]
+		public void ObjectUnion3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p1 in    Parent where p1.ParentID >  3 select new { p = p1 }).Union(
+					(from p2 in    Parent where p2.ParentID <= 3 select new { p = p2 })),
+					(from p1 in db.Parent where p1.ParentID >  3 select new { p = p1 }).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = p2 })));
+		}
+
+		//////[Test]
+		public void ObjectUnion4([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
+					(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })),
+					(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, p1.ParentID } }).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, p2.ParentID } })));
+		}
+
+		//////[Test]
+		public void ObjectUnion5([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p1 in    Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
+					(from p2 in    Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })),
+					(from p1 in db.Parent where p1.ParentID >  3 select new { p = new { p = p1, ParentID = p1.ParentID + 1 } }).Union(
+					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
+		}
+
+		[Test]
+		public void ObjectUnion()
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q1 =
+					from p in db.Product
+					join c in db.Category on p.CategoryID equals c.CategoryID into g
+					from c in g.DefaultIfEmpty()
+					select new
+					{
+						p,
+						c.CategoryName,
+						p.ProductName
+					};
+
+				var q2 =
+					from p in db.Product
+					join c in db.Category on p.CategoryID equals c.CategoryID into g
+					from c in g.DefaultIfEmpty()
+					select new
+					{
+						p,
+						c.CategoryName,
+						p.ProductName
+					};
+
+				var q = q1.Union(q2).Take(5);
+
+				foreach (var item in q)
+				{
+					Console.WriteLine(item);
+				}
+			}
+		}
+
+		public class TestEntity1 { public int Id; public string Field1; }
+		public class TestEntity2 { public int Id; public string Field1; }
+
+		[Test]
+		public void Concat90()
+		{
+			using(var context = new TestDataConnection())
+			{
+				var join1 =
+					from t1 in context.GetTable<TestEntity1>()
+					join t2 in context.GetTable<TestEntity2>()
+						on t1.Id equals t2.Id
+					into tmp
+					from t2 in tmp.DefaultIfEmpty()
+					select new { t1, t2 };
+
+				var join1Sql = join1.ToString();
+				Assert.IsNotNull(join1Sql);
+
+				var join2 =
+					from t2 in context.GetTable<TestEntity2>()
+					join t1 in context.GetTable<TestEntity1>()
+						on t2.Id equals t1.Id
+					into tmp
+					from t1 in tmp.DefaultIfEmpty()
+					where t1 == null
+					select new { t1, t2 };
+
+				var join2Sql = join2.ToString();
+				Assert.IsNotNull(join2Sql);
+
+				var fullJoin = join1.Concat(join2);
+
+				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
+				Assert.IsNotNull(fullJoinSql);
+			}
 		}
 	}
 }
