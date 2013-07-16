@@ -5,11 +5,12 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
-namespace DB2DataContext
+namespace InformixDataContext
 {
 	/// <summary>
 	/// Database       : TestData
@@ -42,26 +43,26 @@ namespace DB2DataContext
 	[Table("alltypes")]
 	public partial class alltype
 	{
-		[Identity          ] public int       id               { get; set; } // SERIAL
-		[Column,   Nullable] public long?     bigintdatatype   { get; set; } // BIGINT
-		[Column,   Nullable] public long?     int8datatype     { get; set; } // INT8
-		[Column,   Nullable] public int?      intdatatype      { get; set; } // INTEGER
-		[Column,   Nullable] public short?    smallintdatatype { get; set; } // SMALLINT
-		[Column,   Nullable] public decimal?  decimaldatatype  { get; set; } // DECIMAL
-		[Column,   Nullable] public decimal?  moneydatatype    { get; set; } // MONEY(16,2)
-		[Column,   Nullable] public float?    realdatatype     { get; set; } // SMALLFLOAT
-		[Column,   Nullable] public double?   floatdatatype    { get; set; } // FLOAT
-		[Column,   Nullable] public bool?     booldatatype     { get; set; } // BOOLEAN
-		[Column,   Nullable] public char?     chardatatype     { get; set; } // CHAR(1)
-		[Column,   Nullable] public string    varchardatatype  { get; set; } // VARCHAR(10)
-		[Column,   Nullable] public string    nchardatatype    { get; set; } // NCHAR(10)
-		[Column,   Nullable] public string    nvarchardatatype { get; set; } // NVARCHAR(10)
-		[Column,   Nullable] public string    lvarchardatatype { get; set; } // LVARCHAR(10)
-		[Column,   Nullable] public string    textdatatype     { get; set; } // TEXT
-		[Column,   Nullable] public DateTime? datedatatype     { get; set; } // DATE
-		[Column,   Nullable] public DateTime? datetimedatatype { get; set; } // DATETIME YEAR TO SECOND
-		[Column,   Nullable] public TimeSpan? intervaldatatype { get; set; } // INTERVAL HOUR TO SECOND
-		[Column,   Nullable] public byte[]    bytedatatype     { get; set; } // BYTE
+		[PrimaryKey, Identity] public int       id               { get; set; } // SERIAL
+		[Column,     Nullable] public long?     bigintdatatype   { get; set; } // BIGINT
+		[Column,     Nullable] public long?     int8datatype     { get; set; } // INT8
+		[Column,     Nullable] public int?      intdatatype      { get; set; } // INTEGER
+		[Column,     Nullable] public short?    smallintdatatype { get; set; } // SMALLINT
+		[Column,     Nullable] public decimal?  decimaldatatype  { get; set; } // DECIMAL
+		[Column,     Nullable] public decimal?  moneydatatype    { get; set; } // MONEY(16,2)
+		[Column,     Nullable] public float?    realdatatype     { get; set; } // SMALLFLOAT
+		[Column,     Nullable] public double?   floatdatatype    { get; set; } // FLOAT
+		[Column,     Nullable] public bool?     booldatatype     { get; set; } // BOOLEAN
+		[Column,     Nullable] public char?     chardatatype     { get; set; } // CHAR(1)
+		[Column,     Nullable] public string    varchardatatype  { get; set; } // VARCHAR(10)
+		[Column,     Nullable] public string    nchardatatype    { get; set; } // NCHAR(10)
+		[Column,     Nullable] public string    nvarchardatatype { get; set; } // NVARCHAR(10)
+		[Column,     Nullable] public string    lvarchardatatype { get; set; } // LVARCHAR(10)
+		[Column,     Nullable] public string    textdatatype     { get; set; } // TEXT
+		[Column,     Nullable] public DateTime? datedatatype     { get; set; } // DATE
+		[Column,     Nullable] public DateTime? datetimedatatype { get; set; } // DATETIME YEAR TO SECOND
+		[Column,     Nullable] public TimeSpan? intervaldatatype { get; set; } // INTERVAL HOUR TO SECOND
+		[Column,     Nullable] public byte[]    bytedatatype     { get; set; } // BYTE
 	}
 
 	[Table("child")]
@@ -76,6 +77,16 @@ namespace DB2DataContext
 	{
 		[Column, NotNull] public int    personid { get; set; } // INTEGER
 		[Column, NotNull] public string taxonomy { get; set; } // NVARCHAR(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_doctor_person
+		/// </summary>
+		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=false)]
+		public person person { get; set; }
+
+		#endregion
 	}
 
 	[Table("grandchild")]
@@ -118,11 +129,21 @@ namespace DB2DataContext
 	[Table("person")]
 	public partial class person
 	{
-		[Identity             ] public int    personid   { get; set; } // SERIAL
-		[Column,   NotNull    ] public string firstname  { get; set; } // NVARCHAR(50)
-		[Column,   NotNull    ] public string lastname   { get; set; } // NVARCHAR(50)
-		[Column,      Nullable] public string middlename { get; set; } // NVARCHAR(50)
-		[Column,   NotNull    ] public char   gender     { get; set; } // CHAR(1)
+		[PrimaryKey, Identity   ] public int    personid   { get; set; } // SERIAL
+		[Column,     NotNull    ] public string firstname  { get; set; } // NVARCHAR(50)
+		[Column,     NotNull    ] public string lastname   { get; set; } // NVARCHAR(50)
+		[Column,        Nullable] public string middlename { get; set; } // NVARCHAR(50)
+		[Column,     NotNull    ] public char   gender     { get; set; } // CHAR(1)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_doctor_person_BackReference
+		/// </summary>
+		[Association(ThisKey="personid", OtherKey="personid", CanBeNull=false)]
+		public IEnumerable<doctor> doctors { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -139,6 +160,6 @@ namespace DB2DataContext
 	[Table("testidentity")]
 	public partial class testidentity
 	{
-		[Identity] public int id { get; set; } // SERIAL
+		[PrimaryKey, Identity] public int id { get; set; } // SERIAL
 	}
 }

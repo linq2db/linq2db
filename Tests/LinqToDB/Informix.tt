@@ -5,7 +5,7 @@
 <#@ assembly name="E:\Projects\Git\linq2db\Redist\IBM\IBM.Data.Informix.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll"     #>
 <#
-	NamespaceName = "DB2DataContext";
+	NamespaceName = "InformixDataContext";
 
 	LoadInformixMetadata("DBHost", "9088", "ol_informix1170", "TestData", "informix", "TestPassword");
 	GenerateModel();
