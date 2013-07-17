@@ -27,8 +27,14 @@ namespace LinqToDB.Mapping
 		}
 
 		internal ColumnAttribute(string memberName, ColumnAttribute ca)
+			: this(ca)
 		{
-			MemberName      = memberName + "." + ca.MemberName.TrimStart('.');
+			MemberName = memberName + "." + ca.MemberName.TrimStart('.');
+		}
+
+		internal ColumnAttribute(ColumnAttribute ca)
+		{
+			MemberName      = ca.MemberName;
 			Configuration   = ca.Configuration;
 			Name            = ca.Name;
 			DataType        = ca.DataType;

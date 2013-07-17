@@ -21,8 +21,9 @@ namespace LinqToDB.SqlBuilder
 		internal SqlTable(
 			int id, string name, string alias, string database, string owner, string physicalName, Type objectType,
 			SequenceNameAttribute[] sequenceAttributes,
-			SqlField[] fields,
-			SqlTableType sqlTableType, ISqlExpression[] tableArguments)
+			SqlField[]              fields,
+			SqlTableType            sqlTableType,
+			ISqlExpression[]        tableArguments)
 		{
 			_sourceID          = id;
 			Name               = name;

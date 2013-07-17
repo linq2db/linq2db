@@ -38,19 +38,20 @@ namespace LinqToDB.Mapping
 		{
 			var ta = _mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
-			if (ta == null)
-			{
-				TableName = TypeAccessor.Type.Name;
-
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
-					TableName = TableName.Substring(1);
-			}
-			else
+			if (ta != null)
 			{
 				TableName                 = ta.Name;
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
+			}
+
+			if (TableName == null)
+			{
+				TableName = TypeAccessor.Type.Name;
+
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+					TableName = TableName.Substring(1);
 			}
 
 			var attrs = new List<ColumnAttribute>();

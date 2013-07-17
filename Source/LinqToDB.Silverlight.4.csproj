@@ -182,6 +182,8 @@
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
+    <Compile Include="Mapping\EntityMappingBuilder.cs" />
+    <Compile Include="Mapping\FluentMappingBuilder.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs" />
     <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
@@ -195,11 +197,13 @@
     <Compile Include="Mapping\NotNullAttribute.cs" />
     <Compile Include="Mapping\NullableAttribute.cs" />
     <Compile Include="Mapping\PrimaryKeyAttribute.cs" />
+    <Compile Include="Mapping\PropertyMappingBuilder.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
+    <Compile Include="Metadata\FluentMetadataReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
     <Compile Include="Metadata\MetadataException.cs" />
     <Compile Include="Metadata\MetadataReader.cs" />

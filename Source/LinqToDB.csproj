@@ -146,6 +146,8 @@
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="DataProvider\ReaderInfo.cs" />
+    <Compile Include="Mapping\EntityMappingBuilder.cs" />
+    <Compile Include="Mapping\FluentMappingBuilder.cs" />
     <Compile Include="Mapping\NotColumnAttribute.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Common\Option.cs" />
@@ -178,10 +180,12 @@
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Mapping\MapValueAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
+    <Compile Include="Mapping\PropertyMappingBuilder.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
+    <Compile Include="Metadata\FluentMetadataReader.cs" />
     <Compile Include="Metadata\IMetadataReader.cs" />
     <Compile Include="Metadata\MetaMemberInfo.cs" />
     <Compile Include="Metadata\MetadataException.cs" />

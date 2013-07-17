@@ -149,7 +149,7 @@ namespace LinqToDB.Metadata
 			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
 				return t.GetAttribute(typeof(T)).Select(a => (T) a.MakeAttribute(typeof(T))).ToArray();
 
-			return new T[0];
+			return Array<T>.Empty;
 		}
 
 		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
@@ -169,7 +169,7 @@ namespace LinqToDB.Metadata
 				}
 			}
 
-			return new T[0];
+			return Array<T>.Empty;
 		}
 	}
 }

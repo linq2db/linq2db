@@ -259,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 				var arg = call.Arguments[0];
 
 				if (AggregationBuilder.MethodNames.Contains(call.Method.Name))
-					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression) arg).Method.Name == "Select")
+					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
 						arg = ((MethodCallExpression)arg).Arguments[0];
 
 				var mc = arg as MethodCallExpression;

@@ -208,6 +208,7 @@
     <Compile Include="Data\ProcedureTest.cs" />
     <Compile Include="Linq\EnumMapping.cs" />
     <Compile Include="Linq\ExplicitInterfaceTest.cs" />
+    <Compile Include="Mapping\FluentMappingTest.cs" />
     <Compile Include="SchemaProvider\SchemaProviderTest.cs" />
     <Compile Include="DataProvider\SybaseTest.cs" />
     <Compile Include="DataProvider\SQLiteTest.cs" />

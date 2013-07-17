@@ -452,8 +452,17 @@ namespace LinqToDB.Mapping
 
 		public IMetadataReader MetadataReader
 		{
-			get { return _schemas[0].MetadataReader;  }
-			set { _schemas[0].MetadataReader = value; }
+			get { return _schemas[0].MetadataReader; }
+			set
+			{
+				_schemas[0].MetadataReader = value;
+				_metadataReaders = null;
+			}
+		}
+
+		public void AddMetadataReader(IMetadataReader reader)
+		{
+			MetadataReader = MetadataReader == null ? reader : new MetadataReader(reader, MetadataReader);
 		}
 
 		IMetadataReader[] _metadataReaders;
@@ -553,6 +562,11 @@ namespace LinqToDB.Mapping
 		{
 			var attrs = GetAttributes(memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return new FluentMappingBuilder(this);
 		}
 
 		#endregion
