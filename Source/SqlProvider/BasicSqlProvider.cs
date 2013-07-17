@@ -192,11 +192,17 @@ namespace LinqToDB.SqlProvider
 		{
 			if (database != null)
 			{
-				if (owner == null)  sb.Append(database).Append("..");
-				else                sb.Append(database).Append(".").Append(owner).Append(".");
+				database = Convert(database, ConvertType.NameToDatabase).ToString();
+				if (owner == null) sb.Append(database).Append("..");
+				else
+				{
+					owner = Convert(owner, ConvertType.NameToOwner).ToString();
+					sb.Append(database).Append(".").Append(owner).Append(".");
+				}
 			}
 			else if (owner != null) sb.Append(owner).Append(".");
 
+			table = Convert(table, ConvertType.NameToQueryTable).ToString();
 			return sb.Append(table);
 		}
 
