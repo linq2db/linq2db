@@ -190,14 +190,20 @@ namespace LinqToDB.SqlProvider
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
-			if (database != null)
-			{
-				if (owner == null)  sb.Append(database).Append("..");
-				else                sb.Append(database).Append(".").Append(owner).Append(".");
-			}
-			else if (owner != null) sb.Append(owner).Append(".");
+		    if (database != null)
+		    {
+			   database = Convert(database, ConvertType.NameToDatabase).ToString();
+			   if (owner == null) sb.Append(database).Append("..");
+			   else
+			   {
+				  owner = Convert(owner, ConvertType.NameToOwner).ToString();
+				  sb.Append(database).Append(".").Append(owner).Append(".");
+			   }
+		    }
+		    else if (owner != null) sb.Append(owner).Append(".");
 
-			return sb.Append(table);
+		    table = Convert(table, ConvertType.NameToQueryTable).ToString();
+		    return sb.Append(table);
 		}
 
 		public virtual object Convert(object value, ConvertType convertType)
