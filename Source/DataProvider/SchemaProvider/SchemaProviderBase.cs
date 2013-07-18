@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.SchemaProvider
 	using Common;
 	using Data;
 
+	using SqlProvider;
+
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
 		[DebuggerDisplay("TypeName = {TypeName}, DataType = {DataType}, CreateFormat = {CreateFormat}, CreateParameters = {CreateParameters}")]
@@ -310,9 +312,13 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					{
 						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 						{
-							var commandText = sqlProvider.BuildTableName(
-								new StringBuilder(),
-								procedure.CatalogName, procedure.SchemaName, procedure.ProcedureName).ToString();
+							var commandText = sqlProvider
+								.BuildTableName(
+									new StringBuilder(),
+									sqlProvider.Convert(procedure.CatalogName,   ConvertType.NameToDatabase).  ToString(),
+									sqlProvider.Convert(procedure.SchemaName,    ConvertType.NameToOwner).     ToString(),
+									sqlProvider.Convert(procedure.ProcedureName, ConvertType.NameToQueryTable).ToString())
+								.ToString();
 
 							CommandType     commandType;
 							DataParameter[] parameters;

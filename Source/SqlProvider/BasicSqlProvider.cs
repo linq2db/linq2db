@@ -190,20 +190,14 @@ namespace LinqToDB.SqlProvider
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
-		    if (database != null)
-		    {
-			   database = Convert(database, ConvertType.NameToDatabase).ToString();
-			   if (owner == null) sb.Append(database).Append("..");
-			   else
-			   {
-				  owner = Convert(owner, ConvertType.NameToOwner).ToString();
-				  sb.Append(database).Append(".").Append(owner).Append(".");
-			   }
-		    }
-		    else if (owner != null) sb.Append(owner).Append(".");
+			if (database != null)
+			{
+				if (owner == null)  sb.Append(database).Append("..");
+				else                sb.Append(database).Append(".").Append(owner).Append(".");
+			}
+			else if (owner != null) sb.Append(owner).Append(".");
 
-		    table = Convert(table, ConvertType.NameToQueryTable).ToString();
-		    return sb.Append(table);
+			return sb.Append(table);
 		}
 
 		public virtual object Convert(object value, ConvertType convertType)
@@ -601,7 +595,7 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.SqlTable    :
 				case QueryElementType.TableSource :
-					sb.Append(GetTablePhysicalName(table, alias));
+					sb.Append(GetPhysicalTableName(table, alias));
 					break;
 
 				case QueryElementType.SqlQuery    :
@@ -1354,7 +1348,7 @@ namespace LinqToDB.SqlProvider
 								var table = GetTableAlias(ts);
 
 								table = table == null ?
-									GetTablePhysicalName(field.Table, null) :
+									GetPhysicalTableName(field.Table, null) :
 									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
 
 								if (string.IsNullOrEmpty(table))
@@ -1392,7 +1386,7 @@ namespace LinqToDB.SqlProvider
 							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
-						var tableAlias = GetTableAlias(table) ?? GetTablePhysicalName(column.Parent, null);
+						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(column.Parent, null);
 
 						if (string.IsNullOrEmpty(tableAlias))
 							throw new SqlException("Table {0} should have an alias.", column.Parent);
@@ -2340,7 +2334,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		string GetTablePhysicalName(ISqlTableSource table, string alias)
+		string GetPhysicalTableName(ISqlTableSource table, string alias)
 		{
 			switch (table.ElementType)
 			{
@@ -2408,7 +2402,7 @@ namespace LinqToDB.SqlProvider
 					}
 
 				case QueryElementType.TableSource :
-					return GetTablePhysicalName(((SqlQuery.TableSource)table).Source, alias);
+					return GetPhysicalTableName(((SqlQuery.TableSource)table).Source, alias);
 
 				default :
 					throw new InvalidOperationException();
