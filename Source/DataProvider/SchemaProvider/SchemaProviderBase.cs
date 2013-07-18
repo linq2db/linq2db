@@ -312,13 +312,10 @@ namespace LinqToDB.DataProvider.SchemaProvider
 					{
 						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 						{
-							var commandText = sqlProvider
-								.BuildTableName(
-									new StringBuilder(),
-									sqlProvider.Convert(procedure.CatalogName,   ConvertType.NameToDatabase).  ToString(),
-									sqlProvider.Convert(procedure.SchemaName,    ConvertType.NameToOwner).     ToString(),
-									sqlProvider.Convert(procedure.ProcedureName, ConvertType.NameToQueryTable).ToString())
-								.ToString();
+							var catalog     = procedure.CatalogName   == null ? null : sqlProvider.Convert(procedure.CatalogName,   ConvertType.NameToDatabase).  ToString();
+							var schema      = procedure.SchemaName    == null ? null : sqlProvider.Convert(procedure.SchemaName,    ConvertType.NameToOwner).     ToString();
+							var procName    = procedure.ProcedureName == null ? null : sqlProvider.Convert(procedure.ProcedureName, ConvertType.NameToQueryTable).ToString();
+							var commandText = sqlProvider.BuildTableName(new StringBuilder(), catalog, schema, procName).ToString();
 
 							CommandType     commandType;
 							DataParameter[] parameters;
