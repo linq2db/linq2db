@@ -30,3 +30,4 @@ Tests/Linq/UserDataProviders.txt
 NuGet/*.nupkg
 !*.dll
 !*.exe
+!*.pdb
