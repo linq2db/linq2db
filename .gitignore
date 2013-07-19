@@ -32,3 +32,4 @@ Tests/T4Model.Silverlight.Web/ClientBin/
 NuGet/*.nupkg
 !*.exe
 !*.dll
+!*.pdb
