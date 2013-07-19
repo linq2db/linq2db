@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Text;
 
 namespace LinqToDB.SqlBuilder
@@ -18,7 +17,7 @@ namespace LinqToDB.SqlBuilder
 			Name             = name;
 			SystemType       = systemType;
 			_value           = value;
-			DbType           = DbType.Object;
+			DataType         = DataType.Undefined;
 		}
 
 		public SqlParameter(Type systemType, string name, object value, Converter<object,object> valueConverter)
@@ -27,13 +26,13 @@ namespace LinqToDB.SqlBuilder
 			_valueConverter = valueConverter;
 		}
 
-		public string Name             { get; set; }
-		public Type   SystemType       { get; set; }
-		public bool   IsQueryParameter { get; set; }
-		public DbType DbType           { get; set; }
-		public int    DbSize           { get; set; }
-		public string LikeStart        { get; set; }
-		public string LikeEnd          { get; set; }
+		public string   Name             { get; set; }
+		public Type     SystemType       { get; set; }
+		public bool     IsQueryParameter { get; set; }
+		public DataType DataType         { get; set; }
+		public int      DbSize           { get; set; }
+		public string   LikeStart        { get; set; }
+		public string   LikeEnd          { get; set; }
 
 		private object _value;
 		public  object  Value
@@ -202,7 +201,7 @@ namespace LinqToDB.SqlBuilder
 				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
 					{
 						IsQueryParameter = IsQueryParameter,
-						DbType           = DbType,
+						DataType           = DataType,
 						DbSize           = DbSize,
 						LikeStart        = LikeStart,
 						LikeEnd          = LikeEnd,

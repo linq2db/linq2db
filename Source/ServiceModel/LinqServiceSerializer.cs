@@ -564,7 +564,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
-							Append((int)elem.DbType);
+							Append((int)elem.DataType);
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
@@ -1073,7 +1073,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var dbType           = (DbType)ReadInt();
+							var dbType           = (DataType)ReadInt();
 							var dbSize           = ReadInt();
 							var likeStart = ReadString();
 							var likeEnd   = ReadString();
@@ -1098,7 +1098,7 @@ namespace LinqToDB.ServiceModel
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								DbType           = dbType,
+								DataType         = dbType,
 								DbSize           = dbSize,
 								//EnumTypes        = enumTypes,
 								//TakeValues       = takeValues,

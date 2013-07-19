@@ -139,42 +139,14 @@ namespace LinqToDB.Data
 		{
 			var p = Command.CreateParameter();
 
-			DataType dataType;
+			var dataType = parm.DataType;
 
-			switch (parm.DbType)
+			if (dataType == DataType.Undefined)
 			{
-				case DbType.AnsiString            : dataType = DataType.VarChar;        break;
-				case DbType.Binary                : dataType = DataType.VarBinary;      break;
-				case DbType.Byte                  : dataType = DataType.Byte;           break;
-				case DbType.Boolean               : dataType = DataType.Boolean;        break;
-				case DbType.Currency              : dataType = DataType.Money;          break;
-				case DbType.Date                  : dataType = DataType.Date;           break;
-				case DbType.DateTime              : dataType = DataType.DateTime;       break;
-				case DbType.Decimal               : dataType = DataType.Decimal;        break;
-				case DbType.Double                : dataType = DataType.Double;         break;
-				case DbType.Guid                  : dataType = DataType.Guid;           break;
-				case DbType.Int16                 : dataType = DataType.Int16;          break;
-				case DbType.Int32                 : dataType = DataType.Int32;          break;
-				case DbType.Int64                 : dataType = DataType.Int64;          break;
-				case DbType.SByte                 : dataType = DataType.SByte;          break;
-				case DbType.Single                : dataType = DataType.Single;         break;
-				case DbType.String                : dataType = DataType.NVarChar;       break;
-				case DbType.Time                  : dataType = DataType.Time;           break;
-				case DbType.UInt16                : dataType = DataType.UInt16;         break;
-				case DbType.UInt32                : dataType = DataType.UInt32;         break;
-				case DbType.UInt64                : dataType = DataType.UInt64;         break;
-				case DbType.VarNumeric            : dataType = DataType.VarNumeric;     break;
-				case DbType.AnsiStringFixedLength : dataType = DataType.Char;           break;
-				case DbType.StringFixedLength     : dataType = DataType.NChar;          break;
-				case DbType.Xml                   : dataType = DataType.Xml;            break;
-				case DbType.DateTime2             : dataType = DataType.DateTime2;      break;
-				case DbType.DateTimeOffset        : dataType = DataType.DateTimeOffset; break;
-				default :
-					dataType = MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && parm.Value != null ?
-							parm.Value.GetType() :
-							parm.SystemType);
-					break;
+				dataType = MappingSchema.GetDataType(
+					parm.SystemType == typeof(object) && parm.Value != null ?
+						parm.Value.GetType() :
+						parm.SystemType);
 			}
 
 			DataProvider.SetParameter(p, name, dataType, parm.Value);
