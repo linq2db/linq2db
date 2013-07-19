@@ -18,6 +18,8 @@
 
 //	GetSchemaOptions.GetProcedures = false;
 
+	IncludeDefaultSchema = false;
+
 	LoadSqlServerMetadata("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
 	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";

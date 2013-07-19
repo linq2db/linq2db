@@ -96,8 +96,8 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="PostreSQL.generated.cs">
-      <DependentUpon>PostreSQL.tt</DependentUpon>
+    <Compile Include="PostgreSQL.generated.cs">
+      <DependentUpon>PostgreSQL.tt</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
@@ -155,9 +155,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>DB2.generated.cs</LastGenOutput>
     </None>
-    <None Include="PostreSQL.tt">
+    <None Include="PostgreSQL.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>PostreSQL.generated.cs</LastGenOutput>
+      <LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
     </None>
     <None Include="Oracle.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

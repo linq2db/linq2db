@@ -1129,10 +1129,10 @@ namespace DataModel
 	{
 		[PrimaryKey,                                   Identity] public int       ID                       { get; set; } // int
 		[Column,                                       Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,                                       Nullable] public decimal?  numericDataType          { get; set; } // numeric(18, 0)
+		[Column,                                       Nullable] public decimal?  numericDataType          { get; set; } // numeric
 		[Column,                                       Nullable] public bool?     bitDataType              { get; set; } // bit
 		[Column,                                       Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal(18, 0)
+		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal
 		[Column,                                       Nullable] public decimal?  smallmoneyDataType       { get; set; } // smallmoney
 		[Column,                                       Nullable] public int?      intDataType              { get; set; } // int
 		[Column,                                       Nullable] public sbyte?    tinyintDataType          { get; set; } // tinyint
@@ -1141,7 +1141,7 @@ namespace DataModel
 		[Column,                                       Nullable] public float?    realDataType             { get; set; } // real
 		[Column,                                       Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
 		[Column,                                       Nullable] public DateTime? smalldatetimeDataType    { get; set; } // smalldatetime
-		[Column,                                       Nullable] public string    charDataType             { get; set; } // char(1)
+		[Column,                                       Nullable] public char?     charDataType             { get; set; } // char(1)
 		[Column,                                       Nullable] public string    varcharDataType          { get; set; } // varchar(20)
 		[Column,                                       Nullable] public string    textDataType             { get; set; } // text
 		[Column,                                       Nullable] public string    ncharDataType            { get; set; } // nchar(20)
@@ -1164,9 +1164,9 @@ namespace DataModel
 	{
 		[PrimaryKey, Identity] public int             ID                     { get; set; } // int
 		[Column,     Nullable] public DateTime?       dateDataType           { get; set; } // date
-		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(0)
-		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2(0)
-		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time(0)
+		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset
+		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2
+		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time
 		[Column,     Nullable] public SqlHierarchyId? hierarchyidDataType    { get; set; } // hierarchyid
 		[Column,     Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
 		[Column,     Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
@@ -1198,7 +1198,7 @@ namespace DataModel
 		[Column,     Nullable] public bool?     Boolean_   { get; set; } // bit
 		[Column,     Nullable] public sbyte?    Byte_      { get; set; } // tinyint
 		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // varbinary(50)
-		[Column,     Nullable] public string    Char_      { get; set; } // char(1)
+		[Column,     Nullable] public char?     Char_      { get; set; } // char(1)
 		[Column,     Nullable] public DateTime? DateTime_  { get; set; } // datetime
 		[Column,     Nullable] public decimal?  Decimal_   { get; set; } // decimal(20, 2)
 		[Column,     Nullable] public double?   Double_    { get; set; } // float
@@ -1257,7 +1257,7 @@ namespace DataModel
 		[Column, Nullable] public int?      ID             { get; set; } // int
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2(0)
+		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2
 		[Column, Nullable] public bool?     BoolValue      { get; set; } // bit
 		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
 		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
@@ -1317,21 +1317,21 @@ namespace DataModel
 		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string Gender     { get; set; } // char(1)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
-
-		/// <summary>
-		/// FK_Patient_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public Patient Patient { get; set; }
 
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Doctor Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Patient Patient { get; set; }
 
 		#endregion
 	}
@@ -1392,7 +1392,7 @@ namespace DataModel
 			public int? PersonID { get; set; }
 		}
 
-		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, string @Gender)
+		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
 				new DataParameter("@FirstName",  @FirstName),
@@ -1405,7 +1405,7 @@ namespace DataModel
 
 		#region Person_Insert_OutputParameter
 
-		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, string @Gender, ref int? @PersonID)
+		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
 				new DataParameter("@FirstName",  @FirstName),
@@ -1423,7 +1423,7 @@ namespace DataModel
 
 		#region Person_Update
 
-		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, string @Gender)
+		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[TestData]..[Person_Update]",
 				new DataParameter("@PersonID",   @PersonID),
@@ -1453,7 +1453,7 @@ namespace DataModel
 			public string FirstName  { get; set; }
 			public string LastName   { get; set; }
 			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
+			public char   Gender     { get; set; }
 			public string Diagnosis  { get; set; }
 		}
 
@@ -1472,7 +1472,7 @@ namespace DataModel
 			public string FirstName  { get; set; }
 			public string LastName   { get; set; }
 			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
+			public char   Gender     { get; set; }
 			public string Diagnosis  { get; set; }
 		}
 

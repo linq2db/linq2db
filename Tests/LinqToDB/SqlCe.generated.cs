@@ -44,10 +44,10 @@ namespace SqlCeDataContext
 	{
 		[PrimaryKey, NotNull    ] public int       ID                       { get; set; } // int
 		[Column,        Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,        Nullable] public decimal?  numericDataType          { get; set; } // numeric(18, 0)
+		[Column,        Nullable] public decimal?  numericDataType          { get; set; } // numeric
 		[Column,        Nullable] public bool?     bitDataType              { get; set; } // bit
 		[Column,        Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,        Nullable] public decimal?  decimalDataType          { get; set; } // numeric(18, 0)
+		[Column,        Nullable] public decimal?  decimalDataType          { get; set; } // numeric
 		[Column,        Nullable] public int?      intDataType              { get; set; } // int
 		[Column,        Nullable] public sbyte?    tinyintDataType          { get; set; } // tinyint
 		[Column,        Nullable] public decimal?  moneyDataType            { get; set; } // money
@@ -129,7 +129,7 @@ namespace SqlCeDataContext
 		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string Gender     { get; set; } // nchar(1)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // nchar(1)
 	}
 
 	[Table("TestIdentity")]

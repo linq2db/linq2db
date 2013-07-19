@@ -46,17 +46,17 @@ namespace SybaseDataContext
 		}
 	}
 
-	[Table("AllTypes")]
+	[Table(Schema="dbo", Name="AllTypes")]
 	public partial class AllType
 	{
 		[Identity                                             ] public int      ID                    { get; set; } // int
 		[Column,                                       NotNull] public long     bigintDataType        { get; set; } // bigint
 		[Column,                                       NotNull] public object   uBigintDataType       { get; set; } // ubigint
-		[Column,                                       NotNull] public decimal  numericDataType       { get; set; } // numeric(18, 0)
+		[Column,                                       NotNull] public decimal  numericDataType       { get; set; } // numeric
 		[Column,                                       NotNull] public bool     bitDataType           { get; set; } // bit
 		[Column,                                       NotNull] public short    smallintDataType      { get; set; } // smallint
 		[Column,                                       NotNull] public object   uSmallintDataType     { get; set; } // usmallint
-		[Column,                                       NotNull] public decimal  decimalDataType       { get; set; } // decimal(18, 0)
+		[Column,                                       NotNull] public decimal  decimalDataType       { get; set; } // decimal
 		[Column,                                       NotNull] public decimal  smallmoneyDataType    { get; set; } // smallmoney
 		[Column,                                       NotNull] public int      intDataType           { get; set; } // int
 		[Column,                                       NotNull] public object   uIntDataType          { get; set; } // uint
@@ -68,7 +68,7 @@ namespace SybaseDataContext
 		[Column,                                       NotNull] public DateTime smalldatetimeDataType { get; set; } // smalldatetime
 		[Column,                                       NotNull] public object   dateDataType          { get; set; } // date
 		[Column,                                       NotNull] public object   timeDataType          { get; set; } // time
-		[Column,                                       NotNull] public string   charDataType          { get; set; } // char(1)
+		[Column,                                       NotNull] public char     charDataType          { get; set; } // char(1)
 		[Column,                                       NotNull] public string   varcharDataType       { get; set; } // varchar(20)
 		[Column,                                       NotNull] public string   textDataType          { get; set; } // text
 		[Column,                                       NotNull] public string   ncharDataType         { get; set; } // nchar(20)
@@ -80,7 +80,7 @@ namespace SybaseDataContext
 		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public byte[]   timestampDataType     { get; set; } // timestamp
 	}
 
-	[Table("BinaryData")]
+	[Table(Schema="dbo", Name="BinaryData")]
 	public partial class BinaryData
 	{
 		[PrimaryKey,                                   Identity] public int    BinaryDataID { get; set; } // int
@@ -88,14 +88,14 @@ namespace SybaseDataContext
 		[Column,                                       NotNull ] public byte[] Data         { get; set; } // varbinary(1024)
 	}
 
-	[Table("Child")]
+	[Table(Schema="dbo", Name="Child")]
 	public partial class Child
 	{
 		[Column, NotNull] public int ParentID { get; set; } // int
 		[Column, NotNull] public int ChildID  { get; set; } // int
 	}
 
-	[Table("DataTypeTest")]
+	[Table(Schema="dbo", Name="DataTypeTest")]
 	public partial class DataTypeTest
 	{
 		[PrimaryKey, Identity] public int      DataTypeID { get; set; } // int
@@ -103,7 +103,7 @@ namespace SybaseDataContext
 		[Column,     NotNull ] public bool     Boolean_   { get; set; } // bit
 		[Column,     NotNull ] public sbyte    Byte_      { get; set; } // tinyint
 		[Column,     NotNull ] public byte[]   Bytes_     { get; set; } // varbinary(50)
-		[Column,     NotNull ] public string   Char_      { get; set; } // char(1)
+		[Column,     NotNull ] public char     Char_      { get; set; } // char(1)
 		[Column,     NotNull ] public DateTime DateTime_  { get; set; } // datetime
 		[Column,     NotNull ] public decimal  Decimal_   { get; set; } // decimal(20, 2)
 		[Column,     NotNull ] public double   Double_    { get; set; } // float
@@ -122,7 +122,7 @@ namespace SybaseDataContext
 		[Column,     NotNull ] public string   Xml_       { get; set; } // nvarchar(1000)
 	}
 
-	[Table("Doctor")]
+	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
@@ -139,7 +139,7 @@ namespace SybaseDataContext
 		#endregion
 	}
 
-	[Table("GrandChild")]
+	[Table(Schema="dbo", Name="GrandChild")]
 	public partial class GrandChild
 	{
 		[Column, NotNull] public int ParentID     { get; set; } // int
@@ -147,7 +147,7 @@ namespace SybaseDataContext
 		[Column, NotNull] public int GrandChildID { get; set; } // int
 	}
 
-	[Table("LinqDataTypes")]
+	[Table(Schema="dbo", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
 		[Column, NotNull] public int      ID             { get; set; } // int
@@ -162,14 +162,14 @@ namespace SybaseDataContext
 		[Column, NotNull] public long     BigIntValue    { get; set; } // bigint
 	}
 
-	[Table("Parent")]
+	[Table(Schema="dbo", Name="Parent")]
 	public partial class Parent
 	{
 		[Column, NotNull] public int ParentID { get; set; } // int
 		[Column, NotNull] public int Value1   { get; set; } // int
 	}
 
-	[Table("Patient")]
+	[Table(Schema="dbo", Name="Patient")]
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
@@ -186,14 +186,14 @@ namespace SybaseDataContext
 		#endregion
 	}
 
-	[Table("Person")]
+	[Table(Schema="dbo", Name="Person")]
 	public partial class Person
 	{
 		[PrimaryKey, Identity] public int    PersonID   { get; set; } // int
 		[Column,     NotNull ] public string FirstName  { get; set; } // nvarchar(50)
 		[Column,     NotNull ] public string LastName   { get; set; } // nvarchar(50)
 		[Column,     NotNull ] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull ] public string Gender     { get; set; } // char(1)
+		[Column,     NotNull ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
 
@@ -239,7 +239,7 @@ namespace SybaseDataContext
 	}
 
 	// View
-	[Table("sysquerymetrics")]
+	[Table(Schema="dbo", Name="sysquerymetrics")]
 	public partial class sysquerymetric
 	{
 		[Column, NotNull] public int    uid       { get; set; } // int
@@ -264,7 +264,7 @@ namespace SybaseDataContext
 		[Column, NotNull] public string qtext     { get; set; } // varchar(255)
 	}
 
-	[Table("TestIdentity")]
+	[Table(Schema="dbo", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // int
@@ -276,7 +276,7 @@ namespace SybaseDataContext
 
 		public static int OutRefEnumTest(this DataConnection dataConnection, string str, out string outputStr, out string inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]",
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
 				new DataParameter("str", str));
 
 			outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputStr"]).     Value);
@@ -291,7 +291,7 @@ namespace SybaseDataContext
 
 		public static int OutRefTest(this DataConnection dataConnection, int? ID, out int? outputID, out int? inputOutputID, string str, out string outputStr, out string inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[OutRefTest]",
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
 				new DataParameter("ID",  ID),
 				new DataParameter("str", str));
 
@@ -319,7 +319,7 @@ namespace SybaseDataContext
 
 		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<Patient_SelectAllResult>("[Patient_SelectAll]");
+			return dataConnection.QueryProc<Patient_SelectAllResult>("[dbo].[Patient_SelectAll]");
 		}
 
 		#endregion
@@ -338,7 +338,7 @@ namespace SybaseDataContext
 
 		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
 		{
-			return dataConnection.QueryProc<Patient_SelectByNameResult>("[Patient_SelectByName]",
+			return dataConnection.QueryProc<Patient_SelectByNameResult>("[dbo].[Patient_SelectByName]",
 				new DataParameter("firstName", firstName),
 				new DataParameter("lastName",  lastName));
 		}
@@ -349,7 +349,7 @@ namespace SybaseDataContext
 
 		public static int Person_Delete(this DataConnection dataConnection, int? PersonID)
 		{
-			return dataConnection.ExecuteProc("[Person_Delete]",
+			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
 				new DataParameter("PersonID", PersonID));
 		}
 
@@ -364,7 +364,7 @@ namespace SybaseDataContext
 
 		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender)
 		{
-			return dataConnection.QueryProc<Person_InsertResult>("[Person_Insert]",
+			return dataConnection.QueryProc<Person_InsertResult>("[dbo].[Person_Insert]",
 				new DataParameter("FirstName",  FirstName),
 				new DataParameter("LastName",   LastName),
 				new DataParameter("MiddleName", MiddleName),
@@ -377,7 +377,7 @@ namespace SybaseDataContext
 
 		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender, out int? PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("Person_Insert_OutputParameter",
+			var ret = dataConnection.ExecuteProc("[dbo].Person_Insert_OutputParameter",
 				new DataParameter("FirstName",  FirstName),
 				new DataParameter("LastName",   LastName),
 				new DataParameter("MiddleName", MiddleName),
@@ -392,18 +392,36 @@ namespace SybaseDataContext
 
 		#region Person_SelectAll
 
-		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
+		public partial class Person_SelectAllResult
 		{
-			return dataConnection.QueryProc<Person>("[Person_SelectAll]");
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		public static IEnumerable<Person_SelectAllResult> Person_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person_SelectAllResult>("[dbo].[Person_SelectAll]");
 		}
 
 		#endregion
 
 		#region Person_SelectByKey
 
-		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? id)
+		public partial class Person_SelectByKeyResult
 		{
-			return dataConnection.QueryProc<Person>("[Person_SelectByKey]",
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		public static IEnumerable<Person_SelectByKeyResult> Person_SelectByKey(this DataConnection dataConnection, int? id)
+		{
+			return dataConnection.QueryProc<Person_SelectByKeyResult>("[dbo].[Person_SelectByKey]",
 				new DataParameter("id", id));
 		}
 
@@ -411,9 +429,18 @@ namespace SybaseDataContext
 
 		#region Person_SelectByName
 
-		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
+		public partial class Person_SelectByNameResult
 		{
-			return dataConnection.QueryProc<Person>("[Person_SelectByName]",
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		public static IEnumerable<Person_SelectByNameResult> Person_SelectByName(this DataConnection dataConnection, string firstName, string lastName)
+		{
+			return dataConnection.QueryProc<Person_SelectByNameResult>("[dbo].[Person_SelectByName]",
 				new DataParameter("firstName", firstName),
 				new DataParameter("lastName",  lastName));
 		}
@@ -422,9 +449,18 @@ namespace SybaseDataContext
 
 		#region Person_SelectListByName
 
-		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string firstName, string lastName)
+		public partial class Person_SelectListByNameResult
 		{
-			return dataConnection.QueryProc<Person>("[Person_SelectListByName]",
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		public static IEnumerable<Person_SelectListByNameResult> Person_SelectListByName(this DataConnection dataConnection, string firstName, string lastName)
+		{
+			return dataConnection.QueryProc<Person_SelectListByNameResult>("[dbo].[Person_SelectListByName]",
 				new DataParameter("firstName", firstName),
 				new DataParameter("lastName",  lastName));
 		}
@@ -435,7 +471,7 @@ namespace SybaseDataContext
 
 		public static int Person_Update(this DataConnection dataConnection, int? PersonID, string FirstName, string LastName, string MiddleName, string Gender)
 		{
-			return dataConnection.ExecuteProc("[Person_Update]",
+			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
 				new DataParameter("PersonID",   PersonID),
 				new DataParameter("FirstName",  FirstName),
 				new DataParameter("LastName",   LastName),
@@ -455,7 +491,7 @@ namespace SybaseDataContext
 
 		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
 		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[Scalar_DataReader]");
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[dbo].[Scalar_DataReader]");
 		}
 
 		#endregion
@@ -464,7 +500,7 @@ namespace SybaseDataContext
 
 		public static int Scalar_OutputParameter(this DataConnection dataConnection, out int? outputInt, out string outputString)
 		{
-			var ret = dataConnection.ExecuteProc("[Scalar_OutputParameter]");
+			var ret = dataConnection.ExecuteProc("[dbo].[Scalar_OutputParameter]");
 
 			outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["outputInt"]).   Value);
 			outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
@@ -476,9 +512,18 @@ namespace SybaseDataContext
 
 		#region Scalar_ReturnParameterWithObject
 
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? id)
+		public partial class Scalar_ReturnParameterWithObjectResult
 		{
-			return dataConnection.QueryProc<Person>("Scalar_ReturnParameterWithObject",
+			public int    PersonID   { get; set; }
+			public string FirstName  { get; set; }
+			public string LastName   { get; set; }
+			public string MiddleName { get; set; }
+			public string Gender     { get; set; }
+		}
+
+		public static IEnumerable<Scalar_ReturnParameterWithObjectResult> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? id)
+		{
+			return dataConnection.QueryProc<Scalar_ReturnParameterWithObjectResult>("[dbo].Scalar_ReturnParameterWithObject",
 				new DataParameter("id", id));
 		}
 

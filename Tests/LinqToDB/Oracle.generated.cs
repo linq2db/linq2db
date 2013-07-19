@@ -34,6 +34,7 @@ namespace OracleDataContext
 		public ITable<PERSON>                People                { get { return this.GetTable<PERSON>(); } }
 		public ITable<SEQUENCETEST>          SEQUENCETESTs         { get { return this.GetTable<SEQUENCETEST>(); } }
 		public ITable<STG_TRADE_INFORMATION> STG_TRADE_INFORMATION { get { return this.GetTable<STG_TRADE_INFORMATION>(); } }
+		public ITable<T_ENTITY>              T_ENTITY              { get { return this.GetTable<T_ENTITY>(); } }
 		public ITable<T_TEST_USER>           T_TEST_USER           { get { return this.GetTable<T_TEST_USER>(); } }
 		public ITable<T_TEST_USER_CONTRACT>  T_TEST_USER_CONTRACT  { get { return this.GetTable<T_TEST_USER_CONTRACT>(); } }
 		public ITable<TESTIDENTITY>          TESTIDENTITies        { get { return this.GetTable<TESTIDENTITY>(); } }
@@ -52,14 +53,14 @@ namespace OracleDataContext
 	public partial class ALLTYPE
 	{
 		[PrimaryKey, NotNull    ] public decimal         ID                     { get; set; } // NUMBER
-		[Column,        Nullable] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
+		[Column,        Nullable] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?        NUMERICDATATYPE        { get; set; } // NUMBER
-		[Column,        Nullable] public sbyte?          BITDATATYPE            { get; set; } // NUMBER (1,0)
-		[Column,        Nullable] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER (5,0)
+		[Column,        Nullable] public sbyte?          BITDATATYPE            { get; set; } // NUMBER
+		[Column,        Nullable] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?        DECIMALDATATYPE        { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?        SMALLMONEYDATATYPE     { get; set; } // NUMBER (10,4)
-		[Column,        Nullable] public long?           INTDATATYPE            { get; set; } // NUMBER (10,0)
-		[Column,        Nullable] public short?          TINYINTDATATYPE        { get; set; } // NUMBER (3,0)
+		[Column,        Nullable] public long?           INTDATATYPE            { get; set; } // NUMBER
+		[Column,        Nullable] public short?          TINYINTDATATYPE        { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
 		[Column,        Nullable] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
 		[Column,        Nullable] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
@@ -67,7 +68,7 @@ namespace OracleDataContext
 		[Column,        Nullable] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
 		[Column,        Nullable] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
 		[Column,        Nullable] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
-		[Column,        Nullable] public string          CHARDATATYPE           { get; set; } // CHAR(1)
+		[Column,        Nullable] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
 		[Column,        Nullable] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
 		[Column,        Nullable] public string          TEXTDATATYPE           { get; set; } // CLOB
 		[Column,        Nullable] public string          NCHARDATATYPE          { get; set; } // NCHAR(40)
@@ -100,25 +101,25 @@ namespace OracleDataContext
 	{
 		[PrimaryKey, NotNull    ] public decimal   DATATYPEID { get; set; } // NUMBER
 		[Column,        Nullable] public byte[]    BINARY_    { get; set; } // RAW(50)
-		[Column,        Nullable] public sbyte?    BOOLEAN_   { get; set; } // NUMBER (1,0)
-		[Column,        Nullable] public short?    BYTE_      { get; set; } // NUMBER (3,0)
+		[Column,        Nullable] public sbyte?    BOOLEAN_   { get; set; } // NUMBER
+		[Column,        Nullable] public short?    BYTE_      { get; set; } // NUMBER
 		[Column,        Nullable] public byte[]    BYTES_     { get; set; } // BLOB
 		[Column,        Nullable] public string    CHAR_      { get; set; } // NCHAR(2)
 		[Column,        Nullable] public DateTime? DATETIME_  { get; set; } // DATE
 		[Column,        Nullable] public decimal?  DECIMAL_   { get; set; } // NUMBER (19,5)
 		[Column,        Nullable] public decimal?  DOUBLE_    { get; set; } // FLOAT(126)
 		[Column,        Nullable] public byte[]    GUID_      { get; set; } // RAW(16)
-		[Column,        Nullable] public int?      INT16_     { get; set; } // NUMBER (5,0)
-		[Column,        Nullable] public long?     INT32_     { get; set; } // NUMBER (10,0)
-		[Column,        Nullable] public decimal?  INT64_     { get; set; } // NUMBER (20,0)
+		[Column,        Nullable] public int?      INT16_     { get; set; } // NUMBER
+		[Column,        Nullable] public long?     INT32_     { get; set; } // NUMBER
+		[Column,        Nullable] public decimal?  INT64_     { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?  MONEY_     { get; set; } // NUMBER
-		[Column,        Nullable] public short?    SBYTE_     { get; set; } // NUMBER (3,0)
+		[Column,        Nullable] public short?    SBYTE_     { get; set; } // NUMBER
 		[Column,        Nullable] public decimal?  SINGLE_    { get; set; } // FLOAT(126)
 		[Column,        Nullable] public byte[]    STREAM_    { get; set; } // BLOB
 		[Column,        Nullable] public string    STRING_    { get; set; } // NVARCHAR2(100)
-		[Column,        Nullable] public int?      UINT16_    { get; set; } // NUMBER (5,0)
-		[Column,        Nullable] public long?     UINT32_    { get; set; } // NUMBER (10,0)
-		[Column,        Nullable] public decimal?  UINT64_    { get; set; } // NUMBER (20,0)
+		[Column,        Nullable] public int?      UINT16_    { get; set; } // NUMBER
+		[Column,        Nullable] public long?     UINT32_    { get; set; } // NUMBER
+		[Column,        Nullable] public decimal?  UINT64_    { get; set; } // NUMBER
 		[Column,        Nullable] public string    XML_       { get; set; } // XMLTYPE
 	}
 
@@ -159,7 +160,7 @@ namespace OracleDataContext
 		[Column, Nullable] public byte[]    BINARYVALUE    { get; set; } // BLOB
 		[Column, Nullable] public decimal?  SMALLINTVALUE  { get; set; } // NUMBER
 		[Column, Nullable] public decimal?  INTVALUE       { get; set; } // NUMBER
-		[Column, Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER (20,0)
+		[Column, Nullable] public decimal?  BIGINTVALUE    { get; set; } // NUMBER
 	}
 
 	[Table(Schema="TESTUSER", Name="PARENT")]
@@ -193,7 +194,7 @@ namespace OracleDataContext
 		[Column,     NotNull    ] public string  FIRSTNAME  { get; set; } // VARCHAR2(50)
 		[Column,     NotNull    ] public string  LASTNAME   { get; set; } // VARCHAR2(50)
 		[Column,        Nullable] public string  MIDDLENAME { get; set; } // VARCHAR2(50)
-		[Column,     NotNull    ] public string  GENDER     { get; set; } // CHAR(1)
+		[Column,     NotNull    ] public char    GENDER     { get; set; } // CHAR(1)
 
 		#region Associations
 
@@ -231,6 +232,13 @@ namespace OracleDataContext
 		[Column,    Nullable] public DateTime? VALUE_AS_DATE         { get; set; } // DATE
 	}
 
+	[Table(Schema="TESTUSER", Name="T_ENTITY")]
+	public partial class T_ENTITY
+	{
+		[PrimaryKey, NotNull] public decimal  ENTITY_ID { get; set; } // NUMBER
+		[Column,     NotNull] public DateTime TIME      { get; set; } // DATE
+	}
+
 	[Table(Schema="TESTUSER", Name="T_TEST_USER")]
 	public partial class T_TEST_USER
 	{
@@ -240,10 +248,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0030240_BackReference
+		/// SYS_C0033430_BackReference
 		/// </summary>
 		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false)]
-		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0030240 { get; set; }
+		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0033430 { get; set; }
 
 		#endregion
 	}
@@ -259,10 +267,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0030240
+		/// SYS_C0033430
 		/// </summary>
 		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false)]
-		public T_TEST_USER SYSC0030240 { get; set; }
+		public T_TEST_USER SYSC0033430 { get; set; }
 
 		#endregion
 	}
