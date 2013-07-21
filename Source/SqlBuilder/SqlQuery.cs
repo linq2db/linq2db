@@ -131,7 +131,7 @@ namespace LinqToDB.SqlBuilder
 
 		#region Column
 
-		public class Column : IEquatable<Column>, ISqlExpression, IChild<SqlQuery>
+		public class Column : IEquatable<Column>, ISqlExpression
 		{
 			public Column(SqlQuery parent, ISqlExpression expression, string alias)
 			{
@@ -157,6 +157,7 @@ namespace LinqToDB.SqlBuilder
 #endif
 
 			public ISqlExpression Expression { get; set; }
+			public SqlQuery       Parent     { get; set; }
 
 			internal string _alias;
 			public   string  Alias
@@ -269,17 +270,6 @@ namespace LinqToDB.SqlBuilder
 
 			#endregion
 
-			#region IChild<ISqlTableSource> Members
-
-			string IChild<SqlQuery>.Name
-			{
-				get { return Alias; }
-			}
-
-			public SqlQuery Parent { get; set; }
-
-			#endregion
-	
 			#region IQueryElement Members
 
 			public QueryElementType ElementType { get { return QueryElementType.Column; } }
@@ -4711,23 +4701,14 @@ namespace LinqToDB.SqlBuilder
 		private SqlField _all;
 		public  SqlField  All
 		{
-			get
-			{
-				if (_all == null)
-				{
-					_all = new SqlField { Name = "*", PhysicalName = "*" };
-					((IChild<ISqlTableSource>)_all).Parent = this;
-				}
-
-				return _all;
-			}
+			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
 
 			internal set
 			{
 				_all = value;
 
 				if (_all != null)
-					((IChild<ISqlTableSource>)_all).Parent = this;
+					_all.Table = this;
 			}
 		}
 

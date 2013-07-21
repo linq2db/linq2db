@@ -6,7 +6,7 @@ namespace LinqToDB.SqlBuilder
 {
 	using Mapping;
 
-	public class SqlField : IChild<ISqlTableSource>, ISqlExpression
+	public class SqlField : ISqlExpression
 	{
 		public SqlField()
 		{
@@ -37,7 +37,7 @@ namespace LinqToDB.SqlBuilder
 		public bool             IsIdentity       { get; set; }
 		public bool             IsInsertable     { get; set; }
 		public bool             IsUpdatable      { get; set; }
-		public ISqlTableSource  Table            { get; private set; }
+		public ISqlTableSource  Table            { get; set; }
 		public ColumnDescriptor ColumnDescriptor { get; set; }
 
 		private string _physicalName;
@@ -46,8 +46,6 @@ namespace LinqToDB.SqlBuilder
 			get { return _physicalName ?? Name; }
 			set { _physicalName = value; }
 		}
-
-		ISqlTableSource IChild<ISqlTableSource>.Parent { get { return Table; } set { Table = value; } }
 
 		#region Overrides
 

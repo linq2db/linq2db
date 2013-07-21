@@ -2143,7 +2143,7 @@ namespace LinqToDB.SqlProvider
 
 					sql.From.Table(copy).Where.Exists(sqlQuery);
 
-					var map = new Dictionary<SqlField, SqlField>(table.Fields.Count);
+					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
 
 					foreach (var field in table.Fields.Values)
 						map.Add(field, copy[field.Name]);
@@ -2155,12 +2155,6 @@ namespace LinqToDB.SqlProvider
 							var fld = expr as SqlField;
 							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
 						});
-
-//						((ISqlExpressionWalkable)item).Walk(false, expr =>
-//						{
-//							var fld = expr as SqlField;
-//							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
-//						});
 
 						sql.Update.Items.Add(ex);
 					}

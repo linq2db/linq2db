@@ -73,35 +73,6 @@ namespace LinqToDB.SqlBuilder
 
 		#endregion
 
-		#region ISqlTableSource Members
-
-		/*
-		readonly int _sourceID;
-		public   int  SourceID { get { return _sourceID; } }
-
-		SqlField _all;
-		SqlField  ISqlTableSource.All
-		{
-			get
-			{
-				if (_all == null)
-				{
-					_all = new SqlField(null, "*", "*", true, -1, null, null);
-					((IChild<ISqlTableSource>)_all).Parent = this;
-				}
-
-				return _all;
-			}
-		}
-
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
-		{
-			return null;
-		}
-		*/
-
-		#endregion
-
 		#region ISqlExpression Members
 
 		public bool CanBeNull()

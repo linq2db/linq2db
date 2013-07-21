@@ -15,7 +15,7 @@ namespace LinqToDB.SqlBuilder
 		public SqlTable()
 		{
 			_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
-			_fields   = new ChildContainer<ISqlTableSource,SqlField>(this);
+			_fields   = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
@@ -34,8 +34,9 @@ namespace LinqToDB.SqlBuilder
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
-			_fields  = new ChildContainer<ISqlTableSource,SqlField>(this);
-			_fields.AddRange(fields);
+			_fields = new Dictionary<string, SqlField>();
+
+			AddRange(fields);
 
 			foreach (var field in fields)
 			{
@@ -43,7 +44,7 @@ namespace LinqToDB.SqlBuilder
 				{
 					_all = field;
 					_fields.Remove("*");
-					((IChild<ISqlTableSource>)_all).Parent = this;
+					_all.Table = this;
 					break;
 				}
 			}
@@ -70,7 +71,7 @@ namespace LinqToDB.SqlBuilder
 
 			foreach (var column in ed.Columns)
 			{
-				Fields.Add(column.MemberName, new SqlField
+				Add(new SqlField
 				{
 					SystemType       = column.MemberType,
 					Name             = column.MemberName,
@@ -116,7 +117,7 @@ namespace LinqToDB.SqlBuilder
 			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields.Values)
-				Fields.Add(field.Name, new SqlField(field));
+				Add(new SqlField(field));
 
 			SqlTableType   = table.SqlTableType;
 			TableArguments = table.TableArguments;
@@ -132,7 +133,7 @@ namespace LinqToDB.SqlBuilder
 			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
-			Fields.AddRange(fields);
+			AddRange(fields);
 
 			SqlTableType   = table.SqlTableType;
 			TableArguments = tableArguments;
@@ -177,24 +178,15 @@ namespace LinqToDB.SqlBuilder
 
 		public ISqlExpression[] TableArguments { get; set; }
 
-		readonly ChildContainer<ISqlTableSource,SqlField> _fields;
-		public   ChildContainer<ISqlTableSource,SqlField>  Fields { get { return _fields; } }
+		readonly Dictionary<string,SqlField> _fields;
+		public   Dictionary<string,SqlField>  Fields { get { return _fields; } }
 
 		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
 
 		private SqlField _all;
 		public  SqlField  All
 		{
-			get
-			{
-				if (_all == null)
-				{
-					_all = new SqlField { Name = "*", PhysicalName = "*" };
-					((IChild<ISqlTableSource>)_all).Parent = this;
-				}
-
-				return _all;
-			}
+			get { return _all ?? (_all = new SqlField { Name = "*", PhysicalName = "*", Table = this }); }
 		}
 
 		public SqlField GetIdentityField()
@@ -209,6 +201,21 @@ namespace LinqToDB.SqlBuilder
 				return (SqlField)keys[0];
 
 			return null;
+		}
+
+		public void Add(SqlField field)
+		{
+			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+
+			field.Table = this;
+
+			_fields.Add(field.Name, field);
+		}
+
+		public void AddRange(IEnumerable<SqlField> collection)
+		{
+			foreach (var item in collection)
+				Add(item);
 		}
 
 		#endregion
@@ -269,8 +276,8 @@ namespace LinqToDB.SqlBuilder
 				{
 					var fc = new SqlField(field.Value);
 
-					objectTree.   Add(field.Value, fc);
-					table._fields.Add(field.Key,   fc);
+					objectTree.Add(field.Value, fc);
+					table.     Add(fc);
 				}
 
 				if (TableArguments != null)

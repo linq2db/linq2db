@@ -277,9 +277,7 @@
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
     <Compile Include="Linq\TableT.cs" />
-    <Compile Include="SqlBuilder\ChildContainer.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
-    <Compile Include="SqlBuilder\IChild.cs" />
     <Compile Include="SqlBuilder\ICloneableElement.cs" />
     <Compile Include="SqlBuilder\IQueryElement.cs" />
     <Compile Include="SqlBuilder\ISqlExpression.cs" />
