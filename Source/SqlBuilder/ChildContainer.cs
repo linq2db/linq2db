@@ -19,11 +19,6 @@ namespace LinqToDB.SqlBuilder
 		readonly TP _parent;
 		public   TP  Parent { get { return _parent; } }
 
-		public void Add(TC item)
-		{
-			Add(item.Name, item);
-		}
-
 		public new void Add(string key, TC value)
 		{
 			if (value.Parent != null) throw new InvalidOperationException("Invalid parent.");
@@ -35,7 +30,7 @@ namespace LinqToDB.SqlBuilder
 		public void AddRange(IEnumerable<TC> collection)
 		{
 			foreach (var item in collection)
-				Add(item);
+				Add(item.Name, item);
 		}
 	}
 }

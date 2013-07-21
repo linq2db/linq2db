@@ -70,7 +70,7 @@ namespace LinqToDB.SqlBuilder
 
 			foreach (var column in ed.Columns)
 			{
-				Fields.Add(new SqlField
+				Fields.Add(column.MemberName, new SqlField
 				{
 					SystemType       = column.MemberType,
 					Name             = column.MemberName,
@@ -116,7 +116,7 @@ namespace LinqToDB.SqlBuilder
 			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields.Values)
-				Fields.Add(new SqlField(field));
+				Fields.Add(field.Name, new SqlField(field));
 
 			SqlTableType   = table.SqlTableType;
 			TableArguments = table.TableArguments;
