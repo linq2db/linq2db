@@ -114,18 +114,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.TinyInt       : sb.Append("SmallInt");        break;
-				case SqlDbType.Money         : sb.Append("Decimal(19,4)");   break;
-				case SqlDbType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
+				case DataType.SByte         :
+				case DataType.Byte          : sb.Append("SmallInt");        break;
+				case DataType.Money         : sb.Append("Decimal(19,4)");   break;
+				case DataType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
 #if !MONO
-				case SqlDbType.DateTime2     :
+				case DataType.DateTime2     :
 #endif
-				case SqlDbType.SmallDateTime :
-				case SqlDbType.DateTime      : sb.Append("TimeStamp");       break;
-				case SqlDbType.Bit           : sb.Append("Boolean");         break;
-				case SqlDbType.NVarChar      :
+				case DataType.SmallDateTime :
+				case DataType.DateTime      : sb.Append("TimeStamp");       break;
+				case DataType.Boolean       : sb.Append("Boolean");         break;
+				case DataType.NVarChar      :
 					sb.Append("VarChar");
 					if (type.Length > 0)
 						sb.Append('(').Append(type.Length).Append(')');

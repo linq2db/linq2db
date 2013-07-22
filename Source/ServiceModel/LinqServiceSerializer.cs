@@ -624,7 +624,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlDataType)e;
 
-							Append((int)elem.SqlDbType);
+							Append((int)elem.DataType);
 							Append(elem.Type);
 							Append(elem.Length);
 							Append(elem.Precision);
@@ -1155,7 +1155,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlDataType :
 						{
-							var dbType     = (SqlDbType)ReadInt();
+							var dbType     = (DataType)ReadInt();
 							var systemType = Read<Type>();
 							var length     = ReadInt();
 							var precision  = ReadInt();

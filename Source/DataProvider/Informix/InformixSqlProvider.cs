@@ -199,11 +199,12 @@ namespace LinqToDB.DataProvider
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.TinyInt    : sb.Append("SmallInt");        break;
-				case SqlDbType.SmallMoney : sb.Append("Decimal(10,4)");   break;
-				default                   : base.BuildDataType(sb, type); break;
+				case DataType.SByte      :
+				case DataType.Byte       : sb.Append("SmallInt");        break;
+				case DataType.SmallMoney : sb.Append("Decimal(10,4)");   break;
+				default                  : base.BuildDataType(sb, type); break;
 			}
 		}
 

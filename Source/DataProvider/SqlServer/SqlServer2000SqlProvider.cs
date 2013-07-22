@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -32,13 +31,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.DateTimeOffset :
-				case SqlDbType.DateTime2      :
-				case SqlDbType.Time           :
-				case SqlDbType.Date           : sb.Append("DateTime");        break;
-				default                       : base.BuildDataType(sb, type); break;
+				case DataType.DateTimeOffset :
+				case DataType.DateTime2      :
+				case DataType.Time           :
+				case DataType.Date           : sb.Append("DateTime");        break;
+				default                      : base.BuildDataType(sb, type); break;
 			}
 		}
 

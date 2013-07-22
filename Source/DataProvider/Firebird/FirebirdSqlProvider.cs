@@ -137,20 +137,21 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.Decimal       :
-					base.BuildDataType(sb, type.Precision > 18 ? new SqlDataType(type.SqlDbType, type.Type, 18, type.Scale) : type);
+				case DataType.Decimal       :
+					base.BuildDataType(sb, type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
 					break;
-				case SqlDbType.TinyInt       : sb.Append("SmallInt");        break;
-				case SqlDbType.Money         : sb.Append("Decimal(18,4)");   break;
-				case SqlDbType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
+				case DataType.SByte         :
+				case DataType.Byte          : sb.Append("SmallInt");        break;
+				case DataType.Money         : sb.Append("Decimal(18,4)");   break;
+				case DataType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
 #if !MONO
-				case SqlDbType.DateTime2     :
+				case DataType.DateTime2     :
 #endif
-				case SqlDbType.SmallDateTime :
-				case SqlDbType.DateTime      : sb.Append("TimeStamp");       break;
-				case SqlDbType.NVarChar      :
+				case DataType.SmallDateTime :
+				case DataType.DateTime      : sb.Append("TimeStamp");       break;
+				case DataType.NVarChar      :
 					sb.Append("VarChar");
 					if (type.Length > 0)
 						sb.Append('(').Append(type.Length).Append(')');

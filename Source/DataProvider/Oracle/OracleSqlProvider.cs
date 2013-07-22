@@ -262,13 +262,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.BigInt     : sb.Append("Number(19)");      break;
-				case SqlDbType.TinyInt    : sb.Append("Number(3)");       break;
-				case SqlDbType.Money      : sb.Append("Number(19,4)");    break;
-				case SqlDbType.SmallMoney : sb.Append("Number(10,4)");    break;
-				case SqlDbType.NVarChar   :
+				case DataType.UInt32     :
+				case DataType.Int64      : sb.Append("Number(19)");      break;
+				case DataType.SByte      :
+				case DataType.Byte       : sb.Append("Number(3)");       break;
+				case DataType.Money      : sb.Append("Number(19,4)");    break;
+				case DataType.SmallMoney : sb.Append("Number(10,4)");    break;
+				case DataType.NVarChar   :
 					sb.Append("VarChar2");
 					if (type.Length > 0)
 						sb.Append('(').Append(type.Length).Append(')');

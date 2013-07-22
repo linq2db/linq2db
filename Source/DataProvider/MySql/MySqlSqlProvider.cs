@@ -131,22 +131,24 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.Int           :
-				case SqlDbType.SmallInt      : sb.Append("Signed");        break;
-				case SqlDbType.TinyInt       : sb.Append("Unsigned");      break;
-				case SqlDbType.Money         : sb.Append("Decimal(19,4)"); break;
-				case SqlDbType.SmallMoney    : sb.Append("Decimal(10,4)"); break;
+				case DataType.UInt16        :
+				case DataType.Int32         :
+				case DataType.Int16         : sb.Append("Signed");        break;
+				case DataType.SByte         :
+				case DataType.Byte          : sb.Append("Unsigned");      break;
+				case DataType.Money         : sb.Append("Decimal(19,4)"); break;
+				case DataType.SmallMoney    : sb.Append("Decimal(10,4)"); break;
 #if !MONO
-				case SqlDbType.DateTime2     :
+				case DataType.DateTime2     :
 #endif
-				case SqlDbType.SmallDateTime : sb.Append("DateTime");      break;
-				case SqlDbType.Bit           : sb.Append("Boolean");       break;
-				case SqlDbType.Float         :
-				case SqlDbType.Real          : base.BuildDataType(sb, SqlDataType.Decimal); break;
-				case SqlDbType.VarChar       :
-				case SqlDbType.NVarChar      :
+				case DataType.SmallDateTime : sb.Append("DateTime");      break;
+				case DataType.Boolean       : sb.Append("Boolean");       break;
+				case DataType.Double        :
+				case DataType.Single        : base.BuildDataType(sb, SqlDataType.Decimal); break;
+				case DataType.VarChar       :
+				case DataType.NVarChar      :
 					sb.Append("Char");
 					if (type.Length > 0)
 						sb.Append('(').Append(type.Length).Append(')');

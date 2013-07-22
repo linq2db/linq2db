@@ -1750,7 +1750,22 @@ namespace LinqToDB.SqlProvider
 	
 		protected virtual void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			sb.Append(type.SqlDbType.ToString());
+			switch (type.DataType)
+			{
+				case DataType.Double  : sb.Append("Float");    return;
+				case DataType.Single  : sb.Append("Real");     return;
+				case DataType.SByte   : sb.Append("TinyInt");  return;
+				case DataType.UInt16  : sb.Append("Int");      return;
+				case DataType.UInt32  : sb.Append("BigInt");   return;
+				case DataType.UInt64  : sb.Append("Decimal");  return;
+				case DataType.Byte    : sb.Append("TinyInt");  return;
+				case DataType.Int16   : sb.Append("SmallInt"); return;
+				case DataType.Int32   : sb.Append("Int");      return;
+				case DataType.Int64   : sb.Append("BigInt");   return;
+				case DataType.Boolean : sb.Append("Bit");      return;
+			}
+
+			sb.Append(type.DataType.ToString());
 
 			if (type.Length > 0)
 				sb.Append('(').Append(type.Length).Append(')');
@@ -2021,8 +2036,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).SqlDbType == SqlDbType.Date;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr      == dateName;
+				case QueryElementType.SqlDataType   : return ((SqlDataType)  expr).DataType == DataType.Date;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == dateName;
 			}
 
 			return false;
@@ -2032,8 +2047,8 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
-				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).  SqlDbType == SqlDbType.Time;
-				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr      == "Time";
+				case QueryElementType.SqlDataType   : return ((SqlDataType)expr).  DataType == DataType.Time;
+				case QueryElementType.SqlExpression : return ((SqlExpression)expr).Expr     == "Time";
 			}
 
 			return false;
@@ -2485,10 +2500,10 @@ namespace LinqToDB.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.SqlDbType); }
-		protected virtual int GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.SqlDbType); }
-		protected virtual int GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.SqlDbType); }
-		protected virtual int GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.SqlDbType); }
+		protected virtual int GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
+		protected virtual int GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
+		protected virtual int GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
+		protected virtual int GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
 		{
@@ -2506,7 +2521,7 @@ namespace LinqToDB.SqlProvider
 				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale,     maxScale)     : to.Scale;
 
 				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.SqlDbType, to.Type, newPrecision, newScale);
+					to = new SqlDataType(to.DataType, to.Type, newPrecision, newScale);
 			}
 			else if (to.Length > 0)
 			{
@@ -2514,7 +2529,7 @@ namespace LinqToDB.SqlProvider
 				var newLength = maxLength >= 0 ? Math.Min(to.Length, maxLength) : to.Length;
 
 				if (to.Length != newLength)
-					to = new SqlDataType(to.SqlDbType, to.Type, newLength);
+					to = new SqlDataType(to.DataType, to.Type, newLength);
 			}
 			else if (from.Type == typeof(short) && to.Type == typeof(int))
 				return func.Parameters[2];
@@ -2632,7 +2647,7 @@ namespace LinqToDB.SqlProvider
 
 								if (be.Expr1.SystemType == typeof(string) && be.Expr2.SystemType != typeof(string))
 								{
-									var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).SqlDbType);
+									var len = be.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr2.SystemType).DataType);
 
 									if (len <= 0)
 										len = 100;
@@ -2641,20 +2656,20 @@ namespace LinqToDB.SqlProvider
 										be.SystemType,
 										be.Expr1,
 										be.Operation,
-										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(SqlDbType.VarChar, len), be.Expr2)),
+										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2)),
 										be.Precedence);
 								}
 
 								if (be.Expr1.SystemType != typeof(string) && be.Expr2.SystemType == typeof(string))
 								{
-									var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).SqlDbType);
+									var len = be.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(be.Expr1.SystemType).DataType);
 
 									if (len <= 0)
 										len = 100;
 
 									return new SqlBinaryExpression(
 										be.SystemType,
-										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(SqlDbType.VarChar, len), be.Expr1)),
+										ConvertExpression(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1)),
 										be.Operation,
 										be.Expr2,
 										be.Precedence);

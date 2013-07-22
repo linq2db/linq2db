@@ -116,12 +116,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
 #if !MONO
-				case SqlDbType.DateTime2 : sb.Append("DateTime");        break;
+				case DataType.DateTime2 : sb.Append("DateTime");        break;
 #endif
-				default                  : base.BuildDataType(sb, type); break;
+				default                 : base.BuildDataType(sb, type); break;
 			}
 		}
 

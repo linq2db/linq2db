@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -147,18 +146,18 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
 		{
-			switch (type.SqlDbType)
+			switch (type.DataType)
 			{
-				case SqlDbType.Char          : base.BuildDataType(sb, new SqlDataType(SqlDbType.NChar,    type.Length)); break;
-				case SqlDbType.VarChar       : base.BuildDataType(sb, new SqlDataType(SqlDbType.NVarChar, type.Length)); break;
-				case SqlDbType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
+				case DataType.Char          : base.BuildDataType(sb, new SqlDataType(DataType.NChar,    type.Length)); break;
+				case DataType.VarChar       : base.BuildDataType(sb, new SqlDataType(DataType.NVarChar, type.Length)); break;
+				case DataType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
 #if !MONO
-				case SqlDbType.DateTime2     :
+				case DataType.DateTime2     :
 #endif
-				case SqlDbType.Time          :
-				case SqlDbType.Date          :
-				case SqlDbType.SmallDateTime : sb.Append("DateTime");        break;
-				default                      : base.BuildDataType(sb, type); break;
+				case DataType.Time          :
+				case DataType.Date          :
+				case DataType.SmallDateTime : sb.Append("DateTime");        break;
+				default                     : base.BuildDataType(sb, type); break;
 			}
 		}
 

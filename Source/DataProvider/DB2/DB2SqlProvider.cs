@@ -128,12 +128,12 @@ namespace LinqToDB.DataProvider.DB2
 								return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", func.Parameters[1]));
 
 							if (type.Length > 0)
-								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(type.Length));
+								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Length));
 
 							if (type.Precision > 0)
-								return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale));
+								return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1], new SqlValue(type.Precision), new SqlValue(type.Scale));
 
-							return new SqlFunction(func.SystemType, type.SqlDbType.ToString(), func.Parameters[1]);
+							return new SqlFunction(func.SystemType, type.DataType.ToString(), func.Parameters[1]);
 						}
 
 						if (func.Parameters[0] is SqlFunction)
@@ -157,7 +157,16 @@ namespace LinqToDB.DataProvider.DB2
 					case "SmallDateTime" :
 					case "DateTime"      :
 					case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);
-					case "TinyInt"       : return new SqlFunction(func.SystemType, "SmallInt",  func.Parameters);
+					case "UInt16"        : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
+					case "UInt32"        : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
+					case "UInt64"        : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters);
+					case "Byte"          :
+					case "SByte"         :
+					case "Int16"         : return new SqlFunction(func.SystemType, "SmallInt",  func.Parameters);
+					case "Int32"         : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
+					case "Int64"         : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
+					case "Double"        : return new SqlFunction(func.SystemType, "Float",     func.Parameters);
+					case "Single"        : return new SqlFunction(func.SystemType, "Real",      func.Parameters);
 					case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
 					case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
 					case "VarChar"       :
