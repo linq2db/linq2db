@@ -4,8 +4,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Collections.Generic;
-
 	using LinqToDB.Expressions;
 	using SqlBuilder;
 

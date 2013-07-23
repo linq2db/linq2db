@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Linq;
-
 	using Common;
 	using Extensions;
 	using SqlBuilder;

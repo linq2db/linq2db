@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Expressions;
-
 	using Mapping;
 	using SqlProvider;
 

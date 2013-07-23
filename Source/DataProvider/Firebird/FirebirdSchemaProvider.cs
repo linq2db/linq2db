@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
 using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.IO;
-
 	using Common;
 	using Data;
 	using SchemaProvider;

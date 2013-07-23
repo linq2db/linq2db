@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Configuration;
-	using System.Data.SqlClient;
-
 	using Data;
 
 	public class SqlServerFactory : IDataProviderFactory

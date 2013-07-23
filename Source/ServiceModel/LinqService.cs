@@ -4,10 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.ServiceModel;
 using System.Web.Services;
-using LinqToDB.Common;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
 	using Data;
 	using Linq;
 	using SqlBuilder;

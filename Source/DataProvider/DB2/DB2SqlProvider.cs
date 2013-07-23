@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Linq;
-
 	using Extensions;
 	using SqlBuilder;
 	using SqlProvider;

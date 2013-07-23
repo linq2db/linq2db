@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Data;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Threading;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Linq.Expressions;
-
 	using Common;
 	using Mapping;
 	using SqlProvider;

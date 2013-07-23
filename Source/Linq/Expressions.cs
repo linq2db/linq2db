@@ -15,8 +15,6 @@ using System.Text;
 
 namespace LinqToDB.Linq
 {
-	// FIXME: using B = Boolean;
-
 	using LinqToDB.Expressions;
 	using Mapping;
 

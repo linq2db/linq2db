@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider

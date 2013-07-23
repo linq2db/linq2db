@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using System.Reflection;
-
 	using Data;
 
 	public class SQLiteFactory: IDataProviderFactory

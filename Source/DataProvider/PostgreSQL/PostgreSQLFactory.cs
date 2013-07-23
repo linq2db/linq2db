@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Data;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Reflection;
-
 	using Data;
 
 	public class PostgreSQLFactory: IDataProviderFactory
