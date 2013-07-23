@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 		public ISqlExpression   Sql;
 		public SqlQuery         Query;
 		public int              Index = -1;
-		public List<MemberInfo> Members = new List<MemberInfo>();
+		public readonly List<MemberInfo> Members = new List<MemberInfo>();
 
 		public SqlInfo()
 		{
@@ -37,12 +37,10 @@ namespace LinqToDB.Linq.Builder
 		public SqlInfo Clone(MemberInfo mi)
 		{
 			var info = Clone();
+
 			if (Members.Count == 0 || Members[0] != mi)
 				info.Members.Insert(0, mi);
-			else
-			{
-				
-			}
+
 			return info;
 		}
 

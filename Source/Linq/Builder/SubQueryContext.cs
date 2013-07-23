@@ -10,8 +10,6 @@ namespace LinqToDB.Linq.Builder
 
 	class SubQueryContext : PassThroughContext
 	{
-		public readonly IBuildContext SubQuery;
-
 		public SubQueryContext(IBuildContext subQuery, SqlQuery sqlQuery, bool addToSql)
 			: base(subQuery)
 		{
@@ -26,16 +24,12 @@ namespace LinqToDB.Linq.Builder
 				sqlQuery.From.Table(SubQuery.SqlQuery);
 		}
 
-		public SubQueryContext(IBuildContext subQuery, bool addToSql)
+		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
 			: this(subQuery, new SqlQuery { ParentSql = subQuery.SqlQuery.ParentSql }, addToSql)
 		{
 		}
 
-		public SubQueryContext(IBuildContext subQuery)
-			: this(subQuery, true)
-		{
-		}
-
+		public          IBuildContext SubQuery { get; private set; }
 		public override SqlQuery      SqlQuery { get; set; }
 		public override IBuildContext Parent   { get; set; }
 

@@ -90,17 +90,15 @@ namespace LinqToDB.Linq
 			SqlProviderFlags  = parseContext.Builder.DataContextInfo.SqlProviderFlags;
 			CreateSqlProvider = parseContext.Builder.DataContextInfo.CreateSqlProvider;
 			Expression        = parseContext.Builder.OriginalExpression;
-			//Parameters        = parameters;
 		}
 
 		#endregion
 
 		#region Properties & Fields
 
-		public Query<T>              Next;
-		public ParameterExpression[] CompiledParameters;
-		public List<QueryInfo>       Queries = new List<QueryInfo>(1);
-		public Func<ISqlProvider>    CreateSqlProvider;
+		public          Query<T>           Next;
+		public readonly List<QueryInfo>    Queries = new List<QueryInfo>(1);
+		public          Func<ISqlProvider> CreateSqlProvider;
 
 		private ISqlProvider _sqlProvider; 
 		public  ISqlProvider  SqlProvider
@@ -398,8 +396,7 @@ namespace LinqToDB.Linq
 					var type  = value.GetType();
 					var etype = type.GetItemType();
 
-					if (etype == null || etype == typeof(object) ||
-						etype.IsEnum ||
+					if (etype == null || etype == typeof(object) || etype.IsEnum ||
 						(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArguments()[0].IsEnum))
 					{
 						var values = new List<object>();
