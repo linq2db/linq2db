@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml;
@@ -152,10 +151,10 @@ namespace Tests.DataProvider
 				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
 				TestNumeric(conn, short.MinValue,    DataType.Int16);
 				TestNumeric(conn, short.MaxValue,    DataType.Int16);
-				TestNumeric(conn, int.MinValue,      DataType.Int32);
-				TestNumeric(conn, int.MaxValue,      DataType.Int32);
-				TestNumeric(conn, long.MinValue,     DataType.Int64);
-				TestNumeric(conn, long.MaxValue,     DataType.Int64,      "float real");
+				TestNumeric(conn, int.  MinValue,    DataType.Int32);
+				TestNumeric(conn, int.  MaxValue,    DataType.Int32);
+				TestNumeric(conn, long. MinValue,    DataType.Int64);
+				TestNumeric(conn, long. MaxValue,    DataType.Int64,      "float real");
 
 				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
@@ -163,7 +162,7 @@ namespace Tests.DataProvider
 				TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumeric(conn, 3.40282306E+38f,   DataType.Single,     "bigint int smallint tinyint");
+				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
@@ -218,21 +217,21 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> ("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
@@ -244,27 +243,27 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),         Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),     Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),     Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),      Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),         Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),         Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),        Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),     Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"), Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),         Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"),        Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),        Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));

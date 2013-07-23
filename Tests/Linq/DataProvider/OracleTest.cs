@@ -313,17 +313,17 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar2(20)) FROM sys.dual"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar2(20)) FROM sys.dual"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.Char    ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.Char    ("p", '1')),  Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.VarChar ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.VarChar ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.NChar   ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.NChar   ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.NVarChar("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.NVarChar("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> (PathThroughSql, DataParameter.Create  ("p", '1')),  Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>(PathThroughSql, DataParameter.Create  ("p", '1')),  Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> (PathThroughSql, new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>(PathThroughSql, new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
@@ -396,10 +396,10 @@ namespace Tests.DataProvider
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 
-				Assert.That(conn.Execute<OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").Value, Is.EqualTo(arr));
-				Assert.That(conn.Execute<OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").Value, Is.EqualTo(1));
-				Assert.That(conn.Execute<OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").Value, Is.EqualTo("12345 "));
+				Assert.That(conn.Execute<OracleBinary>   ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleBlob>     ("SELECT to_blob('3039')           FROM sys.dual").     Value, Is.EqualTo(arr));
+				Assert.That(conn.Execute<OracleDecimal>  ("SELECT Cast(1        as decimal) FROM sys.dual").     Value, Is.EqualTo(1));
+				Assert.That(conn.Execute<OracleString>   ("SELECT Cast('12345' as char(6))  FROM sys.dual").     Value, Is.EqualTo("12345 "));
 				Assert.That(conn.Execute<OracleClob>     ("SELECT ntextDataType     FROM AllTypes WHERE ID = 2").Value, Is.EqualTo("111"));
 				Assert.That(conn.Execute<OracleDate>     ("SELECT datetimeDataType  FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 				Assert.That(conn.Execute<OracleTimeStamp>("SELECT datetime2DataType FROM AllTypes WHERE ID = 2").Value, Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));

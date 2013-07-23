@@ -193,7 +193,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region InsertOrUpdate
+		#region InsertOrReplace
 
 		public static int InsertOrReplace<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
