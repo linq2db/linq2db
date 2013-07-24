@@ -134,5 +134,24 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		#endregion
+
+		public override void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			if (!databaseName.ToLower().EndsWith(".sdf"))
+				databaseName += ".sdf";
+
+			dynamic eng = Activator.CreateInstance(
+				GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
+				string.Format("Data Source={0}", databaseName));
+
+			eng.CreateDatabase();
+
+			var disp = eng as IDisposable;
+
+			if (disp != null)
+				disp.Dispose();
+		}
 	}
 }

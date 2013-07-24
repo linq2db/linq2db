@@ -55,5 +55,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		#endregion
+
+		public static void CreateDatabase(string databaseName)
+		{
+			_sqlCeDataProvider.CreateDatabase(databaseName);
+		}
 	}
 }

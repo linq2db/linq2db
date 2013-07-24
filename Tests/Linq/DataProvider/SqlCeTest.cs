@@ -3,12 +3,14 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -398,6 +400,18 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
+		}
+
+		[Test]
+		public void CreateDatabase([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		{
+//			using (var e = new System.Data.SqlServerCe.SqlCeEngine("Data Source = TestDatabase.sdf"))
+//				e.CreateDatabase();
+
+			SqlCeFactory.CreateDatabase("TestDatabase");
+
+			Assert.IsTrue(File.Exists("TestDatabase.sdf"));
+			File.Delete("TestDatabase.sdf");
 		}
 	}
 }
