@@ -811,6 +811,10 @@ namespace LinqToDB.ServiceModel
 										appendSelect = true;
 									break;
 
+								case QueryType.CreateDatabase :
+									Append(elem.CreateDatabaseInfo.DatabaseName);
+									break;
+
 								default                       :
 									appendSelect = true;
 									break;
@@ -1311,6 +1315,11 @@ namespace LinqToDB.ServiceModel
 							var delete             = readDelete ? Read<SqlQuery.DeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlQuery.SelectClause>() : new SqlQuery.SelectClause(null);
+							var createDbInfo       = queryType == QueryType.CreateDatabase ?
+								new CreateDatabaseInfo
+								{
+									DatabaseName = ReadString()
+								} : null;
 							var where              = Read<SqlQuery.WhereClause>();
 							var groupBy            = Read<SqlQuery.GroupByClause>();
 							var having             = Read<SqlQuery.WhereClause>();
@@ -1334,6 +1343,7 @@ namespace LinqToDB.ServiceModel
 								orderBy,
 								unions == null ? null : unions.ToList(),
 								null,
+								createDbInfo,
 								parameterDependent,
 								parameters.ToList());
 

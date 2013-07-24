@@ -8,6 +8,7 @@ namespace LinqToDB.SqlBuilder
 		Delete,
 		Update,
 		Insert,
-		InsertOrUpdate
+		InsertOrUpdate,
+		CreateDatabase,
 	}
 }

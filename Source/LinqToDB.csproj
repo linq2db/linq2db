@@ -197,6 +197,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="SqlBuilder\CreateDatabaseInfo.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />

@@ -1329,7 +1329,11 @@ namespace LinqToDB.SqlBuilder
 							}
 						}
 
-						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us, (SqlQuery)parent, q.IsParameterDependent, ps);
+						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
+							(SqlQuery)parent,
+							q.CreateDatabaseInfo,
+							q.IsParameterDependent,
+							ps);
 
 						_visitedElements[q] = action(nq) ?? nq;
 
