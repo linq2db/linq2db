@@ -43,5 +43,10 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		#endregion
+
+		public static void CreateDatabase(string databaseName)
+		{
+			_accessDataProvider.CreateDatabase(databaseName);
+		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.OleDb;
+using System.Runtime.InteropServices;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -81,6 +82,28 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			base.SetParameterType(parameter, dataType);
+		}
+
+		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
+		public class CatalogClass
+		{
+		}
+
+		public override void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			if (!databaseName.ToLower().EndsWith(".mdb"))
+				databaseName += ".mdb";
+
+			dynamic catalog = new CatalogClass();
+
+			var conn = catalog.Create(string.Format(
+				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Jet OLEDB:Engine Type=5",
+				databaseName));
+
+			if (conn != null)
+				conn.Close();
 		}
 	}
 }

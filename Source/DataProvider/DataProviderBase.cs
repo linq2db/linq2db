@@ -253,6 +253,15 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
+		#region CreateDatabase
+
+		public virtual void CreateDatabase(string databaseName)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
 		#region BulkCopy
 
 		public virtual int BulkCopy<T>(DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)

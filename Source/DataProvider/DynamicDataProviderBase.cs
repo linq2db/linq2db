@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 
 		volatile Type _connectionType;
 
-		private Type GetConnectionType()
+		protected Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (_sync)
