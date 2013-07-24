@@ -38,6 +38,11 @@ namespace LinqToDB.DataProvider.SQLite
 			new AssemblyResolver(assembly, "System.Data.SQLite");
 		}
 
+		public static void CreateDatabase(string databaseName)
+		{
+			_SQLiteDataProvider.CreateDatabase(databaseName);
+		}
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)

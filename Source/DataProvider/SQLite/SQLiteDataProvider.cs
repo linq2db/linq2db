@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -66,6 +67,27 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			base.SetParameterType(parameter, dataType);
+		}
+
+		static Action<string> _createDatabase;
+
+		public override void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			if (!databaseName.ToLower().EndsWith(".sqlite"))
+				databaseName += ".sqlite";
+
+			if (_createDatabase == null)
+			{
+				var p = Expression.Parameter(typeof(string));
+				var l = Expression.Lambda<Action<string>>(
+					Expression.Call(GetConnectionType(), "CreateFile", null, p),
+					p);
+				_createDatabase = l.Compile();
+			}
+
+			_createDatabase(databaseName);
 		}
 	}
 }

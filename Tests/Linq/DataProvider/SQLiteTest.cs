@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -390,6 +392,15 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
+		}
+
+		[Test]
+		public void CreateDatabase([IncludeDataContexts(ProviderName.SQLite)] string context)
+		{
+			SQLiteFactory.CreateDatabase("TestDatabase");
+
+			Assert.IsTrue(File.Exists("TestDatabase.sqlite"));
+			File.Delete("TestDatabase.sqlite");
 		}
 	}
 }
