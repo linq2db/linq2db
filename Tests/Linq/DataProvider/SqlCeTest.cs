@@ -405,13 +405,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataContexts(ProviderName.SqlCe)] string context)
 		{
-//			using (var e = new System.Data.SqlServerCe.SqlCeEngine("Data Source = TestDatabase.sdf"))
-//				e.CreateDatabase();
-
-			SqlCeFactory.CreateDatabase("TestDatabase");
-
+			SqlCeFactory.CreateDatabase(context, "TestDatabase");
 			Assert.IsTrue(File.Exists("TestDatabase.sdf"));
-			File.Delete("TestDatabase.sdf");
+			SqlCeFactory.DropDatabase  (context, "TestDatabase");
 		}
 	}
 }

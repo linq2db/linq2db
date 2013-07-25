@@ -38,11 +38,6 @@ namespace LinqToDB.DataProvider.SQLite
 			new AssemblyResolver(assembly, "System.Data.SQLite");
 		}
 
-		public static void CreateDatabase(string databaseName)
-		{
-			_SQLiteDataProvider.CreateDatabase(databaseName);
-		}
-
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
@@ -61,5 +56,17 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		#endregion
+
+		public static void CreateDatabase(string configurationString,
+			string databaseName   = null,
+			bool   deleteIfExists = false)
+		{
+			_SQLiteDataProvider.CreateDatabase(configurationString, databaseName, deleteIfExists);
+		}
+
+		public static void DropDatabase(string configurationString, string databaseName = null)
+		{
+			_SQLiteDataProvider.DropDatabase(configurationString, databaseName);
+		}
 	}
 }

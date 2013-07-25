@@ -68,7 +68,6 @@ namespace LinqToDB.DataProvider.Access
 				case DataType.Decimal    :
 				case DataType.VarNumeric : 
 					((OleDbParameter)parameter).OleDbType = OleDbType.Decimal; return;
-					//((OleDbParameter)parameter).OleDbType = OleDbType.Currency; return;
 
 				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
 				//
@@ -77,8 +76,6 @@ namespace LinqToDB.DataProvider.Access
 
 				case DataType.Text       : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarChar;  return;
 				case DataType.NText      : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarWChar; return;
-
-				//case DataType.Int32      : ((OleDbParameter)parameter).OleDbType = OleDbType.Integer; return;
 			}
 
 			base.SetParameterType(parameter, dataType);
@@ -89,21 +86,34 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		public override void CreateDatabase(
+			[JetBrains.Annotations.NotNull] string configurationString,
+			string databaseName   = null,
+			bool   deleteIfExists = false,
+			string parameters     = null)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (configurationString == null) throw new ArgumentNullException("configurationString");
 
-			if (!databaseName.ToLower().EndsWith(".mdb"))
-				databaseName += ".mdb";
+			CreateFileDatabase(
+				configurationString, databaseName, deleteIfExists, ".mdb",
+				(connStr,dbName) =>
+				{
+					dynamic catalog = new CatalogClass();
 
-			dynamic catalog = new CatalogClass();
+					var conn = catalog.Create(connStr);
 
-			var conn = catalog.Create(string.Format(
-				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Jet OLEDB:Engine Type=5",
-				databaseName));
+					if (conn != null)
+						conn.Close();
+				});
+		}
 
-			if (conn != null)
-				conn.Close();
+		public override void DropDatabase(
+			[JetBrains.Annotations.NotNull] string configurationString,
+			string databaseName = null)
+		{
+			if (configurationString == null) throw new ArgumentNullException("configurationString");
+
+			DropFileDatabase(configurationString, databaseName, ".mdb");
 		}
 	}
 }

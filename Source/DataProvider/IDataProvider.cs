@@ -28,7 +28,8 @@ namespace LinqToDB.DataProvider
 
 		ISchemaProvider  GetSchemaProvider  ();
 
-		void             CreateDatabase     (string databaseName);
+		void             CreateDatabase     (string configurationString, string databaseName=null, bool deleteIfExists=false, string parameters=null);
+		void             DropDatabase       (string configurationString, string databaseName=null);
 		int              BulkCopy<T>        (DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source);
 	}
 }

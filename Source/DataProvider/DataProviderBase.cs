@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
@@ -253,11 +255,95 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		#region CreateDatabase
+		#region Create/Drop Database
 
-		public virtual void CreateDatabase(string databaseName)
+		public virtual void CreateDatabase(
+			string configurationString,
+			string databaseName   = null,
+			bool   deleteIfExists = false,
+			string parameters     = null)
 		{
 			throw new NotImplementedException();
+		}
+
+		internal void CreateFileDatabase(
+			string configurationString,
+			string databaseName,
+			bool   deleteIfExists,
+			string extension,
+			Action<string,string> createDatabase)
+		{
+			var connectionString = DataConnection.GetConnectionString(configurationString);
+			var csDatabaseName   =
+			(
+				from p in connectionString.Split(';')
+				let v = p.Split('=')
+				where v.Length == 2 && v[0].Replace(" ", "").ToLower() == "datasource"
+				select v[1]
+			).First().Trim();
+
+			if (databaseName != null)
+			{
+				databaseName = databaseName.Trim();
+
+				if (!databaseName.ToLower().EndsWith(extension))
+					databaseName += extension;
+			}
+
+			if (File.Exists(databaseName ?? csDatabaseName))
+			{
+				if (!deleteIfExists)
+					return;
+
+				File.Delete(databaseName ?? csDatabaseName);
+			}
+
+			if (databaseName != null)
+				connectionString = connectionString.Replace(csDatabaseName, databaseName);
+
+			createDatabase(connectionString, databaseName ?? csDatabaseName);
+		}
+
+		public virtual void DropDatabase(string configurationString, string databaseName = null)
+		{
+			throw new NotImplementedException();
+		}
+
+		internal static void DropFileDatabase(string configurationString, string databaseName, string extension)
+		{
+			var connectionString = DataConnection.GetConnectionString(configurationString);
+			var csDatabaseName   =
+			(
+				from p in connectionString.Split(';')
+				let v = p.Split('=')
+				where v.Length == 2 && v[0].Replace(" ", "").ToLower() == "datasource"
+				select v[1]
+			).First().Trim();
+
+			if (databaseName == null)
+			{
+				if (File.Exists(csDatabaseName))
+					File.Delete(csDatabaseName);
+			}
+			else
+			{
+				databaseName = databaseName.Trim();
+
+				if (File.Exists(databaseName))
+				{
+					File.Delete(databaseName);
+				}
+				else
+				{
+					if (!databaseName.ToLower().EndsWith(extension))
+					{
+						databaseName += extension;
+
+						if (File.Exists(databaseName))
+							File.Delete(databaseName);
+					}
+				}
+			}
 		}
 
 		#endregion

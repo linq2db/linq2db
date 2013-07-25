@@ -329,6 +329,8 @@ namespace LinqToDB.Data
 
 		public static string GetConnectionString(string configurationString)
 		{
+			InitConfig();
+
 			ConfigurationInfo ci;
 
 			if (_configurations.TryGetValue(configurationString, out ci))

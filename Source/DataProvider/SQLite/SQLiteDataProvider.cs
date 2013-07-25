@@ -71,23 +71,37 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Action<string> _createDatabase;
 
-		public override void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		public override void CreateDatabase([JetBrains.Annotations.NotNull] string configurationString,
+			string databaseName   = null,
+			bool   deleteIfExists = false,
+			string parameters     = null)
 		{
-			if (databaseName == null) throw new ArgumentNullException("databaseName");
+			if (configurationString == null) throw new ArgumentNullException("configurationString");
 
-			if (!databaseName.ToLower().EndsWith(".sqlite"))
-				databaseName += ".sqlite";
+			CreateFileDatabase(
+				configurationString, databaseName, deleteIfExists, ".sqlite",
+				(connStr,dbName) =>
+				{
+					if (_createDatabase == null)
+					{
+						var p = Expression.Parameter(typeof(string));
+						var l = Expression.Lambda<Action<string>>(
+							Expression.Call(GetConnectionType(), "CreateFile", null, p),
+							p);
+						_createDatabase = l.Compile();
+					}
 
-			if (_createDatabase == null)
-			{
-				var p = Expression.Parameter(typeof(string));
-				var l = Expression.Lambda<Action<string>>(
-					Expression.Call(GetConnectionType(), "CreateFile", null, p),
-					p);
-				_createDatabase = l.Compile();
-			}
+					_createDatabase(dbName);
+				});
+		}
 
-			_createDatabase(databaseName);
+		public override void DropDatabase(
+			[JetBrains.Annotations.NotNull] string configurationString,
+			string databaseName = null)
+		{
+			if (configurationString == null) throw new ArgumentNullException("configurationString");
+
+			DropFileDatabase(configurationString, databaseName, ".sqlite");
 		}
 	}
 }
