@@ -56,16 +56,14 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#endregion
 
-		public static void CreateDatabase(string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false)
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_sqlCeDataProvider.CreateDatabase(configurationString, databaseName, deleteIfExists);
+			_sqlCeDataProvider.CreateDatabase(databaseName, deleteIfExists);
 		}
 
-		public static void DropDatabase(string configurationString, string databaseName = null)
+		public static void DropDatabase(string databaseName)
 		{
-			_sqlCeDataProvider.DropDatabase(configurationString, databaseName);
+			_sqlCeDataProvider.DropDatabase(databaseName);
 		}
 	}
 }

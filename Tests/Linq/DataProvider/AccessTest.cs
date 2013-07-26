@@ -316,14 +316,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataContexts(ProviderName.Access)] string context)
 		{
-			DataConnection.AddConfiguration(
-				context + ".CreateDatabase",
-				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=TestDatabase.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5",
-				AccessFactory.GetDataProvider());
-
-			AccessFactory.CreateDatabase(context + ".CreateDatabase", "TestDatabase", deleteIfExists:true);
+			AccessFactory.CreateDatabase("TestDatabase", deleteIfExists:true);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
-			AccessFactory.DropDatabase  (context + ".CreateDatabase", "TestDatabase");
+			AccessFactory.DropDatabase  ("TestDatabase");
 		}
 	}
 }

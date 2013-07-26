@@ -397,9 +397,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataContexts(ProviderName.SQLite)] string context)
 		{
-			SQLiteFactory.CreateDatabase(context, "TestDatabase");
+			SQLiteFactory.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists("TestDatabase.sqlite"));
-			SQLiteFactory.DropDatabase  (context, "TestDatabase");
+			SQLiteFactory.DropDatabase  ("TestDatabase");
 		}
 	}
 }

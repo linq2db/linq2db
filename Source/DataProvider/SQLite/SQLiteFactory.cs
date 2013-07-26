@@ -57,16 +57,14 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#endregion
 
-		public static void CreateDatabase(string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false)
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_SQLiteDataProvider.CreateDatabase(configurationString, databaseName, deleteIfExists);
+			_SQLiteDataProvider.CreateDatabase(databaseName, deleteIfExists);
 		}
 
-		public static void DropDatabase(string configurationString, string databaseName = null)
+		public static void DropDatabase(string databaseName)
 		{
-			_SQLiteDataProvider.DropDatabase(configurationString, databaseName);
+			_SQLiteDataProvider.DropDatabase(databaseName);
 		}
 	}
 }

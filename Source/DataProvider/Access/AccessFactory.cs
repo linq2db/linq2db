@@ -44,16 +44,14 @@ namespace LinqToDB.DataProvider.Access
 
 		#endregion
 
-		public static void CreateDatabase(string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false)
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			_accessDataProvider.CreateDatabase(configurationString, databaseName, deleteIfExists);
+			_accessDataProvider.CreateDatabase(databaseName, deleteIfExists);
 		}
 
-		public static void DropDatabase(string configurationString, string databaseName = null)
+		public static void DropDatabase(string databaseName)
 		{
-			_accessDataProvider.DropDatabase(configurationString, databaseName);
+			_accessDataProvider.DropDatabase(databaseName);
 		}
 	}
 }

@@ -135,21 +135,17 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#endregion
 
-		public override void CreateDatabase(
-			[JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false,
-			string parameters     = null)
+		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
 
 			CreateFileDatabase(
-				configurationString, databaseName, deleteIfExists, ".sdf",
-				(connStr,dbName) =>
+				databaseName, deleteIfExists, ".sdf",
+				dbName =>
 				{
 					dynamic eng = Activator.CreateInstance(
 						GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
-						connStr);
+						"Data Source=" + dbName);
 
 					eng.CreateDatabase();
 
@@ -160,13 +156,11 @@ namespace LinqToDB.DataProvider.SqlCe
 				});
 		}
 
-		public override void DropDatabase(
-			[JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName = null)
+		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
 
-			DropFileDatabase(configurationString, databaseName, ".sdf");
+			DropFileDatabase(databaseName, ".sdf");
 		}
 	}
 }

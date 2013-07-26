@@ -71,16 +71,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static Action<string> _createDatabase;
 
-		public override void CreateDatabase([JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false,
-			string parameters     = null)
+		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
 
 			CreateFileDatabase(
-				configurationString, databaseName, deleteIfExists, ".sqlite",
-				(connStr,dbName) =>
+				databaseName, deleteIfExists, ".sqlite",
+				dbName =>
 				{
 					if (_createDatabase == null)
 					{
@@ -95,13 +92,11 @@ namespace LinqToDB.DataProvider.SQLite
 				});
 		}
 
-		public override void DropDatabase(
-			[JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName = null)
+		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
 
-			DropFileDatabase(configurationString, databaseName, ".sqlite");
+			DropFileDatabase(databaseName, ".sqlite");
 		}
 	}
 }

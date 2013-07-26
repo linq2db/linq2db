@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.IO;
+
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -82,38 +84,48 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
-		public class CatalogClass
+		class CatalogClass
 		{
 		}
 
-		public override void CreateDatabase(
-			[JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName   = null,
-			bool   deleteIfExists = false,
-			string parameters     = null)
+		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool   deleteIfExists = false)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(".mdb"))
+				databaseName += ".mdb";
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			var connectionString = string.Format(
+				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
+				databaseName);
 
 			CreateFileDatabase(
-				configurationString, databaseName, deleteIfExists, ".mdb",
-				(connStr,dbName) =>
+				databaseName, deleteIfExists, ".mdb",
+				dbName =>
 				{
 					dynamic catalog = new CatalogClass();
 
-					var conn = catalog.Create(connStr);
+					var conn = catalog.Create(connectionString);
 
 					if (conn != null)
 						conn.Close();
 				});
 		}
 
-		public override void DropDatabase(
-			[JetBrains.Annotations.NotNull] string configurationString,
-			string databaseName = null)
+		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
 		{
-			if (configurationString == null) throw new ArgumentNullException("configurationString");
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
 
-			DropFileDatabase(configurationString, databaseName, ".mdb");
+			DropFileDatabase(databaseName, ".mdb");
 		}
 	}
 }
