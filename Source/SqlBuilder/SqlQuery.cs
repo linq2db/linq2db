@@ -55,20 +55,20 @@ namespace LinqToDB.SqlBuilder
 		}
 
 		internal void Init(
-			InsertClause       insert,
-			UpdateClause       update,
-			DeleteClause       delete,
-			SelectClause       select,
-			FromClause         from,
-			WhereClause        where,
-			GroupByClause      groupBy,
-			WhereClause        having,
-			OrderByClause      orderBy,
-			List<Union>        unions,
-			SqlQuery           parentSql,
-			CreateTableInfo    createDatabaseInfo,
-			bool               parameterDependent,
-			List<SqlParameter> parameters)
+			InsertClause         insert,
+			UpdateClause         update,
+			DeleteClause         delete,
+			SelectClause         select,
+			FromClause           from,
+			WhereClause          where,
+			GroupByClause        groupBy,
+			WhereClause          having,
+			OrderByClause        orderBy,
+			List<Union>          unions,
+			SqlQuery             parentSql,
+			CreateTableStatement createTable,
+			bool                 parameterDependent,
+			List<SqlParameter>   parameters)
 		{
 			_insert              = insert;
 			_update              = update;
@@ -81,7 +81,7 @@ namespace LinqToDB.SqlBuilder
 			_orderBy             = orderBy;
 			_unions              = unions;
 			ParentSql            = parentSql;
-			CreateTableInfo      = createDatabaseInfo;
+			_createTable         = createTable;
 			IsParameterDependent = parameterDependent;
 			_parameters.AddRange(parameters);
 
@@ -2131,9 +2131,67 @@ namespace LinqToDB.SqlBuilder
 
 		#endregion
 
-		#region CreateTable
+		#region CreateTableStatement
 
-		public CreateTableInfo CreateTableInfo { get; set; }
+		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+		{
+			public SqlTable Table { get; set; }
+
+			#region IQueryElement Members
+
+			public QueryElementType ElementType { get { return QueryElementType.CreateTableStatement; } }
+
+			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			{
+				sb.Append("CREATE TABLE ");
+
+				if (Table != null)
+					((IQueryElement)Table).ToString(sb, dic);
+
+				sb.AppendLine();
+
+				return sb;
+			}
+
+			#endregion
+
+			#region ISqlExpressionWalkable Members
+
+			ISqlExpression ISqlExpressionWalkable.Walk(bool skipColumns, Func<ISqlExpression,ISqlExpression> func)
+			{
+				if (Table != null)
+					((ISqlExpressionWalkable)Table).Walk(skipColumns, func);
+
+				return null;
+			}
+
+			#endregion
+
+			#region ICloneableElement Members
+
+			public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+			{
+				if (!doClone(this))
+					return this;
+
+				var clone = new CreateTableStatement { };
+
+				if (Table != null)
+					clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
+
+				objectTree.Add(this, clone);
+
+				return clone;
+			}
+
+			#endregion
+		}
+
+		private CreateTableStatement _createTable;
+		public  CreateTableStatement  CreateTable
+		{
+			get { return _createTable ?? (_createTable = new CreateTableStatement()); }
+		}
 
 		#endregion
 

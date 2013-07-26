@@ -121,12 +121,13 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (SqlQuery.QueryType)
 			{
-				case QueryType.Select         : BuildSelectQuery        (sb); break;
-				case QueryType.Delete         : BuildDeleteQuery        (sb); break;
-				case QueryType.Update         : BuildUpdateQuery        (sb); break;
-				case QueryType.Insert         : BuildInsertQuery        (sb); break;
-				case QueryType.InsertOrUpdate : BuildInsertOrUpdateQuery(sb); break;
-				default                       : BuildUnknownQuery       (sb); break;
+				case QueryType.Select         : BuildSelectQuery         (sb); break;
+				case QueryType.Delete         : BuildDeleteQuery         (sb); break;
+				case QueryType.Update         : BuildUpdateQuery         (sb); break;
+				case QueryType.Insert         : BuildInsertQuery         (sb); break;
+				case QueryType.InsertOrUpdate : BuildInsertOrUpdateQuery (sb); break;
+				case QueryType.CreateTable    : BuildCreateTableStatement(sb); break;
+				default                       : BuildUnknownQuery        (sb); break;
 			}
 		}
 
@@ -538,6 +539,73 @@ namespace LinqToDB.SqlProvider
 
 			sb.AppendLine();
 			AppendIndent(sb).AppendLine("COMMIT");
+		}
+
+		#endregion
+
+		#region Build Insert
+
+		protected void BuildCreateTableStatement(StringBuilder sb)
+		{
+			AppendIndent(sb).Append("CREATE TABLE");
+
+			BuildPhysicalTable(sb, SqlQuery.Insert.Into, null);
+
+//			if (SqlQuery.Insert.Items.Count == 0)
+//			{
+//				sb.Append(' ');
+//				BuildEmptyInsert(sb);
+//			}
+//			else
+//			{
+//				sb.AppendLine();
+//
+//				AppendIndent(sb).AppendLine("(");
+//
+//				Indent++;
+//
+//				var first = true;
+//
+//				foreach (var expr in SqlQuery.Insert.Items)
+//				{
+//					if (!first)
+//						sb.Append(',').AppendLine();
+//					first = false;
+//
+//					AppendIndent(sb);
+//					BuildExpression(sb, expr.Column, false, true);
+//				}
+//
+//				Indent--;
+//
+//				sb.AppendLine();
+//				AppendIndent(sb).AppendLine(")");
+//
+//				if (SqlQuery.QueryType == QueryType.InsertOrUpdate || SqlQuery.From.Tables.Count == 0)
+//				{
+//					AppendIndent(sb).AppendLine("VALUES");
+//					AppendIndent(sb).AppendLine("(");
+//
+//					Indent++;
+//
+//					first = true;
+//
+//					foreach (var expr in SqlQuery.Insert.Items)
+//					{
+//						if (!first)
+//							sb.Append(',').AppendLine();
+//						first = false;
+//
+//						AppendIndent(sb);
+//						BuildExpression(sb, expr.Expression);
+//					}
+//
+//					Indent--;
+//
+//					sb.AppendLine();
+//					AppendIndent(sb).AppendLine(")");
+//				}
+//			}
 		}
 
 		#endregion

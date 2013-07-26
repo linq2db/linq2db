@@ -784,10 +784,11 @@ namespace LinqToDB.ServiceModel
 							Append((int)elem.QueryType);
 							Append(elem.From);
 
-							var appendInsert = false;
-							var appendUpdate = false;
-							var appendDelete = false;
-							var appendSelect = false;
+							var appendInsert      = false;
+							var appendUpdate      = false;
+							var appendDelete      = false;
+							var appendSelect      = false;
+							var appendCreateTable = false;
 
 							switch (elem.QueryType)
 							{
@@ -812,7 +813,7 @@ namespace LinqToDB.ServiceModel
 									break;
 
 								case QueryType.CreateTable    :
-									Append(elem.CreateTableInfo.DatabaseName);
+									appendCreateTable = true;
 									break;
 
 								default                       :
@@ -820,10 +821,11 @@ namespace LinqToDB.ServiceModel
 									break;
 							}
 
-							Append(appendInsert); if (appendInsert) Append(elem.Insert);
-							Append(appendUpdate); if (appendUpdate) Append(elem.Update);
-							Append(appendDelete); if (appendDelete) Append(elem.Delete);
-							Append(appendSelect); if (appendSelect) Append(elem.Select);
+							Append(appendInsert);      if (appendInsert)      Append(elem.Insert);
+							Append(appendUpdate);      if (appendUpdate)      Append(elem.Update);
+							Append(appendDelete);      if (appendDelete)      Append(elem.Delete);
+							Append(appendSelect);      if (appendSelect)      Append(elem.Select);
+							Append(appendCreateTable); if (appendCreateTable) Append(elem.CreateTable);
 
 							Append(elem.Where);
 							Append(elem.GroupBy);
@@ -859,8 +861,10 @@ namespace LinqToDB.ServiceModel
 						}
 
 					case QueryElementType.SearchCondition :
+						{
 							Append(((SqlQuery.SearchCondition)e).Conditions);
 							break;
+						}
 
 					case QueryElementType.Condition :
 						{
@@ -932,8 +936,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.DeleteClause :
 						{
-							var elem = (SqlQuery.DeleteClause)e;
-							Append(elem.Table);
+							Append(((SqlQuery.DeleteClause)e).Table);
 							break;
 						}
 
@@ -943,6 +946,15 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Column);
 							Append(elem.Expression);
+
+							break;
+						}
+
+					case QueryElementType.CreateTableStatement :
+						{
+							var elem = (SqlQuery.CreateTableStatement)e;
+
+							Append(elem.Table);
 
 							break;
 						}
@@ -1315,11 +1327,8 @@ namespace LinqToDB.ServiceModel
 							var delete             = readDelete ? Read<SqlQuery.DeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlQuery.SelectClause>() : new SqlQuery.SelectClause(null);
-							var createDbInfo       = queryType == QueryType.CreateTable ?
-								new CreateTableInfo
-								{
-									DatabaseName = ReadString()
-								} : null;
+							var readCreateTable    = ReadBool();
+							var createTable        = readCreateTable ? Read<SqlQuery.CreateTableStatement>() : new SqlQuery.CreateTableStatement();
 							var where              = Read<SqlQuery.WhereClause>();
 							var groupBy            = Read<SqlQuery.GroupByClause>();
 							var having             = Read<SqlQuery.WhereClause>();
@@ -1343,7 +1352,7 @@ namespace LinqToDB.ServiceModel
 								orderBy,
 								unions == null ? null : unions.ToList(),
 								null,
-								createDbInfo,
+								createTable,
 								parameterDependent,
 								parameters.ToList());
 
@@ -1456,6 +1465,15 @@ namespace LinqToDB.ServiceModel
 						{
 							var table = Read<SqlTable>();
 							obj = new SqlQuery.DeleteClause { Table = table };
+							break;
+						}
+
+					case QueryElementType.CreateTableStatement :
+						{
+							var table = Read<SqlTable>();
+
+							obj = new SqlQuery.CreateTableStatement { Table = table };
+
 							break;
 						}
 

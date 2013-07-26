@@ -41,5 +41,6 @@ namespace LinqToDB.SqlBuilder
 			OrderByClause,
 				OrderByItem,
 			Union,
+			CreateTableStatement,
 	}
 }

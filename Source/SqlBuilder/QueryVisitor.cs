@@ -208,6 +208,13 @@ namespace LinqToDB.SqlBuilder
 						break;
 					}
 
+				case QueryElementType.CreateTableStatement:
+					{
+						if (((SqlQuery.CreateTableStatement)element).Table != null)
+							Visit1(((SqlQuery.CreateTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
@@ -513,6 +520,13 @@ namespace LinqToDB.SqlBuilder
 						break;
 					}
 
+				case QueryElementType.CreateTableStatement:
+					{
+						if (((SqlQuery.CreateTableStatement)element).Table != null)
+							Visit2(((SqlQuery.CreateTableStatement)element).Table);
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
@@ -798,6 +812,13 @@ namespace LinqToDB.SqlBuilder
 					{
 						var sc = (SqlQuery.DeleteClause)element;
 						return Find(sc.Table, find);
+					}
+
+				case QueryElementType.CreateTableStatement:
+					{
+						var sc = (SqlQuery.CreateTableStatement)element;
+						return
+							Find(sc.Table, find);
 					}
 
 				case QueryElementType.SelectClause:
@@ -1158,6 +1179,19 @@ namespace LinqToDB.SqlBuilder
 						break;
 					}
 
+				case QueryElementType.CreateTableStatement:
+					{
+						var s = (SqlQuery.CreateTableStatement)element;
+						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
+
+						if (t != null && !ReferenceEquals(s.Table, t))
+						{
+							newElement = new SqlQuery.CreateTableStatement { Table = t };
+						}
+
+						break;
+					}
+
 				case QueryElementType.SelectClause:
 					{
 						var sc   = (SqlQuery.SelectClause)element;
@@ -1331,7 +1365,7 @@ namespace LinqToDB.SqlBuilder
 
 						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
 							(SqlQuery)parent,
-							q.CreateTableInfo,
+							q.CreateTable,
 							q.IsParameterDependent,
 							ps);
 
