@@ -24,13 +24,6 @@ namespace LinqToDB.SqlBuilder
 			using (var stream = typeof(SqlQuery).Assembly.GetManifestResourceStream(typeof(SqlQuery), "ReservedWords.txt"))
 			using (var reader = new StreamReader(stream))
 			{
-				/*
-				var words = reader.ReadToEnd().Replace(' ', '\n').Replace('\t', '\n').Split('\n');
-				var q = from w in words where w.Length > 0 orderby w select w;
-
-				var text = string.Join("\n", q.Distinct().ToArray());
-				*/
-
 				string s;
 				while ((s = reader.ReadLine()) != null)
 					_reservedWords.Add(s, s);
@@ -301,15 +294,6 @@ namespace LinqToDB.SqlBuilder
 					Expression.ToString(sb, dic).Replace("\n", "\n\t\t", len, sb.Length - len);
 					sb.Append("\n\t)");
 				}
-				/*else if (Expression is Column)
-				{
-					var col = (Column)Expression;
-					sb
-						.Append("t")
-						.Append(col.Parent.SourceID)
-						.Append(".")
-						.Append(col.Alias ?? "c" + (col.Parent.Select.Columns.IndexOf(col) + 1));
-				}*/
 				else
 				{
 					Expression.ToString(sb, dic);

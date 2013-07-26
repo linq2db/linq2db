@@ -504,10 +504,6 @@ namespace LinqToDB.ServiceModel
 								GetType(GetArrayType(elemType));
 							}
 
-							//if (p.EnumTypes != null)
-							//	foreach (var type in p.EnumTypes)
-							//		GetType(type);
-
 							break;
 						}
 
@@ -1095,40 +1091,15 @@ namespace LinqToDB.ServiceModel
 
 							var systemType       = Read<Type>();
 							var value            = ReadValue(systemType);
-							//var enumTypes        = ReadList<Type>();
-							//var takeValues       = null as List<int>;
-
-							/*
-							var count = ReadCount();
-
-							if (count != null)
-							{
-								takeValues = new List<int>(count.Value);
-
-								for (var i = 0; i < count; i++)
-									takeValues.Add(ReadInt());
-							}
-							*/
 
 							obj = new SqlParameter(systemType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
 								DataType         = dbType,
 								DbSize           = dbSize,
-								//EnumTypes        = enumTypes,
-								//TakeValues       = takeValues,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
 							};
-
-							/*
-							if (enumTypes != null && UnresolvedTypes.Count > 0)
-								foreach (var et in enumTypes)
-									if (et == null)
-										throw new LinqException(
-											"Query cannot be deserialized. The possible reason is that the deserializer could not resolve the following types: {0}. Use LinqService.TypeResolver to resolve types.",
-											string.Join(", ", UnresolvedTypes.Select(_ => "'" + _ + "'").ToArray()));
-							*/
 
 							break;
 						}
@@ -1450,7 +1421,6 @@ namespace LinqToDB.ServiceModel
 							var items = ReadArray<SqlQuery.SetExpression>();
 							var keys  = ReadArray<SqlQuery.SetExpression>();
 							var table = Read<SqlTable>();
-							//var wid   = ReadBool();
 
 							var c = new SqlQuery.UpdateClause { Table = table };
 
