@@ -229,7 +229,6 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
-    <Compile Include="SqlBuilder\CreateTableInfo.cs" />
     <Compile Include="SqlBuilder\Extensions.cs" />
     <Compile Include="SqlBuilder\ICloneableElement.cs" />
     <Compile Include="SqlBuilder\IQueryElement.cs" />
