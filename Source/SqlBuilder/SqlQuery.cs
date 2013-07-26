@@ -66,7 +66,7 @@ namespace LinqToDB.SqlBuilder
 			OrderByClause      orderBy,
 			List<Union>        unions,
 			SqlQuery           parentSql,
-			CreateDatabaseInfo createDatabaseInfo,
+			CreateTableInfo    createDatabaseInfo,
 			bool               parameterDependent,
 			List<SqlParameter> parameters)
 		{
@@ -81,7 +81,7 @@ namespace LinqToDB.SqlBuilder
 			_orderBy             = orderBy;
 			_unions              = unions;
 			ParentSql            = parentSql;
-			CreateDatabaseInfo   = createDatabaseInfo;
+			CreateTableInfo      = createDatabaseInfo;
 			IsParameterDependent = parameterDependent;
 			_parameters.AddRange(parameters);
 
@@ -123,7 +123,7 @@ namespace LinqToDB.SqlBuilder
 			set { _queryType = value; }
 		}
 
-		public bool IsCreateDatabase { get { return _queryType == QueryType.CreateDatabase; } }
+		public bool IsCreateTable    { get { return _queryType == QueryType.CreateTable;    } }
 		public bool IsSelect         { get { return _queryType == QueryType.Select;         } }
 		public bool IsDelete         { get { return _queryType == QueryType.Delete;         } }
 		public bool IsInsertOrUpdate { get { return _queryType == QueryType.InsertOrUpdate; } }
@@ -2131,9 +2131,9 @@ namespace LinqToDB.SqlBuilder
 
 		#endregion
 
-		#region CreateDatabase
+		#region CreateTable
 
-		public CreateDatabaseInfo CreateDatabaseInfo { get; set; }
+		public CreateTableInfo CreateTableInfo { get; set; }
 
 		#endregion
 

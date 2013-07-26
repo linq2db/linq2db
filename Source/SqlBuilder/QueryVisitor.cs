@@ -1331,7 +1331,7 @@ namespace LinqToDB.SqlBuilder
 
 						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
 							(SqlQuery)parent,
-							q.CreateDatabaseInfo,
+							q.CreateTableInfo,
 							q.IsParameterDependent,
 							ps);
 

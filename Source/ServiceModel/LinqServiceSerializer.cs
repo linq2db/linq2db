@@ -811,8 +811,8 @@ namespace LinqToDB.ServiceModel
 										appendSelect = true;
 									break;
 
-								case QueryType.CreateDatabase :
-									Append(elem.CreateDatabaseInfo.DatabaseName);
+								case QueryType.CreateTable    :
+									Append(elem.CreateTableInfo.DatabaseName);
 									break;
 
 								default                       :
@@ -1315,8 +1315,8 @@ namespace LinqToDB.ServiceModel
 							var delete             = readDelete ? Read<SqlQuery.DeleteClause>() : null;
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SqlQuery.SelectClause>() : new SqlQuery.SelectClause(null);
-							var createDbInfo       = queryType == QueryType.CreateDatabase ?
-								new CreateDatabaseInfo
+							var createDbInfo       = queryType == QueryType.CreateTable ?
+								new CreateTableInfo
 								{
 									DatabaseName = ReadString()
 								} : null;

@@ -9,6 +9,6 @@ namespace LinqToDB.SqlBuilder
 		Update,
 		Insert,
 		InsertOrUpdate,
-		CreateDatabase,
+		CreateTable,
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlBuilder
 {
-	public class CreateDatabaseInfo
+	public class CreateTableInfo
 	{
 		public string DatabaseName { get; set; }
 	}
