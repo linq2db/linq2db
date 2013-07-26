@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Data;
 using System.Data.OleDb;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.IO;
-
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
