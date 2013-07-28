@@ -941,55 +941,39 @@ namespace LinqToDB.Linq
 
 		#region DDL Operations
 
-		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo)
+		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
 		{
-/*
-			Query<int> ei;
+			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
+			var sqlQuery = new SqlQuery { QueryType = QueryType.CreateTable };
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			if (tableName    != null) sqlTable.PhysicalName = tableName;
+			if (databaseName != null) sqlTable.Database     = databaseName;
+			if (ownerName    != null) sqlTable.Owner        = ownerName;
 
-			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
-				lock (_sync)
-					if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
-					{
-						var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
-						var sqlQuery = new SqlQuery { QueryType = QueryType.Delete };
+			sqlQuery.CreateTable.Table = sqlTable;
 
-						sqlQuery.From.Table(sqlTable);
+			var query = new Query<int>
+			{
+				MappingSchema     = dataContextInfo.MappingSchema,
+				ContextID         = dataContextInfo.ContextID,
+				CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+				Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
+			};
 
-						ei = new Query<int>
-						{
-							MappingSchema     = dataContextInfo.MappingSchema,
-							ContextID         = dataContextInfo.ContextID,
-							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
-							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
-						};
+			query.SetNonQueryQuery();
 
-						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+			query.GetElement(null, dataContextInfo, Expression.Constant(null), null);
 
-						if (keys.Count == 0)
-							throw new LinqException("Table '{0}' does not have primary key.".Args(sqlTable.Name));
+			ITable<T> table = new Table<T>(dataContextInfo);
 
-						foreach (var field in keys)
-						{
-							var param = GetParameter(dataContextInfo.DataContext, field);
+			if (tableName    != null) table = table.TableName   (tableName);
+			if (databaseName != null) table = table.DatabaseName(databaseName);
+			if (ownerName    != null) table = table.OwnerName   (ownerName);
 
-							ei.Queries[0].Parameters.Add(param);
-
-							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
-
-							if (field.Nullable)
-								sqlQuery.IsParameterDependent = true;
-						}
-
-						ei.SetNonQueryQuery();
-
-						ObjectOperation<T>.Delete.Add(key, ei);
-					}
-
-			return (int)ei.GetElement(null, dataContextInfo, Expression.Constant(obj), null);
-*/
-			return null;
+			return table;
 		}
 
 		#endregion
