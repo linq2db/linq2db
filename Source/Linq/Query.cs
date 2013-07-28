@@ -939,6 +939,61 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region DDL Operations
+
+		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo)
+		{
+/*
+			Query<int> ei;
+
+			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+
+			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
+				lock (_sync)
+					if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
+					{
+						var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
+						var sqlQuery = new SqlQuery { QueryType = QueryType.Delete };
+
+						sqlQuery.From.Table(sqlTable);
+
+						ei = new Query<int>
+						{
+							MappingSchema     = dataContextInfo.MappingSchema,
+							ContextID         = dataContextInfo.ContextID,
+							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
+						};
+
+						var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+
+						if (keys.Count == 0)
+							throw new LinqException("Table '{0}' does not have primary key.".Args(sqlTable.Name));
+
+						foreach (var field in keys)
+						{
+							var param = GetParameter(dataContextInfo.DataContext, field);
+
+							ei.Queries[0].Parameters.Add(param);
+
+							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+
+							if (field.Nullable)
+								sqlQuery.IsParameterDependent = true;
+						}
+
+						ei.SetNonQueryQuery();
+
+						ObjectOperation<T>.Delete.Add(key, ei);
+					}
+
+			return (int)ei.GetElement(null, dataContextInfo, Expression.Constant(obj), null);
+*/
+			return null;
+		}
+
+		#endregion
+
 		#region New Builder Support
 
 		public void SetElementQuery(Func<QueryContext,IDataContext,IDataReader,Expression,object[],object> mapper)

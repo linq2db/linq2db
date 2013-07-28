@@ -248,11 +248,26 @@ namespace LinqToDB
 
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
 		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return Query<T>.Delete(DataContextInfo.Create(dataContext), obj);
 		}
+		#endregion
 
 		#endregion
 
+		#region DDL Operations
+
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo)
+		{
+			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+			return Query<T>.CreateTable(dataContextInfo);
+		}
+
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.CreateTable(DataContextInfo.Create(dataContext));
+		}
 		#endregion
 	}
 }
