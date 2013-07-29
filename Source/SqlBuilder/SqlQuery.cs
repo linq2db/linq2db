@@ -2119,7 +2119,8 @@ namespace LinqToDB.SqlBuilder
 
 		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
-			public SqlTable Table { get; set; }
+			public SqlTable Table  { get; set; }
+			public bool     IsDrop { get; set; }
 
 			#region IQueryElement Members
 
@@ -2127,7 +2128,7 @@ namespace LinqToDB.SqlBuilder
 
 			public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
-				sb.Append("CREATE TABLE ");
+				sb.Append(IsDrop ? "DROP TABLE " : "CREATE TABLE ");
 
 				if (Table != null)
 					((IQueryElement)Table).ToString(sb, dic);
@@ -2202,7 +2203,7 @@ namespace LinqToDB.SqlBuilder
 //								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
 //
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbSizeSet)
-//								p.DbSize = field.ColumnDescriptorptor.MapMemberInfo.DbSize;
+//								p.DbSize = field.ColumnDescriptor.MapMemberInfo.DbSize;
 						}
 					}
 				}

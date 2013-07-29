@@ -13,9 +13,9 @@ namespace LinqToDB.Metadata
 			Attributes = attributes;
 		}
 
-		public string                        Name;
+		public string                            Name;
 		public Dictionary<string,MetaMemberInfo> Members;
-		public AttributeInfo[]               Attributes;
+		public AttributeInfo[]                   Attributes;
 
 		public AttributeInfo[] GetAttribute(Type type)
 		{

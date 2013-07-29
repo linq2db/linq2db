@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlProvider(_isSelect, SqlProviderFlags);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{

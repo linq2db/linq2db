@@ -7,6 +7,8 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using System.Linq.Expressions;
+
 	using Common;
 	using Extensions;
 	using Mapping;
@@ -126,7 +128,12 @@ namespace LinqToDB.SqlProvider
 				case QueryType.Update         : BuildUpdateQuery         (sb); break;
 				case QueryType.Insert         : BuildInsertQuery         (sb); break;
 				case QueryType.InsertOrUpdate : BuildInsertOrUpdateQuery (sb); break;
-				case QueryType.CreateTable    : BuildCreateTableStatement(sb); break;
+				case QueryType.CreateTable    :
+					if (SqlQuery.CreateTable.IsDrop)
+						BuildDropTableStatement(sb);
+					else
+						BuildCreateTableStatement(sb);
+					break;
 				default                       : BuildUnknownQuery        (sb); break;
 			}
 		}
@@ -543,69 +550,100 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Build Insert
+		#region Build DDL
 
-		protected void BuildCreateTableStatement(StringBuilder sb)
+		protected virtual void BuildDropTableStatement(StringBuilder sb)
 		{
-			AppendIndent(sb).Append("CREATE TABLE");
+			var table = SqlQuery.CreateTable.Table;
 
-			BuildPhysicalTable(sb, SqlQuery.Insert.Into, null);
+			AppendIndent(sb).Append("DROP TABLE ");
+			BuildPhysicalTable(sb, table, null);
+			sb.AppendLine();
+		}
 
-//			if (SqlQuery.Insert.Items.Count == 0)
-//			{
-//				sb.Append(' ');
-//				BuildEmptyInsert(sb);
-//			}
-//			else
-//			{
-//				sb.AppendLine();
-//
-//				AppendIndent(sb).AppendLine("(");
-//
-//				Indent++;
-//
-//				var first = true;
-//
-//				foreach (var expr in SqlQuery.Insert.Items)
-//				{
-//					if (!first)
-//						sb.Append(',').AppendLine();
-//					first = false;
-//
-//					AppendIndent(sb);
-//					BuildExpression(sb, expr.Column, false, true);
-//				}
-//
-//				Indent--;
-//
-//				sb.AppendLine();
-//				AppendIndent(sb).AppendLine(")");
-//
-//				if (SqlQuery.QueryType == QueryType.InsertOrUpdate || SqlQuery.From.Tables.Count == 0)
-//				{
-//					AppendIndent(sb).AppendLine("VALUES");
-//					AppendIndent(sb).AppendLine("(");
-//
-//					Indent++;
-//
-//					first = true;
-//
-//					foreach (var expr in SqlQuery.Insert.Items)
-//					{
-//						if (!first)
-//							sb.Append(',').AppendLine();
-//						first = false;
-//
-//						AppendIndent(sb);
-//						BuildExpression(sb, expr.Expression);
-//					}
-//
-//					Indent--;
-//
-//					sb.AppendLine();
-//					AppendIndent(sb).AppendLine(")");
-//				}
-//			}
+		protected virtual void BuildCreateTableStatement(StringBuilder sb)
+		{
+			var table = SqlQuery.CreateTable.Table;
+
+			AppendIndent(sb).Append("CREATE TABLE ");
+
+			BuildPhysicalTable(sb, table, null);
+			sb.AppendLine();
+			AppendIndent(sb).Append("(");
+			Indent++;
+
+			var fields = table.Fields.Select(f => new { field = f.Value, sb = new StringBuilder() }).ToList();
+			var maxlen = 0;
+
+			// Build field name.
+			//
+			foreach (var field in fields)
+			{
+				field.sb.Append(Convert(field.field.PhysicalName, ConvertType.NameToQueryField));
+
+				if (maxlen < field.sb.Length)
+					maxlen = field.sb.Length;
+			}
+
+			foreach (var field in fields)
+				while (maxlen > field.sb.Length)
+					field.sb.Append(' ');
+
+			// Build field type.
+			//
+			foreach (var field in fields)
+			{
+				field.sb.Append(' ');
+
+				if (!string.IsNullOrEmpty(field.field.DbType))
+					field.sb.Append(field.field.DbType);
+				else
+				{
+					BuildDataType(field.sb, new SqlDataType(
+						field.field.DataType,
+						field.field.SystemType,
+						field.field.Length,
+						field.field.Precision,
+						field.field.Scale),
+						createDbType : true);
+				}
+
+				if (maxlen < field.sb.Length)
+					maxlen = field.sb.Length;
+			}
+
+			foreach (var field in fields)
+				while (maxlen > field.sb.Length)
+					field.sb.Append(' ');
+
+			// Build field name.
+			//
+			foreach (var field in fields)
+			{
+				field.sb.Append(' ');
+				BuildCreateTableNullAttribute(field.sb, field.field);
+			}
+
+			// Build fields.
+			//
+			for (var i = 0; i < fields.Count; i++)
+			{
+				while (fields[i].sb.Length > 0 && fields[i].sb[fields[i].sb.Length - 1] == ' ')
+					fields[i].sb.Length--;
+
+				sb.AppendLine(i == 0 ? "" : ",");
+				AppendIndent(sb);
+				sb.Append(fields[i].sb);
+			}
+
+			Indent--;
+			sb.AppendLine();
+			AppendIndent(sb).AppendLine(")");
+		}
+
+		protected virtual void BuildCreateTableNullAttribute(StringBuilder sb, SqlField field)
+		{
+			sb.Append(field.Nullable ? "NULL" : "NOT NULL");
 		}
 
 		#endregion
@@ -1406,7 +1444,7 @@ namespace LinqToDB.SqlProvider
 								if (ts == null)
 								{
 #if DEBUG
-									SqlQuery.GetTableSource(field.Table);
+									//SqlQuery.GetTableSource(field.Table);
 #endif
 
 									throw new SqlException("Table '{0}' not found.", field.Table);
@@ -1815,7 +1853,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildDataType
 	
-		protected virtual void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected virtual void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{

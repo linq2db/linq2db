@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildValue(sb, value);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
@@ -128,6 +128,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					sb.Append("VarChar");
 					if (type.Length > 0)
 						sb.Append('(').Append(type.Length).Append(')');
+					break;
+				case DataType.Undefined      :
+					if (type.Type == typeof(string))
+						goto case DataType.NVarChar;
 					break;
 				default                      : base.BuildDataType(sb, type); break;
 			}

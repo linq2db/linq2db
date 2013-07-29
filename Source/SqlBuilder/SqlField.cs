@@ -25,6 +25,11 @@ namespace LinqToDB.SqlBuilder
 			IsIdentity       = field.IsIdentity;
 			IsInsertable     = field.IsInsertable;
 			IsUpdatable      = field.IsUpdatable;
+			DataType         = field.DataType;
+			DbType           = field.DbType;
+			Length           = field.Length;
+			Precision        = field.Precision;
+			Scale            = field.Scale;
 			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
@@ -37,6 +42,12 @@ namespace LinqToDB.SqlBuilder
 		public bool             IsIdentity       { get; set; }
 		public bool             IsInsertable     { get; set; }
 		public bool             IsUpdatable      { get; set; }
+		public DataType         DataType         { get; set; }
+		public string           DbType           { get; set; }
+		public int              Length           { get; set; }
+		public int              Precision        { get; set; }
+		public int              Scale            { get; set; }
+
 		public ISqlTableSource  Table            { get; set; }
 		public ColumnDescriptor ColumnDescriptor { get; set; }
 

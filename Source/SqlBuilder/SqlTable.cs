@@ -82,6 +82,11 @@ namespace LinqToDB.SqlBuilder
 					IsIdentity       = column.IsIdentity,
 					IsInsertable     = !column.SkipOnInsert,
 					IsUpdatable      = !column.SkipOnUpdate,
+					DataType         = column.DataType,
+					DbType           = column.DbType,
+					Length           = column.Length,
+					Precision        = column.Precision,
+					Scale            = column.Scale,
 					ColumnDescriptor = column,
 				});
 			}

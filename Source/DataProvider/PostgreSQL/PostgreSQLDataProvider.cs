@@ -56,15 +56,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
-			SetProviderField(BitStringType,      BitStringType,      "GetBitString");
-			SetProviderField(NpgsqlIntervalType, NpgsqlIntervalType, "GetInterval");
-			SetProviderField(NpgsqlInetType,     NpgsqlInetType,     "GetProviderSpecificValue");
-			SetProviderField(NpgsqlTimeType,     NpgsqlTimeType,     "GetTime");
-			SetProviderField(NpgsqlTimeTZType,   NpgsqlTimeTZType,   "GetTimeTZ");
-			SetProviderField(_npgsqlTimeStamp,   _npgsqlTimeStamp,   "GetTimeStamp");
-			SetProviderField(_npgsqlTimeStampTZ, _npgsqlTimeStampTZ, "GetTimeStampTZ");
-			SetProviderField(_npgsqlDate,        _npgsqlDate,        "GetDate");
-			SetProviderField(NpgsqlMacAddressType,  NpgsqlMacAddressType,  "GetProviderSpecificValue");
+			SetProviderField(BitStringType,        BitStringType,        "GetBitString");
+			SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
+			SetProviderField(NpgsqlInetType,       NpgsqlInetType,       "GetProviderSpecificValue");
+			SetProviderField(NpgsqlTimeType,       NpgsqlTimeType,       "GetTime");
+			SetProviderField(NpgsqlTimeTZType,     NpgsqlTimeTZType,     "GetTimeTZ");
+			SetProviderField(_npgsqlTimeStamp,     _npgsqlTimeStamp,     "GetTimeStamp");
+			SetProviderField(_npgsqlTimeStampTZ,   _npgsqlTimeStampTZ,   "GetTimeStampTZ");
+			SetProviderField(_npgsqlDate,          _npgsqlDate,          "GetDate");
+			SetProviderField(NpgsqlMacAddressType, NpgsqlMacAddressType, "GetProviderSpecificValue");
 
 			{
 				// SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));

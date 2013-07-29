@@ -537,6 +537,11 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsIdentity);
 							Append(elem.IsUpdatable);
 							Append(elem.IsInsertable);
+							Append((int)elem.DataType);
+							Append(elem.DbType);
+							Append(elem.Length);
+							Append(elem.Precision);
+							Append(elem.Scale);
 
 							break;
 						}
@@ -951,6 +956,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlQuery.CreateTableStatement)e;
 
 							Append(elem.Table);
+							Append(elem.IsDrop);
 
 							break;
 						}
@@ -1051,6 +1057,11 @@ namespace LinqToDB.ServiceModel
 							var isIdentity       = ReadBool();
 							var isUpdatable      = ReadBool();
 							var isInsertable     = ReadBool();
+							var dataType         = ReadInt();
+							var dbType           = ReadString();
+							var length           = ReadInt();
+							var precision        = ReadInt();
+							var scale            = ReadInt();
 
 							obj = new SqlField
 							{
@@ -1063,6 +1074,11 @@ namespace LinqToDB.ServiceModel
 								IsIdentity      = isIdentity,
 								IsInsertable    = isInsertable,
 								IsUpdatable     = isUpdatable,
+								DataType        = (DataType)dataType,
+								DbType          = dbType,
+								Length          = length,
+								Precision       = precision,
+								Scale           = scale,
 							};
 
 							break;
@@ -1440,9 +1456,10 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var table = Read<SqlTable>();
+							var table  = Read<SqlTable>();
+							var isDrop = ReadBool();
 
-							obj = new SqlQuery.CreateTableStatement { Table = table };
+							obj = new SqlQuery.CreateTableStatement { Table = table, IsDrop = isDrop };
 
 							break;
 						}

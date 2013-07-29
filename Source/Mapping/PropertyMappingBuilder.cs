@@ -113,5 +113,20 @@ namespace LinqToDB.Mapping
 		{
 			return SetColumn(a => a.CanBeNull = canBeNull);
 		}
+
+		public PropertyMappingBuilder<T> HasLength(int length)
+		{
+			return SetColumn(a => a.Length = length);
+		}
+
+		public PropertyMappingBuilder<T> HasPrecision(int precision)
+		{
+			return SetColumn(a => a.Precision = precision);
+		}
+
+		public PropertyMappingBuilder<T> HasScale(int scale)
+		{
+			return SetColumn(a => a.Scale = scale);
+		}
 	}
 }

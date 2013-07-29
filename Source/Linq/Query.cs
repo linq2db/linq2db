@@ -955,6 +955,12 @@ namespace LinqToDB.Linq
 
 			sqlQuery.CreateTable.Table = sqlTable;
 
+			foreach (var field in sqlTable.Fields.Values)
+			{
+				if (field.DataType == DataType.Undefined)
+					field.DataType = dataContextInfo.MappingSchema.GetDataType(field.SystemType);
+			}
+
 			var query = new Query<int>
 			{
 				MappingSchema     = dataContextInfo.MappingSchema,
@@ -974,6 +980,34 @@ namespace LinqToDB.Linq
 			if (ownerName    != null) table = table.OwnerName   (ownerName);
 
 			return table;
+		}
+
+		public static void DropTable(IDataContextInfo dataContextInfo,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
+		{
+			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
+			var sqlQuery = new SqlQuery { QueryType = QueryType.CreateTable };
+
+			if (tableName    != null) sqlTable.PhysicalName = tableName;
+			if (databaseName != null) sqlTable.Database     = databaseName;
+			if (ownerName    != null) sqlTable.Owner        = ownerName;
+
+			sqlQuery.CreateTable.Table  = sqlTable;
+			sqlQuery.CreateTable.IsDrop = true;
+
+			var query = new Query<int>
+			{
+				MappingSchema     = dataContextInfo.MappingSchema,
+				ContextID         = dataContextInfo.ContextID,
+				CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+				Queries           = { new Query<int>.QueryInfo { SqlQuery = sqlQuery, } }
+			};
+
+			query.SetNonQueryQuery();
+
+			query.GetElement(null, dataContextInfo, Expression.Constant(null), null);
 		}
 
 		#endregion

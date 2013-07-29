@@ -196,7 +196,7 @@ namespace LinqToDB.DataProvider
 				base.BuildValue(sb, value);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{

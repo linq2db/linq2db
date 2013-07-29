@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.Firebird
 			base.BuildFunction(sb, func);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
@@ -266,6 +266,12 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
 		{
 			BuildInsertOrUpdateQueryAsMerge(sb, "FROM rdb$database");
+		}
+
+		protected override void BuildCreateTableNullAttribute(StringBuilder sb, SqlField field)
+		{
+			if (!field.Nullable)
+				sb.Append("NOT NULL");
 		}
 	}
 }

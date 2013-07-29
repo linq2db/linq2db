@@ -259,7 +259,7 @@ namespace LinqToDB.DataProvider.Oracle
 			base.BuildFunction(sb, func);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{

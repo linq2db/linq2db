@@ -257,17 +257,39 @@ namespace LinqToDB
 
 		#region DDL Operations
 
-		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo)
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo);
+			return Query<T>.CreateTable(dataContextInfo, tableName, databaseName, ownerName);
 		}
 
-		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext)
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext));
+			return Query<T>.CreateTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
 		}
+
+		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
+		{
+			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
+		}
+
+		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
+		}
+
 		#endregion
 	}
 }

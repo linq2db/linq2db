@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2005SqlProvider(SqlProviderFlags);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{

@@ -128,15 +128,21 @@ namespace LinqToDB.DataProvider.MySql
 			return expr;
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
-				case DataType.UInt16        :
 				case DataType.Int32         :
-				case DataType.Int16         : sb.Append("Signed");        break;
+				case DataType.UInt16        :
+				case DataType.Int16         :
+					if (createDbType) goto default;
+					sb.Append("Signed");
+					break;
 				case DataType.SByte         :
-				case DataType.Byte          : sb.Append("Unsigned");      break;
+				case DataType.Byte          :
+					if (createDbType) goto default;
+					sb.Append("Unsigned");
+					break;
 				case DataType.Money         : sb.Append("Decimal(19,4)"); break;
 				case DataType.SmallMoney    : sb.Append("Decimal(10,4)"); break;
 #if !MONO

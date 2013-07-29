@@ -207,6 +207,7 @@
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />
+    <Compile Include="DDL\CreateTableTest.cs" />
     <Compile Include="Linq\EnumMapping.cs" />
     <Compile Include="Linq\ExplicitInterfaceTest.cs" />
     <Compile Include="Mapping\FluentMappingTest.cs" />

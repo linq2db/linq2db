@@ -610,6 +610,10 @@ namespace LinqToDB.SqlBuilder
 
 								break;
 
+							case QueryType.CreateTable :
+								Visit2(q.CreateTable);
+								break;
+
 							default :
 								Visit2(q.Select);
 								break;
@@ -1186,7 +1190,7 @@ namespace LinqToDB.SqlBuilder
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SqlQuery.CreateTableStatement { Table = t };
+							newElement = new SqlQuery.CreateTableStatement { Table = t, IsDrop = s.IsDrop };
 						}
 
 						break;

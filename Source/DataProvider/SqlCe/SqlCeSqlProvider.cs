@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return sqlQuery;
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type)
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
