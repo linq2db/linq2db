@@ -320,5 +320,10 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			sb.AppendLine("() VALUES ()");
 		}
+
+		protected override void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		{
+			//sb.Append("AUTO_INCREMENT");
+		}
 	}
 }

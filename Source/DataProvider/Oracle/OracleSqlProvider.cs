@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -376,5 +377,74 @@ namespace LinqToDB.DataProvider.Oracle
 
 			sb.AppendLine();
 		}
+
+		SqlField _identityField;
+
+		public override int CommandCount(SqlQuery sqlQuery)
+		{
+			if (sqlQuery.IsCreateTable)
+			{
+				_identityField = sqlQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+				if (_identityField != null)
+					return 3;
+			}
+
+			return base.CommandCount(sqlQuery);
+		}
+
+		protected override void BuildDropTableStatement(StringBuilder sb)
+		{
+			if (_identityField == null)
+			{
+				base.BuildDropTableStatement(sb);
+			}
+			else
+			{
+				sb
+					.Append("DROP TRIGGER TIDENTITY_")
+					.Append(SqlQuery.CreateTable.Table.PhysicalName)
+					.AppendLine();
+			}
+		}
+
+		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		{
+			if (SqlQuery.CreateTable.IsDrop)
+			{
+				if (commandNumber == 1)
+				{
+					sb
+						.Append("DROP SEQUENCE SIDENTITY_")
+						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine();
+				}
+				else
+					base.BuildDropTableStatement(sb);
+			}
+			else
+			{
+				if (commandNumber == 1)
+				{
+					sb
+						.Append("CREATE SEQUENCE SIDENTITY_")
+						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine();
+				}
+				else
+				{
+					sb
+						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine  ()
+						.AppendFormat("BEFORE INSERT ON {0} FOR EACH ROW", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine  ()
+						.AppendLine  ("BEGIN")
+						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine  ()
+						.AppendLine  ("END");
+				}
+			}
+		}
+
 	}
 }

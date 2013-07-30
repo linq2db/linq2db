@@ -210,5 +210,25 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			return base.GetIdentityExpression(table, identityField, forReturning);
 		}
+
+		protected override void BuildCreateTableFieldType(StringBuilder sb, SqlField field)
+		{
+			if (field.IsIdentity)
+			{
+				if (field.DataType == DataType.Int32)
+				{
+					sb.Append("SERIAL");
+					return;
+				}
+
+				if (field.DataType == DataType.Int64)
+				{
+					sb.Append("BIGSERIAL");
+					return;
+				}
+			}
+
+			base.BuildCreateTableFieldType(sb, field);
+		}
 	}
 }

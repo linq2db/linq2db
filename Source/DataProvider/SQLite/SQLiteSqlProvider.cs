@@ -209,5 +209,10 @@ namespace LinqToDB.DataProvider.SQLite
 
 			return value;
 		}
+
+		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		{
+			//sb.Append("AUTOINCREMENT");
+		}
 	}
 }

@@ -385,5 +385,10 @@ namespace LinqToDB.DataProvider.Access
 		{
 			sb.Append("#{0:yyyy-MM-dd HH:mm:ss}#".Args(value));
 		}
+
+		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		{
+			sb.Append("IDENTITY");
+		}
 	}
 }

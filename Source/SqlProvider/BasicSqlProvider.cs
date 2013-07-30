@@ -575,6 +575,13 @@ namespace LinqToDB.SqlProvider
 			var fields = table.Fields.Select(f => new { field = f.Value, sb = new StringBuilder() }).ToList();
 			var maxlen = 0;
 
+			Action appendToMax = () =>
+			{
+				foreach (var field in fields)
+					while (maxlen > field.sb.Length)
+						field.sb.Append(' ');
+			};
+
 			// Build field name.
 			//
 			foreach (var field in fields)
@@ -585,9 +592,7 @@ namespace LinqToDB.SqlProvider
 					maxlen = field.sb.Length;
 			}
 
-			foreach (var field in fields)
-				while (maxlen > field.sb.Length)
-					field.sb.Append(' ');
+			appendToMax();
 
 			// Build field type.
 			//
@@ -598,30 +603,63 @@ namespace LinqToDB.SqlProvider
 				if (!string.IsNullOrEmpty(field.field.DbType))
 					field.sb.Append(field.field.DbType);
 				else
-				{
-					BuildDataType(field.sb, new SqlDataType(
-						field.field.DataType,
-						field.field.SystemType,
-						field.field.Length,
-						field.field.Precision,
-						field.field.Scale),
-						createDbType : true);
-				}
+					BuildCreateTableFieldType(field.sb, field.field);
 
 				if (maxlen < field.sb.Length)
 					maxlen = field.sb.Length;
 			}
 
-			foreach (var field in fields)
-				while (maxlen > field.sb.Length)
+			appendToMax();
+
+			var hasIdentity = fields.Any(f => f.field.IsIdentity);
+
+			// Build identity attribute.
+			//
+			if (hasIdentity)
+			{
+				foreach (var field in fields)
+				{
 					field.sb.Append(' ');
 
-			// Build field name.
+					if (field.field.IsIdentity)
+						BuildCreateTableIdentityAttribute1(field.sb, field.field);
+
+					if (maxlen < field.sb.Length)
+						maxlen = field.sb.Length;
+				}
+
+				appendToMax();
+			}
+
+			// Build nullable attribute.
 			//
 			foreach (var field in fields)
 			{
 				field.sb.Append(' ');
 				BuildCreateTableNullAttribute(field.sb, field.field);
+
+				if (maxlen < field.sb.Length)
+					maxlen = field.sb.Length;
+			}
+
+			appendToMax();
+
+			// Build identity attribute.
+			//
+			if (hasIdentity)
+			{
+				foreach (var field in fields)
+				{
+					field.sb.Append(' ');
+
+					if (field.field.IsIdentity)
+						BuildCreateTableIdentityAttribute2(field.sb, field.field);
+
+					if (maxlen < field.sb.Length)
+						maxlen = field.sb.Length;
+				}
+
+				appendToMax();
 			}
 
 			// Build fields.
@@ -641,9 +679,28 @@ namespace LinqToDB.SqlProvider
 			AppendIndent(sb).AppendLine(")");
 		}
 
+		protected virtual void BuildCreateTableFieldType(StringBuilder sb, SqlField field)
+		{
+			BuildDataType(sb, new SqlDataType(
+				field.DataType,
+				field.SystemType,
+				field.Length,
+				field.Precision,
+				field.Scale),
+				createDbType : true);
+		}
+
 		protected virtual void BuildCreateTableNullAttribute(StringBuilder sb, SqlField field)
 		{
-			sb.Append(field.Nullable ? "NULL" : "NOT NULL");
+			sb.Append(field.Nullable ? "    NULL" : "NOT NULL");
+		}
+
+		protected virtual void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		{
+		}
+
+		protected virtual void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		{
 		}
 
 		#endregion

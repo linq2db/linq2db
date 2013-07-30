@@ -162,23 +162,57 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
+			if (pq.Commands.Length == 1)
+			{
+				SetCommand(pq.Commands[0]);
 
-			if (pq.Parameters != null)
-				foreach (var p in pq.Parameters)
-					Command.Parameters.Add(p);
+				if (pq.Parameters != null)
+					foreach (var p in pq.Parameters)
+						Command.Parameters.Add(p);
 
-			if (TraceSwitch.TraceInfo)
+				if (TraceSwitch.TraceInfo)
+				{
+					var now = DateTime.Now;
+					var n   = Command.ExecuteNonQuery();
+
+					WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
+
+					return n;
+				}
+
+				return Command.ExecuteNonQuery();
+			}
+			else
 			{
 				var now = DateTime.Now;
-				var n   = Command.ExecuteNonQuery();
 
-				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
+				for (var i = 0; i < pq.Commands.Length; i++)
+				{
+					SetCommand(pq.Commands[i]);
 
-				return n;
+					if (i == 0 && pq.Parameters != null)
+						foreach (var p in pq.Parameters)
+							Command.Parameters.Add(p);
+
+					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
+					{
+						try
+						{
+							Command.ExecuteNonQuery();
+						}
+						catch (Exception)
+						{
+						}
+					}
+					else
+						Command.ExecuteNonQuery();
+				}
+
+				if (TraceSwitch.TraceInfo)
+					WriteTraceLine("Execution time: {0}.\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
+
+				return -1;
 			}
-
-			return Command.ExecuteNonQuery();
 		}
 
 		object IDataContext.ExecuteScalar(object query)

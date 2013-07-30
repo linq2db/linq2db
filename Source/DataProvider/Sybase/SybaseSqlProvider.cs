@@ -230,5 +230,11 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			sb.AppendLine("VALUES ()");
 		}
+
+
+		protected override void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		{
+			sb.Append("IDENTITY");
+		}
 	}
 }

@@ -261,5 +261,25 @@ namespace LinqToDB.DataProvider
 
 			return value;
 		}
+
+		protected override void BuildCreateTableFieldType(StringBuilder sb, SqlField field)
+		{
+			if (field.IsIdentity)
+			{
+				if (field.DataType == DataType.Int32)
+				{
+					sb.Append("SERIAL");
+					return;
+				}
+
+				if (field.DataType == DataType.Int64)
+				{
+					sb.Append("SERIAL8");
+					return;
+				}
+			}
+
+			base.BuildCreateTableFieldType(sb, field);
+		}
 	}
 }

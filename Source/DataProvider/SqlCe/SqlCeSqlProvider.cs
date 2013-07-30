@@ -258,5 +258,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			return value;
 		}
+
+		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		{
+			sb.Append("IDENTITY");
+		}
 	}
 }

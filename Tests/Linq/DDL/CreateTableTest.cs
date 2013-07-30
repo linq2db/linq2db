@@ -24,6 +24,8 @@ namespace Tests.DDL
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<TestTable>()
+						.Property(t => t.ID)
+							.IsIdentity()
 						.Property(t => t.Field1)
 							.HasLength(50);
 

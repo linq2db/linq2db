@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 #region ReSharper disable
@@ -272,6 +273,73 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (!field.Nullable)
 				sb.Append("NOT NULL");
+		}
+
+		SqlField _identityField;
+
+		public override int CommandCount(SqlQuery sqlQuery)
+		{
+			if (sqlQuery.IsCreateTable)
+			{
+				_identityField = sqlQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+
+				if (_identityField != null)
+					return 3;
+			}
+
+			return base.CommandCount(sqlQuery);
+		}
+
+		protected override void BuildDropTableStatement(StringBuilder sb)
+		{
+			if (_identityField == null)
+			{
+				base.BuildDropTableStatement(sb);
+			}
+			else
+			{
+				sb
+					.Append("DROP TRIGGER TIDENTITY_")
+					.Append(SqlQuery.CreateTable.Table.PhysicalName)
+					.AppendLine();
+			}
+		}
+
+		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		{
+			if (SqlQuery.CreateTable.IsDrop)
+			{
+				if (commandNumber == 1)
+				{
+					sb
+						.Append("DROP GENERATOR GIDENTITY_")
+						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine();
+				}
+				else
+					base.BuildDropTableStatement(sb);
+			}
+			else
+			{
+				if (commandNumber == 1)
+				{
+					sb
+						.Append("CREATE GENERATOR GIDENTITY_")
+						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine();
+				}
+				else
+				{
+					sb
+						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine  ()
+						.AppendLine  ("BEFORE INSERT POSITION 0")
+						.AppendLine  ("AS BEGIN")
+						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendLine  ()
+						.AppendLine  ("END");
+				}
+			}
 		}
 	}
 }

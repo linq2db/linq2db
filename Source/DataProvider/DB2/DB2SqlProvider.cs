@@ -327,5 +327,10 @@ namespace LinqToDB.DataProvider.DB2
 
 			sb.AppendLine();
 		}
+
+		protected override void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		{
+			sb.Append("GENERATED ALWAYS AS IDENTITY");
+		}
 	}
 }
