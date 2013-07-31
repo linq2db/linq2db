@@ -674,6 +674,23 @@ namespace LinqToDB.SqlProvider
 				sb.Append(fields[i].sb);
 			}
 
+			var pk =
+			(
+				from f in fields
+				where f.field.IsPrimaryKey
+				orderby f.field.PrimaryKeyOrder
+				select f
+			).ToList();
+
+			if (pk.Count > 0)
+			{
+				sb.AppendLine(",").AppendLine();
+
+				BuildCreateTablePrimaryKey(sb,
+					Convert("PK_" + SqlQuery.CreateTable.Table.PhysicalName, ConvertType.NameToQueryTable).ToString(),
+					pk.Select(f => Convert(f.field.PhysicalName, ConvertType.NameToQueryField).ToString()));
+			}
+
 			Indent--;
 			sb.AppendLine();
 			AppendIndent(sb).AppendLine(")");
@@ -701,6 +718,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
 		{
+		}
+
+		protected virtual void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		{
+			sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
+			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			sb.Append(")");
 		}
 
 		#endregion

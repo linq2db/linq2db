@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -210,9 +212,35 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
+		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.Int32 : sb.Append("INTEGER");      break;
+				default             : base.BuildDataType(sb, type); break;
+			}
+		}
+
 		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
 		{
-			//sb.Append("AUTOINCREMENT");
+			sb.Append("PRIMARY KEY AUTOINCREMENT");
+		}
+
+		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		{
+			if (SqlQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			{
+				while (sb[sb.Length - 1] != ',')
+					sb.Length--;
+				sb.Length--;
+			}
+			else
+			{
+				sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
+				//sb.Append("PRIMARY KEY (");
+				sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+				sb.Append(")");
+			}
 		}
 	}
 }

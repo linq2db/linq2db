@@ -2,7 +2,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -26,6 +25,7 @@ namespace Tests.DDL
 					.Entity<TestTable>()
 						.Property(t => t.ID)
 							.IsIdentity()
+							.IsPrimaryKey()
 						.Property(t => t.Field1)
 							.HasLength(50);
 

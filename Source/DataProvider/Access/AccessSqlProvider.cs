@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
@@ -389,6 +390,13 @@ namespace LinqToDB.DataProvider.Access
 		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
 		{
 			sb.Append("IDENTITY");
+		}
+
+		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		{
+			sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			sb.Append(")");
 		}
 	}
 }
