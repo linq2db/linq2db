@@ -109,9 +109,9 @@ namespace LinqToDB.Mapping
 			return SetColumn(a => a.SkipOnUpdate = skipOnUpdate);
 		}
 
-		public PropertyMappingBuilder<T> CanBeNull(bool canBeNull = true)
+		public PropertyMappingBuilder<T> IsNullable(bool isNullable = true)
 		{
-			return SetColumn(a => a.CanBeNull = canBeNull);
+			return SetColumn(a => a.CanBeNull = isNullable);
 		}
 
 		public PropertyMappingBuilder<T> HasLength(int length)
