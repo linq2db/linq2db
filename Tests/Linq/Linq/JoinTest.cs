@@ -810,5 +810,28 @@ namespace Tests.Linq
 				q.ToList();
 			}
 		}
+
+		[Test]
+		public void Issue257([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from m in db.Types
+						join p in db.Parent on m.ID equals p.ParentID
+					group m by new
+					{
+						m.DateTimeValue.Date
+					}
+					into b
+					select new
+					{
+						QualiStatusByDate = b.Key,
+						Count             = b.Count()
+					};
+
+				q.ToList();
+			}
+		}
 	}
 }
