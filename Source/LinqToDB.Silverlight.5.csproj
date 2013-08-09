@@ -229,34 +229,34 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
-    <Compile Include="SqlBuilder\Extensions.cs" />
-    <Compile Include="SqlBuilder\ICloneableElement.cs" />
-    <Compile Include="SqlBuilder\IQueryElement.cs" />
-    <Compile Include="SqlBuilder\ISqlExpression.cs" />
-    <Compile Include="SqlBuilder\ISqlExpressionWalkable.cs" />
-    <Compile Include="SqlBuilder\ISqlPredicate.cs" />
-    <Compile Include="SqlBuilder\ISqlTableSource.cs" />
-    <Compile Include="SqlBuilder\IValueContainer.cs" />
-    <Compile Include="SqlBuilder\Precedence.cs" />
-    <Compile Include="SqlBuilder\QueryElementType.cs" />
-    <Compile Include="SqlBuilder\QueryType.cs" />
-    <Compile Include="SqlBuilder\QueryVisitor.cs" />
-    <Compile Include="SqlBuilder\SelectQuery.cs" />
-    <Compile Include="SqlBuilder\SqlBinaryExpression.cs" />
-    <Compile Include="SqlBuilder\SqlDataType.cs" />
-    <Compile Include="SqlBuilder\SqlException.cs" />
-    <Compile Include="SqlBuilder\SqlExpression.cs" />
-    <Compile Include="SqlBuilder\SqlField.cs" />
-    <Compile Include="SqlBuilder\SqlFunction.cs" />
-    <Compile Include="SqlBuilder\SqlParameter.cs" />
-    <Compile Include="SqlBuilder\SqlTable.cs" />
-    <Compile Include="SqlBuilder\SqlTableT.cs" />
-    <Compile Include="SqlBuilder\SqlTableType.cs" />
-    <Compile Include="SqlBuilder\SqlValue.cs" />
     <Compile Include="SqlProvider\BasicSqlProvider.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />
     <Compile Include="SqlProvider\ISqlProvider.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
+    <Compile Include="SqlQuery\Extensions.cs" />
+    <Compile Include="SqlQuery\ICloneableElement.cs" />
+    <Compile Include="SqlQuery\IQueryElement.cs" />
+    <Compile Include="SqlQuery\ISqlExpression.cs" />
+    <Compile Include="SqlQuery\ISqlExpressionWalkable.cs" />
+    <Compile Include="SqlQuery\ISqlPredicate.cs" />
+    <Compile Include="SqlQuery\ISqlTableSource.cs" />
+    <Compile Include="SqlQuery\IValueContainer.cs" />
+    <Compile Include="SqlQuery\Precedence.cs" />
+    <Compile Include="SqlQuery\QueryElementType.cs" />
+    <Compile Include="SqlQuery\QueryType.cs" />
+    <Compile Include="SqlQuery\QueryVisitor.cs" />
+    <Compile Include="SqlQuery\SelectQuery.cs" />
+    <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
+    <Compile Include="SqlQuery\SqlDataType.cs" />
+    <Compile Include="SqlQuery\SqlException.cs" />
+    <Compile Include="SqlQuery\SqlExpression.cs" />
+    <Compile Include="SqlQuery\SqlField.cs" />
+    <Compile Include="SqlQuery\SqlFunction.cs" />
+    <Compile Include="SqlQuery\SqlParameter.cs" />
+    <Compile Include="SqlQuery\SqlTable.cs" />
+    <Compile Include="SqlQuery\SqlTableT.cs" />
+    <Compile Include="SqlQuery\SqlTableType.cs" />
+    <Compile Include="SqlQuery\SqlValue.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
@@ -266,12 +266,11 @@
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SqlBuilder\ReservedWords.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="linq2db.snk" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
