@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class AggregationBuilder : MethodCallBuilder
 	{

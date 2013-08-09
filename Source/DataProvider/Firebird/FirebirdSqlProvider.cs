@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class FirebirdSqlProvider : BasicSqlProvider

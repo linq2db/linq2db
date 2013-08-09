@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class AccessSqlProvider : BasicSqlProvider

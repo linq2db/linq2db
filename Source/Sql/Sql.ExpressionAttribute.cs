@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB
 {
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	partial class Sql
 	{
@@ -17,25 +17,25 @@ namespace LinqToDB
 			public ExpressionAttribute(string expression)
 				: base(expression)
 			{
-				Precedence = SqlBuilder.Precedence.Primary;
+				Precedence = SqlQuery.Precedence.Primary;
 			}
 
 			public ExpressionAttribute(string expression, params int[] argIndices)
 				: base(expression, argIndices)
 			{
-				Precedence = SqlBuilder.Precedence.Primary;
+				Precedence = SqlQuery.Precedence.Primary;
 			}
 
 			public ExpressionAttribute(string sqlProvider, string expression)
 				: base(sqlProvider, expression)
 			{
-				Precedence = SqlBuilder.Precedence.Primary;
+				Precedence = SqlQuery.Precedence.Primary;
 			}
 
 			public ExpressionAttribute(string sqlProvider, string expression, params int[] argIndices)
 				: base(sqlProvider, expression, argIndices)
 			{
-				Precedence = SqlBuilder.Precedence.Primary;
+				Precedence = SqlQuery.Precedence.Primary;
 			}
 
 			protected new string Name

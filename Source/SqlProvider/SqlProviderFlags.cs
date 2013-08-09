@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public class SqlProviderFlags
 	{

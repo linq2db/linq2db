@@ -14,7 +14,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public abstract class Query

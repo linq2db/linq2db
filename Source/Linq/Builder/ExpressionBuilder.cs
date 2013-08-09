@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 	using LinqToDB.Expressions;
 

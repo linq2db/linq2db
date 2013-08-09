@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public interface IQueryContext
 	{

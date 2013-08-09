@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	public interface ISqlPredicate : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 	{

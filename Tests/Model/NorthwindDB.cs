@@ -8,7 +8,7 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.SqlBuilder;
+using LinqToDB.SqlQuery;
 using LinqToDB.SqlProvider;
 
 namespace Tests.Model

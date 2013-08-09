@@ -9,7 +9,7 @@ using System.Threading;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 	using Mapping;
 

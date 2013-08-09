@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class PostgreSQLSqlProvider : BasicSqlProvider

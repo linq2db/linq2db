@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	[Serializable, DebuggerDisplay("SQL = {SqlText}")]
 	public class SqlBinaryExpression : ISqlExpression
@@ -22,7 +22,7 @@ namespace LinqToDB.SqlBuilder
 		}
 
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2)
-			: this(systemType, expr1, operation, expr2, SqlBuilder.Precedence.Unknown)
+			: this(systemType, expr1, operation, expr2, SqlQuery.Precedence.Unknown)
 		{
 		}
 

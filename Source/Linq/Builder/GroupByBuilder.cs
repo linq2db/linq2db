@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class GroupByBuilder : MethodCallBuilder
 	{

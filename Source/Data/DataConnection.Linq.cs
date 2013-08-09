@@ -12,7 +12,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using Linq;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public partial class DataConnection : IDataContext

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
@@ -26,12 +26,12 @@ namespace LinqToDB.SqlBuilder
 		}
 
 		public SqlExpression(Type systemType, string expr, params ISqlExpression[] parameters)
-			: this(systemType, expr, SqlBuilder.Precedence.Unknown, parameters)
+			: this(systemType, expr, SqlQuery.Precedence.Unknown, parameters)
 		{
 		}
 
 		public SqlExpression(string expr, params ISqlExpression[] parameters)
-			: this(null, expr, SqlBuilder.Precedence.Unknown, parameters)
+			: this(null, expr, SqlQuery.Precedence.Unknown, parameters)
 		{
 		}
 

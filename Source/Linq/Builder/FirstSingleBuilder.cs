@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{

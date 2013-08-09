@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	public interface ICloneableElement
 	{

@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	public class SqlException : Exception
 	{

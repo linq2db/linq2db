@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class SqlServer2000SqlProvider : SqlServerSqlProvider

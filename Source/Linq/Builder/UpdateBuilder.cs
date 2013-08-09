@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class UpdateBuilder : MethodCallBuilder
 	{

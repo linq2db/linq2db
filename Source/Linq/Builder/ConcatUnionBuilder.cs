@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class ConcatUnionBuilder : MethodCallBuilder
 	{

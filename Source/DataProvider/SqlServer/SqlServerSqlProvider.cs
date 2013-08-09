@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public abstract class SqlServerSqlProvider : BasicSqlProvider

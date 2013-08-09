@@ -6,7 +6,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.SqlBuilder;
+using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {

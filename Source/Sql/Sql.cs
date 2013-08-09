@@ -14,7 +14,7 @@ namespace LinqToDB
 	using LinqToDB.Common;
 	using Extensions;
 	using Linq;
-	using SqlBuilder;
+	using SqlQuery;
 
 	public static partial class Sql
 	{
@@ -530,17 +530,17 @@ namespace LinqToDB
 		class DatePartAttribute : Sql.ExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, false, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, false, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
 			{
 			}
 

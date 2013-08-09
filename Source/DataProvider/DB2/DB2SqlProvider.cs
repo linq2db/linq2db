@@ -5,7 +5,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class DB2SqlProvider : BasicSqlProvider

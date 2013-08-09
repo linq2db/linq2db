@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using Reflection;
-	using SqlBuilder;
+	using SqlQuery;
 
 	partial class ExpressionBuilder
 	{

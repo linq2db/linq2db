@@ -6,7 +6,7 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
-using LinqToDB.SqlBuilder;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 

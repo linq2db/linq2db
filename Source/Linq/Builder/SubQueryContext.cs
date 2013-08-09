@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class SubQueryContext : PassThroughContext
 	{

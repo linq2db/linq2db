@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(systemType, name, SqlBuilder.Precedence.Primary, parameters)
+			: this(systemType, name, SqlQuery.Precedence.Primary, parameters)
 		{
 		}
 
@@ -34,10 +34,10 @@ namespace LinqToDB.SqlBuilder
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count",  table.All); }
 
-		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", SqlBuilder.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    SqlQuery.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", SqlQuery.Precedence.Comparison, subQuery); }
 
 		#region Overrides
 

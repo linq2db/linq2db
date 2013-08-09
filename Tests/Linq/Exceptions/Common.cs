@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.SqlBuilder;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 

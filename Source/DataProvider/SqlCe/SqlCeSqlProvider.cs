@@ -4,7 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class SqlCeSqlProvider : BasicSqlProvider

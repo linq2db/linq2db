@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public class OracleSqlProvider : BasicSqlProvider

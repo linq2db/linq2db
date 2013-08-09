@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public interface ISqlProvider
 	{

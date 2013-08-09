@@ -11,7 +11,7 @@ namespace LinqToDB.ServiceModel
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 
 	static class LinqServiceSerializer
 	{

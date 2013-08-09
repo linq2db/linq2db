@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Extensions;
 	using Reflection;
@@ -214,7 +214,7 @@ namespace LinqToDB.SqlBuilder
 
 			public int Precedence
 			{
-				get { return SqlBuilder.Precedence.Primary; }
+				get { return SqlQuery.Precedence.Primary; }
 			}
 
 			public Type SystemType
@@ -770,7 +770,7 @@ namespace LinqToDB.SqlBuilder
 			public class ExprExpr : Expr
 			{
 				public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2)
-					: base(exp1, SqlBuilder.Precedence.Comparison)
+					: base(exp1, SqlQuery.Precedence.Comparison)
 				{
 					Operator = op;
 					Expr2    = exp2;
@@ -839,7 +839,7 @@ namespace LinqToDB.SqlBuilder
 			public class Like : NotExpr
 			{
 				public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression escape)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 					Expr2  = exp2;
 					Escape = escape;
@@ -898,7 +898,7 @@ namespace LinqToDB.SqlBuilder
 			public class Between : NotExpr
 			{
 				public Between(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression exp3)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 					Expr2 = exp2;
 					Expr3 = exp3;
@@ -954,7 +954,7 @@ namespace LinqToDB.SqlBuilder
 			public class IsNull : NotExpr
 			{
 				public IsNull(ISqlExpression exp1, bool isNot)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 				}
 
@@ -991,7 +991,7 @@ namespace LinqToDB.SqlBuilder
 			public class InSubQuery : NotExpr
 			{
 				public InSubQuery(ISqlExpression exp1, bool isNot, SelectQuery subQuery)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 					SubQuery = subQuery;
 				}
@@ -1040,14 +1040,14 @@ namespace LinqToDB.SqlBuilder
 			public class InList : NotExpr
 			{
 				public InList(ISqlExpression exp1, bool isNot, params ISqlExpression[] values)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 					if (values != null && values.Length > 0)
 						_values.AddRange(values);
 				}
 
 				public InList(ISqlExpression exp1, bool isNot, IEnumerable<ISqlExpression> values)
-					: base(exp1, isNot, SqlBuilder.Precedence.Comparison)
+					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
 				{
 					if (values != null)
 						_values.AddRange(values);
@@ -1246,9 +1246,9 @@ namespace LinqToDB.SqlBuilder
 				get
 				{
 					return
-						IsNot ? SqlBuilder.Precedence.LogicalNegation :
-						IsOr  ? SqlBuilder.Precedence.LogicalDisjunction :
-						        SqlBuilder.Precedence.LogicalConjunction;
+						IsNot ? SqlQuery.Precedence.LogicalNegation :
+						IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
+						        SqlQuery.Precedence.LogicalConjunction;
 				}
 			}
 
@@ -1375,13 +1375,13 @@ namespace LinqToDB.SqlBuilder
 			{
 				get
 				{
-					if (_conditions.Count == 0) return SqlBuilder.Precedence.Unknown;
+					if (_conditions.Count == 0) return SqlQuery.Precedence.Unknown;
 					if (_conditions.Count == 1) return _conditions[0].Precedence;
 
 					return _conditions.Select(_ =>
-						_.IsNot ? SqlBuilder.Precedence.LogicalNegation :
-						_.IsOr  ? SqlBuilder.Precedence.LogicalDisjunction :
-						          SqlBuilder.Precedence.LogicalConjunction).Min();
+						_.IsNot ? SqlQuery.Precedence.LogicalNegation :
+						_.IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
+						          SqlQuery.Precedence.LogicalConjunction).Min();
 				}
 			}
 
@@ -4111,7 +4111,7 @@ namespace LinqToDB.SqlBuilder
 			}
 			else
 			{
-				if (where1.SearchCondition.Precedence < SqlBuilder.Precedence.LogicalConjunction)
+				if (where1.SearchCondition.Precedence < SqlQuery.Precedence.LogicalConjunction)
 				{
 					var sc1 = new SearchCondition();
 
@@ -4121,7 +4121,7 @@ namespace LinqToDB.SqlBuilder
 					where1.SearchCondition.Conditions.Add(new Condition(false, sc1));
 				}
 
-				if (where2.SearchCondition.Precedence < SqlBuilder.Precedence.LogicalConjunction)
+				if (where2.SearchCondition.Precedence < SqlQuery.Precedence.LogicalConjunction)
 				{
 					var sc2 = new SearchCondition();
 
@@ -4379,7 +4379,7 @@ namespace LinqToDB.SqlBuilder
 									if (ee.Operator == Predicate.Operator.NotEqual)
 										value = !value;
 
-									return new Predicate.Expr(new SqlValue(value), SqlBuilder.Precedence.Comparison);
+									return new Predicate.Expr(new SqlValue(value), SqlQuery.Precedence.Comparison);
 								}
 							}
 
@@ -4486,9 +4486,9 @@ namespace LinqToDB.SqlBuilder
 								return new Predicate.Expr(new SqlValue(p.IsNot));
 
 							if (p.IsNot)
-								return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);
+								return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
 
-							return new Predicate.Expr(sc, SqlBuilder.Precedence.LogicalDisjunction);
+							return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
 						}
 					}
 
@@ -4544,9 +4544,9 @@ namespace LinqToDB.SqlBuilder
 									return new Predicate.Expr(new SqlValue(p.IsNot));
 
 								if (p.IsNot)
-									return new Predicate.NotExpr(sc, true, SqlBuilder.Precedence.LogicalNegation);
+									return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
 
-								return new Predicate.Expr(sc, SqlBuilder.Precedence.LogicalDisjunction);
+								return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
 							}
 						}
 					}
@@ -4675,7 +4675,7 @@ namespace LinqToDB.SqlBuilder
 
 		public int Precedence
 		{
-			get { return SqlBuilder.Precedence.Unknown; }
+			get { return SqlQuery.Precedence.Unknown; }
 		}
 
 		public Type SystemType

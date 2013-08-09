@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.SqlBuilder
+namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Extensions;
 
@@ -143,7 +143,7 @@ namespace LinqToDB.SqlBuilder
 
 		public int Precedence
 		{
-			get { return SqlBuilder.Precedence.Primary; }
+			get { return SqlQuery.Precedence.Primary; }
 		}
 
 		#endregion

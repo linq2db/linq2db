@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	public class SqlInfo
 	{

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public class BuildInfo
 	{

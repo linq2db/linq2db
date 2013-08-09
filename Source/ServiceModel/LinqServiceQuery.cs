@@ -2,7 +2,7 @@
 
 namespace LinqToDB.ServiceModel
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public class LinqServiceQuery
 	{
