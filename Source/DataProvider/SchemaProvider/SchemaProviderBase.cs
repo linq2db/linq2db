@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.SchemaProvider
 			public string ProcedureName;
 			public bool   IsFunction;
 			public bool   IsTableFunction;
+               public bool   IsAggregateFunction;
 			public bool   IsDefaultSchema;
 			public string ProcedureDefinition;
 		}
@@ -268,14 +269,15 @@ namespace LinqToDB.DataProvider.SchemaProvider
 						into gr
 						select new ProcedureSchema
 						{
-							CatalogName     = sp.CatalogName,
-							SchemaName      = sp.SchemaName,
-							ProcedureName   = sp.ProcedureName,
-							MemberName      = ToValidName(sp.ProcedureName),
-							IsFunction      = sp.IsFunction,
-							IsTableFunction = sp.IsTableFunction,
-							IsDefaultSchema = sp.IsDefaultSchema,
-							Parameters      =
+							CatalogName         = sp.CatalogName,
+							SchemaName          = sp.SchemaName,
+							ProcedureName       = sp.ProcedureName,
+							MemberName          = ToValidName(sp.ProcedureName),
+							IsFunction          = sp.IsFunction,
+							IsTableFunction     = sp.IsTableFunction,
+                                   IsAggregateFunction = sp.IsAggregateFunction,
+							IsDefaultSchema     = sp.IsDefaultSchema,
+							Parameters          =
 							(
 								from pr in gr
 
