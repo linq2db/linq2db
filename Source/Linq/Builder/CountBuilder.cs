@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 
 	class CountBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = new[] { "Count", "LongCount" };
+		public static readonly string[] MethodNames = { "Count", "LongCount" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -20,17 +20,17 @@ namespace LinqToDB.Linq.Builder
 			var returnType = methodCall.Method.ReturnType;
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence.SqlQuery != buildInfo.SqlQuery)
+			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{
 				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
 				{
 					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
 					{
-						SqlQuery = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
+						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
 					};
 
-					ctx.Sql        = ctx.SqlQuery;
-					ctx.FieldIndex = ctx.SqlQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SqlQuery), "cnt");
+					ctx.Sql        = ctx.SelectQuery;
+					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
 
 					return ctx;
 				}
@@ -39,33 +39,33 @@ namespace LinqToDB.Linq.Builder
 				{
 					return new CountContext(buildInfo.Parent, sequence, returnType)
 					{
-						Sql        = SqlFunction.CreateCount(returnType, sequence.SqlQuery),
+						Sql        = SqlFunction.CreateCount(returnType, sequence.SelectQuery),
 						FieldIndex = -1
 					};
 				}
 			}
 
-			if (sequence.SqlQuery.Select.IsDistinct        ||
-			    sequence.SqlQuery.Select.TakeValue != null ||
-			    sequence.SqlQuery.Select.SkipValue != null ||
-			   !sequence.SqlQuery.GroupBy.IsEmpty)
+			if (sequence.SelectQuery.Select.IsDistinct        ||
+			    sequence.SelectQuery.Select.TakeValue != null ||
+			    sequence.SelectQuery.Select.SkipValue != null ||
+			   !sequence.SelectQuery.GroupBy.IsEmpty)
 			{
 				sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
 				sequence = new SubQueryContext(sequence);
 			}
 
-			if (sequence.SqlQuery.OrderBy.Items.Count > 0)
+			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
 			{
-				if (sequence.SqlQuery.Select.TakeValue == null && sequence.SqlQuery.Select.SkipValue == null)
-					sequence.SqlQuery.OrderBy.Items.Clear();
+				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
+					sequence.SelectQuery.OrderBy.Items.Clear();
 				else
 					sequence = new SubQueryContext(sequence);
 			}
 
 			var context = new CountContext(buildInfo.Parent, sequence, returnType);
 
-			context.Sql        = context.SqlQuery;
-			context.FieldIndex = context.SqlQuery.Select.Add(SqlFunction.CreateCount(returnType, context.SqlQuery), "cnt");
+			context.Sql        = context.SelectQuery;
+			context.FieldIndex = context.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, context.SelectQuery), "cnt");
 
 			return context;
 		}
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (flags)
 				{
-					case ConvertFlags.Field : return new[] { new SqlInfo { Query = Parent.SqlQuery, Sql = Sql } };
+					case ConvertFlags.Field : return new[] { new SqlInfo { Query = Parent.SelectQuery, Sql = Sql } };
 				}
 
 				throw new NotImplementedException();
@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent.SqlQuery, Index = Parent.SqlQuery.Select.Add(Sql), Sql = Sql, }
+							new SqlInfo { Query = Parent.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql), Sql = Sql, }
 						});
 				}
 
@@ -144,9 +144,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override ISqlExpression GetSubQuery(IBuildContext context)
 			{
-				var query = context.SqlQuery;
+				var query = context.SelectQuery;
 
-				if (query == SqlQuery)
+				if (query == SelectQuery)
 				{
 					var col = query.Select.Columns[query.Select.Columns.Count - 1];
 

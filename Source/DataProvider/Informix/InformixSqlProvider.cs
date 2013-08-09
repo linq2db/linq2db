@@ -17,9 +17,9 @@ namespace LinqToDB.DataProvider
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
@@ -32,9 +32,9 @@ namespace LinqToDB.DataProvider
 			return new InformixSqlProvider(SqlProviderFlags);
 		}
 
-		public override int BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public override int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
-			var n = base.BuildSql(commandNumber, sqlQuery, sb, indent, nesting, skipAlias);
+			var n = base.BuildSql(commandNumber, selectQuery, sb, indent, nesting, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider
 
 		protected override void BuildSelectClause(StringBuilder sb)
 		{
-			if (SqlQuery.From.Tables.Count == 0)
+			if (SelectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent(sb).Append("SELECT FIRST 1").AppendLine();
 				BuildColumns(sb);
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider
 		protected override string FirstFormat { get { return "FIRST {0}"; } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
 
-		protected override void BuildLikePredicate(StringBuilder sb, SqlQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(StringBuilder sb, SelectQuery.Predicate.Like predicate)
 		{
 			if (predicate.IsNot)
 				sb.Append("NOT ");
@@ -215,32 +215,32 @@ namespace LinqToDB.DataProvider
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			CheckAliases(sqlQuery, int.MaxValue);
+			CheckAliases(selectQuery, int.MaxValue);
 
-			new QueryVisitor().Visit(sqlQuery.Select, SetQueryParameter);
+			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
 
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
 				case QueryType.Delete :
-					sqlQuery = GetAlternativeDelete(sqlQuery);
-					sqlQuery.From.Tables[0].Alias = "$";
+					selectQuery = GetAlternativeDelete(selectQuery);
+					selectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					sqlQuery = GetAlternativeUpdate(sqlQuery);
+					selectQuery = GetAlternativeUpdate(selectQuery);
 					break;
 			}
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 

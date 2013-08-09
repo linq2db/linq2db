@@ -299,7 +299,7 @@
     <Compile Include="SqlProvider\BasicSqlProvider.cs" />
     <Compile Include="SqlProvider\ISqlProvider.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
-    <Compile Include="SqlBuilder\SqlQuery.cs" />
+    <Compile Include="SqlBuilder\SelectQuery.cs" />
     <Compile Include="SqlBuilder\SqlTable.cs" />
     <Compile Include="SqlBuilder\SqlTableT.cs" />
     <Compile Include="SqlBuilder\SqlTableType.cs" />

@@ -149,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool EnforceServerSide(IBuildContext context)
 		{
-			return context.SqlQuery.Select.IsDistinct;
+			return context.SelectQuery.Select.IsDistinct;
 		}
 
 		#endregion
@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 		Expression BuildSql(IBuildContext context, Expression expression)
 		{
 			var sqlex = ConvertToSqlExpression(context, expression);
-			var idx   = context.SqlQuery.Select.Add(sqlex);
+			var idx   = context.SelectQuery.Select.Add(sqlex);
 
 			idx = context.ConvertToParentIndex(idx, context);
 

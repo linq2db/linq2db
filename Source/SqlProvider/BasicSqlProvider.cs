@@ -7,8 +7,6 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Linq.Expressions;
-
 	using Common;
 	using Extensions;
 	using Mapping;
@@ -23,10 +21,10 @@ namespace LinqToDB.SqlProvider
 			SqlProviderFlags = sqlProviderFlags;
 		}
 
-		public SqlQuery SqlQuery  { get; set; }
-		public int      Indent    { get; set; }
-		public int      Nesting   { get; private set; }
-		public Step     BuildStep { get; set; }
+		public SelectQuery SelectQuery { get; set; }
+		public int         Indent      { get; set; }
+		public int         Nesting     { get; private set; }
+		public Step        BuildStep   { get; set; }
 
 		int  _nextNesting = 1;
 		bool _skipAlias;
@@ -41,7 +39,7 @@ namespace LinqToDB.SqlProvider
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
 		public virtual bool IsGroupByExpressionSupported    { get { return true;  } }
 
-		public virtual bool ConvertCountSubQuery(SqlQuery subQuery)
+		public virtual bool ConvertCountSubQuery(SelectQuery subQuery)
 		{
 			return true;
 		}
@@ -50,7 +48,7 @@ namespace LinqToDB.SqlProvider
 
 		#region CommandCount
 
-		public virtual int CommandCount(SqlQuery sqlQuery)
+		public virtual int CommandCount(SelectQuery selectQuery)
 		{
 			return 1;
 		}
@@ -59,9 +57,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public virtual int BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public virtual int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
-			SqlQuery    = sqlQuery;
+			SelectQuery    = selectQuery;
 			Indent      = indent;
 			Nesting     = nesting;
 			_nextNesting = Nesting + 1;
@@ -71,16 +69,16 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildSql(sb);
 
-				if (sqlQuery.HasUnion)
+				if (selectQuery.HasUnion)
 				{
-					foreach (var union in sqlQuery.Unions)
+					foreach (var union in selectQuery.Unions)
 					{
 						AppendIndent(sb);
 						sb.Append("UNION");
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						CreateSqlProvider().BuildSql(commandNumber, union.SqlQuery, sb, indent, nesting, skipAlias);
+						CreateSqlProvider().BuildSql(commandNumber, union.SelectQuery, sb, indent, nesting, skipAlias);
 					}
 				}
 			}
@@ -100,16 +98,16 @@ namespace LinqToDB.SqlProvider
 
 		#region Overrides
 
-		protected virtual int BuildSqlBuilder(SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		protected virtual int BuildSqlBuilder(SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
-			if (!SqlProviderFlags.GetIsSkipSupportedFlag(sqlQuery)
-				&& sqlQuery.Select.SkipValue != null)
+			if (!SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery)
+				&& selectQuery.Select.SkipValue != null)
 				throw new SqlException("Skip for subqueries is not supported by the '{0}' provider.", Name);
 
-			if (!SqlProviderFlags.IsTakeSupported && sqlQuery.Select.TakeValue != null)
+			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			return CreateSqlProvider().BuildSql(0, sqlQuery, sb, indent, nesting, skipAlias);
+			return CreateSqlProvider().BuildSql(0, selectQuery, sb, indent, nesting, skipAlias);
 		}
 
 		protected abstract ISqlProvider CreateSqlProvider();
@@ -121,7 +119,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSql(StringBuilder sb)
 		{
-			switch (SqlQuery.QueryType)
+			switch (SelectQuery.QueryType)
 			{
 				case QueryType.Select         : BuildSelectQuery         (sb); break;
 				case QueryType.Delete         : BuildDeleteQuery         (sb); break;
@@ -129,7 +127,7 @@ namespace LinqToDB.SqlProvider
 				case QueryType.Insert         : BuildInsertQuery         (sb); break;
 				case QueryType.InsertOrUpdate : BuildInsertOrUpdateQuery (sb); break;
 				case QueryType.CreateTable    :
-					if (SqlQuery.CreateTable.IsDrop)
+					if (SelectQuery.CreateTable.IsDrop)
 						BuildDropTableStatement(sb);
 					else
 						BuildCreateTableStatement(sb);
@@ -175,7 +173,7 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildStep = Step.InsertClause; BuildInsertClause(sb);
 
-			if (SqlQuery.QueryType == QueryType.Insert && SqlQuery.From.Tables.Count != 0)
+			if (SelectQuery.QueryType == QueryType.Insert && SelectQuery.From.Tables.Count != 0)
 			{
 				BuildStep = Step.SelectClause;  BuildSelectClause (sb);
 				BuildStep = Step.FromClause;    BuildFromClause   (sb);
@@ -186,13 +184,13 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.OffsetLimit;   BuildOffsetLimit  (sb);
 			}
 
-			if (SqlQuery.Insert.WithIdentity)
+			if (SelectQuery.Insert.WithIdentity)
 				BuildGetIdentity(sb);
 		}
 
 		protected virtual void BuildUnknownQuery(StringBuilder sb)
 		{
-			throw new SqlException("Unknown query type '{0}'.", SqlQuery.QueryType);
+			throw new SqlException("Unknown query type '{0}'.", SelectQuery.QueryType);
 		}
 
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
@@ -221,7 +219,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent(sb);
 			sb.Append("SELECT");
 
-			if (SqlQuery.Select.IsDistinct)
+			if (SelectQuery.Select.IsDistinct)
 				sb.Append(" DISTINCT");
 
 			BuildSkipFirst(sb);
@@ -230,9 +228,9 @@ namespace LinqToDB.SqlProvider
 			BuildColumns(sb);
 		}
 
-		protected virtual IEnumerable<SqlQuery.Column> GetSelectedColumns()
+		protected virtual IEnumerable<SelectQuery.Column> GetSelectedColumns()
 		{
-			return SqlQuery.Select.Columns;
+			return SelectQuery.Select.Columns;
 		}
 
 		protected virtual void BuildColumns(StringBuilder sb)
@@ -300,10 +298,10 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateTableName(StringBuilder sb)
 		{
-			if (SqlQuery.Update.Table != null && SqlQuery.Update.Table != SqlQuery.From.Tables[0].Source)
-				BuildPhysicalTable(sb, SqlQuery.Update.Table, null);
+			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
+				BuildPhysicalTable(sb, SelectQuery.Update.Table, null);
 			else
-				BuildTableName(sb, SqlQuery.From.Tables[0], true, true);
+				BuildTableName(sb, SelectQuery.From.Tables[0], true, true);
 		}
 
 		protected virtual void BuildUpdateSet(StringBuilder sb)
@@ -315,7 +313,7 @@ namespace LinqToDB.SqlProvider
 
 			var first = true;
 
-			foreach (var expr in SqlQuery.Update.Items)
+			foreach (var expr in SelectQuery.Update.Items)
 			{
 				if (!first)
 					sb.Append(',').AppendLine();
@@ -354,9 +352,9 @@ namespace LinqToDB.SqlProvider
 			AppendIndent(sb).Append(insertText);
 
 			if (appendTableName)
-				BuildPhysicalTable(sb, SqlQuery.Insert.Into, null);
+				BuildPhysicalTable(sb, SelectQuery.Insert.Into, null);
 
-			if (SqlQuery.Insert.Items.Count == 0)
+			if (SelectQuery.Insert.Items.Count == 0)
 			{
 				sb.Append(' ');
 				BuildEmptyInsert(sb);
@@ -371,7 +369,7 @@ namespace LinqToDB.SqlProvider
 
 				var first = true;
 
-				foreach (var expr in SqlQuery.Insert.Items)
+				foreach (var expr in SelectQuery.Insert.Items)
 				{
 					if (!first)
 						sb.Append(',').AppendLine();
@@ -386,7 +384,7 @@ namespace LinqToDB.SqlProvider
 				sb.AppendLine();
 				AppendIndent(sb).AppendLine(")");
 
-				if (SqlQuery.QueryType == QueryType.InsertOrUpdate || SqlQuery.From.Tables.Count == 0)
+				if (SelectQuery.QueryType == QueryType.InsertOrUpdate || SelectQuery.From.Tables.Count == 0)
 				{
 					AppendIndent(sb).AppendLine("VALUES");
 					AppendIndent(sb).AppendLine("(");
@@ -395,7 +393,7 @@ namespace LinqToDB.SqlProvider
 
 					first = true;
 
-					foreach (var expr in SqlQuery.Insert.Items)
+					foreach (var expr in SelectQuery.Insert.Items)
 					{
 						if (!first)
 							sb.Append(',').AppendLine();
@@ -429,10 +427,10 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsMerge(StringBuilder sb, string fromDummyTable)
 		{
-			var table       = SqlQuery.Insert.Into;
-			var targetAlias = Convert(SqlQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
-			var sourceAlias = Convert(GetTempAliases(1, "s")[0],     ConvertType.NameToQueryTableAlias).ToString();
-			var keys        = SqlQuery.Update.Keys;
+			var table       = SelectQuery.Insert.Into;
+			var targetAlias = Convert(SelectQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
+			var sourceAlias = Convert(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias).ToString();
+			var keys        = SelectQuery.Update.Keys;
 
 			AppendIndent(sb).Append("MERGE INTO ");
 			BuildPhysicalTable(sb, table, null);
@@ -507,8 +505,8 @@ namespace LinqToDB.SqlProvider
 
 			AppendIndent(sb).AppendLine("WHERE");
 
-			var alias = Convert(SqlQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
-			var exprs = SqlQuery.Update.Keys;
+			var alias = Convert(SelectQuery.From.Tables[0].Alias, ConvertType.NameToQueryTableAlias).ToString();
+			var exprs = SelectQuery.Update.Keys;
 
 			Indent++;
 
@@ -554,7 +552,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildDropTableStatement(StringBuilder sb)
 		{
-			var table = SqlQuery.CreateTable.Table;
+			var table = SelectQuery.CreateTable.Table;
 
 			AppendIndent(sb).Append("DROP TABLE ");
 			BuildPhysicalTable(sb, table, null);
@@ -563,7 +561,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableStatement(StringBuilder sb)
 		{
-			var table = SqlQuery.CreateTable.Table;
+			var table = SelectQuery.CreateTable.Table;
 
 			AppendIndent(sb).Append("CREATE TABLE ");
 
@@ -687,7 +685,7 @@ namespace LinqToDB.SqlProvider
 				sb.AppendLine(",").AppendLine();
 
 				BuildCreateTablePrimaryKey(sb,
-					Convert("PK_" + SqlQuery.CreateTable.Table.PhysicalName, ConvertType.NameToQueryTable).ToString(),
+					Convert("PK_" + SelectQuery.CreateTable.Table.PhysicalName, ConvertType.NameToQueryTable).ToString(),
 					pk.Select(f => Convert(f.field.PhysicalName, ConvertType.NameToQueryField).ToString()));
 			}
 
@@ -733,7 +731,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildFromClause(StringBuilder sb)
 		{
-			if (SqlQuery.From.Tables.Count == 0)
+			if (SelectQuery.From.Tables.Count == 0)
 				return;
 
 			AppendIndent(sb);
@@ -745,7 +743,7 @@ namespace LinqToDB.SqlProvider
 
 			var first = true;
 
-			foreach (var ts in SqlQuery.From.Tables)
+			foreach (var ts in SelectQuery.From.Tables)
 			{
 				if (!first)
 				{
@@ -786,7 +784,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlQuery    :
 					sb.Append("(").AppendLine();
-					_nextNesting = BuildSqlBuilder((SqlQuery)table, sb, Indent + 1, _nextNesting, false);
+					_nextNesting = BuildSqlBuilder((SelectQuery)table, sb, Indent + 1, _nextNesting, false);
 					AppendIndent(sb).Append(")");
 
 					break;
@@ -796,7 +794,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected void BuildTableName(StringBuilder sb, SqlQuery.TableSource ts, bool buildName, bool buildAlias)
+		protected void BuildTableName(StringBuilder sb, SelectQuery.TableSource ts, bool buildName, bool buildAlias)
 		{
 			if (buildName)
 			{
@@ -821,7 +819,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildJoinTable(StringBuilder sb, SqlQuery.JoinedTable join, ref int joinCounter)
+		void BuildJoinTable(StringBuilder sb, SelectQuery.JoinedTable join, ref int joinCounter)
 		{
 			sb.AppendLine();
 			Indent++;
@@ -873,14 +871,14 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 		}
 
-		protected virtual bool BuildJoinType(StringBuilder sb, SqlQuery.JoinedTable join)
+		protected virtual bool BuildJoinType(StringBuilder sb, SelectQuery.JoinedTable join)
 		{
 			switch (join.JoinType)
 			{
-				case SqlQuery.JoinType.Inner      : sb.Append("INNER JOIN ");  return true;
-				case SqlQuery.JoinType.Left       : sb.Append("LEFT JOIN ");   return true;
-				case SqlQuery.JoinType.CrossApply : sb.Append("CROSS APPLY "); return false;
-				case SqlQuery.JoinType.OuterApply : sb.Append("OUTER APPLY "); return false;
+				case SelectQuery.JoinType.Inner      : sb.Append("INNER JOIN ");  return true;
+				case SelectQuery.JoinType.Left       : sb.Append("LEFT JOIN ");   return true;
+				case SelectQuery.JoinType.CrossApply : sb.Append("CROSS APPLY "); return false;
+				case SelectQuery.JoinType.OuterApply : sb.Append("OUTER APPLY "); return false;
 				default: throw new InvalidOperationException();
 			}
 		}
@@ -891,7 +889,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool BuildWhere()
 		{
-			return SqlQuery.Where.SearchCondition.Conditions.Count != 0;
+			return SelectQuery.Where.SearchCondition.Conditions.Count != 0;
 		}
 
 		protected virtual void BuildWhereClause(StringBuilder sb)
@@ -905,7 +903,7 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 			AppendIndent(sb);
-			BuildWhereSearchCondition(sb, SqlQuery.Where.SearchCondition);
+			BuildWhereSearchCondition(sb, SelectQuery.Where.SearchCondition);
 			Indent--;
 
 			sb.AppendLine();
@@ -917,7 +915,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildGroupByClause(StringBuilder sb)
 		{
-			if (SqlQuery.GroupBy.Items.Count == 0)
+			if (SelectQuery.GroupBy.Items.Count == 0)
 				return;
 
 			AppendIndent(sb);
@@ -926,13 +924,13 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 
-			for (var i = 0; i < SqlQuery.GroupBy.Items.Count; i++)
+			for (var i = 0; i < SelectQuery.GroupBy.Items.Count; i++)
 			{
 				AppendIndent(sb);
 
-				BuildExpression(sb, SqlQuery.GroupBy.Items[i]);
+				BuildExpression(sb, SelectQuery.GroupBy.Items[i]);
 
-				if (i + 1 < SqlQuery.GroupBy.Items.Count)
+				if (i + 1 < SelectQuery.GroupBy.Items.Count)
 					sb.Append(',');
 
 				sb.AppendLine();
@@ -947,7 +945,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(StringBuilder sb)
 		{
-			if (SqlQuery.Having.SearchCondition.Conditions.Count == 0)
+			if (SelectQuery.Having.SearchCondition.Conditions.Count == 0)
 				return;
 
 			AppendIndent(sb);
@@ -956,7 +954,7 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 			AppendIndent(sb);
-			BuildWhereSearchCondition(sb, SqlQuery.Having.SearchCondition);
+			BuildWhereSearchCondition(sb, SelectQuery.Having.SearchCondition);
 			Indent--;
 
 			sb.AppendLine();
@@ -968,7 +966,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOrderByClause(StringBuilder sb)
 		{
-			if (SqlQuery.OrderBy.Items.Count == 0)
+			if (SelectQuery.OrderBy.Items.Count == 0)
 				return;
 
 			AppendIndent(sb);
@@ -977,18 +975,18 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 
-			for (var i = 0; i < SqlQuery.OrderBy.Items.Count; i++)
+			for (var i = 0; i < SelectQuery.OrderBy.Items.Count; i++)
 			{
 				AppendIndent(sb);
 
-				var item = SqlQuery.OrderBy.Items[i];
+				var item = SelectQuery.OrderBy.Items[i];
 
 				BuildExpression(sb, item.Expression);
 
 				if (item.IsDescending)
 					sb.Append(" DESC");
 
-				if (i + 1 < SqlQuery.OrderBy.Items.Count)
+				if (i + 1 < SelectQuery.OrderBy.Items.Count)
 					sb.Append(',');
 
 				sb.AppendLine();
@@ -1008,19 +1006,19 @@ namespace LinqToDB.SqlProvider
 		protected virtual string OffsetFormat { get { return null;  } }
 		protected virtual bool   OffsetFirst  { get { return false; } }
 
-		protected bool NeedSkip { get { return SqlQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(SqlQuery); } }
-		protected bool NeedTake { get { return SqlQuery.Select.TakeValue != null && SqlProviderFlags.IsTakeSupported; } }
+		protected bool NeedSkip { get { return SelectQuery.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(SelectQuery); } }
+		protected bool NeedTake { get { return SelectQuery.Select.TakeValue != null && SqlProviderFlags.IsTakeSupported; } }
 
 		protected virtual void BuildSkipFirst(StringBuilder sb)
 		{
 			if (SkipFirst && NeedSkip && SkipFormat != null)
-				sb.Append(' ').AppendFormat(SkipFormat,  BuildExpression(new StringBuilder(), SqlQuery.Select.SkipValue));
+				sb.Append(' ').AppendFormat(SkipFormat,  BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue));
 
 			if (NeedTake && FirstFormat != null)
-				sb.Append(' ').AppendFormat(FirstFormat, BuildExpression(new StringBuilder(), SqlQuery.Select.TakeValue));
+				sb.Append(' ').AppendFormat(FirstFormat, BuildExpression(new StringBuilder(), SelectQuery.Select.TakeValue));
 
 			if (!SkipFirst && NeedSkip && SkipFormat != null)
-				sb.Append(' ').AppendFormat(SkipFormat,  BuildExpression(new StringBuilder(), SqlQuery.Select.SkipValue));
+				sb.Append(' ').AppendFormat(SkipFormat,  BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue));
 		}
 
 		protected virtual void BuildOffsetLimit(StringBuilder sb)
@@ -1034,7 +1032,7 @@ namespace LinqToDB.SqlProvider
 
 				if (doSkip && OffsetFirst)
 				{
-					sb.AppendFormat(OffsetFormat, BuildExpression(new StringBuilder(), SqlQuery.Select.SkipValue));
+					sb.AppendFormat(OffsetFormat, BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue));
 
 					if (doTake)
 						sb.Append(' ');
@@ -1042,14 +1040,14 @@ namespace LinqToDB.SqlProvider
 
 				if (doTake)
 				{
-					sb.AppendFormat(LimitFormat, BuildExpression(new StringBuilder(), SqlQuery.Select.TakeValue));
+					sb.AppendFormat(LimitFormat, BuildExpression(new StringBuilder(), SelectQuery.Select.TakeValue));
 
 					if (doSkip)
 						sb.Append(' ');
 				}
 
 				if (doSkip && !OffsetFirst)
-					sb.AppendFormat(OffsetFormat, BuildExpression(new StringBuilder(), SqlQuery.Select.SkipValue));
+					sb.AppendFormat(OffsetFormat, BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue));
 
 				sb.AppendLine();
 			}
@@ -1061,12 +1059,12 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSearchCondition
 
-		protected virtual void BuildWhereSearchCondition(StringBuilder sb, SqlQuery.SearchCondition condition)
+		protected virtual void BuildWhereSearchCondition(StringBuilder sb, SelectQuery.SearchCondition condition)
 		{
 			BuildSearchCondition(sb, Precedence.Unknown, condition);
 		}
 
-		protected virtual void BuildSearchCondition(StringBuilder sb, SqlQuery.SearchCondition condition)
+		protected virtual void BuildSearchCondition(StringBuilder sb, SelectQuery.SearchCondition condition)
 		{
 			var isOr = (bool?)null;
 			var len  = sb.Length;
@@ -1078,7 +1076,7 @@ namespace LinqToDB.SqlProvider
 				{
 					sb.Append(isOr.Value ? " OR" : " AND");
 
-					if (condition.Conditions.Count < 4 && sb.Length - len < 50 || condition != SqlQuery.Where.SearchCondition)
+					if (condition.Conditions.Count < 4 && sb.Length - len < 50 || condition != SelectQuery.Where.SearchCondition)
 					{
 						sb.Append(' ');
 					}
@@ -1101,7 +1099,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSearchCondition(StringBuilder sb, int parentPrecedence, SqlQuery.SearchCondition condition)
+		protected virtual void BuildSearchCondition(StringBuilder sb, int parentPrecedence, SelectQuery.SearchCondition condition)
 		{
 			var wrap = Wrap(GetPrecedence(condition as ISqlExpression), parentPrecedence);
 
@@ -1120,12 +1118,12 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.ExprExprPredicate :
 					{
-						var expr = (SqlQuery.Predicate.ExprExpr)predicate;
+						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
 						switch (expr.Operator)
 						{
-							case SqlQuery.Predicate.Operator.Equal :
-							case SqlQuery.Predicate.Operator.NotEqual :
+							case SelectQuery.Predicate.Operator.Equal :
+							case SelectQuery.Predicate.Operator.NotEqual :
 								{
 									ISqlExpression e = null;
 
@@ -1137,7 +1135,7 @@ namespace LinqToDB.SqlProvider
 									if (e != null)
 									{
 										BuildExpression(sb, GetPrecedence(expr), e);
-										sb.Append(expr.Operator == SqlQuery.Predicate.Operator.Equal ? " IS NULL" : " IS NOT NULL");
+										sb.Append(expr.Operator == SelectQuery.Predicate.Operator.Equal ? " IS NULL" : " IS NOT NULL");
 										return;
 									}
 
@@ -1149,14 +1147,14 @@ namespace LinqToDB.SqlProvider
 
 						switch (expr.Operator)
 						{
-							case SqlQuery.Predicate.Operator.Equal          : sb.Append(" = ");  break;
-							case SqlQuery.Predicate.Operator.NotEqual       : sb.Append(" <> "); break;
-							case SqlQuery.Predicate.Operator.Greater        : sb.Append(" > ");  break;
-							case SqlQuery.Predicate.Operator.GreaterOrEqual : sb.Append(" >= "); break;
-							case SqlQuery.Predicate.Operator.NotGreater     : sb.Append(" !> "); break;
-							case SqlQuery.Predicate.Operator.Less           : sb.Append(" < ");  break;
-							case SqlQuery.Predicate.Operator.LessOrEqual    : sb.Append(" <= "); break;
-							case SqlQuery.Predicate.Operator.NotLess        : sb.Append(" !< "); break;
+							case SelectQuery.Predicate.Operator.Equal          : sb.Append(" = ");  break;
+							case SelectQuery.Predicate.Operator.NotEqual       : sb.Append(" <> "); break;
+							case SelectQuery.Predicate.Operator.Greater        : sb.Append(" > ");  break;
+							case SelectQuery.Predicate.Operator.GreaterOrEqual : sb.Append(" >= "); break;
+							case SelectQuery.Predicate.Operator.NotGreater     : sb.Append(" !> "); break;
+							case SelectQuery.Predicate.Operator.Less           : sb.Append(" < ");  break;
+							case SelectQuery.Predicate.Operator.LessOrEqual    : sb.Append(" <= "); break;
+							case SelectQuery.Predicate.Operator.NotLess        : sb.Append(" !< "); break;
 						}
 
 						BuildExpression(sb, GetPrecedence(expr), expr.Expr2);
@@ -1165,12 +1163,12 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.LikePredicate :
-					BuildLikePredicate(sb, (SqlQuery.Predicate.Like)predicate);
+					BuildLikePredicate(sb, (SelectQuery.Predicate.Like)predicate);
 					break;
 
 				case QueryElementType.BetweenPredicate :
 					{
-						var p = (SqlQuery.Predicate.Between)predicate;
+						var p = (SelectQuery.Predicate.Between)predicate;
 						BuildExpression(sb, GetPrecedence(p), p.Expr1);
 						if (p.IsNot) sb.Append(" NOT");
 						sb.Append(" BETWEEN ");
@@ -1183,7 +1181,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.IsNullPredicate :
 					{
-						var p = (SqlQuery.Predicate.IsNull)predicate;
+						var p = (SelectQuery.Predicate.IsNull)predicate;
 						BuildExpression(sb, GetPrecedence(p), p.Expr1);
 						sb.Append(p.IsNot ? " IS NOT NULL" : " IS NULL");
 					}
@@ -1192,7 +1190,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.InSubQueryPredicate :
 					{
-						var p = (SqlQuery.Predicate.InSubQuery)predicate;
+						var p = (SelectQuery.Predicate.InSubQuery)predicate;
 						BuildExpression(sb, GetPrecedence(p), p.Expr1);
 						sb.Append(p.IsNot ? " NOT IN " : " IN ");
 						BuildExpression(sb, GetPrecedence(p), p.SubQuery);
@@ -1206,19 +1204,19 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.FuncLikePredicate :
 					{
-						var f = (SqlQuery.Predicate.FuncLike)predicate;
+						var f = (SelectQuery.Predicate.FuncLike)predicate;
 						BuildExpression(sb, f.Function.Precedence, f.Function);
 					}
 
 					break;
 
 				case QueryElementType.SearchCondition :
-					BuildSearchCondition(sb, predicate.Precedence, (SqlQuery.SearchCondition)predicate);
+					BuildSearchCondition(sb, predicate.Precedence, (SelectQuery.SearchCondition)predicate);
 					break;
 
 				case QueryElementType.NotExprPredicate :
 					{
-						var p = (SqlQuery.Predicate.NotExpr)predicate;
+						var p = (SelectQuery.Predicate.NotExpr)predicate;
 
 						if (p.IsNot)
 							sb.Append("NOT ");
@@ -1230,7 +1228,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.ExprPredicate :
 					{
-						var p = (SqlQuery.Predicate.Expr)predicate;
+						var p = (SelectQuery.Predicate.Expr)predicate;
 
 						if (p.Expr1 is SqlValue)
 						{
@@ -1258,7 +1256,7 @@ namespace LinqToDB.SqlProvider
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((SqlQuery.Column)expr).Expression);
+				case QueryElementType.Column  : return GetUnderlayingField(((SelectQuery.Column)expr).Expression);
 			}
 
 			throw new InvalidOperationException();
@@ -1266,11 +1264,11 @@ namespace LinqToDB.SqlProvider
 
 		void BuildInListPredicate(ISqlPredicate predicate, StringBuilder sb)
 		{
-			var p = (SqlQuery.Predicate.InList)predicate;
+			var p = (SelectQuery.Predicate.InList)predicate;
 
 			if (p.Values == null || p.Values.Count == 0)
 			{
-				BuildPredicate(sb, new SqlQuery.Predicate.Expr(new SqlValue(false)));
+				BuildPredicate(sb, new SelectQuery.Predicate.Expr(new SqlValue(false)));
 			}
 			else
 			{
@@ -1283,7 +1281,7 @@ namespace LinqToDB.SqlProvider
 
 					if (pr.Value == null)
 					{
-						BuildPredicate(sb, new SqlQuery.Predicate.Expr(new SqlValue(false)));
+						BuildPredicate(sb, new SelectQuery.Predicate.Expr(new SqlValue(false)));
 						return;
 					}
 
@@ -1372,7 +1370,7 @@ namespace LinqToDB.SqlProvider
 							}
 
 							if (firstValue)
-								BuildPredicate(sb, new SqlQuery.Predicate.Expr(new SqlValue(p.IsNot)));
+								BuildPredicate(sb, new SelectQuery.Predicate.Expr(new SqlValue(p.IsNot)));
 							else
 								sb.Remove(sb.Length - 2, 2).Append(')');
 						}
@@ -1389,7 +1387,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildInListValues(StringBuilder sb, SqlQuery.Predicate.InList predicate, IEnumerable values)
+		void BuildInListValues(StringBuilder sb, SelectQuery.Predicate.InList predicate, IEnumerable values)
 		{
 			var firstValue = true;
 			var len        = sb.Length;
@@ -1440,8 +1438,8 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildPredicate(sb,
 					hasNull ?
-						new SqlQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot) :
-						new SqlQuery.Predicate.Expr(new SqlValue(predicate.IsNot)));
+						new SelectQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot) :
+						new SelectQuery.Predicate.Expr(new SqlValue(predicate.IsNot)));
 			}
 			else
 			{
@@ -1451,7 +1449,7 @@ namespace LinqToDB.SqlProvider
 				{
 					sb.Insert(len, "(");
 					sb.Append(" OR ");
-					BuildPredicate(sb, new SqlQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot));
+					BuildPredicate(sb, new SelectQuery.Predicate.IsNull(predicate.Expr1, predicate.IsNot));
 					sb.Append(")");
 				}
 			}
@@ -1477,7 +1475,7 @@ namespace LinqToDB.SqlProvider
 			if (wrap) sb.Append(')');
 		}
 
-		protected virtual void BuildLikePredicate(StringBuilder sb, SqlQuery.Predicate.Like predicate)
+		protected virtual void BuildLikePredicate(StringBuilder sb, SelectQuery.Predicate.Like predicate)
 		{
 			var precedence = GetPrecedence(predicate);
 
@@ -1520,7 +1518,7 @@ namespace LinqToDB.SqlProvider
 						{
 							if (buildTableName)
 							{
-								var ts = SqlQuery.GetTableSource(field.Table);
+								var ts = SelectQuery.GetTableSource(field.Table);
 
 								if (ts == null)
 								{
@@ -1555,18 +1553,18 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.Column:
 					{
-						var column = (SqlQuery.Column)expr;
+						var column = (SelectQuery.Column)expr;
 
 #if DEBUG
-						var sql = SqlQuery.SqlText;
+						var sql = SelectQuery.SqlText;
 #endif
 
-						var table = SqlQuery.GetTableSource(column.Parent);
+						var table = SelectQuery.GetTableSource(column.Parent);
 
 						if (table == null)
 						{
 #if DEBUG
-							table = SqlQuery.GetTableSource(column.Parent);
+							table = SelectQuery.GetTableSource(column.Parent);
 #endif
 
 							throw new SqlException("Table not found for '{0}'.", column);
@@ -1595,7 +1593,7 @@ namespace LinqToDB.SqlProvider
 							sb.Append("(");
 						sb.AppendLine();
 
-						_nextNesting = BuildSqlBuilder((SqlQuery)expr, sb, Indent + 1, _nextNesting, BuildStep != Step.FromClause);
+						_nextNesting = BuildSqlBuilder((SelectQuery)expr, sb, Indent + 1, _nextNesting, BuildStep != Step.FromClause);
 
 						AppendIndent(sb);
 
@@ -1663,7 +1661,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition:
-					BuildSearchCondition(sb, expr.Precedence, (SqlQuery.SearchCondition)expr);
+					BuildSearchCondition(sb, expr.Precedence, (SelectQuery.SearchCondition)expr);
 					break;
 
 				default:
@@ -1998,7 +1996,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected virtual void BuildAliases(StringBuilder sb, string table, List<SqlQuery.Column> columns, string postfix)
+		protected virtual void BuildAliases(StringBuilder sb, string table, List<SelectQuery.Column> columns, string postfix)
 		{
 			Indent++;
 
@@ -2039,7 +2037,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent(sb).AppendFormat("{0}.*,", aliases[0]).AppendLine();
 				AppendIndent(sb).Append("ROW_NUMBER() OVER");
 
-				if (!SqlQuery.OrderBy.IsEmpty && !implementOrderBy)
+				if (!SelectQuery.OrderBy.IsEmpty && !implementOrderBy)
 					sb.Append("()");
 				else
 				{
@@ -2048,10 +2046,10 @@ namespace LinqToDB.SqlProvider
 
 					Indent++;
 
-					if (SqlQuery.OrderBy.IsEmpty)
+					if (SelectQuery.OrderBy.IsEmpty)
 					{
 						AppendIndent(sb).Append("ORDER BY").AppendLine();
-						BuildAliases(sb, aliases[0], SqlQuery.Select.Columns.Take(1).ToList(), null);
+						BuildAliases(sb, aliases[0], SelectQuery.Select.Columns.Take(1).ToList(), null);
 					}
 					else
 						BuildAlternativeOrderBy(sb, true);
@@ -2081,8 +2079,8 @@ namespace LinqToDB.SqlProvider
 
 				if (NeedTake)
 				{
-					var expr1 = Add(SqlQuery.Select.SkipValue, 1);
-					var expr2 = Add<int>(SqlQuery.Select.SkipValue, SqlQuery.Select.TakeValue);
+					var expr1 = Add(SelectQuery.Select.SkipValue, 1);
+					var expr2 = Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue);
 
 					if (expr1 is SqlValue && expr2 is SqlValue && Equals(((SqlValue)expr1).Value, ((SqlValue)expr2).Value))
 					{
@@ -2100,7 +2098,7 @@ namespace LinqToDB.SqlProvider
 				else
 				{
 					AppendIndent(sb).AppendFormat("{0}.{1} > ", aliases[1], rnaliase);
-					BuildExpression(sb, SqlQuery.Select.SkipValue);
+					BuildExpression(sb, SelectQuery.Select.SkipValue);
 				}
 
 				sb.AppendLine();
@@ -2120,22 +2118,22 @@ namespace LinqToDB.SqlProvider
 			Indent++;
 
 			AppendIndent(sb).Append("SELECT TOP ");
-			BuildExpression(sb, SqlQuery.Select.TakeValue);
+			BuildExpression(sb, SelectQuery.Select.TakeValue);
 			sb.Append(" *").AppendLine();
 			AppendIndent(sb).Append("FROM").AppendLine();
 			AppendIndent(sb).Append("(")   .AppendLine();
 			Indent++;
 
-			if (SqlQuery.OrderBy.IsEmpty)
+			if (SelectQuery.OrderBy.IsEmpty)
 			{
 				AppendIndent(sb).Append("SELECT TOP ");
 
-				var p = SqlQuery.Select.SkipValue as SqlParameter;
+				var p = SelectQuery.Select.SkipValue as SqlParameter;
 
-				if (p != null && !p.IsQueryParameter && SqlQuery.Select.TakeValue is SqlValue)
-					BuildValue(sb, (int)p.Value + (int)((SqlValue)(SqlQuery.Select.TakeValue)).Value);
+				if (p != null && !p.IsQueryParameter && SelectQuery.Select.TakeValue is SqlValue)
+					BuildValue(sb, (int)p.Value + (int)((SqlValue)(SelectQuery.Select.TakeValue)).Value);
 				else
-					BuildExpression(sb, Add<int>(SqlQuery.Select.SkipValue, SqlQuery.Select.TakeValue));
+					BuildExpression(sb, Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue));
 
 				sb.Append(" *").AppendLine();
 				AppendIndent(sb).Append("FROM").AppendLine();
@@ -2145,21 +2143,21 @@ namespace LinqToDB.SqlProvider
 
 			buildSql(sb);
 
-			if (SqlQuery.OrderBy.IsEmpty)
+			if (SelectQuery.OrderBy.IsEmpty)
 			{
 				Indent--;
 				AppendIndent(sb).AppendFormat(") {0}", aliases[2]).AppendLine();
 				AppendIndent(sb).Append("ORDER BY").AppendLine();
-				BuildAliases(sb, aliases[2], SqlQuery.Select.Columns, null);
+				BuildAliases(sb, aliases[2], SelectQuery.Select.Columns, null);
 			}
 
 			Indent--;
 			AppendIndent(sb).AppendFormat(") {0}", aliases[1]).AppendLine();
 
-			if (SqlQuery.OrderBy.IsEmpty)
+			if (SelectQuery.OrderBy.IsEmpty)
 			{
 				AppendIndent(sb).Append("ORDER BY").AppendLine();
-				BuildAliases(sb, aliases[1], SqlQuery.Select.Columns, " DESC");
+				BuildAliases(sb, aliases[1], SelectQuery.Select.Columns, " DESC");
 			}
 			else
 			{
@@ -2169,10 +2167,10 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 			AppendIndent(sb).AppendFormat(") {0}", aliases[0]).AppendLine();
 
-			if (SqlQuery.OrderBy.IsEmpty)
+			if (SelectQuery.OrderBy.IsEmpty)
 			{
 				AppendIndent(sb).Append("ORDER BY").AppendLine();
-				BuildAliases(sb, aliases[0], SqlQuery.Select.Columns, null);
+				BuildAliases(sb, aliases[0], SelectQuery.Select.Columns, null);
 			}
 			else
 			{
@@ -2184,7 +2182,7 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent(sb).Append("ORDER BY").AppendLine();
 
-			var obys = GetTempAliases(SqlQuery.OrderBy.Items.Count, "oby");
+			var obys = GetTempAliases(SelectQuery.OrderBy.Items.Count, "oby");
 
 			Indent++;
 
@@ -2192,8 +2190,8 @@ namespace LinqToDB.SqlProvider
 			{
 				AppendIndent(sb).Append(obys[i]);
 
-				if ( ascending &&  SqlQuery.OrderBy.Items[i].IsDescending ||
-					!ascending && !SqlQuery.OrderBy.Items[i].IsDescending)
+				if ( ascending &&  SelectQuery.OrderBy.Items[i].IsDescending ||
+					!ascending && !SelectQuery.OrderBy.Items[i].IsDescending)
 					sb.Append(" DESC");
 
 				if (i + 1 < obys.Length)
@@ -2205,17 +2203,17 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 		}
 
-		protected delegate IEnumerable<SqlQuery.Column> ColumnSelector();
+		protected delegate IEnumerable<SelectQuery.Column> ColumnSelector();
 
-		protected IEnumerable<SqlQuery.Column> AlternativeGetSelectedColumns(ColumnSelector columnSelector)
+		protected IEnumerable<SelectQuery.Column> AlternativeGetSelectedColumns(ColumnSelector columnSelector)
 		{
 			foreach (var col in columnSelector())
 				yield return col;
 
-			var obys = GetTempAliases(SqlQuery.OrderBy.Items.Count, "oby");
+			var obys = GetTempAliases(SelectQuery.OrderBy.Items.Count, "oby");
 
 			for (var i = 0; i < obys.Length; i++)
-				yield return new SqlQuery.Column(SqlQuery, SqlQuery.OrderBy.Items[i].Expression, obys[i]);
+				yield return new SelectQuery.Column(SelectQuery, SelectQuery.OrderBy.Items[i].Expression, obys[i]);
 		}
 
 		protected bool IsDateDataType(ISqlExpression expr, string dateName)
@@ -2254,10 +2252,10 @@ namespace LinqToDB.SqlProvider
 
 			if (par.SystemType.IsFloatType() || par.SystemType.IsIntegerType())
 			{
-				var sc = new SqlQuery.SearchCondition();
+				var sc = new SelectQuery.SearchCondition();
 
 				sc.Conditions.Add(
-					new SqlQuery.Condition(false, new SqlQuery.Predicate.ExprExpr(par, SqlQuery.Predicate.Operator.Equal, new SqlValue(0))));
+					new SelectQuery.Condition(false, new SelectQuery.Predicate.ExprExpr(par, SelectQuery.Predicate.Operator.Equal, new SqlValue(0))));
 
 				return ConvertExpression(new SqlFunction(func.SystemType, "CASE", sc, new SqlValue(false), new SqlValue(true)));
 			}
@@ -2265,72 +2263,72 @@ namespace LinqToDB.SqlProvider
 			return null;
 		}
 
-		protected SqlQuery GetAlternativeDelete(SqlQuery sqlQuery)
+		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
 		{
-			if (sqlQuery.IsDelete && 
-				(sqlQuery.From.Tables.Count > 1 || sqlQuery.From.Tables[0].Joins.Count > 0) && 
-				sqlQuery.From.Tables[0].Source is SqlTable)
+			if (selectQuery.IsDelete && 
+				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
+				selectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SqlQuery { QueryType = QueryType.Delete };
+				var sql = new SelectQuery { QueryType = QueryType.Delete };
 
-				sqlQuery.ParentSql = sql;
-				sqlQuery.QueryType = QueryType.Select;
+				selectQuery.ParentSelect = sql;
+				selectQuery.QueryType = QueryType.Select;
 
-				var table = (SqlTable)sqlQuery.From.Tables[0].Source;
+				var table = (SqlTable)selectQuery.From.Tables[0].Source;
 				var copy  = new SqlTable(table) { Alias = null };
 
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (sqlQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
+				if (selectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
 				{
-					var sc1 = new SqlQuery.SearchCondition(sqlQuery.Where.SearchCondition.Conditions);
-					var sc2 = new SqlQuery.SearchCondition();
+					var sc1 = new SelectQuery.SearchCondition(selectQuery.Where.SearchCondition.Conditions);
+					var sc2 = new SelectQuery.SearchCondition();
 
 					for (var i = 0; i < tableKeys.Count; i++)
 					{
-						sc2.Conditions.Add(new SqlQuery.Condition(
+						sc2.Conditions.Add(new SelectQuery.Condition(
 							false,
-							new SqlQuery.Predicate.ExprExpr(copyKeys[i], SqlQuery.Predicate.Operator.Equal, tableKeys[i])));
+							new SelectQuery.Predicate.ExprExpr(copyKeys[i], SelectQuery.Predicate.Operator.Equal, tableKeys[i])));
 					}
 
-					sqlQuery.Where.SearchCondition.Conditions.Clear();
-					sqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, sc1));
-					sqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, sc2));
+					selectQuery.Where.SearchCondition.Conditions.Clear();
+					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
+					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc2));
 				}
 				else
 				{
 					for (var i = 0; i < tableKeys.Count; i++)
-						sqlQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+						selectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 				}
 
-				sql.From.Table(copy).Where.Exists(sqlQuery);
-				sql.Parameters.AddRange(sqlQuery.Parameters);
+				sql.From.Table(copy).Where.Exists(selectQuery);
+				sql.Parameters.AddRange(selectQuery.Parameters);
 
-				sqlQuery.Parameters.Clear();
+				selectQuery.Parameters.Clear();
 
-				sqlQuery = sql;
+				selectQuery = sql;
 			}
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
-		protected SqlQuery GetAlternativeUpdate(SqlQuery sqlQuery)
+		protected SelectQuery GetAlternativeUpdate(SelectQuery selectQuery)
 		{
-			if (sqlQuery.IsUpdate && (sqlQuery.From.Tables[0].Source is SqlTable || sqlQuery.Update.Table != null))
+			if (selectQuery.IsUpdate && (selectQuery.From.Tables[0].Source is SqlTable || selectQuery.Update.Table != null))
 			{
-				if (sqlQuery.From.Tables.Count > 1 || sqlQuery.From.Tables[0].Joins.Count > 0)
+				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SqlQuery { QueryType = QueryType.Update };
+					var sql = new SelectQuery { QueryType = QueryType.Update };
 
-					sqlQuery.ParentSql = sql;
-					sqlQuery.QueryType = QueryType.Select;
+					selectQuery.ParentSelect = sql;
+					selectQuery.QueryType = QueryType.Select;
 
-					var table = sqlQuery.Update.Table ?? (SqlTable)sqlQuery.From.Tables[0].Source;
+					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
 
-					if (sqlQuery.Update.Table != null)
-						if (new QueryVisitor().Find(sqlQuery.From, t => t == table) == null)
-							table = (SqlTable)new QueryVisitor().Find(sqlQuery.From,
+					if (selectQuery.Update.Table != null)
+						if (new QueryVisitor().Find(selectQuery.From, t => t == table) == null)
+							table = (SqlTable)new QueryVisitor().Find(selectQuery.From,
 								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
 
 					var copy = new SqlTable(table);
@@ -2339,17 +2337,17 @@ namespace LinqToDB.SqlProvider
 					var copyKeys  = copy. GetKeys(true);
 
 					for (var i = 0; i < tableKeys.Count; i++)
-						sqlQuery.Where
+						selectQuery.Where
 							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
 
-					sql.From.Table(copy).Where.Exists(sqlQuery);
+					sql.From.Table(copy).Where.Exists(selectQuery);
 
 					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
 
 					foreach (var field in table.Fields.Values)
 						map.Add(field, copy[field.Name]);
 
-					foreach (var item in sqlQuery.Update.Items)
+					foreach (var item in selectQuery.Update.Items)
 					{
 						var ex = new QueryVisitor().Convert(item, expr =>
 						{
@@ -2360,19 +2358,19 @@ namespace LinqToDB.SqlProvider
 						sql.Update.Items.Add(ex);
 					}
 
-					sql.Parameters.AddRange(sqlQuery.Parameters);
-					sql.Update.Table = sqlQuery.Update.Table;
+					sql.Parameters.AddRange(selectQuery.Parameters);
+					sql.Update.Table = selectQuery.Update.Table;
 
-					sqlQuery.Parameters.Clear();
-					sqlQuery.Update.Items.Clear();
+					selectQuery.Parameters.Clear();
+					selectQuery.Update.Items.Clear();
 
-					sqlQuery = sql;
+					selectQuery = sql;
 				}
 
-				sqlQuery.From.Tables[0].Alias = "$";
+				selectQuery.From.Tables[0].Alias = "$";
 			}
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
@@ -2482,17 +2480,17 @@ namespace LinqToDB.SqlProvider
 			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
 		}
 
-		protected void CheckAliases(SqlQuery sqlQuery, int maxLen)
+		protected void CheckAliases(SelectQuery selectQuery, int maxLen)
 		{
-			new QueryVisitor().Visit(sqlQuery, e =>
+			new QueryVisitor().Visit(selectQuery, e =>
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)            e).Alias = SetAlias(((SqlField)            e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)        e).Name  = SetAlias(((SqlParameter)        e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)            e).Alias = SetAlias(((SqlTable)            e).Alias, maxLen); break;
-					case QueryElementType.Column       : ((SqlQuery.Column)     e).Alias = SetAlias(((SqlQuery.Column)     e).Alias, maxLen); break;
-					case QueryElementType.TableSource  : ((SqlQuery.TableSource)e).Alias = SetAlias(((SqlQuery.TableSource)e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)            e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)        e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)            e).Alias, maxLen); break;
+					case QueryElementType.Column       : ((SelectQuery.Column)     e).Alias = SetAlias(((SelectQuery.Column)     e).Alias, maxLen); break;
+					case QueryElementType.TableSource  : ((SelectQuery.TableSource)e).Alias = SetAlias(((SelectQuery.TableSource)e).Alias, maxLen); break;
 				}
 			});
 		}
@@ -2509,7 +2507,7 @@ namespace LinqToDB.SqlProvider
 
 		protected string[] GetTempAliases(int n, string defaultAlias)
 		{
-			return SqlQuery.GetTempAliases(n, defaultAlias + (Nesting == 0? "": "n" + Nesting));
+			return SelectQuery.GetTempAliases(n, defaultAlias + (Nesting == 0? "": "n" + Nesting));
 		}
 
 		protected static string GetTableAlias(ISqlTableSource table)
@@ -2517,7 +2515,7 @@ namespace LinqToDB.SqlProvider
 			switch (table.ElementType)
 			{
 				case QueryElementType.TableSource :
-					var ts    = (SqlQuery.TableSource)table;
+					var ts    = (SelectQuery.TableSource)table;
 					var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
 					return alias != "$" ? alias : null;
 
@@ -2597,7 +2595,7 @@ namespace LinqToDB.SqlProvider
 					}
 
 				case QueryElementType.TableSource :
-					return GetPhysicalTableName(((SqlQuery.TableSource)table).Source, alias);
+					return GetPhysicalTableName(((SelectQuery.TableSource)table).Source, alias);
 
 				default :
 					throw new InvalidOperationException();
@@ -3003,8 +3001,8 @@ namespace LinqToDB.SqlProvider
 						{
 							case "ConvertToCaseCompareTo":
 								return ConvertExpression(new SqlFunction(func.SystemType, "CASE",
-									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
-									new SqlQuery.SearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
+									new SelectQuery.SearchCondition().Expr(func.Parameters[0]). Greater .Expr(func.Parameters[1]).ToExpr(), new SqlValue(1),
+									new SelectQuery.SearchCondition().Expr(func.Parameters[0]). Equal   .Expr(func.Parameters[1]).ToExpr(), new SqlValue(0),
 									new SqlValue(-1)));
 
 							case "$Convert$": return ConvertConvertion(func);
@@ -3091,7 +3089,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition :
-					SqlQuery.OptimizeSearchCondition((SqlQuery.SearchCondition)expression);
+					SelectQuery.OptimizeSearchCondition((SelectQuery.SearchCondition)expression);
 					break;
 
 				case QueryElementType.SqlExpression   :
@@ -3114,44 +3112,44 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.ExprExprPredicate:
 					{
-						var expr = (SqlQuery.Predicate.ExprExpr)predicate;
+						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
-						if (expr.Operator == SqlQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
+						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
-							return new SqlQuery.Predicate.Expr(new SqlValue(value), Precedence.Comparison);
+							return new SelectQuery.Predicate.Expr(new SqlValue(value), Precedence.Comparison);
 						}
 
 						switch (expr.Operator)
 						{
-							case SqlQuery.Predicate.Operator.Equal         :
-							case SqlQuery.Predicate.Operator.NotEqual      :
-							case SqlQuery.Predicate.Operator.Greater       :
-							case SqlQuery.Predicate.Operator.GreaterOrEqual:
-							case SqlQuery.Predicate.Operator.Less          :
-							case SqlQuery.Predicate.Operator.LessOrEqual   :
+							case SelectQuery.Predicate.Operator.Equal         :
+							case SelectQuery.Predicate.Operator.NotEqual      :
+							case SelectQuery.Predicate.Operator.Greater       :
+							case SelectQuery.Predicate.Operator.GreaterOrEqual:
+							case SelectQuery.Predicate.Operator.Less          :
+							case SelectQuery.Predicate.Operator.LessOrEqual   :
 								predicate = OptimizeCase(expr);
 								break;
 						}
 
-						if (predicate is SqlQuery.Predicate.ExprExpr)
+						if (predicate is SelectQuery.Predicate.ExprExpr)
 						{
-							expr = (SqlQuery.Predicate.ExprExpr)predicate;
+							expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
 							switch (expr.Operator)
 							{
-								case SqlQuery.Predicate.Operator.Equal :
-								case SqlQuery.Predicate.Operator.NotEqual :
+								case SelectQuery.Predicate.Operator.Equal :
+								case SelectQuery.Predicate.Operator.NotEqual :
 									var expr1 = expr.Expr1;
 									var expr2 = expr.Expr2;
 
 									if (expr1.CanBeNull() && expr2.CanBeNull())
 									{
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
-											SqlQuery.IsParameterDependent = true;
+											SelectQuery.IsParameterDependent = true;
 										else
-											if (expr1 is SqlQuery.Column || expr1 is SqlField)
-											if (expr2 is SqlQuery.Column || expr2 is SqlField)
+											if (expr1 is SelectQuery.Column || expr1 is SqlField)
+											if (expr2 is SelectQuery.Column || expr2 is SqlField)
 												predicate = ConvertEqualPredicate(expr);
 									}
 
@@ -3164,11 +3162,11 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.NotExprPredicate:
 					{
-						var expr = (SqlQuery.Predicate.NotExpr)predicate;
+						var expr = (SelectQuery.Predicate.NotExpr)predicate;
 
-						if (expr.IsNot && expr.Expr1 is SqlQuery.SearchCondition)
+						if (expr.IsNot && expr.Expr1 is SelectQuery.SearchCondition)
 						{
-							var sc = (SqlQuery.SearchCondition)expr.Expr1;
+							var sc = (SelectQuery.SearchCondition)expr.Expr1;
 
 							if (sc.Conditions.Count == 1)
 							{
@@ -3177,15 +3175,15 @@ namespace LinqToDB.SqlProvider
 								if (cond.IsNot)
 									return cond.Predicate;
 
-								if (cond.Predicate is SqlQuery.Predicate.ExprExpr)
+								if (cond.Predicate is SelectQuery.Predicate.ExprExpr)
 								{
-									var ee = (SqlQuery.Predicate.ExprExpr)cond.Predicate;
+									var ee = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
 
-									if (ee.Operator == SqlQuery.Predicate.Operator.Equal)
-										return new SqlQuery.Predicate.ExprExpr(ee.Expr1, SqlQuery.Predicate.Operator.NotEqual, ee.Expr2);
+									if (ee.Operator == SelectQuery.Predicate.Operator.Equal)
+										return new SelectQuery.Predicate.ExprExpr(ee.Expr1, SelectQuery.Predicate.Operator.NotEqual, ee.Expr2);
 
-									if (ee.Operator == SqlQuery.Predicate.Operator.NotEqual)
-										return new SqlQuery.Predicate.ExprExpr(ee.Expr1, SqlQuery.Predicate.Operator.Equal, ee.Expr2);
+									if (ee.Operator == SelectQuery.Predicate.Operator.NotEqual)
+										return new SelectQuery.Predicate.ExprExpr(ee.Expr1, SelectQuery.Predicate.Operator.Equal, ee.Expr2);
 								}
 							}
 						}
@@ -3197,13 +3195,13 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		protected ISqlPredicate ConvertEqualPredicate(SqlQuery.Predicate.ExprExpr expr)
+		protected ISqlPredicate ConvertEqualPredicate(SelectQuery.Predicate.ExprExpr expr)
 		{
 			var expr1 = expr.Expr1;
 			var expr2 = expr.Expr2;
-			var cond  = new SqlQuery.SearchCondition();
+			var cond  = new SelectQuery.SearchCondition();
 
-			if (expr.Operator == SqlQuery.Predicate.Operator.Equal)
+			if (expr.Operator == SelectQuery.Predicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
 					.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And .Expr(expr1).Equal.Expr(expr2);
@@ -3216,23 +3214,23 @@ namespace LinqToDB.SqlProvider
 			return cond;
 		}
 
-		static SqlQuery.Predicate.Operator InvertOperator(SqlQuery.Predicate.Operator op, bool skipEqual)
+		static SelectQuery.Predicate.Operator InvertOperator(SelectQuery.Predicate.Operator op, bool skipEqual)
 		{
 			switch (op)
 			{
-				case SqlQuery.Predicate.Operator.Equal          : return skipEqual ? op : SqlQuery.Predicate.Operator.NotEqual;
-				case SqlQuery.Predicate.Operator.NotEqual       : return skipEqual ? op : SqlQuery.Predicate.Operator.Equal;
-				case SqlQuery.Predicate.Operator.Greater        : return SqlQuery.Predicate.Operator.LessOrEqual;
-				case SqlQuery.Predicate.Operator.NotLess        :
-				case SqlQuery.Predicate.Operator.GreaterOrEqual : return SqlQuery.Predicate.Operator.Less;
-				case SqlQuery.Predicate.Operator.Less           : return SqlQuery.Predicate.Operator.GreaterOrEqual;
-				case SqlQuery.Predicate.Operator.NotGreater     :
-				case SqlQuery.Predicate.Operator.LessOrEqual    : return SqlQuery.Predicate.Operator.Greater;
+				case SelectQuery.Predicate.Operator.Equal          : return skipEqual ? op : SelectQuery.Predicate.Operator.NotEqual;
+				case SelectQuery.Predicate.Operator.NotEqual       : return skipEqual ? op : SelectQuery.Predicate.Operator.Equal;
+				case SelectQuery.Predicate.Operator.Greater        : return SelectQuery.Predicate.Operator.LessOrEqual;
+				case SelectQuery.Predicate.Operator.NotLess        :
+				case SelectQuery.Predicate.Operator.GreaterOrEqual : return SelectQuery.Predicate.Operator.Less;
+				case SelectQuery.Predicate.Operator.Less           : return SelectQuery.Predicate.Operator.GreaterOrEqual;
+				case SelectQuery.Predicate.Operator.NotGreater     :
+				case SelectQuery.Predicate.Operator.LessOrEqual    : return SelectQuery.Predicate.Operator.Greater;
 				default: throw new InvalidOperationException();
 			}
 		}
 
-		ISqlPredicate OptimizeCase(SqlQuery.Predicate.ExprExpr expr)
+		ISqlPredicate OptimizeCase(SelectQuery.Predicate.ExprExpr expr)
 		{
 			var value = expr.Expr1 as SqlValue;
 			var func  = expr.Expr2 as SqlFunction;
@@ -3252,25 +3250,25 @@ namespace LinqToDB.SqlProvider
 			{
 				if (value.Value is int && func.Parameters.Length == 5)
 				{
-					var c1 = func.Parameters[0] as SqlQuery.SearchCondition;
+					var c1 = func.Parameters[0] as SelectQuery.SearchCondition;
 					var v1 = func.Parameters[1] as SqlValue;
-					var c2 = func.Parameters[2] as SqlQuery.SearchCondition;
+					var c2 = func.Parameters[2] as SelectQuery.SearchCondition;
 					var v2 = func.Parameters[3] as SqlValue;
 					var v3 = func.Parameters[4] as SqlValue;
 
 					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is int &&
 					    c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
 					{
-						var ee1 = c1.Conditions[0].Predicate as SqlQuery.Predicate.ExprExpr;
-						var ee2 = c2.Conditions[0].Predicate as SqlQuery.Predicate.ExprExpr;
+						var ee1 = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
+						var ee2 = c2.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 
 						if (ee1 != null && ee2 != null && ee1.Expr1.Equals(ee2.Expr1) && ee1.Expr2.Equals(ee2.Expr2))
 						{
 							int e = 0, g = 0, l = 0;
 
-							if (ee1.Operator == SqlQuery.Predicate.Operator.Equal   || ee2.Operator == SqlQuery.Predicate.Operator.Equal)   e = 1;
-							if (ee1.Operator == SqlQuery.Predicate.Operator.Greater || ee2.Operator == SqlQuery.Predicate.Operator.Greater) g = 1;
-							if (ee1.Operator == SqlQuery.Predicate.Operator.Less    || ee2.Operator == SqlQuery.Predicate.Operator.Less)    l = 1;
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Equal   || ee2.Operator == SelectQuery.Predicate.Operator.Equal)   e = 1;
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Greater || ee2.Operator == SelectQuery.Predicate.Operator.Greater) g = 1;
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Less    || ee2.Operator == SelectQuery.Predicate.Operator.Less)    l = 1;
 
 							if (e + g + l == 2)
 							{
@@ -3288,11 +3286,11 @@ namespace LinqToDB.SqlProvider
 									if (n1 == 1) return ee1;
 									if (n2 == 1) return ee2;
 
-									return ConvertPredicate(new SqlQuery.Predicate.ExprExpr(
+									return ConvertPredicate(new SelectQuery.Predicate.ExprExpr(
 										ee1.Expr1,
-										e == 0 ? SqlQuery.Predicate.Operator.Equal :
-										g == 0 ? SqlQuery.Predicate.Operator.Greater :
-												 SqlQuery.Predicate.Operator.Less,
+										e == 0 ? SelectQuery.Predicate.Operator.Equal :
+										g == 0 ? SelectQuery.Predicate.Operator.Greater :
+												 SelectQuery.Predicate.Operator.Less,
 										ee1.Expr2));
 								}
 
@@ -3303,11 +3301,11 @@ namespace LinqToDB.SqlProvider
 								//			THEN 0
 								//		ELSE -1
 								//	END <= 0
-								if (ee1.Operator == SqlQuery.Predicate.Operator.Greater && i1 == 1 &&
-									ee2.Operator == SqlQuery.Predicate.Operator.Equal   && i2 == 0 &&
+								if (ee1.Operator == SelectQuery.Predicate.Operator.Greater && i1 == 1 &&
+									ee2.Operator == SelectQuery.Predicate.Operator.Equal   && i2 == 0 &&
 									i3 == -1 && n == 0)
 								{
-									return ConvertPredicate(new SqlQuery.Predicate.ExprExpr(
+									return ConvertPredicate(new SelectQuery.Predicate.ExprExpr(
 										ee1.Expr1,
 										valueFirst ? InvertOperator(expr.Operator, true) : expr.Operator,
 										ee1.Expr2));
@@ -3318,7 +3316,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else if (value.Value is bool && func.Parameters.Length == 3)
 				{
-					var c1 = func.Parameters[0] as SqlQuery.SearchCondition;
+					var c1 = func.Parameters[0] as SelectQuery.SearchCondition;
 					var v1 = func.Parameters[1] as SqlValue;
 					var v2 = func.Parameters[2] as SqlValue;
 
@@ -3328,34 +3326,34 @@ namespace LinqToDB.SqlProvider
 						var bv1 = (bool)v1.Value;
 						var bv2 = (bool)v2.Value;
 
-						if (bv == bv1 && expr.Operator == SqlQuery.Predicate.Operator.Equal ||
-						    bv != bv1 && expr.Operator == SqlQuery.Predicate.Operator.NotEqual)
+						if (bv == bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal ||
+						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
 						{
 							return c1;
 						}
 
-						if (bv == bv2 && expr.Operator == SqlQuery.Predicate.Operator.NotEqual ||
-						    bv != bv1 && expr.Operator == SqlQuery.Predicate.Operator.Equal)
+						if (bv == bv2 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual ||
+						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
 						{
-							var ee = c1.Conditions[0].Predicate as SqlQuery.Predicate.ExprExpr;
+							var ee = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 
 							if (ee != null)
 							{
 								var op = InvertOperator(ee.Operator, false);
-								return new SqlQuery.Predicate.ExprExpr(ee.Expr1, op, ee.Expr2);
+								return new SelectQuery.Predicate.ExprExpr(ee.Expr1, op, ee.Expr2);
 							}
 
-							var sc = new SqlQuery.SearchCondition();
+							var sc = new SelectQuery.SearchCondition();
 
-							sc.Conditions.Add(new SqlQuery.Condition(true, c1));
+							sc.Conditions.Add(new SelectQuery.Condition(true, c1));
 
 							return sc;
 						}
 					}
 				}
-				else if (expr.Operator == SqlQuery.Predicate.Operator.Equal && func.Parameters.Length == 3)
+				else if (expr.Operator == SelectQuery.Predicate.Operator.Equal && func.Parameters.Length == 3)
 				{
-					var sc = func.Parameters[0] as SqlQuery.SearchCondition;
+					var sc = func.Parameters[0] as SelectQuery.SearchCondition;
 					var v1 = func.Parameters[1] as SqlValue;
 					var v2 = func.Parameters[2] as SqlValue;
 
@@ -3365,7 +3363,7 @@ namespace LinqToDB.SqlProvider
 							return sc;
 
 						if (Equals(value.Value, v2.Value) && !sc.CanBeNull())
-							return ConvertPredicate(new SqlQuery.Predicate.NotExpr(sc, true, Precedence.LogicalNegation));
+							return ConvertPredicate(new SelectQuery.Predicate.NotExpr(sc, true, Precedence.LogicalNegation));
 					}
 				}
 			}
@@ -3373,40 +3371,40 @@ namespace LinqToDB.SqlProvider
 			return expr;
 		}
 
-		static bool Compare(int v1, int v2, SqlQuery.Predicate.Operator op)
+		static bool Compare(int v1, int v2, SelectQuery.Predicate.Operator op)
 		{
 			switch (op)
 			{
-				case SqlQuery.Predicate.Operator.Equal:           return v1 == v2;
-				case SqlQuery.Predicate.Operator.NotEqual:        return v1 != v2;
-				case SqlQuery.Predicate.Operator.Greater:         return v1 >  v2;
-				case SqlQuery.Predicate.Operator.NotLess:
-				case SqlQuery.Predicate.Operator.GreaterOrEqual:  return v1 >= v2;
-				case SqlQuery.Predicate.Operator.Less:            return v1 <  v2;
-				case SqlQuery.Predicate.Operator.NotGreater:
-				case SqlQuery.Predicate.Operator.LessOrEqual:     return v1 <= v2;
+				case SelectQuery.Predicate.Operator.Equal:           return v1 == v2;
+				case SelectQuery.Predicate.Operator.NotEqual:        return v1 != v2;
+				case SelectQuery.Predicate.Operator.Greater:         return v1 >  v2;
+				case SelectQuery.Predicate.Operator.NotLess:
+				case SelectQuery.Predicate.Operator.GreaterOrEqual:  return v1 >= v2;
+				case SelectQuery.Predicate.Operator.Less:            return v1 <  v2;
+				case SelectQuery.Predicate.Operator.NotGreater:
+				case SelectQuery.Predicate.Operator.LessOrEqual:     return v1 <= v2;
 			}
 
 			throw new InvalidOperationException();
 		}
 
-		public virtual SqlQuery Finalize(SqlQuery sqlQuery)
+		public virtual SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			sqlQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
+			selectQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
 
-			if (!SqlProviderFlags.IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
-			if (!SqlProviderFlags.IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
+			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				sqlQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
+				selectQuery.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported, IsGroupByExpressionSupported);
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
-		SqlQuery MoveCountSubQuery(SqlQuery sqlQuery)
+		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
 		{
-			new QueryVisitor().Visit(sqlQuery, MoveCountSubQuery);
-			return sqlQuery;
+			new QueryVisitor().Visit(selectQuery, MoveCountSubQuery);
+			return selectQuery;
 		}
 
 		void MoveCountSubQuery(IQueryElement element)
@@ -3414,7 +3412,7 @@ namespace LinqToDB.SqlProvider
 			if (element.ElementType != QueryElementType.SqlQuery)
 				return;
 
-			var query = (SqlQuery)element;
+			var query = (SelectQuery)element;
 
 			for (var i = 0; i < query.Select.Columns.Count; i++)
 			{
@@ -3424,7 +3422,7 @@ namespace LinqToDB.SqlProvider
 				//
 				if (col.Expression.ElementType == QueryElementType.SqlQuery)
 				{
-					var subQuery = (SqlQuery)col.Expression;
+					var subQuery = (SelectQuery)col.Expression;
 					var isCount  = false;
 
 					// Check if subquery is Count subquery.
@@ -3442,7 +3440,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SqlQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -3480,12 +3478,12 @@ namespace LinqToDB.SqlProvider
 						switch (e.ElementType)
 						{
 							case QueryElementType.SqlField : return !allTables.Contains(((SqlField)       e).Table);
-							case QueryElementType.Column   : return !allTables.Contains(((SqlQuery.Column)e).Parent);
+							case QueryElementType.Column   : return !allTables.Contains(((SelectQuery.Column)e).Parent);
 						}
 						return false;
 					};
 
-					var join = SqlQuery.LeftJoin(subQuery);
+					var join = SelectQuery.LeftJoin(subQuery);
 
 					query.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -3520,10 +3518,10 @@ namespace LinqToDB.SqlProvider
 									if (replaced.TryGetValue(e, out ne))
 										return ne;
 
-									if (levelTables.Contains(((SqlQuery.Column)e).Parent))
+									if (levelTables.Contains(((SelectQuery.Column)e).Parent))
 									{
-										subQuery.GroupBy.Expr((SqlQuery.Column)e);
-										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
+										subQuery.GroupBy.Expr((SelectQuery.Column)e);
+										ne = subQuery.Select.Columns[subQuery.Select.Add((SelectQuery.Column)e)];
 									}
 
 									break;
@@ -3560,16 +3558,16 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		SqlQuery MoveSubQueryColumn(SqlQuery sqlQuery)
+		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery)
 		{
 			var dic = new Dictionary<IQueryElement,IQueryElement>();
 
-			new QueryVisitor().Visit(sqlQuery, element =>
+			new QueryVisitor().Visit(selectQuery, element =>
 			{
 				if (element.ElementType != QueryElementType.SqlQuery)
 					return;
 
-				var query = (SqlQuery)element;
+				var query = (SelectQuery)element;
 
 				for (var i = 0; i < query.Select.Columns.Count; i++)
 				{
@@ -3577,7 +3575,7 @@ namespace LinqToDB.SqlProvider
 
 					if (col.Expression.ElementType == QueryElementType.SqlQuery)
 					{
-						var subQuery    = (SqlQuery)col.Expression;
+						var subQuery    = (SelectQuery)col.Expression;
 						var allTables   = new HashSet<ISqlTableSource>();
 						var levelTables = new HashSet<ISqlTableSource>();
 
@@ -3586,7 +3584,7 @@ namespace LinqToDB.SqlProvider
 							switch (e.ElementType)
 							{
 								case QueryElementType.SqlField : return !allTables.Contains(((SqlField)e).Table);
-								case QueryElementType.Column   : return !allTables.Contains(((SqlQuery.Column)e).Parent);
+								case QueryElementType.Column   : return !allTables.Contains(((SelectQuery.Column)e).Parent);
 							}
 							return false;
 						};
@@ -3606,11 +3604,11 @@ namespace LinqToDB.SqlProvider
 						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
 							continue;
 
-						var join = SqlQuery.LeftJoin(subQuery);
+						var join = SelectQuery.LeftJoin(subQuery);
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SqlQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -3682,11 +3680,11 @@ namespace LinqToDB.SqlProvider
 										if (replaced.TryGetValue(e, out ne))
 											return ne;
 
-										if (levelTables.Contains(((SqlQuery.Column)e).Parent))
+										if (levelTables.Contains(((SelectQuery.Column)e).Parent))
 										{
 											if (isAggregated)
-												subQuery.GroupBy.Expr((SqlQuery.Column)e);
-											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlQuery.Column)e)];
+												subQuery.GroupBy.Expr((SelectQuery.Column)e);
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SelectQuery.Column)e)];
 										}
 
 										break;
@@ -3716,7 +3714,7 @@ namespace LinqToDB.SqlProvider
 
 								subQuery.Select.Columns.RemoveAt(0);
 
-								query.Select.Columns[i] = new SqlQuery.Column(
+								query.Select.Columns[i] = new SelectQuery.Column(
 									query,
 									new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]));
 							}
@@ -3728,13 +3726,13 @@ namespace LinqToDB.SqlProvider
 
 								var idx = subQuery.Select.Add(oldFunc.Parameters[0]);
 
-								query.Select.Columns[i] = new SqlQuery.Column(
+								query.Select.Columns[i] = new SelectQuery.Column(
 									query,
 									new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[idx]));
 							}
 							else
 							{
-								query.Select.Columns[i] = new SqlQuery.Column(query, subQuery.Select.Columns[0]);
+								query.Select.Columns[i] = new SelectQuery.Column(query, subQuery.Select.Columns[0]);
 							}
 
 							dic.Add(col, query.Select.Columns[i]);
@@ -3743,13 +3741,13 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			sqlQuery = new QueryVisitor().Convert(sqlQuery, e =>
+			selectQuery = new QueryVisitor().Convert(selectQuery, e =>
 			{
 				IQueryElement ne;
 				return dic.TryGetValue(e, out ne) ? ne : e;
 			});
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		public virtual ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)

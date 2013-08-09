@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
@@ -108,28 +108,28 @@ namespace LinqToDB.DataProvider.SQLite
 			return expr;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
 				case QueryType.Delete :
-					sqlQuery = GetAlternativeDelete(base.Finalize(sqlQuery));
-					sqlQuery.From.Tables[0].Alias = "$";
+					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery));
+					selectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					sqlQuery = GetAlternativeUpdate(sqlQuery);
+					selectQuery = GetAlternativeUpdate(selectQuery);
 					break;
 			}
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
@@ -228,7 +228,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
 		{
-			if (SqlQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
+			if (SelectQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
 			{
 				while (sb[sb.Length - 1] != ',')
 					sb.Length--;

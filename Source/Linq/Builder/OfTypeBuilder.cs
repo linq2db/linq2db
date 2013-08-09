@@ -28,8 +28,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = builder.MakeIsPredicate(table, objectType);
 
-					if (predicate.GetType() != typeof(SqlQuery.Predicate.Expr))
-						sequence.SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
+						sequence.SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 				}
 			}
 			else
@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
-							sequence.SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+							sequence.SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 
 							return new OfTypeContext(sequence, methodCall);
 						}

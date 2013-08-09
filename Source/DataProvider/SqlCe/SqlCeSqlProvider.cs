@@ -16,14 +16,14 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
-		protected override string FirstFormat  { get { return SqlQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }
-		protected override string LimitFormat  { get { return SqlQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }
+		protected override string FirstFormat  { get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" :                null; } }
+		protected override string LimitFormat  { get { return SelectQuery.Select.SkipValue != null ? "FETCH NEXT {0} ROWS ONLY" : null; } }
 		protected override string OffsetFormat { get { return "OFFSET {0} ROWS"; } }
 		protected override bool   OffsetFirst  { get { return true;              } }
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
@@ -116,32 +116,32 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.BuildFunction(sb, func);
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			new QueryVisitor().Visit(sqlQuery.Select, element =>
+			new QueryVisitor().Visit(selectQuery.Select, element =>
 			{
 				if (element.ElementType == QueryElementType.SqlParameter)
 				{
 					((SqlParameter)element).IsQueryParameter = false;
-					sqlQuery.IsParameterDependent = true;
+					selectQuery.IsParameterDependent = true;
 				}
 			});
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
 				case QueryType.Delete :
-					sqlQuery = GetAlternativeDelete(sqlQuery);
-					sqlQuery.From.Tables[0].Alias = "$";
+					selectQuery = GetAlternativeDelete(selectQuery);
+					selectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					sqlQuery = GetAlternativeUpdate(sqlQuery);
+					selectQuery = GetAlternativeUpdate(selectQuery);
 					break;
 			}
 
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
@@ -163,13 +163,13 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
 		protected override void BuildOrderByClause(StringBuilder sb)
 		{
-			if (SqlQuery.OrderBy.Items.Count == 0 && SqlQuery.Select.SkipValue != null)
+			if (SelectQuery.OrderBy.Items.Count == 0 && SelectQuery.Select.SkipValue != null)
 			{
 				AppendIndent(sb);
 
@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				AppendIndent(sb);
 
-				BuildExpression(sb, SqlQuery.Select.Columns[0].Expression);
+				BuildExpression(sb, SelectQuery.Select.Columns[0].Expression);
 				sb.AppendLine();
 
 				Indent--;
@@ -194,12 +194,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 

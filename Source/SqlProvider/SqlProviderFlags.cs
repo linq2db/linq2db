@@ -21,14 +21,14 @@ namespace LinqToDB.SqlProvider
 		public bool CanCombineParameters         { get; set; }
 		public int  MaxInListValuesCount         { get; set; }
 
-		public bool GetAcceptsTakeAsParameterFlag(SqlQuery sqlQuery)
+		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
-			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && sqlQuery.Select.SkipValue != null;
+			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
 		}
 
-		public bool GetIsSkipSupportedFlag(SqlQuery sqlQuery)
+		public bool GetIsSkipSupportedFlag(SelectQuery selectQuery)
 		{
-			return IsSkipSupported || IsSkipSupportedIfTake && sqlQuery.Select.TakeValue != null;
+			return IsSkipSupported || IsSkipSupportedIfTake && selectQuery.Select.TakeValue != null;
 		}
 	}
 }

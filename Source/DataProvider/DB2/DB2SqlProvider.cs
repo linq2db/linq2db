@@ -16,11 +16,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		SqlField _identityField;
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			if (sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity)
+			if (selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
 			{
-				_identityField = sqlQuery.Insert.Into.GetIdentityField();
+				_identityField = selectQuery.Insert.Into.GetIdentityField();
 
 				if (_identityField == null)
 					return 2;
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.DB2
 			return 1;
 		}
 
-		public override int BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public override int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
 		{
 			if (_identityField != null)
 			{
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent(sb).AppendLine("\t(");
 			}
 
-			var ret = base.BuildSql(commandNumber, sqlQuery, sb, indent, nesting, skipAlias);
+			var ret = base.BuildSql(commandNumber, selectQuery, sb, indent, nesting, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildSelectClause(StringBuilder sb)
 		{
-			if (SqlQuery.From.Tables.Count == 0)
+			if (SelectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent(sb).AppendLine("SELECT");
 				BuildColumns(sb);
@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override string LimitFormat
 		{
-			get { return SqlQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null; }
+			get { return SelectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null; }
 		}
 
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
@@ -205,23 +205,23 @@ namespace LinqToDB.DataProvider.DB2
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			new QueryVisitor().Visit(sqlQuery.Select, SetQueryParameter);
+			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
 
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(sqlQuery);
-				case QueryType.Update : return GetAlternativeUpdate(sqlQuery);
-				default               : return sqlQuery;
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
 			}
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
@@ -254,12 +254,12 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 
@@ -322,7 +322,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			sb.Append("VALUES ");
 
-			foreach (var col in SqlQuery.Insert.Into.Fields)
+			foreach (var col in SelectQuery.Insert.Into.Fields)
 				sb.Append("(DEFAULT)");
 
 			sb.AppendLine();

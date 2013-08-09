@@ -39,8 +39,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = GetSubQuery(null);
 
-				query.Queries[0].SqlQuery = new SqlQuery();
-				query.Queries[0].SqlQuery.Select.Add(sql);
+				query.Queries[0].SelectQuery = new SelectQuery();
+				query.Queries[0].SelectQuery.Select.Add(sql);
 
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);
@@ -59,10 +59,10 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 				{
 					var sql   = GetSubQuery(null);
-					var query = SqlQuery;
+					var query = SelectQuery;
 
 					if (Parent != null)
-						query = Parent.SqlQuery;
+						query = Parent.SelectQuery;
 
 					return new[] { new SqlInfo { Query = query, Sql = sql } };
 				}
@@ -116,23 +116,23 @@ namespace LinqToDB.Linq.Builder
 
 					Builder.ReplaceParent(ctx, this);
 
-					SqlQuery.Condition cond;
+					SelectQuery.Condition cond;
 
-					if (Sequence.SqlQuery != SqlQuery &&
+					if (Sequence.SelectQuery != SelectQuery &&
 						(ctx.IsExpression(expr, 0, RequestFor.Field).     Result ||
 						 ctx.IsExpression(expr, 0, RequestFor.Expression).Result))
 					{
 						Sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 						var ex = Builder.ConvertToSql(ctx, _methodCall.Arguments[1]);
-						cond = new SqlQuery.Condition(false, new SqlQuery.Predicate.InSubQuery(ex, false, SqlQuery));
+						cond = new SelectQuery.Condition(false, new SelectQuery.Predicate.InSubQuery(ex, false, SelectQuery));
 					}
 					else
 					{
 						var sequence = Builder.BuildWhere(Parent, Sequence, condition, true);
-						cond = new SqlQuery.Condition(false, new SqlQuery.Predicate.FuncLike(SqlFunction.CreateExists(sequence.SqlQuery)));
+						cond = new SelectQuery.Condition(false, new SelectQuery.Predicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
 					}
 
-					_subQuerySql = new SqlQuery.SearchCondition(cond);
+					_subQuerySql = new SelectQuery.SearchCondition(cond);
 				}
 
 				return _subQuerySql;

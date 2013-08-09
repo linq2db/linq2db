@@ -34,10 +34,10 @@ namespace LinqToDB.SqlBuilder
 
 		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count",  table.All); }
 
-		public static SqlFunction CreateAll   (SqlQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateSome  (SqlQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateAny   (SqlQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    SqlBuilder.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateExists(SqlQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", SqlBuilder.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    SqlBuilder.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   SqlBuilder.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    SqlBuilder.Precedence.Comparison, subQuery); }
+		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", SqlBuilder.Precedence.Comparison, subQuery); }
 
 		#region Overrides
 

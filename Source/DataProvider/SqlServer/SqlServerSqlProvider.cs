@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string FirstFormat
 		{
-			get { return SqlQuery.Select.SkipValue == null ? "TOP ({0})" : null; }
+			get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" : null; }
 		}
 
 		protected override void BuildSql(StringBuilder sb)
@@ -44,9 +44,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildOrderByClause(sb);
 		}
 
-		protected override IEnumerable<SqlQuery.Column> GetSelectedColumns()
+		protected override IEnumerable<SelectQuery.Column> GetSelectedColumns()
 		{
-			if (BuildAlternativeSql && NeedSkip && !SqlQuery.OrderBy.IsEmpty)
+			if (BuildAlternativeSql && NeedSkip && !SelectQuery.OrderBy.IsEmpty)
 				return AlternativeGetSelectedColumns(base.GetSelectedColumns);
 			return base.GetSelectedColumns();
 		}
@@ -153,9 +153,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDeleteClause(StringBuilder sb)
 		{
-			var table = SqlQuery.Delete.Table != null ?
-				(SqlQuery.From.FindTableSource(SqlQuery.Delete.Table) ?? SqlQuery.Delete.Table) :
-				SqlQuery.From.Tables[0];
+			var table = SelectQuery.Delete.Table != null ?
+				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
+				SelectQuery.From.Tables[0];
 
 			AppendIndent(sb)
 				.Append("DELETE ")
@@ -165,9 +165,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildUpdateTableName(StringBuilder sb)
 		{
-			var table = SqlQuery.Update.Table != null ?
-				(SqlQuery.From.FindTableSource(SqlQuery.Update.Table) ?? SqlQuery.Update.Table) :
-				SqlQuery.From.Tables[0];
+			var table = SelectQuery.Update.Table != null ?
+				(SelectQuery.From.FindTableSource(SelectQuery.Update.Table) ?? SelectQuery.Update.Table) :
+				SelectQuery.From.Tables[0];
 
 			if (table is SqlTable)
 				BuildPhysicalTable(sb, table, null);
@@ -189,12 +189,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 

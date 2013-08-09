@@ -7,17 +7,17 @@ namespace LinqToDB.SqlProvider
 
 	public interface ISqlProvider
 	{
-		int              CommandCount         (SqlQuery sqlQuery);
-		int              BuildSql             (int commandNumber, SqlQuery sqlQuery, StringBuilder sb, int indent, int nesting, bool skipAlias);
+		int              CommandCount         (SelectQuery selectQuery);
+		int              BuildSql             (int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias);
 		ISqlExpression   ConvertExpression    (ISqlExpression expression);
 		ISqlPredicate    ConvertPredicate     (ISqlPredicate  predicate);
-		SqlQuery         Finalize             (SqlQuery sqlQuery);
+		SelectQuery      Finalize             (SelectQuery selectQuery);
 
 		StringBuilder    BuildTableName       (StringBuilder sb, string database, string owner, string table);
 		object           Convert              (object value, ConvertType convertType);
 		ISqlExpression   GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning);
 
-		string           Name     { get; }
-		SqlQuery         SqlQuery { get; set; }
+		string           Name        { get; }
+		SelectQuery      SelectQuery { get; set; }
 	}
 }

@@ -23,10 +23,10 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence1 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])));
-			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SqlQuery())));
-			var union     = new SqlQuery.Union(sequence2.SqlQuery, methodCall.Method.Name == "Concat");
+			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery())));
+			var union     = new SelectQuery.Union(sequence2.SelectQuery, methodCall.Method.Name == "Concat");
 
-			sequence1.SqlQuery.Unions.Add(union);
+			sequence1.SelectQuery.Unions.Add(union);
 
 			return new UnionContext(sequence1, sequence2, methodCall);
 		}
@@ -128,8 +128,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				sequence1.SqlQuery.Select.Columns.Clear();
-				sequence2.SqlQuery.Select.Columns.Clear();
+				sequence1.SelectQuery.Select.Columns.Clear();
+				sequence2.SelectQuery.Select.Columns.Clear();
 
 				for (var i = 0; i < members.Count; i++)
 				{
@@ -140,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 						member.Info1 = new SqlInfo(member.Info2.Members)
 						{
 							Sql   = new SqlValue(null),
-							Query = sequence1.SqlQuery,
+							Query = sequence1.SelectQuery,
 						};
 
 						member.Member.SequenceInfo = member.Info1;
@@ -151,12 +151,12 @@ namespace LinqToDB.Linq.Builder
 						member.Info2 = new SqlInfo(member.Info1.Members)
 						{
 							Sql   = new SqlValue(null),
-							Query = sequence2.SqlQuery,
+							Query = sequence2.SelectQuery,
 						};
 					}
 
-					sequence1.SqlQuery.Select.Columns.Add(new SqlQuery.Column(sequence1.SqlQuery, member.Info1.Sql));
-					sequence2.SqlQuery.Select.Columns.Add(new SqlQuery.Column(sequence2.SqlQuery, member.Info2.Sql));
+					sequence1.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence1.SelectQuery, member.Info1.Sql));
+					sequence2.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence2.SelectQuery, member.Info2.Sql));
 
 					member.Member.SequenceInfo.Index = i;
 
@@ -164,10 +164,10 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				foreach (var key in sequence1.ColumnIndexes.Keys.ToList())
-					sequence1.ColumnIndexes[key] = sequence1.SqlQuery.Select.Add(key);
+					sequence1.ColumnIndexes[key] = sequence1.SelectQuery.Select.Add(key);
 
 				foreach (var key in sequence2.ColumnIndexes.Keys.ToList())
-					sequence2.ColumnIndexes[key] = sequence2.SqlQuery.Select.Add(key);
+					sequence2.ColumnIndexes[key] = sequence2.SelectQuery.Select.Add(key);
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -266,12 +266,12 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (idx.Index == -2)
 								{
-									SqlQuery.Select.Columns.Add(new SqlQuery.Column(SqlQuery, idx.Sql));
-									idx.Index = SqlQuery.Select.Columns.Count - 1;
+									SelectQuery.Select.Columns.Add(new SelectQuery.Column(SelectQuery, idx.Sql));
+									idx.Index = SelectQuery.Select.Columns.Count - 1;
 								}
 								else
 								{
-									idx.Index = SqlQuery.Select.Add(idx.Sql);
+									idx.Index = SelectQuery.Select.Add(idx.Sql);
 								}
 							}
 
@@ -317,8 +317,8 @@ namespace LinqToDB.Linq.Builder
 										member.SqlQueryInfo = new SqlInfo(member.MemberExpression.Member)
 										{
 											Index = -2,
-											Sql   = SubQuery.SqlQuery.Select.Columns[member.SequenceInfo.Index],
-											Query = SqlQuery,
+											Sql   = SubQuery.SelectQuery.Select.Columns[member.SequenceInfo.Index],
+											Query = SelectQuery,
 										};
 									}
 

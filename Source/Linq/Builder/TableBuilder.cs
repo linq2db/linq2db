@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 
 					// Looking for association.
 					//
-					if (buildInfo.IsSubQuery && buildInfo.SqlQuery.From.Tables.Count == 0)
+					if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 					{
 						var ctx = builder.GetContext(buildInfo.Parent, expression);
 						if (ctx != null)
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Parameter:
 					{
-						if (buildInfo.IsSubQuery && buildInfo.SqlQuery.From.Tables.Count == 0)
+						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
 							var ctx = builder.GetContext(buildInfo.Parent, expression);
 							if (ctx != null)
@@ -124,12 +124,12 @@ namespace LinqToDB.Linq.Builder
 			#region Properties
 
 #if DEBUG
-			public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
+			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
 #endif
 
-			public ExpressionBuilder Builder    { get; private set; }
-			public Expression        Expression { get; private set; }
-			public SqlQuery          SqlQuery   { get; set; }
+			public ExpressionBuilder Builder     { get; private set; }
+			public Expression        Expression  { get; private set; }
+			public SelectQuery       SelectQuery { get; set; }
 
 			public virtual IBuildContext Parent { get; set; }
 
@@ -147,30 +147,30 @@ namespace LinqToDB.Linq.Builder
 				Builder          = builder;
 				Parent           = buildInfo.Parent;
 				Expression       = buildInfo.Expression;
-				SqlQuery         = buildInfo.SqlQuery;
+				SelectQuery         = buildInfo.SelectQuery;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
-				SqlQuery.From.Table(SqlTable);
+				SelectQuery.From.Table(SqlTable);
 
 				Init();
 			}
 
-			protected TableContext(ExpressionBuilder builder, SqlQuery sqlQuery)
+			protected TableContext(ExpressionBuilder builder, SelectQuery selectQuery)
 			{
-				Builder  = builder;
-				SqlQuery = sqlQuery;
+				Builder     = builder;
+				SelectQuery = selectQuery;
 			}
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder    = builder;
-				Parent     = buildInfo.Parent;
-				Expression = buildInfo.Expression;
-				SqlQuery   = buildInfo.SqlQuery;
+				Builder     = builder;
+				Parent      = buildInfo.Parent;
+				Expression  = buildInfo.Expression;
+				SelectQuery = buildInfo.SelectQuery;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method);
@@ -183,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
-				SqlQuery.From.Table(SqlTable);
+				SelectQuery.From.Table(SqlTable);
 
 				var args = mc.Arguments.Select(a => builder.ConvertToSql(this, a));
 
@@ -219,8 +219,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
-					if (predicate.GetType() != typeof(SqlQuery.Predicate.Expr))
-						SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
+						SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 				}
 			}
 
@@ -528,14 +528,14 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Sql is SqlField)
 				{
 					var field = (SqlField)expr.Sql;
-					expr.Index = SqlQuery.Select.Add(field, field.Alias);
+					expr.Index = SelectQuery.Select.Add(field, field.Alias);
 				}
 				else
 				{
-					expr.Index = SqlQuery.Select.Add(expr.Sql);
+					expr.Index = SelectQuery.Select.Add(expr.Sql);
 				}
 
-				expr.Query = SqlQuery;
+				expr.Query = SelectQuery;
 
 				_indexes.Add(expr.Sql, expr);
 
@@ -647,7 +647,7 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
 					{
-						var p  = (SqlQuery.Predicate.ExprExpr)cond.Predicate;
+						var p  = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
 
 						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
@@ -688,7 +688,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var table = new TableContext(
 							Builder,
-							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression, buildInfo.SqlQuery),
+							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression, buildInfo.SelectQuery),
 							SqlTable.ObjectType);
 
 						return table;
@@ -974,7 +974,7 @@ namespace LinqToDB.Linq.Builder
 		public class AssociatedTableContext : TableContext
 		{
 			public readonly TableContext          ParentAssociation;
-			public readonly SqlQuery.JoinedTable  ParentAssociationJoin;
+			public readonly SelectQuery.JoinedTable  ParentAssociationJoin;
 			public readonly AssociationDescriptor Association;
 			public readonly bool                  IsList;
 
@@ -985,7 +985,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public AssociatedTableContext(ExpressionBuilder builder, TableContext parent, AssociationDescriptor association)
-				: base(builder, parent.SqlQuery)
+				: base(builder, parent.SelectQuery)
 			{
 				var type = association.MemberInfo.GetMemberType();
 				var left = association.CanBeNull;
@@ -1002,7 +1002,7 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 
-				var psrc = parent.SqlQuery.From[parent.SqlTable];
+				var psrc = parent.SelectQuery.From[parent.SqlTable];
 				var join = left ? SqlTable.WeakLeftJoin() : IsList ? SqlTable.InnerJoin() : SqlTable.WeakInnerJoin();
 
 				Association           = association;
@@ -1038,8 +1038,8 @@ namespace LinqToDB.Linq.Builder
 					association = association.ParentAssociation as AssociatedTableContext)
 				{
 					isLeft =
-						association.ParentAssociationJoin.JoinType == SqlQuery.JoinType.Left ||
-						association.ParentAssociationJoin.JoinType == SqlQuery.JoinType.OuterApply;
+						association.ParentAssociationJoin.JoinType == SelectQuery.JoinType.Left ||
+						association.ParentAssociationJoin.JoinType == SelectQuery.JoinType.OuterApply;
 				}
 
 				if (isLeft)

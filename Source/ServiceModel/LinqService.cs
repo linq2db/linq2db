@@ -55,9 +55,9 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlQuery       SqlQuery   { get; set; }
-			public object         Context    { get; set; }
-			public SqlParameter[] Parameters { get; set; }
+			public SelectQuery    SelectQuery { get; set; }
+			public object         Context     { get; set; }
+			public SqlParameter[] Parameters  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -76,7 +76,7 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
 					return db.ExecuteNonQuery(obj);
 				}
 			}
@@ -98,7 +98,7 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
 					return db.ExecuteScalar(obj);
 				}
 			}
@@ -120,7 +120,7 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
 
 					using (var rd = db.ExecuteReader(obj))
 					{
@@ -237,7 +237,7 @@ namespace LinqToDB.ServiceModel
 
 					foreach (var query in queries)
 					{
-						var obj = ((IDataContext)db).SetQuery(new QueryContext { SqlQuery = query.Query, Parameters = query.Parameters });
+						var obj = ((IDataContext)db).SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
 						((IDataContext)db).ExecuteNonQuery(obj);
 					}
 

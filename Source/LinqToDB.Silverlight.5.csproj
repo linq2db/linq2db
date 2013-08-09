@@ -241,6 +241,7 @@
     <Compile Include="SqlBuilder\QueryElementType.cs" />
     <Compile Include="SqlBuilder\QueryType.cs" />
     <Compile Include="SqlBuilder\QueryVisitor.cs" />
+    <Compile Include="SqlBuilder\SelectQuery.cs" />
     <Compile Include="SqlBuilder\SqlBinaryExpression.cs" />
     <Compile Include="SqlBuilder\SqlDataType.cs" />
     <Compile Include="SqlBuilder\SqlException.cs" />
@@ -248,7 +249,6 @@
     <Compile Include="SqlBuilder\SqlField.cs" />
     <Compile Include="SqlBuilder\SqlFunction.cs" />
     <Compile Include="SqlBuilder\SqlParameter.cs" />
-    <Compile Include="SqlBuilder\SqlQuery.cs" />
     <Compile Include="SqlBuilder\SqlTable.cs" />
     <Compile Include="SqlBuilder\SqlTableT.cs" />
     <Compile Include="SqlBuilder\SqlTableType.cs" />

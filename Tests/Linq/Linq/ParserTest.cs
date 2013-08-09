@@ -717,7 +717,7 @@ namespace Tests.Linq
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
 				Assert.AreEqual        (1, sql.Length);
-				Assert.IsAssignableFrom(typeof(SqlQuery.Column), sql[0].Sql);
+				Assert.IsAssignableFrom(typeof(SelectQuery.Column), sql[0].Sql);
 			}
 		}
 
@@ -778,7 +778,7 @@ namespace Tests.Linq
 				var ctx = q.GetContext();
 				ctx.BuildExpression(null, 0);
 
-				Assert.AreEqual(1, ctx.SqlQuery.Select.Columns.Count);
+				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
 		}
 
@@ -798,7 +798,7 @@ namespace Tests.Linq
 				var ctx = q.GetContext();
 				ctx.BuildExpression(null, 0);
 
-				Assert.AreEqual(2, ctx.SqlQuery.Select.Columns.Count);
+				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
 		}
 
@@ -820,7 +820,7 @@ namespace Tests.Linq
 				var ctx = q.GetContext();
 				ctx.BuildExpression(null, 0);
 
-				Assert.AreEqual(2, ctx.SqlQuery.Select.Columns.Count);
+				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
 			}
 		}
 
@@ -843,7 +843,7 @@ namespace Tests.Linq
 				var ctx = q.GetContext();
 				ctx.BuildExpression(null, 0);
 
-				Assert.AreEqual(1, ctx.SqlQuery.Select.Columns.Count);
+				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
 			}
 		}
 
@@ -880,7 +880,7 @@ namespace Tests.Linq
 
 				ctx.BuildExpression(null, 0);
 
-				var sql = db.GetSqlText(ctx.SqlQuery);
+				var sql = db.GetSqlText(ctx.SelectQuery);
 
 				CompareSql(sql, @"
 					SELECT

@@ -49,15 +49,15 @@ namespace Tests.Model
 			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(), id);
 		}
 
-		public string GetSqlText(SqlQuery sql)
+		public string GetSqlText(SelectQuery query)
 		{
 			var provider = ((IDataContext)this).CreateSqlProvider();
 
 			//provider.SqlQuery = sql;
 
-			sql = provider.Finalize(sql);
+			query = provider.Finalize(query);
 
-			var cc = provider.CommandCount(sql);
+			var cc = provider.CommandCount(query);
 			var sb = new StringBuilder();
 
 			var commands = new string[cc];
@@ -66,7 +66,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, sql, sb, 0, 0, false);
+				provider.BuildSql(i, query, sb, 0, 0, false);
 				commands[i] = sb.ToString();
 			}
 

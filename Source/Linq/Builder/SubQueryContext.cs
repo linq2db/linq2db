@@ -10,28 +10,28 @@ namespace LinqToDB.Linq.Builder
 
 	class SubQueryContext : PassThroughContext
 	{
-		public SubQueryContext(IBuildContext subQuery, SqlQuery sqlQuery, bool addToSql)
+		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
 			: base(subQuery)
 		{
-			if (sqlQuery == subQuery.SqlQuery)
+			if (selectQuery == subQuery.SelectQuery)
 				throw new ArgumentException("Wrong subQuery argument.", "subQuery");
 
-			SubQuery = subQuery;
+			SubQuery    = subQuery;
 			SubQuery.Parent = this;
-			SqlQuery = sqlQuery;
+			SelectQuery = selectQuery;
 
 			if (addToSql)
-				sqlQuery.From.Table(SubQuery.SqlQuery);
+				selectQuery.From.Table(SubQuery.SelectQuery);
 		}
 
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
-			: this(subQuery, new SqlQuery { ParentSql = subQuery.SqlQuery.ParentSql }, addToSql)
+			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
 		{
 		}
 
-		public          IBuildContext SubQuery { get; private set; }
-		public override SqlQuery      SqlQuery { get; set; }
-		public override IBuildContext Parent   { get; set; }
+		public          IBuildContext SubQuery    { get; private set; }
+		public override SelectQuery   SelectQuery { get; set; }
+		public override IBuildContext Parent      { get; set; }
 
 		public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return SubQuery
 				.ConvertToIndex(expression, level, flags)
-				.Select(idx => new SqlInfo((idx.Members)) { Sql = SubQuery.SqlQuery.Select.Columns[idx.Index] })
+				.Select(idx => new SqlInfo((idx.Members)) { Sql = SubQuery.SelectQuery.Select.Columns[idx.Index] })
 				.ToArray();
 		}
 
@@ -107,8 +107,8 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(expression, level, flags)
 				.Select(idx =>
 				{
-					idx.Query = SqlQuery;
-					idx.Index = GetIndex((SqlQuery.Column)idx.Sql);
+					idx.Query = SelectQuery;
+					idx.Index = GetIndex((SelectQuery.Column)idx.Sql);
 
 					return idx;
 				})
@@ -127,13 +127,13 @@ namespace LinqToDB.Linq.Builder
 
 		internal protected readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
 
-		protected virtual int GetIndex(SqlQuery.Column column)
+		protected virtual int GetIndex(SelectQuery.Column column)
 		{
 			int idx;
 
 			if (!ColumnIndexes.TryGetValue(column, out idx))
 			{
-				idx = SqlQuery.Select.Add(column);
+				idx = SelectQuery.Select.Add(column);
 				ColumnIndexes.Add(column, idx);
 			}
 
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			var idx = GetIndex(context.SqlQuery.Select.Columns[index]);
+			var idx = GetIndex(context.SelectQuery.Select.Columns[index]);
 			return Parent == null ? idx : Parent.ConvertToParentIndex(idx, this);
 		}
 
@@ -151,8 +151,8 @@ namespace LinqToDB.Linq.Builder
 			if (alias.Contains('<'))
 				return;
 
-			if (SqlQuery.From.Tables[0].Alias == null)
-				SqlQuery.From.Tables[0].Alias = alias;
+			if (SelectQuery.From.Tables[0].Alias == null)
+				SelectQuery.From.Tables[0].Alias = alias;
 		}
 
 		public override ISqlExpression GetSubQuery(IBuildContext context)

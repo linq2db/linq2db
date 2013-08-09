@@ -6,7 +6,7 @@ namespace LinqToDB.ServiceModel
 
 	public class LinqServiceQuery
 	{
-		public SqlQuery       Query      { get; set; }
+		public SelectQuery    Query      { get; set; }
 		public SqlParameter[] Parameters { get; set; }
 	}
 }

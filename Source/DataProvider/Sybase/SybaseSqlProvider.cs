@@ -94,12 +94,12 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 
@@ -134,12 +134,12 @@ namespace LinqToDB.DataProvider.Sybase
 			ISqlTableSource table;
 			ISqlTableSource source;
 
-			if (SqlQuery.Delete.Table != null)
-				table = source = SqlQuery.Delete.Table;
+			if (SelectQuery.Delete.Table != null)
+				table = source = SelectQuery.Delete.Table;
 			else
 			{
-				table  = SqlQuery.From.Tables[0];
-				source = SqlQuery.From.Tables[0].Source;
+				table  = SelectQuery.From.Tables[0];
+				source = SelectQuery.From.Tables[0].Source;
 			}
 
 			var alias = GetTableAlias(table);
@@ -150,10 +150,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildUpdateTableName(StringBuilder sb)
 		{
-			if (SqlQuery.Update.Table != null && SqlQuery.Update.Table != SqlQuery.From.Tables[0].Source)
-				BuildPhysicalTable(sb, SqlQuery.Update.Table, null);
+			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
+				BuildPhysicalTable(sb, SelectQuery.Update.Table, null);
 			else
-				BuildTableName(sb, SqlQuery.From.Tables[0], true, false);
+				BuildTableName(sb, SelectQuery.From.Tables[0], true, false);
 		}
 
 		protected override void BuildUnicodeString(StringBuilder sb, string value)

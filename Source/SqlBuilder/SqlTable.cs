@@ -14,7 +14,7 @@ namespace LinqToDB.SqlBuilder
 
 		public SqlTable()
 		{
-			_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
+			_sourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			_fields   = new Dictionary<string,SqlField>();
 		}
 

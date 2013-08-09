@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildSelectClause(StringBuilder sb)
 		{
-			if (SqlQuery.From.Tables.Count == 0)
+			if (SelectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent(sb);
 				sb.Append("SELECT").AppendLine();
@@ -46,10 +46,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(StringBuilder sb)
 		{
-			var identityField = SqlQuery.Insert.Into.GetIdentityField();
+			var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", SqlQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
 			AppendIndent(sb).AppendLine("RETURNING");
 			AppendIndent(sb).Append("\t");
@@ -166,43 +166,43 @@ namespace LinqToDB.DataProvider.Firebird
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			CheckAliases(sqlQuery, int.MaxValue);
+			CheckAliases(selectQuery, int.MaxValue);
 
-			new QueryVisitor().Visit(sqlQuery.Select, SetNonQueryParameter);
+			new QueryVisitor().Visit(selectQuery.Select, SetNonQueryParameter);
 
-			if (sqlQuery.QueryType == QueryType.InsertOrUpdate)
+			if (selectQuery.QueryType == QueryType.InsertOrUpdate)
 			{
-				foreach (var key in sqlQuery.Insert.Items)
+				foreach (var key in selectQuery.Insert.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in sqlQuery.Update.Items)
+				foreach (var key in selectQuery.Update.Items)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 
-				foreach (var key in sqlQuery.Update.Keys)
+				foreach (var key in selectQuery.Update.Keys)
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			new QueryVisitor().Visit(sqlQuery, element =>
+			new QueryVisitor().Visit(selectQuery, element =>
 			{
 				if (element.ElementType == QueryElementType.InSubQueryPredicate)
-					new QueryVisitor().Visit(((SqlQuery.Predicate.InSubQuery)element).Expr1, SetNonQueryParameter);
+					new QueryVisitor().Visit(((SelectQuery.Predicate.InSubQuery)element).Expr1, SetNonQueryParameter);
 			});
 
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(sqlQuery);
-				case QueryType.Update : return GetAlternativeUpdate(sqlQuery);
-				default               : return sqlQuery;
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
 			}
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
@@ -212,12 +212,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 
@@ -277,17 +277,17 @@ namespace LinqToDB.DataProvider.Firebird
 
 		SqlField _identityField;
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			if (sqlQuery.IsCreateTable)
+			if (selectQuery.IsCreateTable)
 			{
-				_identityField = sqlQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				_identityField = selectQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 				if (_identityField != null)
 					return 3;
 			}
 
-			return base.CommandCount(sqlQuery);
+			return base.CommandCount(selectQuery);
 		}
 
 		protected override void BuildDropTableStatement(StringBuilder sb)
@@ -300,20 +300,20 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				sb
 					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(SqlQuery.CreateTable.Table.PhysicalName)
+					.Append(SelectQuery.CreateTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
 		{
-			if (SqlQuery.CreateTable.IsDrop)
+			if (SelectQuery.CreateTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
 					sb
 						.Append("DROP GENERATOR GIDENTITY_")
-						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
@@ -325,17 +325,17 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					sb
 						.Append("CREATE GENERATOR GIDENTITY_")
-						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					sb
-						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("BEFORE INSERT POSITION 0")
 						.AppendLine  ("AS BEGIN")
-						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("\tNEW.{0} = GEN_ID(GIDENTITY_{1}, 1);", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("END");
 				}

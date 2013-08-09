@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSelectClause(StringBuilder sb)
 		{
-			if (SqlQuery.From.Tables.Count == 0)
+			if (SelectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent(sb).Append("SELECT").AppendLine();
 				BuildColumns(sb);
@@ -31,10 +31,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildGetIdentity(StringBuilder sb)
 		{
-			var identityField = SqlQuery.Insert.Into.GetIdentityField();
+			var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", SqlQuery.Insert.Into.Name);
+				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
 			AppendIndent(sb).AppendLine("RETURNING");
 			AppendIndent(sb).Append("\t");
@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere()
 		{
-			return base.BuildWhere() || !NeedSkip && NeedTake && SqlQuery.OrderBy.IsEmpty && SqlQuery.Having.IsEmpty;
+			return base.BuildWhere() || !NeedSkip && NeedTake && SelectQuery.OrderBy.IsEmpty && SelectQuery.Having.IsEmpty;
 		}
 
 		string _rowNumberAlias;
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql(StringBuilder sb)
 		{
-			var buildRowNum = NeedSkip || NeedTake && (!SqlQuery.OrderBy.IsEmpty || !SqlQuery.Having.IsEmpty);
+			var buildRowNum = NeedSkip || NeedTake && (!SelectQuery.OrderBy.IsEmpty || !SelectQuery.Having.IsEmpty);
 			var aliases     = null as string[];
 
 			if (buildRowNum)
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					AppendIndent(sb).AppendLine("WHERE");
 					AppendIndent(sb).Append("\tROWNUM <= ");
-					BuildExpression(sb, Add<int>(SqlQuery.Select.SkipValue, SqlQuery.Select.TakeValue));
+					BuildExpression(sb, Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue));
 					sb.AppendLine();
 				}
 
@@ -114,17 +114,17 @@ namespace LinqToDB.DataProvider.Oracle
 				if (NeedTake && NeedSkip)
 				{
 					AppendIndent(sb).AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(sb, SqlQuery.Select.SkipValue);
+					BuildExpression(sb, SelectQuery.Select.SkipValue);
 				}
 				else if (NeedTake)
 				{
 					AppendIndent(sb).AppendFormat("{0}.{1} <= ", aliases[1], _rowNumberAlias);
-					BuildExpression(sb, Precedence.Comparison, SqlQuery.Select.TakeValue);
+					BuildExpression(sb, Precedence.Comparison, SelectQuery.Select.TakeValue);
 				}
 				else
 				{
 					AppendIndent(sb).AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(sb, Precedence.Comparison, SqlQuery.Select.SkipValue);
+					BuildExpression(sb, Precedence.Comparison, SelectQuery.Select.SkipValue);
 				}
 
 				sb.AppendLine();
@@ -132,17 +132,17 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		protected override void BuildWhereSearchCondition(StringBuilder sb, SqlQuery.SearchCondition condition)
+		protected override void BuildWhereSearchCondition(StringBuilder sb, SelectQuery.SearchCondition condition)
 		{
-			if (NeedTake && !NeedSkip && SqlQuery.OrderBy.IsEmpty && SqlQuery.Having.IsEmpty)
+			if (NeedTake && !NeedSkip && SelectQuery.OrderBy.IsEmpty && SelectQuery.Having.IsEmpty)
 			{
 				BuildPredicate(
 					sb,
 					Precedence.LogicalConjunction,
-					new SqlQuery.Predicate.ExprExpr(
+					new SelectQuery.Predicate.ExprExpr(
 						new SqlExpression(null, "ROWNUM", Precedence.Primary),
-						SqlQuery.Predicate.Operator.LessOrEqual,
-						SqlQuery.Select.TakeValue));
+						SelectQuery.Predicate.Operator.LessOrEqual,
+						SelectQuery.Select.TakeValue));
 
 				if (base.BuildWhere())
 				{
@@ -279,29 +279,29 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			CheckAliases(sqlQuery, 30);
+			CheckAliases(selectQuery, 30);
 
-			new QueryVisitor().Visit(sqlQuery.Select, element =>
+			new QueryVisitor().Visit(selectQuery.Select, element =>
 			{
 				if (element.ElementType == QueryElementType.SqlParameter)
 					((SqlParameter)element).IsQueryParameter = false;
 			});
 
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(sqlQuery);
-				case QueryType.Update : return GetAlternativeUpdate(sqlQuery);
-				default               : return sqlQuery;
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
 			}
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
@@ -338,12 +338,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlQuery.SearchCondition)
+				if (expr is SelectQuery.SearchCondition)
 					wrap = true;
 				else
 				{
 					var ex = expr as SqlExpression;
-					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SqlQuery.SearchCondition;
+					wrap = ex != null && ex.Expr == "{0}" && ex.Parameters.Length == 1 && ex.Parameters[0] is SelectQuery.SearchCondition;
 				}
 			}
 
@@ -372,7 +372,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			sb.Append("VALUES ");
 
-			foreach (var col in SqlQuery.Insert.Into.Fields)
+			foreach (var col in SelectQuery.Insert.Into.Fields)
 				sb.Append("(DEFAULT)");
 
 			sb.AppendLine();
@@ -380,17 +380,17 @@ namespace LinqToDB.DataProvider.Oracle
 
 		SqlField _identityField;
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			if (sqlQuery.IsCreateTable)
+			if (selectQuery.IsCreateTable)
 			{
-				_identityField = sqlQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+				_identityField = selectQuery.CreateTable.Table.Fields.Values.FirstOrDefault(f => f.IsIdentity);
 
 				if (_identityField != null)
 					return 3;
 			}
 
-			return base.CommandCount(sqlQuery);
+			return base.CommandCount(selectQuery);
 		}
 
 		protected override void BuildDropTableStatement(StringBuilder sb)
@@ -403,20 +403,20 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				sb
 					.Append("DROP TRIGGER TIDENTITY_")
-					.Append(SqlQuery.CreateTable.Table.PhysicalName)
+					.Append(SelectQuery.CreateTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
 		{
-			if (SqlQuery.CreateTable.IsDrop)
+			if (SelectQuery.CreateTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
 					sb
 						.Append("DROP SEQUENCE SIDENTITY_")
-						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
@@ -428,18 +428,18 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					sb
 						.Append("CREATE SEQUENCE SIDENTITY_")
-						.Append(SqlQuery.CreateTable.Table.PhysicalName)
+						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
 					sb
-						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("CREATE OR REPLACE TRIGGER  TIDENTITY_{0}", SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
-						.AppendFormat("BEFORE INSERT ON {0} FOR EACH ROW", SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("BEFORE INSERT ON {0} FOR EACH ROW", SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("BEGIN")
-						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SqlQuery.CreateTable.Table.PhysicalName)
+						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("END");
 				}

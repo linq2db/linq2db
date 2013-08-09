@@ -20,21 +20,21 @@ namespace Tests.Exceptions
 			{
 			}
 
-			protected override SqlQuery ProcessQuery(SqlQuery sqlQuery)
+			protected override SelectQuery ProcessQuery(SelectQuery selectQuery)
 			{
-				if (sqlQuery.IsInsert && sqlQuery.Insert.Into.Name == "Parent")
+				if (selectQuery.IsInsert && selectQuery.Insert.Into.Name == "Parent")
 				{
 					var expr =
-						new QueryVisitor().Find(sqlQuery.Insert, e =>
+						new QueryVisitor().Find(selectQuery.Insert, e =>
 						{
 							if (e.ElementType == QueryElementType.SetExpression)
 							{
-								var se = (SqlQuery.SetExpression)e;
+								var se = (SelectQuery.SetExpression)e;
 								return ((SqlField)se.Column).Name == "ParentID";
 							}
 
 							return false;
-						}) as SqlQuery.SetExpression;
+						}) as SelectQuery.SetExpression;
 
 					if (expr != null)
 					{
@@ -45,7 +45,7 @@ namespace Tests.Exceptions
 							var tableName = "Parent1";
 							var dic       = new Dictionary<IQueryElement,IQueryElement>();
 
-							sqlQuery = new QueryVisitor().Convert(sqlQuery, e =>
+							selectQuery = new QueryVisitor().Convert(selectQuery, e =>
 							{
 								if (e.ElementType == QueryElementType.SqlTable)
 								{
@@ -69,7 +69,7 @@ namespace Tests.Exceptions
 					}
 				}
 
-				return sqlQuery;
+				return selectQuery;
 			}
 		}
 

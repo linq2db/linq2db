@@ -20,9 +20,9 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
@@ -41,17 +41,17 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(StringBuilder sb)
 		{
-			if (SqlQuery.Select.SkipValue == null)
+			if (SelectQuery.Select.SkipValue == null)
 				base.BuildOffsetLimit(sb);
 			else
 			{
 				AppendIndent(sb)
 					.AppendFormat(
 						"LIMIT {0},{1}",
-						BuildExpression(new StringBuilder(), SqlQuery.Select.SkipValue),
-						SqlQuery.Select.TakeValue == null ?
+						BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue),
+						SelectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							BuildExpression(new StringBuilder(), SqlQuery.Select.TakeValue).ToString())
+							BuildExpression(new StringBuilder(), SelectQuery.Select.TakeValue).ToString())
 					.AppendLine();
 			}
 		}
@@ -165,9 +165,9 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDeleteClause(StringBuilder sb)
 		{
-			var table = SqlQuery.Delete.Table != null ?
-				(SqlQuery.From.FindTableSource(SqlQuery.Delete.Table) ?? SqlQuery.Delete.Table) :
-				SqlQuery.From.Tables[0];
+			var table = SelectQuery.Delete.Table != null ?
+				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
+				SelectQuery.From.Tables[0];
 
 			AppendIndent(sb)
 				.Append("DELETE ")
@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 
@@ -259,9 +259,9 @@ namespace LinqToDB.DataProvider.MySql
 						return "`" + value + "`";
 					}
 
-				case ConvertType.NameToDatabase  :
-				case ConvertType.NameToOwner     :
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToDatabase   :
+				case ConvertType.NameToOwner      :
+				case ConvertType.NameToQueryTable :
 					if (value != null)
 					{
 						var name = value.ToString();
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.MySql
 			return base.BuildExpression(
 				sb,
 				expr,
-				buildTableName && SqlQuery.QueryType != QueryType.InsertOrUpdate,
+				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
 				ref addAlias);
@@ -300,7 +300,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			var first = true;
 
-			foreach (var expr in SqlQuery.Update.Items)
+			foreach (var expr in SelectQuery.Update.Items)
 			{
 				if (!first)
 					sb.Append(',').AppendLine();

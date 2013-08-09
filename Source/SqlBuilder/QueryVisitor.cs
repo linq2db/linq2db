@@ -71,7 +71,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.Column:
 					{
-						Visit1(((SqlQuery.Column)element).Expression);
+						Visit1(((SelectQuery.Column)element).Expression);
 						break;
 					}
 
@@ -79,102 +79,102 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var table = ((SqlQuery.TableSource)element);
 
-						Visit1(((SqlQuery.TableSource)element).Source);
-						foreach (var j in ((SqlQuery.TableSource)element).Joins) Visit1(j);
+						Visit1(((SelectQuery.TableSource)element).Source);
+						foreach (var j in ((SelectQuery.TableSource)element).Joins) Visit1(j);
 						break;
 					}
 
 				case QueryElementType.JoinedTable:
 					{
 						//var join = (SqlQuery.JoinedTable)element;
-						Visit1(((SqlQuery.JoinedTable)element).Table);
-						Visit1(((SqlQuery.JoinedTable)element).Condition);
+						Visit1(((SelectQuery.JoinedTable)element).Table);
+						Visit1(((SelectQuery.JoinedTable)element).Condition);
 						break;
 					}
 
 				case QueryElementType.SearchCondition:
 					{
-						foreach (var c in ((SqlQuery.SearchCondition)element).Conditions) Visit1(c);
+						foreach (var c in ((SelectQuery.SearchCondition)element).Conditions) Visit1(c);
 						break;
 					}
 
 				case QueryElementType.Condition:
 					{
-						Visit1(((SqlQuery.Condition)element).Predicate);
+						Visit1(((SelectQuery.Condition)element).Predicate);
 						break;
 					}
 
 				case QueryElementType.ExprPredicate:
 					{
-						Visit1(((SqlQuery.Predicate.Expr)element).Expr1);
+						Visit1(((SelectQuery.Predicate.Expr)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.NotExprPredicate:
 					{
-						Visit1(((SqlQuery.Predicate.NotExpr)element).Expr1);
+						Visit1(((SelectQuery.Predicate.NotExpr)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.ExprExprPredicate:
 					{
 						//var p = ((SqlQuery.Predicate.ExprExpr)element);
-						Visit1(((SqlQuery.Predicate.ExprExpr)element).Expr1);
-						Visit1(((SqlQuery.Predicate.ExprExpr)element).Expr2);
+						Visit1(((SelectQuery.Predicate.ExprExpr)element).Expr1);
+						Visit1(((SelectQuery.Predicate.ExprExpr)element).Expr2);
 						break;
 					}
 
 				case QueryElementType.LikePredicate:
 					{
 						//var p = ((SqlQuery.Predicate.Like)element);
-						Visit1(((SqlQuery.Predicate.Like)element).Expr1);
-						Visit1(((SqlQuery.Predicate.Like)element).Expr2);
-						Visit1(((SqlQuery.Predicate.Like)element).Escape);
+						Visit1(((SelectQuery.Predicate.Like)element).Expr1);
+						Visit1(((SelectQuery.Predicate.Like)element).Expr2);
+						Visit1(((SelectQuery.Predicate.Like)element).Escape);
 						break;
 					}
 
 				case QueryElementType.BetweenPredicate:
 					{
 						//var p = (SqlQuery.Predicate.Between)element;
-						Visit1(((SqlQuery.Predicate.Between)element).Expr1);
-						Visit1(((SqlQuery.Predicate.Between)element).Expr2);
-						Visit1(((SqlQuery.Predicate.Between)element).Expr3);
+						Visit1(((SelectQuery.Predicate.Between)element).Expr1);
+						Visit1(((SelectQuery.Predicate.Between)element).Expr2);
+						Visit1(((SelectQuery.Predicate.Between)element).Expr3);
 						break;
 					}
 
 				case QueryElementType.IsNullPredicate:
 					{
-						Visit1(((SqlQuery.Predicate.IsNull)element).Expr1);
+						Visit1(((SelectQuery.Predicate.IsNull)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.InSubQueryPredicate:
 					{
 						//var p = (SqlQuery.Predicate.InSubQuery)element;
-						Visit1(((SqlQuery.Predicate.InSubQuery)element).Expr1);
-						Visit1(((SqlQuery.Predicate.InSubQuery)element).SubQuery);
+						Visit1(((SelectQuery.Predicate.InSubQuery)element).Expr1);
+						Visit1(((SelectQuery.Predicate.InSubQuery)element).SubQuery);
 						break;
 					}
 
 				case QueryElementType.InListPredicate:
 					{
 						//var p = (SqlQuery.Predicate.InList)element;
-						Visit1(((SqlQuery.Predicate.InList)element).Expr1);
-						foreach (var value in ((SqlQuery.Predicate.InList)element).Values) Visit1(value);
+						Visit1(((SelectQuery.Predicate.InList)element).Expr1);
+						foreach (var value in ((SelectQuery.Predicate.InList)element).Values) Visit1(value);
 						break;
 					}
 
 				case QueryElementType.FuncLikePredicate:
 					{
-						Visit1(((SqlQuery.Predicate.FuncLike)element).Function);
+						Visit1(((SelectQuery.Predicate.FuncLike)element).Function);
 						break;
 					}
 
 				case QueryElementType.SetExpression:
 					{
 						//var s = (SqlQuery.SetExpression)element;
-						Visit1(((SqlQuery.SetExpression)element).Column);
-						Visit1(((SqlQuery.SetExpression)element).Expression);
+						Visit1(((SelectQuery.SetExpression)element).Column);
+						Visit1(((SelectQuery.SetExpression)element).Expression);
 						break;
 					}
 
@@ -182,10 +182,10 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var sc = (SqlQuery.InsertClause)element;
 
-						if (((SqlQuery.InsertClause)element).Into != null)
-							Visit1(((SqlQuery.InsertClause)element).Into);
+						if (((SelectQuery.InsertClause)element).Into != null)
+							Visit1(((SelectQuery.InsertClause)element).Into);
 
-						foreach (var c in ((SqlQuery.InsertClause)element).Items.ToArray()) Visit1(c);
+						foreach (var c in ((SelectQuery.InsertClause)element).Items.ToArray()) Visit1(c);
 						break;
 					}
 
@@ -193,70 +193,70 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var sc = (SqlQuery.UpdateClause)element;
 
-						if (((SqlQuery.UpdateClause)element).Table != null)
-							Visit1(((SqlQuery.UpdateClause)element).Table);
+						if (((SelectQuery.UpdateClause)element).Table != null)
+							Visit1(((SelectQuery.UpdateClause)element).Table);
 
-						foreach (var c in ((SqlQuery.UpdateClause)element).Items.ToArray()) Visit1(c);
-						foreach (var c in ((SqlQuery.UpdateClause)element).Keys. ToArray()) Visit1(c);
+						foreach (var c in ((SelectQuery.UpdateClause)element).Items.ToArray()) Visit1(c);
+						foreach (var c in ((SelectQuery.UpdateClause)element).Keys. ToArray()) Visit1(c);
 						break;
 					}
 
 				case QueryElementType.DeleteClause:
 					{
-						if (((SqlQuery.DeleteClause)element).Table != null)
-							Visit1(((SqlQuery.DeleteClause)element).Table);
+						if (((SelectQuery.DeleteClause)element).Table != null)
+							Visit1(((SelectQuery.DeleteClause)element).Table);
 						break;
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
-						if (((SqlQuery.CreateTableStatement)element).Table != null)
-							Visit1(((SqlQuery.CreateTableStatement)element).Table);
+						if (((SelectQuery.CreateTableStatement)element).Table != null)
+							Visit1(((SelectQuery.CreateTableStatement)element).Table);
 						break;
 					}
 
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
-						Visit1(((SqlQuery.SelectClause)element).TakeValue);
-						Visit1(((SqlQuery.SelectClause)element).SkipValue);
+						Visit1(((SelectQuery.SelectClause)element).TakeValue);
+						Visit1(((SelectQuery.SelectClause)element).SkipValue);
 
-						foreach (var c in ((SqlQuery.SelectClause)element).Columns.ToArray()) Visit1(c);
+						foreach (var c in ((SelectQuery.SelectClause)element).Columns.ToArray()) Visit1(c);
 						break;
 					}
 
 				case QueryElementType.FromClause:
 					{
-						foreach (var t in ((SqlQuery.FromClause)element).Tables) Visit1(t);
+						foreach (var t in ((SelectQuery.FromClause)element).Tables) Visit1(t);
 						break;
 					}
 
 				case QueryElementType.WhereClause:
 					{
-						Visit1(((SqlQuery.WhereClause)element).SearchCondition);
+						Visit1(((SelectQuery.WhereClause)element).SearchCondition);
 						break;
 					}
 
 				case QueryElementType.GroupByClause:
 					{
-						foreach (var i in ((SqlQuery.GroupByClause)element).Items) Visit1(i);
+						foreach (var i in ((SelectQuery.GroupByClause)element).Items) Visit1(i);
 						break;
 					}
 
 				case QueryElementType.OrderByClause:
 					{
-						foreach (var i in ((SqlQuery.OrderByClause)element).Items) Visit1(i);
+						foreach (var i in ((SelectQuery.OrderByClause)element).Items) Visit1(i);
 						break;
 					}
 
 				case QueryElementType.OrderByItem:
 					{
-						Visit1(((SqlQuery.OrderByItem)element).Expression);
+						Visit1(((SelectQuery.OrderByItem)element).Expression);
 						break;
 					}
 
 				case QueryElementType.Union:
-					Visit1(((SqlQuery.Union)element).SqlQuery);
+					Visit1(((SelectQuery.Union)element).SelectQuery);
 					break;
 
 				case QueryElementType.SqlQuery:
@@ -268,7 +268,7 @@ namespace LinqToDB.SqlBuilder
 							_visitedElements.Add(element, element);
 						}
 
-						var q = (SqlQuery)element;
+						var q = (SelectQuery)element;
 
 						switch (q.QueryType)
 						{
@@ -313,7 +313,7 @@ namespace LinqToDB.SqlBuilder
 						{
 							foreach (var i in q.Unions)
 							{
-								if (i.SqlQuery == q)
+								if (i.SelectQuery == q)
 									throw new InvalidOperationException();
 
 								Visit1(i);
@@ -383,7 +383,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.Column:
 					{
-						Visit2(((SqlQuery.Column)element).Expression);
+						Visit2(((SelectQuery.Column)element).Expression);
 						break;
 					}
 
@@ -391,102 +391,102 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var table = ((SqlQuery.TableSource)element);
 
-						Visit2(((SqlQuery.TableSource)element).Source);
-						foreach (var j in ((SqlQuery.TableSource)element).Joins) Visit2(j);
+						Visit2(((SelectQuery.TableSource)element).Source);
+						foreach (var j in ((SelectQuery.TableSource)element).Joins) Visit2(j);
 						break;
 					}
 
 				case QueryElementType.JoinedTable:
 					{
 						//var join = (SqlQuery.JoinedTable)element;
-						Visit2(((SqlQuery.JoinedTable)element).Table);
-						Visit2(((SqlQuery.JoinedTable)element).Condition);
+						Visit2(((SelectQuery.JoinedTable)element).Table);
+						Visit2(((SelectQuery.JoinedTable)element).Condition);
 						break;
 					}
 
 				case QueryElementType.SearchCondition:
 					{
-						foreach (var c in ((SqlQuery.SearchCondition)element).Conditions) Visit2(c);
+						foreach (var c in ((SelectQuery.SearchCondition)element).Conditions) Visit2(c);
 						break;
 					}
 
 				case QueryElementType.Condition:
 					{
-						Visit2(((SqlQuery.Condition)element).Predicate);
+						Visit2(((SelectQuery.Condition)element).Predicate);
 						break;
 					}
 
 				case QueryElementType.ExprPredicate:
 					{
-						Visit2(((SqlQuery.Predicate.Expr)element).Expr1);
+						Visit2(((SelectQuery.Predicate.Expr)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.NotExprPredicate:
 					{
-						Visit2(((SqlQuery.Predicate.NotExpr)element).Expr1);
+						Visit2(((SelectQuery.Predicate.NotExpr)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.ExprExprPredicate:
 					{
 						//var p = ((SqlQuery.Predicate.ExprExpr)element);
-						Visit2(((SqlQuery.Predicate.ExprExpr)element).Expr1);
-						Visit2(((SqlQuery.Predicate.ExprExpr)element).Expr2);
+						Visit2(((SelectQuery.Predicate.ExprExpr)element).Expr1);
+						Visit2(((SelectQuery.Predicate.ExprExpr)element).Expr2);
 						break;
 					}
 
 				case QueryElementType.LikePredicate:
 					{
 						//var p = ((SqlQuery.Predicate.Like)element);
-						Visit2(((SqlQuery.Predicate.Like)element).Expr1);
-						Visit2(((SqlQuery.Predicate.Like)element).Expr2);
-						Visit2(((SqlQuery.Predicate.Like)element).Escape);
+						Visit2(((SelectQuery.Predicate.Like)element).Expr1);
+						Visit2(((SelectQuery.Predicate.Like)element).Expr2);
+						Visit2(((SelectQuery.Predicate.Like)element).Escape);
 						break;
 					}
 
 				case QueryElementType.BetweenPredicate:
 					{
 						//var p = (SqlQuery.Predicate.Between)element;
-						Visit2(((SqlQuery.Predicate.Between)element).Expr1);
-						Visit2(((SqlQuery.Predicate.Between)element).Expr2);
-						Visit2(((SqlQuery.Predicate.Between)element).Expr3);
+						Visit2(((SelectQuery.Predicate.Between)element).Expr1);
+						Visit2(((SelectQuery.Predicate.Between)element).Expr2);
+						Visit2(((SelectQuery.Predicate.Between)element).Expr3);
 						break;
 					}
 
 				case QueryElementType.IsNullPredicate:
 					{
-						Visit2(((SqlQuery.Predicate.IsNull)element).Expr1);
+						Visit2(((SelectQuery.Predicate.IsNull)element).Expr1);
 						break;
 					}
 
 				case QueryElementType.InSubQueryPredicate:
 					{
 						//var p = (SqlQuery.Predicate.InSubQuery)element;
-						Visit2(((SqlQuery.Predicate.InSubQuery)element).Expr1);
-						Visit2(((SqlQuery.Predicate.InSubQuery)element).SubQuery);
+						Visit2(((SelectQuery.Predicate.InSubQuery)element).Expr1);
+						Visit2(((SelectQuery.Predicate.InSubQuery)element).SubQuery);
 						break;
 					}
 
 				case QueryElementType.InListPredicate:
 					{
 						//var p = (SqlQuery.Predicate.InList)element;
-						Visit2(((SqlQuery.Predicate.InList)element).Expr1);
-						foreach (var value in ((SqlQuery.Predicate.InList)element).Values) Visit2(value);
+						Visit2(((SelectQuery.Predicate.InList)element).Expr1);
+						foreach (var value in ((SelectQuery.Predicate.InList)element).Values) Visit2(value);
 						break;
 					}
 
 				case QueryElementType.FuncLikePredicate:
 					{
-						Visit2(((SqlQuery.Predicate.FuncLike)element).Function);
+						Visit2(((SelectQuery.Predicate.FuncLike)element).Function);
 						break;
 					}
 
 				case QueryElementType.SetExpression:
 					{
 						//var s = (SqlQuery.SetExpression)element;
-						Visit2(((SqlQuery.SetExpression)element).Column);
-						Visit2(((SqlQuery.SetExpression)element).Expression);
+						Visit2(((SelectQuery.SetExpression)element).Column);
+						Visit2(((SelectQuery.SetExpression)element).Expression);
 						break;
 					}
 
@@ -494,10 +494,10 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var sc = (SqlQuery.InsertClause)element;
 
-						if (((SqlQuery.InsertClause)element).Into != null)
-							Visit2(((SqlQuery.InsertClause)element).Into);
+						if (((SelectQuery.InsertClause)element).Into != null)
+							Visit2(((SelectQuery.InsertClause)element).Into);
 
-						foreach (var c in ((SqlQuery.InsertClause)element).Items.ToArray()) Visit2(c);
+						foreach (var c in ((SelectQuery.InsertClause)element).Items.ToArray()) Visit2(c);
 						break;
 					}
 
@@ -505,70 +505,70 @@ namespace LinqToDB.SqlBuilder
 					{
 						//var sc = (SqlQuery.UpdateClause)element;
 
-						if (((SqlQuery.UpdateClause)element).Table != null)
-							Visit2(((SqlQuery.UpdateClause)element).Table);
+						if (((SelectQuery.UpdateClause)element).Table != null)
+							Visit2(((SelectQuery.UpdateClause)element).Table);
 
-						foreach (var c in ((SqlQuery.UpdateClause)element).Items.ToArray()) Visit2(c);
-						foreach (var c in ((SqlQuery.UpdateClause)element).Keys. ToArray()) Visit2(c);
+						foreach (var c in ((SelectQuery.UpdateClause)element).Items.ToArray()) Visit2(c);
+						foreach (var c in ((SelectQuery.UpdateClause)element).Keys. ToArray()) Visit2(c);
 						break;
 					}
 
 				case QueryElementType.DeleteClause:
 					{
-						if (((SqlQuery.DeleteClause)element).Table != null)
-							Visit2(((SqlQuery.DeleteClause)element).Table);
+						if (((SelectQuery.DeleteClause)element).Table != null)
+							Visit2(((SelectQuery.DeleteClause)element).Table);
 						break;
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
-						if (((SqlQuery.CreateTableStatement)element).Table != null)
-							Visit2(((SqlQuery.CreateTableStatement)element).Table);
+						if (((SelectQuery.CreateTableStatement)element).Table != null)
+							Visit2(((SelectQuery.CreateTableStatement)element).Table);
 						break;
 					}
 
 				case QueryElementType.SelectClause:
 					{
 						//var sc = (SqlQuery.SelectClause)element;
-						Visit2(((SqlQuery.SelectClause)element).TakeValue);
-						Visit2(((SqlQuery.SelectClause)element).SkipValue);
+						Visit2(((SelectQuery.SelectClause)element).TakeValue);
+						Visit2(((SelectQuery.SelectClause)element).SkipValue);
 
-						foreach (var c in ((SqlQuery.SelectClause)element).Columns.ToArray()) Visit2(c);
+						foreach (var c in ((SelectQuery.SelectClause)element).Columns.ToArray()) Visit2(c);
 						break;
 					}
 
 				case QueryElementType.FromClause:
 					{
-						foreach (var t in ((SqlQuery.FromClause)element).Tables) Visit2(t);
+						foreach (var t in ((SelectQuery.FromClause)element).Tables) Visit2(t);
 						break;
 					}
 
 				case QueryElementType.WhereClause:
 					{
-						Visit2(((SqlQuery.WhereClause)element).SearchCondition);
+						Visit2(((SelectQuery.WhereClause)element).SearchCondition);
 						break;
 					}
 
 				case QueryElementType.GroupByClause:
 					{
-						foreach (var i in ((SqlQuery.GroupByClause)element).Items) Visit2(i);
+						foreach (var i in ((SelectQuery.GroupByClause)element).Items) Visit2(i);
 						break;
 					}
 
 				case QueryElementType.OrderByClause:
 					{
-						foreach (var i in ((SqlQuery.OrderByClause)element).Items) Visit2(i);
+						foreach (var i in ((SelectQuery.OrderByClause)element).Items) Visit2(i);
 						break;
 					}
 
 				case QueryElementType.OrderByItem:
 					{
-						Visit2(((SqlQuery.OrderByItem)element).Expression);
+						Visit2(((SelectQuery.OrderByItem)element).Expression);
 						break;
 					}
 
 				case QueryElementType.Union:
-					Visit2(((SqlQuery.Union)element).SqlQuery);
+					Visit2(((SelectQuery.Union)element).SelectQuery);
 					break;
 
 				case QueryElementType.SqlQuery:
@@ -580,7 +580,7 @@ namespace LinqToDB.SqlBuilder
 							_visitedElements.Add(element, element);
 						}
 
-						var q = (SqlQuery)element;
+						var q = (SelectQuery)element;
 
 						switch (q.QueryType)
 						{
@@ -653,7 +653,7 @@ namespace LinqToDB.SqlBuilder
 						{
 							foreach (var i in q.Unions)
 							{
-								if (i.SqlQuery == q)
+								if (i.SelectQuery == q)
 									throw new InvalidOperationException();
 
 								Visit2(i);
@@ -698,19 +698,19 @@ namespace LinqToDB.SqlBuilder
 			{
 				case QueryElementType.SqlFunction       : return Find(((SqlFunction)                element).Parameters,      find);
 				case QueryElementType.SqlExpression     : return Find(((SqlExpression)              element).Parameters,      find);
-				case QueryElementType.Column            : return Find(((SqlQuery.Column)            element).Expression,      find);
-				case QueryElementType.SearchCondition   : return Find(((SqlQuery.SearchCondition)   element).Conditions,      find);
-				case QueryElementType.Condition         : return Find(((SqlQuery.Condition)         element).Predicate,       find);
-				case QueryElementType.ExprPredicate     : return Find(((SqlQuery.Predicate.Expr)    element).Expr1,           find);
-				case QueryElementType.NotExprPredicate  : return Find(((SqlQuery.Predicate.NotExpr) element).Expr1,           find);
-				case QueryElementType.IsNullPredicate   : return Find(((SqlQuery.Predicate.IsNull)  element).Expr1,           find);
-				case QueryElementType.FromClause        : return Find(((SqlQuery.FromClause)        element).Tables,          find);
-				case QueryElementType.WhereClause       : return Find(((SqlQuery.WhereClause)       element).SearchCondition, find);
-				case QueryElementType.GroupByClause     : return Find(((SqlQuery.GroupByClause)     element).Items,           find);
-				case QueryElementType.OrderByClause     : return Find(((SqlQuery.OrderByClause)     element).Items,           find);
-				case QueryElementType.OrderByItem       : return Find(((SqlQuery.OrderByItem)       element).Expression,      find);
-				case QueryElementType.Union             : return Find(((SqlQuery.Union)             element).SqlQuery,        find);
-				case QueryElementType.FuncLikePredicate : return Find(((SqlQuery.Predicate.FuncLike)element).Function,        find);
+				case QueryElementType.Column            : return Find(((SelectQuery.Column)            element).Expression,      find);
+				case QueryElementType.SearchCondition   : return Find(((SelectQuery.SearchCondition)   element).Conditions,      find);
+				case QueryElementType.Condition         : return Find(((SelectQuery.Condition)         element).Predicate,       find);
+				case QueryElementType.ExprPredicate     : return Find(((SelectQuery.Predicate.Expr)    element).Expr1,           find);
+				case QueryElementType.NotExprPredicate  : return Find(((SelectQuery.Predicate.NotExpr) element).Expr1,           find);
+				case QueryElementType.IsNullPredicate   : return Find(((SelectQuery.Predicate.IsNull)  element).Expr1,           find);
+				case QueryElementType.FromClause        : return Find(((SelectQuery.FromClause)        element).Tables,          find);
+				case QueryElementType.WhereClause       : return Find(((SelectQuery.WhereClause)       element).SearchCondition, find);
+				case QueryElementType.GroupByClause     : return Find(((SelectQuery.GroupByClause)     element).Items,           find);
+				case QueryElementType.OrderByClause     : return Find(((SelectQuery.OrderByClause)     element).Items,           find);
+				case QueryElementType.OrderByItem       : return Find(((SelectQuery.OrderByItem)       element).Expression,      find);
+				case QueryElementType.Union             : return Find(((SelectQuery.Union)             element).SelectQuery,        find);
+				case QueryElementType.FuncLikePredicate : return Find(((SelectQuery.Predicate.FuncLike)element).Function,        find);
 
 				case QueryElementType.SqlBinaryExpression:
 					{
@@ -731,7 +731,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.TableSource:
 					{
-						var table = (SqlQuery.TableSource)element;
+						var table = (SelectQuery.TableSource)element;
 						return
 							Find(table.Source, find) ??
 							Find(table.Joins,  find);
@@ -739,7 +739,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.JoinedTable:
 					{
-						var join = (SqlQuery.JoinedTable)element;
+						var join = (SelectQuery.JoinedTable)element;
 						return
 							Find(join.Table,     find) ??
 							Find(join.Condition, find);
@@ -747,7 +747,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.ExprExprPredicate:
 					{
-						var p = (SqlQuery.Predicate.ExprExpr)element;
+						var p = (SelectQuery.Predicate.ExprExpr)element;
 						return
 							Find(p.Expr1, find) ??
 							Find(p.Expr2, find);
@@ -755,7 +755,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.LikePredicate:
 					{
-						var p = (SqlQuery.Predicate.Like)element;
+						var p = (SelectQuery.Predicate.Like)element;
 						return
 							Find(p.Expr1,  find) ??
 							Find(p.Expr2,  find) ??
@@ -764,7 +764,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.BetweenPredicate:
 					{
-						var p = (SqlQuery.Predicate.Between)element;
+						var p = (SelectQuery.Predicate.Between)element;
 						return
 							Find(p.Expr1, find) ??
 							Find(p.Expr2, find) ??
@@ -773,7 +773,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.InSubQueryPredicate:
 					{
-						var p = (SqlQuery.Predicate.InSubQuery)element;
+						var p = (SelectQuery.Predicate.InSubQuery)element;
 						return
 							Find(p.Expr1,    find) ??
 							Find(p.SubQuery, find);
@@ -781,7 +781,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.InListPredicate:
 					{
-						var p = (SqlQuery.Predicate.InList)element;
+						var p = (SelectQuery.Predicate.InList)element;
 						return
 							Find(p.Expr1,  find) ??
 							Find(p.Values, find);
@@ -789,7 +789,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.SetExpression:
 					{
-						var s = (SqlQuery.SetExpression)element;
+						var s = (SelectQuery.SetExpression)element;
 						return
 							Find(s.Column,     find) ??
 							Find(s.Expression, find);
@@ -797,7 +797,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.InsertClause:
 					{
-						var sc = (SqlQuery.InsertClause)element;
+						var sc = (SelectQuery.InsertClause)element;
 						return
 							Find(sc.Into,  find) ??
 							Find(sc.Items, find);
@@ -805,7 +805,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.UpdateClause:
 					{
-						var sc = (SqlQuery.UpdateClause)element;
+						var sc = (SelectQuery.UpdateClause)element;
 						return
 							Find(sc.Table, find) ??
 							Find(sc.Items, find) ??
@@ -814,20 +814,20 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.DeleteClause:
 					{
-						var sc = (SqlQuery.DeleteClause)element;
+						var sc = (SelectQuery.DeleteClause)element;
 						return Find(sc.Table, find);
 					}
 
 				case QueryElementType.CreateTableStatement:
 					{
-						var sc = (SqlQuery.CreateTableStatement)element;
+						var sc = (SelectQuery.CreateTableStatement)element;
 						return
 							Find(sc.Table, find);
 					}
 
 				case QueryElementType.SelectClause:
 					{
-						var sc = (SqlQuery.SelectClause)element;
+						var sc = (SelectQuery.SelectClause)element;
 						return
 							Find(sc.TakeValue, find) ??
 							Find(sc.SkipValue, find) ??
@@ -836,7 +836,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.SqlQuery:
 					{
-						var q = (SqlQuery)element;
+						var q = (SelectQuery)element;
 						return
 							Find(q.Select,  find) ??
 							(q.IsInsert ? Find(q.Insert, find) : null) ??
@@ -947,103 +947,103 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.Column:
 					{
-						var col  = (SqlQuery.Column)element;
+						var col  = (SelectQuery.Column)element;
 						var expr = (ISqlExpression)ConvertInternal(col.Expression, action);
 
 						IQueryElement parent;
 						_visitedElements.TryGetValue(col.Parent, out parent);
 
 						if (parent != null || expr != null && !ReferenceEquals(expr, col.Expression))
-							newElement = new SqlQuery.Column(parent == null ? col.Parent : (SqlQuery)parent, expr ?? col.Expression, col._alias);
+							newElement = new SelectQuery.Column(parent == null ? col.Parent : (SelectQuery)parent, expr ?? col.Expression, col._alias);
 
 						break;
 					}
 
 				case QueryElementType.TableSource:
 					{
-						var table  = (SqlQuery.TableSource)element;
+						var table  = (SelectQuery.TableSource)element;
 						var source = (ISqlTableSource)ConvertInternal(table.Source, action);
 						var joins  = Convert(table.Joins, action);
 
 						if (source != null && !ReferenceEquals(source, table.Source) ||
 							joins  != null && !ReferenceEquals(table.Joins, joins))
-							newElement = new SqlQuery.TableSource(source ?? table.Source, table._alias, joins ?? table.Joins);
+							newElement = new SelectQuery.TableSource(source ?? table.Source, table._alias, joins ?? table.Joins);
 
 						break;
 					}
 
 				case QueryElementType.JoinedTable:
 					{
-						var join  = (SqlQuery.JoinedTable)element;
-						var table = (SqlQuery.TableSource)    ConvertInternal(join.Table,     action);
-						var cond  = (SqlQuery.SearchCondition)ConvertInternal(join.Condition, action);
+						var join  = (SelectQuery.JoinedTable)element;
+						var table = (SelectQuery.TableSource)    ConvertInternal(join.Table,     action);
+						var cond  = (SelectQuery.SearchCondition)ConvertInternal(join.Condition, action);
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond  != null && !ReferenceEquals(cond,  join.Condition))
-							newElement = new SqlQuery.JoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition);
+							newElement = new SelectQuery.JoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition);
 
 						break;
 					}
 
 				case QueryElementType.SearchCondition:
 					{
-						var sc    = (SqlQuery.SearchCondition)element;
+						var sc    = (SelectQuery.SearchCondition)element;
 						var conds = Convert(sc.Conditions, action);
 
 						if (conds != null && !ReferenceEquals(sc.Conditions, conds))
-							newElement = new SqlQuery.SearchCondition(conds);
+							newElement = new SelectQuery.SearchCondition(conds);
 
 						break;
 					}
 
 				case QueryElementType.Condition:
 					{
-						var c = (SqlQuery.Condition)element;
+						var c = (SelectQuery.Condition)element;
 						var p = (ISqlPredicate)ConvertInternal(c.Predicate, action);
 
 						if (p != null && !ReferenceEquals(c.Predicate, p))
-							newElement = new SqlQuery.Condition(c.IsNot, p, c.IsOr);
+							newElement = new SelectQuery.Condition(c.IsNot, p, c.IsOr);
 
 						break;
 					}
 
 				case QueryElementType.ExprPredicate:
 					{
-						var p = (SqlQuery.Predicate.Expr)element;
+						var p = (SelectQuery.Predicate.Expr)element;
 						var e = (ISqlExpression)ConvertInternal(p.Expr1, action);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
-							newElement = new SqlQuery.Predicate.Expr(e, p.Precedence);
+							newElement = new SelectQuery.Predicate.Expr(e, p.Precedence);
 
 						break;
 					}
 
 				case QueryElementType.NotExprPredicate:
 					{
-						var p = (SqlQuery.Predicate.NotExpr)element;
+						var p = (SelectQuery.Predicate.NotExpr)element;
 						var e = (ISqlExpression)ConvertInternal(p.Expr1, action);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
-							newElement = new SqlQuery.Predicate.NotExpr(e, p.IsNot, p.Precedence);
+							newElement = new SelectQuery.Predicate.NotExpr(e, p.IsNot, p.Precedence);
 
 						break;
 					}
 
 				case QueryElementType.ExprExprPredicate:
 					{
-						var p  = (SqlQuery.Predicate.ExprExpr)element;
+						var p  = (SelectQuery.Predicate.ExprExpr)element;
 						var e1 = (ISqlExpression)ConvertInternal(p.Expr1, action);
 						var e2 = (ISqlExpression)ConvertInternal(p.Expr2, action);
 
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) || e2 != null && !ReferenceEquals(p.Expr2, e2))
-							newElement = new SqlQuery.Predicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2);
+							newElement = new SelectQuery.Predicate.ExprExpr(e1 ?? p.Expr1, p.Operator, e2 ?? p.Expr2);
 
 						break;
 					}
 
 				case QueryElementType.LikePredicate:
 					{
-						var p  = (SqlQuery.Predicate.Like)element;
+						var p  = (SelectQuery.Predicate.Like)element;
 						var e1 = (ISqlExpression)ConvertInternal(p.Expr1,  action);
 						var e2 = (ISqlExpression)ConvertInternal(p.Expr2,  action);
 						var es = (ISqlExpression)ConvertInternal(p.Escape, action);
@@ -1051,14 +1051,14 @@ namespace LinqToDB.SqlBuilder
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							es != null && !ReferenceEquals(p.Escape, es))
-							newElement = new SqlQuery.Predicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
+							newElement = new SelectQuery.Predicate.Like(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, es ?? p.Escape);
 
 						break;
 					}
 
 				case QueryElementType.BetweenPredicate:
 					{
-						var p = (SqlQuery.Predicate.Between)element;
+						var p = (SelectQuery.Predicate.Between)element;
 						var e1 = (ISqlExpression)ConvertInternal(p.Expr1, action);
 						var e2 = (ISqlExpression)ConvertInternal(p.Expr2, action);
 						var e3 = (ISqlExpression)ConvertInternal(p.Expr3, action);
@@ -1066,78 +1066,78 @@ namespace LinqToDB.SqlBuilder
 						if (e1 != null && !ReferenceEquals(p.Expr1, e1) ||
 							e2 != null && !ReferenceEquals(p.Expr2, e2) ||
 							e3 != null && !ReferenceEquals(p.Expr3, e3))
-							newElement = new SqlQuery.Predicate.Between(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, e3 ?? p.Expr3);
+							newElement = new SelectQuery.Predicate.Between(e1 ?? p.Expr1, p.IsNot, e2 ?? p.Expr2, e3 ?? p.Expr3);
 
 						break;
 					}
 
 				case QueryElementType.IsNullPredicate:
 					{
-						var p = (SqlQuery.Predicate.IsNull)element;
+						var p = (SelectQuery.Predicate.IsNull)element;
 						var e = (ISqlExpression)ConvertInternal(p.Expr1, action);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e))
-							newElement = new SqlQuery.Predicate.IsNull(e, p.IsNot);
+							newElement = new SelectQuery.Predicate.IsNull(e, p.IsNot);
 
 						break;
 					}
 
 				case QueryElementType.InSubQueryPredicate:
 					{
-						var p = (SqlQuery.Predicate.InSubQuery)element;
+						var p = (SelectQuery.Predicate.InSubQuery)element;
 						var e = (ISqlExpression)ConvertInternal(p.Expr1,    action);
-						var q = (SqlQuery)ConvertInternal(p.SubQuery, action);
+						var q = (SelectQuery)ConvertInternal(p.SubQuery, action);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e) || q != null && !ReferenceEquals(p.SubQuery, q))
-							newElement = new SqlQuery.Predicate.InSubQuery(e ?? p.Expr1, p.IsNot, q ?? p.SubQuery);
+							newElement = new SelectQuery.Predicate.InSubQuery(e ?? p.Expr1, p.IsNot, q ?? p.SubQuery);
 
 						break;
 					}
 
 				case QueryElementType.InListPredicate:
 					{
-						var p = (SqlQuery.Predicate.InList)element;
+						var p = (SelectQuery.Predicate.InList)element;
 						var e = (ISqlExpression)ConvertInternal(p.Expr1,    action);
 						var v = Convert(p.Values, action);
 
 						if (e != null && !ReferenceEquals(p.Expr1, e) || v != null && !ReferenceEquals(p.Values, v))
-							newElement = new SqlQuery.Predicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
+							newElement = new SelectQuery.Predicate.InList(e ?? p.Expr1, p.IsNot, v ?? p.Values);
 
 						break;
 					}
 
 				case QueryElementType.FuncLikePredicate:
 					{
-						var p = (SqlQuery.Predicate.FuncLike)element;
+						var p = (SelectQuery.Predicate.FuncLike)element;
 						var f = (SqlFunction)ConvertInternal(p.Function, action);
 
 						if (f != null && !ReferenceEquals(p.Function, f))
-							newElement = new SqlQuery.Predicate.FuncLike(f);
+							newElement = new SelectQuery.Predicate.FuncLike(f);
 
 						break;
 					}
 
 				case QueryElementType.SetExpression:
 					{
-						var s = (SqlQuery.SetExpression)element;
+						var s = (SelectQuery.SetExpression)element;
 						var c = (ISqlExpression)ConvertInternal(s.Column,     action);
 						var e = (ISqlExpression)ConvertInternal(s.Expression, action);
 
 						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-							newElement = new SqlQuery.SetExpression(c ?? s.Column, e ?? s.Expression);
+							newElement = new SelectQuery.SetExpression(c ?? s.Column, e ?? s.Expression);
 
 						break;
 					}
 
 				case QueryElementType.InsertClause:
 					{
-						var s = (SqlQuery.InsertClause)element;
+						var s = (SelectQuery.InsertClause)element;
 						var t = s.Into != null ? (SqlTable)ConvertInternal(s.Into, action) : null;
 						var i = Convert(s.Items, action);
 
 						if (t != null && !ReferenceEquals(s.Into, t) || i != null && !ReferenceEquals(s.Items, i))
 						{
-							var sc = new SqlQuery.InsertClause { Into = t ?? s.Into };
+							var sc = new SelectQuery.InsertClause { Into = t ?? s.Into };
 
 							sc.Items.AddRange(i ?? s.Items);
 							sc.WithIdentity = s.WithIdentity;
@@ -1150,7 +1150,7 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.UpdateClause:
 					{
-						var s = (SqlQuery.UpdateClause)element;
+						var s = (SelectQuery.UpdateClause)element;
 						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
 						var i = Convert(s.Items, action);
 						var k = Convert(s.Keys,  action);
@@ -1159,7 +1159,7 @@ namespace LinqToDB.SqlBuilder
 							i != null && !ReferenceEquals(s.Items, i) ||
 							k != null && !ReferenceEquals(s.Keys,  k))
 						{
-							var sc = new SqlQuery.UpdateClause { Table = t ?? s.Table };
+							var sc = new SelectQuery.UpdateClause { Table = t ?? s.Table };
 
 							sc.Items.AddRange(i ?? s.Items);
 							sc.Keys. AddRange(k ?? s.Keys);
@@ -1172,12 +1172,12 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.DeleteClause:
 					{
-						var s = (SqlQuery.DeleteClause)element;
+						var s = (SelectQuery.DeleteClause)element;
 						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SqlQuery.DeleteClause { Table = t };
+							newElement = new SelectQuery.DeleteClause { Table = t };
 						}
 
 						break;
@@ -1185,12 +1185,12 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.CreateTableStatement:
 					{
-						var s = (SqlQuery.CreateTableStatement)element;
+						var s = (SelectQuery.CreateTableStatement)element;
 						var t = s.Table != null ? (SqlTable)ConvertInternal(s.Table, action) : null;
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SqlQuery.CreateTableStatement { Table = t, IsDrop = s.IsDrop };
+							newElement = new SelectQuery.CreateTableStatement { Table = t, IsDrop = s.IsDrop };
 						}
 
 						break;
@@ -1198,21 +1198,21 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.SelectClause:
 					{
-						var sc   = (SqlQuery.SelectClause)element;
+						var sc   = (SelectQuery.SelectClause)element;
 						var cols = Convert(sc.Columns, action);
 						var take = (ISqlExpression)ConvertInternal(sc.TakeValue, action);
 						var skip = (ISqlExpression)ConvertInternal(sc.SkipValue, action);
 
 						IQueryElement parent;
-						_visitedElements.TryGetValue(sc.SqlQuery, out parent);
+						_visitedElements.TryGetValue(sc.SelectQuery, out parent);
 
 						if (parent != null ||
 							cols != null && !ReferenceEquals(sc.Columns,   cols) ||
 							take != null && !ReferenceEquals(sc.TakeValue, take) ||
 							skip != null && !ReferenceEquals(sc.SkipValue, skip))
 						{
-							newElement = new SqlQuery.SelectClause(sc.IsDistinct, take ?? sc.TakeValue, skip ?? sc.SkipValue, cols ?? sc.Columns);
-							((SqlQuery.SelectClause)newElement).SetSqlQuery((SqlQuery)parent);
+							newElement = new SelectQuery.SelectClause(sc.IsDistinct, take ?? sc.TakeValue, skip ?? sc.SkipValue, cols ?? sc.Columns);
+							((SelectQuery.SelectClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1220,16 +1220,16 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.FromClause:
 					{
-						var fc   = (SqlQuery.FromClause)element;
+						var fc   = (SelectQuery.FromClause)element;
 						var ts = Convert(fc.Tables, action);
 
 						IQueryElement parent;
-						_visitedElements.TryGetValue(fc.SqlQuery, out parent);
+						_visitedElements.TryGetValue(fc.SelectQuery, out parent);
 
 						if (parent != null || ts != null && !ReferenceEquals(fc.Tables, ts))
 						{
-							newElement = new SqlQuery.FromClause(ts ?? fc.Tables);
-							((SqlQuery.FromClause)newElement).SetSqlQuery((SqlQuery)parent);
+							newElement = new SelectQuery.FromClause(ts ?? fc.Tables);
+							((SelectQuery.FromClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1237,16 +1237,16 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.WhereClause:
 					{
-						var wc   = (SqlQuery.WhereClause)element;
-						var cond = (SqlQuery.SearchCondition)ConvertInternal(wc.SearchCondition, action);
+						var wc   = (SelectQuery.WhereClause)element;
+						var cond = (SelectQuery.SearchCondition)ConvertInternal(wc.SearchCondition, action);
 
 						IQueryElement parent;
-						_visitedElements.TryGetValue(wc.SqlQuery, out parent);
+						_visitedElements.TryGetValue(wc.SelectQuery, out parent);
 
 						if (parent != null || cond != null && !ReferenceEquals(wc.SearchCondition, cond))
 						{
-							newElement = new SqlQuery.WhereClause(cond ?? wc.SearchCondition);
-							((SqlQuery.WhereClause)newElement).SetSqlQuery((SqlQuery)parent);
+							newElement = new SelectQuery.WhereClause(cond ?? wc.SearchCondition);
+							((SelectQuery.WhereClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1254,16 +1254,16 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.GroupByClause:
 					{
-						var gc = (SqlQuery.GroupByClause)element;
+						var gc = (SelectQuery.GroupByClause)element;
 						var es = Convert(gc.Items, action);
 
 						IQueryElement parent;
-						_visitedElements.TryGetValue(gc.SqlQuery, out parent);
+						_visitedElements.TryGetValue(gc.SelectQuery, out parent);
 
 						if (parent != null || es != null && !ReferenceEquals(gc.Items, es))
 						{
-							newElement = new SqlQuery.GroupByClause(es ?? gc.Items);
-							((SqlQuery.GroupByClause)newElement).SetSqlQuery((SqlQuery)parent);
+							newElement = new SelectQuery.GroupByClause(es ?? gc.Items);
+							((SelectQuery.GroupByClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1271,16 +1271,16 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.OrderByClause:
 					{
-						var oc = (SqlQuery.OrderByClause)element;
+						var oc = (SelectQuery.OrderByClause)element;
 						var es = Convert(oc.Items, action);
 
 						IQueryElement parent;
-						_visitedElements.TryGetValue(oc.SqlQuery, out parent);
+						_visitedElements.TryGetValue(oc.SelectQuery, out parent);
 
 						if (parent != null || es != null && !ReferenceEquals(oc.Items, es))
 						{
-							newElement = new SqlQuery.OrderByClause(es ?? oc.Items);
-							((SqlQuery.OrderByClause)newElement).SetSqlQuery((SqlQuery)parent);
+							newElement = new SelectQuery.OrderByClause(es ?? oc.Items);
+							((SelectQuery.OrderByClause)newElement).SetSqlQuery((SelectQuery)parent);
 						}
 
 						break;
@@ -1288,32 +1288,32 @@ namespace LinqToDB.SqlBuilder
 
 				case QueryElementType.OrderByItem:
 					{
-						var i = (SqlQuery.OrderByItem)element;
+						var i = (SelectQuery.OrderByItem)element;
 						var e = (ISqlExpression)ConvertInternal(i.Expression, action);
 
 						if (e != null && !ReferenceEquals(i.Expression, e))
-							newElement = new SqlQuery.OrderByItem(e, i.IsDescending);
+							newElement = new SelectQuery.OrderByItem(e, i.IsDescending);
 
 						break;
 					}
 
 				case QueryElementType.Union:
 					{
-						var u = (SqlQuery.Union)element;
-						var q = (SqlQuery)ConvertInternal(u.SqlQuery, action);
+						var u = (SelectQuery.Union)element;
+						var q = (SelectQuery)ConvertInternal(u.SelectQuery, action);
 
-						if (q != null && !ReferenceEquals(u.SqlQuery, q))
-							newElement = new SqlQuery.Union(q, u.IsAll);
+						if (q != null && !ReferenceEquals(u.SelectQuery, q))
+							newElement = new SelectQuery.Union(q, u.IsAll);
 
 						break;
 					}
 
 				case QueryElementType.SqlQuery:
 					{
-						var q = (SqlQuery)element;
+						var q = (SelectQuery)element;
 						IQueryElement parent = null;
 
-						var doConvert = q.ParentSql != null && !_visitedElements.TryGetValue(q.ParentSql, out parent);
+						var doConvert = q.ParentSelect != null && !_visitedElements.TryGetValue(q.ParentSelect, out parent);
 
 						if (!doConvert)
 						{
@@ -1337,19 +1337,19 @@ namespace LinqToDB.SqlBuilder
 						if (!doConvert)
 							break;
 
-						var nq = new SqlQuery { QueryType = q.QueryType };
+						var nq = new SelectQuery { QueryType = q.QueryType };
 
 						_visitedElements.Add(q, nq);
 
-						var fc = (SqlQuery.FromClause)   ConvertInternal(q.From,    action) ?? q.From;
-						var sc = (SqlQuery.SelectClause) ConvertInternal(q.Select,  action) ?? q.Select;
-						var ic = q.IsInsert ? ((SqlQuery.InsertClause)ConvertInternal(q.Insert, action) ?? q.Insert) : null;
-						var uc = q.IsUpdate ? ((SqlQuery.UpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
-						var dc = q.IsDelete ? ((SqlQuery.DeleteClause)ConvertInternal(q.Delete, action) ?? q.Delete) : null;
-						var wc = (SqlQuery.WhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
-						var gc = (SqlQuery.GroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
-						var hc = (SqlQuery.WhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
-						var oc = (SqlQuery.OrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
+						var fc = (SelectQuery.FromClause)   ConvertInternal(q.From,    action) ?? q.From;
+						var sc = (SelectQuery.SelectClause) ConvertInternal(q.Select,  action) ?? q.Select;
+						var ic = q.IsInsert ? ((SelectQuery.InsertClause)ConvertInternal(q.Insert, action) ?? q.Insert) : null;
+						var uc = q.IsUpdate ? ((SelectQuery.UpdateClause)ConvertInternal(q.Update, action) ?? q.Update) : null;
+						var dc = q.IsDelete ? ((SelectQuery.DeleteClause)ConvertInternal(q.Delete, action) ?? q.Delete) : null;
+						var wc = (SelectQuery.WhereClause)  ConvertInternal(q.Where,   action) ?? q.Where;
+						var gc = (SelectQuery.GroupByClause)ConvertInternal(q.GroupBy, action) ?? q.GroupBy;
+						var hc = (SelectQuery.WhereClause)  ConvertInternal(q.Having,  action) ?? q.Having;
+						var oc = (SelectQuery.OrderByClause)ConvertInternal(q.OrderBy, action) ?? q.OrderBy;
 						var us = q.HasUnion ? Convert(q.Unions, action) : q.Unions;
 
 						var ps = new List<SqlParameter>(q.Parameters.Count);
@@ -1368,7 +1368,7 @@ namespace LinqToDB.SqlBuilder
 						}
 
 						nq.Init(ic, uc, dc, sc, fc, wc, gc, hc, oc, us,
-							(SqlQuery)parent,
+							(SelectQuery)parent,
 							q.CreateTable,
 							q.IsParameterDependent,
 							ps);

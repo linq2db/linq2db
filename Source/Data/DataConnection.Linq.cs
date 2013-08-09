@@ -40,7 +40,7 @@ namespace LinqToDB.Data
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
 			public IDbDataParameter[] Parameters;
-			public SqlQuery           SqlQuery;
+			public SelectQuery           SelectQuery;
 			public ISqlProvider       SqlProvider;
 		}
 
@@ -53,12 +53,12 @@ namespace LinqToDB.Data
 				return new PreparedQuery
 				{
 					Commands      = (string[])query.Context,
-					SqlParameters = query.SqlQuery.Parameters,
-					SqlQuery      = query.SqlQuery
+					SqlParameters = query.SelectQuery.Parameters,
+					SelectQuery   = query.SelectQuery
 				 };
 			}
 
-			var sql    = query.SqlQuery.ProcessParameters();
+			var sql    = query.SelectQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
 			if (!object.ReferenceEquals(sql, newSql))
@@ -82,21 +82,21 @@ namespace LinqToDB.Data
 				commands[i] = sb.ToString();
 			}
 
-			if (!query.SqlQuery.IsParameterDependent)
+			if (!query.SelectQuery.IsParameterDependent)
 				query.Context = commands;
 
 			return new PreparedQuery
 			{
 				Commands      = commands,
 				SqlParameters = sql.Parameters,
-				SqlQuery      = sql,
+				SelectQuery      = sql,
 				SqlProvider   = sqlProvider
 			};
 		}
 
-		protected virtual SqlQuery ProcessQuery(SqlQuery sqlQuery)
+		protected virtual SelectQuery ProcessQuery(SelectQuery selectQuery)
 		{
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		void GetParameters(IQueryContext query, PreparedQuery pq)
@@ -244,7 +244,7 @@ namespace LinqToDB.Data
 
 			if (DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 			{
-				var sql = pq.SqlQuery;
+				var sql = pq.SelectQuery;
 
 				if (sql.IsInsert && sql.Insert.WithIdentity)
 				{

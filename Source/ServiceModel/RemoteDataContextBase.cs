@@ -229,7 +229,7 @@ namespace LinqToDB.ServiceModel
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var ctx  = (QueryContext)query;
-			var q    = ctx.Query.SqlQuery.ProcessParameters();
+			var q    = ctx.Query.SelectQuery.ProcessParameters();
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
 
 			if (_batchCounter > 0)
@@ -252,7 +252,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q = ctx.Query.SqlQuery.ProcessParameters();
+			var q = ctx.Query.SelectQuery.ProcessParameters();
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
@@ -268,7 +268,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q      = ctx.Query.SqlQuery.ProcessParameters();
+			var q      = ctx.Query.SelectQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
@@ -300,9 +300,9 @@ namespace LinqToDB.ServiceModel
 				.Append(sqlProvider.Name)
 				.AppendLine();
 
-			if (ctx.Query.SqlQuery.Parameters != null && ctx.Query.SqlQuery.Parameters.Count > 0)
+			if (ctx.Query.SelectQuery.Parameters != null && ctx.Query.SelectQuery.Parameters.Count > 0)
 			{
-				foreach (var p in ctx.Query.SqlQuery.Parameters)
+				foreach (var p in ctx.Query.SelectQuery.Parameters)
 					sb
 						.Append("-- DECLARE ")
 						.Append(p.Name)
@@ -312,7 +312,7 @@ namespace LinqToDB.ServiceModel
 
 				sb.AppendLine();
 
-				foreach (var p in ctx.Query.SqlQuery.Parameters)
+				foreach (var p in ctx.Query.SelectQuery.Parameters)
 				{
 					var value = p.Value;
 
@@ -330,18 +330,18 @@ namespace LinqToDB.ServiceModel
 				sb.AppendLine();
 			}
 
-			var cc       = sqlProvider.CommandCount(ctx.Query.SqlQuery);
+			var cc       = sqlProvider.CommandCount(ctx.Query.SelectQuery);
 			var commands = new string[cc];
 
 			for (var i = 0; i < cc; i++)
 			{
 				sb.Length = 0;
 
-				sqlProvider.BuildSql(i, ctx.Query.SqlQuery, sb, 0, 0, false);
+				sqlProvider.BuildSql(i, ctx.Query.SelectQuery, sb, 0, 0, false);
 				commands[i] = sb.ToString();
 			}
 
-			if (!ctx.Query.SqlQuery.IsParameterDependent)
+			if (!ctx.Query.SelectQuery.IsParameterDependent)
 				ctx.Query.Context = commands;
 
 			foreach (var command in commands)

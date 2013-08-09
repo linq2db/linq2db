@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				BuildSkip(builder, sequence, sequence.SqlQuery.Select.SkipValue, expr);
+				BuildSkip(builder, sequence, sequence.SelectQuery.Select.SkipValue, expr);
 			}
 
 			return sequence;
@@ -62,9 +62,9 @@ namespace LinqToDB.Linq.Builder
 
 		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
 		{
-			var sql = sequence.SqlQuery;
+			var sql = sequence.SelectQuery;
 
-			builder.SqlProvider.SqlQuery = sql;
+			builder.SqlProvider.SelectQuery = sql;
 
 			sql.Select.Take(expr);
 
@@ -109,13 +109,13 @@ namespace LinqToDB.Linq.Builder
 
 		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression prevSkipValue, ISqlExpression expr)
 		{
-			var sql = sequence.SqlQuery;
+			var sql = sequence.SelectQuery;
 
-			builder.SqlProvider.SqlQuery = sql;
+			builder.SqlProvider.SelectQuery = sql;
 
 			sql.Select.Skip(expr);
 
-			builder.SqlProvider.SqlQuery = sql;
+			builder.SqlProvider.SelectQuery = sql;
 
 			if (sql.Select.TakeValue != null)
 			{

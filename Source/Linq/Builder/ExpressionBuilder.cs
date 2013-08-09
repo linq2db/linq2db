@@ -148,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal Query<T> Build<T>()
 		{
-			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SqlQuery()));
+			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
 			
 			if (_reorder)
 				lock (_sync)
@@ -254,7 +254,7 @@ namespace LinqToDB.Linq.Builder
 
 			SequenceParameter = Expression.Parameter(paramType, "cp");
 
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SqlQuery()), SequenceParameter);
+			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter);
 
 			if (sequence != null)
 			{

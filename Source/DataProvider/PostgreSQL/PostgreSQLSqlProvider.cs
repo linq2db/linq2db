@@ -16,14 +16,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
-		public override int CommandCount(SqlQuery sqlQuery)
+		public override int CommandCount(SelectQuery selectQuery)
 		{
-			return sqlQuery.IsInsert && sqlQuery.Insert.WithIdentity ? 2 : 1;
+			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
 		{
-			var into = SqlQuery.Insert.Into;
+			var into = SelectQuery.Insert.Into;
 			var attr = GetSequenceNameAttribute(into, false);
 			var name =
 				attr != null ?
@@ -137,23 +137,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public override SqlQuery Finalize(SqlQuery sqlQuery)
+		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			CheckAliases(sqlQuery, int.MaxValue);
+			CheckAliases(selectQuery, int.MaxValue);
 
-			sqlQuery = base.Finalize(sqlQuery);
+			selectQuery = base.Finalize(selectQuery);
 
-			switch (sqlQuery.QueryType)
+			switch (selectQuery.QueryType)
 			{
-				case QueryType.Delete : return GetAlternativeDelete(sqlQuery);
-				case QueryType.Update : return GetAlternativeUpdate(sqlQuery);
-				default               : return sqlQuery;
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
 			}
 		}
 
 		protected override void BuildFromClause(StringBuilder sb)
 		{
-			if (!SqlQuery.IsUpdate)
+			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause(sb);
 		}
 

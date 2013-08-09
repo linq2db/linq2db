@@ -18,10 +18,10 @@ namespace LinqToDB.Linq.Builder
 // ReSharper restore InconsistentNaming
 #endif
 
-		ExpressionBuilder  Builder    { get; }
-		Expression         Expression { get; }
-		SqlQuery           SqlQuery   { get; set; }
-		IBuildContext      Parent     { get; set; }
+		ExpressionBuilder  Builder     { get; }
+		Expression         Expression  { get; }
+		SelectQuery        SelectQuery { get; set; }
+		IBuildContext      Parent      { get; set; }
 
 		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
 		Expression         BuildExpression     (Expression expression, int level);
