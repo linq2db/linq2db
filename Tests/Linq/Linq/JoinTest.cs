@@ -812,7 +812,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue257([DataContexts] string context)
+		public void BltIssue257([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

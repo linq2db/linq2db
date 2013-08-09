@@ -143,20 +143,6 @@ namespace LinqToDB.Linq.Builder
 														switch (e.NodeType)
 														{
 															case ExpressionType.MemberAccess :
-//																var ma = (MemberExpression)e;
-//																var l  = Expressions.ConvertMember(Builder.MappingSchema, ma.Member);
-//
-//																if (l != null)
-//																{
-//																	var body = l.Body.Unwrap();
-//																	var expr = body.Transform(wpi => wpi.NodeType == ExpressionType.Parameter ? ma.Expression : wpi);
-//
-//																	if (expr.Type != e.Type)
-//																		expr = new ChangeTypeExpression(expr, e.Type);
-//
-//																	e = expr;
-//																}
-
 																var sequence = GetSequence(memberExpression, 0);
 
 																if (sequence != null &&
