@@ -16,11 +16,10 @@
 void GenerateSqlServerTypes()
 {
 	Model.Usings.Add("System.Collections.Generic");
-	Model.Usings.Add("System.Linq");
 	Model.Usings.Add("System.Linq.Expressions");
 	Model.Usings.Add("System.Reflection");
 	Model.Usings.Add("LinqToDB");
-	Model.Usings.Add("LinqToDB.SqlBuilder");
+	Model.Usings.Add("LinqToDB.DataProvider.SqlServer");
 
 	DataContextObject.Members.Add(
 		new MemberGroup
@@ -42,87 +41,6 @@ void GenerateSqlServerTypes()
 					IsPartial = false
 				},
 
-				new Class("FreeTextTableExpressionAttribute")
-				{
-					IsPartial = false,
-					BaseClass = "Sql.TableExpressionAttribute",
-					Members   =
-					{
-						new Method(null, "FreeTextTableExpressionAttribute")
-						{
-							AfterSignature = { ": base(\"\")" },
-						},
-						new Method("string", "Convert",
-							new[] { "string value" },
-							new[]
-							{
-								"if (value != null && value.Length > 0 && value[0] != '[')",
-								"	return \"[\" + value + \"]\";",
-								"return value;"
-							})
-						{
-							AccessModifier = AccessModifier.Private
-						},
-						new Method("void", "SetTable",
-							new[] { "SqlTable table", "MemberInfo member", "IEnumerable<Expression> expArgs", "IEnumerable<ISqlExpression> sqlArgs" },
-							new[]
-							{
-								"var aargs  = sqlArgs.ToArray();",
-								"var arr    = ConvertArgs(member, aargs).ToList();",
-								"var method = (MethodInfo)member;",
-								"",
-								"{",
-								"	var ttype  = method.GetGenericArguments()[0];",
-								"	var tbl    = new SqlTable(ttype);",
-								"",
-								"	var database     = Convert(tbl.Database);",
-								"	var owner        = Convert(tbl.Owner);",
-								"	var physicalName = Convert(tbl.PhysicalName);",
-								"",
-								"	var name = \"\";",
-								"",
-								"	if (database != null)",
-								"		name = database + \".\" + (owner == null ? \".\" : owner + \".\");",
-								"	else if (owner != null)",
-								"		name = owner + \".\";",
-								"",
-								"	name += physicalName;",
-								"",
-								"	arr.Add(new SqlExpression(name, Precedence.Primary));",
-								"}",
-								"",
-								"{",
-								"	var field = ((ConstantExpression)expArgs.First()).Value;",
-								"",
-								"	if (field is string)",
-								"	{",
-								"		arr[0] = new SqlExpression(field.ToString(), Precedence.Primary);",
-								"	}",
-								"	else if (field is LambdaExpression)",
-								"	{",
-								"		var body = ((LambdaExpression)field).Body;",
-								"",
-								"		if (body is MemberExpression)",
-								"		{",
-								"			var name = ((MemberExpression)body).Member.Name;",
-								"",
-								"			if (name.Length > 0 && name[0] != '[')",
-								"				name = \"[\" + name + \"]\";",
-								"",
-								"			arr[0] = new SqlExpression(name, Precedence.Primary);",
-								"		}",
-								"	}",
-								"}",
-								"",
-								"table.SqlTableType   = SqlTableType.Expression;",
-								"table.Name           = \"FREETEXTTABLE({6}, {2}, {3}) {1}\";",
-								"table.TableArguments = arr.ToArray();",
-							})
-						{
-							IsOverride = true
-						}
-					}
-				},
 				new Method("ITable<FreeTextKey<TKey>>", "FreeTextTable<TTable,TKey>",
 					new[] { "string field", "string text" },
 					new[]
