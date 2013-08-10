@@ -113,9 +113,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility" />
-    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=3.0.2.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
+    <Reference Include="FirebirdSql.Data.FirebirdClient, Version=3.1.0.0, Culture=neutral, PublicKeyToken=3750abcc3150b00c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll</HintPath>
+      <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.3.1.0.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll</HintPath>
     </Reference>
     <Reference Include="IBM.Data.DB2, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
