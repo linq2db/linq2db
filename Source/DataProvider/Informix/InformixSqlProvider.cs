@@ -32,15 +32,13 @@ namespace LinqToDB.DataProvider
 			return new InformixSqlProvider(SqlProviderFlags);
 		}
 
-		public override int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
-			var n = base.BuildSql(commandNumber, selectQuery, sb, indent, nesting, skipAlias);
+			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")
 				.Replace("NULL IS NULL",     "1=1");
-
-			return n;
 		}
 
 		protected override void BuildSelectClause(StringBuilder sb)

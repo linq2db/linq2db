@@ -23,10 +23,8 @@ namespace LinqToDB.SqlProvider
 
 		public SelectQuery SelectQuery { get; set; }
 		public int         Indent      { get; set; }
-		public int         Nesting     { get; private set; }
 		public Step        BuildStep   { get; set; }
 
-		int  _nextNesting = 1;
 		bool _skipAlias;
 
 		public SqlProviderFlags SqlProviderFlags { get; set; }
@@ -57,13 +55,11 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public virtual int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
-			SelectQuery    = selectQuery;
+			SelectQuery = selectQuery;
 			Indent      = indent;
-			Nesting     = nesting;
-			_nextNesting = Nesting + 1;
-			_skipAlias   = skipAlias;
+			_skipAlias  = skipAlias;
 
 			if (commandNumber == 0)
 			{
@@ -78,7 +74,7 @@ namespace LinqToDB.SqlProvider
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						CreateSqlProvider().BuildSql(commandNumber, union.SelectQuery, sb, indent, nesting, skipAlias);
+						CreateSqlProvider().BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
 					}
 				}
 			}
@@ -86,8 +82,6 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildCommand(commandNumber, sb);
 			}
-
-			return _nextNesting;
 		}
 
 		protected virtual void BuildCommand(int commandNumber, StringBuilder sb)
@@ -98,7 +92,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Overrides
 
-		protected virtual int BuildSqlBuilder(SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery)
 				&& selectQuery.Select.SkipValue != null)
@@ -107,7 +101,7 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			return CreateSqlProvider().BuildSql(0, selectQuery, sb, indent, nesting, skipAlias);
+			CreateSqlProvider().BuildSql(0, selectQuery, sb, indent, skipAlias);
 		}
 
 		protected abstract ISqlProvider CreateSqlProvider();
@@ -784,7 +778,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlQuery    :
 					sb.Append("(").AppendLine();
-					_nextNesting = BuildSqlBuilder((SelectQuery)table, sb, Indent + 1, _nextNesting, false);
+					BuildSqlBuilder((SelectQuery)table, sb, Indent + 1, false);
 					AppendIndent(sb).Append(")");
 
 					break;
@@ -1593,7 +1587,7 @@ namespace LinqToDB.SqlProvider
 							sb.Append("(");
 						sb.AppendLine();
 
-						_nextNesting = BuildSqlBuilder((SelectQuery)expr, sb, Indent + 1, _nextNesting, BuildStep != Step.FromClause);
+						BuildSqlBuilder((SelectQuery)expr, sb, Indent + 1, BuildStep != Step.FromClause);
 
 						AppendIndent(sb);
 
@@ -2500,7 +2494,7 @@ namespace LinqToDB.SqlProvider
 
 		protected string[] GetTempAliases(int n, string defaultAlias)
 		{
-			return SelectQuery.GetTempAliases(n, defaultAlias + (Nesting == 0? "": "n" + Nesting));
+			return SelectQuery.GetTempAliases(n, defaultAlias);
 		}
 
 		protected static string GetTableAlias(ISqlTableSource table)

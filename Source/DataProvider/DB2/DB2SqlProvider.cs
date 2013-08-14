@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.DB2
 			return 1;
 		}
 
-		public override int BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, int nesting, bool skipAlias)
+		public override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
 			if (_identityField != null)
 			{
@@ -44,12 +44,10 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent(sb).AppendLine("\t(");
 			}
 
-			var ret = base.BuildSql(commandNumber, selectQuery, sb, indent, nesting, skipAlias);
+			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
-
-			return ret;
 		}
 
 		protected override void BuildCommand(int commandNumber, StringBuilder sb)
