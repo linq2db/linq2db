@@ -1,12 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(
+	LinqToDB.DataProvider.SqlCe.SqlCeTools.ResolveSqlCe(
 		typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
 #>
 <#+
 LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.SqlCe.SqlCeTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetSqlCeConnection(string path, string database)

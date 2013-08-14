@@ -1,12 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(
+	LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(
 		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
 #>
 <#+
 LinqToDB.Data.DataConnection GetFirebirdConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.Firebird.FirebirdFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database)

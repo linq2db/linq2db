@@ -373,23 +373,6 @@ namespace SybaseDataContext
 
 		#endregion
 
-		#region Person_Insert_OutputParameter
-
-		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string FirstName, string LastName, string MiddleName, string Gender, out int? PersonID)
-		{
-			var ret = dataConnection.ExecuteProc("[dbo].Person_Insert_OutputParameter",
-				new DataParameter("FirstName",  FirstName),
-				new DataParameter("LastName",   LastName),
-				new DataParameter("MiddleName", MiddleName),
-				new DataParameter("Gender",     Gender));
-
-			PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PersonID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region Person_SelectAll
 
 		public partial class Person_SelectAllResult
@@ -506,25 +489,6 @@ namespace SybaseDataContext
 			outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["outputString"]).Value);
 
 			return ret;
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public partial class Scalar_ReturnParameterWithObjectResult
-		{
-			public int    PersonID   { get; set; }
-			public string FirstName  { get; set; }
-			public string LastName   { get; set; }
-			public string MiddleName { get; set; }
-			public string Gender     { get; set; }
-		}
-
-		public static IEnumerable<Scalar_ReturnParameterWithObjectResult> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? id)
-		{
-			return dataConnection.QueryProc<Scalar_ReturnParameterWithObjectResult>("[dbo].Scalar_ReturnParameterWithObject",
-				new DataParameter("id", id));
 		}
 
 		#endregion

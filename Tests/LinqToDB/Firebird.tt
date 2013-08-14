@@ -1,17 +1,12 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\LinqToDB.Firebird.ttinclude"    #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.3.0.2.1\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.3.1.0.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "FirebirdDataContext";
 
-	LinqToDB.DataProvider.Firebird.FirebirdFactory.ResolveFirebird(typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
-
-	var connectionString = @"DataSource=DBHost;Database=C:\Data\TestData.fdb;User Id=SYSDBA;Password=masterkey";
-	var dataConnection   = LinqToDB.DataProvider.Firebird.FirebirdFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadFirebirdMetadata("DBHost", @"C:\Data\TestData.fdb");
 	GenerateModel();
 #>

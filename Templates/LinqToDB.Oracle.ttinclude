@@ -1,11 +1,11 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Oracle.OracleFactory.ResolveOracle(
+	LinqToDB.DataProvider.Oracle.OracleTools.ResolveOracle(
 		typeof(Oracle.DataAccess.Client.OracleConnection).Assembly);
 #><#+
 LinqToDB.Data.DataConnection GetOracleConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.Oracle.OracleFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.Oracle.OracleTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetOracleConnection(string server, string port, string database, string uid, string password)

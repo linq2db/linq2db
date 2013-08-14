@@ -248,10 +248,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0033430_BackReference
+		/// SYS_C0031697_BackReference
 		/// </summary>
 		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false)]
-		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0033430 { get; set; }
+		public IEnumerable<T_TEST_USER_CONTRACT> SYSC0031697 { get; set; }
 
 		#endregion
 	}
@@ -267,10 +267,10 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C0033430
+		/// SYS_C0031697
 		/// </summary>
 		[Association(ThisKey="USER_ID", OtherKey="USER_ID", CanBeNull=false)]
-		public T_TEST_USER SYSC0033430 { get; set; }
+		public T_TEST_USER SYSC0031697 { get; set; }
 
 		#endregion
 	}

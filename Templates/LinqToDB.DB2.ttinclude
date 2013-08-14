@@ -1,12 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.DB2.DB2Factory.ResolveDB2(
+	LinqToDB.DataProvider.DB2.DB2Tools.ResolveDB2(
 		typeof(IBM.Data.DB2.DB2Connection).Assembly);
 #><#+
 LinqToDB.Data.DataConnection GetDB2Connection(string connectionString)
 {
 	var conn = new IBM.Data.DB2.DB2Connection(connectionString);
-	return LinqToDB.DataProvider.DB2.DB2Factory.CreateDataConnection(conn);
+	return LinqToDB.DataProvider.DB2.DB2Tools.CreateDataConnection(conn);
 }
 
 LinqToDB.Data.DataConnection GetDB2Connection(string server, string port, string database, string uid, string password)

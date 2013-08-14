@@ -1,19 +1,12 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\LinqToDB.MySql.ttinclude"       #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.6.5\lib\net40\MySql.Data.dll" #>
+<#@ assembly name="$(SolutionDir)packages\MySql.Data.6.7.4\lib\net40\MySql.Data.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "MySqlDataContext";
 
-	var path = typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly.GetName().CodeBase;
-
-	LinqToDB.DataProvider.MySql.MySqlFactory.ResolveMySql(typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);
-
-	var connectionString = @"Server=DBHost;Port=3306;Database=TestData;Uid=root;Pwd=TestPassword;charset=utf8;";
-	var dataConnection   = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadMySqlMetadata("DBHost", "TestData", "root", "TestPassword");
 	GenerateModel();
 #>

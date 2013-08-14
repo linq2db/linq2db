@@ -1,12 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.MySql.MySqlFactory.ResolveMySql(
+	LinqToDB.DataProvider.MySql.MySqlTools.ResolveMySql(
 		typeof(MySql.Data.MySqlClient.MySqlConnection).Assembly);
 #>
 <#+
 LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetMySqlConnection(string server, string database, string uid, string password)

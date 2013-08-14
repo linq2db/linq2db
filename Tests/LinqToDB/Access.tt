@@ -1,15 +1,11 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\LinqToDB.Access.ttinclude"      #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "AccessDataContext";
 
-	var dataFile         = @"E:\Projects\Git\linq2db\Data\TestData.mdb";
-	var connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + dataFile + ";Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True";
-	var dataConnection   = LinqToDB.DataProvider.Access.AccessFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadAccessMetadata(@"E:\Projects\Git\linq2db\Data\", "TestData.mdb");
 	GenerateModel();
 #>

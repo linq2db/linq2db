@@ -1,12 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Informix.InformixFactory.ResolveInformix(
+	LinqToDB.DataProvider.Informix.InformixTools.ResolveInformix(
 		typeof(IBM.Data.Informix.IfxConnection).Assembly);
 #><#+
 LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
 {
 	var conn = new IBM.Data.Informix.IfxConnection(connectionString);
-	return LinqToDB.DataProvider.Informix.InformixFactory.CreateDataConnection(conn);
+	return LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(conn);
 }
 
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)

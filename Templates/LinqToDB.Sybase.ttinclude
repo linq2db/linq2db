@@ -1,6 +1,6 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.Sybase.SybaseFactory.ResolveSybase(
+	LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(
 		typeof(Sybase.Data.AseClient.AseConnection).Assembly);
 
 	{
@@ -55,7 +55,7 @@ void GenerateSybaseTypes()
 
 LinqToDB.Data.DataConnection GetSybaseConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.Sybase.SybaseFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.Sybase.SybaseTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetSybaseConnection(string server, string database)

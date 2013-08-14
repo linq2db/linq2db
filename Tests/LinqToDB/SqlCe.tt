@@ -1,17 +1,12 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
 <#@ output extension=".generated.cs"                              #>
-<#@ include file="..\..\Templates\LinqToDB.ttinclude"             #>
+<#@ include file="..\..\Templates\LinqToDB.SqlCe.ttinclude"       #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\lib\net40\System.Data.SqlServerCe.dll" #>
 <#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
 <#
 	NamespaceName = "SqlCeDataContext";
 
-	LinqToDB.DataProvider.SqlCe.SqlCeFactory.ResolveSqlCe(typeof(System.Data.SqlServerCe.SqlCeConnection).Assembly);
-
-	var connectionString = @"Data Source=E:\Projects\Git\linq2db\Data\TestData.sdf";
-	var dataConnection   = LinqToDB.DataProvider.SqlCe.SqlCeFactory.CreateDataConnection(connectionString);
-
-	LoadMetadata(dataConnection);
+	LoadSqlCeMetadata(@"E:\Projects\Git\linq2db\Data\", "TestData.sdf");
 	GenerateModel();
 #>

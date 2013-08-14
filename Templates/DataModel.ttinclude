@@ -42,8 +42,8 @@ bool SingularizeClassNames               = true;
 bool PluralizeDataContextPropertyNames   = true;
 bool SingularizeDataContextPropertyNames = false;
 
-LinqToDB.DataProvider.SchemaProvider.GetSchemaOptions GetSchemaOptions =
-	new LinqToDB.DataProvider.SchemaProvider.GetSchemaOptions();
+LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
+	new LinqToDB.SchemaProvider.GetSchemaOptions();
 
 LinqToDB.SqlProvider.ISqlProvider SqlProvider;
 

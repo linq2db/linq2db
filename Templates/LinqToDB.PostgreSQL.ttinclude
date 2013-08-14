@@ -1,6 +1,6 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.ResolvePostgreSQL(
+	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
 		typeof(Npgsql.NpgsqlConnection).Assembly);
 
 	{
@@ -35,7 +35,7 @@ void SetCaseSensitiveNames()
 
 LinqToDB.Data.DataConnection GetPostgreSQLConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetPostgreSQLConnection(string server, string port, string database, string uid, string password)

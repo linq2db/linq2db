@@ -2,7 +2,7 @@
 <#+
 LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.Access.AccessFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
