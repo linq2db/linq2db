@@ -106,7 +106,7 @@ namespace Tests.DataProvider
 				TestType(conn, "binaryDataType",         new byte[] { 0, 170 });
 				TestType(conn, "bfileDataType",          new byte[] { 49, 50, 51, 52, 53 });
 
-				if (OracleFactory.IsXmlTypeSupported)
+				if (OracleTools.IsXmlTypeSupported)
 					TestType(conn, "xmlDataType",        "<root>\n  <element strattr=\"strvalue\" intattr=\"12345\"/>\n</root>\n");
 			}
 		}
@@ -433,7 +433,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
 		{
-			if (OracleFactory.IsXmlTypeSupported)
+			if (OracleTools.IsXmlTypeSupported)
 			{
 				using (var conn = new DataConnection(context))
 				{

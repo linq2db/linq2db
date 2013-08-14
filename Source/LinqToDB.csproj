@@ -51,33 +51,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataProvider\Access\AccessTools.cs" />
+    <Compile Include="DataProvider\DB2\DB2Tools.cs" />
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
     <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
     <Compile Include="DataProvider\DB2\DB2SchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\IDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataProvider\Informix\InformixTools.cs" />
     <Compile Include="DataProvider\Informix\InformixFactory.cs" />
     <Compile Include="DataProvider\Informix\InformixDataProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
     <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlProvider.cs" />
+    <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleTools.cs" />
     <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleFactory.cs" />
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlProvider.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLTools.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLFactory.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLDataProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeTools.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteTools.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerTools.cs" />
     <Compile Include="DataProvider\SqlServer\FreeTextTableExpressionAttribute.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseTools.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSchemaProvider.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\DefaultDataContextInfo.cs">

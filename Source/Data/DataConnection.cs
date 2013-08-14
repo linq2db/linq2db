@@ -166,17 +166,17 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			LinqToDB.DataProvider.SqlServer. SqlServerFactory. GetDataProvider();
-			LinqToDB.DataProvider.Access.    AccessFactory.    GetDataProvider();
-			LinqToDB.DataProvider.SqlCe.     SqlCeFactory.     GetDataProvider();
-			LinqToDB.DataProvider.Firebird.  FirebirdFactory.  GetDataProvider();
-			LinqToDB.DataProvider.MySql.     MySqlFactory.     GetDataProvider();
-			LinqToDB.DataProvider.SQLite.    SQLiteFactory.    GetDataProvider();
-			LinqToDB.DataProvider.Sybase.    SybaseFactory.    GetDataProvider();
-			LinqToDB.DataProvider.Oracle.    OracleFactory.    GetDataProvider();
-			LinqToDB.DataProvider.PostgreSQL.PostgreSQLFactory.GetDataProvider();
-			LinqToDB.DataProvider.DB2.       DB2Factory.       GetDataProvider();
-			LinqToDB.DataProvider.Informix.  InformixFactory.  GetDataProvider();
+			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
+			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
+			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
+			LinqToDB.DataProvider.Firebird.  FirebirdTools.  GetDataProvider();
+			LinqToDB.DataProvider.MySql.     MySqlTools.     GetDataProvider();
+			LinqToDB.DataProvider.SQLite.    SQLiteTools.    GetDataProvider();
+			LinqToDB.DataProvider.Sybase.    SybaseTools.    GetDataProvider();
+			LinqToDB.DataProvider.Oracle.    OracleTools.    GetDataProvider();
+			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
+			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
+			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
 
 			var section = LinqToDBSection.Instance;
 

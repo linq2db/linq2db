@@ -316,9 +316,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataContexts(ProviderName.Access)] string context)
 		{
-			AccessFactory.CreateDatabase("TestDatabase", deleteIfExists:true);
+			AccessTools.CreateDatabase("TestDatabase", deleteIfExists:true);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
-			AccessFactory.DropDatabase  ("TestDatabase");
+			AccessTools.DropDatabase  ("TestDatabase");
 		}
 	}
 }

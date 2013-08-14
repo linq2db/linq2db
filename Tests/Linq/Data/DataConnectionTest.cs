@@ -17,7 +17,7 @@ namespace Tests.Data
 		[Test]
 		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(SqlServerFactory.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);

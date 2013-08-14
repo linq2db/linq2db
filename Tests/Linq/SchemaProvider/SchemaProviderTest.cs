@@ -14,7 +14,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void Test([DataContexts(ExcludeLinqService=true)] string context)
 		{
-			SqlServerFactory.ResolveSqlTypes("");
+			SqlServerTools.ResolveSqlTypes("");
 
 			using (var conn = new DataConnection(context))
 			{

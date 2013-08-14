@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
 		}
 
-		public    override string ConnectionNamespace { get { return SybaseFactory.AssemblyName; } }
+		public    override string ConnectionNamespace { get { return SybaseTools.AssemblyName; } }
 		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseConnection"); } }
 		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseDataReader"); } }
 

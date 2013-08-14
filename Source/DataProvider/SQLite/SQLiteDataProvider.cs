@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
-			if (SQLiteFactory.AlwaysCheckDbNull)
+			if (SQLiteTools.AlwaysCheckDbNull)
 				return true;
 
 			return base.IsDBNullAllowed(reader, idx);

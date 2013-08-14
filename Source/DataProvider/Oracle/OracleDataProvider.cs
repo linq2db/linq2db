@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var typesNamespace = OracleFactory.AssemblyName + ".Types.";
+			var typesNamespace = OracleTools.AssemblyName + ".Types.";
 
 			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
 			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.PropertyOrField(p, "Command"),
-									connectionType.Assembly.GetType(OracleFactory.AssemblyName + ".Client.OracleCommand", true)),
+									connectionType.Assembly.GetType(OracleTools.AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
 							p
@@ -261,9 +261,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return getValue.Compile()();
 		}
 
-		public    override string ConnectionNamespace { get { return OracleFactory.AssemblyName + ".Client"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleDataReader"); } }
+		public    override string ConnectionNamespace { get { return OracleTools.AssemblyName + ".Client"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleDataReader"); } }
 
 		public bool IsXmlTypeSupported
 		{

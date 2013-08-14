@@ -167,7 +167,7 @@ namespace Tests.Create
 
 		static void AccessAction(IDbConnection connection)
 		{
-			using (var conn = AccessFactory.CreateDataConnection(connection))
+			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes
@@ -202,7 +202,7 @@ namespace Tests.Create
 
 		static void SQLiteAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes
@@ -224,7 +224,7 @@ namespace Tests.Create
 
 		static void InformixAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes
