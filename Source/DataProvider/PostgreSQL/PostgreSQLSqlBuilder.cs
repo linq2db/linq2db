@@ -9,9 +9,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlQuery;
 	using SqlProvider;
 
-	public class PostgreSQLSqlProvider : BasicSqlProvider
+	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public PostgreSQLSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
@@ -38,9 +38,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				.AppendLine("')");
 		}
 
-		protected override ISqlProvider CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new PostgreSQLSqlProvider(SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(SqlProviderFlags);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }

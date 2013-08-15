@@ -154,11 +154,11 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();
+		static readonly Dictionary<Type,Func<ISqlBuilder>> _sqlProviders = new Dictionary<Type, Func<ISqlBuilder>>();
 
-		Func<ISqlProvider> _createSqlProvider;
+		Func<ISqlBuilder> _createSqlProvider;
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get
 			{
@@ -170,7 +170,7 @@ namespace LinqToDB.ServiceModel
 						lock (_sqlProviderType)
 							if (!_sqlProviders.TryGetValue(type, out _createSqlProvider))
 								_sqlProviders.Add(type, _createSqlProvider =
-									Expression.Lambda<Func<ISqlProvider>>(
+									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
 											type.GetConstructor(new[] { typeof(SqlProviderFlags) }),
 											new Expression[] { Expression.Constant(((IDataContext)this).SqlProviderFlags) })).Compile());

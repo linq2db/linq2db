@@ -134,9 +134,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string ConnectionTypeName  { get { return "Npgsql.NpgsqlConnection, Npgsql"; } }
 		protected override string DataReaderTypeName  { get { return "Npgsql.NpgsqlDataReader, Npgsql"; } }
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new PostgreSQLSqlProvider(SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(SqlProviderFlags);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

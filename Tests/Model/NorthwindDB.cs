@@ -53,7 +53,7 @@ namespace Tests.Model
 				var aargs  = sqlArgs.ToArray();
 				var arr    = ConvertArgs(member, aargs).ToList();
 				var method = (MethodInfo)member;
-				var sp     = new SqlServer2008SqlProvider(SqlServerTools.GetDataProvider().SqlProviderFlags);
+				var sp     = new SqlServer2008SqlBuilder(SqlServerTools.GetDataProvider().SqlProviderFlags);
 
 				{
 					var ttype  = method.GetGenericArguments()[0];

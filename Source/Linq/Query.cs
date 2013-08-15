@@ -98,10 +98,10 @@ namespace LinqToDB.Linq
 
 		public          Query<T>           Next;
 		public readonly List<QueryInfo>    Queries = new List<QueryInfo>(1);
-		public          Func<ISqlProvider> CreateSqlProvider;
+		public          Func<ISqlBuilder> CreateSqlProvider;
 
-		private ISqlProvider _sqlProvider; 
-		public  ISqlProvider  SqlProvider
+		private ISqlBuilder _sqlProvider; 
+		public  ISqlBuilder  SqlProvider
 		{
 			get { return _sqlProvider ?? (_sqlProvider = CreateSqlProvider()); }
 		}

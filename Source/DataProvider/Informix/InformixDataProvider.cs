@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  { get { return "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix"; } }
 		
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
 			return new InformixSqlProvider(SqlProviderFlags);
 		}

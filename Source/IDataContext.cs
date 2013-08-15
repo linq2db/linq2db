@@ -11,7 +11,7 @@ namespace LinqToDB
 	public interface IDataContext : IDisposable
 	{
 		string             ContextID         { get; }
-		Func<ISqlProvider> CreateSqlProvider { get; }
+		Func<ISqlBuilder> CreateSqlProvider { get; }
 		SqlProviderFlags   SqlProviderFlags  { get; }
 		Type               DataReaderType    { get; }
 		MappingSchema      MappingSchema     { get; }

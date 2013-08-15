@@ -270,9 +270,9 @@ namespace LinqToDB.DataProvider.Oracle
 			get { return _oracleXmlType != null; }
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new OracleSqlProvider(SqlProviderFlags);
+			return new OracleSqlBuilder(SqlProviderFlags);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

@@ -73,9 +73,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region Overrides
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new SqlCeSqlProvider(SqlProviderFlags);
+			return new SqlCeSqlBuilder(SqlProviderFlags);
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

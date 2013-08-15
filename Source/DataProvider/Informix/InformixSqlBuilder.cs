@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider
 	using SqlQuery;
 	using SqlProvider;
 
-	public class InformixSqlProvider : BasicSqlProvider
+	public class InformixSqlProvider : BasicSqlBuilder
 	{
 		public InformixSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 			sb.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
 		}
 
-		protected override ISqlProvider CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlProvider()
 		{
 			return new InformixSqlProvider(SqlProviderFlags);
 		}

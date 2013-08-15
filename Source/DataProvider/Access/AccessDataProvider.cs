@@ -52,9 +52,9 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSchemaProvider();
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new AccessSqlProvider(SqlProviderFlags);
+			return new AccessSqlBuilder(SqlProviderFlags);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

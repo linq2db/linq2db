@@ -108,14 +108,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlConnection(connectionString);
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlProvider(SqlProviderFlags);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(SqlProviderFlags);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(SqlProviderFlags);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(SqlProviderFlags);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(SqlProviderFlags);
 			}
 
 			throw new InvalidOperationException();

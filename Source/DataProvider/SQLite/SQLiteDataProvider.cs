@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new SQLiteSqlProvider(SqlProviderFlags);
+			return new SQLiteSqlBuilder(SqlProviderFlags);
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

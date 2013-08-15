@@ -9,9 +9,9 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 
-	public class OracleSqlProvider : BasicSqlProvider
+	public class OracleSqlBuilder : BasicSqlBuilder
 	{
-		public OracleSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public OracleSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 			SqlProviderFlags.IsCountSubQuerySupported    = false;
 			SqlProviderFlags.IsIdentityParameterRequired = true;
@@ -62,9 +62,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		string _rowNumberAlias;
 
-		protected override ISqlProvider CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new OracleSqlProvider(SqlProviderFlags);
+			return new OracleSqlBuilder(SqlProviderFlags);
 		}
 
 		protected override void BuildSql(StringBuilder sb)

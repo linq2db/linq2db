@@ -41,7 +41,7 @@ namespace LinqToDB.Data
 			public List<SqlParameter> SqlParameters;
 			public IDbDataParameter[] Parameters;
 			public SelectQuery           SelectQuery;
-			public ISqlProvider       SqlProvider;
+			public ISqlBuilder       SqlProvider;
 		}
 
 		#region SetQuery
@@ -410,12 +410,12 @@ namespace LinqToDB.Data
 			get { return DataProvider.Name; }
 		}
 
-		static Func<ISqlProvider> GetCreateSqlProvider(IDataProvider dp)
+		static Func<ISqlBuilder> GetCreateSqlProvider(IDataProvider dp)
 		{
 			return dp.CreateSqlProvider;
 		}
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get { return GetCreateSqlProvider(DataProvider); }
 		}

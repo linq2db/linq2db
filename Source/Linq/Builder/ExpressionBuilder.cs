@@ -124,8 +124,8 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[] CompiledParameters;
 		public readonly List<IBuildContext>   Contexts = new List<IBuildContext>();
 
-		private ISqlProvider _sqlProvider;
-		public  ISqlProvider  SqlProvider
+		private ISqlBuilder _sqlProvider;
+		public  ISqlBuilder  SqlProvider
 		{
 			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlProvider()); }
 		}

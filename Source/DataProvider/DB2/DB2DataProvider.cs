@@ -112,9 +112,9 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string ConnectionTypeName  { get { return "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2"; } }
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlProvider()
 		{
-			return new DB2SqlProvider(SqlProviderFlags);
+			return new DB2SqlBuilder(SqlProviderFlags);
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
