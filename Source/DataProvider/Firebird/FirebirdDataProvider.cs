@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.Firebird
 		protected FirebirdDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsIdentityParameterRequired = true;
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
@@ -45,9 +47,14 @@ namespace LinqToDB.DataProvider.Firebird
 			_setTimeStamp = GetSetParameter(connectionType, "FbParameter",         "FbDbType", "FbDbType", "TimeStamp");
 		}
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new FirebirdSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new FirebirdSqlOptimizer();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

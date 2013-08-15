@@ -20,8 +20,10 @@ namespace LinqToDB.DataProvider.Access
 		protected AccessDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter = false;
-			SqlProviderFlags.IsSkipSupported        = false;
+			SqlProviderFlags.AcceptsTakeAsParameter    = false;
+			SqlProviderFlags.IsSkipSupported           = false;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
@@ -47,14 +49,19 @@ namespace LinqToDB.DataProvider.Access
 			return new OleDbConnection(connectionString);
 		}
 
+		public override ISqlBuilder CreateSqlBuilder()
+		{
+			return new AccessSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new AccessSqlOptimizer();
+		}
+
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new AccessSchemaProvider();
-		}
-
-		public override ISqlBuilder CreateSqlProvider()
-		{
-			return new AccessSqlBuilder(SqlProviderFlags);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)

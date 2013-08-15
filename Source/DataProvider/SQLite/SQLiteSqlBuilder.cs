@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		public SQLiteSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
 		public override int CommandCount(SelectQuery selectQuery)

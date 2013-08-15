@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class SybaseDataProvider : DynamicDataProviderBase
@@ -85,12 +86,17 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SybaseSqlBuilder(SqlProviderFlags);
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new SybaseSqlOptimizer();
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SybaseSchemaProvider();
 		}

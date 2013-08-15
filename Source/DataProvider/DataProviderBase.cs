@@ -65,7 +65,8 @@ namespace LinqToDB.DataProvider
 		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
 		public abstract IDbConnection    CreateConnection (string connectionString);
-		public abstract ISqlBuilder     CreateSqlProvider();
+		public abstract ISqlBuilder      CreateSqlBuilder();
+		public abstract ISqlOptimizer    GetSqlOptimizer ();
 
 		public virtual void InitCommand(DataConnection dataConnection)
 		{

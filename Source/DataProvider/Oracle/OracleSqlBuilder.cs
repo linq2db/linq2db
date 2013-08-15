@@ -13,8 +13,6 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public OracleSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsCountSubQuerySupported    = false;
-			SqlProviderFlags.IsIdentityParameterRequired = true;
 		}
 
 		protected override void BuildSelectClause(StringBuilder sb)

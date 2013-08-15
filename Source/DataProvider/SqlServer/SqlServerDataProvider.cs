@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlConnection(connectionString);
 		}
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			switch (Version)
 			{
@@ -119,6 +119,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			throw new InvalidOperationException();
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new SqlServerSqlOptimizer();
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

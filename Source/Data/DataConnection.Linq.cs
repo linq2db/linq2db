@@ -67,7 +67,7 @@ namespace LinqToDB.Data
 				sql.IsParameterDependent = true;
 			}
 
-			var sqlProvider = DataProvider.CreateSqlProvider();
+			var sqlProvider = DataProvider.CreateSqlBuilder();
 
 			var cc = sqlProvider.CommandCount(sql);
 			var sb = new StringBuilder();
@@ -313,7 +313,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlProvider();
+			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlBuilder();
 
 			var sb = new StringBuilder();
 
@@ -412,7 +412,7 @@ namespace LinqToDB.Data
 
 		static Func<ISqlBuilder> GetCreateSqlProvider(IDataProvider dp)
 		{
-			return dp.CreateSqlProvider;
+			return dp.CreateSqlBuilder;
 		}
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider

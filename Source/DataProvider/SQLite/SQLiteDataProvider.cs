@@ -19,8 +19,9 @@ namespace LinqToDB.DataProvider.SQLite
 		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsSkipSupported       = false;
-			SqlProviderFlags.IsSkipSupportedIfTake = true;
+			SqlProviderFlags.IsSkipSupported           = false;
+			SqlProviderFlags.IsSkipSupportedIfTake     = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
@@ -34,9 +35,14 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SQLiteSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new SQLiteSqlOptimizer();
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

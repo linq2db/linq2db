@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase
@@ -22,6 +23,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsSubQueryColumnSupported = false;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.IsApplyJoinSupported      = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 		}
@@ -73,12 +77,17 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region Overrides
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SqlCeSqlBuilder(SqlProviderFlags);
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new SqlCeSqlOptimizer();
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SqlCeSchemaProvider();
 		}

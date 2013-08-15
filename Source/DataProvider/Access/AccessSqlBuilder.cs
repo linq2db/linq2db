@@ -14,8 +14,6 @@ namespace LinqToDB.DataProvider.Access
 	{
 		public AccessSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsCountSubQuerySupported  = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
 		public override int CommandCount(SelectQuery selectQuery)

@@ -82,7 +82,7 @@ namespace LinqToDB
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
-			get { return DataProvider.CreateSqlProvider; }
+			get { return DataProvider.CreateSqlBuilder; }
 		}
 
 		Type IDataContext.DataReaderType

@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.DataProvider.Informix
 {
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
-	public class InformixSqlProvider : BasicSqlBuilder
+	public class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlProvider(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public InformixSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 		}
 
 		public override int CommandCount(SelectQuery selectQuery)
@@ -29,7 +27,7 @@ namespace LinqToDB.DataProvider
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new InformixSqlProvider(SqlProviderFlags);
+			return new InformixSqlBuilder(SqlProviderFlags);
 		}
 
 		public override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)

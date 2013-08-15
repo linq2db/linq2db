@@ -52,6 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataProvider\Access\AccessTools.cs" />
+    <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
+    <Compile Include="DataProvider\DB2\DB2SqlOptimizer.cs" />
     <Compile Include="DataProvider\DB2\DB2Tools.cs" />
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
@@ -59,24 +61,29 @@
     <Compile Include="DataProvider\DB2\DB2SchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdSqlOptimizer.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\IDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataProvider\Informix\InformixSqlOptimizer.cs" />
     <Compile Include="DataProvider\Informix\InformixTools.cs" />
     <Compile Include="DataProvider\Informix\InformixFactory.cs" />
     <Compile Include="DataProvider\Informix\InformixDataProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
     <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
+    <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleSqlOptimizer.cs" />
     <Compile Include="DataProvider\Oracle\OracleTools.cs" />
     <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleFactory.cs" />
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlOptimizer.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLTools.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLFactory.cs" />
@@ -84,6 +91,10 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />
@@ -216,6 +227,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />

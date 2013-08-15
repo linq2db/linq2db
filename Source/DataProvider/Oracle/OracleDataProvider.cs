@@ -20,6 +20,9 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsCountSubQuerySupported    = false;
+			SqlProviderFlags.IsIdentityParameterRequired = true;
+
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
@@ -270,9 +273,14 @@ namespace LinqToDB.DataProvider.Oracle
 			get { return _oracleXmlType != null; }
 		}
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new OracleSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new OracleSqlOptimizer();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

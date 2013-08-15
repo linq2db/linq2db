@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
 		}
 
@@ -134,9 +136,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string ConnectionTypeName  { get { return "Npgsql.NpgsqlConnection, Npgsql"; } }
 		protected override string DataReaderTypeName  { get { return "Npgsql.NpgsqlDataReader, Npgsql"; } }
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new PostgreSQLSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new PostgreSQLSqlOptimizer();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

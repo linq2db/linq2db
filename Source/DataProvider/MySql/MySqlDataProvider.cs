@@ -47,14 +47,19 @@ namespace LinqToDB.DataProvider.MySql
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
-		public override ISqlBuilder CreateSqlProvider()
+		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		{
+			return new MySqlSchemaProvider();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(SqlProviderFlags);
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new MySqlSchemaProvider();
+			return new MySqlSqlOptimizer();
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

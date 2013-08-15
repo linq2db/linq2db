@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 
 		public ISqlBuilder CreateSqlProvider()
 		{
-			return _dataProvider.CreateSqlProvider();
+			return _dataProvider.CreateSqlBuilder();
 		}
 
 		public IDataContextInfo Clone(bool forNestedQuery)

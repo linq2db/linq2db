@@ -18,7 +18,6 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		public FirebirdSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-			SqlProviderFlags.IsIdentityParameterRequired = true;
 		}
 
 		protected override ISqlBuilder CreateSqlProvider()

@@ -19,7 +19,8 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags    { get; }
 
 		IDbConnection    CreateConnection   (string connectionString);
-		ISqlBuilder     CreateSqlProvider  ();
+		ISqlBuilder      CreateSqlBuilder   ();
+		ISqlOptimizer    GetSqlOptimizer    ();
 		void             InitCommand        (DataConnection dataConnection);
 		object           GetConnectionInfo  (DataConnection dataConnection, string parameterName);
 		Expression       GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);

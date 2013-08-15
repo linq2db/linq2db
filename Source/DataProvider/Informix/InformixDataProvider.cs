@@ -21,6 +21,8 @@ namespace LinqToDB.DataProvider.Informix
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
@@ -129,9 +131,14 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  { get { return "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix"; } }
 		
-		public override ISqlBuilder CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlProvider(SqlProviderFlags);
+			return new InformixSqlBuilder(SqlProviderFlags);
+		}
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return new InformixSqlOptimizer();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

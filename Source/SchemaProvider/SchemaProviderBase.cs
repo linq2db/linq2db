@@ -166,7 +166,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlProvider();
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
 
