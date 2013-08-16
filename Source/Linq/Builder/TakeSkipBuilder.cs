@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = sequence.SelectQuery;
 
-			builder.SqlProvider.SelectQuery = sql;
+			builder.SqlBuilder.SelectQuery = sql;
 
 			sql.Select.Take(expr);
 
@@ -111,11 +111,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = sequence.SelectQuery;
 
-			builder.SqlProvider.SelectQuery = sql;
+			builder.SqlBuilder.SelectQuery = sql;
 
 			sql.Select.Skip(expr);
 
-			builder.SqlProvider.SelectQuery = sql;
+			builder.SqlBuilder.SelectQuery = sql;
 
 			if (sql.Select.TakeValue != null)
 			{

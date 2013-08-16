@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 
 			sql.Select.Take(expr);
 
-			SqlProvider.SelectQuery = sql;
+			SqlBuilder.SelectQuery = sql;
 
 			if (sql.Select.SkipValue != null &&
 				DataContextInfo.SqlProviderFlags.IsTakeSupported &&

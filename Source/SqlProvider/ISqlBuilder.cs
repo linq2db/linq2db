@@ -12,7 +12,7 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    BuildTableName       (StringBuilder sb, string database, string owner, string table);
 		object           Convert              (object value, ConvertType convertType);
-		ISqlExpression   GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning);
+		ISqlExpression   GetIdentityExpression(SqlTable table);
 
 		string           Name        { get; }
 		SelectQuery      SelectQuery { get; set; }

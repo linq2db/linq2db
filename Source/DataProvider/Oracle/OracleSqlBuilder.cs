@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 			sb.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)
+		public override ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return new SqlExpression(attr.SequenceName + ".nextval", Precedence.Primary);
 			}
 
-			return base.GetIdentityExpression(table, identityField, forReturning);
+			return base.GetIdentityExpression(table);
 		}
 
 		protected override bool BuildWhere()

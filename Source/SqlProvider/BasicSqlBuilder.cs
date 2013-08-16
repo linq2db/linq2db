@@ -2426,7 +2426,7 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlProvider Members
 
-		public virtual ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)
+		public virtual ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			return null;
 		}
@@ -2434,7 +2434,7 @@ namespace LinqToDB.SqlProvider
 		private        string _name;
 		public virtual string  Name
 		{
-			get { return _name ?? (_name = GetType().Name.Replace("SqlProvider", "")); }
+			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
 		}
 
 		#endregion

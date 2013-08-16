@@ -124,10 +124,10 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[] CompiledParameters;
 		public readonly List<IBuildContext>   Contexts = new List<IBuildContext>();
 
-		private ISqlBuilder _sqlProvider;
-		public  ISqlBuilder  SqlProvider
+		private ISqlBuilder _sqlBuilder;
+		public  ISqlBuilder  SqlBuilder
 		{
-			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlBuilder()); }
+			get { return _sqlBuilder ?? (_sqlBuilder = DataContextInfo.CreateSqlBuilder()); }
 		}
 
 		private ISqlOptimizer _sqlOptimizer;

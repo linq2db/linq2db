@@ -55,12 +55,12 @@ namespace LinqToDB.DataProvider.Firebird
 			BuildExpression(sb, identityField, false, true);
 		}
 
-		public override ISqlExpression GetIdentityExpression(SqlTable table, SqlField identityField, bool forReturning)
+		public override ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
 
-			return base.GetIdentityExpression(table, identityField, forReturning);
+			return base.GetIdentityExpression(table);
 		}
 
 		protected override void BuildFunction(StringBuilder sb, SqlFunction func)

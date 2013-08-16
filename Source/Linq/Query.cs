@@ -564,8 +564,8 @@ namespace LinqToDB.Linq
 							}
 							else if (field.Value.IsIdentity)
 							{
-								var sqlp = dataContextInfo.CreateSqlBuilder();
-								var expr = sqlp.GetIdentityExpression(sqlTable, field.Value, false);
+								var sqlb = dataContextInfo.CreateSqlBuilder();
+								var expr = sqlb.GetIdentityExpression(sqlTable);
 
 								if (expr != null)
 									sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
@@ -624,7 +624,7 @@ namespace LinqToDB.Linq
 							else if (field.Value.IsIdentity)
 							{
 								var sqlb = dataContextInfo.CreateSqlBuilder();
-								var expr = sqlb.GetIdentityExpression(sqlTable, field.Value, true);
+								var expr = sqlb.GetIdentityExpression(sqlTable);
 
 								if (expr != null)
 									sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
