@@ -8,6 +8,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
+		public SqlServerSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

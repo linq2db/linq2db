@@ -8,6 +8,30 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
+		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
+			: base(sqlProviderFlags)
+		{
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete :
+					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery));
+					selectQuery.From.Tables[0].Alias = "$";
+					break;
+
+				case QueryType.Update :
+					selectQuery = GetAlternativeUpdate(selectQuery);
+					break;
+			}
+
+			return selectQuery;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

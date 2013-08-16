@@ -223,7 +223,14 @@ namespace LinqToDB.ServiceModel
 								_sqlOptimizers.Add(type, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructor(new Type[0]))).Compile());
+											type.GetConstructor(new[]
+											{
+												typeof(SqlProviderFlags)
+											}),
+											new Expression[]
+											{
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)
+											})).Compile());
 				}
 
 				return _getSqlOptimizer;

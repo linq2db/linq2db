@@ -89,6 +89,7 @@ namespace LinqToDB.Linq
 			MappingSchema     = parseContext.Builder.MappingSchema;
 			SqlProviderFlags  = parseContext.Builder.DataContextInfo.SqlProviderFlags;
 			CreateSqlProvider = parseContext.Builder.DataContextInfo.CreateSqlProvider;
+			SqlOptimizer      = parseContext.Builder.DataContextInfo.GetSqlOptimizer();
 			Expression        = parseContext.Builder.OriginalExpression;
 		}
 
@@ -96,9 +97,10 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public          Query<T>           Next;
-		public readonly List<QueryInfo>    Queries = new List<QueryInfo>(1);
+		public          Query<T>          Next;
+		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
 		public          Func<ISqlBuilder> CreateSqlProvider;
+		public          ISqlOptimizer     SqlOptimizer;
 
 		private ISqlBuilder _sqlProvider; 
 		public  ISqlBuilder  SqlProvider
@@ -214,7 +216,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in Queries)
 			{
-				sql.SelectQuery = SqlProvider.Finalize(sql.SelectQuery);
+				sql.SelectQuery = SqlOptimizer.Finalize(sql.SelectQuery);
 				sql.Parameters  = sql.Parameters
 					.Select (p => new { p, idx = sql.SelectQuery.Parameters.IndexOf(p.SqlParameter) })
 					.OrderBy(p => p.idx)
@@ -561,6 +563,7 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 							Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
@@ -619,6 +622,7 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 							Queries           = { new Query<object>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
@@ -684,6 +688,7 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 							Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } },
 							SqlProviderFlags  = dataContextInfo.SqlProviderFlags,
 						};
@@ -837,6 +842,7 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 							Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
@@ -907,6 +913,7 @@ namespace LinqToDB.Linq
 							MappingSchema     = dataContextInfo.MappingSchema,
 							ContextID         = dataContextInfo.ContextID,
 							CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+							SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 							Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 						};
 
@@ -966,6 +973,7 @@ namespace LinqToDB.Linq
 				MappingSchema     = dataContextInfo.MappingSchema,
 				ContextID         = dataContextInfo.ContextID,
 				CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+				SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 				Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 			};
 
@@ -1002,6 +1010,7 @@ namespace LinqToDB.Linq
 				MappingSchema     = dataContextInfo.MappingSchema,
 				ContextID         = dataContextInfo.ContextID,
 				CreateSqlProvider = dataContextInfo.CreateSqlProvider,
+				SqlOptimizer      = dataContextInfo.GetSqlOptimizer(),
 				Queries           = { new Query<int>.QueryInfo { SelectQuery = sqlQuery, } }
 			};
 

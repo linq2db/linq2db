@@ -29,11 +29,6 @@ namespace LinqToDB.DataProvider.Access
 
 		public override bool IsNestedJoinSupported     { get { return false; } }
 
-		public override bool ConvertCountSubQuery(SelectQuery subQuery)
-		{
-			return !subQuery.Where.IsEmpty;
-		}
-
 		#region Skip / Take Support
 
 		protected override string FirstFormat { get { return "TOP {0}"; } }
@@ -303,17 +298,6 @@ namespace LinqToDB.DataProvider.Access
 				sb.Append("'").Append(((Guid)value).ToString("B")).Append("'");
 			else
 				base.BuildValue(sb, value);
-		}
-
-		public override SelectQuery Finalize(SelectQuery selectQuery)
-		{
-			selectQuery = base.Finalize(selectQuery);
-
-			switch (selectQuery.QueryType)
-			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				default               : return selectQuery;
-			}
 		}
 
 		protected override void BuildUpdateClause(StringBuilder sb)

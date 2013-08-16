@@ -8,6 +8,30 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleSqlOptimizer : BasicSqlOptimizer
 	{
+		public OracleSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			CheckAliases(selectQuery, 30);
+
+			new QueryVisitor().Visit(selectQuery.Select, element =>
+			{
+				if (element.ElementType == QueryElementType.SqlParameter)
+					((SqlParameter)element).IsQueryParameter = false;
+			});
+
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
+			}
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

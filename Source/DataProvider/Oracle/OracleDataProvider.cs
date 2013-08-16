@@ -27,6 +27,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 		}
 
 		Type _oracleBFile;
@@ -278,7 +280,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new OracleSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

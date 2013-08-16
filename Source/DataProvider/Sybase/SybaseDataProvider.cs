@@ -33,6 +33,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return SybaseTools.AssemblyName; } }
@@ -91,7 +93,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new SybaseSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

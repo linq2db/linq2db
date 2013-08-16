@@ -28,6 +28,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return "System.Data.SqlServerCe"; } }
@@ -82,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new SqlCeSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

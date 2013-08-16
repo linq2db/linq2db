@@ -81,20 +81,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
-		{
-			CheckAliases(selectQuery, int.MaxValue);
-
-			selectQuery = base.Finalize(selectQuery);
-
-			switch (selectQuery.QueryType)
-			{
-				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
-				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
-				default               : return selectQuery;
-			}
-		}
-
 		protected override void BuildFromClause(StringBuilder sb)
 		{
 			if (!SelectQuery.IsUpdate)

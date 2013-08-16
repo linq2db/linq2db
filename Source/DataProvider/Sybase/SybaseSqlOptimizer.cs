@@ -8,6 +8,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
+		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

@@ -28,15 +28,16 @@ namespace LinqToDB.DataProvider
 			MappingSchema    = mappingSchema;
 			SqlProviderFlags = new SqlProviderFlags
 			{
-				AcceptsTakeAsParameter    = true,
-				IsTakeSupported           = true,
-				IsSkipSupported           = true,
-				IsSubQueryTakeSupported   = true,
-				IsSubQueryColumnSupported = true,
-				IsCountSubQuerySupported  = true,
-				IsInsertOrUpdateSupported = true,
-				CanCombineParameters      = true,
-				MaxInListValuesCount      = int.MaxValue,
+				AcceptsTakeAsParameter       = true,
+				IsTakeSupported              = true,
+				IsSkipSupported              = true,
+				IsSubQueryTakeSupported      = true,
+				IsSubQueryColumnSupported    = true,
+				IsCountSubQuerySupported     = true,
+				IsInsertOrUpdateSupported    = true,
+				CanCombineParameters         = true,
+				MaxInListValuesCount         = int.MaxValue,
+				IsGroupByExpressionSupported = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -97,11 +98,6 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
 		}
 
-		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
-		}
-
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
@@ -110,16 +106,6 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
-		}
-
-		protected void SetProviderField2<TP,T,TS>(Expression<Func<TP,int,TS>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
-		}
-
-		protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
 		}
 
 		#endregion
@@ -152,31 +138,6 @@ namespace LinqToDB.DataProvider
 			return Expression.Convert(
 				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
-		}
-
-		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
-		{
-			var type = reader.GetFieldType(idx);
-
-			switch (Type.GetTypeCode(type))
-			{
-				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetBoolean (0));
-				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetByte    (0));
-				case TypeCode.Char     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetChar    (0));
-				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt16   (0));
-				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt32   (0));
-				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt64   (0));
-				case TypeCode.Single   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetFloat   (0));
-				case TypeCode.Double   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDouble  (0));
-				case TypeCode.String   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetString  (0));
-				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDecimal (0));
-				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDateTime(0));
-			}
-
-			if (type == typeof(Guid))   return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
-			if (type == typeof(byte[])) return MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
-
-			return null;
 		}
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)

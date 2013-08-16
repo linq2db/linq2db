@@ -8,6 +8,30 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2SqlOptimizer : BasicSqlOptimizer
 	{
+		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		static void SetQueryParameter(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+				((SqlParameter)element).IsQueryParameter = false;
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
+			}
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

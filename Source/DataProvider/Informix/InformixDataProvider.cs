@@ -20,9 +20,11 @@ namespace LinqToDB.DataProvider.Informix
 		protected InformixDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsParameterOrderDependent = true;
-			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsParameterOrderDependent    = true;
+			SqlProviderFlags.IsSubQueryTakeSupported      = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported    = false;
+			SqlProviderFlags.IsGroupByExpressionSupported = false;
+
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
@@ -33,6 +35,8 @@ namespace LinqToDB.DataProvider.Informix
 				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
 				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
 			}
+
+			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 		}
 
 		static float GetFloat(IDataReader dr, int idx)
@@ -136,7 +140,7 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new InformixSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

@@ -8,6 +8,39 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixSqlOptimizer : BasicSqlOptimizer
 	{
+		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		static void SetQueryParameter(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+				((SqlParameter)element).IsQueryParameter = false;
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			CheckAliases(selectQuery, int.MaxValue);
+
+			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete :
+					selectQuery = GetAlternativeDelete(selectQuery);
+					selectQuery.From.Tables[0].Alias = "$";
+					break;
+
+				case QueryType.Update :
+					selectQuery = GetAlternativeUpdate(selectQuery);
+					break;
+			}
+
+			return selectQuery;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

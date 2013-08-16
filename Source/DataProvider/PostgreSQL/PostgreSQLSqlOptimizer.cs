@@ -8,6 +8,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
+		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			CheckAliases(selectQuery, int.MaxValue);
+
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
+			}
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

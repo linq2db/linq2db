@@ -23,6 +23,8 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
 
 		Type _db2Int64;
@@ -122,7 +124,7 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly DB2SqlOptimizer _sqlOptimizer = new DB2SqlOptimizer();
+		readonly DB2SqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

@@ -19,6 +19,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsApplyJoinSupported         { get; set; }
 		public bool IsInsertOrUpdateSupported    { get; set; }
 		public bool CanCombineParameters         { get; set; }
+		public bool IsGroupByExpressionSupported { get; set; }
 		public int  MaxInListValuesCount         { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)

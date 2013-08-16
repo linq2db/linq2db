@@ -64,6 +64,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
 			}
+
+			_sqlOptimizer              = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
+			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 		}
 
 		#endregion
@@ -121,9 +125,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException();
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer              = new SqlServerSqlOptimizer();
-		readonly ISqlOptimizer _sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer();
-		readonly ISqlOptimizer _sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2000SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

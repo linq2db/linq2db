@@ -39,34 +39,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.BuildFunction(sb, func);
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
-		{
-			selectQuery = base.Finalize(selectQuery);
-
-			new QueryVisitor().Visit(selectQuery.Select, element =>
-			{
-				if (element.ElementType == QueryElementType.SqlParameter)
-				{
-					((SqlParameter)element).IsQueryParameter = false;
-					selectQuery.IsParameterDependent = true;
-				}
-			});
-
-			switch (selectQuery.QueryType)
-			{
-				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(selectQuery);
-					selectQuery.From.Tables[0].Alias = "$";
-					break;
-
-				case QueryType.Update :
-					selectQuery = GetAlternativeUpdate(selectQuery);
-					break;
-			}
-
-			return selectQuery;
-		}
-
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)

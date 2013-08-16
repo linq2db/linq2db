@@ -21,6 +21,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}
 
 		internal Type BitStringType;
@@ -141,7 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new PostgreSQLSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

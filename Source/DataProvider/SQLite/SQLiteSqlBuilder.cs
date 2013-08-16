@@ -35,25 +35,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
-		{
-			selectQuery = base.Finalize(selectQuery);
-
-			switch (selectQuery.QueryType)
-			{
-				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery));
-					selectQuery.From.Tables[0].Alias = "$";
-					break;
-
-				case QueryType.Update :
-					selectQuery = GetAlternativeUpdate(selectQuery);
-					break;
-			}
-
-			return selectQuery;
-		}
-
 		protected override void BuildFromClause(StringBuilder sb)
 		{
 			if (!SelectQuery.IsUpdate)

@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return "MySql.Data.MySqlClient"; } }
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new MySqlSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

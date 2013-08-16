@@ -25,6 +25,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return "System.Data.SQLite"; } }
@@ -40,7 +42,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new SQLiteSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

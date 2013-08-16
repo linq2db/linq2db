@@ -29,6 +29,8 @@ namespace LinqToDB.DataProvider.Access
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -54,7 +56,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new AccessSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

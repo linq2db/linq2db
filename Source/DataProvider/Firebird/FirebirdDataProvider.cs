@@ -23,6 +23,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			_sqlOptimizer = new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -52,7 +54,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		readonly ISqlOptimizer _sqlOptimizer = new FirebirdSqlOptimizer();
+		readonly ISqlOptimizer _sqlOptimizer;
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{

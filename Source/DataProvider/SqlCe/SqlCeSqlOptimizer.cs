@@ -8,6 +8,38 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
+		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			selectQuery = base.Finalize(selectQuery);
+
+			new QueryVisitor().Visit(selectQuery.Select, element =>
+			{
+				if (element.ElementType == QueryElementType.SqlParameter)
+				{
+					((SqlParameter)element).IsQueryParameter = false;
+					selectQuery.IsParameterDependent = true;
+				}
+			});
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete :
+					selectQuery = GetAlternativeDelete(selectQuery);
+					selectQuery.From.Tables[0].Alias = "$";
+					break;
+
+				case QueryType.Update :
+					selectQuery = GetAlternativeUpdate(selectQuery);
+					break;
+			}
+
+			return selectQuery;
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

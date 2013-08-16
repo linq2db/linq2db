@@ -51,11 +51,12 @@ namespace Tests.Model
 
 		public string GetSqlText(SelectQuery query)
 		{
-			var provider = ((IDataContext)this).CreateSqlProvider();
+			var provider  = ((IDataContext)this).CreateSqlProvider();
+			var optimizer = ((IDataContext)this).GetSqlOptimizer  ();
 
 			//provider.SqlQuery = sql;
 
-			query = provider.Finalize(query);
+			query = optimizer.Finalize(query);
 
 			var cc = provider.CommandCount(query);
 			var sb = new StringBuilder();

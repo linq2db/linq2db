@@ -2,12 +2,397 @@
 
 namespace LinqToDB.SqlProvider
 {
+	using System.Collections.Generic;
+	using System.Linq;
+
 	using Extensions;
 	using SqlQuery;
 
 	class BasicSqlOptimizer : ISqlOptimizer
 	{
+		#region Init
+
+		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
+		{
+			SqlProviderFlags = sqlProviderFlags;
+		}
+
+		public SqlProviderFlags SqlProviderFlags { get; private set; }
+
+		#endregion
+
 		#region ISqlOptimizer Members
+
+		public virtual SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			selectQuery.FinalizeAndValidate(
+				SqlProviderFlags.IsApplyJoinSupported,
+				SqlProviderFlags.IsGroupByExpressionSupported);
+
+			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
+			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+
+			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
+				selectQuery.FinalizeAndValidate(
+					SqlProviderFlags.IsApplyJoinSupported,
+					SqlProviderFlags.IsGroupByExpressionSupported);
+
+			return selectQuery;
+		}
+
+		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
+		{
+			new QueryVisitor().Visit(selectQuery, MoveCountSubQuery);
+			return selectQuery;
+		}
+
+		void MoveCountSubQuery(IQueryElement element)
+		{
+			if (element.ElementType != QueryElementType.SqlQuery)
+				return;
+
+			var query = (SelectQuery)element;
+
+			for (var i = 0; i < query.Select.Columns.Count; i++)
+			{
+				var col = query.Select.Columns[i];
+
+				// The column is a subquery.
+				//
+				if (col.Expression.ElementType == QueryElementType.SqlQuery)
+				{
+					var subQuery = (SelectQuery)col.Expression;
+					var isCount  = false;
+
+					// Check if subquery is Count subquery.
+					//
+					if (subQuery.Select.Columns.Count == 1)
+					{
+						var subCol = subQuery.Select.Columns[0];
+
+						if (subCol.Expression.ElementType == QueryElementType.SqlFunction)
+							isCount = ((SqlFunction)subCol.Expression).Name == "Count";
+					}
+
+					if (!isCount)
+						continue;
+
+					// Check if subquery where clause does not have ORs.
+					//
+					SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+
+					var allAnd = true;
+
+					for (var j = 0; allAnd && j < subQuery.Where.SearchCondition.Conditions.Count - 1; j++)
+					{
+						var cond = subQuery.Where.SearchCondition.Conditions[j];
+
+						if (cond.IsOr)
+							allAnd = false;
+					}
+
+					if (!allAnd || !ConvertCountSubQuery(subQuery))
+						continue;
+
+					// Collect tables.
+					//
+					var allTables   = new HashSet<ISqlTableSource>();
+					var levelTables = new HashSet<ISqlTableSource>();
+
+					new QueryVisitor().Visit(subQuery, e =>
+					{
+						if (e is ISqlTableSource)
+							allTables.Add((ISqlTableSource)e);
+					});
+
+					new QueryVisitor().Visit(subQuery, e =>
+					{
+						if (e is ISqlTableSource)
+							if (subQuery.From.IsChild((ISqlTableSource)e))
+								levelTables.Add((ISqlTableSource)e);
+					});
+
+					Func<IQueryElement,bool> checkTable = e =>
+					{
+						switch (e.ElementType)
+						{
+							case QueryElementType.SqlField : return !allTables.Contains(((SqlField)       e).Table);
+							case QueryElementType.Column   : return !allTables.Contains(((SelectQuery.Column)e).Parent);
+						}
+						return false;
+					};
+
+					var join = SelectQuery.LeftJoin(subQuery);
+
+					query.From.Tables[0].Joins.Add(join.JoinedTable);
+
+					for (var j = 0; j < subQuery.Where.SearchCondition.Conditions.Count; j++)
+					{
+						var cond = subQuery.Where.SearchCondition.Conditions[j];
+
+						if (new QueryVisitor().Find(cond, checkTable) == null)
+							continue;
+
+						var replaced = new Dictionary<IQueryElement,IQueryElement>();
+
+						var nc = new QueryVisitor().Convert(cond, e =>
+						{
+							var ne = e;
+
+							switch (e.ElementType)
+							{
+								case QueryElementType.SqlField :
+									if (replaced.TryGetValue(e, out ne))
+										return ne;
+
+									if (levelTables.Contains(((SqlField)e).Table))
+									{
+										subQuery.GroupBy.Expr((SqlField)e);
+										ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
+									}
+
+									break;
+
+								case QueryElementType.Column   :
+									if (replaced.TryGetValue(e, out ne))
+										return ne;
+
+									if (levelTables.Contains(((SelectQuery.Column)e).Parent))
+									{
+										subQuery.GroupBy.Expr((SelectQuery.Column)e);
+										ne = subQuery.Select.Columns[subQuery.Select.Add((SelectQuery.Column)e)];
+									}
+
+									break;
+							}
+
+							if (!ReferenceEquals(e, ne))
+								replaced.Add(e, ne);
+
+							return ne;
+						});
+
+						if (nc != null && !ReferenceEquals(nc, cond))
+						{
+							join.JoinedTable.Condition.Conditions.Add(nc);
+							subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
+							j--;
+						}
+					}
+
+					if (!query.GroupBy.IsEmpty/* && subQuery.Select.Columns.Count > 1*/)
+					{
+						var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
+
+						subQuery.Select.Columns.RemoveAt(0);
+
+						query.Select.Columns[i].Expression = 
+							new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]);
+					}
+					else
+					{
+						query.Select.Columns[i].Expression = subQuery.Select.Columns[0];
+					}
+				}
+			}
+		}
+
+		public virtual bool ConvertCountSubQuery(SelectQuery subQuery)
+		{
+			return true;
+		}
+
+		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery)
+		{
+			var dic = new Dictionary<IQueryElement,IQueryElement>();
+
+			new QueryVisitor().Visit(selectQuery, element =>
+			{
+				if (element.ElementType != QueryElementType.SqlQuery)
+					return;
+
+				var query = (SelectQuery)element;
+
+				for (var i = 0; i < query.Select.Columns.Count; i++)
+				{
+					var col = query.Select.Columns[i];
+
+					if (col.Expression.ElementType == QueryElementType.SqlQuery)
+					{
+						var subQuery    = (SelectQuery)col.Expression;
+						var allTables   = new HashSet<ISqlTableSource>();
+						var levelTables = new HashSet<ISqlTableSource>();
+
+						Func<IQueryElement,bool> checkTable = e =>
+						{
+							switch (e.ElementType)
+							{
+								case QueryElementType.SqlField : return !allTables.Contains(((SqlField)e).Table);
+								case QueryElementType.Column   : return !allTables.Contains(((SelectQuery.Column)e).Parent);
+							}
+							return false;
+						};
+
+						new QueryVisitor().Visit(subQuery, e =>
+						{
+							if (e is ISqlTableSource)
+								allTables.Add((ISqlTableSource)e);
+						});
+
+						new QueryVisitor().Visit(subQuery, e =>
+						{
+							if (e is ISqlTableSource && subQuery.From.IsChild((ISqlTableSource)e))
+								levelTables.Add((ISqlTableSource)e);
+						});
+
+						if (SqlProviderFlags.IsSubQueryColumnSupported && new QueryVisitor().Find(subQuery, checkTable) == null)
+							continue;
+
+						var join = SelectQuery.LeftJoin(subQuery);
+
+						query.From.Tables[0].Joins.Add(join.JoinedTable);
+
+						SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+
+						var isCount      = false;
+						var isAggregated = false;
+						
+						if (subQuery.Select.Columns.Count == 1)
+						{
+							var subCol = subQuery.Select.Columns[0];
+
+							if (subCol.Expression.ElementType == QueryElementType.SqlFunction)
+							{
+								switch (((SqlFunction)subCol.Expression).Name)
+								{
+									case "Min"     :
+									case "Max"     :
+									case "Sum"     :
+									case "Average" : isAggregated = true;                 break;
+									case "Count"   : isAggregated = true; isCount = true; break;
+								}
+							}
+						}
+
+						if (SqlProviderFlags.IsSubQueryColumnSupported && !isCount)
+							continue;
+
+						var allAnd = true;
+
+						for (var j = 0; allAnd && j < subQuery.Where.SearchCondition.Conditions.Count - 1; j++)
+						{
+							var cond = subQuery.Where.SearchCondition.Conditions[j];
+
+							if (cond.IsOr)
+								allAnd = false;
+						}
+
+						if (!allAnd)
+							continue;
+
+						var modified = false;
+
+						for (var j = 0; j < subQuery.Where.SearchCondition.Conditions.Count; j++)
+						{
+							var cond = subQuery.Where.SearchCondition.Conditions[j];
+
+							if (new QueryVisitor().Find(cond, checkTable) == null)
+								continue;
+
+							var replaced = new Dictionary<IQueryElement,IQueryElement>();
+
+							var nc = new QueryVisitor().Convert(cond, delegate(IQueryElement e)
+							{
+								var ne = e;
+
+								switch (e.ElementType)
+								{
+									case QueryElementType.SqlField :
+										if (replaced.TryGetValue(e, out ne))
+											return ne;
+
+										if (levelTables.Contains(((SqlField)e).Table))
+										{
+											if (isAggregated)
+												subQuery.GroupBy.Expr((SqlField)e);
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SqlField)e)];
+										}
+
+										break;
+
+									case QueryElementType.Column   :
+										if (replaced.TryGetValue(e, out ne))
+											return ne;
+
+										if (levelTables.Contains(((SelectQuery.Column)e).Parent))
+										{
+											if (isAggregated)
+												subQuery.GroupBy.Expr((SelectQuery.Column)e);
+											ne = subQuery.Select.Columns[subQuery.Select.Add((SelectQuery.Column)e)];
+										}
+
+										break;
+								}
+
+								if (!ReferenceEquals(e, ne))
+									replaced.Add(e, ne);
+
+								return ne;
+							});
+
+							if (nc != null && !ReferenceEquals(nc, cond))
+							{
+								modified = true;
+
+								join.JoinedTable.Condition.Conditions.Add(nc);
+								subQuery.Where.SearchCondition.Conditions.RemoveAt(j);
+								j--;
+							}
+						}
+
+						if (modified || isAggregated)
+						{
+							if (isCount && !query.GroupBy.IsEmpty)
+							{
+								var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
+
+								subQuery.Select.Columns.RemoveAt(0);
+
+								query.Select.Columns[i] = new SelectQuery.Column(
+									query,
+									new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[0]));
+							}
+							else if (isAggregated && !query.GroupBy.IsEmpty)
+							{
+								var oldFunc = (SqlFunction)subQuery.Select.Columns[0].Expression;
+
+								subQuery.Select.Columns.RemoveAt(0);
+
+								var idx = subQuery.Select.Add(oldFunc.Parameters[0]);
+
+								query.Select.Columns[i] = new SelectQuery.Column(
+									query,
+									new SqlFunction(oldFunc.SystemType, oldFunc.Name, subQuery.Select.Columns[idx]));
+							}
+							else
+							{
+								query.Select.Columns[i] = new SelectQuery.Column(query, subQuery.Select.Columns[0]);
+							}
+
+							dic.Add(col, query.Select.Columns[i]);
+						}
+					}
+				}
+			});
+
+			selectQuery = new QueryVisitor().Convert(selectQuery, e =>
+			{
+				IQueryElement ne;
+				return dic.TryGetValue(e, out ne) ? ne : e;
+			});
+
+			return selectQuery;
+		}
 
 		public virtual ISqlExpression ConvertExpression(ISqlExpression expression)
 		{
@@ -770,9 +1155,161 @@ namespace LinqToDB.SqlProvider
 				new SqlFunction(func.SystemType, "Floor", par1) : par1;
 		}
 
+		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
+		{
+			if (selectQuery.IsDelete && 
+				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
+				selectQuery.From.Tables[0].Source is SqlTable)
+			{
+				var sql = new SelectQuery { QueryType = QueryType.Delete };
+
+				selectQuery.ParentSelect = sql;
+				selectQuery.QueryType = QueryType.Select;
+
+				var table = (SqlTable)selectQuery.From.Tables[0].Source;
+				var copy  = new SqlTable(table) { Alias = null };
+
+				var tableKeys = table.GetKeys(true);
+				var copyKeys  = copy. GetKeys(true);
+
+				if (selectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
+				{
+					var sc1 = new SelectQuery.SearchCondition(selectQuery.Where.SearchCondition.Conditions);
+					var sc2 = new SelectQuery.SearchCondition();
+
+					for (var i = 0; i < tableKeys.Count; i++)
+					{
+						sc2.Conditions.Add(new SelectQuery.Condition(
+							false,
+							new SelectQuery.Predicate.ExprExpr(copyKeys[i], SelectQuery.Predicate.Operator.Equal, tableKeys[i])));
+					}
+
+					selectQuery.Where.SearchCondition.Conditions.Clear();
+					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
+					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc2));
+				}
+				else
+				{
+					for (var i = 0; i < tableKeys.Count; i++)
+						selectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+				}
+
+				sql.From.Table(copy).Where.Exists(selectQuery);
+				sql.Parameters.AddRange(selectQuery.Parameters);
+
+				selectQuery.Parameters.Clear();
+
+				selectQuery = sql;
+			}
+
+			return selectQuery;
+		}
+
+		protected SelectQuery GetAlternativeUpdate(SelectQuery selectQuery)
+		{
+			if (selectQuery.IsUpdate && (selectQuery.From.Tables[0].Source is SqlTable || selectQuery.Update.Table != null))
+			{
+				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
+				{
+					var sql = new SelectQuery { QueryType = QueryType.Update };
+
+					selectQuery.ParentSelect = sql;
+					selectQuery.QueryType = QueryType.Select;
+
+					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
+
+					if (selectQuery.Update.Table != null)
+						if (new QueryVisitor().Find(selectQuery.From, t => t == table) == null)
+							table = (SqlTable)new QueryVisitor().Find(selectQuery.From,
+								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
+
+					var copy = new SqlTable(table);
+
+					var tableKeys = table.GetKeys(true);
+					var copyKeys  = copy. GetKeys(true);
+
+					for (var i = 0; i < tableKeys.Count; i++)
+						selectQuery.Where
+							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+
+					sql.From.Table(copy).Where.Exists(selectQuery);
+
+					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
+
+					foreach (var field in table.Fields.Values)
+						map.Add(field, copy[field.Name]);
+
+					foreach (var item in selectQuery.Update.Items)
+					{
+						var ex = new QueryVisitor().Convert(item, expr =>
+						{
+							var fld = expr as SqlField;
+							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
+						});
+
+						sql.Update.Items.Add(ex);
+					}
+
+					sql.Parameters.AddRange(selectQuery.Parameters);
+					sql.Update.Table = selectQuery.Update.Table;
+
+					selectQuery.Parameters.Clear();
+					selectQuery.Update.Items.Clear();
+
+					selectQuery = sql;
+				}
+
+				selectQuery.From.Tables[0].Alias = "$";
+			}
+
+			return selectQuery;
+		}
+
 		#endregion
 
 		#region Helpers
+
+		static string SetAlias(string alias, int maxLen)
+		{
+			if (alias == null)
+				return null;
+
+			alias = alias.TrimStart('_');
+
+			var cs      = alias.ToCharArray();
+			var replace = false;
+
+			for (var i = 0; i < cs.Length; i++)
+			{
+				var c = cs[i];
+
+				if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
+					continue;
+
+				cs[i] = ' ';
+				replace = true;
+			}
+
+			if (replace)
+				alias = new string(cs).Replace(" ", "");
+
+			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
+		}
+
+		protected void CheckAliases(SelectQuery selectQuery, int maxLen)
+		{
+			new QueryVisitor().Visit(selectQuery, e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)            e).Alias, maxLen); break;
+					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)        e).Name,  maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)            e).Alias, maxLen); break;
+					case QueryElementType.Column       : ((SelectQuery.Column)     e).Alias = SetAlias(((SelectQuery.Column)     e).Alias, maxLen); break;
+					case QueryElementType.TableSource  : ((SelectQuery.TableSource)e).Alias = SetAlias(((SelectQuery.TableSource)e).Alias, maxLen); break;
+				}
+			});
+		}
 
 		public ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{

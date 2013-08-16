@@ -9,6 +9,10 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
+		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);

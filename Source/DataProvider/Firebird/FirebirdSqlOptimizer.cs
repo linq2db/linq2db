@@ -8,6 +8,50 @@ namespace LinqToDB.DataProvider.Firebird
 
 	class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
+		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		{
+		}
+
+		static void SetNonQueryParameter(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+				((SqlParameter)element).IsQueryParameter = false;
+		}
+
+		public override SelectQuery Finalize(SelectQuery selectQuery)
+		{
+			CheckAliases(selectQuery, int.MaxValue);
+
+			new QueryVisitor().Visit(selectQuery.Select, SetNonQueryParameter);
+
+			if (selectQuery.QueryType == QueryType.InsertOrUpdate)
+			{
+				foreach (var key in selectQuery.Insert.Items)
+					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+
+				foreach (var key in selectQuery.Update.Items)
+					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+
+				foreach (var key in selectQuery.Update.Keys)
+					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
+			}
+
+			new QueryVisitor().Visit(selectQuery, element =>
+			{
+				if (element.ElementType == QueryElementType.InSubQueryPredicate)
+					new QueryVisitor().Visit(((SelectQuery.Predicate.InSubQuery)element).Expr1, SetNonQueryParameter);
+			});
+
+			selectQuery = base.Finalize(selectQuery);
+
+			switch (selectQuery.QueryType)
+			{
+				case QueryType.Delete : return GetAlternativeDelete(selectQuery);
+				case QueryType.Update : return GetAlternativeUpdate(selectQuery);
+				default               : return selectQuery;
+			}
+		}
+
 		public override ISqlExpression ConvertExpression(ISqlExpression expr)
 		{
 			expr = base.ConvertExpression(expr);
