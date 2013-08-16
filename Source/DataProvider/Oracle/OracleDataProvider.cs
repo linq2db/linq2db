@@ -275,12 +275,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(SqlProviderFlags);
+			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new OracleSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new OracleSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

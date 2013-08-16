@@ -37,12 +37,14 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlProviderFlags);
+			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new SQLiteSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new SQLiteSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

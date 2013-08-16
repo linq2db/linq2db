@@ -51,12 +51,14 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlProviderFlags);
+			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new AccessSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new AccessSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

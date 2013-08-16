@@ -8,7 +8,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2012SqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2012SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -19,7 +20,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new SqlServer2012SqlBuilder(SqlProviderFlags);
+			return new SqlServer2012SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql(StringBuilder sb)

@@ -130,6 +130,12 @@ namespace LinqToDB.Linq.Builder
 			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlProvider()); }
 		}
 
+		private ISqlOptimizer _sqlOptimizer;
+		public  ISqlOptimizer  SqlOptimizer
+		{
+			get { return _sqlOptimizer ?? (_sqlOptimizer = DataContextInfo.GetSqlOptimizer()); }
+		}
+
 		public static readonly ParameterExpression ContextParam     = Expression.Parameter(typeof(QueryContext), "context");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");

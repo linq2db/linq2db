@@ -93,6 +93,8 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServer2000SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
@@ -227,6 +229,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />

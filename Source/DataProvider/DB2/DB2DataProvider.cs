@@ -119,12 +119,14 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new DB2SqlBuilder(SqlProviderFlags);
+			return new DB2SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly DB2SqlOptimizer _sqlOptimizer = new DB2SqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new DB2SqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override void InitCommand(DataConnection dataConnection)

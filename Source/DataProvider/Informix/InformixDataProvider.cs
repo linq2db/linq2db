@@ -133,12 +133,14 @@ namespace LinqToDB.DataProvider.Informix
 		
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlProviderFlags);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new InformixSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new InformixSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

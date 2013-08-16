@@ -12,7 +12,8 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -146,7 +147,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new AccessSqlBuilder(SqlProviderFlags);
+			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override bool ParenthesizeJoin()

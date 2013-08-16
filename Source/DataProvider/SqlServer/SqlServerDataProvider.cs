@@ -112,18 +112,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(SqlProviderFlags);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(SqlProviderFlags);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(SqlProviderFlags);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(SqlProviderFlags);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 			}
 
 			throw new InvalidOperationException();
 		}
 
+		readonly ISqlOptimizer _sqlOptimizer              = new SqlServerSqlOptimizer();
+		readonly ISqlOptimizer _sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer();
+		readonly ISqlOptimizer _sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer();
+
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new SqlServerSqlOptimizer();
+			switch (Version)
+			{
+				case SqlServerVersion.v2000 : return _sqlServer2000SqlOptimizer;
+				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
+			}
+
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

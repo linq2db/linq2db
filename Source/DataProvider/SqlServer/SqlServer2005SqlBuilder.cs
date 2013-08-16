@@ -8,23 +8,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2005SqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2005SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
-		}
-
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
-
-			return expr;
 		}
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new SqlServer2005SqlBuilder(SqlProviderFlags);
+			return new SqlServer2005SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)

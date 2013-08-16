@@ -2239,8 +2239,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
 		{
-			SqlProvider.SelectQuery = context.SelectQuery;
-			return SqlProvider.ConvertExpression(expr);
+			return SqlOptimizer.ConvertExpression(expr);
 		}
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)

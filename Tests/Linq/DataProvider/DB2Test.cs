@@ -367,6 +367,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
 		{
+			//new IBM.Data.DB2.DB2Connection().GetSchema()
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = TestEnum.AA }), Is.EqualTo("A"));

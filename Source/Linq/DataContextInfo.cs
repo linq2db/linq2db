@@ -30,6 +30,11 @@ namespace LinqToDB.Linq
 			return DataContext.CreateSqlProvider();
 		}
 
+		public ISqlOptimizer GetSqlOptimizer()
+		{
+			return DataContext.GetSqlOptimizer();
+		}
+
 		public IDataContextInfo Clone(bool forNestedQuery)
 		{
 			return new DataContextInfo(DataContext.Clone(forNestedQuery));

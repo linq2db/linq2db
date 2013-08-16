@@ -85,6 +85,11 @@ namespace LinqToDB
 			get { return DataProvider.CreateSqlBuilder; }
 		}
 
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
+		{
+			get { return DataProvider.GetSqlOptimizer; }
+		}
+
 		Type IDataContext.DataReaderType
 		{
 			get { return DataProvider.DataReaderType; }

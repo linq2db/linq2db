@@ -138,12 +138,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new PostgreSQLSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new PostgreSQLSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

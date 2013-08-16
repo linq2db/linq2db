@@ -11,7 +11,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -39,67 +40,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new PostgreSQLSqlBuilder(SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
-
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlBinaryExpression)
-			{
-				var be = (SqlBinaryExpression)expr;
-
-				switch (be.Operation)
-				{
-					case "^": return new SqlBinaryExpression(be.SystemType, be.Expr1, "#", be.Expr2);
-					case "+": return be.SystemType == typeof(string)? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence): expr;
-				}
-			}
-			else if (expr is SqlFunction)
-			{
-				var func = (SqlFunction) expr;
-
-				switch (func.Name)
-				{
-					case "Convert"   :
-						if (func.SystemType.ToUnderlying() == typeof(bool))
-						{
-							var ex = AlternativeConvertToBoolean(func, 1);
-							if (ex != null)
-								return ex;
-						}
-
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-
-					case "CharIndex" :
-						return func.Parameters.Length == 2?
-							new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0], func.Parameters[1]):
-							Add<int>(
-								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0],
-									ConvertExpression(new SqlFunction(typeof(string), "Substring",
-										func.Parameters[1],
-										func.Parameters[2],
-										Sub<int>(ConvertExpression(new SqlFunction(typeof(int), "Length", func.Parameters[1])), func.Parameters[2])))),
-								Sub(func.Parameters[2], 1));
-				}
-			}
-			else if (expr is SqlExpression)
-			{
-				var e = (SqlExpression)expr;
-
-				if (e.Expr.StartsWith("Extract(DOW"))
-					return Inc(new SqlExpression(expr.SystemType, e.Expr.Replace("Extract(DOW", "Extract(Dow"), e.Parameters));
-
-				if (e.Expr.StartsWith("Extract(Millisecond"))
-					return new SqlExpression(expr.SystemType, "Cast(To_Char({0}, 'MS') as int)", e.Parameters);
-			}
-
-			return expr;
-		}
 
 		public override void BuildValue(StringBuilder sb, object value)
 		{

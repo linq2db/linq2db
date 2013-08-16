@@ -49,12 +49,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(SqlProviderFlags);
+			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new FirebirdSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new FirebirdSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

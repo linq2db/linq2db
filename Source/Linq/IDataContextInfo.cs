@@ -13,7 +13,8 @@ namespace LinqToDB.Linq
 		bool             DisposeContext   { get; }
 		SqlProviderFlags SqlProviderFlags { get; }
 
-		ISqlBuilder     CreateSqlProvider();
+		ISqlBuilder      CreateSqlProvider();
+		ISqlOptimizer    GetSqlOptimizer  ();
 		IDataContextInfo Clone(bool forNestedQuery);
 	}
 }

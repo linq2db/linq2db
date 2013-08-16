@@ -10,7 +10,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -23,50 +24,6 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string FirstFormat { get { return "TOP {0}"; } }
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlFunction)
-			{
-				var func = (SqlFunction) expr;
-
-				switch (func.Name)
-				{
-					case "CharIndex" :
-						if (func.Parameters.Length == 3)
-							return Add<int>(
-								ConvertExpression(new SqlFunction(func.SystemType, "CharIndex",
-									func.Parameters[0],
-									ConvertExpression(new SqlFunction(typeof(string), "Substring",
-										func.Parameters[1],
-										func.Parameters[2], new SqlFunction(typeof(int), "Len", func.Parameters[1]))))),
-								Sub(func.Parameters[2], 1));
-						break;
-
-					case "Stuff"     :
-						if (func.Parameters[3] is SqlValue)
-						{
-							var value = (SqlValue)func.Parameters[3];
-
-							if (value.Value is string && string.IsNullOrEmpty((string)value.Value))
-								return new SqlFunction(
-									func.SystemType,
-									func.Name,
-									func.Precedence,
-									func.Parameters[0],
-									func.Parameters[1],
-									func.Parameters[1],
-									new SqlValue(null));
-						}
-
-						break;
-				}
-			}
-
-			return expr;
-		}
-
 		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
@@ -76,7 +33,8 @@ namespace LinqToDB.DataProvider.Sybase
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlBuilder(bool skipAliases, SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		SybaseSqlBuilder(bool skipAliases, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 			_skipAliases = skipAliases;
 		}
@@ -112,7 +70,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new SybaseSqlBuilder(_isSelect, SqlProviderFlags);
+			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)

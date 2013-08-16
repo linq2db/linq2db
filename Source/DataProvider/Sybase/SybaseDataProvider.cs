@@ -88,12 +88,14 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(SqlProviderFlags);
+			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
+
+		readonly ISqlOptimizer _sqlOptimizer = new SybaseSqlOptimizer();
 
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
-			return new SybaseSqlOptimizer();
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

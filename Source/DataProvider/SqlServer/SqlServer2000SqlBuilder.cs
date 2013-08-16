@@ -8,25 +8,16 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2000SqlBuilder(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public SqlServer2000SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected override string FirstFormat { get { return "TOP {0}"; } }
 
-		public override ISqlExpression ConvertExpression(ISqlExpression expr)
-		{
-			expr = base.ConvertExpression(expr);
-
-			if (expr is SqlFunction)
-				return ConvertConvertFunction((SqlFunction)expr);
-
-			return expr;
-		}
-
 		protected override ISqlBuilder CreateSqlProvider()
 		{
-			return new SqlServer2000SqlBuilder(SqlProviderFlags);
+			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)

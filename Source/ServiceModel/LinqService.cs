@@ -46,7 +46,8 @@ namespace LinqToDB.ServiceModel
 				return new LinqServiceInfo
 				{
 					MappingSchemaType = ctx.DataProvider.MappingSchema.     GetType().AssemblyQualifiedName,
-					SqlProviderType   = ctx.DataProvider.CreateSqlBuilder().GetType().AssemblyQualifiedName,
+					SqlBuilderType    = ctx.DataProvider.CreateSqlBuilder().GetType().AssemblyQualifiedName,
+					SqlOptimizerType  = ctx.DataProvider.GetSqlOptimizer(). GetType().AssemblyQualifiedName,
 					SqlProviderFlags  = ctx.DataProvider.SqlProviderFlags,
 					ConfigurationList = ctx.MappingSchema.ConfigurationList,
 				};

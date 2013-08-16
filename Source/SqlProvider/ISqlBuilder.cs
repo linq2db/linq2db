@@ -9,7 +9,6 @@ namespace LinqToDB.SqlProvider
 	{
 		int              CommandCount         (SelectQuery selectQuery);
 		void             BuildSql             (int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias);
-		ISqlExpression   ConvertExpression    (ISqlExpression expression);
 		ISqlPredicate    ConvertPredicate     (ISqlPredicate  predicate);
 		SelectQuery      Finalize             (SelectQuery selectQuery);
 

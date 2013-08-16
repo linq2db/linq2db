@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider.Access
 {
 	using SqlProvider;
 
-	class AccessSqlOptimizer : ISqlOptimizer
+	class AccessSqlOptimizer : BasicSqlOptimizer
 	{
 	}
 }

@@ -371,7 +371,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region IDataContext Members
-
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
 
@@ -418,6 +417,16 @@ namespace LinqToDB.Data
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get { return GetCreateSqlProvider(DataProvider); }
+		}
+
+		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
+		{
+			return dp.GetSqlOptimizer;
+		}
+
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
+		{
+			get { return GetGetSqlOptimizer(DataProvider); }
 		}
 
 		#endregion
