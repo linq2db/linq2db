@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using SqlQuery;
 	using SqlProvider;
 
-	public class SqlCeSqlBuilder : BasicSqlBuilder
+	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
 		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)

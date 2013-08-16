@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 		public SqlProviderFlags  SqlProviderFlags { get { return _dataProvider.SqlProviderFlags; } }
 		public string            ContextID        { get { return _dataProvider.Name;    } }
 
-		public ISqlBuilder CreateSqlProvider()
+		public ISqlBuilder CreateSqlBuilder()
 		{
 			return _dataProvider.CreateSqlBuilder();
 		}

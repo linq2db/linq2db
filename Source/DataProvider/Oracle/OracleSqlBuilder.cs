@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlQuery;
 	using SqlProvider;
 
-	public class OracleSqlBuilder : BasicSqlBuilder
+	class OracleSqlBuilder : BasicSqlBuilder
 	{
 		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags) 
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildFromClause(sb);
 		}
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is Guid)
 			{

@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	public class DB2SqlBuilder : BasicSqlBuilder
+	class DB2SqlBuilder : BasicSqlBuilder
 	{
 		public DB2SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.DB2
 				base.BuildFromClause(sb);
 		}
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is Guid)
 			{

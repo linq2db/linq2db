@@ -127,7 +127,7 @@ namespace LinqToDB.Linq.Builder
 		private ISqlBuilder _sqlProvider;
 		public  ISqlBuilder  SqlProvider
 		{
-			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlProvider()); }
+			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlBuilder()); }
 		}
 
 		private ISqlOptimizer _sqlOptimizer;

@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using SqlProvider;
 
-	public class InformixSqlBuilder : BasicSqlBuilder
+	class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Informix
 			return value ? 't' : 'f';
 		}
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is bool)
 				sb.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");

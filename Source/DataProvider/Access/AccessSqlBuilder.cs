@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Access
 	using SqlQuery;
 	using SqlProvider;
 
-	public class AccessSqlBuilder : BasicSqlBuilder
+	class AccessSqlBuilder : BasicSqlBuilder
 	{
 		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -290,7 +290,7 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is bool)
 				sb.Append(value);

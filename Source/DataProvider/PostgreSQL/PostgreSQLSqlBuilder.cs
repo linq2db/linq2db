@@ -5,11 +5,10 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
-	public class PostgreSQLSqlBuilder : BasicSqlBuilder
+	class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
 		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -46,7 +45,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is bool)
 				sb.Append(value);

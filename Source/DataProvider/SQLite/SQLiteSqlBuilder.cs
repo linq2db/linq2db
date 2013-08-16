@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 
-	public class SQLiteSqlBuilder : BasicSqlBuilder
+	class SQLiteSqlBuilder : BasicSqlBuilder
 	{
 		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.SQLite
 				base.BuildFromClause(sb);
 		}
 
-		public override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(StringBuilder sb, object value)
 		{
 			if (value is Guid)
 			{

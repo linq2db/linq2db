@@ -11,7 +11,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using SqlQuery;
 
-	public abstract class BasicSqlBuilder : ISqlBuilder
+	abstract class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
@@ -1662,7 +1662,7 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
-		protected void BuildExpression(StringBuilder sb, int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)
+		void BuildExpression(StringBuilder sb, int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = Wrap(GetPrecedence(expr), parentPrecedence);
 
@@ -1677,10 +1677,10 @@ namespace LinqToDB.SqlProvider
 			return BuildExpression(sb, expr, true, true, null, ref dummy);
 		}
 
-		protected StringBuilder BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, bool checkParentheses)
+		protected void BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, bool checkParentheses)
 		{
 			var dummy = false;
-			return BuildExpression(sb, expr, buildTableName, checkParentheses, null, ref dummy);
+			BuildExpression(sb, expr, buildTableName, checkParentheses, null, ref dummy);
 		}
 
 		protected void BuildExpression(StringBuilder sb, int precedence, ISqlExpression expr)
@@ -1708,7 +1708,7 @@ namespace LinqToDB.SqlProvider
 
 		static readonly Dictionary<Type,INullableValueReader> _nullableValueReader = new Dictionary<Type,INullableValueReader>();
 
-		public NumberFormatInfo NumberFormatInfo = new NumberFormatInfo
+		readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
 		{
 			CurrencyDecimalDigits    = NumberFormatInfo.InvariantInfo.CurrencyDecimalDigits,
 			CurrencyDecimalSeparator = NumberFormatInfo.InvariantInfo.CurrencyDecimalSeparator,
@@ -1737,7 +1737,7 @@ namespace LinqToDB.SqlProvider
 			PositiveSign             = NumberFormatInfo.InvariantInfo.PositiveSign,
 		};
 
-		public virtual void BuildValue(StringBuilder sb, object value)
+		protected virtual void BuildValue(StringBuilder sb, object value)
 		{
 			if      (value == null)     sb.Append("NULL");
 			else if (value is string)   BuildString(sb, value.ToString());
@@ -1745,9 +1745,9 @@ namespace LinqToDB.SqlProvider
 			else if (value is bool)     sb.Append((bool)value ? "1" : "0");
 			else if (value is DateTime) BuildDateTime(sb, value);
 			else if (value is Guid)     sb.Append('\'').Append(value).Append('\'');
-			else if (value is decimal)  sb.Append(((decimal)value).ToString(NumberFormatInfo));
-			else if (value is double)   sb.Append(((double) value).ToString(NumberFormatInfo));
-			else if (value is float)    sb.Append(((float)  value).ToString(NumberFormatInfo));
+			else if (value is decimal)  sb.Append(((decimal)value).ToString(_numberFormatInfo));
+			else if (value is double)   sb.Append(((double) value).ToString(_numberFormatInfo));
+			else if (value is float)    sb.Append(((float)  value).ToString(_numberFormatInfo));
 			else
 			{
 				var type = value.GetType();
@@ -1809,17 +1809,7 @@ namespace LinqToDB.SqlProvider
 			BuildBinaryExpression(sb, expr.Operation, expr);
 		}
 
-		protected void BuildFunction(StringBuilder sb, string name, SqlBinaryExpression expr)
-		{
-			sb.Append(name);
-			sb.Append("(");
-			BuildExpression(sb, expr.Expr1);
-			sb.Append(", ");
-			BuildExpression(sb, expr.Expr2);
-			sb.Append(')');
-		}
-
-		protected void BuildBinaryExpression(StringBuilder sb, string op, SqlBinaryExpression expr)
+		void BuildBinaryExpression(StringBuilder sb, string op, SqlBinaryExpression expr)
 		{
 			if (expr.Operation == "*" && expr.Expr1 is SqlValue)
 			{
@@ -1893,7 +1883,7 @@ namespace LinqToDB.SqlProvider
 				BuildFunction(sb, func.Name, func.Parameters);
 		}
 
-		protected void BuildFunction(StringBuilder sb, string name, ISqlExpression[] exprs)
+		void BuildFunction(StringBuilder sb, string name, ISqlExpression[] exprs)
 		{
 			sb.Append(name).Append('(');
 
@@ -1933,7 +1923,7 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean : sb.Append("Bit");      return;
 			}
 
-			sb.Append(type.DataType.ToString());
+			sb.Append(type.DataType);
 
 			if (type.Length > 0)
 				sb.Append('(').Append(type.Length).Append(')');
@@ -1946,12 +1936,12 @@ namespace LinqToDB.SqlProvider
 
 		#region GetPrecedence
 
-		protected virtual int GetPrecedence(ISqlExpression expr)
+		static int GetPrecedence(ISqlExpression expr)
 		{
 			return expr.Precedence;
 		}
 
-		protected virtual int GetPrecedence(ISqlPredicate predicate)
+		protected static int GetPrecedence(ISqlPredicate predicate)
 		{
 			return predicate.Precedence;
 		}
@@ -1980,7 +1970,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected virtual void BuildAliases(StringBuilder sb, string table, List<SelectQuery.Column> columns, string postfix)
+		void BuildAliases(StringBuilder sb, string table, List<SelectQuery.Column> columns, string postfix)
 		{
 			Indent++;
 
@@ -2162,7 +2152,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected void BuildAlternativeOrderBy(StringBuilder sb, bool ascending)
+		void BuildAlternativeOrderBy(StringBuilder sb, bool ascending)
 		{
 			AppendIndent(sb).Append("ORDER BY").AppendLine();
 
@@ -2200,7 +2190,7 @@ namespace LinqToDB.SqlProvider
 				yield return new SelectQuery.Column(SelectQuery, SelectQuery.OrderBy.Items[i].Expression, obys[i]);
 		}
 
-		protected bool IsDateDataType(ISqlExpression expr, string dateName)
+		protected static bool IsDateDataType(ISqlExpression expr, string dateName)
 		{
 			switch (expr.ElementType)
 			{
@@ -2211,7 +2201,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		protected bool IsTimeDataType(ISqlExpression expr)
+		protected static bool IsTimeDataType(ISqlExpression expr)
 		{
 			switch (expr.ElementType)
 			{
@@ -2220,116 +2210,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return false;
-		}
-
-		protected SelectQuery GetAlternativeDelete(SelectQuery selectQuery)
-		{
-			if (selectQuery.IsDelete && 
-				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
-				selectQuery.From.Tables[0].Source is SqlTable)
-			{
-				var sql = new SelectQuery { QueryType = QueryType.Delete };
-
-				selectQuery.ParentSelect = sql;
-				selectQuery.QueryType = QueryType.Select;
-
-				var table = (SqlTable)selectQuery.From.Tables[0].Source;
-				var copy  = new SqlTable(table) { Alias = null };
-
-				var tableKeys = table.GetKeys(true);
-				var copyKeys  = copy. GetKeys(true);
-
-				if (selectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
-				{
-					var sc1 = new SelectQuery.SearchCondition(selectQuery.Where.SearchCondition.Conditions);
-					var sc2 = new SelectQuery.SearchCondition();
-
-					for (var i = 0; i < tableKeys.Count; i++)
-					{
-						sc2.Conditions.Add(new SelectQuery.Condition(
-							false,
-							new SelectQuery.Predicate.ExprExpr(copyKeys[i], SelectQuery.Predicate.Operator.Equal, tableKeys[i])));
-					}
-
-					selectQuery.Where.SearchCondition.Conditions.Clear();
-					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
-					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc2));
-				}
-				else
-				{
-					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
-				}
-
-				sql.From.Table(copy).Where.Exists(selectQuery);
-				sql.Parameters.AddRange(selectQuery.Parameters);
-
-				selectQuery.Parameters.Clear();
-
-				selectQuery = sql;
-			}
-
-			return selectQuery;
-		}
-
-		protected SelectQuery GetAlternativeUpdate(SelectQuery selectQuery)
-		{
-			if (selectQuery.IsUpdate && (selectQuery.From.Tables[0].Source is SqlTable || selectQuery.Update.Table != null))
-			{
-				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
-				{
-					var sql = new SelectQuery { QueryType = QueryType.Update };
-
-					selectQuery.ParentSelect = sql;
-					selectQuery.QueryType = QueryType.Select;
-
-					var table = selectQuery.Update.Table ?? (SqlTable)selectQuery.From.Tables[0].Source;
-
-					if (selectQuery.Update.Table != null)
-						if (new QueryVisitor().Find(selectQuery.From, t => t == table) == null)
-							table = (SqlTable)new QueryVisitor().Find(selectQuery.From,
-								ex => ex is SqlTable && ((SqlTable)ex).ObjectType == table.ObjectType) ?? table;
-
-					var copy = new SqlTable(table);
-
-					var tableKeys = table.GetKeys(true);
-					var copyKeys  = copy. GetKeys(true);
-
-					for (var i = 0; i < tableKeys.Count; i++)
-						selectQuery.Where
-							.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
-
-					sql.From.Table(copy).Where.Exists(selectQuery);
-
-					var map = new Dictionary<SqlField,SqlField>(table.Fields.Count);
-
-					foreach (var field in table.Fields.Values)
-						map.Add(field, copy[field.Name]);
-
-					foreach (var item in selectQuery.Update.Items)
-					{
-						var ex = new QueryVisitor().Convert(item, expr =>
-						{
-							var fld = expr as SqlField;
-							return fld != null && map.TryGetValue(fld, out fld) ? fld : expr;
-						});
-
-						sql.Update.Items.Add(ex);
-					}
-
-					sql.Parameters.AddRange(selectQuery.Parameters);
-					sql.Update.Table = selectQuery.Update.Table;
-
-					selectQuery.Parameters.Clear();
-					selectQuery.Update.Items.Clear();
-
-					selectQuery = sql;
-				}
-
-				selectQuery.From.Tables[0].Alias = "$";
-			}
-
-			return selectQuery;
 		}
 
 		static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
@@ -2527,29 +2407,20 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
-		public ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
+		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
 			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive));
 		}
 
-		public ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
+		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return Add(expr1, expr2, typeof(T));
 		}
 
-		public ISqlExpression Add(ISqlExpression expr1, int value)
+		ISqlExpression Add(ISqlExpression expr1, int value)
 		{
 			return Add<int>(expr1, new SqlValue(value));
 		}
-
-		#endregion
-
-		#region DataTypes
-
-		protected virtual int GetMaxLength     (SqlDataType type) { return SqlDataType.GetMaxLength     (type.DataType); }
-		protected virtual int GetMaxPrecision  (SqlDataType type) { return SqlDataType.GetMaxPrecision  (type.DataType); }
-		protected virtual int GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.DataType); }
-		protected virtual int GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		#endregion
 

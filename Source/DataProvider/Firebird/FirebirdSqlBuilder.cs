@@ -10,11 +10,10 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
-	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
-	public class FirebirdSqlBuilder : BasicSqlBuilder
+	class FirebirdSqlBuilder : BasicSqlBuilder
 	{
 		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)

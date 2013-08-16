@@ -6,11 +6,10 @@ using System.Text;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
-	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
-	public abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
 		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)

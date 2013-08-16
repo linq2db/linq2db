@@ -25,7 +25,7 @@ namespace LinqToDB.Linq
 		public MappingSchema    MappingSchema    { get { return DataContext.MappingSchema;    } }
 		public SqlProviderFlags SqlProviderFlags { get { return DataContext.SqlProviderFlags; } }
 
-		public ISqlBuilder CreateSqlProvider()
+		public ISqlBuilder CreateSqlBuilder()
 		{
 			return DataContext.CreateSqlProvider();
 		}

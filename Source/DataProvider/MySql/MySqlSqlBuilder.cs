@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlQuery;
 	using SqlProvider;
 
-	public class MySqlSqlBuilder : BasicSqlBuilder
+	class MySqlSqlBuilder : BasicSqlBuilder
 	{
 		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
