@@ -2244,8 +2244,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)
 		{
-			SqlProvider.SelectQuery = context.SelectQuery;
-			return SqlProvider.ConvertPredicate(predicate);
+			return SqlOptimizer.ConvertPredicate(context.SelectQuery, predicate);
 		}
 
 		public ISqlExpression ConvertTimeSpanMember(IBuildContext context, MemberExpression expression)

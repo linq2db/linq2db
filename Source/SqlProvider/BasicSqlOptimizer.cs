@@ -7,6 +7,8 @@ namespace LinqToDB.SqlProvider
 
 	class BasicSqlOptimizer : ISqlOptimizer
 	{
+		#region ISqlOptimizer Members
+
 		public virtual ISqlExpression ConvertExpression(ISqlExpression expression)
 		{
 			switch (expression.ElementType)
@@ -387,6 +389,296 @@ namespace LinqToDB.SqlProvider
 
 			return expression;
 		}
+
+		public virtual ISqlPredicate ConvertPredicate(SelectQuery selectQuery, ISqlPredicate predicate)
+		{
+			switch (predicate.ElementType)
+			{
+				case QueryElementType.ExprExprPredicate:
+					{
+						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
+
+						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
+						{
+							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
+							return new SelectQuery.Predicate.Expr(new SqlValue(value), Precedence.Comparison);
+						}
+
+						switch (expr.Operator)
+						{
+							case SelectQuery.Predicate.Operator.Equal         :
+							case SelectQuery.Predicate.Operator.NotEqual      :
+							case SelectQuery.Predicate.Operator.Greater       :
+							case SelectQuery.Predicate.Operator.GreaterOrEqual:
+							case SelectQuery.Predicate.Operator.Less          :
+							case SelectQuery.Predicate.Operator.LessOrEqual   :
+								predicate = OptimizeCase(selectQuery, expr);
+								break;
+						}
+
+						if (predicate is SelectQuery.Predicate.ExprExpr)
+						{
+							expr = (SelectQuery.Predicate.ExprExpr)predicate;
+
+							switch (expr.Operator)
+							{
+								case SelectQuery.Predicate.Operator.Equal :
+								case SelectQuery.Predicate.Operator.NotEqual :
+									var expr1 = expr.Expr1;
+									var expr2 = expr.Expr2;
+
+									if (expr1.CanBeNull() && expr2.CanBeNull())
+									{
+										if (expr1 is SqlParameter || expr2 is SqlParameter)
+											selectQuery.IsParameterDependent = true;
+										else
+											if (expr1 is SelectQuery.Column || expr1 is SqlField)
+											if (expr2 is SelectQuery.Column || expr2 is SqlField)
+												predicate = ConvertEqualPredicate(expr);
+									}
+
+									break;
+							}
+						}
+					}
+
+					break;
+
+				case QueryElementType.NotExprPredicate:
+					{
+						var expr = (SelectQuery.Predicate.NotExpr)predicate;
+
+						if (expr.IsNot && expr.Expr1 is SelectQuery.SearchCondition)
+						{
+							var sc = (SelectQuery.SearchCondition)expr.Expr1;
+
+							if (sc.Conditions.Count == 1)
+							{
+								var cond = sc.Conditions[0];
+
+								if (cond.IsNot)
+									return cond.Predicate;
+
+								if (cond.Predicate is SelectQuery.Predicate.ExprExpr)
+								{
+									var ee = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
+
+									if (ee.Operator == SelectQuery.Predicate.Operator.Equal)
+										return new SelectQuery.Predicate.ExprExpr(ee.Expr1, SelectQuery.Predicate.Operator.NotEqual, ee.Expr2);
+
+									if (ee.Operator == SelectQuery.Predicate.Operator.NotEqual)
+										return new SelectQuery.Predicate.ExprExpr(ee.Expr1, SelectQuery.Predicate.Operator.Equal, ee.Expr2);
+								}
+							}
+						}
+					}
+
+					break;
+			}
+
+			return predicate;
+		}
+
+		protected ISqlPredicate ConvertEqualPredicate(SelectQuery.Predicate.ExprExpr expr)
+		{
+			var expr1 = expr.Expr1;
+			var expr2 = expr.Expr2;
+			var cond  = new SelectQuery.SearchCondition();
+
+			if (expr.Operator == SelectQuery.Predicate.Operator.Equal)
+				cond
+					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
+					.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And .Expr(expr1).Equal.Expr(expr2);
+			else
+				cond
+					.Expr(expr1).IsNull.    And .Expr(expr2).IsNotNull. Or
+					.Expr(expr1).IsNotNull. And .Expr(expr2).IsNull.    Or
+					.Expr(expr1).NotEqual.Expr(expr2);
+
+			return cond;
+		}
+
+		static SelectQuery.Predicate.Operator InvertOperator(SelectQuery.Predicate.Operator op, bool skipEqual)
+		{
+			switch (op)
+			{
+				case SelectQuery.Predicate.Operator.Equal          : return skipEqual ? op : SelectQuery.Predicate.Operator.NotEqual;
+				case SelectQuery.Predicate.Operator.NotEqual       : return skipEqual ? op : SelectQuery.Predicate.Operator.Equal;
+				case SelectQuery.Predicate.Operator.Greater        : return SelectQuery.Predicate.Operator.LessOrEqual;
+				case SelectQuery.Predicate.Operator.NotLess        :
+				case SelectQuery.Predicate.Operator.GreaterOrEqual : return SelectQuery.Predicate.Operator.Less;
+				case SelectQuery.Predicate.Operator.Less           : return SelectQuery.Predicate.Operator.GreaterOrEqual;
+				case SelectQuery.Predicate.Operator.NotGreater     :
+				case SelectQuery.Predicate.Operator.LessOrEqual    : return SelectQuery.Predicate.Operator.Greater;
+				default: throw new InvalidOperationException();
+			}
+		}
+
+		ISqlPredicate OptimizeCase(SelectQuery selectQuery, SelectQuery.Predicate.ExprExpr expr)
+		{
+			var value = expr.Expr1 as SqlValue;
+			var func  = expr.Expr2 as SqlFunction;
+			var valueFirst = false;
+
+			if (value != null && func != null)
+			{
+				valueFirst = true;
+			}
+			else
+			{
+				value = expr.Expr2 as SqlValue;
+				func  = expr.Expr1 as SqlFunction;
+			}
+
+			if (value != null && func != null && func.Name == "CASE")
+			{
+				if (value.Value is int && func.Parameters.Length == 5)
+				{
+					var c1 = func.Parameters[0] as SelectQuery.SearchCondition;
+					var v1 = func.Parameters[1] as SqlValue;
+					var c2 = func.Parameters[2] as SelectQuery.SearchCondition;
+					var v2 = func.Parameters[3] as SqlValue;
+					var v3 = func.Parameters[4] as SqlValue;
+
+					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is int &&
+					    c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
+					{
+						var ee1 = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
+						var ee2 = c2.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
+
+						if (ee1 != null && ee2 != null && ee1.Expr1.Equals(ee2.Expr1) && ee1.Expr2.Equals(ee2.Expr2))
+						{
+							int e = 0, g = 0, l = 0;
+
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Equal   || ee2.Operator == SelectQuery.Predicate.Operator.Equal)   e = 1;
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Greater || ee2.Operator == SelectQuery.Predicate.Operator.Greater) g = 1;
+							if (ee1.Operator == SelectQuery.Predicate.Operator.Less    || ee2.Operator == SelectQuery.Predicate.Operator.Less)    l = 1;
+
+							if (e + g + l == 2)
+							{
+								var n  = (int)value.Value;
+								var i1 = (int)v1.Value;
+								var i2 = (int)v2.Value;
+								var i3 = (int)v3.Value;
+
+								var n1 = Compare(valueFirst ? n : i1, valueFirst ? i1 : n, expr.Operator) ? 1 : 0;
+								var n2 = Compare(valueFirst ? n : i2, valueFirst ? i2 : n, expr.Operator) ? 1 : 0;
+								var n3 = Compare(valueFirst ? n : i3, valueFirst ? i3 : n, expr.Operator) ? 1 : 0;
+
+								if (n1 + n2 + n3 == 1)
+								{
+									if (n1 == 1) return ee1;
+									if (n2 == 1) return ee2;
+
+									return ConvertPredicate(
+										selectQuery,
+										new SelectQuery.Predicate.ExprExpr(
+											ee1.Expr1,
+											e == 0 ? SelectQuery.Predicate.Operator.Equal :
+											g == 0 ? SelectQuery.Predicate.Operator.Greater :
+													 SelectQuery.Predicate.Operator.Less,
+											ee1.Expr2));
+								}
+
+								//	CASE
+								//		WHEN [p].[FirstName] > 'John'
+								//			THEN 1
+								//		WHEN [p].[FirstName] = 'John'
+								//			THEN 0
+								//		ELSE -1
+								//	END <= 0
+								if (ee1.Operator == SelectQuery.Predicate.Operator.Greater && i1 == 1 &&
+									ee2.Operator == SelectQuery.Predicate.Operator.Equal   && i2 == 0 &&
+									i3 == -1 && n == 0)
+								{
+									return ConvertPredicate(
+										selectQuery,
+										new SelectQuery.Predicate.ExprExpr(
+											ee1.Expr1,
+											valueFirst ? InvertOperator(expr.Operator, true) : expr.Operator,
+											ee1.Expr2));
+								}
+							}
+						}
+					}
+				}
+				else if (value.Value is bool && func.Parameters.Length == 3)
+				{
+					var c1 = func.Parameters[0] as SelectQuery.SearchCondition;
+					var v1 = func.Parameters[1] as SqlValue;
+					var v2 = func.Parameters[2] as SqlValue;
+
+					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is bool && v2 != null && v2.Value is bool)
+					{
+						var bv  = (bool)value.Value;
+						var bv1 = (bool)v1.Value;
+						var bv2 = (bool)v2.Value;
+
+						if (bv == bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal ||
+						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+						{
+							return c1;
+						}
+
+						if (bv == bv2 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual ||
+						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
+						{
+							var ee = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
+
+							if (ee != null)
+							{
+								var op = InvertOperator(ee.Operator, false);
+								return new SelectQuery.Predicate.ExprExpr(ee.Expr1, op, ee.Expr2);
+							}
+
+							var sc = new SelectQuery.SearchCondition();
+
+							sc.Conditions.Add(new SelectQuery.Condition(true, c1));
+
+							return sc;
+						}
+					}
+				}
+				else if (expr.Operator == SelectQuery.Predicate.Operator.Equal && func.Parameters.Length == 3)
+				{
+					var sc = func.Parameters[0] as SelectQuery.SearchCondition;
+					var v1 = func.Parameters[1] as SqlValue;
+					var v2 = func.Parameters[2] as SqlValue;
+
+					if (sc != null && v1 != null && v2 != null)
+					{
+						if (Equals(value.Value, v1.Value))
+							return sc;
+
+						if (Equals(value.Value, v2.Value) && !sc.CanBeNull())
+							return ConvertPredicate(
+								selectQuery,
+								new SelectQuery.Predicate.NotExpr(sc, true, Precedence.LogicalNegation));
+					}
+				}
+			}
+
+			return expr;
+		}
+
+		static bool Compare(int v1, int v2, SelectQuery.Predicate.Operator op)
+		{
+			switch (op)
+			{
+				case SelectQuery.Predicate.Operator.Equal:           return v1 == v2;
+				case SelectQuery.Predicate.Operator.NotEqual:        return v1 != v2;
+				case SelectQuery.Predicate.Operator.Greater:         return v1 >  v2;
+				case SelectQuery.Predicate.Operator.NotLess:
+				case SelectQuery.Predicate.Operator.GreaterOrEqual:  return v1 >= v2;
+				case SelectQuery.Predicate.Operator.Less:            return v1 <  v2;
+				case SelectQuery.Predicate.Operator.NotGreater:
+				case SelectQuery.Predicate.Operator.LessOrEqual:     return v1 <= v2;
+			}
+
+			throw new InvalidOperationException();
+		}
+
+		#endregion
 
 		#region DataTypes
 

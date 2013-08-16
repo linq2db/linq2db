@@ -7,5 +7,6 @@ namespace LinqToDB.SqlProvider
 	public interface ISqlOptimizer
 	{
 		ISqlExpression ConvertExpression(ISqlExpression expression);
+		ISqlPredicate  ConvertPredicate (SelectQuery selectQuery, ISqlPredicate  predicate);
 	}
 }
