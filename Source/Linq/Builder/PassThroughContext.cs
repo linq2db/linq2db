@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	public abstract class PassThroughContext : IBuildContext
+	abstract class PassThroughContext : IBuildContext
 	{
 		protected PassThroughContext(IBuildContext context)
 		{

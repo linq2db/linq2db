@@ -5,7 +5,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlProvider;
 
-	public class DataContextInfo : IDataContextInfo
+	class DataContextInfo : IDataContextInfo
 	{
 		public DataContextInfo(IDataContext dataContext)
 		{

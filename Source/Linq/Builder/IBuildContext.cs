@@ -2,6 +2,8 @@
 using System.Linq.Expressions;
 
 #if DEBUG
+// ReSharper disable InconsistentNaming
+
 #pragma warning disable 3010
 #endif
 
@@ -9,13 +11,10 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	public interface IBuildContext
+	interface IBuildContext
 	{
 #if DEBUG
-// ReSharper disable InconsistentNaming
-		[CLSCompliant(false)]
 		string _sqlQueryText { get; }
-// ReSharper restore InconsistentNaming
 #endif
 
 		ExpressionBuilder  Builder     { get; }

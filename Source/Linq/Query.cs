@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using SqlProvider;
 
-	public abstract class Query
+	abstract class Query
 	{
 		#region Init
 
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	public class Query<T> : Query
+	class Query<T> : Query
 	{
 		#region Init
 

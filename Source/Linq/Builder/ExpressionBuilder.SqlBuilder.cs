@@ -140,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 			sql.Select.Take(expr);
 
 			if (sql.Select.SkipValue != null &&
-				DataContextInfo.SqlProviderFlags.IsTakeSupported &&
+				 DataContextInfo.SqlProviderFlags.IsTakeSupported &&
 				!DataContextInfo.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
 			{
 				if (context.SelectQuery.Select.SkipValue is SqlParameter && sql.Select.TakeValue is SqlValue)

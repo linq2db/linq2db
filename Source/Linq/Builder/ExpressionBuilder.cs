@@ -12,10 +12,9 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using SqlProvider;
 	using LinqToDB.Expressions;
 
-	public partial class ExpressionBuilder
+	partial class ExpressionBuilder
 	{
 		#region Sequence
 
