@@ -124,12 +124,6 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[] CompiledParameters;
 		public readonly List<IBuildContext>   Contexts = new List<IBuildContext>();
 
-		private ISqlBuilder _sqlBuilder;
-		public  ISqlBuilder  SqlBuilder
-		{
-			get { return _sqlBuilder ?? (_sqlBuilder = DataContextInfo.CreateSqlBuilder()); }
-		}
-
 		public static readonly ParameterExpression ContextParam     = Expression.Parameter(typeof(QueryContext), "context");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");

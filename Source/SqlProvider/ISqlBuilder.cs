@@ -14,7 +14,6 @@ namespace LinqToDB.SqlProvider
 		object           Convert              (object value, ConvertType convertType);
 		ISqlExpression   GetIdentityExpression(SqlTable table);
 
-		string           Name        { get; }
-		SelectQuery      SelectQuery { get; set; }
+		string           Name { get; }
 	}
 }
