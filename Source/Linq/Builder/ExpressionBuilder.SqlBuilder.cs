@@ -139,8 +139,6 @@ namespace LinqToDB.Linq.Builder
 
 			sql.Select.Take(expr);
 
-			SqlBuilder.SelectQuery = sql;
-
 			if (sql.Select.SkipValue != null &&
 				DataContextInfo.SqlProviderFlags.IsTakeSupported &&
 				!DataContextInfo.SqlProviderFlags.GetIsSkipSupportedFlag(sql))
@@ -2239,47 +2237,12 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression Convert(IBuildContext context, ISqlExpression expr)
 		{
-			return SqlOptimizer.ConvertExpression(expr);
+			return DataContextInfo.GetSqlOptimizer().ConvertExpression(expr);
 		}
 
 		public ISqlPredicate Convert(IBuildContext context, ISqlPredicate predicate)
 		{
-			return SqlOptimizer.ConvertPredicate(context.SelectQuery, predicate);
-		}
-
-		public ISqlExpression ConvertTimeSpanMember(IBuildContext context, MemberExpression expression)
-		{
-			if (expression.Member.DeclaringType == typeof(TimeSpan))
-			{
-				switch (expression.Expression.NodeType)
-				{
-					case ExpressionType.Subtract       :
-					case ExpressionType.SubtractChecked:
-
-						Sql.DateParts datePart;
-
-						switch (expression.Member.Name)
-						{
-							case "TotalMilliseconds" : datePart = Sql.DateParts.Millisecond; break;
-							case "TotalSeconds"      : datePart = Sql.DateParts.Second;      break;
-							case "TotalMinutes"      : datePart = Sql.DateParts.Minute;      break;
-							case "TotalHours"        : datePart = Sql.DateParts.Hour;        break;
-							case "TotalDays"         : datePart = Sql.DateParts.Day;         break;
-							default                  : return null;
-						}
-
-						var e = (BinaryExpression)expression.Expression;
-
-						return new SqlFunction(
-							typeof(int),
-							"DateDiff",
-							new SqlValue(datePart),
-							ConvertToSql(context, e.Right),
-							ConvertToSql(context, e.Left));
-				}
-			}
-
-			return null;
+			return DataContextInfo.GetSqlOptimizer().ConvertPredicate(context.SelectQuery, predicate);
 		}
 
 		internal ISqlExpression ConvertSearchCondition(IBuildContext context, ISqlExpression sqlExpression)
