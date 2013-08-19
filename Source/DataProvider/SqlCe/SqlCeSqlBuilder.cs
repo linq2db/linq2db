@@ -23,67 +23,67 @@ namespace LinqToDB.DataProvider.SqlCe
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT @@IDENTITY");
+			StringBuilder.AppendLine("SELECT @@IDENTITY");
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SqlCeSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Char          : base.BuildDataType(sb, new SqlDataType(DataType.NChar,    type.Length)); break;
-				case DataType.VarChar       : base.BuildDataType(sb, new SqlDataType(DataType.NVarChar, type.Length)); break;
-				case DataType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
+				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length)); break;
+				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length)); break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
 #if !MONO
 				case DataType.DateTime2     :
 #endif
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : sb.Append("DateTime");        break;
-				default                     : base.BuildDataType(sb, type); break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime"); break;
+				default                     : base.BuildDataType(type);         break;
 			}
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
-		protected override void BuildOrderByClause(StringBuilder sb)
+		protected override void BuildOrderByClause()
 		{
 			if (SelectQuery.OrderBy.Items.Count == 0 && SelectQuery.Select.SkipValue != null)
 			{
-				AppendIndent(sb);
+				AppendIndent();
 
-				sb.Append("ORDER BY").AppendLine();
+				StringBuilder.Append("ORDER BY").AppendLine();
 
 				Indent++;
 
-				AppendIndent(sb);
+				AppendIndent();
 
-				BuildExpression(sb, SelectQuery.Select.Columns[0].Expression);
-				sb.AppendLine();
+				BuildExpression(SelectQuery.Select.Columns[0].Expression);
+				StringBuilder.AppendLine();
 
 				Indent--;
 			}
 			else
-				base.BuildOrderByClause(sb);
+				base.BuildOrderByClause();
 		}
 
-		protected override void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -98,9 +98,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				}
 			}
 
-			if (wrap) sb.Append("CASE WHEN ");
-			base.BuildColumnExpression(sb, expr, alias, ref addAlias);
-			if (wrap) sb.Append(" THEN 1 ELSE 0 END");
+			if (wrap) StringBuilder.Append("CASE WHEN ");
+			base.BuildColumnExpression(expr, alias, ref addAlias);
+			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -154,9 +154,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			return value;
 		}
 
-		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
-			sb.Append("IDENTITY");
+			StringBuilder.Append("IDENTITY");
 		}
 	}
 }

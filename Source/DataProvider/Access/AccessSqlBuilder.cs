@@ -22,9 +22,9 @@ namespace LinqToDB.DataProvider.Access
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT @@IDENTITY");
+			StringBuilder.AppendLine("SELECT @@IDENTITY");
 		}
 
 		public override bool IsNestedJoinSupported     { get { return false; } }
@@ -33,11 +33,11 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string FirstFormat { get { return "TOP {0}"; } }
 
-		protected override void BuildSql(StringBuilder sb)
+		protected override void BuildSql()
 		{
 			if (NeedSkip)
 			{
-				AlternativeBuildSql2(sb, base.BuildSql);
+				AlternativeBuildSql2(base.BuildSql);
 				return;
 			}
 
@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.Access
 
 							if (p.Function.Name == "EXISTS")
 							{
-								BuildAnyAsCount(sb);
+								BuildAnyAsCount();
 								return;
 							}
 						}
@@ -73,19 +73,19 @@ namespace LinqToDB.DataProvider.Access
 
 						if (p.Function.Name == "EXISTS")
 						{
-							BuildAnyAsCount(sb);
+							BuildAnyAsCount();
 							return;
 						}
 					}
 				}
 			}
 
-			base.BuildSql(sb);
+			base.BuildSql();
 		}
 
 		SelectQuery.Column _selectColumn;
 
-		void BuildAnyAsCount(StringBuilder sb)
+		void BuildAnyAsCount()
 		{
 			SelectQuery.SearchCondition cond;
 
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Access
 
 			_selectColumn = new SelectQuery.Column(SelectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), SelectQuery.Select.Columns[0].Alias);
 
-			BuildSql(0, query, sb, 0, false);
+			BuildSql(0, query, StringBuilder);
 
 			_selectColumn = null;
 		}
@@ -120,27 +120,27 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSelectedColumns();
 		}
 
-		protected override void BuildSkipFirst(StringBuilder sb)
+		protected override void BuildSkipFirst()
 		{
 			if (NeedSkip)
 			{
 				if (!NeedTake)
 				{
-					sb.AppendFormat(" TOP {0}", int.MaxValue);
+					StringBuilder.AppendFormat(" TOP {0}", int.MaxValue);
 				}
 				else if (!SelectQuery.OrderBy.IsEmpty)
 				{
-					sb.Append(" TOP ");
-					BuildExpression(sb, Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue));
+					StringBuilder.Append(" TOP ");
+					BuildExpression(Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue));
 				}
 			}
 			else
-				base.BuildSkipFirst(sb);
+				base.BuildSkipFirst();
 		}
 
 		#endregion
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.Access
 			return true;
 		}
 
-		protected override void BuildLikePredicate(StringBuilder sb, SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
 			if (predicate.Escape != null)
 			{
@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.Access
 				}
 			}
 
-			base.BuildLikePredicate(sb, predicate);
+			base.BuildLikePredicate(predicate);
 		}
 
 		static string ReescapeLikeText(string text, char esc)
@@ -205,7 +205,7 @@ namespace LinqToDB.DataProvider.Access
 			return sb.ToString();
 		}
 
-		protected override void BuildBinaryExpression(StringBuilder sb, SqlBinaryExpression expr)
+		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
 		{
 			switch (expr.Operation[0])
 			{
@@ -215,10 +215,10 @@ namespace LinqToDB.DataProvider.Access
 				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
-			base.BuildBinaryExpression(sb, expr);
+			base.BuildBinaryExpression(expr);
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -229,8 +229,8 @@ namespace LinqToDB.DataProvider.Access
 						var parms = new ISqlExpression[func.Parameters.Length - 1];
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(sb, new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-						                  new SqlFunction(func.SystemType, func.Name, parms)));
+						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
+						              new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 
@@ -266,7 +266,7 @@ namespace LinqToDB.DataProvider.Access
 							if (func.SystemType == typeof(DateTime))
 								goto case TypeCode.DateTime;
 
-							BuildExpression(sb, func.Parameters[1]);
+							BuildExpression(func.Parameters[1]);
 
 							return;
 					}
@@ -274,7 +274,7 @@ namespace LinqToDB.DataProvider.Access
 					break;
 			}
 
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
 		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
@@ -290,27 +290,27 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(object value)
 		{
 			if (value is bool)
-				sb.Append(value);
+				StringBuilder.Append(value);
 			else if (value is Guid)
-				sb.Append("'").Append(((Guid)value).ToString("B")).Append("'");
+				StringBuilder.Append("'").Append(((Guid)value).ToString("B")).Append("'");
 			else
-				base.BuildValue(sb, value);
+				base.BuildValue(value);
 		}
 
-		protected override void BuildUpdateClause(StringBuilder sb)
+		protected override void BuildUpdateClause()
 		{
-			base.BuildFromClause(sb);
-			sb.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(sb);
+			base.BuildFromClause();
+			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
+			base.BuildUpdateSet();
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -365,21 +365,21 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-		protected override void BuildDateTime(StringBuilder sb, object value)
+		protected override void BuildDateTime(object value)
 		{
-			sb.Append("#{0:yyyy-MM-dd HH:mm:ss}#".Args(value));
+			StringBuilder.Append("#{0:yyyy-MM-dd HH:mm:ss}#".Args(value));
 		}
 
-		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
-			sb.Append("IDENTITY");
+			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
-			sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			sb.Append(")");
+			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(")");
 		}
 	}
 }

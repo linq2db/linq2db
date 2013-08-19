@@ -20,39 +20,39 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSelectClause(StringBuilder sb)
+		protected override void BuildSelectClause()
 		{
 			if (SelectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent(sb);
-				sb.Append("SELECT").AppendLine();
-				BuildColumns(sb);
-				AppendIndent(sb);
-				sb.Append("FROM rdb$database").AppendLine();
+				AppendIndent();
+				StringBuilder.Append("SELECT").AppendLine();
+				BuildColumns();
+				AppendIndent();
+				StringBuilder.Append("FROM rdb$database").AppendLine();
 			}
 			else
-				base.BuildSelectClause(sb);
+				base.BuildSelectClause();
 		}
 
 		protected override bool   SkipFirst   { get { return false;       } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
 		protected override string FirstFormat { get { return "FIRST {0}"; } }
 
-		protected override void BuildGetIdentity(StringBuilder sb)
+		protected override void BuildGetIdentity()
 		{
 			var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
-			AppendIndent(sb).AppendLine("RETURNING");
-			AppendIndent(sb).Append("\t");
-			BuildExpression(sb, identityField, false, true);
+			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().Append("\t");
+			BuildExpression(identityField, false, true);
 		}
 
 		public override ISqlExpression GetIdentityExpression(SqlTable table)
@@ -63,44 +63,44 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(sb, type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
+					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
 					break;
 				case DataType.SByte         :
-				case DataType.Byte          : sb.Append("SmallInt");        break;
-				case DataType.Money         : sb.Append("Decimal(18,4)");   break;
-				case DataType.SmallMoney    : sb.Append("Decimal(10,4)");   break;
+				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
+				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
 #if !MONO
 				case DataType.DateTime2     :
 #endif
 				case DataType.SmallDateTime :
-				case DataType.DateTime      : sb.Append("TimeStamp");       break;
+				case DataType.DateTime      : StringBuilder.Append("TimeStamp");       break;
 				case DataType.NVarChar      :
-					sb.Append("VarChar");
+					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
-						sb.Append('(').Append(type.Length).Append(')');
+						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default                      : base.BuildDataType(sb, type); break;
+				default                      : base.BuildDataType(type); break;
 			}
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
-		protected override void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -115,9 +115,9 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
-			if (wrap) sb.Append("CASE WHEN ");
-			base.BuildColumnExpression(sb, expr, alias, ref addAlias);
-			if (wrap) sb.Append(" THEN 1 ELSE 0 END");
+			if (wrap) StringBuilder.Append("CASE WHEN ");
+			base.BuildColumnExpression(expr, alias, ref addAlias);
+			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		public static bool QuoteIdentifiers = false;
@@ -158,15 +158,15 @@ namespace LinqToDB.DataProvider.Firebird
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertOrUpdateQueryAsMerge(sb, "FROM rdb$database");
+			BuildInsertOrUpdateQueryAsMerge("FROM rdb$database");
 		}
 
-		protected override void BuildCreateTableNullAttribute(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableNullAttribute(SqlField field)
 		{
 			if (!field.Nullable)
-				sb.Append("NOT NULL");
+				StringBuilder.Append("NOT NULL");
 		}
 
 		SqlField _identityField;
@@ -184,47 +184,47 @@ namespace LinqToDB.DataProvider.Firebird
 			return base.CommandCount(selectQuery);
 		}
 
-		protected override void BuildDropTableStatement(StringBuilder sb)
+		protected override void BuildDropTableStatement()
 		{
 			if (_identityField == null)
 			{
-				base.BuildDropTableStatement(sb);
+				base.BuildDropTableStatement();
 			}
 			else
 			{
-				sb
+				StringBuilder
 					.Append("DROP TRIGGER TIDENTITY_")
 					.Append(SelectQuery.CreateTable.Table.PhysicalName)
 					.AppendLine();
 			}
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
 			if (SelectQuery.CreateTable.IsDrop)
 			{
 				if (commandNumber == 1)
 				{
-					sb
+					StringBuilder
 						.Append("DROP GENERATOR GIDENTITY_")
 						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
-					base.BuildDropTableStatement(sb);
+					base.BuildDropTableStatement();
 			}
 			else
 			{
 				if (commandNumber == 1)
 				{
-					sb
+					StringBuilder
 						.Append("CREATE GENERATOR GIDENTITY_")
 						.Append(SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine();
 				}
 				else
 				{
-					sb
+					StringBuilder
 						.AppendFormat("CREATE TRIGGER TIDENTITY_{0} FOR {0}", SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
 						.AppendLine  ("BEFORE INSERT POSITION 0")

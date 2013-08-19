@@ -13,21 +13,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2008SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertOrUpdateQueryAsMerge(sb, null);
-			sb.AppendLine(";");
+			BuildInsertOrUpdateQueryAsMerge(null);
+			StringBuilder.AppendLine(";");
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
 		public override string  Name

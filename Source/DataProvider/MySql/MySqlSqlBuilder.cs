@@ -25,12 +25,12 @@ namespace LinqToDB.DataProvider.MySql
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT LAST_INSERT_ID()");
+			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
@@ -39,24 +39,24 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool IsNestedJoinParenthesisRequired { get { return true; } }
 
-		protected override void BuildOffsetLimit(StringBuilder sb)
+		protected override void BuildOffsetLimit()
 		{
 			if (SelectQuery.Select.SkipValue == null)
-				base.BuildOffsetLimit(sb);
+				base.BuildOffsetLimit();
 			else
 			{
-				AppendIndent(sb)
+				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0},{1}",
-						BuildExpression(new StringBuilder(), SelectQuery.Select.SkipValue),
+						WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.SkipValue)),
 						SelectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							BuildExpression(new StringBuilder(), SelectQuery.Select.TakeValue).ToString())
+							WithStringBuilder(new StringBuilder(), () => BuildExpression(SelectQuery.Select.TakeValue).ToString()))
 					.AppendLine();
 			}
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
@@ -64,55 +64,55 @@ namespace LinqToDB.DataProvider.MySql
 				case DataType.UInt16        :
 				case DataType.Int16         :
 					if (createDbType) goto default;
-					sb.Append("Signed");
+					StringBuilder.Append("Signed");
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          :
 					if (createDbType) goto default;
-					sb.Append("Unsigned");
+					StringBuilder.Append("Unsigned");
 					break;
-				case DataType.Money         : sb.Append("Decimal(19,4)"); break;
-				case DataType.SmallMoney    : sb.Append("Decimal(10,4)"); break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
 #if !MONO
 				case DataType.DateTime2     :
 #endif
-				case DataType.SmallDateTime : sb.Append("DateTime");      break;
-				case DataType.Boolean       : sb.Append("Boolean");       break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
 				case DataType.Double        :
-				case DataType.Single        : base.BuildDataType(sb, SqlDataType.Decimal); break;
+				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal); break;
 				case DataType.VarChar       :
 				case DataType.NVarChar      :
-					sb.Append("Char");
+					StringBuilder.Append("Char");
 					if (type.Length > 0)
-						sb.Append('(').Append(type.Length).Append(')');
+						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default: base.BuildDataType(sb, type); break;
+				default                     : base.BuildDataType(type); break;
 			}
 		}
 
-		protected override void BuildDeleteClause(StringBuilder sb)
+		protected override void BuildDeleteClause()
 		{
 			var table = SelectQuery.Delete.Table != null ?
 				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
 				SelectQuery.From.Tables[0];
 
-			AppendIndent(sb)
+			AppendIndent()
 				.Append("DELETE ")
 				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(StringBuilder sb)
+		protected override void BuildUpdateClause()
 		{
-			base.BuildFromClause(sb);
-			sb.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(sb);
+			base.BuildFromClause();
+			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
+			base.BuildUpdateSet();
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -207,10 +207,9 @@ namespace LinqToDB.DataProvider.MySql
 			return value;
 		}
 
-		protected override StringBuilder BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, bool checkParentheses, string alias, ref bool addAlias)
+		protected override StringBuilder BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, string alias, ref bool addAlias)
 		{
 			return base.BuildExpression(
-				sb,
 				expr,
 				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
@@ -218,10 +217,10 @@ namespace LinqToDB.DataProvider.MySql
 				ref addAlias);
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertQuery(sb);
-			AppendIndent(sb).AppendLine("ON DUPLICATE KEY UPDATE");
+			BuildInsertQuery();
+			AppendIndent().AppendLine("ON DUPLICATE KEY UPDATE");
 
 			Indent++;
 
@@ -230,48 +229,48 @@ namespace LinqToDB.DataProvider.MySql
 			foreach (var expr in SelectQuery.Update.Items)
 			{
 				if (!first)
-					sb.Append(',').AppendLine();
+					StringBuilder.Append(',').AppendLine();
 				first = false;
 
-				AppendIndent(sb);
-				BuildExpression(sb, expr.Column, false, true);
-				sb.Append(" = ");
-				BuildExpression(sb, expr.Expression, false, true);
+				AppendIndent();
+				BuildExpression(expr.Column, false, true);
+				StringBuilder.Append(" = ");
+				BuildExpression(expr.Expression, false, true);
 			}
 
 			Indent--;
 
-			sb.AppendLine();
+			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildEmptyInsert(StringBuilder sb)
+		protected override void BuildEmptyInsert()
 		{
-			sb.AppendLine("() VALUES ()");
+			StringBuilder.AppendLine("() VALUES ()");
 		}
 
-		protected override void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
 		{
-			sb.Append("AUTO_INCREMENT");
+			StringBuilder.Append("AUTO_INCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
-			sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			sb.Append(")");
+			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(")");
 		}
 
-		protected override void BuildString(StringBuilder sb, string value)
+		protected override void BuildString(string value)
 		{
-			base.BuildString(sb, value.Replace("\\", "\\\\"));
+			base.BuildString(value.Replace("\\", "\\\\"));
 		}
 
-		protected override void BuildChar(StringBuilder sb, char value)
+		protected override void BuildChar(char value)
 		{
 			if (value == '\\')
-				sb.Append("\\\\");
+				StringBuilder.Append("\\\\");
 			else
-				base.BuildChar(sb, value);
+				base.BuildChar(value);
 		}
 	}
 }

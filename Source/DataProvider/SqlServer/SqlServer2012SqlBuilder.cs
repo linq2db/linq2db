@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -18,12 +17,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override bool   OffsetFirst         { get { return true;              } }
 		protected override bool   BuildAlternativeSql { get { return false;             } }
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2012SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(StringBuilder sb)
+		protected override void BuildSql()
 		{
 			if (NeedSkip && SelectQuery.OrderBy.IsEmpty)
 			{
@@ -31,13 +30,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					SelectQuery.OrderBy.ExprAsc(new SqlValue(i + 1));
 			}
 
-			base.BuildSql(sb);
+			base.BuildSql();
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertOrUpdateQueryAsMerge(sb, null);
-			sb.AppendLine(";");
+			BuildInsertOrUpdateQueryAsMerge(null);
+			StringBuilder.AppendLine(";");
 		}
 
 		public override string  Name
@@ -45,7 +44,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			get { return ProviderName.SqlServer2012; }
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
 
@@ -59,8 +58,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						var parms = new ISqlExpression[func.Parameters.Length - 1];
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(sb, new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-						                  new SqlFunction(func.SystemType, func.Name, parms)));
+						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
+						              new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
 
@@ -73,7 +72,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
 		static SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)

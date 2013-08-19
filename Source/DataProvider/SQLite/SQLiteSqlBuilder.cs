@@ -20,12 +20,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT last_insert_rowid()");
+			StringBuilder.AppendLine("SELECT last_insert_rowid()");
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
@@ -35,19 +35,19 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override bool IsNestedJoinSupported { get { return false; } }
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
-		protected override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(object value)
 		{
 			if (value is Guid)
 			{
 				var s = ((Guid)value).ToString("N");
 
-				sb
+				StringBuilder
 					.Append("Cast(x'")
 					.Append(s.Substring( 6,  2))
 					.Append(s.Substring( 4,  2))
@@ -61,12 +61,12 @@ namespace LinqToDB.DataProvider.SQLite
 					.Append("' as blob)");
 			}
 			else
-				base.BuildValue(sb, value);
+				base.BuildValue(value);
 		}
 
-		protected override void BuildDateTime(StringBuilder sb, object value)
+		protected override void BuildDateTime(object value)
 		{
-			sb
+			StringBuilder
 				.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
 				.Append('\'');
 		}
@@ -120,34 +120,33 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : sb.Append("INTEGER");      break;
-				default             : base.BuildDataType(sb, type); break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER"); break;
+				default             : base.BuildDataType(type);        break;
 			}
 		}
 
-		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
-			sb.Append("PRIMARY KEY AUTOINCREMENT");
+			StringBuilder.Append("PRIMARY KEY AUTOINCREMENT");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
 			if (SelectQuery.CreateTable.Table.Fields.Values.Any(f => f.IsIdentity))
 			{
-				while (sb[sb.Length - 1] != ',')
-					sb.Length--;
-				sb.Length--;
+				while (StringBuilder[StringBuilder.Length - 1] != ',')
+					StringBuilder.Length--;
+				StringBuilder.Length--;
 			}
 			else
 			{
-				sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-				//sb.Append("PRIMARY KEY (");
-				sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-				sb.Append(")");
+				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
+				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+				StringBuilder.Append(")");
 			}
 		}
 	}

@@ -29,19 +29,24 @@ namespace LinqToDB.DataProvider.DB2
 			return 1;
 		}
 
-		public override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
+			SelectQuery   = selectQuery;
+			StringBuilder = sb;
+			Indent        = indent;
+			SkipAlias     = skipAlias;
+
 			if (_identityField != null)
 			{
 				indent += 2;
 
-				AppendIndent(sb).AppendLine("SELECT");
-				AppendIndent(sb).Append("\t");
-				BuildExpression(sb, _identityField, false, true);
+				AppendIndent().AppendLine("SELECT");
+				AppendIndent().Append("\t");
+				BuildExpression(_identityField, false, true);
 				sb.AppendLine();
-				AppendIndent(sb).AppendLine("FROM");
-				AppendIndent(sb).AppendLine("\tNEW TABLE");
-				AppendIndent(sb).AppendLine("\t(");
+				AppendIndent().AppendLine("FROM");
+				AppendIndent().AppendLine("\tNEW TABLE");
+				AppendIndent().AppendLine("\t(");
 			}
 
 			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
@@ -50,31 +55,31 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
+			StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new DB2SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override void BuildSql(StringBuilder sb)
+		protected override void BuildSql()
 		{
-			AlternativeBuildSql(sb, false, base.BuildSql);
+			AlternativeBuildSql(false, base.BuildSql);
 		}
 
-		protected override void BuildSelectClause(StringBuilder sb)
+		protected override void BuildSelectClause()
 		{
 			if (SelectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent(sb).AppendLine("SELECT");
-				BuildColumns(sb);
-				AppendIndent(sb).AppendLine("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+				AppendIndent().AppendLine("SELECT");
+				BuildColumns();
+				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 			}
 			else
-				base.BuildSelectClause(sb);
+				base.BuildSelectClause();
 		}
 
 		protected override string LimitFormat
@@ -82,25 +87,25 @@ namespace LinqToDB.DataProvider.DB2
 			get { return SelectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null; }
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
-		protected override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(object value)
 		{
 			if (value is Guid)
 			{
 				var s = ((Guid)value).ToString("N");
 
-				sb
+				StringBuilder
 					.Append("Cast(x'")
 					.Append(s.Substring( 6,  2))
 					.Append(s.Substring( 4,  2))
@@ -114,10 +119,10 @@ namespace LinqToDB.DataProvider.DB2
 					.Append("' as char(16) for bit data)");
 			}
 			else
-				base.BuildValue(sb, value);
+				base.BuildValue(value);
 		}
 
-		protected override void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -132,9 +137,9 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			if (wrap) sb.Append("CASE WHEN ");
-			base.BuildColumnExpression(sb, expr, alias, ref addAlias);
-			if (wrap) sb.Append(" THEN 1 ELSE 0 END");
+			if (wrap) StringBuilder.Append("CASE WHEN ");
+			base.BuildColumnExpression(expr, alias, ref addAlias);
+			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
@@ -182,24 +187,24 @@ namespace LinqToDB.DataProvider.DB2
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertOrUpdateQueryAsMerge(sb, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
+			BuildInsertOrUpdateQueryAsMerge("FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");
 		}
 
-		protected override void BuildEmptyInsert(StringBuilder sb)
+		protected override void BuildEmptyInsert()
 		{
-			sb.Append("VALUES ");
+			StringBuilder.Append("VALUES ");
 
 			foreach (var col in SelectQuery.Insert.Into.Fields)
-				sb.Append("(DEFAULT)");
+				StringBuilder.Append("(DEFAULT)");
 
-			sb.AppendLine();
+			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildCreateTableIdentityAttribute1(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute1(SqlField field)
 		{
-			sb.Append("GENERATED ALWAYS AS IDENTITY");
+			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 	}
 }

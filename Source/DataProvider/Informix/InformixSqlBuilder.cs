@@ -20,17 +20,17 @@ namespace LinqToDB.DataProvider.Informix
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
-		protected override void BuildCommand(int commandNumber, StringBuilder sb)
+		protected override void BuildCommand(int commandNumber)
 		{
-			sb.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
 		}
 
-		protected override ISqlBuilder CreateSqlProvider()
+		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
-		public override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
 			base.BuildSql(commandNumber, selectQuery, sb, indent, skipAlias);
 
@@ -39,43 +39,43 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NULL",     "1=1");
 		}
 
-		protected override void BuildSelectClause(StringBuilder sb)
+		protected override void BuildSelectClause()
 		{
 			if (SelectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent(sb).Append("SELECT FIRST 1").AppendLine();
-				BuildColumns(sb);
-				AppendIndent(sb).Append("FROM SYSTABLES").AppendLine();
+				AppendIndent().Append("SELECT FIRST 1").AppendLine();
+				BuildColumns();
+				AppendIndent().Append("FROM SYSTABLES").AppendLine();
 			}
 			else
-				base.BuildSelectClause(sb);
+				base.BuildSelectClause();
 		}
 
 		protected override string FirstFormat { get { return "FIRST {0}"; } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
 
-		protected override void BuildLikePredicate(StringBuilder sb, SelectQuery.Predicate.Like predicate)
+		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
 			if (predicate.IsNot)
-				sb.Append("NOT ");
+				StringBuilder.Append("NOT ");
 
 			var precedence = GetPrecedence(predicate);
 
-			BuildExpression(sb, precedence, predicate.Expr1);
-			sb.Append(" LIKE ");
-			BuildExpression(sb, precedence, predicate.Expr2);
+			BuildExpression(precedence, predicate.Expr1);
+			StringBuilder.Append(" LIKE ");
+			BuildExpression(precedence, predicate.Expr2);
 
 			if (predicate.Escape != null)
 			{
-				sb.Append(" ESCAPE ");
-				BuildExpression(sb, precedence, predicate.Escape);
+				StringBuilder.Append(" ESCAPE ");
+				BuildExpression(precedence, predicate.Escape);
 			}
 		}
 
-		protected override void BuildFunction(StringBuilder sb, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func);
-			base.BuildFunction(sb, func);
+			base.BuildFunction(func);
 		}
 
 		public virtual object ConvertBooleanValue(bool value)
@@ -83,29 +83,29 @@ namespace LinqToDB.DataProvider.Informix
 			return value ? 't' : 'f';
 		}
 
-		protected override void BuildValue(StringBuilder sb, object value)
+		protected override void BuildValue(object value)
 		{
 			if (value is bool)
-				sb.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");
+				StringBuilder.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");
 			else
-				base.BuildValue(sb, value);
+				base.BuildValue(value);
 		}
 
-		protected override void BuildDataType(StringBuilder sb, SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
 				case DataType.SByte      :
-				case DataType.Byte       : sb.Append("SmallInt");        break;
-				case DataType.SmallMoney : sb.Append("Decimal(10,4)");   break;
-				default                  : base.BuildDataType(sb, type); break;
+				case DataType.Byte       : StringBuilder.Append("SmallInt");      break;
+				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)"); break;
+				default                  : base.BuildDataType(type);              break;
 			}
 		}
 
-		protected override void BuildFromClause(StringBuilder sb)
+		protected override void BuildFromClause()
 		{
 			if (!SelectQuery.IsUpdate)
-				base.BuildFromClause(sb);
+				base.BuildFromClause();
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -128,31 +128,31 @@ namespace LinqToDB.DataProvider.Informix
 			return value;
 		}
 
-		protected override void BuildCreateTableFieldType(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableFieldType(SqlField field)
 		{
 			if (field.IsIdentity)
 			{
 				if (field.DataType == DataType.Int32)
 				{
-					sb.Append("SERIAL");
+					StringBuilder.Append("SERIAL");
 					return;
 				}
 
 				if (field.DataType == DataType.Int64)
 				{
-					sb.Append("SERIAL8");
+					StringBuilder.Append("SERIAL8");
 					return;
 				}
 			}
 
-			base.BuildCreateTableFieldType(sb, field);
+			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
-			sb.Append("PRIMARY KEY (");
-			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			sb.Append(")");
+			StringBuilder.Append("PRIMARY KEY (");
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(")");
 		}
 	}
 }

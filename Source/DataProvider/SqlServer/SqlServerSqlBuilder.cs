@@ -23,25 +23,25 @@ namespace LinqToDB.DataProvider.SqlServer
 			get { return SelectQuery.Select.SkipValue == null ? "TOP ({0})" : null; }
 		}
 
-		protected override void BuildSql(StringBuilder sb)
+		protected override void BuildSql()
 		{
 			if (BuildAlternativeSql)
-				AlternativeBuildSql(sb, true, base.BuildSql);
+				AlternativeBuildSql(true, base.BuildSql);
 			else
-				base.BuildSql(sb);
+				base.BuildSql();
 		}
 
-		protected override void BuildGetIdentity(StringBuilder sb)
+		protected override void BuildGetIdentity()
 		{
-			sb
+			StringBuilder
 				.AppendLine()
 				.AppendLine("SELECT SCOPE_IDENTITY()");
 		}
 
-		protected override void BuildOrderByClause(StringBuilder sb)
+		protected override void BuildOrderByClause()
 		{
 			if (!BuildAlternativeSql || !NeedSkip)
-				base.BuildOrderByClause(sb);
+				base.BuildOrderByClause();
 		}
 
 		protected override IEnumerable<SelectQuery.Column> GetSelectedColumns()
@@ -51,53 +51,53 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetSelectedColumns();
 		}
 
-		protected override void BuildDeleteClause(StringBuilder sb)
+		protected override void BuildDeleteClause()
 		{
 			var table = SelectQuery.Delete.Table != null ?
 				(SelectQuery.From.FindTableSource(SelectQuery.Delete.Table) ?? SelectQuery.Delete.Table) :
 				SelectQuery.From.Tables[0];
 
-			AppendIndent(sb)
+			AppendIndent()
 				.Append("DELETE ")
 				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(StringBuilder sb)
+		protected override void BuildUpdateTableName()
 		{
 			var table = SelectQuery.Update.Table != null ?
 				(SelectQuery.From.FindTableSource(SelectQuery.Update.Table) ?? SelectQuery.Update.Table) :
 				SelectQuery.From.Tables[0];
 
 			if (table is SqlTable)
-				BuildPhysicalTable(sb, table, null);
+				BuildPhysicalTable(table, null);
 			else
-				sb.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
+				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
 		}
 
-		protected override void BuildString(StringBuilder sb, string value)
+		protected override void BuildString(string value)
 		{
 			foreach (var ch in value)
 			{
 				if (ch > 127)
 				{
-					sb.Append("N");
+					StringBuilder.Append("N");
 					break;
 				}
 			}
 
-			base.BuildString(sb, value);
+			base.BuildString(value);
 		}
 
-		protected override void BuildChar(StringBuilder sb, char value)
+		protected override void BuildChar(char value)
 		{
 			if (value > 127)
-				sb.Append("N");
+				StringBuilder.Append("N");
 
-			base.BuildChar(sb, value);
+			base.BuildChar(value);
 		}
 
-		protected override void BuildColumnExpression(StringBuilder sb, ISqlExpression expr, string alias, ref bool addAlias)
+		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
@@ -112,9 +112,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			if (wrap) sb.Append("CASE WHEN ");
-			base.BuildColumnExpression(sb, expr, alias, ref addAlias);
-			if (wrap) sb.Append(" THEN 1 ELSE 0 END");
+			if (wrap) StringBuilder.Append("CASE WHEN ");
+			base.BuildColumnExpression(expr, alias, ref addAlias);
+			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -168,26 +168,26 @@ namespace LinqToDB.DataProvider.SqlServer
 			return value;
 		}
 
-		protected override void BuildInsertOrUpdateQuery(StringBuilder sb)
+		protected override void BuildInsertOrUpdateQuery()
 		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(sb);
+			BuildInsertOrUpdateQueryAsUpdateInsert();
 		}
 
-		protected override void BuildDateTime(StringBuilder sb, object value)
+		protected override void BuildDateTime(object value)
 		{
-			sb.Append("'{0:yyyy-MM-ddTHH:mm:ss.fff}'".Args(value));
+			StringBuilder.Append("'{0:yyyy-MM-ddTHH:mm:ss.fff}'".Args(value));
 		}
 
-		protected override void BuildCreateTableIdentityAttribute2(StringBuilder sb, SqlField field)
+		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
-			sb.Append("IDENTITY");
+			StringBuilder.Append("IDENTITY");
 		}
 
-		protected override void BuildCreateTablePrimaryKey(StringBuilder sb, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
-			sb.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			sb.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
-			sb.Append(")");
+			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
+			StringBuilder.Append(")");
 		}
 	}
 }
