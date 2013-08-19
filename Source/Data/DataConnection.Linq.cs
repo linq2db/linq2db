@@ -78,7 +78,7 @@ namespace LinqToDB.Data
 			{
 				sb.Length = 0;
 
-				sqlProvider.BuildSql(i, sql, sb, 0, false);
+				sqlProvider.BuildSql(i, sql, sb);
 				commands[i] = sb.ToString();
 			}
 

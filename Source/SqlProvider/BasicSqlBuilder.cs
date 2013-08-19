@@ -50,6 +50,11 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
+		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb)
+		{
+			BuildSql(commandNumber, selectQuery, sb, 0, false);
+		}
+
 		public virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
 		{
 			SelectQuery = selectQuery;
@@ -69,7 +74,7 @@ namespace LinqToDB.SqlProvider
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						CreateSqlProvider().BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
+						((BasicSqlBuilder)CreateSqlProvider()).BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
 					}
 				}
 			}
@@ -96,7 +101,7 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			CreateSqlProvider().BuildSql(0, selectQuery, sb, indent, skipAlias);
+			((BasicSqlBuilder)CreateSqlProvider()).BuildSql(0, selectQuery, sb, indent, skipAlias);
 		}
 
 		protected abstract ISqlBuilder CreateSqlProvider();

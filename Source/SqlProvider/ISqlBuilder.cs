@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	public interface ISqlBuilder
 	{
 		int              CommandCount         (SelectQuery selectQuery);
-		void             BuildSql             (int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias);
+		void             BuildSql             (int commandNumber, SelectQuery selectQuery, StringBuilder sb);
 
 		StringBuilder    BuildTableName       (StringBuilder sb, string database, string owner, string table);
 		object           Convert              (object value, ConvertType convertType);

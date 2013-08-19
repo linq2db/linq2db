@@ -67,7 +67,7 @@ namespace Tests.Model
 			{
 				sb.Length = 0;
 
-				provider.BuildSql(i, query, sb, 0, false);
+				provider.BuildSql(i, query, sb);
 				commands[i] = sb.ToString();
 			}
 

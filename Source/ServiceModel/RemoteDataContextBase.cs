@@ -394,7 +394,7 @@ namespace LinqToDB.ServiceModel
 			{
 				sb.Length = 0;
 
-				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb, 0, false);
+				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
 				commands[i] = sb.ToString();
 			}
 
