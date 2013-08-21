@@ -208,8 +208,8 @@
     <Compile Include="Metadata\MetaTypeInfo.cs" />
     <Compile Include="Metadata\XmlAttributeReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\BLToolkitConstants.cs" />
     <Compile Include="Properties\JetBrains.Annotations.cs" />
+    <Compile Include="Properties\LinqToDBConstants.cs" />
     <Compile Include="ProviderName.cs" />
     <Compile Include="Reflection\IObjectFactory.cs" />
     <Compile Include="Reflection\MemberAccessor.cs" />
