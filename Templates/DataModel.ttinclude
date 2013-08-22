@@ -45,11 +45,11 @@ bool SingularizeDataContextPropertyNames = false;
 LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 	new LinqToDB.SchemaProvider.GetSchemaOptions();
 
-LinqToDB.SqlProvider.ISqlProvider SqlProvider;
+LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlProvider = dataConnection.DataProvider.CreateSqlProvider();
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 
 	var sp = dataConnection.DataProvider.GetSchemaProvider();
 	var db = sp.GetSchema(dataConnection, GetSchemaOptions);

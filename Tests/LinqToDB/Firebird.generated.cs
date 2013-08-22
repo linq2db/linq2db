@@ -170,10 +170,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_8093
+		/// INTEG_8158
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public PERSON INTEG8093 { get; set; }
+		public PERSON INTEG8158 { get; set; }
 
 		#endregion
 	}
@@ -196,10 +196,10 @@ namespace FirebirdDataContext
 		public IEnumerable<DOCTOR> DOCTORs { get; set; }
 
 		/// <summary>
-		/// INTEG_8093_BackReference
+		/// INTEG_8158_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public IEnumerable<PATIENT> INTEG8093 { get; set; }
+		public IEnumerable<PATIENT> INTEG8158 { get; set; }
 
 		#endregion
 	}

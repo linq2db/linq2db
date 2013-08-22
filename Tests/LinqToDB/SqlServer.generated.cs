@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -1184,16 +1183,16 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public Patient Patient { get; set; }
-
-		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Doctor Doctor { get; set; }
+
+		/// <summary>
+		/// FK_Patient_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Patient Patient { get; set; }
 
 		#endregion
 	}
@@ -1206,6 +1205,50 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region SelectImplicitColumn
+
+		public partial class SelectImplicitColumnResult
+		{
+			[Column("")] public int Column1 { get; set; }
+		}
+
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new SelectImplicitColumnResult
+				{
+					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
+				},
+				"[TestData]..[SelectImplicitColumn]");
+		}
+
+		#endregion
+
+		#region DuplicateColumnNames
+
+		public partial class DuplicateColumnNamesResult
+		{
+			               public int    id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
+		}
+
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new DuplicateColumnNamesResult
+				{
+					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+				},
+				"[TestData]..[DuplicateColumnNames]");
+		}
+
+		#endregion
+
 		#region Person_SelectByKey
 
 		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
@@ -1382,50 +1425,6 @@ namespace DataModel
 			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
-		}
-
-		#endregion
-
-		#region SelectImplicitColumn
-
-		public partial class SelectImplicitColumnResult
-		{
-			[Column("")] public int Column1 { get; set; }
-		}
-
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new SelectImplicitColumnResult
-				{
-					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-				},
-				"[TestData]..[SelectImplicitColumn]");
-		}
-
-		#endregion
-
-		#region DuplicateColumnNames
-
-		public partial class DuplicateColumnNamesResult
-		{
-			               public int    id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
-		}
-
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult
-				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"[TestData]..[DuplicateColumnNames]");
 		}
 
 		#endregion

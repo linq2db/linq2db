@@ -1,6 +1,6 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.SqlServer.SqlServerFactory.ResolveSqlTypes(
+	LinqToDB.DataProvider.SqlServer.SqlServerTools.ResolveSqlTypes(
 		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
 
 	{
@@ -74,7 +74,7 @@ void GenerateSqlServerTypes()
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database)

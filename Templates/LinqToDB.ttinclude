@@ -255,11 +255,11 @@ void GenerateTypesFromMetadata()
 			else
 			{
 				var spName = "\"" + 
-					SqlProvider.BuildTableName(
+					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
-						(string)SqlProvider.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
-						(string)SqlProvider.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToOwner),
-						(string)SqlProvider.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
+						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
+						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToOwner),
+						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
 					).ToString() +
 					 "\"";
 
