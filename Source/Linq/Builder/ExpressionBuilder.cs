@@ -52,6 +52,7 @@ namespace LinqToDB.Linq.Builder
 			new CastBuilder          (),
 			new OfTypeBuilder        (),
 			new AsUpdatableBuilder   (),
+			new LoadWithBuilder      (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

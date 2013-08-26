@@ -54,6 +54,24 @@ namespace LinqToDB
 
 		#endregion
 
+		#region LoadWith
+
+		static public ITable<T> LoadWith<T>(
+			[NotNull]                this ITable<T> table,
+			[NotNull, InstantHandle] Expression<Func<T,object>> selector)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			table.Expression = Expression.Call(
+				null,
+				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Quote(selector) });
+
+			return table;
+		}
+
+		#endregion
+
 		#region Scalar Select
 
 		static public T Select<T>(

@@ -6,6 +6,8 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Reflection;
+
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -171,12 +173,13 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string Name         { get; set; }
-		public string Alias        { get; set; }
-		public string Database     { get; set; }
-		public string Owner        { get; set; }
-		public Type   ObjectType   { get; set; }
-		public string PhysicalName { get; set; }
+		public string             Name         { get; set; }
+		public string             Alias        { get; set; }
+		public string             Database     { get; set; }
+		public string             Owner        { get; set; }
+		public Type               ObjectType   { get; set; }
+		public string             PhysicalName { get; set; }
+		public List<MemberInfo[]> LoadWith     { get; set; }
 
 		private SqlTableType _sqlTableType = SqlTableType.Table;
 		public  SqlTableType  SqlTableType { get { return _sqlTableType; } set { _sqlTableType = value; } }
