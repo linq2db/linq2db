@@ -2,14 +2,11 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class LoadWithTest : TestBase
 	{
@@ -19,7 +16,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.GetTable<Northwind.Product>().LoadWith(p => p.Category.Products[0].OrderDetails)
+					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child.Parent)
 					select p;
 
 				q.ToList();

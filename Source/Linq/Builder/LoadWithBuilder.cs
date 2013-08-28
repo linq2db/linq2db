@@ -7,6 +7,8 @@ namespace LinqToDB.Linq.Builder
 	using System.Linq;
 	using System.Reflection;
 
+	using Extensions;
+
 	using LinqToDB.Expressions;
 
 	using Mapping;
@@ -35,13 +37,22 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<MemberInfo> GetAssosiations(ExpressionBuilder builder, Expression expression)
 		{
+			MemberInfo lastMember = null;
+
 			for (;;)
 			{
 				switch (expression.NodeType)
 				{
-					case ExpressionType.Parameter    : yield break;
-					case ExpressionType.Call         :
+					case ExpressionType.Parameter :
+						if (lastMember == null)
+							goto default;
+						yield break;
+
+					case ExpressionType.Call      :
 						{
+							if (lastMember == null)
+								goto default;
+
 							var cexpr = (MethodCallExpression)expression;
 							var expr  = cexpr.Object;
 
@@ -56,14 +67,23 @@ namespace LinqToDB.Linq.Builder
 							if (expr.NodeType != ExpressionType.MemberAccess)
 								goto default;
 
+							var member = ((MemberExpression)expr).Member;
+							var mtype  = member.MemberType == MemberTypes.Field ?
+								((FieldInfo)   member).FieldType :
+								((PropertyInfo)member).PropertyType;
+
+							if (lastMember.ReflectedType != mtype.GetItemType())
+								goto default;
+
 							expression = expr;
 
 							break;
 						}
+
 					case ExpressionType.MemberAccess :
 						{
 							var mexpr  = (MemberExpression)expression;
-							var member = mexpr.Member;
+							var member = lastMember = mexpr.Member;
 							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member);
 
 							if (attr == null)
@@ -76,6 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+
 					default :
 						{
 							throw new LinqToDBException(

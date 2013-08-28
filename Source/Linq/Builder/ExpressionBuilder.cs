@@ -386,12 +386,12 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions.TryGetValue(expression, out expr))
 				return expr;
 
-			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,Expression>)OptimizeExpressionImpl);
+			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
 
 			return expr;
 		}
 
-		Expression OptimizeExpressionImpl(Expression expr)
+		TransformInfo OptimizeExpressionImpl(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -415,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 									.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
 									.MakeGenericMethod(me.Expression.Type.GetItemType());
 
-								return Expression.Call(null, mi, me.Expression);
+								return new TransformInfo(Expression.Call(null, mi, me.Expression));
 							}
 						}
 
@@ -424,10 +424,10 @@ namespace LinqToDB.Linq.Builder
 							var ex = ConvertIQueriable(expr);
 
 							if (!ReferenceEquals(ex, expr))
-								return ConvertExpressionTree(ex);
+								return new TransformInfo(ConvertExpressionTree(ex));
 						}
 
-						return ConvertSubquery(expr);
+						return new TransformInfo(ConvertSubquery(expr));
 					}
 
 				case ExpressionType.Call :
@@ -438,22 +438,23 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"              : return ConvertWhere     (call);
-								case "GroupBy"            : return ConvertGroupBy   (call);
-								case "SelectMany"         : return ConvertSelectMany(call);
-								case "Select"             : return ConvertSelect    (call);
+								case "Where"              : return new TransformInfo(ConvertWhere     (call));
+								case "GroupBy"            : return new TransformInfo(ConvertGroupBy   (call));
+								case "SelectMany"         : return new TransformInfo(ConvertSelectMany(call));
+								case "Select"             : return new TransformInfo(ConvertSelect    (call));
 								case "LongCount"          :
 								case "Count"              :
 								case "Single"             :
 								case "SingleOrDefault"    :
 								case "First"              :
-								case "FirstOrDefault"     : return ConvertPredicate (call);
+								case "FirstOrDefault"     : return new TransformInfo(ConvertPredicate (call));
 								case "Min"                :
-								case "Max"                : return ConvertSelector  (call, true);
+								case "Max"                : return new TransformInfo(ConvertSelector  (call, true));
 								case "Sum"                :
-								case "Average"            : return ConvertSelector  (call, false);
+								case "Average"            : return new TransformInfo(ConvertSelector  (call, false));
 								case "ElementAt"          :
-								case "ElementAtOrDefault" : return ConvertElementAt (call);
+								case "ElementAtOrDefault" : return new TransformInfo(ConvertElementAt (call));
+								case "LoadWith"           : return new TransformInfo(expr, true);
 							}
 						}
 						else
@@ -461,7 +462,7 @@ namespace LinqToDB.Linq.Builder
 							var l = ConvertMethodExpression(call.Method);
 
 							if (l != null)
-								return OptimizeExpression(ConvertMethod(call, l));
+								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
 
 							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
@@ -472,16 +473,16 @@ namespace LinqToDB.Linq.Builder
 									var ex = ConvertIQueriable(expr);
 
 									if (!ReferenceEquals(ex, expr))
-										return ConvertExpressionTree(ex);
+										return new TransformInfo(ConvertExpressionTree(ex));
 								}
 							}
 						}
 
-						return ConvertSubquery(expr);
+						return new TransformInfo(ConvertSubquery(expr));
 					}
 			}
 
-			return expr;
+			return new TransformInfo(expr);
 		}
 
 		LambdaExpression ConvertMethodExpression(MemberInfo mi)
