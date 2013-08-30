@@ -316,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 				return q.ToArray();
 			}
 
-			Expression BuildQuery(Type tableType)
+			Expression BuildQuery(Type tableType, TableContext tableContext)
 			{
 				SqlInfo[] info;
 
@@ -411,7 +411,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildQuery(typeof(T));
+				var expr   = BuildQuery(typeof(T), this);
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				query.SetQuery(mapper);
@@ -445,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (table.Field == null)
-					return table.Table.BuildQuery(table.Table.OriginalType);
+					return table.Table.BuildQuery(table.Table.OriginalType, table.Table);
 
 				// Build field.
 				//
