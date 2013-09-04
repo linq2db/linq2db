@@ -29,6 +29,6 @@ namespace LinqToDB.DataProvider
 
 		ISchemaProvider  GetSchemaProvider  ();
 
-		int              BulkCopy<T>        (DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source);
+		int              BulkCopy<T>        (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
 	}
 }

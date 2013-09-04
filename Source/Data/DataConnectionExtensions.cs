@@ -744,14 +744,25 @@ namespace LinqToDB.Data
 
 		#region BulkCopy
 
+		public static int BulkCopy<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
+		}
+
 		public static int BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 		{
-			return dataConnection.DataProvider.BulkCopy(dataConnection, maxBatchSize, source);
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection,
+				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
+				source);
 		}
 
 		public static int BulkCopy<T>(this DataConnection dataConnection, IEnumerable<T> source)
 		{
-			return BulkCopy(dataConnection, 0, source);
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection,
+				new BulkCopyOptions(),
+				source);
 		}
 
 		public static int BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, params T[] source)

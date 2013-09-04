@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual int BulkCopy<T>(DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		public virtual int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			var n = 0;
 

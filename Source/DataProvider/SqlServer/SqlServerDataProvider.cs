@@ -274,7 +274,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region BulkCopy
 
 		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T>  source)
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
@@ -284,22 +286,26 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 				var rd = new BulkCopyReader(ed, source);
-				var bc = dataConnection.Transaction == null ?
+
+				using (var bc = dataConnection.Transaction == null ?
 					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction);
+					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction))
+				{
+					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
+					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-				bc.BatchSize            = maxBatchSize;
-				bc.DestinationTableName = ed.TableName;
+					bc.DestinationTableName = ed.TableName;
 
-				for (var i = 0; i < rd.Columns.Length; i++)
-					bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
+					for (var i = 0; i < rd.Columns.Length; i++)
+						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
 
-				bc.WriteToServer(rd);
+					bc.WriteToServer(rd);
 
-				return rd.Count;
+					return rd.Count;
+				}
 			}
 
-			return base.BulkCopy(dataConnection, maxBatchSize, source);
+			return base.BulkCopy(dataConnection, options, source);
 		}
 
 		#endregion

@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider
 	class BulkCopyReader : IDataReader
 	{
 		public  readonly ColumnDescriptor[] Columns;
-		private readonly IEnumerable        _collection;
 		private readonly IEnumerator        _enumerator;
 
 		public int Count;
@@ -18,8 +17,7 @@ namespace LinqToDB.DataProvider
 		public BulkCopyReader(EntityDescriptor entityDescriptor, IEnumerable collection)
 		{
 			Columns     = entityDescriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-			_collection = collection;
-			_enumerator = _collection.GetEnumerator();
+			_enumerator = collection.GetEnumerator();
 		}
 
 		#region Implementation of IDisposable
