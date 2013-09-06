@@ -100,7 +100,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						ordinal_position                                                    as Ordinal,
 						data_type                                                           as DataType,
 						character_maximum_length                                            as Length,
-						COALESCE(numeric_precision, datetime_precision, interval_precision) as Precision,
+						COALESCE(
+							numeric_precision::integer,
+							datetime_precision::integer,
+							interval_precision::integer)                                    as Precision,
 						numeric_scale                                                       as Scale,
 						is_identity = 'YES' OR COALESCE(column_default ~* 'nextval', false) as IsIdentity,
 						is_generated <> 'NEVER'                                             as SkipOnInsert,
