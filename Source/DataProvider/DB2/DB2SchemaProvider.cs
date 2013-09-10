@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -12,8 +12,56 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2SchemaProvider : SchemaProviderBase
 	{
+		bool _iszOS;
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
+			try
+			{
+				dataConnection.Execute<string>("SELECT INST_NAME FROM SYSIBMADM.ENV_INST_INFO");
+			}
+			catch
+			{
+				try
+				{
+					var version = dataConnection.Execute<string>("SELECT GETVARIABLE('SYSIBM.VERSION') FROM SYSIBM.SYSDUMMY1");
+					_iszOS = version.StartsWith("DSN");
+				}
+				catch
+				{
+				}
+			}
+
+			if (_iszOS)
+			{
+				return new List<DataTypeInfo>
+				{
+					new DataTypeInfo { TypeName = "XML",                       CreateParameters = null,               DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "DECFLOAT",                  CreateParameters = "PRECISION",        DataType = "System.Decimal"  },
+					new DataTypeInfo { TypeName = "DBCLOB",                    CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "CLOB",                      CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "BLOB",                      CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
+					new DataTypeInfo { TypeName = "LONG VARGRAPHIC",           CreateParameters = null,               DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "VARGRAPHIC",                CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "GRAPHIC",                   CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "BIGINT",                    CreateParameters = null,               DataType = "System.Int64"    },
+					new DataTypeInfo { TypeName = "LONG VARCHAR FOR BIT DATA", CreateParameters = null,               DataType = "System.Byte[]"   },
+					new DataTypeInfo { TypeName = "VARCHAR () FOR BIT DATA",   CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
+					new DataTypeInfo { TypeName = "CHAR () FOR BIT DATA",      CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
+					new DataTypeInfo { TypeName = "LONG VARCHAR",              CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "CHAR",                      CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "DECIMAL",                   CreateParameters = "PRECISION,SCALE",  DataType = "System.Decimal"  },
+					new DataTypeInfo { TypeName = "INTEGER",                   CreateParameters = null,               DataType = "System.Int32"    },
+					new DataTypeInfo { TypeName = "SMALLINT",                  CreateParameters = null,               DataType = "System.Int16"    },
+					new DataTypeInfo { TypeName = "REAL",                      CreateParameters = null,               DataType = "System.Single"   },
+					new DataTypeInfo { TypeName = "DOUBLE",                    CreateParameters = null,               DataType = "System.Double"   },
+					new DataTypeInfo { TypeName = "VARCHAR",                   CreateParameters = "LENGTH",           DataType = "System.String"   },
+					new DataTypeInfo { TypeName = "DATE",                      CreateParameters = null,               DataType = "System.DateTime" },
+					new DataTypeInfo { TypeName = "TIME",                      CreateParameters = null,               DataType = "System.TimeSpan" },
+					new DataTypeInfo { TypeName = "TIMESTAMP",                 CreateParameters = null,               DataType = "System.DateTime" },
+				};
+			}
+
 			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			return dts.AsEnumerable()
@@ -58,6 +106,34 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
+			if (_iszOS)
+			{
+				return dataConnection.Query(
+					rd => new PrimaryKeyInfo
+					{
+						TableID        = dataConnection.Connection.Database + "." + rd[0] + "." + rd[1],
+						PrimaryKeyName = rd.GetString(2),
+						ColumnName     = rd.GetString(3),
+						Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
+					},@"
+					SELECT
+						col.TBCREATOR,
+						col.TBNAME,
+						idx.NAME,
+						col.NAME,
+						col.KEYSEQ
+					FROM
+						SYSIBM.SYSCOLUMNS col
+							JOIN SYSIBM.SYSINDEXES idx ON
+								col.TBCREATOR = idx.TBCREATOR AND
+								col.TBNAME    = idx.TBNAME
+					WHERE
+						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P'
+					ORDER BY
+						col.TBCREATOR, col.TBNAME, col.KEYSEQ")
+					.ToList();
+			}
+
 			return
 			(
 				from pk in dataConnection.Query(
