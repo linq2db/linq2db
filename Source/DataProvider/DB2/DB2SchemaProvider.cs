@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.DB2
 			(
 				from t in tables.AsEnumerable()
 				where
-					new[] {"TABLE", "VIEW"}.Contains(t.Field<string>("TABLE_TYPE"))
+					new[] { "TABLE", "VIEW" }.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -167,51 +167,58 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var sql = @"
+				SELECT
+					TABSCHEMA,
+					TABNAME,
+					COLNAME,
+					LENGTH,
+					SCALE,
+					NULLS,
+					IDENTITY,
+					COLNO,
+					TYPENAME,
+					REMARKS
+				FROM
+					SYSCAT.COLUMNS";
 
-			return _columns =
-			(
-				from c in cs.AsEnumerable()
-				let schema = c.Field<string>("TABLE_SCHEMA")
-				let table  = c.Field<string>("TABLE_NAME")
-				let name   = c.Field<string>("COLUMN_NAME")
-				join c2 in 
-					dataConnection.Query(
-						rd => new
-						{
-							schema     = rd.GetString(0),
-							table      = rd.GetString(1),
-							name       = rd.GetString(2),
-							length     = Converter.ChangeTypeTo<int>(rd[3]),
-							scale      = Converter.ChangeTypeTo<int>(rd[4]),
-							isIdentity = rd.GetString(5) == "Y"
-						},@"
-						SELECT
-							TABSCHEMA,
-							TABNAME,
-							COLNAME,
-							LENGTH,
-							SCALE,
-							IDENTITY
-						FROM
-							SYSCAT.COLUMNS").ToList()
-				on new { schema, table, name } equals new { c2.schema, c2.table, c2.name }
-				select new ColumnInfo
+			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			{
+				sql += @"
+				WHERE TABSCHEMA ";
+
+				if (IncludedSchemas.Length != 0)
 				{
-					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + table,
-					Name         = name,
-					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType     = c.Field<string>("DATA_TYPE_NAME"),
-					Length       = c2.length,
-					Precision    = c2.length,
-					Scale        = c2.scale,
-					IsIdentity   = c2.isIdentity,
-					SkipOnInsert = c2.isIdentity,
-					SkipOnUpdate = c2.isIdentity,
-					Description  = c.Field<string>("REMARKS"),
+					sql += string.Format("IN ({0})", IncludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+
+					if (ExcludedSchemas.Length != 0)
+						sql += " TABSCHEMA ";
 				}
-			).ToList();
+
+				if (ExcludedSchemas.Length != 0)
+					sql += string.Format("NOT IN ({0})", ExcludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+			}
+			else
+			{
+				sql += string.Format(@"
+				WHERE TABSCHEMA = '{0}'",
+					_currenSchema);
+			}
+
+			return _columns = dataConnection.Query(
+				rd => new ColumnInfo
+				{
+					TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
+					Name        = Converter.ChangeTypeTo<string>(rd[2]),
+					Length      = Converter.ChangeTypeTo<int>(   rd[3]),
+					Scale       = Converter.ChangeTypeTo<int>(   rd[4]),
+					IsNullable  = Converter.ChangeTypeTo<string>(rd[5]) == "Y",
+					IsIdentity  = Converter.ChangeTypeTo<string>(rd[6]) == "Y",
+					Ordinal     = Converter.ChangeTypeTo<int>(   rd[7]),
+					DataType    = Converter.ChangeTypeTo<string>(rd[8]),
+					Description = Converter.ChangeTypeTo<string>(rd[9]),
+				},
+				sql).ToList();
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
