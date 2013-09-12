@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.DB2
 								col.TBCREATOR = idx.TBCREATOR AND
 								col.TBNAME    = idx.TBNAME
 					WHERE
-						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P'
+						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND " + GetSchemaFilter("col.TBCREATOR") + @"
 					ORDER BY
 						col.TBCREATOR, col.TBNAME, col.KEYSEQ")
 					.ToList();
@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.DB2
 					FROM
 						SYSCAT.INDEXES
 					WHERE
-						UNIQUERULE = 'P'")
+						UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
 				from col in pk.cols.Select((c,i) => new { c, i })
 				select new PrimaryKeyInfo
 				{
@@ -167,7 +167,25 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var sql = @"
+			var sql = _iszOS ?
+				@"
+				SELECT
+					TBCREATOR,
+					TBNAME,
+					NAME,
+					LENGTH,
+					SCALE,
+					NULLS,
+					CASE WHEN DEFAULT IN ('I', 'J') THEN 'Y' ELSE 'N' END,
+					COLNO,
+					COLTYPE,
+					REMARKS
+				FROM
+					SYSIBM.SYSCOLUMNS
+				WHERE
+					" + GetSchemaFilter("TBCREATOR")
+				:
+				@"
 				SELECT
 					TABSCHEMA,
 					TABNAME,
@@ -180,30 +198,9 @@ namespace LinqToDB.DataProvider.DB2
 					TYPENAME,
 					REMARKS
 				FROM
-					SYSCAT.COLUMNS";
-
-			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
-			{
-				sql += @"
-				WHERE TABSCHEMA ";
-
-				if (IncludedSchemas.Length != 0)
-				{
-					sql += string.Format("IN ({0})", IncludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
-
-					if (ExcludedSchemas.Length != 0)
-						sql += " TABSCHEMA ";
-				}
-
-				if (ExcludedSchemas.Length != 0)
-					sql += string.Format("NOT IN ({0})", ExcludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
-			}
-			else
-			{
-				sql += string.Format(@"
-				WHERE TABSCHEMA = '{0}'",
-					_currenSchema);
-			}
+					SYSCAT.COLUMNS
+				WHERE
+					" + GetSchemaFilter("TABSCHEMA");
 
 			return _columns = dataConnection.Query(
 				rd => new ColumnInfo
@@ -424,6 +421,31 @@ namespace LinqToDB.DataProvider.DB2
 						SCALE
 					FROM SYSCAT.PROCPARMS")
 				.ToList();
+		}
+
+		string GetSchemaFilter(string schemaNameField)
+		{
+			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			{
+				var sql = schemaNameField;
+
+				if (IncludedSchemas.Length != 0)
+				{
+					sql += string.Format(" IN ({0})", IncludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+
+					if (ExcludedSchemas.Length != 0)
+						sql += " AND " + schemaNameField;
+				}
+
+				if (ExcludedSchemas.Length != 0)
+					sql += string.Format(" NOT IN ({0})", ExcludedSchemas.Select(n => '\'' + n + '\'') .Aggregate((s1,s2) => s1 + ',' + s2));
+
+				return sql;
+			}
+			else
+			{
+				return string.Format("{0} = '{1}'", schemaNameField, _currenSchema);
+			}
 		}
 	}
 }
