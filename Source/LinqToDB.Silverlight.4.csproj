@@ -180,6 +180,7 @@
     <Compile Include="Linq\TableT.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />
     <Compile Include="Mapping\AssociationDescriptor.cs" />
+    <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />

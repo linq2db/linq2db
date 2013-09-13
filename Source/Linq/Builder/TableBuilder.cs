@@ -780,7 +780,20 @@ namespace LinqToDB.Linq.Builder
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
 					var memberExpression = (MemberExpression)expression;
-					var levelExpression  = expression.GetLevelExpression(level);
+
+					if (EntityDescriptor.Aliases != null)
+					{
+						if (EntityDescriptor.Aliases.ContainsKey(memberExpression.Member.Name))
+						{
+							var alias = EntityDescriptor[memberExpression.Member.Name];
+
+							if (alias != null)
+								expression = memberExpression = Expression.PropertyOrField(
+									memberExpression.Expression, alias.MemberName);
+						}
+					}
+
+					var levelExpression = expression.GetLevelExpression(level);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -830,7 +843,7 @@ namespace LinqToDB.Linq.Builder
 									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
 									{
 										var name = memberExpression.Member.Name;
-										var me = memberExpression;
+										var me   = memberExpression;
 
 										if (me.Expression is MemberExpression)
 										{
