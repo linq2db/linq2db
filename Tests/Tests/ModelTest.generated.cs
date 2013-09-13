@@ -609,7 +609,7 @@ namespace T4Model.Tests
 		private bool _isEditing;
 		public  bool  IsEditing { get { return _isEditing; } }
 
-		public virtual void BeginEdit () { _isEditing = true; }
+		public virtual void BeginEdit () { AcceptChanges(); _isEditing = true; }
 		public virtual void CancelEdit() { _isEditing = false; RejectChanges(); }
 		public virtual void EndEdit   () { _isEditing = false; AcceptChanges(); }
 
@@ -727,19 +727,81 @@ namespace T4Model.Tests
 
 		#region Validation
 
+#if !SILVERLIGHT
+		[field : NonSerialized]
+#endif
+		public int _isValidCounter;
+
 		public static partial class CustomValidator
 		{
-			// The following method(s) must be implemented:
-			// public static ValidationResult ValidateEditableLong1(TestClass1 obj) { return ValidationResult.Success; }
-			// public static ValidationResult ValidateEditableInt1(TestClass1 obj) { return ValidationResult.Success; }
-			//
 			public static bool IsValid(TestClass1 obj)
 			{
-				return
-					ValidateEditableLong1(obj) == ValidationResult.Success &&
-					ValidateEditableInt1(obj) == ValidationResult.Success;
+				try
+				{
+					obj._isValidCounter++;
+
+					var flag0 = ValidationResult.Success == ValidateEditableLong1(obj, obj.EditableLong1);
+					var flag1 = ValidationResult.Success == ValidateEditableInt1(obj, obj.EditableInt1);
+
+					return flag0 || flag1;
+				}
+				finally
+				{
+					obj._isValidCounter--;
+				}
+			}
+
+			public static ValidationResult ValidateEditableLong1(TestClass1 obj, long value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfEditableLong1 }, list);
+
+				obj.ValidateEditableLong1(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfEditableLong1);
+
+				return ValidationResult.Success;
+			}
+
+			public static ValidationResult ValidateEditableInt1(TestClass1 obj, int value)
+			{
+				var list = new List<ValidationResult>();
+
+				Validator.TryValidateProperty(
+					value,
+					new ValidationContext(obj, null, null) { MemberName = NameOfEditableInt1 }, list);
+
+				obj.ValidateEditableInt1(value, list);
+
+				if (list.Count > 0)
+				{
+					foreach (var result in list)
+						foreach (var name in result.MemberNames)
+							obj.AddError(name, result.ErrorMessage);
+
+					return list[0];
+				}
+
+				obj.RemoveError(NameOfEditableInt1);
+
+				return ValidationResult.Success;
 			}
 		}
+
+		partial void ValidateEditableLong1(long value, List<ValidationResult> validationResults);
+		partial void ValidateEditableInt1 (int value, List<ValidationResult> validationResults);
 
 		#endregion
 	}

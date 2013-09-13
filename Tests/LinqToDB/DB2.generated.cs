@@ -53,15 +53,15 @@ namespace DB2DataContext
 		[Column,     Nullable] public int?      INTDATATYPE       { get; set; } // INTEGER
 		[Column,     Nullable] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
 		[Column,     Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
-		[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT(16)
+		[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT
 		[Column,     Nullable] public float?    REALDATATYPE      { get; set; } // REAL
 		[Column,     Nullable] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
-		[Column,     Nullable] public char?     CHARDATATYPE      { get; set; } // CHAR(1)
+		[Column,     Nullable] public object    CHARDATATYPE      { get; set; } // CHARACTER
 		[Column,     Nullable] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
 		[Column,     Nullable] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
 		[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
-		[Column,     Nullable] public byte[]    BINARYDATATYPE    { get; set; } // CHAR (5) FOR BIT DATA
-		[Column,     Nullable] public byte[]    VARBINARYDATATYPE { get; set; } // VARCHAR (5) FOR BIT DATA
+		[Column,     Nullable] public object    BINARYDATATYPE    { get; set; } // CHARACTER
+		[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
 		[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(10)
 		[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
 		[Column,     Nullable] public DateTime? DATEDATATYPE      { get; set; } // DATE
@@ -82,16 +82,6 @@ namespace DB2DataContext
 	{
 		[Column, NotNull] public int    PersonID { get; set; } // INTEGER
 		[Column, NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Doctor_Person
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public Person Person { get; set; }
-
-		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="GrandChild")]
@@ -106,11 +96,11 @@ namespace DB2DataContext
 	public partial class LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
+		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
 		[Column, Nullable] public short?    BoolValue      { get; set; } // SMALLINT
-		[Column, Nullable] public byte[]    GuidValue      { get; set; } // CHAR (16) FOR BIT DATA
+		[Column, Nullable] public object    GuidValue      { get; set; } // CHARACTER
 		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // BLOB(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
 		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
@@ -155,17 +145,7 @@ namespace DB2DataContext
 		[Column,     NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // CHAR(1)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Doctor_Person_BackReference
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public IEnumerable<Doctor> Doctors { get; set; }
-
-		#endregion
+		[Column,     NotNull    ] public object Gender     { get; set; } // CHARACTER
 	}
 
 	// View
@@ -176,7 +156,7 @@ namespace DB2DataContext
 		[Column, NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
 		[Column, NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
 		[Column,    Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column, NotNull    ] public char   Gender     { get; set; } // CHAR(1)
+		[Column, NotNull    ] public object Gender     { get; set; } // CHARACTER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="SLAVETABLE")]
