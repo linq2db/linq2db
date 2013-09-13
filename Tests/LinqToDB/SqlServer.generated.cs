@@ -72,6 +72,16 @@ namespace DataModel
 		{
 		}
 
+		#region Alias members
+
+		/// <summary>
+		/// Description for Categories table.
+		/// </summary>
+		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
+		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
+
+		#endregion
+
 		#region FreeTextTable
 
 		public class FreeTextKey<T>
@@ -143,6 +153,14 @@ namespace DataModel
 		public List<Product> Products { get; set; }
 
 		#endregion
+	}
+
+	/// <summary>
+	/// Description for Categories table.
+	/// </summary>
+	[Obsolete("Use Category instead.")]
+	public partial class CATEG : Category
+	{
 	}
 
 	// View
@@ -429,6 +447,11 @@ namespace DataModel
 		public Product OrderDetailsProduct { get; set; }
 
 		#endregion
+	}
+
+	[Obsolete("Use OrderDetail instead.")]
+	public partial class ORD_DET : OrderDetail
+	{
 	}
 
 	// View

@@ -390,6 +390,8 @@ public partial class Table : Class
 	public string DataContextPropertyName { get; set; }
 	public bool   IsView                  { get; set; }
 	public string Description             { get; set; }
+	public string AliasPropertyName       { get; set; }
+	public string AliasTypeName           { get; set; }
 
 	public string TypeName
 	{

@@ -19,10 +19,16 @@
 //	GetSchemaOptions.GetProcedures = false;
 
 	IncludeDefaultSchema = false;
+	GenerateObsoleteAttributeFoAliases = true;
 
 	LoadSqlServerMetadata("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 
 	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
+
+	GetTable("Categories").   AliasPropertyName = "CATEG";
+	GetTable("Categories").   AliasTypeName     = "CATEG";
+	GetTable("Order Details").AliasPropertyName = "Order_Details";
+	GetTable("Order Details").AliasTypeName     = "ORD_DET";
 
 	GenerateTypesFromMetadata();
 
