@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using IBM.Data.DB2;
+
 	[TestFixture]
 	public class DB2Test : DataProviderTestBase
 	{
@@ -368,6 +370,9 @@ namespace Tests.DataProvider
 		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			//var new IBM.Data.DB2.DB2Connection().GetSchema()
+
+			//var bk = new DB2BulkCopy();
+
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = TestEnum.AA }), Is.EqualTo("A"));

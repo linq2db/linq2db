@@ -957,6 +957,7 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Table);
 							Append(elem.IsDrop);
+							Append((int)elem.TableType);
 
 							break;
 						}
@@ -1315,7 +1316,9 @@ namespace LinqToDB.ServiceModel
 							var readSelect         = ReadBool();
 							var select             = readSelect ? Read<SelectQuery.SelectClause>() : new SelectQuery.SelectClause(null);
 							var readCreateTable    = ReadBool();
-							var createTable        = readCreateTable ? Read<SelectQuery.CreateTableStatement>() : new SelectQuery.CreateTableStatement();
+							var createTable        = readCreateTable ?
+								Read<SelectQuery.CreateTableStatement>() :
+								new SelectQuery.CreateTableStatement();
 							var where              = Read<SelectQuery.WhereClause>();
 							var groupBy            = Read<SelectQuery.GroupByClause>();
 							var having             = Read<SelectQuery.WhereClause>();
@@ -1456,10 +1459,11 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.CreateTableStatement :
 						{
-							var table  = Read<SqlTable>();
-							var isDrop = ReadBool();
+							var table     = Read<SqlTable>();
+							var isDrop    = ReadBool();
+							var tableType = (SelectQuery.TableType)ReadInt();
 
-							obj = new SelectQuery.CreateTableStatement { Table = table, IsDrop = isDrop };
+							obj = new SelectQuery.CreateTableStatement { Table = table, IsDrop = isDrop, TableType = tableType };
 
 							break;
 						}

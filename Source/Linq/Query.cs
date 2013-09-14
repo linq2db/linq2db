@@ -936,6 +936,16 @@ namespace LinqToDB.Linq
 			string databaseName = null,
 			string ownerName    = null)
 		{
+			return CreateTable(dataContextInfo, tableName, databaseName, ownerName, SelectQuery.TableType.Regular);
+		}
+
+		static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
+			string                tableName,
+			string                databaseName,
+			string                ownerName,
+			SelectQuery.TableType tableType
+			)
+		{
 			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
 			var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
 
@@ -943,7 +953,8 @@ namespace LinqToDB.Linq
 			if (databaseName != null) sqlTable.Database     = databaseName;
 			if (ownerName    != null) sqlTable.Owner        = ownerName;
 
-			sqlQuery.CreateTable.Table = sqlTable;
+			sqlQuery.CreateTable.Table     = sqlTable;
+			sqlQuery.CreateTable.TableType = tableType;
 
 			foreach (var field in sqlTable.Fields.Values)
 			{
