@@ -594,13 +594,19 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
+		protected virtual void BuildStartCreateTableStatement(SqlTable table)
+		{
+			AppendIndent().Append("CREATE TABLE ");
+
+			BuildPhysicalTable(table, null);
+		}
+
 		protected virtual void BuildCreateTableStatement()
 		{
 			var table = SelectQuery.CreateTable.Table;
 
-			AppendIndent().Append("CREATE TABLE ");
+			BuildStartCreateTableStatement(table);
 
-			BuildPhysicalTable(table, null);
 			StringBuilder.AppendLine();
 			AppendIndent().Append("(");
 			Indent++;
