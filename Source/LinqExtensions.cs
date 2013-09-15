@@ -9,6 +9,8 @@ namespace LinqToDB
 {
 	using Linq;
 
+	using SqlQuery;
+
 	public static class LinqExtensions
 	{
 		#region Table Helpers
@@ -48,6 +50,18 @@ namespace LinqToDB
 				null,
 				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
+
+			return table;
+		}
+
+		static public ITable<T> TableTempType<T>([NotNull] this ITable<T> table, SqlTableTempType sqlTableTempType)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			table.Expression = Expression.Call(
+				null,
+				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Constant(sqlTableTempType) });
 
 			return table;
 		}
@@ -662,6 +676,23 @@ namespace LinqToDB
 						Expression.Quote(onDuplicateKeyUpdateSetter),
 						Expression.Quote(keySelector)
 					}));
+		}
+
+		#endregion
+
+		#region DDL Operations
+
+		public static int Drop<T>([NotNull] this ITable<T> target)
+		{
+			if (target == null) throw new ArgumentNullException("target");
+
+			IQueryable<T> query = target;
+
+			return query.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					new[] { query.Expression }));
 		}
 
 		#endregion

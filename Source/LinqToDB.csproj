@@ -98,8 +98,12 @@
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
+    <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
+    <Compile Include="Mapping\GlobalTempTableAttribute.cs" />
+    <Compile Include="Mapping\LocalTempTableAttribute.cs" />
+    <Compile Include="Mapping\TableTempTypeAttribute.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />
@@ -306,6 +310,7 @@
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
+    <Compile Include="SqlQuery\SqlTableTempType.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />

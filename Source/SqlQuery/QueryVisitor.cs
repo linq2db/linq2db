@@ -1190,12 +1190,7 @@ namespace LinqToDB.SqlQuery
 
 						if (t != null && !ReferenceEquals(s.Table, t))
 						{
-							newElement = new SelectQuery.CreateTableStatement
-							{
-								Table     = t,
-								IsDrop    = s.IsDrop,
-								TableType = s.TableType
-							};
+							newElement = new SelectQuery.CreateTableStatement { Table = t, IsDrop = s.IsDrop };
 						}
 
 						break;

@@ -150,6 +150,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
+			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");

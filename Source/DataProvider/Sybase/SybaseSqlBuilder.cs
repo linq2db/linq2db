@@ -212,6 +212,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
+			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");

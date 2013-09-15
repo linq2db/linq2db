@@ -679,6 +679,8 @@ namespace LinqToDB.ServiceModel
 								}
 							}
 
+							Append((int)elem.SqlTableTempType);
+
 							break;
 						}
 
@@ -957,7 +959,6 @@ namespace LinqToDB.ServiceModel
 
 							Append(elem.Table);
 							Append(elem.IsDrop);
-							Append((int)elem.TableType);
 
 							break;
 						}
@@ -1197,12 +1198,13 @@ namespace LinqToDB.ServiceModel
 							flds[0] = all;
 							Array.Copy(fields, 0, flds, 1, fields.Length);
 
-							var sqlTableType = (SqlTableType)ReadInt();
-							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
+							var sqlTableType     = (SqlTableType)ReadInt();
+							var tableArgs        = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
+							var sqlTableTempType = (SqlTableTempType)ReadInt();
 
 							obj = new SqlTable(
 								sourceID, name, alias, database, owner, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs);
+								sqlTableType, tableArgs, sqlTableTempType);
 
 							break;
 						}
@@ -1461,9 +1463,8 @@ namespace LinqToDB.ServiceModel
 						{
 							var table     = Read<SqlTable>();
 							var isDrop    = ReadBool();
-							var tableType = (SelectQuery.TableType)ReadInt();
 
-							obj = new SelectQuery.CreateTableStatement { Table = table, IsDrop = isDrop, TableType = tableType };
+							obj = new SelectQuery.CreateTableStatement { Table = table, IsDrop = isDrop };
 
 							break;
 						}

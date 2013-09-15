@@ -6,6 +6,8 @@ namespace LinqToDB.Mapping
 {
 	using Expressions;
 
+	using SqlQuery;
+
 	public class PropertyMappingBuilder<T>
 	{
 		#region Init

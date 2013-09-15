@@ -932,29 +932,19 @@ namespace LinqToDB.Linq
 		#region DDL Operations
 
 		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
+			string           tableName     = null,
+			string           databaseName  = null,
+			string           ownerName     = null,
+			SqlTableTempType tableTempType = SqlTableTempType.Regular)
 		{
-			return CreateTable(dataContextInfo, tableName, databaseName, ownerName, SelectQuery.TableType.Regular);
-		}
-
-		static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
-			string                tableName,
-			string                databaseName,
-			string                ownerName,
-			SelectQuery.TableType tableType
-			)
-		{
-			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
+			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema) { SqlTableTempType = tableTempType };
 			var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
 
-			if (tableName    != null) sqlTable.PhysicalName = tableName;
-			if (databaseName != null) sqlTable.Database     = databaseName;
-			if (ownerName    != null) sqlTable.Owner        = ownerName;
+			if (tableName     != null) sqlTable.PhysicalName = tableName;
+			if (databaseName  != null) sqlTable.Database     = databaseName;
+			if (ownerName     != null) sqlTable.Owner        = ownerName;
 
-			sqlQuery.CreateTable.Table     = sqlTable;
-			sqlQuery.CreateTable.TableType = tableType;
+			sqlQuery.CreateTable.Table = sqlTable;
 
 			foreach (var field in sqlTable.Fields.Values)
 			{
@@ -976,24 +966,27 @@ namespace LinqToDB.Linq
 
 			ITable<T> table = new Table<T>(dataContextInfo);
 
-			if (tableName    != null) table = table.TableName   (tableName);
-			if (databaseName != null) table = table.DatabaseName(databaseName);
-			if (ownerName    != null) table = table.OwnerName   (ownerName);
+			if (tableName     != null) table = table.TableName    (tableName);
+			if (databaseName  != null) table = table.DatabaseName (databaseName);
+			if (ownerName     != null) table = table.OwnerName    (ownerName);
+
+			table.TableTempType(tableTempType);
 
 			return table;
 		}
 
 		public static void DropTable(IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
+			string           tableName     = null,
+			string           databaseName  = null,
+			string           ownerName     = null,
+			SqlTableTempType tableTempType = SqlTableTempType.Regular)
 		{
-			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
+			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema) { SqlTableTempType = tableTempType };
 			var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
 
-			if (tableName    != null) sqlTable.PhysicalName = tableName;
-			if (databaseName != null) sqlTable.Database     = databaseName;
-			if (ownerName    != null) sqlTable.Owner        = ownerName;
+			if (tableName     != null) sqlTable.PhysicalName = tableName;
+			if (databaseName  != null) sqlTable.Database     = databaseName;
+			if (ownerName     != null) sqlTable.Owner        = ownerName;
 
 			sqlQuery.CreateTable.Table  = sqlTable;
 			sqlQuery.CreateTable.IsDrop = true;

@@ -5,6 +5,8 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
+	using SqlQuery;
+
 	public class EntityMappingBuilder<T>
 	{
 		#region Init
@@ -173,6 +175,30 @@ namespace LinqToDB.Mapping
 					Database                  = a.Database,
 					IsColumnAttributeRequired = a.IsColumnAttributeRequired,
 				});
+		}
+
+		public EntityMappingBuilder<T> HasTableTempType(SqlTableTempType tableTempType)
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new TableTempTypeAttribute(tableTempType) { Configuration = Configuration });
+			return this;
+		}
+
+		public EntityMappingBuilder<T> IsLocalTempTable()
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new LocalTempTableAttribute { Configuration = Configuration });
+			return this;
+		}
+
+		public EntityMappingBuilder<T> IsGlobalTempTable()
+		{
+			_builder.HasAttribute(
+				typeof(T),
+				new GlobalTempTableAttribute { Configuration = Configuration });
+			return this;
 		}
 
 		EntityMappingBuilder<T> SetAttribute<TA>(

@@ -7,6 +7,8 @@ using NUnit.Framework;
 
 namespace Tests.DDL
 {
+	using LinqToDB.SqlQuery;
+
 	[TestFixture]
 	public class CreateTableTest : TestBase
 	{
@@ -17,7 +19,7 @@ namespace Tests.DDL
 		}
 
 		[Test]
-		public void CreateTable([DataContexts] string context)
+		public void CreateTable1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,6 +43,63 @@ namespace Tests.DDL
 				var list = table.ToList();
 
 				db.DropTable<TestTable>();
+			}
+		}
+
+		[Test]
+		public void CreateTable2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				try
+				{
+					db.DropTable<TestTable>();
+				}
+				catch (Exception)
+				{
+				}
+
+				var table = db.CreateLocalTempTable<TestTable>();
+				var list = table.ToList();
+
+				table.Drop();
+			}
+		}
+
+		[Test]
+		public void CreateTempTable1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.IsLocalTempTable()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				try
+				{
+					db.DropTable<TestTable>();
+				}
+				catch (Exception)
+				{
+				}
+
+				var table = db.CreateLocalTempTable<TestTable>();
+				var list = table.ToList();
+
+				table.Drop();
 			}
 		}
 	}

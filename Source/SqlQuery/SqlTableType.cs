@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery
 {
 	public enum SqlTableType
 	{
-		Table,
+		Table = 0,
 		Function,
 		Expression
 	}

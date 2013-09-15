@@ -53,6 +53,7 @@ namespace LinqToDB.Linq.Builder
 			new OfTypeBuilder        (),
 			new AsUpdatableBuilder   (),
 			new LoadWithBuilder      (),
+			new DropBuilder          (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 		public SqlTable()
 		{
 			_sourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
-			_fields   = new Dictionary<string,SqlField>();
+			Fields    = new Dictionary<string,SqlField>();
 		}
 
 		internal SqlTable(
@@ -25,7 +25,8 @@ namespace LinqToDB.SqlQuery
 			SequenceNameAttribute[] sequenceAttributes,
 			SqlField[]              fields,
 			SqlTableType            sqlTableType,
-			ISqlExpression[]        tableArguments)
+			ISqlExpression[]        tableArguments,
+			SqlTableTempType        sqlTableTempType)
 		{
 			_sourceID          = id;
 			Name               = name;
@@ -36,7 +37,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
-			_fields = new Dictionary<string, SqlField>();
+			Fields = new Dictionary<string, SqlField>();
 
 			AddRange(fields);
 
@@ -45,14 +46,15 @@ namespace LinqToDB.SqlQuery
 				if (field.Name == "*")
 				{
 					_all = field;
-					_fields.Remove("*");
+					Fields.Remove("*");
 					_all.Table = this;
 					break;
 				}
 			}
 
-			SqlTableType   = sqlTableType;
-			TableArguments = tableArguments;
+			SqlTableType     = sqlTableType;
+			TableArguments   = tableArguments;
+			SqlTableTempType = sqlTableTempType;
 		}
 
 		#endregion
@@ -65,11 +67,12 @@ namespace LinqToDB.SqlQuery
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
-			Database     = ed.DatabaseName;
-			Owner        = ed.SchemaName;
-			Name         = ed.TableName;
-			ObjectType   = objectType;
-			PhysicalName = Name;
+			Database         = ed.DatabaseName;
+			Owner            = ed.SchemaName;
+			Name             = ed.TableName;
+			ObjectType       = objectType;
+			PhysicalName     = Name;
+			SqlTableTempType = ed.TableTempType;
 
 			foreach (var column in ed.Columns)
 			{
@@ -126,8 +129,9 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields.Values)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType     = table.SqlTableType;
+			TableArguments   = table.TableArguments;
+			SqlTableTempType = table.SqlTableTempType;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
@@ -142,8 +146,9 @@ namespace LinqToDB.SqlQuery
 
 			AddRange(fields);
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = tableArguments;
+			SqlTableType     = table.SqlTableType;
+			TableArguments   = tableArguments;
+			SqlTableTempType = table.SqlTableTempType;
 		}
 
 		#endregion
@@ -173,21 +178,18 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string             Name         { get; set; }
-		public string             Alias        { get; set; }
-		public string             Database     { get; set; }
-		public string             Owner        { get; set; }
-		public Type               ObjectType   { get; set; }
-		public string             PhysicalName { get; set; }
-		public List<MemberInfo[]> LoadWith     { get; set; }
+		public string             Name             { get; set; }
+		public string             Alias            { get; set; }
+		public string             Database         { get; set; }
+		public string             Owner            { get; set; }
+		public Type               ObjectType       { get; set; }
+		public string             PhysicalName     { get; set; }
+		public List<MemberInfo[]> LoadWith         { get; set; }
+		public SqlTableType       SqlTableType     { get; set; }
+		public SqlTableTempType   SqlTableTempType { get; set; }
+		public ISqlExpression[]   TableArguments   { get; set; }
 
-		private SqlTableType _sqlTableType = SqlTableType.Table;
-		public  SqlTableType  SqlTableType { get { return _sqlTableType; } set { _sqlTableType = value; } }
-
-		public ISqlExpression[] TableArguments { get; set; }
-
-		readonly Dictionary<string,SqlField> _fields;
-		public   Dictionary<string,SqlField>  Fields { get { return _fields; } }
+		public Dictionary<string,SqlField> Fields  { get; private set; }
 
 		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
 
@@ -217,7 +219,7 @@ namespace LinqToDB.SqlQuery
 
 			field.Table = this;
 
-			_fields.Add(field.Name, field);
+			Fields.Add(field.Name, field);
 		}
 
 		public void AddRange(IEnumerable<SqlField> collection)
@@ -276,11 +278,12 @@ namespace LinqToDB.SqlQuery
 					ObjectType         = ObjectType,
 					SqlTableType       = SqlTableType,
 					SequenceAttributes = SequenceAttributes,
+					SqlTableTempType   = SqlTableTempType,
 				};
 
-				table._fields.Clear();
+				table.Fields.Clear();
 
-				foreach (var field in _fields)
+				foreach (var field in Fields)
 				{
 					var fc = new SqlField(field.Value);
 

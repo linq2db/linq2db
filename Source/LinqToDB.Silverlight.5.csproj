@@ -121,6 +121,7 @@
     <Compile Include="Linq\Builder\DefaultIfEmptyBuilder.cs" />
     <Compile Include="Linq\Builder\DeleteBuilder.cs" />
     <Compile Include="Linq\Builder\DistinctBuilder.cs" />
+    <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.QueryBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilder.SqlBuilder.cs" />
@@ -259,6 +260,7 @@
     <Compile Include="SqlQuery\SqlParameter.cs" />
     <Compile Include="SqlQuery\SqlTable.cs" />
     <Compile Include="SqlQuery\SqlTableT.cs" />
+    <Compile Include="SqlQuery\SqlTableTempType.cs" />
     <Compile Include="SqlQuery\SqlTableType.cs" />
     <Compile Include="SqlQuery\SqlValue.cs" />
     <Compile Include="Sql\Sql.cs" />

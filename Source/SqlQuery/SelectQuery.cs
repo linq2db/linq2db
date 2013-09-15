@@ -2118,18 +2118,10 @@ namespace LinqToDB.SqlQuery
 
 		#region CreateTableStatement
 
-		internal enum TableType
-		{
-			Regular,
-			LocalTemp,
-			GlobalTemp,
-		}
-
 		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
-			public   SqlTable  Table     { get; set; }
-			public   bool      IsDrop    { get; set; }
-			internal TableType TableType { get; set; }
+			public SqlTable Table  { get; set; }
+			public bool     IsDrop { get; set; }
 
 			#region IQueryElement Members
 
