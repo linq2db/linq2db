@@ -416,6 +416,7 @@ public partial class Column : Property
 	public bool      SkipOnUpdate;
 	public bool      SkipOnInsert;
 	public bool      IsDuplicateOrEmpty;
+	public string    AliasName;
 
 	public string MemberName
 	{
