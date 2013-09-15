@@ -235,5 +235,36 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 		}
+
+		protected override void BuildStartCreateTableStatement(SqlTable table)
+		{
+			if (table.SqlTableTempType != SqlTableTempType.Regular)
+			{
+				AppendIndent().Append("CREATE GLOBAL TEMPORARY TABLE ");
+				BuildPhysicalTable(table, null);
+			}
+			else
+			{
+				base.BuildStartCreateTableStatement(table);
+			}
+		}
+
+		protected override void BuildEndCreateTableStatement(SqlTable table)
+		{
+			if (table.SqlTableTempType == SqlTableTempType.GlobalTemp)
+			{
+				AppendIndent()
+					.AppendLine("ON COMMIT PRESERVE ROWS");
+			}
+			else if (table.SqlTableTempType == SqlTableTempType.LocalTemp)
+			{
+				AppendIndent()
+					.AppendLine("ON COMMIT DELETE ROWS");
+			}
+			else
+			{
+				base.BuildStartCreateTableStatement(table);
+			}
+		}
 	}
 }

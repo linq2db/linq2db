@@ -601,6 +601,10 @@ namespace LinqToDB.SqlProvider
 			BuildPhysicalTable(table, null);
 		}
 
+		protected virtual void BuildEndCreateTableStatement(SqlTable table)
+		{
+		}
+
 		protected virtual void BuildCreateTableStatement()
 		{
 			var table = SelectQuery.CreateTable.Table;
@@ -740,6 +744,8 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 			StringBuilder.AppendLine();
 			AppendIndent().AppendLine(")");
+
+			BuildEndCreateTableStatement(table);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
@@ -2389,6 +2395,21 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		protected virtual string GetTableDatabaseName(SqlTable table)
+		{
+			return table.Database == null ? null : Convert(table.Database, ConvertType.NameToDatabase).ToString();
+		}
+
+		protected virtual string GetTableOwnerName(SqlTable table)
+		{
+			return table.Owner == null ? null : Convert(table.Owner, ConvertType.NameToOwner).ToString();
+		}
+
+		protected virtual string GetTablePhysicalName(SqlTable table)
+		{
+			return table.PhysicalName == null ? null : Convert(table.PhysicalName, ConvertType.NameToQueryTable).ToString();
+		}
+
 		string GetPhysicalTableName(ISqlTableSource table, string alias)
 		{
 			switch (table.ElementType)
@@ -2397,9 +2418,9 @@ namespace LinqToDB.SqlProvider
 					{
 						var tbl = (SqlTable)table;
 
-						var database     = tbl.Database     == null ? null : Convert(tbl.Database,     ConvertType.NameToDatabase).  ToString();
-						var owner        = tbl.Owner        == null ? null : Convert(tbl.Owner,        ConvertType.NameToOwner).     ToString();
-						var physicalName = tbl.PhysicalName == null ? null : Convert(tbl.PhysicalName, ConvertType.NameToQueryTable).ToString();
+						var database     = GetTableDatabaseName(tbl);
+						var owner        = GetTableOwnerName   (tbl);
+						var physicalName = GetTablePhysicalName(tbl);
 
 						var sb = new StringBuilder();
 

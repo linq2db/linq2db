@@ -7,8 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.DDL
 {
-	using LinqToDB.SqlQuery;
-
 	[TestFixture]
 	public class CreateTableTest : TestBase
 	{
@@ -75,7 +73,9 @@ namespace Tests.DDL
 		}
 
 		[Test]
-		public void CreateTempTable1([DataContexts] string context)
+		public void CreateLocalTempTable1([DataContexts(
+			ProviderName.DB2,
+			ExcludeLinqService = true)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -97,6 +97,37 @@ namespace Tests.DDL
 				}
 
 				var table = db.CreateLocalTempTable<TestTable>();
+				var list = table.ToList();
+
+				table.Drop();
+			}
+		}
+
+		[Test]
+		public void CreateGlobalTempTable1([DataContexts(
+			ProviderName.DB2,
+			ExcludeLinqService = true)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.MappingSchema.GetFluentMappingBuilder()
+					.Entity<TestTable>()
+						.IsGlobalTempTable()
+						.Property(t => t.ID)
+							.IsIdentity()
+							.IsPrimaryKey()
+						.Property(t => t.Field1)
+							.HasLength(50);
+
+				try
+				{
+					db.DropTable<TestTable>();
+				}
+				catch (Exception)
+				{
+				}
+
+				var table = db.CreateTable<TestTable>();
 				var list = table.ToList();
 
 				table.Drop();

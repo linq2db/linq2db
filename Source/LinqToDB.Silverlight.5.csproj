@@ -186,9 +186,11 @@
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
+    <Compile Include="Mapping\GlobalTempTableAttribute.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs" />
     <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
+    <Compile Include="Mapping\LocalTempTableAttribute.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />
     <Compile Include="Mapping\MappingSchemaInfo.cs" />
     <Compile Include="Mapping\MapValue.cs" />
@@ -201,6 +203,7 @@
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
+    <Compile Include="Mapping\TableTempTypeAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
     <Compile Include="Metadata\FluentMetadataReader.cs" />
