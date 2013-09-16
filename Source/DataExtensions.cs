@@ -260,57 +260,27 @@ namespace LinqToDB
 		#region DDL Operations
 
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
+			string tableName       = null,
+			string databaseName    = null,
+			string ownerName       = null,
+			string statementHeader = null,
+			string statementFooter = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo, tableName, databaseName, ownerName);
+			return Query<T>.CreateTable(dataContextInfo,
+				tableName, databaseName, ownerName, statementHeader, statementFooter);
 		}
 
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
+			string tableName       = null,
+			string databaseName    = null,
+			string ownerName       = null,
+			string statementHeader = null,
+			string statementFooter = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
-		}
-
-		public static ITable<T> CreateLocalTempTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo, tableName, databaseName, ownerName, SqlTableTempType.LocalTemp);
-		}
-
-		public static ITable<T> CreateLocalTempTable<T>([NotNull] this IDataContext dataContext,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName, SqlTableTempType.LocalTemp);
-		}
-
-		public static ITable<T> CreateGlobalTempTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo, tableName, databaseName, ownerName, SqlTableTempType.GlobalTemp);
-		}
-
-		public static ITable<T> CreateGlobalTempTable<T>([NotNull] this IDataContext dataContext,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName, SqlTableTempType.GlobalTemp);
+			return Query<T>.CreateTable(DataContextInfo.Create(dataContext),
+				tableName, databaseName, ownerName, statementHeader, statementFooter);
 		}
 
 		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
@@ -326,36 +296,6 @@ namespace LinqToDB
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
-		}
-
-		public static void DropLocalTempTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName, SqlTableTempType.LocalTemp);
-		}
-
-		public static void DropLocalTempTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName, SqlTableTempType.LocalTemp);
-		}
-
-		public static void DropGlobalTempTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName    = null,
-			string databaseName = null,
-			string ownerName    = null)
-		{
-			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName, SqlTableTempType.GlobalTemp);
-		}
-
-		public static void DropGlobalTempTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
-		{
-			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName, SqlTableTempType.GlobalTemp);
 		}
 
 		#endregion

@@ -25,8 +25,7 @@ namespace LinqToDB.SqlQuery
 			SequenceNameAttribute[] sequenceAttributes,
 			SqlField[]              fields,
 			SqlTableType            sqlTableType,
-			ISqlExpression[]        tableArguments,
-			SqlTableTempType        sqlTableTempType)
+			ISqlExpression[]        tableArguments)
 		{
 			_sourceID          = id;
 			Name               = name;
@@ -52,9 +51,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			SqlTableType     = sqlTableType;
-			TableArguments   = tableArguments;
-			SqlTableTempType = sqlTableTempType;
+			SqlTableType   = sqlTableType;
+			TableArguments = tableArguments;
 		}
 
 		#endregion
@@ -67,12 +65,11 @@ namespace LinqToDB.SqlQuery
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
-			Database         = ed.DatabaseName;
-			Owner            = ed.SchemaName;
-			Name             = ed.TableName;
-			ObjectType       = objectType;
-			PhysicalName     = Name;
-			SqlTableTempType = ed.TableTempType;
+			Database     = ed.DatabaseName;
+			Owner        = ed.SchemaName;
+			Name         = ed.TableName;
+			ObjectType   = objectType;
+			PhysicalName = Name;
 
 			foreach (var column in ed.Columns)
 			{
@@ -129,9 +126,8 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields.Values)
 				Add(new SqlField(field));
 
-			SqlTableType     = table.SqlTableType;
-			TableArguments   = table.TableArguments;
-			SqlTableTempType = table.SqlTableTempType;
+			SqlTableType   = table.SqlTableType;
+			TableArguments = table.TableArguments;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments) : this()
@@ -146,9 +142,8 @@ namespace LinqToDB.SqlQuery
 
 			AddRange(fields);
 
-			SqlTableType     = table.SqlTableType;
-			TableArguments   = tableArguments;
-			SqlTableTempType = table.SqlTableTempType;
+			SqlTableType   = table.SqlTableType;
+			TableArguments = tableArguments;
 		}
 
 		#endregion
@@ -178,18 +173,17 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string             Name             { get; set; }
-		public string             Alias            { get; set; }
-		public string             Database         { get; set; }
-		public string             Owner            { get; set; }
-		public Type               ObjectType       { get; set; }
-		public string             PhysicalName     { get; set; }
-		public List<MemberInfo[]> LoadWith         { get; set; }
-		public SqlTableType       SqlTableType     { get; set; }
-		public SqlTableTempType   SqlTableTempType { get; set; }
-		public ISqlExpression[]   TableArguments   { get; set; }
+		public string             Name            { get; set; }
+		public string             Alias           { get; set; }
+		public string             Database        { get; set; }
+		public string             Owner           { get; set; }
+		public Type               ObjectType      { get; set; }
+		public string             PhysicalName    { get; set; }
+		public List<MemberInfo[]> LoadWith        { get; set; }
+		public SqlTableType       SqlTableType    { get; set; }
+		public ISqlExpression[]   TableArguments  { get; set; }
 
-		public Dictionary<string,SqlField> Fields  { get; private set; }
+		public Dictionary<string,SqlField> Fields { get; private set; }
 
 		public SequenceNameAttribute[] SequenceAttributes { get; private set; }
 
@@ -278,7 +272,6 @@ namespace LinqToDB.SqlQuery
 					ObjectType         = ObjectType,
 					SqlTableType       = SqlTableType,
 					SequenceAttributes = SequenceAttributes,
-					SqlTableTempType   = SqlTableTempType,
 				};
 
 				table.Fields.Clear();

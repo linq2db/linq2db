@@ -189,21 +189,5 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
-
-		protected override string GetTablePhysicalName(SqlTable table)
-		{
-			if (table.PhysicalName == null)
-				return null;
-
-			var name = table.PhysicalName;
-
-			switch (table.SqlTableTempType)
-			{
-				case SqlTableTempType.LocalTemp  : name = "#"  + name; break;
-				case SqlTableTempType.GlobalTemp : name = "##" + name; break;
-			}
-
-			return Convert(name, ConvertType.NameToQueryTable).ToString();
-		}
 	}
 }

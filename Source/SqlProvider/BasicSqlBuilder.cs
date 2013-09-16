@@ -117,7 +117,7 @@ namespace LinqToDB.SqlProvider
 			sb.SqlOptimizer     = SqlOptimizer;
 			sb.SqlProviderFlags = SqlProviderFlags;
 			sb.StringBuilder    = StringBuilder;
-			sb.SkipAlias       = SkipAlias; 
+			sb.SkipAlias        = SkipAlias; 
 
 			return sb;
 		}
@@ -594,22 +594,38 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual void BuildStartCreateTableStatement(SqlTable table)
+		protected virtual void BuildStartCreateTableStatement(SelectQuery.CreateTableStatement createTable)
 		{
-			AppendIndent().Append("CREATE TABLE ");
+			if (createTable.StatementHeader == null)
+			{
+				AppendIndent().Append("CREATE TABLE ");
+				BuildPhysicalTable(createTable.Table, null);
+			}
+			else
+			{
+				var name = WithStringBuilder(
+					new StringBuilder(),
+					() =>
+					{
+						BuildPhysicalTable(createTable.Table, null);
+						return StringBuilder.ToString();
+					});
 
-			BuildPhysicalTable(table, null);
+				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+			}
 		}
 
-		protected virtual void BuildEndCreateTableStatement(SqlTable table)
+		protected virtual void BuildEndCreateTableStatement(SelectQuery.CreateTableStatement createTable)
 		{
+			if (createTable.StatementFooter == null)
+				AppendIndent().Append(createTable.StatementFooter);
 		}
 
 		protected virtual void BuildCreateTableStatement()
 		{
 			var table = SelectQuery.CreateTable.Table;
 
-			BuildStartCreateTableStatement(table);
+			BuildStartCreateTableStatement(SelectQuery.CreateTable);
 
 			StringBuilder.AppendLine();
 			AppendIndent().Append("(");
@@ -745,7 +761,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 			AppendIndent().AppendLine(")");
 
-			BuildEndCreateTableStatement(table);
+			BuildEndCreateTableStatement(SelectQuery.CreateTable);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)

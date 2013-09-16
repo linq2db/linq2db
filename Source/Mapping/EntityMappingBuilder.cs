@@ -177,30 +177,6 @@ namespace LinqToDB.Mapping
 				});
 		}
 
-		public EntityMappingBuilder<T> HasTableTempType(SqlTableTempType tableTempType)
-		{
-			_builder.HasAttribute(
-				typeof(T),
-				new TableTempTypeAttribute(tableTempType) { Configuration = Configuration });
-			return this;
-		}
-
-		public EntityMappingBuilder<T> IsLocalTempTable()
-		{
-			_builder.HasAttribute(
-				typeof(T),
-				new LocalTempTableAttribute { Configuration = Configuration });
-			return this;
-		}
-
-		public EntityMappingBuilder<T> IsGlobalTempTable()
-		{
-			_builder.HasAttribute(
-				typeof(T),
-				new GlobalTempTableAttribute { Configuration = Configuration });
-			return this;
-		}
-
 		EntityMappingBuilder<T> SetAttribute<TA>(
 			Func<TA>        getNew,
 			Action<TA>      modifyExisting,

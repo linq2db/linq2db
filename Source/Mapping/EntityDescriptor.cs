@@ -29,7 +29,6 @@ namespace LinqToDB.Mapping
 		public string                      TableName                 { get; private set; }
 		public string                      SchemaName                { get; private set; }
 		public string                      DatabaseName              { get; private set; }
-		public SqlTableTempType            TableTempType             { get; private set; }
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
@@ -56,13 +55,6 @@ namespace LinqToDB.Mapping
 
 				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
-			}
-
-			var ttta = _mappingSchema.GetAttribute<TableTempTypeAttribute>(TypeAccessor.Type, a => a.Configuration);
-
-			if (ttta != null)
-			{
-				TableTempType = ttta.SqlTableTempType;
 			}
 
 			var attrs = new List<ColumnAttribute>();

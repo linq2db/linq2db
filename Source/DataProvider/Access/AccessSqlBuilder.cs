@@ -382,18 +382,5 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
-
-		protected override void BuildStartCreateTableStatement(SqlTable table)
-		{
-			//if (table.SqlTableTempType == SqlTableTempType.LocalTemp)
-			//{
-			//	AppendIndent().Append("CREATE TEMPORARY TABLE ");
-			//	BuildPhysicalTable(table, null);
-			//}
-			//else
-			//{
-				base.BuildStartCreateTableStatement(table);
-			//}
-		}
 	}
 }

@@ -54,18 +54,6 @@ namespace LinqToDB
 			return table;
 		}
 
-		static public ITable<T> TableTempType<T>([NotNull] this ITable<T> table, SqlTableTempType sqlTableTempType)
-		{
-			if (table == null) throw new ArgumentNullException("table");
-
-			table.Expression = Expression.Call(
-				null,
-				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
-				new[] { table.Expression, Expression.Constant(sqlTableTempType) });
-
-			return table;
-		}
-
 		#endregion
 
 		#region LoadWith

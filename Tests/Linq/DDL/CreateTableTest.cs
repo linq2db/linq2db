@@ -45,35 +45,8 @@ namespace Tests.DDL
 		}
 
 		[Test]
-		public void CreateTable2([DataContexts] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50);
-
-				try
-				{
-					db.DropTable<TestTable>();
-				}
-				catch (Exception)
-				{
-				}
-
-				var table = db.CreateLocalTempTable<TestTable>();
-				var list = table.ToList();
-
-				table.Drop();
-			}
-		}
-
-		[Test]
-		public void CreateLocalTempTable1([DataContexts(
+		public void CreateLocalTempTable1([IncludeDataContexts(
+			ProviderName.SqlServer2008,
 			ProviderName.DB2,
 			ExcludeLinqService = true)] string context)
 		{
@@ -81,53 +54,37 @@ namespace Tests.DDL
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<TestTable>()
-						.IsLocalTempTable()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
 						.Property(t => t.Field1)
 							.HasLength(50);
 
+				const string tableName = "TestTable";
+
 				try
 				{
-					db.DropTable<TestTable>();
+					switch (context)
+					{
+						case ProviderName.SqlServer2008 : db.DropTable<TestTable>("#" + tableName); break;
+						default                         : db.DropTable<TestTable>(tableName);       break;
+					}
 				}
 				catch (Exception)
 				{
 				}
 
-				var table = db.CreateLocalTempTable<TestTable>();
-				var list = table.ToList();
+				ITable<TestTable> table;
 
-				table.Drop();
-			}
-		}
-
-		[Test]
-		public void CreateGlobalTempTable1([DataContexts(
-			ProviderName.DB2,
-			ExcludeLinqService = true)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.IsGlobalTempTable()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50);
-
-				try
+				switch (context)
 				{
-					db.DropTable<TestTable>();
-				}
-				catch (Exception)
-				{
+					case ProviderName.SqlServer2008 :
+						table = db.CreateTable<TestTable>("#" + tableName);
+						break;
+					case ProviderName.DB2 :
+						table = db.CreateTable<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
+						break;
+					default:
+						throw new InvalidOperationException();
 				}
 
-				var table = db.CreateTable<TestTable>();
 				var list = table.ToList();
 
 				table.Drop();
