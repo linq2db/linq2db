@@ -959,6 +959,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsDrop);
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
+							Append((int)elem.DefaulNullable);
 
 							break;
 						}
@@ -1464,6 +1465,7 @@ namespace LinqToDB.ServiceModel
 							var isDrop          = ReadBool();
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
+							var defaultNullable = (DefaulNullable)ReadInt();
 
 							obj = new SelectQuery.CreateTableStatement
 							{
@@ -1471,6 +1473,7 @@ namespace LinqToDB.ServiceModel
 								IsDrop          = isDrop,
 								StatementHeader = statementHeader,
 								StatementFooter = statementFooter,
+								DefaulNullable  = defaultNullable,
 							};
 
 							break;

@@ -260,27 +260,29 @@ namespace LinqToDB
 		#region DDL Operations
 
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo,
-			string tableName       = null,
-			string databaseName    = null,
-			string ownerName       = null,
-			string statementHeader = null,
-			string statementFooter = null)
+			string         tableName       = null,
+			string         databaseName    = null,
+			string         ownerName       = null,
+			string         statementHeader = null,
+			string         statementFooter = null,
+			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
 			return Query<T>.CreateTable(dataContextInfo,
-				tableName, databaseName, ownerName, statementHeader, statementFooter);
+				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
 		}
 
 		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
-			string tableName       = null,
-			string databaseName    = null,
-			string ownerName       = null,
-			string statementHeader = null,
-			string statementFooter = null)
+			string         tableName       = null,
+			string         databaseName    = null,
+			string         ownerName       = null,
+			string         statementHeader = null,
+			string         statementFooter = null,
+			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return Query<T>.CreateTable(DataContextInfo.Create(dataContext),
-				tableName, databaseName, ownerName, statementHeader, statementFooter);
+				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
 		}
 
 		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,

@@ -932,11 +932,12 @@ namespace LinqToDB.Linq
 		#region DDL Operations
 
 		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
-			string tableName       = null,
-			string databaseName    = null,
-			string ownerName       = null,
-			string statementHeader = null,
-			string statementFooter = null)
+			string         tableName       = null,
+			string         databaseName    = null,
+			string         ownerName       = null,
+			string         statementHeader = null,
+			string         statementFooter = null,
+			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
 			var sqlQuery = new SelectQuery { QueryType = QueryType.CreateTable };
@@ -948,6 +949,7 @@ namespace LinqToDB.Linq
 			sqlQuery.CreateTable.Table           = sqlTable;
 			sqlQuery.CreateTable.StatementHeader = statementHeader;
 			sqlQuery.CreateTable.StatementFooter = statementFooter;
+			sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
 
 			foreach (var field in sqlTable.Fields.Values)
 			{

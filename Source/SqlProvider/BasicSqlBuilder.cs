@@ -617,7 +617,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildEndCreateTableStatement(SelectQuery.CreateTableStatement createTable)
 		{
-			if (createTable.StatementFooter == null)
+			if (createTable.StatementFooter != null)
 				AppendIndent().Append(createTable.StatementFooter);
 		}
 
@@ -702,7 +702,9 @@ namespace LinqToDB.SqlProvider
 			foreach (var field in fields)
 			{
 				field.sb.Append(' ');
-				WithStringBuilder(field.sb, () => BuildCreateTableNullAttribute(field.field));
+				WithStringBuilder(
+					field.sb,
+					() => BuildCreateTableNullAttribute(field.field, SelectQuery.CreateTable.DefaulNullable));
 
 				if (maxlen < field.sb.Length)
 					maxlen = field.sb.Length;
@@ -775,8 +777,14 @@ namespace LinqToDB.SqlProvider
 				createDbType : true);
 		}
 
-		protected virtual void BuildCreateTableNullAttribute(SqlField field)
+		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
 		{
+			if (defaulNullable == DefaulNullable.Null && field.Nullable)
+				return;
+
+			if (defaulNullable == DefaulNullable.NotNull && !field.Nullable)
+				return;
+
 			StringBuilder.Append(field.Nullable ? "    NULL" : "NOT NULL");
 		}
 

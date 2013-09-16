@@ -2120,10 +2120,11 @@ namespace LinqToDB.SqlQuery
 
 		public class CreateTableStatement : IQueryElement, ISqlExpressionWalkable, ICloneableElement
 		{
-			public SqlTable Table           { get; set; }
-			public bool     IsDrop          { get; set; }
-			public string   StatementHeader { get; set; }
-			public string   StatementFooter { get; set; }
+			public SqlTable       Table           { get; set; }
+			public bool           IsDrop          { get; set; }
+			public string         StatementHeader { get; set; }
+			public string         StatementFooter { get; set; }
+			public DefaulNullable DefaulNullable  { get; set; }
 
 			#region IQueryElement Members
 
