@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider
 		public decimal     GetDecimal     (int i)           { throw new NotImplementedException(); }
 		public DateTime    GetDateTime    (int i)           { throw new NotImplementedException(); }
 		public IDataReader GetData        (int i)           { throw new NotImplementedException(); }
-		public bool        IsDBNull       (int i)           { throw new NotImplementedException(); }
+		public bool        IsDBNull       (int i)           { return GetValue(i) == null;          }
 
 		object IDataRecord.this[int i]
 		{
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider
 
 		public bool IsClosed
 		{
-			get { throw new NotImplementedException(); }
+			get { return false; }
 		}
 
 		public int RecordsAffected

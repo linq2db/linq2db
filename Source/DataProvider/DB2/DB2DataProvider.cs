@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Text;
+
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -193,6 +197,158 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);
+		}
+
+		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
+		static Func<int,string,object>         _columnMappingCreator;
+
+		public override int BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection  dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T>  source)
+		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				.ToString();
+
+			if (dataConnection.Transaction == null)
+			{
+				if (_bulkCopyCreator == null)
+				{
+					var connType          = GetConnectionType();
+					var bulkCopyType      = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
+					var columnMappingType = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
+
+					if (bulkCopyType != null)
+					{
+						{
+							var p = Expression.Parameter(typeof(IDbConnection), "p");
+							var l = Expression.Lambda<Func<IDbConnection,IDisposable>>(
+								Expression.Convert(
+									Expression.New(
+										bulkCopyType.GetConstructor(new[] { connType }),
+										Expression.Convert(p, connType)),
+									typeof(IDisposable)),
+								p);
+
+							_bulkCopyCreator = l.Compile();
+						}
+						{
+							var p1 = Expression.Parameter(typeof(int),    "p1");
+							var p2 = Expression.Parameter(typeof(string), "p2");
+							var l  = Expression.Lambda<Func<int,string,object>>(
+								Expression.Convert(
+									Expression.New(
+										columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
+										new [] { p1, p2 }),
+									typeof(object)),
+								p1, p2);
+
+							_columnMappingCreator = l.Compile();
+						}
+					}
+				}
+
+				if (_bulkCopyCreator != null)
+				{
+					var rd = new BulkCopyReader(descriptor, source);
+
+					using (var bc = _bulkCopyCreator(dataConnection.Connection))
+					{
+						dynamic dbc = bc;
+
+						if (options.BulkCopyTimeout.HasValue)
+							dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+
+						dbc.DestinationTableName = tableName;
+
+						for (var i = 0; i < rd.Columns.Length; i++)
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, rd.Columns[i].ColumnName));
+
+						dbc.WriteToServer(rd);
+					}
+
+					return rd.Count;
+				}
+			}
+
+			{
+				var sb         = new StringBuilder();
+				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+
+				sb
+					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
+					.Append("(");
+
+				foreach (var column in columns)
+					sb
+						.AppendLine()
+						.Append("\t")
+						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+						.Append(",");
+
+				sb.Length--;
+				sb
+					.AppendLine()
+					.Append(")")
+					.AppendLine()
+					.Append("VALUES");
+
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
+				var currentCount = 0;
+				var batchSize    = options.MaxBatchSize ?? 1000;
+
+				if (batchSize <= 0)
+					batchSize = 1000;
+
+				foreach (var item in source)
+				{
+					sb
+						.AppendLine()
+						.Append("(");
+
+					foreach (var column in columns)
+					{
+						buildValue(column.GetValue(item));
+						sb.Append(",");
+					}
+
+					sb.Length--;
+					sb.Append("),");
+
+					totalCount++;
+					currentCount++;
+
+					if (currentCount >= batchSize)
+					{
+						sb.Length--;
+						dataConnection.Execute(sb.AppendLine().ToString());
+						currentCount = 0;
+						sb.Length = headerLen;
+					}
+				}
+
+				if (currentCount > 0)
+				{
+					sb.Length--;
+					dataConnection.Execute(sb.ToString());
+					sb.Length = headerLen;
+				}
+
+				return totalCount;
+			}
+
+			//return base.BulkCopy(dataConnection, options, source);
 		}
 	}
 }

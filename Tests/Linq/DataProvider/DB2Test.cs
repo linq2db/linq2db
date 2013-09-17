@@ -16,7 +16,14 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Text;
+
 	using IBM.Data.DB2;
+
+	using LinqToDB.DataProvider;
+	using LinqToDB.SqlProvider;
+
+	using Model;
 
 	[TestFixture]
 	public class DB2Test : DataProviderTestBase
@@ -369,10 +376,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
 		{
-			//var new IBM.Data.DB2.DB2Connection().GetSchema()
-
-			//var bk = new DB2BulkCopy();
-
 			using (var conn = new DataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = TestEnum.AA }), Is.EqualTo("A"));
@@ -380,6 +383,19 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+			}
+		}
+
+		[Test]
+		public void BulkCopyTest([IncludeDataContexts(CurrentProvider)] string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				conn.BeginTransaction();
+				conn.BulkCopy(49000,
+					Enumerable.Range(0, 50000).Select(n => new Parent { ParentID = 2000 + n }));
+
+				conn.GetTable<Parent>().Delete(p => p.ParentID >= 2000);
 			}
 		}
 	}

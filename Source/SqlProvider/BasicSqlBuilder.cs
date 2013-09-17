@@ -2548,5 +2548,18 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
+
+		#region Internal Helpers
+
+		internal static Action<object> GetBuildValue(ISqlBuilder sqlBuilder, StringBuilder sb)
+		{
+			var bsb = (BasicSqlBuilder)sqlBuilder;
+
+			bsb.StringBuilder = sb;
+
+			return bsb.BuildValue;
+		}
+
+		#endregion
 	}
 }
