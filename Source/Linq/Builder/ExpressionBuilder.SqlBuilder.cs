@@ -323,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Expression.Call(
 					null,
-					MemberHelper.MethodOf<T?>(p => Sql.ConvertNullable(p)),
+					MemberHelper.MethodOf<T?>(p => Sql.AsNotNull(p)),
 					expression.Expression);
 			}
 		}

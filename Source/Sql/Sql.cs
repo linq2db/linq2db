@@ -29,10 +29,26 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0)]
+		public static T? AsNullable<T>(T value)
+			where T : struct
+		{
+			return value;
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0)]
 		public static T ConvertNullable<T>(T? value)
 			where T : struct
 		{
-			return value.Value;
+			return value ?? default(T);
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0)]
+		public static T AsNotNull<T>(T? value)
+			where T : struct
+		{
+			return value ?? default(T);
 		}
 
 		#endregion
