@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -280,6 +280,8 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
+			var iszOS = true;
+
 			{
 				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
@@ -299,9 +301,12 @@ namespace LinqToDB.DataProvider.DB2
 				sb.Length--;
 				sb
 					.AppendLine()
-					.Append(")")
-					.AppendLine()
-					.Append("VALUES");
+					.Append(")");
+
+				if (!iszOS)
+					sb
+						.AppendLine()
+						.Append("VALUES");
 
 				var headerLen    = sb.Length;
 				var totalCount   = 0;
@@ -315,7 +320,7 @@ namespace LinqToDB.DataProvider.DB2
 				{
 					sb
 						.AppendLine()
-						.Append("(");
+						.Append(iszOS ? "SELECT " : "(");
 
 					foreach (var column in columns)
 					{
@@ -324,14 +329,18 @@ namespace LinqToDB.DataProvider.DB2
 					}
 
 					sb.Length--;
-					sb.Append("),");
+					sb.Append(iszOS ? " FROM SYSIBM.SYSDUMMY1 UNION ALL" : "),");
 
 					totalCount++;
 					currentCount++;
 
 					if (currentCount >= batchSize)
 					{
-						sb.Length--;
+						if (iszOS)
+							sb.Length -= " UNION ALL".Length;
+						else
+							sb.Length--;
+
 						dataConnection.Execute(sb.AppendLine().ToString());
 						currentCount = 0;
 						sb.Length = headerLen;
@@ -340,7 +349,11 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (currentCount > 0)
 				{
-					sb.Length--;
+					if (iszOS)
+						sb.Length -= " UNION ALL".Length;
+					else
+						sb.Length--;
+
 					dataConnection.Execute(sb.ToString());
 					sb.Length = headerLen;
 				}
