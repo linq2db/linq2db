@@ -8,6 +8,8 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using System.Text;
 
+	using Common;
+
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -207,6 +209,9 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
+			if (options.BulkCopyType == BulkCopyType.RowByRow)
+				return base.BulkCopy(dataConnection, options, source);
+
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
@@ -219,7 +224,7 @@ namespace LinqToDB.DataProvider.DB2
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
-			if (dataConnection.Transaction == null)
+			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
 				{
@@ -360,8 +365,6 @@ namespace LinqToDB.DataProvider.DB2
 
 				return totalCount;
 			}
-
-			//return base.BulkCopy(dataConnection, options, source);
 		}
 	}
 }

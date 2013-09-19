@@ -101,10 +101,13 @@ namespace LinqToDB.Mapping
 				{
 					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(member.MemberInfo, attr => attr.Configuration);
 
-					if (Aliases == null)
-						Aliases = new Dictionary<string,string>();
+					if (caa != null)
+					{
+						if (Aliases == null)
+							Aliases = new Dictionary<string,string>();
 
-					Aliases.Add(member.Name, caa.MemberName);
+						Aliases.Add(member.Name, caa.MemberName);
+					}
 				}
 			}
 

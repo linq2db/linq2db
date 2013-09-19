@@ -794,6 +794,11 @@ namespace LinqToDB.Linq.Builder
 							return SubQueryToSql(context, e);
 						}
 
+						var expr = ConvertMethod(e);
+
+						if (expr != null)
+							return ConvertToSql(context, expr, unwrap);
+
 						var attr = GetFunctionAttribute(e.Method);
 
 						if (attr != null)

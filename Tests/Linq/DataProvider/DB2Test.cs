@@ -386,7 +386,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		//[Test]
 		public void BulkCopyTest([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
