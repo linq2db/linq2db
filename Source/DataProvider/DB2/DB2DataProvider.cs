@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.DB2
 		static class MappingSchemaInstance
 		{
 			public static readonly DB2LUWMappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
-			public static readonly DB2zOSMappingSchema DB2zOSWappingSchema = new DB2zOSMappingSchema();
+			public static readonly DB2zOSMappingSchema DB2zOSMappingSchema = new DB2zOSMappingSchema();
 		}
 
 		public override MappingSchema MappingSchema
@@ -129,7 +129,7 @@ namespace LinqToDB.DataProvider.DB2
 				switch (Version)
 				{
 					case DB2ServerVersion.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
-					case DB2ServerVersion.zOS : return MappingSchemaInstance.DB2zOSWappingSchema;
+					case DB2ServerVersion.zOS : return MappingSchemaInstance.DB2zOSMappingSchema;
 				}
 
 				return base.MappingSchema;
