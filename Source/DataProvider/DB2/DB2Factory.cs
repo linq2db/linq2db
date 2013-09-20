@@ -10,7 +10,19 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
 		{
-			return new DB2DataProvider();
+			for (var i = 0; i < attributes.Count; i++)
+			{
+				if (attributes.GetKey(i) == "version")
+				{
+					switch (attributes.Get(i))
+					{
+						case "zOS"  :
+						case "z/OS" : return new DB2DataProvider(ProviderName.DB2zOS, DB2ServerVersion.zOS);
+					}
+				}
+			}
+
+			return new DB2DataProvider(ProviderName.DB2LUW, DB2ServerVersion.LUW);
 		}
 	}
 }

@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Text;
-
-	using Common;
-
 	using Data;
 	using Mapping;
 	using SchemaProvider;
@@ -17,14 +14,11 @@ namespace LinqToDB.DataProvider.DB2
 
 	public class DB2DataProvider : DynamicDataProviderBase
 	{
-		public DB2DataProvider()
-			: this(ProviderName.DB2, new DB2MappingSchema())
+		public DB2DataProvider(string name, DB2ServerVersion version)
+			: base(name, null)
 		{
-		}
+			Version = version;
 
-		protected DB2DataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
-		{
 			SqlProviderFlags.AcceptsTakeAsParameter       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 
@@ -119,6 +113,28 @@ namespace LinqToDB.DataProvider.DB2
 		public    override string ConnectionNamespace { get { return "IBM.Data.DB2"; } }
 		protected override string ConnectionTypeName  { get { return "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2"; } }
+
+		public DB2ServerVersion Version { get; private set; }
+
+		static class MappingSchemaInstance
+		{
+			public static readonly DB2LUWMappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
+			public static readonly DB2zOSMappingSchema DB2zOSWappingSchema = new DB2zOSMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema
+		{
+			get
+			{
+				switch (Version)
+				{
+					case DB2ServerVersion.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
+					case DB2ServerVersion.zOS : return MappingSchemaInstance.DB2zOSWappingSchema;
+				}
+
+				return base.MappingSchema;
+			}
+		}
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
