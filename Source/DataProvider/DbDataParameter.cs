@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider
 {
 	using System.Data;
 
-	class DataParameter : IDbDataParameter
+	class DbDataParameter : IDbDataParameter
 	{
 		public DbType             DbType        { get; set; }
 		public ParameterDirection Direction     { get; set; }

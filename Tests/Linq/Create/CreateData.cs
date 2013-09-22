@@ -70,7 +70,7 @@ namespace Tests.Create
 
 				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
 
-				db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow },
+				db.BulkCopy(
 					new []
 					{
 						new LinqDataTypes { ID =  1, MoneyValue =  1.11m, DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100), BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  1 },
@@ -89,7 +89,7 @@ namespace Tests.Create
 
 				Console.WriteLine("\nBulkCopy Parent\n");
 
-				db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow },
+				db.BulkCopy(
 					new []
 					{
 						new Parent { ParentID = 1, Value1 = 1    },
@@ -103,7 +103,7 @@ namespace Tests.Create
 
 				Console.WriteLine("\nBulkCopy Child\n");
 
-				db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow },
+				db.BulkCopy(
 					new []
 					{
 						new Child { ParentID = 1, ChildID = 11 },
@@ -127,7 +127,7 @@ namespace Tests.Create
 
 				Console.WriteLine("\nBulkCopy GrandChild\n");
 
-				db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow },
+				db.BulkCopy(
 					new []
 					{
 						new GrandChild { ParentID = 1, ChildID = 11, GrandChildID = 111 },

@@ -230,6 +230,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
+			var dataParam  = new DbDataParameter();
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = sqlBuilder
@@ -301,7 +302,7 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			var iszOS = true;
+			var iszOS = Version == DB2ServerVersion.zOS;
 
 			{
 				var sb         = new StringBuilder();
@@ -345,7 +346,11 @@ namespace LinqToDB.DataProvider.DB2
 
 					foreach (var column in columns)
 					{
-						buildValue(column.GetValue(item));
+						var value = column.GetValue(item);
+
+						SetParameter(dataParam, "", column.DataType, value);
+
+						buildValue(dataParam.Value);
 						sb.Append(",");
 					}
 
