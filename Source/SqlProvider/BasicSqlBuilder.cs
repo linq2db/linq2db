@@ -1843,6 +1843,7 @@ namespace LinqToDB.SqlProvider
 			else if (value is decimal)  StringBuilder.Append(((decimal)value).ToString(_numberFormatInfo));
 			else if (value is double)   StringBuilder.Append(((double) value).ToString(_numberFormatInfo));
 			else if (value is float)    StringBuilder.Append(((float)  value).ToString(_numberFormatInfo));
+			else if (value is DBNull)   StringBuilder.Append("NULL");
 			else
 			{
 				var type = value.GetType();
