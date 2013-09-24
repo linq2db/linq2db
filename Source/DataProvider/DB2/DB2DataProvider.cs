@@ -27,23 +27,10 @@ namespace LinqToDB.DataProvider.DB2
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
 
-		Type _db2Int64;
-		Type _db2Int32;
-		Type _db2Int16;
-		Type _db2Decimal;
-		Type _db2DecimalFloat;
-		Type _db2Real;
-		Type _db2Real370;
-		Type _db2Double;
-		Type _db2String;
-		Type _db2Clob;
-		Type _db2Binary;
-		Type _db2Blob;
-		Type _db2Date;
-		Type _db2Time;
-		Type _db2TimeStamp;
-		Type _db2Xml;
-		Type _db2RowId;
+		Type _db2Int64;  Type _db2Int32;   Type _db2Int16;  Type _db2Decimal; Type _db2DecimalFloat;
+		Type _db2Real;   Type _db2Real370; Type _db2Double; Type _db2String;  Type _db2Clob;
+		Type _db2Binary; Type _db2Blob;    Type _db2Date;   Type _db2Time;    Type _db2TimeStamp;
+		Type _db2Xml;    Type _db2RowId;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -308,6 +295,7 @@ namespace LinqToDB.DataProvider.DB2
 				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
 				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb
 					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
@@ -338,6 +326,9 @@ namespace LinqToDB.DataProvider.DB2
 				if (batchSize <= 0)
 					batchSize = 1000;
 
+				var parms = new List<DataParameter>();
+				var pidx  = 0;
+
 				foreach (var item in source)
 				{
 					sb
@@ -348,9 +339,55 @@ namespace LinqToDB.DataProvider.DB2
 					{
 						var value = column.GetValue(item);
 
-						SetParameter(dataParam, "", column.DataType, value);
+						if (value == null)
+						{
+							sb.Append("NULL");
+						}
+						else switch (Type.GetTypeCode(value.GetType()))
+						{
+							case TypeCode.DBNull   : sb.Append("NULL"); break;
+							case TypeCode.String   :
+								var isString = false;
 
-						buildValue(dataParam.Value);
+								switch (column.DataType)
+								{
+									case DataType.NVarChar :
+									case DataType.Char     :
+									case DataType.VarChar  :
+									case DataType.NChar    : isString = true; break;
+								}
+
+								if (isString) goto case TypeCode.Int32;
+								goto default;
+
+							case TypeCode.Boolean  :
+							case TypeCode.Char     :
+							case TypeCode.SByte    :
+							case TypeCode.Byte     :
+							case TypeCode.Int16    :
+							case TypeCode.UInt16   :
+							case TypeCode.Int32    :
+							case TypeCode.UInt32   :
+							case TypeCode.Int64    :
+							case TypeCode.UInt64   :
+							case TypeCode.Single   :
+							case TypeCode.Double   :
+							case TypeCode.Decimal  :
+							case TypeCode.DateTime :
+								//SetParameter(dataParam, "", column.DataType, value);
+
+								buildValue(value);
+								break;
+
+							default :
+								var name = pname + ++pidx;
+
+								sb.Append(name);
+								parms.Add(new DataParameter("p" + pidx, value, column.DataType));
+
+								break;
+						}
+
 						sb.Append(",");
 					}
 
@@ -360,16 +397,19 @@ namespace LinqToDB.DataProvider.DB2
 					totalCount++;
 					currentCount++;
 
-					if (currentCount >= batchSize)
+					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
 					{
 						if (iszOS)
 							sb.Length -= " UNION ALL".Length;
 						else
 							sb.Length--;
 
-						dataConnection.Execute(sb.AppendLine().ToString());
+						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
+
+						parms.Clear();
+						pidx         = 0;
 						currentCount = 0;
-						sb.Length = headerLen;
+						sb.Length    = headerLen;
 					}
 				}
 
@@ -380,7 +420,7 @@ namespace LinqToDB.DataProvider.DB2
 					else
 						sb.Length--;
 
-					dataConnection.Execute(sb.ToString());
+					dataConnection.Execute(sb.ToString(), parms.ToArray());
 					sb.Length = headerLen;
 				}
 
