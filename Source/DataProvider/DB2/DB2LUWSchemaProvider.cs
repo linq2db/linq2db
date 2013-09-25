@@ -10,62 +10,10 @@ namespace LinqToDB.DataProvider.DB2
 	using Data;
 	using SchemaProvider;
 
-	class DB2SchemaProvider : SchemaProviderBase
+	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
-		bool _iszOS;
-
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			try
-			{
-				dataConnection.Execute<string>("SELECT INST_NAME FROM SYSIBMADM.ENV_INST_INFO");
-			}
-			catch
-			{
-				try
-				{
-					var version = dataConnection.Execute<string>("SELECT GETVARIABLE('SYSIBM.VERSION') FROM SYSIBM.SYSDUMMY1");
-					_iszOS = version.StartsWith("DSN");
-				}
-				catch
-				{
-				}
-			}
-
-			if (_iszOS)
-			{
-				return new List<DataTypeInfo>
-				{
-					new DataTypeInfo { TypeName = "XML",                       CreateParameters = null,               DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "DECFLOAT",                  CreateParameters = "PRECISION",        DataType = "System.Decimal"  },
-					new DataTypeInfo { TypeName = "DBCLOB",                    CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "CLOB",                      CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "BLOB",                      CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "LONG VARGRAPHIC",           CreateParameters = null,               DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "VARGRAPHIC",                CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "GRAPHIC",                   CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "BIGINT",                    CreateParameters = null,               DataType = "System.Int64"    },
-					new DataTypeInfo { TypeName = "LONG VARCHAR FOR BIT DATA", CreateParameters = null,               DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "VARCHAR () FOR BIT DATA",   CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "VARBIN",                    CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "BINARY",                    CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "CHAR () FOR BIT DATA",      CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-					new DataTypeInfo { TypeName = "LONG VARCHAR",              CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "CHAR",                      CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "DECIMAL",                   CreateParameters = "PRECISION,SCALE",  DataType = "System.Decimal"  },
-					new DataTypeInfo { TypeName = "INTEGER",                   CreateParameters = null,               DataType = "System.Int32"    },
-					new DataTypeInfo { TypeName = "SMALLINT",                  CreateParameters = null,               DataType = "System.Int16"    },
-					new DataTypeInfo { TypeName = "REAL",                      CreateParameters = null,               DataType = "System.Single"   },
-					new DataTypeInfo { TypeName = "DOUBLE",                    CreateParameters = null,               DataType = "System.Double"   },
-					new DataTypeInfo { TypeName = "VARCHAR",                   CreateParameters = "LENGTH",           DataType = "System.String"   },
-					new DataTypeInfo { TypeName = "DATE",                      CreateParameters = null,               DataType = "System.DateTime" },
-					new DataTypeInfo { TypeName = "TIME",                      CreateParameters = null,               DataType = "System.TimeSpan" },
-					new DataTypeInfo { TypeName = "TIMESTAMP",                 CreateParameters = null,               DataType = "System.DateTime" },
-					new DataTypeInfo { TypeName = "TIMESTMP",                  CreateParameters = null,               DataType = "System.DateTime" },
-					new DataTypeInfo { TypeName = "ROWID",                     CreateParameters = "LENGTH",           DataType = "System.Byte[]"   },
-				};
-			}
-
 			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			return dts.AsEnumerable()
@@ -75,14 +23,20 @@ namespace LinqToDB.DataProvider.DB2
 					DataType         = t.Field<string>("FRAMEWORK_TYPE"),
 					CreateParameters = t.Field<string>("CREATE_PARAMS"),
 				})
+				.Union(
+				new[]
+				{
+					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String" }
+				}
+				)
 				.ToList();
 		}
 
-		string _currenSchema;
+		protected string CurrenSchema;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			_currenSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+			CurrenSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
 
@@ -94,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 				let catalog = dataConnection.Connection.Database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currenSchema
+				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == CurrenSchema
 				select new TableInfo
 				{
 					TableID         = catalog + '.' + schema + '.' + name,
@@ -108,38 +62,8 @@ namespace LinqToDB.DataProvider.DB2
 			).ToList();
 		}
 
-		List<PrimaryKeyInfo> _primaryKeys;
-
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
-			if (_iszOS)
-			{
-				return _primaryKeys = dataConnection.Query(
-					rd => new PrimaryKeyInfo
-					{
-						TableID        = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
-						PrimaryKeyName = rd.ToString(2),
-						ColumnName     = rd.ToString(3),
-						Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
-					},@"
-					SELECT
-						col.TBCREATOR,
-						col.TBNAME,
-						idx.NAME,
-						col.NAME,
-						col.KEYSEQ
-					FROM
-						SYSIBM.SYSCOLUMNS col
-							JOIN SYSIBM.SYSINDEXES idx ON
-								col.TBCREATOR = idx.TBCREATOR AND
-								col.TBNAME    = idx.TBNAME
-					WHERE
-						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND " + GetSchemaFilter("col.TBCREATOR") + @"
-					ORDER BY
-						col.TBCREATOR, col.TBNAME, col.KEYSEQ")
-					.ToList();
-			}
-
 			return
 			(
 				from pk in dataConnection.Query(
@@ -173,25 +97,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var sql = _iszOS ?
-				@"
-				SELECT
-					TBCREATOR,
-					TBNAME,
-					NAME,
-					LENGTH,
-					SCALE,
-					NULLS,
-					CASE WHEN DEFAULT IN ('I', 'J') THEN 'Y' ELSE 'N' END,
-					COLNO,
-					COLTYPE,
-					REMARKS
-				FROM
-					SYSIBM.SYSCOLUMNS
-				WHERE
-					" + GetSchemaFilter("TBCREATOR")
-				:
-				@"
+			var sql = @"
 				SELECT
 					TABSCHEMA,
 					TABNAME,
@@ -226,52 +132,6 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			if (_iszOS)
-			{
-				return
-				(
-					from fk in dataConnection.Query(rd => new
-						{
-							name        = rd.ToString(0),
-							thisTable   = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
-							thisColumn  = rd.ToString(3),
-							ordinal     = Converter.ChangeTypeTo<int>(rd[4]),
-							otherTable  = dataConnection.Connection.Database + "." + rd.ToString(5)  + "." + rd.ToString(6),
-						},@"
-							SELECT
-								A.RELNAME,
-								A.CREATOR,
-								A.TBNAME,
-								B.COLNAME,
-								B.COLSEQ,
-								A.REFTBCREATOR,
-								A.REFTBNAME
-							FROM
-								SYSIBM.SYSRELS A
-									JOIN SYSIBM.SYSFOREIGNKEYS B ON
-										A.CREATOR = B.CREATOR AND
-										A.TBNAME  = B.TBNAME  AND
-										A.RELNAME = B.RELNAME
-							WHERE
-								" + GetSchemaFilter("A.CREATOR") + @"
-							ORDER BY
-								A.CREATOR,
-								A.RELNAME,
-								B.COLSEQ")
-					let   otherColumn = _primaryKeys.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
-					where otherColumn != null
-					select new ForeingKeyInfo
-					{
-						Name = fk.name,
-						ThisTableID  = fk.thisTable,
-						ThisColumn   = fk.thisColumn,
-						Ordinal      = fk.ordinal,
-						OtherTableID = fk.otherTable,
-						OtherColumn  = otherColumn.ColumnName
-					}
-				).ToList();
-			}
-
 			return dataConnection
 				.Query(rd => new
 				{
@@ -383,6 +243,7 @@ namespace LinqToDB.DataProvider.DB2
 				case "BINARY"                    : return DataType.Binary;    // Binary          System.Byte[]
 				case "CHAR () FOR BIT DATA"      : return DataType.Binary;    // Binary          System.Byte[]
 				case "LONG VARCHAR"              : return DataType.VarChar;   // LongVarChar     System.String
+				case "CHARACTER"                 : return DataType.Char;      // Char            System.String
 				case "CHAR"                      : return DataType.Char;      // Char            System.String
 				case "DECIMAL"                   : return DataType.Decimal;   // Decimal         System.Decimal
 				case "INTEGER"                   : return DataType.Int32;     // Integer         System.Int32
@@ -428,9 +289,8 @@ namespace LinqToDB.DataProvider.DB2
 			return dataConnection
 				.Query(rd =>
 				{
-					var schema     = rd.ToString(0);
-					var name       = rd.ToString(1);
-					var isFunction = _iszOS && rd.ToString(2) == "F";
+					var schema = rd.ToString(0);
+					var name   = rd.ToString(1);
 
 					return new ProcedureInfo
 					{
@@ -438,21 +298,8 @@ namespace LinqToDB.DataProvider.DB2
 						CatalogName   = dataConnection.Connection.Database,
 						SchemaName    = schema,
 						ProcedureName = name,
-						IsFunction    = isFunction,
 					};
-				},
-				_iszOS ?
-					@"
-					SELECT
-						SCHEMA,
-						NAME,
-						ROUTINETYPE
-					FROM
-						SYSIBM.SYSROUTINES
-					WHERE
-						" + GetSchemaFilter("SCHEMA")
-					:
-					@"
+				},@"
 					SELECT
 						PROCSCHEMA,
 						PROCNAME
@@ -460,7 +307,7 @@ namespace LinqToDB.DataProvider.DB2
 						SYSCAT.PROCEDURES
 					WHERE
 						" + GetSchemaFilter("PROCSCHEMA"))
-				.Where(p => IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || p.SchemaName == _currenSchema)
+				.Where(p => IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || p.SchemaName == CurrenSchema)
 				.ToList();
 		}
 
@@ -487,48 +334,25 @@ namespace LinqToDB.DataProvider.DB2
 						IsOut         = mode.Contains("OUT"),
 						IsResult      = false
 					};
-				},
-					_iszOS ?
-						@"
-						SELECT
-							SCHEMA,
-							NAME,
-							PARMNAME,
-							TYPENAME,
-							CASE ROWTYPE
-								WHEN 'P' THEN 'IN'
-								WHEN 'O' THEN 'OUT'
-								WHEN 'B' THEN 'INOUT'
-								WHEN 'S' THEN 'IN'
-							END,
+				},@"
+					SELECT
+						PROCSCHEMA,
+						PROCNAME,
+						PARMNAME,
+						TYPENAME,
+						PARM_MODE,
 
-							ORDINAL,
-							LENGTH,
-							SCALE
-						FROM
-							SYSIBM.SYSPARMS
-						WHERE
-							" + GetSchemaFilter("SCHEMA")
-						:
-						@"
-						SELECT
-							PROCSCHEMA,
-							PROCNAME,
-							PARMNAME,
-							TYPENAME,
-							PARM_MODE,
-
-							ORDINAL,
-							LENGTH,
-							SCALE
-						FROM
-							SYSCAT.PROCPARMS
-						WHERE
-							" + GetSchemaFilter("PROCSCHEMA"))
+						ORDINAL,
+						LENGTH,
+						SCALE
+					FROM
+						SYSCAT.PROCPARMS
+					WHERE
+						" + GetSchemaFilter("PROCSCHEMA"))
 				.ToList();
 		}
 
-		string GetSchemaFilter(string schemaNameField)
+		protected string GetSchemaFilter(string schemaNameField)
 		{
 			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
 			{
@@ -548,7 +372,7 @@ namespace LinqToDB.DataProvider.DB2
 				return sql;
 			}
 
-			return string.Format("{0} = '{1}'", schemaNameField, _currenSchema);
+			return string.Format("{0} = '{1}'", schemaNameField, CurrenSchema);
 		}
 	}
 

@@ -125,7 +125,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new DB2SchemaProvider();
+			return Version == DB2ServerVersion.zOS ?
+				new DB2zOSSchemaProvider() :
+				new DB2LUWSchemaProvider();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder()
