@@ -217,7 +217,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			var dataParam  = new DbDataParameter();
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = sqlBuilder

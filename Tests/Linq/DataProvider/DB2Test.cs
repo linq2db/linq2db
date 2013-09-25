@@ -448,5 +448,29 @@ namespace Tests.DataProvider
 				conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE >= 4000);
 			}
 		}
+
+		[Test]
+		public void BulkCopyLinqTypes(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					Enumerable.Range(0, 10).Select(n =>
+						new LinqDataTypes
+						{
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
+							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
 	}
 }

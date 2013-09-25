@@ -53,7 +53,6 @@
   <ItemGroup>
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
-    <Compile Include="DataProvider\DbDataParameter.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlOptimizer.cs" />
     <Compile Include="DataProvider\DB2\DB2Tools.cs" />
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
