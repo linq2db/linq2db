@@ -25,7 +25,7 @@ namespace DB2DataContext
 		public ITable<ALLTYPE>      ALLTYPES       { get { return this.GetTable<ALLTYPE>(); } }
 		public ITable<Child>        Children       { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>       Doctors        { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>   GrandChilds    { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>   GrandChildren  { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType> LinqDataTypes  { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<MASTERTABLE>  MASTERTABLEs   { get { return this.GetTable<MASTERTABLE>(); } }
 		public ITable<Parent>       Parents        { get { return this.GetTable<Parent>(); } }
@@ -56,11 +56,11 @@ namespace DB2DataContext
 		[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT
 		[Column,     Nullable] public float?    REALDATATYPE      { get; set; } // REAL
 		[Column,     Nullable] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
-		[Column,     Nullable] public object    CHARDATATYPE      { get; set; } // CHARACTER
+		[Column,     Nullable] public char?     CHARDATATYPE      { get; set; } // CHARACTER(1)
 		[Column,     Nullable] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
 		[Column,     Nullable] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
 		[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
-		[Column,     Nullable] public object    BINARYDATATYPE    { get; set; } // CHARACTER
+		[Column,     Nullable] public string    BINARYDATATYPE    { get; set; } // CHARACTER(5)
 		[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
 		[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(10)
 		[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
@@ -82,6 +82,16 @@ namespace DB2DataContext
 	{
 		[Column, NotNull] public int    PersonID { get; set; } // INTEGER
 		[Column, NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_Person
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public Person Person { get; set; }
+
+		#endregion
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="GrandChild")]
@@ -100,7 +110,7 @@ namespace DB2DataContext
 		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
 		[Column, Nullable] public short?    BoolValue      { get; set; } // SMALLINT
-		[Column, Nullable] public object    GuidValue      { get; set; } // CHARACTER
+		[Column, Nullable] public string    GuidValue      { get; set; } // CHARACTER(16)
 		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // BLOB(5000)
 		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
 		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
@@ -145,7 +155,17 @@ namespace DB2DataContext
 		[Column,     NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column,     NotNull    ] public object Gender     { get; set; } // CHARACTER
+		[Column,     NotNull    ] public char   Gender     { get; set; } // CHARACTER(1)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Doctor_Person_BackReference
+		/// </summary>
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		public IEnumerable<Doctor> Doctors { get; set; }
+
+		#endregion
 	}
 
 	// View
@@ -156,7 +176,7 @@ namespace DB2DataContext
 		[Column, NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
 		[Column, NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
 		[Column,    Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column, NotNull    ] public object Gender     { get; set; } // CHARACTER
+		[Column, NotNull    ] public char   Gender     { get; set; } // CHARACTER(1)
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="SLAVETABLE")]
