@@ -8,7 +8,7 @@
 #>
 <#+
 Action BeforeGenerateLinqToDBModel = () => {};
-Action AfterGenerateLinqToDBModel  = () => {};
+Action AfterGenerateLinqToDBModel = () => {};
 
 bool GenerateObsoleteAttributeForAliases;
 bool IsCompactColumns       = true;
