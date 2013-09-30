@@ -64,6 +64,15 @@ namespace LinqToDB.DataProvider.DB2
 							{
 								conn.Open();
 
+								var serverType = Expression.Lambda<Func<object>>(
+									Expression.Convert(
+										Expression.MakeMemberAccess(Expression.Constant(conn), serverTypeProp),
+										typeof(object)))
+									.Compile()();
+
+								var iszOS = serverType.ToString() == "DB2_390";
+
+								/*
 								var iszOS = false;
 								var cmd   = conn.CreateCommand();
 
@@ -86,6 +95,10 @@ namespace LinqToDB.DataProvider.DB2
 									{
 									}
 								}
+								*/
+
+								if (iszOS) return _db2DataProviderzOS;
+								else       return _db2DataProviderLUW;
 							}
 						}
 					}
