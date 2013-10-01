@@ -290,13 +290,24 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
+			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
+		}
+
+		int MultipleRowsBulkCopy<T>(
+			DataConnection   dataConnection,
+			BulkCopyOptions  options,
+			IEnumerable<T>   source,
+			BasicSqlBuilder  sqlBuilder,
+			EntityDescriptor descriptor,
+			string           tableName)
+		{
 			var iszOS = Version == DB2ServerVersion.zOS;
 
 			{
-				var sb         = new StringBuilder();
+				var sb = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb
 					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
@@ -319,16 +330,16 @@ namespace LinqToDB.DataProvider.DB2
 						.AppendLine()
 						.Append("VALUES");
 
-				var headerLen    = sb.Length;
-				var totalCount   = 0;
+				var headerLen = sb.Length;
+				var totalCount = 0;
 				var currentCount = 0;
-				var batchSize    = options.MaxBatchSize ?? 1000;
+				var batchSize = options.MaxBatchSize ?? 1000;
 
 				if (batchSize <= 0)
 					batchSize = 1000;
 
 				var parms = new List<DataParameter>();
-				var pidx  = 0;
+				var pidx = 0;
 
 				foreach (var item in source)
 				{
@@ -344,50 +355,55 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							sb.Append("NULL");
 						}
-						else switch (Type.GetTypeCode(value.GetType()))
-						{
-							case TypeCode.DBNull   : sb.Append("NULL"); break;
-							case TypeCode.String   :
-								var isString = false;
+						else
+							switch (Type.GetTypeCode(value.GetType()))
+							{
+								case TypeCode.DBNull:
+									sb.Append("NULL");
+									break;
+								case TypeCode.String:
+									var isString = false;
 
-								switch (column.DataType)
-								{
-									case DataType.NVarChar :
-									case DataType.Char     :
-									case DataType.VarChar  :
-									case DataType.NChar    : isString = true; break;
-								}
+									switch (column.DataType)
+									{
+										case DataType.NVarChar:
+										case DataType.Char:
+										case DataType.VarChar:
+										case DataType.NChar:
+											isString = true;
+											break;
+									}
 
-								if (isString) goto case TypeCode.Int32;
-								goto default;
+									if (isString) goto case TypeCode.Int32;
+									goto default;
 
-							case TypeCode.Boolean  :
-							case TypeCode.Char     :
-							case TypeCode.SByte    :
-							case TypeCode.Byte     :
-							case TypeCode.Int16    :
-							case TypeCode.UInt16   :
-							case TypeCode.Int32    :
-							case TypeCode.UInt32   :
-							case TypeCode.Int64    :
-							case TypeCode.UInt64   :
-							case TypeCode.Single   :
-							case TypeCode.Double   :
-							case TypeCode.Decimal  :
-							case TypeCode.DateTime :
-								//SetParameter(dataParam, "", column.DataType, value);
+								case TypeCode.Boolean:
+								case TypeCode.Char:
+								case TypeCode.SByte:
+								case TypeCode.Byte:
+								case TypeCode.Int16:
+								case TypeCode.UInt16:
+								case TypeCode.Int32:
+								case TypeCode.UInt32:
+								case TypeCode.Int64:
+								case TypeCode.UInt64:
+								case TypeCode.Single:
+								case TypeCode.Double:
+								case TypeCode.Decimal:
+								case TypeCode.DateTime:
+									//SetParameter(dataParam, "", column.DataType, value);
 
-								buildValue(value);
-								break;
+									buildValue(value);
+									break;
 
-							default :
-								var name = pname + ++pidx;
+								default:
+									var name = pname + ++pidx;
 
-								sb.Append(name);
-								parms.Add(new DataParameter("p" + pidx, value, column.DataType));
+									sb.Append(name);
+									parms.Add(new DataParameter("p" + pidx, value, column.DataType));
 
-								break;
-						}
+									break;
+							}
 
 						sb.Append(",");
 					}
@@ -408,9 +424,9 @@ namespace LinqToDB.DataProvider.DB2
 						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
 
 						parms.Clear();
-						pidx         = 0;
+						pidx = 0;
 						currentCount = 0;
-						sb.Length    = headerLen;
+						sb.Length = headerLen;
 					}
 				}
 
