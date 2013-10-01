@@ -170,17 +170,22 @@ namespace LinqToDB.Data
 					foreach (var p in pq.Parameters)
 						Command.Parameters.Add(p);
 
-				if (TraceSwitch.TraceInfo)
-				{
 					var now = DateTime.Now;
-					var n   = Command.ExecuteNonQuery();
-
-					WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
-
-					return n;
+				int n = 0;
+				try
+				{
+					n = Command.ExecuteNonQuery();
+				}
+				catch (System.Exception ex)
+				{
+					if (OnError != null)
+						OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+					throw ex;
 				}
 
-				return Command.ExecuteNonQuery();
+				if (OnSuccess != null)
+					OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, n,null,null);
+				return n;
 			}
 			else
 			{
@@ -194,41 +199,61 @@ namespace LinqToDB.Data
 						foreach (var p in pq.Parameters)
 							Command.Parameters.Add(p);
 
+					var nnow = DateTime.Now;
+					try
+					{
 					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
 					{
 						try
 						{
-							Command.ExecuteNonQuery();
+								int n = Command.ExecuteNonQuery();
+								if (OnSuccess != null)
+									OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - nnow, n, null, null);
 						}
-						catch (Exception)
+							catch (Exception ex)
 						{
+								if (OnError != null)
+									OnError(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
 						}
 					}
 					else
-						Command.ExecuteNonQuery();
+						{
+							int n = Command.ExecuteNonQuery();
+							if (OnSuccess != null)
+								OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - nnow, n, null, null);
+						}
+					}					
+					catch (System.Exception ex)
+					{
+						if (OnError != null)
+							OnError(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
+						throw ex;
+					}
 				}
-
-				if (TraceSwitch.TraceInfo)
-					WriteTraceLine("Execution time: {0}.\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
 				return -1;
 			}
 		}
 
 		object IDataContext.ExecuteScalar(object query)
 		{
-			if (TraceSwitch.TraceInfo)
-			{
 				var now = DateTime.Now;
-				var ret = ExecuteScalarInternal(query);
+			object ret;
+			try
+			{
+				ret = ExecuteScalarInternal(query);
+			}
+			catch (System.Exception ex)
+			{
+				if (OnError != null)
+					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				throw ex;
+			}
 
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
+			if (OnSuccess != null)
+				OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, null, null, ret);
 
 				return ret;
 			}
-
-			return ExecuteScalarInternal(query);
-		}
 
 		object ExecuteScalarInternal(object query)
 		{
@@ -288,17 +313,23 @@ namespace LinqToDB.Data
 				foreach (var p in pq.Parameters)
 					Command.Parameters.Add(p);
 
-			if (TraceSwitch.TraceInfo)
-			{
 				var now = DateTime.Now;
-				var ret = Command.ExecuteReader();
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
+			IDataReader ret;
+			try
+			{
+				ret = Command.ExecuteReader();
+			}
+			catch (System.Exception ex)
+			{
+				if (OnError != null)
+					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				throw ex;
 			}
 
-			return Command.ExecuteReader();
+			if (OnSuccess != null)
+				OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, null, null, null);
+
+				return ret;
 		}
 
 		void IDataContext.ReleaseQuery(object query)
