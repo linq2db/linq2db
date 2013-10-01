@@ -97,8 +97,7 @@ namespace LinqToDB.DataProvider.DB2
 								}
 								*/
 
-								if (iszOS) return _db2DataProviderzOS;
-								else       return _db2DataProviderLUW;
+								return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
 							}
 						}
 					}

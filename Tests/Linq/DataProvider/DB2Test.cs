@@ -16,13 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Text;
-
-	using IBM.Data.DB2;
-
-	using LinqToDB.DataProvider;
-	using LinqToDB.SqlProvider;
-
 	using Model;
 
 	[TestFixture]
