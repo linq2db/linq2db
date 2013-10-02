@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	public class DB2DataProvider : DynamicDataProviderBase
 	{
-		public DB2DataProvider(string name, DB2ServerVersion version)
+		public DB2DataProvider(string name, DB2Version version)
 			: base(name, null)
 		{
 			Version = version;
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string ConnectionTypeName  { get { return "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2"; } }
 
-		public DB2ServerVersion Version { get; private set; }
+		public DB2Version Version { get; private set; }
 
 		static class MappingSchemaInstance
 		{
@@ -115,8 +115,8 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				switch (Version)
 				{
-					case DB2ServerVersion.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
-					case DB2ServerVersion.zOS : return MappingSchemaInstance.DB2zOSMappingSchema;
+					case DB2Version.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
+					case DB2Version.zOS : return MappingSchemaInstance.DB2zOSMappingSchema;
 				}
 
 				return base.MappingSchema;
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return Version == DB2ServerVersion.zOS ?
+			return Version == DB2Version.zOS ?
 				new DB2zOSSchemaProvider() :
 				new DB2LUWSchemaProvider();
 		}
@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.DB2
 			EntityDescriptor descriptor,
 			string           tableName)
 		{
-			var iszOS = Version == DB2ServerVersion.zOS;
+			var iszOS = Version == DB2Version.zOS;
 
 			{
 				var sb = new StringBuilder();

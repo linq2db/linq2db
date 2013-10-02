@@ -438,7 +438,7 @@ namespace Tests.DataProvider
 							XMLDATATYPE       = null,
 						}));
 
-				var list = conn.GetTable<ALLTYPE>().ToList();
+				//var list = conn.GetTable<ALLTYPE>().ToList();
 
 				conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE >= 4000);
 			}

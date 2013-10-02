@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	public static class DB2Tools
 	{
-		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2ServerVersion.zOS);
-		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2ServerVersion.LUW);
+		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
+		static readonly DB2DataProvider _db2DataProviderLUW = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
 
 		public static bool AutoDetectProvider { get; set; }
 
@@ -108,11 +108,11 @@ namespace LinqToDB.DataProvider.DB2
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider(DB2ServerVersion version = DB2ServerVersion.LUW)
+		public static IDataProvider GetDataProvider(DB2Version version = DB2Version.LUW)
 		{
 			switch (version)
 			{
-				case DB2ServerVersion.zOS : return _db2DataProviderzOS;
+				case DB2Version.zOS : return _db2DataProviderzOS;
 			}
 
 			return _db2DataProviderLUW;
@@ -130,31 +130,31 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, DB2ServerVersion version = DB2ServerVersion.LUW)
+		public static DataConnection CreateDataConnection(string connectionString, DB2Version version = DB2Version.LUW)
 		{
 			switch (version)
 			{
-				case DB2ServerVersion.zOS : return new DataConnection(_db2DataProviderzOS, connectionString);
+				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, connectionString);
 			}
 
 			return new DataConnection(_db2DataProviderLUW, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, DB2ServerVersion version = DB2ServerVersion.LUW)
+		public static DataConnection CreateDataConnection(IDbConnection connection, DB2Version version = DB2Version.LUW)
 		{
 			switch (version)
 			{
-				case DB2ServerVersion.zOS : return new DataConnection(_db2DataProviderzOS, connection);
+				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, connection);
 			}
 
 			return new DataConnection(_db2DataProviderLUW, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, DB2ServerVersion version = DB2ServerVersion.LUW)
+		public static DataConnection CreateDataConnection(IDbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
 			switch (version)
 			{
-				case DB2ServerVersion.zOS : return new DataConnection(_db2DataProviderzOS, transaction);
+				case DB2Version.zOS : return new DataConnection(_db2DataProviderzOS, transaction);
 			}
 
 			return new DataConnection(_db2DataProviderLUW, transaction);
