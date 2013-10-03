@@ -214,6 +214,7 @@
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />
     <Compile Include="DDL\CreateTableTest.cs" />
+    <Compile Include="Linq\ColumnAliasTest.cs" />
     <Compile Include="Linq\LoadWithTest.cs" />
     <Compile Include="Linq\EnumMapping.cs" />
     <Compile Include="Linq\ExplicitInterfaceTest.cs" />
