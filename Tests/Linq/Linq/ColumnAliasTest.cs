@@ -53,7 +53,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ProjectionTest([DataContexts] string context)
+		public void ProjectionTest1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,6 +65,27 @@ namespace Tests.Linq
 						Value1 = p.Value1,
 					} into p
 					where p.ParentID > 1
+					select p;
+
+				var count = q.Count();
+
+				Assert.That(count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void ProjectionTest2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.GetTable<TestParent>()
+					select new TestParent
+					{
+						ParentID = p.ParentID,
+						Value1   = p.Value1,
+					} into p
+					where p.ID > 1
 					select p;
 
 				var count = q.Count();
