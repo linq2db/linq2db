@@ -27,8 +27,7 @@ namespace LinqToDB.DataProvider.DB2
 				new[]
 				{
 					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String" }
-				}
-				)
+				})
 				.ToList();
 		}
 

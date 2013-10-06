@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		internal static DB2MappingSchema Instance = new DB2MappingSchema();
+		internal static readonly DB2MappingSchema Instance = new DB2MappingSchema();
 	}
 
 	public class DB2zOSMappingSchema : MappingSchema

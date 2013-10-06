@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.DB2
 {
-	public enum DB2ServerVersion
+	public enum DB2Version
 	{
 		LUW,
 		zOS,

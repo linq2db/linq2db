@@ -16,13 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Text;
-
-	using IBM.Data.DB2;
-
-	using LinqToDB.DataProvider;
-	using LinqToDB.SqlProvider;
-
 	using Model;
 
 	[TestFixture]
@@ -445,7 +438,9 @@ namespace Tests.DataProvider
 							XMLDATATYPE       = null,
 						}));
 
-				conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE >= 4000);
+				//var list = conn.GetTable<ALLTYPE>().ToList();
+
+				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
 			}
 		}
 

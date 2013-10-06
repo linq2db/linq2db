@@ -17,12 +17,12 @@ namespace LinqToDB.DataProvider.DB2
 					switch (attributes.Get(i))
 					{
 						case "zOS"  :
-						case "z/OS" : return new DB2DataProvider(ProviderName.DB2zOS, DB2ServerVersion.zOS);
+						case "z/OS" : return new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
 					}
 				}
 			}
 
-			return new DB2DataProvider(ProviderName.DB2LUW, DB2ServerVersion.LUW);
+			return new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
 		}
 	}
 }

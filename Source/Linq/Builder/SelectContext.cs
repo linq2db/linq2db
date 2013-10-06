@@ -1055,13 +1055,43 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (add && member.DeclaringType.IsSameOrParentOf(Body.Type))
+				if (member.DeclaringType.IsSameOrParentOf(Body.Type))
 				{
-					memberExpression = Expression.Constant(type.GetDefaultValue(), type);
-					Members.Add(member, memberExpression);
+					if (Body.NodeType == ExpressionType.MemberInit)
+					{
+						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type);
+
+						if (ed.Aliases != null)
+						{
+							string value;
+
+							if (ed.Aliases.TryGetValue(member.Name, out value))
+								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type);
+
+							foreach (var a in ed.Aliases)
+							{
+								if (a.Value == member.Name)
+								{
+									foreach (var m in Members)
+										if (m.Key.Name == a.Key)
+											return m.Value;
+
+									break;
+								}
+							}
+						}
+					}
+
+					if (add)
+					{
+						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
+						Members.Add(member, memberExpression);
+
+						return memberExpression;
+					}
 				}
-				else
-					throw new InvalidOperationException();
+
+				throw new InvalidOperationException();
 			}
 
 			return memberExpression;

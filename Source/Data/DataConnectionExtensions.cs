@@ -765,16 +765,6 @@ namespace LinqToDB.Data
 				source);
 		}
 
-		public static int BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, params T[] source)
-		{
-			return BulkCopy(dataConnection, maxBatchSize, (IEnumerable<T>)source);
-		}
-
-		public static int BulkCopy<T>(this DataConnection dataConnection, params T[] source)
-		{
-			return BulkCopy(dataConnection, 0, (IEnumerable<T>)source);
-		}
-
 		#endregion
 	}
 }

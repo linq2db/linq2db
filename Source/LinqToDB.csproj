@@ -62,7 +62,7 @@
     <Compile Include="DataProvider\DB2\DB2zOSSchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
-    <Compile Include="DataProvider\DB2\DB2ServerVersion.cs" />
+    <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlOptimizer.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />

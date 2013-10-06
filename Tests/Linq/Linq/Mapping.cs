@@ -112,8 +112,6 @@ namespace Tests.Linq
 		{
 			[Column] public int       ParentID;
 			[Column] public TestValue Value1;
-
-			[ColumnAlias("ParentID")] public int ID;
 		}
 
 		[Test]
@@ -335,29 +333,6 @@ namespace Tests.Linq
 				var idsQuery = query.Select(s => s.Id);
 				var str = idsQuery.ToString(); // Exception
 				Assert.IsNotNull(str);
-			}
-		}
-
-		[Test]
-		public void AliasTest1()
-		{
-			using (var db = new TestDataConnection())
-			{
-				var count = db.GetTable<TestParent>().Count(t => t.ID > 0);
-			}
-		}
-
-		[Test]
-		public void AliasTest2()
-		{
-			using (var db = new TestDataConnection())
-			{
-				db.GetTable<TestParent>()
-					.Where(t => t.ID < 0 && t.ID > 0)
-					.Update(t => new TestParent
-					{
-						ID = t.ID - 1
-					});
 			}
 		}
 	}
