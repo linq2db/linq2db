@@ -186,7 +186,7 @@ namespace LinqToDB.Data
 					ptxt.Append(String.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
 				}
 				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n".Args(sql,ptxt.ToString(), ts, rowsAffected, rowsReturned), TraceSwitch.DisplayName);
-            }
+			}
 		}
 
 		private static void OnErrorInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex)

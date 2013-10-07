@@ -176,15 +176,17 @@ namespace LinqToDB.Data
 				{
 					n = Command.ExecuteNonQuery();
 				}
-				catch (System.Exception ex)
+				catch (Exception ex)
 				{
 					if (OnError != null)
 						OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
-					throw ex;
+
+					throw;
 				}
 
 				if (OnSuccess != null)
-					OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, n,null,null);
+					OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, n, null, null);
+
 				return n;
 			}
 			else
@@ -222,12 +224,13 @@ namespace LinqToDB.Data
 							if (OnSuccess != null)
 								OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - nnow, n, null, null);
 						}
-					}					
-					catch (System.Exception ex)
+					}
+					catch (Exception ex)
 					{
 						if (OnError != null)
 							OnError(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
-						throw ex;
+
+						throw;
 					}
 				}
 				return -1;
