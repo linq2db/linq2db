@@ -8,7 +8,6 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;
@@ -170,8 +169,10 @@ namespace LinqToDB.Data
 					foreach (var p in pq.Parameters)
 						Command.Parameters.Add(p);
 
-					var now = DateTime.Now;
-				int n = 0;
+				var now = DateTime.Now;
+
+				int n;
+
 				try
 				{
 					n = Command.ExecuteNonQuery();
@@ -191,8 +192,6 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var now = DateTime.Now;
-
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
 					SetCommand(pq.Commands[i]);
@@ -202,6 +201,7 @@ namespace LinqToDB.Data
 							Command.Parameters.Add(p);
 
 					var nnow = DateTime.Now;
+
 					try
 					{
 					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
@@ -239,17 +239,20 @@ namespace LinqToDB.Data
 
 		object IDataContext.ExecuteScalar(object query)
 		{
-				var now = DateTime.Now;
+			var now = DateTime.Now;
+
 			object ret;
+
 			try
 			{
 				ret = ExecuteScalarInternal(query);
 			}
-			catch (System.Exception ex)
+			catch (Exception ex)
 			{
 				if (OnError != null)
 					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
-				throw ex;
+
+				throw;
 			}
 
 			if (OnSuccess != null)
@@ -322,11 +325,12 @@ namespace LinqToDB.Data
 			{
 				ret = Command.ExecuteReader();
 			}
-			catch (System.Exception ex)
+			catch (Exception ex)
 			{
 				if (OnError != null)
 					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
-				throw ex;
+
+				throw;
 			}
 
 			if (OnSuccess != null)
