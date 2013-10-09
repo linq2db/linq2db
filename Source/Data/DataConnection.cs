@@ -149,43 +149,34 @@ namespace LinqToDB.Data
 		public delegate void OnSuccessDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned);
 		public delegate void OnErrorDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex);
 
-		private static OnSuccessDelegate onSuccess = new OnSuccessDelegate(OnSuccessInternal);
-		private static OnErrorDelegate onError = new OnErrorDelegate(OnErrorInternal);
+		static OnSuccessDelegate _onSuccess = OnSuccessInternal;
+		static OnErrorDelegate   _onError   = OnErrorInternal;
 
 		public static OnSuccessDelegate OnSuccess
 		{
-			get
-			{
-				return onSuccess;
-			}
-			set
-			{
-				onSuccess = value;
-			}
+			get { return _onSuccess;  }
+			set { _onSuccess = value; }
 		}
 
 		public static OnErrorDelegate OnError
 		{
-			get
-			{
-				return onError;
-			}
-			set
-			{
-				onError = value;
-			}
+			get { return _onError;  }
+			set { _onError = value; }
 		}
 
 		private static void OnSuccessInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned)
 		{
 			if (TraceSwitch.TraceInfo)
 			{
-				StringBuilder ptxt = new StringBuilder();
+				var ptxt = new StringBuilder();
+
 				foreach (IDataParameter param in parameters)
 				{
-					ptxt.Append(String.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+					ptxt.Append(string.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
 				}
-				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n".Args(sql,ptxt.ToString(), ts, rowsAffected, rowsReturned), TraceSwitch.DisplayName);
+
+				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n"
+					.Args(sql, ptxt, ts, rowsAffected, rowsReturned), TraceSwitch.DisplayName);
 			}
 		}
 
@@ -193,12 +184,15 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitch.TraceInfo)
 			{
-				StringBuilder ptxt = new StringBuilder();
+				var ptxt = new StringBuilder();
+
 				foreach (IDataParameter param in parameters)
 				{
-					ptxt.Append(String.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+					ptxt.Append(string.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
 				}
-				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Error: {3} \r\n".Args(sql, ptxt.ToString(), ts, ex.Message), TraceSwitch.DisplayName);
+
+				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Error: {3} \r\n"
+					.Args(sql, ptxt, ts, ex.Message), TraceSwitch.DisplayName);
 			}
 		}
 
