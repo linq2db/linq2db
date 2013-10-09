@@ -147,10 +147,10 @@ namespace LinqToDB.Data
 		}
 
 		public delegate void OnSuccessDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned);
-		public delegate void OnErrorDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex);
+		public delegate void OnFailureDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex);
 
 		static OnSuccessDelegate _onSuccess = OnSuccessInternal;
-		static OnErrorDelegate   _onError   = OnErrorInternal;
+		static OnFailureDelegate _onFailure = OnFailureInternal;
 
 		public static OnSuccessDelegate OnSuccess
 		{
@@ -158,13 +158,13 @@ namespace LinqToDB.Data
 			set { _onSuccess = value; }
 		}
 
-		public static OnErrorDelegate OnError
+		public static OnFailureDelegate OnFailure
 		{
-			get { return _onError;  }
-			set { _onError = value; }
+			get { return _onFailure;  }
+			set { _onFailure = value; }
 		}
 
-		private static void OnSuccessInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned)
+		static void OnSuccessInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned)
 		{
 			if (TraceSwitch.TraceInfo)
 			{
@@ -172,7 +172,7 @@ namespace LinqToDB.Data
 
 				foreach (IDataParameter param in parameters)
 				{
-					ptxt.Append(string.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+					ptxt.AppendFormat("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : "");
 				}
 
 				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n"
@@ -180,7 +180,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private static void OnErrorInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex)
+		static void OnFailureInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex)
 		{
 			if (TraceSwitch.TraceInfo)
 			{
@@ -188,10 +188,10 @@ namespace LinqToDB.Data
 
 				foreach (IDataParameter param in parameters)
 				{
-					ptxt.Append(string.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+					ptxt.AppendFormat("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : "");
 				}
 
-				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Error: {3} \r\n"
+				WriteTraceLine("Sql :{0}. Parameters: {1} . Execution time: {2}. Error: {3} \r\n"
 					.Args(sql, ptxt, ts, ex.Message), TraceSwitch.DisplayName);
 			}
 		}

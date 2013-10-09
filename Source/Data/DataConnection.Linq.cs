@@ -179,8 +179,8 @@ namespace LinqToDB.Data
 				}
 				catch (Exception ex)
 				{
-					if (OnError != null)
-						OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+					if (OnFailure != null)
+						OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
 
 					throw;
 				}
@@ -214,8 +214,8 @@ namespace LinqToDB.Data
 						}
 							catch (Exception ex)
 						{
-								if (OnError != null)
-									OnError(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
+								if (OnFailure != null)
+									OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
 						}
 					}
 					else
@@ -227,12 +227,13 @@ namespace LinqToDB.Data
 					}
 					catch (Exception ex)
 					{
-						if (OnError != null)
-							OnError(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
+						if (OnFailure != null)
+							OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
 
 						throw;
 					}
 				}
+
 				return -1;
 			}
 		}
@@ -249,8 +250,8 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (OnError != null)
-					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				if (OnFailure != null)
+					OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
 
 				throw;
 			}
@@ -258,8 +259,8 @@ namespace LinqToDB.Data
 			if (OnSuccess != null)
 				OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, null, null, ret);
 
-				return ret;
-			}
+			return ret;
+		}
 
 		object ExecuteScalarInternal(object query)
 		{
@@ -327,8 +328,8 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (OnError != null)
-					OnError(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				if (OnFailure != null)
+					OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
 
 				throw;
 			}
