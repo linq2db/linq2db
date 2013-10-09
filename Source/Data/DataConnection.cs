@@ -14,6 +14,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 
 	using Mapping;
+	using System.Text;
 
 	public partial class DataConnection : ICloneable
 	{
@@ -143,6 +144,62 @@ namespace LinqToDB.Data
 		public static void TurnTraceSwitchOn()
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", "Info");
+		}
+
+		public delegate void OnSuccessDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned);
+		public delegate void OnErrorDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex);
+
+		private static OnSuccessDelegate onSuccess = new OnSuccessDelegate(OnSuccessInternal);
+		private static OnErrorDelegate onError = new OnErrorDelegate(OnErrorInternal);
+
+		public static OnSuccessDelegate OnSuccess
+		{
+			get
+			{
+				return onSuccess;
+			}
+			set
+			{
+				onSuccess = value;
+			}
+		}
+
+		public static OnErrorDelegate OnError
+		{
+			get
+			{
+				return onError;
+			}
+			set
+			{
+				onError = value;
+			}
+		}
+
+		private static void OnSuccessInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned)
+		{
+			if (TraceSwitch.TraceInfo)
+			{
+				StringBuilder ptxt = new StringBuilder();
+				foreach (IDataParameter param in parameters)
+				{
+					ptxt.Append(String.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+				}
+				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n".Args(sql,ptxt.ToString(), ts, rowsAffected, rowsReturned), TraceSwitch.DisplayName);
+            }
+		}
+
+		private static void OnErrorInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex)
+		{
+			if (TraceSwitch.TraceInfo)
+			{
+				StringBuilder ptxt = new StringBuilder();
+				foreach (IDataParameter param in parameters)
+				{
+					ptxt.Append(String.Format("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : ""));
+				}
+				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Error: {3} \r\n".Args(sql, ptxt.ToString(), ts, ex.Message), TraceSwitch.DisplayName);
+			}
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
