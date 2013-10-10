@@ -141,9 +141,9 @@ namespace LinqToDB.Data
 			set { _traceSwitch = value; }
 		}
 
-		public static void TurnTraceSwitchOn()
+		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
-			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", "Info");
+			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
 		}
 
 		public delegate void OnSuccessDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned);
@@ -194,6 +194,13 @@ namespace LinqToDB.Data
 				WriteTraceLine("Sql :{0}. Parameters: {1} . Execution time: {2}. Error: {3} \r\n"
 					.Args(sql, ptxt, ts, ex.Message), TraceSwitch.DisplayName);
 			}
+		}
+
+		public static Action<TraceInfo> OnTrace = OnTraceInternal;
+
+		static void OnTraceInternal(TraceInfo traceInfo)
+		{
+			
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
