@@ -297,18 +297,3 @@ using (var db = new DbNorthwind())
     .Delete();
 }
 ```
-
-Supported databases
-------
-
-* DB2
-* Firebird
-* Informix
-* Microsoft Access
-* Microsoft Sql Server
-* Microsoft SqlCe
-* MySql
-* Oracle
-* PostgreSQL
-* SQLite
-* Sybase ASE
