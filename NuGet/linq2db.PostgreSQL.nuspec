@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.PostgreSQL</id>
-		<version>1.0.0</version>
+		<version>1.0.1</version>
 		<title>LINQ to PostgreSQL</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -15,7 +15,7 @@
 			This package includes a T4 template to generate data models for PostgreSQL database and references to the linq2db and Npgsql nugets.
 		</description>
 		<summary />
-		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB</tags>
+		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="Npgsql"           />
 			<dependency id="linq2db"          />
