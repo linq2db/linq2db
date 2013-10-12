@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>FirebirdSql.Data.FirebirdClient</id>
-    <version>3.1.1.0</version>
+    <version>3.2.0.0</version>
     <title>Firebird ADO.NET Data provider</title>
     <authors>FirebirdSQL</authors>
     <owners>FirebirdSQL</owners>
