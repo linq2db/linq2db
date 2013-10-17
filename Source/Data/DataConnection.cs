@@ -14,7 +14,6 @@ namespace LinqToDB.Data
 	using DataProvider;
 
 	using Mapping;
-	using System.Text;
 
 	public partial class DataConnection : ICloneable
 	{
@@ -125,6 +124,19 @@ namespace LinqToDB.Data
 		public static string DefaultConfiguration { get; set; }
 		public static string DefaultDataProvider  { get; set; }
 
+		private static Action<TraceInfo> _onTrace = OnTraceInternal;
+		public  static Action<TraceInfo>  OnTrace
+		{
+			get { return _onTrace; }
+			set { _onTrace = value ?? OnTraceInternal; }
+		}
+
+		static void OnTraceInternal(TraceInfo obj)
+		{
+			//WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
+			
+		}
+
 		private static TraceSwitch _traceSwitch;
 		public  static TraceSwitch  TraceSwitch
 		{
@@ -144,63 +156,6 @@ namespace LinqToDB.Data
 		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
 			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
-		}
-
-		public delegate void OnSuccessDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned);
-		public delegate void OnFailureDelegate(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex);
-
-		static OnSuccessDelegate _onSuccess = OnSuccessInternal;
-		static OnFailureDelegate _onFailure = OnFailureInternal;
-
-		public static OnSuccessDelegate OnSuccess
-		{
-			get { return _onSuccess;  }
-			set { _onSuccess = value; }
-		}
-
-		public static OnFailureDelegate OnFailure
-		{
-			get { return _onFailure;  }
-			set { _onFailure = value; }
-		}
-
-		static void OnSuccessInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, int? rowsAffected, int? rowsReturned, object dataReturned)
-		{
-			if (TraceSwitch.TraceInfo)
-			{
-				var ptxt = new StringBuilder();
-
-				foreach (IDataParameter param in parameters)
-				{
-					ptxt.AppendFormat("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : "");
-				}
-
-				WriteTraceLine("Sql :{0} . Parameters: {1} . Execution time: {2}. Records affected: {3}.  Rows Returned : {4} \r\n"
-					.Args(sql, ptxt, ts, rowsAffected, rowsReturned), TraceSwitch.DisplayName);
-			}
-		}
-
-		static void OnFailureInternal(string sql, IDataParameterCollection parameters, TimeSpan ts, Exception ex)
-		{
-			if (TraceSwitch.TraceInfo)
-			{
-				var ptxt = new StringBuilder();
-
-				foreach (IDataParameter param in parameters)
-				{
-					ptxt.AppendFormat("{2} {0} = {1} ", param.ParameterName, param.Value, ptxt.Length > 0 ? "," : "");
-				}
-
-				WriteTraceLine("Sql :{0}. Parameters: {1} . Execution time: {2}. Error: {3} \r\n"
-					.Args(sql, ptxt, ts, ex.Message), TraceSwitch.DisplayName);
-			}
-		}
-
-		public static Action<TraceInfo> OnTrace = OnTraceInternal;
-
-		static void OnTraceInternal(TraceInfo traceInfo)
-		{
-			
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);

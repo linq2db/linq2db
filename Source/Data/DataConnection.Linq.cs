@@ -8,6 +8,9 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
+	using System.Diagnostics;
+
+	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;
@@ -157,6 +160,52 @@ namespace LinqToDB.Data
 
 		#region ExecuteXXX
 
+		int TraceExecute(Func<int> func)
+		{
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute = true,
+					TraceLevel    = TraceLevel.Info,
+					Command       = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var n   = func();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel       = TraceLevel.Info,
+						Command          = Command,
+						ExecutionTime    = DateTime.Now - now,
+						RecordsAaffected = n,
+					});
+				}
+
+				return n;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel = TraceLevel.Error,
+						Command    = Command,
+						Exception  = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var pq = (PreparedQuery)query;
@@ -169,29 +218,17 @@ namespace LinqToDB.Data
 					foreach (var p in pq.Parameters)
 						Command.Parameters.Add(p);
 
-				var now = DateTime.Now;
-
-				int n;
-
-				try
+				if (TraceSwitch.Level != TraceLevel.Off)
 				{
-					n = Command.ExecuteNonQuery();
-				}
-				catch (Exception ex)
-				{
-					if (OnFailure != null)
-						OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
-
-					throw;
+					TraceExecute(Command.ExecuteNonQuery);
 				}
 
-				if (OnSuccess != null)
-					OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, n, null, null);
-
-				return n;
+				return Command.ExecuteNonQuery();
 			}
 			else
 			{
+				var now = DateTime.Now;
+
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
 					SetCommand(pq.Commands[i]);
@@ -200,39 +237,22 @@ namespace LinqToDB.Data
 						foreach (var p in pq.Parameters)
 							Command.Parameters.Add(p);
 
-					var nnow = DateTime.Now;
-
-					try
-					{
 					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
 					{
 						try
 						{
-								int n = Command.ExecuteNonQuery();
-								if (OnSuccess != null)
-									OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - nnow, n, null, null);
+							Command.ExecuteNonQuery();
 						}
-							catch (Exception ex)
+						catch (Exception)
 						{
-								if (OnFailure != null)
-									OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
 						}
 					}
 					else
-						{
-							int n = Command.ExecuteNonQuery();
-							if (OnSuccess != null)
-								OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - nnow, n, null, null);
-						}
-					}
-					catch (Exception ex)
-					{
-						if (OnFailure != null)
-							OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - nnow, ex);
-
-						throw;
-					}
+						Command.ExecuteNonQuery();
 				}
+
+				if (TraceSwitch.TraceInfo)
+					WriteTraceLine("Execution time: {0}.\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return -1;
 			}
@@ -240,26 +260,17 @@ namespace LinqToDB.Data
 
 		object IDataContext.ExecuteScalar(object query)
 		{
-			var now = DateTime.Now;
-
-			object ret;
-
-			try
+			if (TraceSwitch.TraceInfo)
 			{
-				ret = ExecuteScalarInternal(query);
-			}
-			catch (Exception ex)
-			{
-				if (OnFailure != null)
-					OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				var now = DateTime.Now;
+				var ret = ExecuteScalarInternal(query);
 
-				throw;
+				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
+
+				return ret;
 			}
 
-			if (OnSuccess != null)
-				OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, null, null, ret);
-
-			return ret;
+			return ExecuteScalarInternal(query);
 		}
 
 		object ExecuteScalarInternal(object query)
@@ -320,24 +331,17 @@ namespace LinqToDB.Data
 				foreach (var p in pq.Parameters)
 					Command.Parameters.Add(p);
 
+			if (TraceSwitch.TraceInfo)
+			{
 				var now = DateTime.Now;
-			IDataReader ret;
-			try
-			{
-				ret = Command.ExecuteReader();
-			}
-			catch (Exception ex)
-			{
-				if (OnFailure != null)
-					OnFailure(Command.CommandText, Command.Parameters, DateTime.Now - now, ex);
+				var ret = Command.ExecuteReader();
 
-				throw;
-			}
-
-			if (OnSuccess != null)
-				OnSuccess(Command.CommandText, Command.Parameters, DateTime.Now - now, null, null, null);
+				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return ret;
+			}
+
+			return Command.ExecuteReader();
 		}
 
 		void IDataContext.ReleaseQuery(object query)
