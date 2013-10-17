@@ -285,6 +285,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (connection != null)
 			{
 				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var sb = CreateSqlBuilder();
 				var rd = new BulkCopyReader(ed, source);
 
 				using (var bc = dataConnection.Transaction == null ?
@@ -294,10 +295,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-					bc.DestinationTableName = ed.TableName;
+					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
 
 					for (var i = 0; i < rd.Columns.Length; i++)
-						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
+						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
+							i,
+							sb.Convert(rd.Columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
 
 					bc.WriteToServer(rd);
 
