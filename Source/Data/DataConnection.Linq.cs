@@ -160,7 +160,7 @@ namespace LinqToDB.Data
 
 		#region ExecuteXXX
 
-		int TraceExecute(Func<int> func)
+		T TraceExecute<T>(Func<T> func, bool isReturnRecordAffected = false)
 		{
 			if (TraceSwitch.TraceInfo)
 			{
@@ -175,20 +175,22 @@ namespace LinqToDB.Data
 			try
 			{
 				var now = DateTime.Now;
-				var n   = func();
+				var ret = func();
 
 				if (TraceSwitch.TraceInfo)
 				{
+					var n = isReturnRecordAffected ? (int?)(object)ret : null;
+
 					OnTrace(new TraceInfo
 					{
-						TraceLevel       = TraceLevel.Info,
-						Command          = Command,
-						ExecutionTime    = DateTime.Now - now,
-						RecordsAaffected = n,
+						TraceLevel      = TraceLevel.Info,
+						Command         = Command,
+						ExecutionTime   = DateTime.Now - now,
+						RecordsAffected = n,
 					});
 				}
 
-				return n;
+				return ret;
 			}
 			catch (Exception ex)
 			{
@@ -219,16 +221,12 @@ namespace LinqToDB.Data
 						Command.Parameters.Add(p);
 
 				if (TraceSwitch.Level != TraceLevel.Off)
-				{
-					TraceExecute(Command.ExecuteNonQuery);
-				}
+					return TraceExecute(Command.ExecuteNonQuery);
 
 				return Command.ExecuteNonQuery();
 			}
 			else
 			{
-				var now = DateTime.Now;
-
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
 					SetCommand(pq.Commands[i]);
@@ -239,20 +237,38 @@ namespace LinqToDB.Data
 
 					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
 					{
-						try
+						if (TraceSwitch.Level != TraceLevel.Off)
 						{
-							Command.ExecuteNonQuery();
+							TraceExecute(() =>
+							{
+								try
+								{
+									return Command.ExecuteNonQuery();
+								}
+								catch (Exception)
+								{
+									return -1;
+								}
+							});
 						}
-						catch (Exception)
+						else
 						{
+							try
+							{
+								Command.ExecuteNonQuery();
+							}
+							catch (Exception)
+							{
+							}
 						}
 					}
 					else
+					{
+						if (TraceSwitch.Level != TraceLevel.Off)
+							TraceExecute(Command.ExecuteNonQuery);
 						Command.ExecuteNonQuery();
+					}
 				}
-
-				if (TraceSwitch.TraceInfo)
-					WriteTraceLine("Execution time: {0}.\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return -1;
 			}
