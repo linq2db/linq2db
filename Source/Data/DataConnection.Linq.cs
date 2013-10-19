@@ -276,21 +276,6 @@ namespace LinqToDB.Data
 
 		object IDataContext.ExecuteScalar(object query)
 		{
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = ExecuteScalarInternal(query);
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return ExecuteScalarInternal(query);
-		}
-
-		object ExecuteScalarInternal(object query)
-		{
 			var pq = (PreparedQuery)query;
 
 			SetCommand(pq.Commands[0]);
@@ -322,19 +307,32 @@ namespace LinqToDB.Data
 			{
 				if (idparam != null)
 				{
-					Command.ExecuteNonQuery(); // так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
-					                           // остальные провайдеры должны поддерживать такой режим
+					// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
+					// остальные провайдеры должны поддерживать такой режим
+
+					if (TraceSwitch.Level != TraceLevel.Off)
+						TraceExecute(Command.ExecuteNonQuery);
+					else
+						Command.ExecuteNonQuery();
+
 					return idparam.Value;
 				}
 
-				return Command.ExecuteScalar();
+				return TraceSwitch.Level != TraceLevel.Off ?
+					TraceExecute(Command.ExecuteScalar) :
+					Command.ExecuteScalar();
 			}
 
-			Command.ExecuteNonQuery();
+			if (TraceSwitch.Level != TraceLevel.Off)
+				TraceExecute(Command.ExecuteNonQuery);
+			else
+				Command.ExecuteNonQuery();
 
 			SetCommand(pq.Commands[1]);
 
-			return Command.ExecuteScalar();
+			return TraceSwitch.Level != TraceLevel.Off ?
+				TraceExecute(Command.ExecuteScalar) :
+				Command.ExecuteScalar();
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)

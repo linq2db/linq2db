@@ -134,6 +134,7 @@ namespace LinqToDB.Data
 		static void OnTraceInternal(TraceInfo obj)
 		{
 			//WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
+			//WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 			
 		}
 
