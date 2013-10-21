@@ -20,7 +20,7 @@ namespace LinqToDB.Data
 		{
 			connection.SetCommand(sql);
 
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
@@ -32,7 +32,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
@@ -56,7 +56,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 				while (rd.Read())
 					yield return objectReader(rd);
 		}
@@ -108,7 +108,7 @@ namespace LinqToDB.Data
 
 		static IEnumerable<T> ExecuteQuery<T>(DataConnection connection)
 		{
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 			{
 				if (rd.Read())
 				{
@@ -161,7 +161,7 @@ namespace LinqToDB.Data
 		public static int Execute(this DataConnection connection, string sql)
 		{
 			connection.SetCommand(sql);
-			return connection.Command.ExecuteNonQuery();
+			return connection.ExecuteNonQuery();
 		}
 
 		public static int Execute(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -170,7 +170,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			return connection.Command.ExecuteNonQuery();
+			return connection.ExecuteNonQuery();
 		}
 
 		public static int ExecuteProc(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -180,7 +180,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			return connection.Command.ExecuteNonQuery();
+			return connection.ExecuteNonQuery();
 		}
 
 		public static int Execute(this DataConnection connection, string sql, object parameters)
@@ -191,7 +191,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
-			return connection.Command.ExecuteNonQuery();
+			return connection.ExecuteNonQuery();
 		}
 
 		#endregion
@@ -235,7 +235,7 @@ namespace LinqToDB.Data
 
 		static T ExecuteScalar<T>(DataConnection connection, string sql)
 		{
-			using (var rd = connection.Command.ExecuteReader())
+			using (var rd = connection.ExecuteReader())
 			{
 				if (rd.Read())
 				{
@@ -266,7 +266,8 @@ namespace LinqToDB.Data
 		public static DataReader ExecuteReader(this DataConnection connection, string sql)
 		{
 			connection.SetCommand(sql);
-			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+
+			return new DataReader { Connection = connection, Reader = connection.ExecuteReader() };
 		}
 
 		public static DataReader ExecuteReader(this DataConnection connection, string sql, params DataParameter[] parameters)
@@ -275,7 +276,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, parameters);
 
-			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+			return new DataReader { Connection = connection, Reader = connection.ExecuteReader() };
 		}
 
 		public static DataReader ExecuteReader(this DataConnection connection, string sql, DataParameter parameter)
@@ -291,7 +292,7 @@ namespace LinqToDB.Data
 
 			SetParameters(connection, dps);
 
-			return new DataReader { Connection = connection, Reader = connection.Command.ExecuteReader() };
+			return new DataReader { Connection = connection, Reader = connection.ExecuteReader() };
 		}
 
 		public static DataReader ExecuteReader(

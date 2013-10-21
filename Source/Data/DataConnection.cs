@@ -452,6 +452,151 @@ namespace LinqToDB.Data
 			}
 		}
 
+		internal int ExecuteNonQuery()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteNonQuery();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute = true,
+					TraceLevel    = TraceLevel.Info,
+					Command       = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteNonQuery();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = Command,
+						ExecutionTime   = DateTime.Now - now,
+						RecordsAffected = ret,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel = TraceLevel.Error,
+						Command    = Command,
+						Exception  = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		object ExecuteScalar()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteScalar();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute = true,
+					TraceLevel    = TraceLevel.Info,
+					Command       = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteScalar();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel    = TraceLevel.Info,
+						Command       = Command,
+						ExecutionTime = DateTime.Now - now,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel = TraceLevel.Error,
+						Command    = Command,
+						Exception  = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		internal IDataReader ExecuteReader()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteReader();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute = true,
+					TraceLevel    = TraceLevel.Info,
+					Command       = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteReader();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel    = TraceLevel.Info,
+						Command       = Command,
+						ExecutionTime = DateTime.Now - now,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel = TraceLevel.Error,
+						Command    = Command,
+						Exception  = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
 		#endregion
 
 		#region Transaction

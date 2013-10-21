@@ -160,54 +160,6 @@ namespace LinqToDB.Data
 
 		#region ExecuteXXX
 
-		T TraceExecute<T>(Func<T> func, bool isReturnRecordAffected = false)
-		{
-			if (TraceSwitch.TraceInfo)
-			{
-				OnTrace(new TraceInfo
-				{
-					BeforeExecute = true,
-					TraceLevel    = TraceLevel.Info,
-					Command       = Command,
-				});
-			}
-
-			try
-			{
-				var now = DateTime.Now;
-				var ret = func();
-
-				if (TraceSwitch.TraceInfo)
-				{
-					var n = isReturnRecordAffected ? (int?)(object)ret : null;
-
-					OnTrace(new TraceInfo
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = Command,
-						ExecutionTime   = DateTime.Now - now,
-						RecordsAffected = n,
-					});
-				}
-
-				return ret;
-			}
-			catch (Exception ex)
-			{
-				if (TraceSwitch.TraceError)
-				{
-					OnTrace(new TraceInfo
-					{
-						TraceLevel = TraceLevel.Error,
-						Command    = Command,
-						Exception  = ex,
-					});
-				}
-
-				throw;
-			}
-		}
-
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var pq = (PreparedQuery)query;
@@ -220,10 +172,7 @@ namespace LinqToDB.Data
 					foreach (var p in pq.Parameters)
 						Command.Parameters.Add(p);
 
-				if (TraceSwitch.Level != TraceLevel.Off)
-					return TraceExecute(Command.ExecuteNonQuery);
-
-				return Command.ExecuteNonQuery();
+				return ExecuteNonQuery();
 			}
 			else
 			{
@@ -237,36 +186,17 @@ namespace LinqToDB.Data
 
 					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
 					{
-						if (TraceSwitch.Level != TraceLevel.Off)
+						try
 						{
-							TraceExecute(() =>
-							{
-								try
-								{
-									return Command.ExecuteNonQuery();
-								}
-								catch (Exception)
-								{
-									return -1;
-								}
-							});
+							ExecuteNonQuery();
 						}
-						else
+						catch (Exception)
 						{
-							try
-							{
-								Command.ExecuteNonQuery();
-							}
-							catch (Exception)
-							{
-							}
 						}
 					}
 					else
 					{
-						if (TraceSwitch.Level != TraceLevel.Off)
-							TraceExecute(Command.ExecuteNonQuery);
-						Command.ExecuteNonQuery();
+						ExecuteNonQuery();
 					}
 				}
 
@@ -309,30 +239,19 @@ namespace LinqToDB.Data
 				{
 					// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
 					// остальные провайдеры должны поддерживать такой режим
-
-					if (TraceSwitch.Level != TraceLevel.Off)
-						TraceExecute(Command.ExecuteNonQuery);
-					else
-						Command.ExecuteNonQuery();
+					ExecuteNonQuery();
 
 					return idparam.Value;
 				}
 
-				return TraceSwitch.Level != TraceLevel.Off ?
-					TraceExecute(Command.ExecuteScalar) :
-					Command.ExecuteScalar();
+				return ExecuteScalar();
 			}
 
-			if (TraceSwitch.Level != TraceLevel.Off)
-				TraceExecute(Command.ExecuteNonQuery);
-			else
-				Command.ExecuteNonQuery();
+			ExecuteNonQuery();
 
 			SetCommand(pq.Commands[1]);
 
-			return TraceSwitch.Level != TraceLevel.Off ?
-				TraceExecute(Command.ExecuteScalar) :
-				Command.ExecuteScalar();
+			return ExecuteScalar();
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
@@ -345,17 +264,7 @@ namespace LinqToDB.Data
 				foreach (var p in pq.Parameters)
 					Command.Parameters.Add(p);
 
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = Command.ExecuteReader();
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return Command.ExecuteReader();
+			return ExecuteReader();
 		}
 
 		void IDataContext.ReleaseQuery(object query)
