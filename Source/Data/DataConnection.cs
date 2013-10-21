@@ -9,6 +9,8 @@ using System.Threading;
 
 namespace LinqToDB.Data
 {
+	using System.Text;
+
 	using Common;
 	using Configuration;
 	using DataProvider;
@@ -131,11 +133,88 @@ namespace LinqToDB.Data
 			set { _onTrace = value ?? OnTraceInternal; }
 		}
 
-		static void OnTraceInternal(TraceInfo obj)
+		static void OnTraceInternal(TraceInfo info)
 		{
-			//WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
-			//WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-			
+			if (info.BeforeExecute)
+			{
+				var sqlProvider = info.DataConnection.DataProvider.CreateSqlBuilder();
+				var sb          = new StringBuilder();
+
+				sb.Append("-- ").Append(info.DataConnection.ConfigurationString);
+
+				if (info.DataConnection.ConfigurationString != info.DataConnection.DataProvider.Name)
+					sb.Append(' ').Append(info.DataConnection.DataProvider.Name);
+
+				if (info.DataConnection.DataProvider.Name != sqlProvider.Name)
+					sb.Append(' ').Append(sqlProvider.Name);
+
+				sb.AppendLine();
+
+				if (info.Command.Parameters != null && info.Command.Parameters.Count > 0)
+				{
+					foreach (IDataParameter p in info.Command.Parameters)
+						sb
+							.Append("-- DECLARE ")
+							.Append(p.ParameterName)
+							.Append(' ')
+							.Append(p.Value == null ? p.DbType.ToString() : p.Value.GetType().Name)
+							.AppendLine();
+
+					sb.AppendLine();
+
+					foreach (IDataParameter p in info.Command.Parameters)
+					{
+						var value = p.Value;
+
+						if (value is string || value is char)
+							value = "'" + value.ToString().Replace("'", "''") + "'";
+
+						sb
+							.Append("-- SET ")
+							.Append(p.ParameterName)
+							.Append(" = ")
+							.Append(value)
+							.AppendLine();
+					}
+
+					sb.AppendLine();
+				}
+
+				sb.AppendLine(info.Command.CommandText);
+
+				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					sb.Length--;
+
+				sb.AppendLine();
+
+				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+			}
+			else if (info.TraceLevel == TraceLevel.Error)
+			{
+				var sb = new StringBuilder();
+
+				for (var ex = info.Exception; ex != null; ex = ex.InnerException)
+				{
+					sb
+						.AppendLine()
+						.AppendFormat("Exception: {0}", ex.GetType())
+						.AppendLine()
+						.AppendFormat("Message  : {0}", ex.Message)
+						.AppendLine()
+						.AppendLine(ex.StackTrace)
+						;
+				}
+
+				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+			}
+			else if (info.RecordsAffected != null)
+			{
+				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(info.ExecutionTime, info.RecordsAffected), TraceSwitch.DisplayName);
+			}
+			else
+			{
+				WriteTraceLine("Execution time: {0}\r\n".Args(info.ExecutionTime), TraceSwitch.DisplayName);
+			}
 		}
 
 		private static TraceSwitch _traceSwitch;
@@ -461,9 +540,10 @@ namespace LinqToDB.Data
 			{
 				OnTrace(new TraceInfo
 				{
-					BeforeExecute = true,
-					TraceLevel    = TraceLevel.Info,
-					Command       = Command,
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
 				});
 			}
 
@@ -477,6 +557,7 @@ namespace LinqToDB.Data
 					OnTrace(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
+						DataConnection  = this,
 						Command         = Command,
 						ExecutionTime   = DateTime.Now - now,
 						RecordsAffected = ret,
@@ -491,9 +572,10 @@ namespace LinqToDB.Data
 				{
 					OnTrace(new TraceInfo
 					{
-						TraceLevel = TraceLevel.Error,
-						Command    = Command,
-						Exception  = ex,
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
 					});
 				}
 
@@ -510,9 +592,10 @@ namespace LinqToDB.Data
 			{
 				OnTrace(new TraceInfo
 				{
-					BeforeExecute = true,
-					TraceLevel    = TraceLevel.Info,
-					Command       = Command,
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
 				});
 			}
 
@@ -525,9 +608,10 @@ namespace LinqToDB.Data
 				{
 					OnTrace(new TraceInfo
 					{
-						TraceLevel    = TraceLevel.Info,
-						Command       = Command,
-						ExecutionTime = DateTime.Now - now,
+						TraceLevel     = TraceLevel.Info,
+						DataConnection = this,
+						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 					});
 				}
 
@@ -539,9 +623,10 @@ namespace LinqToDB.Data
 				{
 					OnTrace(new TraceInfo
 					{
-						TraceLevel = TraceLevel.Error,
-						Command    = Command,
-						Exception  = ex,
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
 					});
 				}
 
@@ -558,9 +643,10 @@ namespace LinqToDB.Data
 			{
 				OnTrace(new TraceInfo
 				{
-					BeforeExecute = true,
-					TraceLevel    = TraceLevel.Info,
-					Command       = Command,
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
 				});
 			}
 
@@ -573,9 +659,10 @@ namespace LinqToDB.Data
 				{
 					OnTrace(new TraceInfo
 					{
-						TraceLevel    = TraceLevel.Info,
-						Command       = Command,
-						ExecutionTime = DateTime.Now - now,
+						TraceLevel     = TraceLevel.Info,
+						DataConnection = this,
+						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 					});
 				}
 
@@ -587,9 +674,10 @@ namespace LinqToDB.Data
 				{
 					OnTrace(new TraceInfo
 					{
-						TraceLevel = TraceLevel.Error,
-						Command    = Command,
-						Exception  = ex,
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
 					});
 				}
 
