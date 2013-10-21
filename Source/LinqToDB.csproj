@@ -101,6 +101,7 @@
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
+    <Compile Include="Data\TraceInfo.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />

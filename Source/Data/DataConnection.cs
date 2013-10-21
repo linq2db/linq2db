@@ -9,6 +9,8 @@ using System.Threading;
 
 namespace LinqToDB.Data
 {
+	using System.Text;
+
 	using Common;
 	using Configuration;
 	using DataProvider;
@@ -124,6 +126,97 @@ namespace LinqToDB.Data
 		public static string DefaultConfiguration { get; set; }
 		public static string DefaultDataProvider  { get; set; }
 
+		private static Action<TraceInfo> _onTrace = OnTraceInternal;
+		public  static Action<TraceInfo>  OnTrace
+		{
+			get { return _onTrace; }
+			set { _onTrace = value ?? OnTraceInternal; }
+		}
+
+		static void OnTraceInternal(TraceInfo info)
+		{
+			if (info.BeforeExecute)
+			{
+				var sqlProvider = info.DataConnection.DataProvider.CreateSqlBuilder();
+				var sb          = new StringBuilder();
+
+				sb.Append("-- ").Append(info.DataConnection.ConfigurationString);
+
+				if (info.DataConnection.ConfigurationString != info.DataConnection.DataProvider.Name)
+					sb.Append(' ').Append(info.DataConnection.DataProvider.Name);
+
+				if (info.DataConnection.DataProvider.Name != sqlProvider.Name)
+					sb.Append(' ').Append(sqlProvider.Name);
+
+				sb.AppendLine();
+
+				if (info.Command.Parameters != null && info.Command.Parameters.Count > 0)
+				{
+					foreach (IDataParameter p in info.Command.Parameters)
+						sb
+							.Append("-- DECLARE ")
+							.Append(p.ParameterName)
+							.Append(' ')
+							.Append(p.Value == null ? p.DbType.ToString() : p.Value.GetType().Name)
+							.AppendLine();
+
+					sb.AppendLine();
+
+					foreach (IDataParameter p in info.Command.Parameters)
+					{
+						var value = p.Value;
+
+						if (value is string || value is char)
+							value = "'" + value.ToString().Replace("'", "''") + "'";
+
+						sb
+							.Append("-- SET ")
+							.Append(p.ParameterName)
+							.Append(" = ")
+							.Append(value)
+							.AppendLine();
+					}
+
+					sb.AppendLine();
+				}
+
+				sb.AppendLine(info.Command.CommandText);
+
+				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					sb.Length--;
+
+				sb.AppendLine();
+
+				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+			}
+			else if (info.TraceLevel == TraceLevel.Error)
+			{
+				var sb = new StringBuilder();
+
+				for (var ex = info.Exception; ex != null; ex = ex.InnerException)
+				{
+					sb
+						.AppendLine()
+						.AppendFormat("Exception: {0}", ex.GetType())
+						.AppendLine()
+						.AppendFormat("Message  : {0}", ex.Message)
+						.AppendLine()
+						.AppendLine(ex.StackTrace)
+						;
+				}
+
+				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+			}
+			else if (info.RecordsAffected != null)
+			{
+				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(info.ExecutionTime, info.RecordsAffected), TraceSwitch.DisplayName);
+			}
+			else
+			{
+				WriteTraceLine("Execution time: {0}\r\n".Args(info.ExecutionTime), TraceSwitch.DisplayName);
+			}
+		}
+
 		private static TraceSwitch _traceSwitch;
 		public  static TraceSwitch  TraceSwitch
 		{
@@ -140,9 +233,9 @@ namespace LinqToDB.Data
 			set { _traceSwitch = value; }
 		}
 
-		public static void TurnTraceSwitchOn()
+		public static void TurnTraceSwitchOn(TraceLevel traceLevel = TraceLevel.Info)
 		{
-			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", "Info");
+			TraceSwitch = new TraceSwitch("DataConnection", "DataConnection trace switch", traceLevel.ToString());
 		}
 
 		public static Action<string,string> WriteTraceLine = (message, displayName) => Debug.WriteLine(message, displayName);
@@ -435,6 +528,160 @@ namespace LinqToDB.Data
 			{
 				_command.Dispose();
 				_command = null;
+			}
+		}
+
+		internal int ExecuteNonQuery()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteNonQuery();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteNonQuery();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel      = TraceLevel.Info,
+						DataConnection  = this,
+						Command         = Command,
+						ExecutionTime   = DateTime.Now - now,
+						RecordsAffected = ret,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		object ExecuteScalar()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteScalar();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteScalar();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Info,
+						DataConnection = this,
+						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+
+		internal IDataReader ExecuteReader()
+		{
+			if (TraceSwitch.Level == TraceLevel.Off)
+				return Command.ExecuteReader();
+
+			if (TraceSwitch.TraceInfo)
+			{
+				OnTrace(new TraceInfo
+				{
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = this,
+					Command        = Command,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+				var ret = Command.ExecuteReader();
+
+				if (TraceSwitch.TraceInfo)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Info,
+						DataConnection = this,
+						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
+					});
+				}
+
+				return ret;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitch.TraceError)
+				{
+					OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = this,
+						Command        = Command,
+						Exception      = ex,
+					});
+				}
+
+				throw;
 			}
 		}
 

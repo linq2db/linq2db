@@ -8,6 +8,8 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
+	using System.Diagnostics;
+
 	using Common;
 	using DataProvider;
 	using Linq;
@@ -170,22 +172,10 @@ namespace LinqToDB.Data
 					foreach (var p in pq.Parameters)
 						Command.Parameters.Add(p);
 
-				if (TraceSwitch.TraceInfo)
-				{
-					var now = DateTime.Now;
-					var n   = Command.ExecuteNonQuery();
-
-					WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
-
-					return n;
-				}
-
-				return Command.ExecuteNonQuery();
+				return ExecuteNonQuery();
 			}
 			else
 			{
-				var now = DateTime.Now;
-
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
 					SetCommand(pq.Commands[i]);
@@ -198,39 +188,23 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							Command.ExecuteNonQuery();
+							ExecuteNonQuery();
 						}
 						catch (Exception)
 						{
 						}
 					}
 					else
-						Command.ExecuteNonQuery();
+					{
+						ExecuteNonQuery();
+					}
 				}
-
-				if (TraceSwitch.TraceInfo)
-					WriteTraceLine("Execution time: {0}.\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
 
 				return -1;
 			}
 		}
 
 		object IDataContext.ExecuteScalar(object query)
-		{
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = ExecuteScalarInternal(query);
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return ExecuteScalarInternal(query);
-		}
-
-		object ExecuteScalarInternal(object query)
 		{
 			var pq = (PreparedQuery)query;
 
@@ -263,19 +237,21 @@ namespace LinqToDB.Data
 			{
 				if (idparam != null)
 				{
-					Command.ExecuteNonQuery(); // так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
-					                           // остальные провайдеры должны поддерживать такой режим
+					// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
+					// остальные провайдеры должны поддерживать такой режим
+					ExecuteNonQuery();
+
 					return idparam.Value;
 				}
 
-				return Command.ExecuteScalar();
+				return ExecuteScalar();
 			}
 
-			Command.ExecuteNonQuery();
+			ExecuteNonQuery();
 
 			SetCommand(pq.Commands[1]);
 
-			return Command.ExecuteScalar();
+			return ExecuteScalar();
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
@@ -288,17 +264,7 @@ namespace LinqToDB.Data
 				foreach (var p in pq.Parameters)
 					Command.Parameters.Add(p);
 
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = Command.ExecuteReader();
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return Command.ExecuteReader();
+			return ExecuteReader();
 		}
 
 		void IDataContext.ReleaseQuery(object query)
@@ -390,8 +356,8 @@ namespace LinqToDB.Data
 
 			GetParameters(queryContext, query);
 
-			if (TraceSwitch.TraceInfo)
-				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
+//			if (TraceSwitch.TraceInfo)
+//				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
 
 			return query;
 		}

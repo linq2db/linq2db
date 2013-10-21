@@ -60,44 +60,50 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
 
-							using (var conn = connectionCreator(css.ConnectionString))
+							try
 							{
-								conn.Open();
-
-								var serverType = Expression.Lambda<Func<object>>(
-									Expression.Convert(
-										Expression.MakeMemberAccess(Expression.Constant(conn), serverTypeProp),
-										typeof(object)))
-									.Compile()();
-
-								var iszOS = serverType.ToString() == "DB2_390";
-
-								/*
-								var iszOS = false;
-								var cmd   = conn.CreateCommand();
-
-								try
+								using (var conn = connectionCreator(css.ConnectionString))
 								{
-									cmd.CommandText = "SELECT INST_NAME FROM SYSIBMADM.ENV_INST_INFO";
-									cmd.ExecuteScalar();
-								}
-								catch
-								{
+									conn.Open();
+
+									var serverType = Expression.Lambda<Func<object>>(
+										Expression.Convert(
+											Expression.MakeMemberAccess(Expression.Constant(conn), serverTypeProp),
+											typeof(object)))
+										.Compile()();
+
+									var iszOS = serverType.ToString() == "DB2_390";
+
+									/*
+									var iszOS = false;
+									var cmd   = conn.CreateCommand();
+
 									try
 									{
-										cmd.CommandText = "SELECT GETVARIABLE('SYSIBM.VERSION') FROM SYSIBM.SYSDUMMY1";
-
-										var version = cmd.ExecuteScalar().ToString();
-
-										iszOS = version.StartsWith("DSN");
+										cmd.CommandText = "SELECT INST_NAME FROM SYSIBMADM.ENV_INST_INFO";
+										cmd.ExecuteScalar();
 									}
 									catch
 									{
-									}
-								}
-								*/
+										try
+										{
+											cmd.CommandText = "SELECT GETVARIABLE('SYSIBM.VERSION') FROM SYSIBM.SYSDUMMY1";
 
-								return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
+											var version = cmd.ExecuteScalar().ToString();
+
+											iszOS = version.StartsWith("DSN");
+										}
+										catch
+										{
+										}
+									}
+									*/
+
+									return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
+								}
+							}
+							catch (Exception)
+							{
 							}
 						}
 					}
