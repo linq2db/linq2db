@@ -8,6 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
+	using LinqToDB;
+
 	[TestFixture]
 	public class SchemaProviderTest : TestBase
 	{
@@ -31,6 +33,18 @@ namespace Tests.SchemaProvider
 				Assert.That(table.Columns.Count, Is.EqualTo(2));
 
 //				Assert.That(dbSchema.Tables.Single(t => t.TableName.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
+
+				switch (context)
+				{
+					case ProviderName.SqlServer2000 :
+					case ProviderName.SqlServer2005 :
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+						var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
+						Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
+						Assert.That(indexTable.ForeignKeys[0].ThisColumns.Count, Is.EqualTo(2));
+						break;
+				}
 			}
 		}
 

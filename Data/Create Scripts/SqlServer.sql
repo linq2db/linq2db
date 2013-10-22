@@ -566,6 +566,10 @@ GO
 
 
 -- IndexTable
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('IndexTable2') AND type in (N'U'))
+BEGIN DROP TABLE IndexTable2 END
+GO
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('IndexTable') AND type in (N'U'))
 BEGIN DROP TABLE IndexTable END
 GO
@@ -578,6 +582,18 @@ CREATE TABLE IndexTable
 	IndexField  int NOT NULL,
 	CONSTRAINT PK_IndexTable PRIMARY KEY CLUSTERED (PKField2, PKField1),
 	CONSTRAINT IX_IndexTable UNIQUE NONCLUSTERED (UniqueField)
+)
+GO
+
+CREATE TABLE IndexTable2
+(
+	PKField1    int NOT NULL,
+	PKField2    int NOT NULL,
+	CONSTRAINT PK_IndexTable2 PRIMARY KEY CLUSTERED (PKField2, PKField1),
+	CONSTRAINT FK_Patient2_IndexTable FOREIGN KEY (PKField2,PKField1)
+			REFERENCES IndexTable (PKField2,PKField1)
+			ON UPDATE CASCADE
+			ON DELETE CASCADE
 )
 GO
 
