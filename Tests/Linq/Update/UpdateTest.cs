@@ -547,7 +547,16 @@ namespace Tests.Update
 		}
 
 		[Test]
-		public void UpdateTop([DataContexts] string context)
+		public void UpdateTop([DataContexts(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

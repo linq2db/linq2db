@@ -86,7 +86,9 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override void BuildDeleteClause()
 		{
 			AppendIndent();
-			StringBuilder.Append("DELETE FROM ");
+			StringBuilder.Append("DELETE");
+			BuildSkipFirst();
+			StringBuilder.Append(" FROM ");
 
 			ISqlTableSource table;
 			ISqlTableSource source;

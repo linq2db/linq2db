@@ -118,18 +118,18 @@ namespace LinqToDB.DataProvider.MySql
 		public static char ParameterSymbol           { get; set; }
 		public static bool TryConvertParameterSymbol { get; set; }
 
-		private static string _commandParameterPrefix = "";
+		private static string _commandParameterPrefix = string.Empty;
 		public  static string  CommandParameterPrefix
 		{
 			get { return _commandParameterPrefix; }
-			set { _commandParameterPrefix = string.IsNullOrEmpty(value) ? string.Empty : value; }
+			set { _commandParameterPrefix = value ?? string.Empty; }
 		}
 
-		private static string _sprocParameterPrefix = "";
+		private static string _sprocParameterPrefix = string.Empty;
 		public  static string  SprocParameterPrefix
 		{
 			get { return _sprocParameterPrefix; }
-			set { _sprocParameterPrefix = string.IsNullOrEmpty(value) ? string.Empty : value; }
+			set { _sprocParameterPrefix = value ?? string.Empty; }
 		}
 
 		private static List<char> _convertParameterSymbols;

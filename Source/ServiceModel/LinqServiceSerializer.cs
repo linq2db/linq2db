@@ -800,6 +800,7 @@ namespace LinqToDB.ServiceModel
 
 								case QueryType.Update         :
 									appendUpdate = true;
+									appendSelect = elem.Select.SkipValue != null || elem.Select.TakeValue != null;
 									break;
 
 								case QueryType.Delete         :

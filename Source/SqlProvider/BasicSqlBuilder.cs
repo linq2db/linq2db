@@ -308,7 +308,9 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildDeleteClause()
 		{
 			AppendIndent();
-			StringBuilder.Append("DELETE ");
+			StringBuilder.Append("DELETE");
+			BuildSkipFirst();
+			StringBuilder.Append(" ");
 		}
 
 		#endregion
@@ -323,9 +325,11 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateTable()
 		{
-			AppendIndent()
-				.AppendLine("UPDATE")
-				.Append('\t');
+			AppendIndent().Append("UPDATE");
+
+			BuildSkipFirst();
+
+			StringBuilder.AppendLine().Append('\t');
 			BuildUpdateTableName();
 			StringBuilder.AppendLine();
 		}

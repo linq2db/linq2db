@@ -57,7 +57,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				SelectQuery.From.Tables[0];
 
 			AppendIndent()
-				.Append("DELETE ")
+				.Append("DELETE");
+
+			BuildSkipFirst();
+
+			StringBuilder
+				.Append(" ")
 				.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias))
 				.AppendLine();
 		}

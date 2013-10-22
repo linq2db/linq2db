@@ -283,6 +283,7 @@ namespace LinqToDB.SqlQuery
 
 							case QueryType.Update :
 								Visit1(q.Update);
+								Visit1(q.Select);
 								break;
 
 							case QueryType.Delete :
@@ -328,16 +329,16 @@ namespace LinqToDB.SqlQuery
 		public void Visit(IQueryElement element, Action<IQueryElement> action)
 		{
 			_visitedElements.Clear();
-			_all         = false;
-			_action2     = action;
+			_all     = false;
+			_action2 = action;
 			Visit2(element);
 		}
 
 		public void VisitAll(IQueryElement element, Action<IQueryElement> action)
 		{
 			_visitedElements.Clear();
-			_all         = true;
-			_action2     = action;
+			_all     = true;
+			_action2 = action;
 			Visit2(element);
 		}
 
@@ -595,6 +596,7 @@ namespace LinqToDB.SqlQuery
 
 							case QueryType.Update :
 								Visit2(q.Update);
+								Visit2(q.Select);
 								break;
 
 							case QueryType.Delete :
