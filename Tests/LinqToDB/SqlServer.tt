@@ -19,7 +19,7 @@
 //	GetSchemaOptions.GetProcedures = false;
 
 	IncludeDefaultSchema = false;
-	GenerateObsoleteAttributeFoAliases = true;
+	GenerateObsoleteAttributeForAliases = true;
 
 	LoadSqlServerMetadata("Data Source=.;Database=Northwind;Integrated Security=SSPI");
 

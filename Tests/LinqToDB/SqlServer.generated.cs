@@ -298,7 +298,7 @@ namespace DataModel
 		/// FK_Employees_Employees
 		/// </summary>
 		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
-		public Employee FK_Employees_Employees { get; set; }
+		public Employee FK_Employees_Employee { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
@@ -316,7 +316,7 @@ namespace DataModel
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
-		public List<Employee> FK_Employees_Employees_BackReference { get; set; }
+		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
 
 		#endregion
 	}
@@ -936,12 +936,13 @@ namespace DataModel
 	{
 		public ITable<AllType>         AllTypes         { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>       AllTypes2        { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<BinaryData>      BinaryDatas      { get { return this.GetTable<BinaryData>(); } }
+		public ITable<BinaryData>      BinaryData       { get { return this.GetTable<BinaryData>(); } }
 		public ITable<Child>           Children         { get { return this.GetTable<Child>(); } }
 		public ITable<DataTypeTest>    DataTypeTests    { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>          Doctors          { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>      GrandChilds      { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>      GrandChildren    { get { return this.GetTable<GrandChild>(); } }
 		public ITable<IndexTable>      IndexTables      { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>     IndexTable2      { get { return this.GetTable<IndexTable2>(); } }
 		public ITable<LinqDataType>    LinqDataTypes    { get { return this.GetTable<LinqDataType>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -1133,6 +1134,33 @@ namespace DataModel
 		[PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
 		[Column,        NotNull] public int UniqueField { get; set; } // int
 		[Column,        NotNull] public int IndexField  { get; set; } // int
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable_BackReference
+		/// </summary>
+		[Association(ThisKey="PKField1, PKField1, PKField2, PKField2, PKField1, PKField2, PKField2, PKField1", OtherKey="PKField1, PKField2, PKField1, PKField2, PKField1, PKField2, PKField1, PKField2", CanBeNull=false)]
+		public List<IndexTable2> Patient2 { get; set; }
+
+		#endregion
+	}
+
+	[Table(Database="TestData", Name="IndexTable2")]
+	public partial class IndexTable2
+	{
+		[PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
+		[PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Patient2_IndexTable
+		/// </summary>
+		[Association(ThisKey="PKField1, PKField2, PKField1, PKField2, PKField1, PKField2, PKField1, PKField2", OtherKey="PKField1, PKField1, PKField2, PKField2, PKField1, PKField2, PKField2, PKField1", CanBeNull=false)]
+		public IndexTable Patient2IndexTable { get; set; }
+
+		#endregion
 	}
 
 	[Table(Database="TestData", Name="LinqDataTypes")]
@@ -1228,50 +1256,6 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
-		#region SelectImplicitColumn
-
-		public partial class SelectImplicitColumnResult
-		{
-			[Column("")] public int Column1 { get; set; }
-		}
-
-		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new SelectImplicitColumnResult
-				{
-					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-				},
-				"[TestData]..[SelectImplicitColumn]");
-		}
-
-		#endregion
-
-		#region DuplicateColumnNames
-
-		public partial class DuplicateColumnNamesResult
-		{
-			               public int    id      { get; set; }
-			[Column("id")] public string Column2 { get; set; }
-		}
-
-		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult
-				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"[TestData]..[DuplicateColumnNames]");
-		}
-
-		#endregion
-
 		#region Person_SelectByKey
 
 		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
@@ -1448,6 +1432,50 @@ namespace DataModel
 			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
 
 			return ret;
+		}
+
+		#endregion
+
+		#region SelectImplicitColumn
+
+		public partial class SelectImplicitColumnResult
+		{
+			[Column("")] public int Column1 { get; set; }
+		}
+
+		public static IEnumerable<SelectImplicitColumnResult> SelectImplicitColumn(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new SelectImplicitColumnResult
+				{
+					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
+				},
+				"[TestData]..[SelectImplicitColumn]");
+		}
+
+		#endregion
+
+		#region DuplicateColumnNames
+
+		public partial class DuplicateColumnNamesResult
+		{
+			               public int    id      { get; set; }
+			[Column("id")] public string Column2 { get; set; }
+		}
+
+		public static IEnumerable<DuplicateColumnNamesResult> DuplicateColumnNames(this DataConnection dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new DuplicateColumnNamesResult
+				{
+					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
+				},
+				"[TestData]..[DuplicateColumnNames]");
 		}
 
 		#endregion
