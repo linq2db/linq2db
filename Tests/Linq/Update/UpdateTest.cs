@@ -545,5 +545,32 @@ namespace Tests.Update
 					Assert.IsFalse(((DataConnection)db).LastQuery.Contains("IS NULL"));
 			}
 		}
+
+		[Test]
+		public void UpdateTop([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i });
+
+					var rowsAffected = db.Parent
+						.Where(p => p.ParentID >= 1000)
+						.Take(5)
+						.Set(p => p.Value1, 1)
+						.Update();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 	}
 }
