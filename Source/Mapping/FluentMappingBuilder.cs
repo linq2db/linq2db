@@ -79,7 +79,7 @@ namespace LinqToDB.Mapping
 
 		public EntityMappingBuilder<T> Entity<T>(string configuration = null)
 		{
-			return new EntityMappingBuilder<T>(this, null);
+			return new EntityMappingBuilder<T>(this, configuration);
 		}
 	}
 }
