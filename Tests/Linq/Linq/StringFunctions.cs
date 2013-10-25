@@ -358,6 +358,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void RightInSelect([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.ID == 1 select Sql.Right(p.FirstName, 3);
+				Assert.AreEqual("ohn", q.ToList().First());
+			}
+		}
+
+		[Test]
 		public void Substring1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))

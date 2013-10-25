@@ -333,15 +333,15 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.SQLite, "LeftStr")]
+		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string Left(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.SQLite, "RightStr")]
+		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
 		public static string Right(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length?
