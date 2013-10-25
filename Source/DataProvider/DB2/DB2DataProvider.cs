@@ -1,6 +1,9 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -11,37 +14,23 @@ namespace LinqToDB.DataProvider.DB2
 
 	public class DB2DataProvider : DynamicDataProviderBase
 	{
-		public DB2DataProvider()
-			: this(ProviderName.DB2, new DB2MappingSchema())
+		public DB2DataProvider(string name, DB2Version version)
+			: base(name, null)
 		{
-		}
+			Version = version;
 
-		protected DB2DataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema)
-		{
 			SqlProviderFlags.AcceptsTakeAsParameter       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
 
-		Type _db2Int64;
-		Type _db2Int32;
-		Type _db2Int16;
-		Type _db2Decimal;
-		Type _db2DecimalFloat;
-		Type _db2Real;
-		Type _db2Real370;
-		Type _db2Double;
-		Type _db2String;
-		Type _db2Clob;
-		Type _db2Binary;
-		Type _db2Blob;
-		Type _db2Date;
-		Type _db2Time;
-		Type _db2TimeStamp;
-		Type _db2Xml;
-		Type _db2RowId;
+		Type _db2Int64;  Type _db2Int32;   Type _db2Int16;  Type _db2Decimal; Type _db2DecimalFloat;
+		Type _db2Real;   Type _db2Real370; Type _db2Double; Type _db2String;  Type _db2Clob;
+		Type _db2Binary; Type _db2Blob;    Type _db2Date;   Type _db2Time;    Type _db2TimeStamp;
+		Type _db2Xml;    Type _db2RowId;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -62,7 +51,6 @@ namespace LinqToDB.DataProvider.DB2
 			_db2TimeStamp    = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
 			_db2Xml          = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
 			_db2RowId        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
-
 
 			SetProviderField(_db2Int64,        typeof(Int64),    "GetDB2Int64");
 			SetProviderField(_db2Int32,        typeof(Int32),    "GetDB2Int32");
@@ -113,14 +101,45 @@ namespace LinqToDB.DataProvider.DB2
 		protected override string ConnectionTypeName  { get { return "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.DB2.DB2DataReader, IBM.Data.DB2"; } }
 
-		public override ISqlProvider CreateSqlProvider()
+		public DB2Version Version { get; private set; }
+
+		static class MappingSchemaInstance
 		{
-			return new DB2SqlProvider(SqlProviderFlags);
+			public static readonly DB2LUWMappingSchema DB2LUWMappingSchema = new DB2LUWMappingSchema();
+			public static readonly DB2zOSMappingSchema DB2zOSMappingSchema = new DB2zOSMappingSchema();
+		}
+
+		public override MappingSchema MappingSchema
+		{
+			get
+			{
+				switch (Version)
+				{
+					case DB2Version.LUW : return MappingSchemaInstance.DB2LUWMappingSchema;
+					case DB2Version.zOS : return MappingSchemaInstance.DB2zOSMappingSchema;
+				}
+
+				return base.MappingSchema;
+			}
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new DB2SchemaProvider();
+			return Version == DB2Version.zOS ?
+				new DB2zOSSchemaProvider() :
+				new DB2LUWSchemaProvider();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder()
+		{
+			return new DB2SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly DB2SqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override void InitCommand(DataConnection dataConnection)
@@ -185,6 +204,245 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			base.SetParameter(parameter, "@" + name, dataType, value);
+		}
+
+		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
+		static Func<int,string,object>         _columnMappingCreator;
+
+		public override int BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection  dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T>  source)
+		{
+			if (options.BulkCopyType == BulkCopyType.RowByRow)
+				return base.BulkCopy(dataConnection, options, source);
+
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				.ToString();
+
+			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
+			{
+				if (_bulkCopyCreator == null)
+				{
+					var connType          = GetConnectionType();
+					var bulkCopyType      = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
+					var columnMappingType = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
+
+					if (bulkCopyType != null)
+					{
+						{
+							var p = Expression.Parameter(typeof(IDbConnection), "p");
+							var l = Expression.Lambda<Func<IDbConnection,IDisposable>>(
+								Expression.Convert(
+									Expression.New(
+										bulkCopyType.GetConstructor(new[] { connType }),
+										Expression.Convert(p, connType)),
+									typeof(IDisposable)),
+								p);
+
+							_bulkCopyCreator = l.Compile();
+						}
+						{
+							var p1 = Expression.Parameter(typeof(int),    "p1");
+							var p2 = Expression.Parameter(typeof(string), "p2");
+							var l  = Expression.Lambda<Func<int,string,object>>(
+								Expression.Convert(
+									Expression.New(
+										columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
+										new [] { p1, p2 }),
+									typeof(object)),
+								p1, p2);
+
+							_columnMappingCreator = l.Compile();
+						}
+					}
+				}
+
+				if (_bulkCopyCreator != null)
+				{
+					var rd = new BulkCopyReader(descriptor, source);
+
+					using (var bc = _bulkCopyCreator(dataConnection.Connection))
+					{
+						dynamic dbc = bc;
+
+						if (options.BulkCopyTimeout.HasValue)
+							dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+
+						dbc.DestinationTableName = tableName;
+
+						for (var i = 0; i < rd.Columns.Length; i++)
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, rd.Columns[i].ColumnName));
+
+						dbc.WriteToServer(rd);
+					}
+
+					return rd.Count;
+				}
+			}
+
+			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
+		}
+
+		int MultipleRowsBulkCopy<T>(
+			DataConnection   dataConnection,
+			BulkCopyOptions  options,
+			IEnumerable<T>   source,
+			BasicSqlBuilder  sqlBuilder,
+			EntityDescriptor descriptor,
+			string           tableName)
+		{
+			var iszOS = Version == DB2Version.zOS;
+
+			{
+				var sb = new StringBuilder();
+				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
+				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+
+				sb
+					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
+					.Append("(");
+
+				foreach (var column in columns)
+					sb
+						.AppendLine()
+						.Append("\t")
+						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+						.Append(",");
+
+				sb.Length--;
+				sb
+					.AppendLine()
+					.Append(")");
+
+				if (!iszOS)
+					sb
+						.AppendLine()
+						.Append("VALUES");
+
+				var headerLen = sb.Length;
+				var totalCount = 0;
+				var currentCount = 0;
+				var batchSize = options.MaxBatchSize ?? 1000;
+
+				if (batchSize <= 0)
+					batchSize = 1000;
+
+				var parms = new List<DataParameter>();
+				var pidx = 0;
+
+				foreach (var item in source)
+				{
+					sb
+						.AppendLine()
+						.Append(iszOS ? "SELECT " : "(");
+
+					foreach (var column in columns)
+					{
+						var value = column.GetValue(item);
+
+						if (value == null)
+						{
+							sb.Append("NULL");
+						}
+						else
+							switch (Type.GetTypeCode(value.GetType()))
+							{
+								case TypeCode.DBNull:
+									sb.Append("NULL");
+									break;
+								case TypeCode.String:
+									var isString = false;
+
+									switch (column.DataType)
+									{
+										case DataType.NVarChar:
+										case DataType.Char:
+										case DataType.VarChar:
+										case DataType.NChar:
+											isString = true;
+											break;
+									}
+
+									if (isString) goto case TypeCode.Int32;
+									goto default;
+
+								case TypeCode.Boolean:
+								case TypeCode.Char:
+								case TypeCode.SByte:
+								case TypeCode.Byte:
+								case TypeCode.Int16:
+								case TypeCode.UInt16:
+								case TypeCode.Int32:
+								case TypeCode.UInt32:
+								case TypeCode.Int64:
+								case TypeCode.UInt64:
+								case TypeCode.Single:
+								case TypeCode.Double:
+								case TypeCode.Decimal:
+								case TypeCode.DateTime:
+									//SetParameter(dataParam, "", column.DataType, value);
+
+									buildValue(value);
+									break;
+
+								default:
+									var name = pname + ++pidx;
+
+									sb.Append(name);
+									parms.Add(new DataParameter("p" + pidx, value, column.DataType));
+
+									break;
+							}
+
+						sb.Append(",");
+					}
+
+					sb.Length--;
+					sb.Append(iszOS ? " FROM SYSIBM.SYSDUMMY1 UNION ALL" : "),");
+
+					totalCount++;
+					currentCount++;
+
+					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
+					{
+						if (iszOS)
+							sb.Length -= " UNION ALL".Length;
+						else
+							sb.Length--;
+
+						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
+
+						parms.Clear();
+						pidx = 0;
+						currentCount = 0;
+						sb.Length = headerLen;
+					}
+				}
+
+				if (currentCount > 0)
+				{
+					if (iszOS)
+						sb.Length -= " UNION ALL".Length;
+					else
+						sb.Length--;
+
+					dataConnection.Execute(sb.ToString(), parms.ToArray());
+					sb.Length = headerLen;
+				}
+
+				return totalCount;
+			}
 		}
 	}
 }

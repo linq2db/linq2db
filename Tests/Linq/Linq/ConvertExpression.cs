@@ -518,8 +518,8 @@ namespace Tests.Linq
 					}
 					,
 					from p in db.Parent
-					let ch1 = db.Child.FirstOrDefault(c => c.ParentID > 0)
-					let ch2 = Child.Where(c => c.ChildID > -100)
+					let ch1 = db.Child.OrderBy(c => c.ParentID).FirstOrDefault(c => c.ParentID > 0)
+					let ch2 = db.Child.Where(c => c.ChildID > -100)
 					select new
 					{
 						First1 = ch1 == null ? 0 : ch1.ParentID,

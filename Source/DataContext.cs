@@ -80,9 +80,14 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
-			get { return DataProvider.CreateSqlProvider; }
+			get { return DataProvider.CreateSqlBuilder; }
+		}
+
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
+		{
+			get { return DataProvider.GetSqlOptimizer; }
 		}
 
 		Type IDataContext.DataReaderType

@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class JoinBuilder : MethodCallBuilder
 	{
@@ -38,16 +38,16 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var isGroup      = methodCall.Method.Name == "GroupJoin";
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SqlQuery));
-			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SqlQuery()));
-			var countContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SqlQuery()));
+			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
+			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var countContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext, methodCall) : new SubQueryContext(innerContext);
 			countContext = new SubQueryContext(countContext);
 
-			var join = isGroup ? innerContext.SqlQuery.WeakLeftJoin() : innerContext.SqlQuery.InnerJoin();
-			var sql  = context.SqlQuery;
+			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
+			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
 
@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Process counter.
 			//
-			var counterSql = ((SubQueryContext)countContext).SqlQuery;
+			var counterSql = ((SubQueryContext)countContext).SelectQuery;
 
 			// Make join and where for the counter.
 			//
@@ -116,13 +116,13 @@ namespace LinqToDB.Linq.Builder
 
 			if (isGroup)
 			{
-				counterSql.ParentSql = sql;
+				counterSql.ParentSelect = sql;
 				counterSql.Select.Columns.Clear();
 
 				var inner = (GroupJoinSubQueryContext)innerContext;
 
 				inner.Join       = join.JoinedTable;
-				inner.CounterSql = counterSql;
+				inner.CounterSelect = counterSql;
 				return new GroupJoinContext(
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
 			}
@@ -143,11 +143,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		static void BuildJoin(
-			ExpressionBuilder        builder,
-			SqlQuery.FromClause.Join join,
-			IBuildContext outerKeyContext, Expression outerKeySelector,
-			IBuildContext innerKeyContext, Expression innerKeySelector,
-			IBuildContext countKeyContext, SqlQuery countSql)
+			ExpressionBuilder           builder,
+			SelectQuery.FromClause.Join join,
+			IBuildContext outerKeyContext, Expression  outerKeySelector,
+			IBuildContext innerKeyContext, Expression  innerKeySelector,
+			IBuildContext countKeyContext, SelectQuery countSelect)
 		{
 			var predicate = builder.ConvertObjectComparison(
 				ExpressionType.Equal,
@@ -155,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 				innerKeyContext, innerKeySelector);
 
 			if (predicate != null)
-				join.JoinedTable.Condition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+				join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 			else
 				join
 					.Expr(builder.ConvertToSql(outerKeyContext, outerKeySelector)).Equal
@@ -167,9 +167,9 @@ namespace LinqToDB.Linq.Builder
 				countKeyContext, innerKeySelector);
 
 			if (predicate != null)
-				countSql.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+				countSelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 			else
-				countSql.Where
+				countSelect.Where
 					.Expr(builder.ConvertToSql(outerKeyContext, outerKeySelector)).Equal
 					.Expr(builder.ConvertToSql(countKeyContext, innerKeySelector));
 		}
@@ -187,13 +187,12 @@ namespace LinqToDB.Linq.Builder
 					.ConvertToSql(expression, level, flags)
 					.Select(idx =>
 					{
-						var n = SqlQuery.Select.Add(idx.Sql);
+						var n = SelectQuery.Select.Add(idx.Sql);
 
-						return new SqlInfo
+						return new SqlInfo(idx.Members)
 						{
-							Sql    = SqlQuery.Select.Columns[n],
-							Member = idx.Member,
-							Index  = n
+							Sql   = SelectQuery.Select.Columns[n],
+							Index = n
 						};
 					})
 					.ToArray();
@@ -340,9 +339,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			readonly MethodCallExpression _methodCall;
 
-			public SqlQuery.JoinedTable Join;
-			public SqlQuery             CounterSql;
-			public GroupJoinContext     GroupJoin;
+			public SelectQuery.JoinedTable Join;
+			public SelectQuery             CounterSelect;
+			public GroupJoinContext        GroupJoin;
 
 			public GroupJoinSubQueryContext(IBuildContext subQuery, MethodCallExpression methodCall)
 				: base(subQuery)
@@ -368,9 +367,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						new SqlInfo
 						{
-							Query = CounterSql.ParentSql,
-							Index = CounterSql.ParentSql.Select.Add(CounterSql),
-							Sql   = CounterSql
+							Query = CounterSelect.ParentSelect,
+							Index = CounterSelect.ParentSelect.Select.Add(CounterSelect),
+							Sql   = CounterSelect
 						}
 					});
 
@@ -385,13 +384,13 @@ namespace LinqToDB.Linq.Builder
 				return base.IsExpression(expression, level, testFlag);
 			}
 
-			public SqlQuery GetCounter(Expression expr)
+			public SelectQuery GetCounter(Expression expr)
 			{
 				Join.IsWeak = true;
 
 				_counterExpression = expr;
 
-				return CounterSql;
+				return CounterSelect;
 			}
 		}
 	}

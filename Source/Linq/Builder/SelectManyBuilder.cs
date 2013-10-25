@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class SelectManyBuilder : MethodCallBuilder
 	{
@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			if (!sequence.SqlQuery.GroupBy.IsEmpty)
+			if (!sequence.SelectQuery.GroupBy.IsEmpty)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
@@ -31,29 +31,29 @@ namespace LinqToDB.Linq.Builder
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			var expr           = collectionSelector.Body.Unwrap();
 
-			var collectionInfo = new BuildInfo(context, expr, new SqlQuery());
+			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
 			var collection     = builder.BuildSequence(collectionInfo);
 			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
-			var sql            = collection.SqlQuery;
+			var sql            = collection.SelectQuery;
 
-			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SqlQuery.From.Tables[0].GetTables());
-			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SqlQuery);
+			var sequenceTables = new HashSet<ISqlTableSource>(sequence.SelectQuery.From.Tables[0].GetTables());
+			var newQuery       = null != new QueryVisitor().Find(sql, e => e == collectionInfo.SelectQuery);
 			var crossApply     = null != new QueryVisitor().Find(sql, e =>
 				e.ElementType == QueryElementType.TableSource && sequenceTables.Contains((ISqlTableSource)e)  ||
 				e.ElementType == QueryElementType.SqlField    && sequenceTables.Contains(((SqlField)e).Table) ||
-				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SqlQuery.Column)e).Parent));
+				e.ElementType == QueryElementType.Column      && sequenceTables.Contains(((SelectQuery.Column)e).Parent));
 
 			if (collection is JoinBuilder.GroupJoinSubQueryContext)
 			{
 				var groupJoin = ((JoinBuilder.GroupJoinSubQueryContext)collection).GroupJoin;
 
-				groupJoin.SqlQuery.From.Tables[0].Joins[0].JoinType = SqlQuery.JoinType.Inner;
-				groupJoin.SqlQuery.From.Tables[0].Joins[0].IsWeak   = false;
+				groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = SelectQuery.JoinType.Inner;
+				groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;
 			}
 
 			if (!newQuery)
 			{
-				context.Collection = new SubQueryContext(collection, sequence.SqlQuery, false);
+				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
 
@@ -61,14 +61,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!leftJoin)
 				{
-					context.Collection = new SubQueryContext(collection, sequence.SqlQuery, true);
+					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, true);
 					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 				}
 				else
 				{
-					var join = SqlQuery.OuterApply(sql);
-					sequence.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					context.Collection = new SubQueryContext(collection, sequence.SqlQuery, false);
+					var join = SelectQuery.OuterApply(sql);
+					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 
 					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 				}
@@ -79,8 +79,8 @@ namespace LinqToDB.Linq.Builder
 				var table = (TableBuilder.TableContext)collection;
 
 				var join = table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ?
-					(leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql)) :
-					(leftJoin ? SqlQuery.LeftJoin  (sql) : SqlQuery.InnerJoin (sql));
+					(leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql)) :
+					(leftJoin ? SelectQuery.LeftJoin  (sql) : SelectQuery.InnerJoin (sql));
 
 				join.JoinedTable.Condition.Conditions.AddRange(sql.Where.SearchCondition.Conditions);
 				join.JoinedTable.CanConvertApply = false;
@@ -93,11 +93,11 @@ namespace LinqToDB.Linq.Builder
 				//
 				if (collectionParent != null && collectionInfo.IsAssociationBuilt)
 				{
-					var ts = (SqlQuery.TableSource)new QueryVisitor().Find(sequence.SqlQuery.From, e =>
+					var ts = (SelectQuery.TableSource)new QueryVisitor().Find(sequence.SelectQuery.From, e =>
 					{
 						if (e.ElementType == QueryElementType.TableSource)
 						{
-							var t = (SqlQuery.TableSource)e;
+							var t = (SelectQuery.TableSource)e;
 							return t.Source == collectionParent.SqlTable;
 						}
 
@@ -108,18 +108,18 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					sequence.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
 
-				context.Collection = new SubQueryContext(collection, sequence.SqlQuery, false);
+				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
 			else
 			{
-				var join = leftJoin ? SqlQuery.OuterApply(sql) : SqlQuery.CrossApply(sql);
-				sequence.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				var join = leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql);
+				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-				context.Collection = new SubQueryContext(collection, sequence.SqlQuery, false);
+				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
 		}
@@ -184,16 +184,6 @@ namespace LinqToDB.Linq.Builder
 
 				return base.ConvertToIndex(expression, level, flags);
 			}
-
-			/*
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				if (Collection == null)
-					return base.ConvertToParentIndex(index, context);
-
-				throw new NotImplementedException();
-			}
-			*/
 
 			public override SqlInfo[] ConvertToSql(Expression expression, int level, ConvertFlags flags)
 			{

@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected MySqlDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return "MySql.Data.MySqlClient"; } }
@@ -47,14 +48,21 @@ namespace LinqToDB.DataProvider.MySql
 			MappingSchema.SetDataType(_mySqlDateTimeType, DataType.DateTime2);
 		}
 
-		public override ISqlProvider CreateSqlProvider()
-		{
-			return new MySqlSqlProvider(SqlProviderFlags);
-		}
-
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder()
+		{
+			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)

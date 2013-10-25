@@ -17,9 +17,14 @@ namespace LinqToDB.Linq
 		public SqlProviderFlags  SqlProviderFlags { get { return _dataProvider.SqlProviderFlags; } }
 		public string            ContextID        { get { return _dataProvider.Name;    } }
 
-		public ISqlProvider CreateSqlProvider()
+		public ISqlBuilder CreateSqlBuilder()
 		{
-			return _dataProvider.CreateSqlProvider();
+			return _dataProvider.CreateSqlBuilder();
+		}
+
+		public ISqlOptimizer GetSqlOptimizer()
+		{
+			return _dataProvider.GetSqlOptimizer();
 		}
 
 		public IDataContextInfo Clone(bool forNestedQuery)

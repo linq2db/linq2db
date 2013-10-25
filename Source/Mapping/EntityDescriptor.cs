@@ -8,6 +8,8 @@ namespace LinqToDB.Mapping
 	using Linq;
 	using Reflection;
 
+	using SqlQuery;
+
 	public class EntityDescriptor
 	{
 		public EntityDescriptor(MappingSchema mappingSchema, Type type)
@@ -31,6 +33,7 @@ namespace LinqToDB.Mapping
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
 		public List<InheritanceMapping>    InheritanceMapping        { get; private set; }
+		public Dictionary<string,string>   Aliases                   { get; private set; }
 
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
@@ -38,19 +41,20 @@ namespace LinqToDB.Mapping
 		{
 			var ta = _mappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
 
-			if (ta == null)
-			{
-				TableName = TypeAccessor.Type.Name;
-
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
-					TableName = TableName.Substring(1);
-			}
-			else
+			if (ta != null)
 			{
 				TableName                 = ta.Name;
 				SchemaName                = ta.Schema;
 				DatabaseName              = ta.Database;
 				IsColumnAttributeRequired = ta.IsColumnAttributeRequired;
+			}
+
+			if (TableName == null)
+			{
+				TableName = TypeAccessor.Type.Name;
+
+				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+					TableName = TableName.Substring(1);
 			}
 
 			var attrs = new List<ColumnAttribute>();
@@ -86,12 +90,24 @@ namespace LinqToDB.Mapping
 				}
 				else if (
 					!IsColumnAttributeRequired && _mappingSchema.IsScalarType(member.Type) ||
-					_mappingSchema.GetAttribute<IdentityAttribute>  (member.MemberInfo, attr => attr.Configuration) != null ||
+					_mappingSchema.GetAttribute<IdentityAttribute>(member.MemberInfo, attr => attr.Configuration) != null ||
 					_mappingSchema.GetAttribute<PrimaryKeyAttribute>(member.MemberInfo, attr => attr.Configuration) != null)
 				{
 					var cd = new ColumnDescriptor(_mappingSchema, new ColumnAttribute(), member);
 					Columns.Add(cd);
 					_columnNames.Add(member.Name, cd);
+				}
+				else
+				{
+					var caa = _mappingSchema.GetAttribute<ColumnAliasAttribute>(member.MemberInfo, attr => attr.Configuration);
+
+					if (caa != null)
+					{
+						if (Aliases == null)
+							Aliases = new Dictionary<string,string>();
+
+						Aliases.Add(member.Name, caa.MemberName);
+					}
 				}
 			}
 
@@ -119,8 +135,11 @@ namespace LinqToDB.Mapping
 			{
 				var cd = new ColumnDescriptor(_mappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName));
 
-				Columns.Add(cd);
-				_columnNames.Add(attr.MemberName, cd);
+				if (!string.IsNullOrWhiteSpace(attr.MemberName))
+				{
+					Columns.Add(cd);
+					_columnNames.Add(attr.MemberName, cd);
+				}
 			}
 		}
 
@@ -131,7 +150,15 @@ namespace LinqToDB.Mapping
 			get
 			{
 				ColumnDescriptor cd;
-				_columnNames.TryGetValue(memberName, out cd);
+
+				if (!_columnNames.TryGetValue(memberName, out cd))
+				{
+					string alias;
+
+					if (Aliases != null && Aliases.TryGetValue(memberName, out alias) && memberName != alias)
+						return this[alias];
+				}
+
 				return cd;
 			}
 		}

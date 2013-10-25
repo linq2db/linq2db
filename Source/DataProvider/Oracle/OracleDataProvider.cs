@@ -20,10 +20,15 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsCountSubQuerySupported    = false;
+			SqlProviderFlags.IsIdentityParameterRequired = true;
+
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 		}
 
 		Type _oracleBFile;
@@ -45,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var typesNamespace = OracleFactory.AssemblyName + ".Types.";
+			var typesNamespace = OracleTools.AssemblyName + ".Types.";
 
 			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
 			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
@@ -183,7 +188,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.PropertyOrField(p, "Command"),
-									connectionType.Assembly.GetType(OracleFactory.AssemblyName + ".Client.OracleCommand", true)),
+									connectionType.Assembly.GetType(OracleTools.AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
 							p
@@ -258,21 +263,35 @@ namespace LinqToDB.DataProvider.Oracle
 		static object GetNullValue(Type type)
 		{
 			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-			return getValue.Compile()();
+			try
+			{
+				return getValue.Compile()();
+			}
+			catch (Exception)
+			{
+				return getValue.Compile()();
+			}
 		}
 
-		public    override string ConnectionNamespace { get { return OracleFactory.AssemblyName + ".Client"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleDataReader"); } }
+		public    override string ConnectionNamespace { get { return OracleTools.AssemblyName + ".Client"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleDataReader"); } }
 
 		public bool IsXmlTypeSupported
 		{
 			get { return _oracleXmlType != null; }
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlProvider(SqlProviderFlags);
+			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

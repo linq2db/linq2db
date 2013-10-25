@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Common
 {
@@ -12,7 +13,7 @@ namespace LinqToDB.Common
 
 	static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int)));
+		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int), Thread.CurrentThread.CurrentCulture));
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
@@ -112,15 +113,23 @@ namespace LinqToDB.Common
 		{
 			if (from == typeof(string) && to.IsEnum)
 			{
+#if SL4
+				return
+					Expression.Call(
+						MemberHelper.MethodOf(() => Enum.Parse(to, "", true)),
+						Expression.Constant(to),
+						p,
+						Expression.Constant(true));
+#else
 				var values = Enum.GetValues(to);
-				var names  = Enum.GetNames(to);
+				var names  = Enum.GetNames (to);
 
 				var dic = new Dictionary<string,object>();
 
 				for (var i = 0; i < values.Length; i++)
 				{
 					var val = values.GetValue(i);
-					var lv  = (long)Convert.ChangeType(val, typeof(long));
+					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture);
 
 					dic[lv.ToString()] = val;
 
@@ -143,11 +152,15 @@ namespace LinqToDB.Common
 				var expr = Expression.Switch(
 					p,
 					Expression.Convert(
-						Expression.Call(_defaultConverter, Expression.Convert(p, typeof(string)), Expression.Constant(to)),
+						Expression.Call(_defaultConverter,
+							Expression.Convert(p, typeof(string)),
+							Expression.Constant(to),
+							Expression.Constant(Thread.CurrentThread.CurrentCulture)),
 						to),
 					cases.ToArray());
 
 				return expr;
+#endif
 			}
 
 			return null;
@@ -213,13 +226,16 @@ namespace LinqToDB.Common
 					var expr = Expression.Switch(
 						expression,
 						Expression.Convert(
-							Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+							Expression.Call(_defaultConverter,
+								Expression.Convert(expression, typeof(object)),
+								Expression.Constant(to),
+								Expression.Constant(Thread.CurrentThread.CurrentCulture)),
 							to),
 						cases
 							.Select(f =>
 								Expression.SwitchCase(
 									Expression.Constant(f.value),
-									f.attrs.Select(a => Expression.Constant(a, @from))))
+									(IEnumerable<Expression>)f.attrs.Select(a => Expression.Constant(a, @from))))
 							.ToArray());
 
 					return expr;
@@ -276,12 +292,15 @@ namespace LinqToDB.Common
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
 							Expression.Constant(f.Attrs.Value ?? mappingSchema.GetDefaultValue(to), to),
-							Expression.Constant(Enum.Parse(@from, f.Field.Name))));
+							Expression.Constant(Enum.Parse(@from, f.Field.Name, false))));
 
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+								Expression.Call(_defaultConverter,
+									Expression.Convert(expression, typeof(object)),
+									Expression.Constant(to),
+									Expression.Constant(Thread.CurrentThread.CurrentCulture)),
 								to),
 							cases.ToArray());
 
@@ -368,13 +387,16 @@ namespace LinqToDB.Common
 					if (dic.Count > 0)
 					{
 						var cases = dic.Select(f => Expression.SwitchCase(
-							Expression.Constant(Enum.Parse(@to,   f.Key.  Field.Name)),
-							Expression.Constant(Enum.Parse(@from, f.Value.Field.Name))));
+							Expression.Constant(Enum.Parse(@to,   f.Key.  Field.Name, false)),
+							Expression.Constant(Enum.Parse(@from, f.Value.Field.Name, false))));
 
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter, Expression.Convert(expression, typeof(object)), Expression.Constant(to)),
+								Expression.Call(_defaultConverter,
+									Expression.Convert(expression, typeof(object)), 
+									Expression.Constant(to),
+									Expression.Constant(Thread.CurrentThread.CurrentCulture)),
 								to),
 							cases.ToArray());
 
@@ -494,7 +516,10 @@ namespace LinqToDB.Common
 			{
 				var uto = to.ToNullableUnderlying();
 
-				var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(uto)) as Expression;
+				var defex = Expression.Call(_defaultConverter,
+					Expression.Convert(p, typeof(object)),
+					Expression.Constant(uto),
+					Expression.Constant(Thread.CurrentThread.CurrentCulture)) as Expression;
 
 				if (defex.Type != uto)
 					defex = Expression.Convert(defex, uto);
@@ -505,7 +530,10 @@ namespace LinqToDB.Common
 			}
 			else
 			{
-				var defex = Expression.Call(_defaultConverter, Expression.Convert(p, typeof(object)), Expression.Constant(to)) as Expression;
+				var defex = Expression.Call(_defaultConverter,
+					Expression.Convert(p, typeof(object)),
+					Expression.Constant(to),
+					Expression.Constant(Thread.CurrentThread.CurrentCulture)) as Expression;
 
 				if (defex.Type != to)
 					defex = Expression.Convert(defex, to);

@@ -160,7 +160,6 @@ namespace Tests.DataProvider
 				TestNumeric(conn, byte.MaxValue,    DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,  DataType.UInt16,     "smallint");
 				TestNumeric(conn, uint.MaxValue,    DataType.UInt32,     "smallint int float real");
-				//TestNumeric(conn, ulong.MaxValue,   DataType.UInt64, "bigint");
 
 				TestNumeric(conn, -3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");
 				TestNumeric(conn,  3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");

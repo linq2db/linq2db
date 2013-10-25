@@ -3,17 +3,17 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	abstract class SequenceContextBase : IBuildContext
 	{
 		protected SequenceContextBase(IBuildContext parent, IBuildContext sequence, LambdaExpression lambda)
 		{
-			Parent   = parent;
-			Sequence = sequence;
-			Builder  = sequence.Builder;
-			Lambda   = lambda;
-			SqlQuery = sequence.SqlQuery;
+			Parent      = parent;
+			Sequence    = sequence;
+			Builder     = sequence.Builder;
+			Lambda      = lambda;
+			SelectQuery = sequence.SelectQuery;
 
 			Sequence.Parent = this;
 
@@ -21,14 +21,14 @@ namespace LinqToDB.Linq.Builder
 		}
 
 #if DEBUG
-		public string _sqlQueryText { get { return SqlQuery == null ? "" : SqlQuery.SqlText; } }
+		public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
 #endif
 
-		public IBuildContext     Parent   { get; set; }
-		public IBuildContext     Sequence { get; set; }
-		public ExpressionBuilder Builder  { get; set; }
-		public LambdaExpression  Lambda   { get; set; }
-		public SqlQuery          SqlQuery { get; set; }
+		public IBuildContext     Parent      { get; set; }
+		public IBuildContext     Sequence    { get; set; }
+		public ExpressionBuilder Builder     { get; set; }
+		public LambdaExpression  Lambda      { get; set; }
+		public SelectQuery       SelectQuery { get; set; }
 
 		Expression IBuildContext.Expression { get { return Lambda; } }
 

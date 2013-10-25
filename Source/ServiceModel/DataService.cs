@@ -10,7 +10,7 @@ namespace LinqToDB.ServiceModel
 	using Extensions;
 	using Linq;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext

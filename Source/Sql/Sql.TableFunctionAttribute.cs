@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace LinqToDB
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	partial class Sql
 	{

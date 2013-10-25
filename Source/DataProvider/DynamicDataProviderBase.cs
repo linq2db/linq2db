@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 
 		volatile Type _connectionType;
 
-		private Type GetConnectionType()
+		protected Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (_sync)
@@ -55,15 +55,21 @@ namespace LinqToDB.DataProvider
 		{
 			if (_createConnection == null)
 			{
-				var p = Expression.Parameter(typeof(string));
-				var l = Expression.Lambda<Func<string,IDbConnection>>(
-					Expression.New(GetConnectionType().GetConstructor(new[] { typeof(string) }), p),
-					p);
-
+				var l = CreateConnectionExpression(GetConnectionType());
 				_createConnection = l.Compile();
 			}
 
 			return _createConnection(connectionString);
+		}
+
+		internal static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
+		{
+			var p = Expression.Parameter(typeof(string));
+			var l = Expression.Lambda<Func<string,IDbConnection>>(
+				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
+				p);
+
+			return l;
 		}
 
 		#region Expression Helpers

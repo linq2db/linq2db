@@ -6,11 +6,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		public static string[] MethodNames = { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -109,14 +109,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null)
 				{
-					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported && Parent.SqlQuery.GroupBy.IsEmpty)
+					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported && Parent.SelectQuery.GroupBy.IsEmpty)
 					{
-						var join = SqlQuery.OuterApply(SqlQuery);
+						var join = SelectQuery.OuterApply(SelectQuery);
 
-						Parent.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 						var expr = Sequence.BuildExpression(expression, level);
-						var idx  = SqlQuery.Select.Add(new SqlValue(1));
+						var idx  = SelectQuery.Select.Add(new SqlValue(1));
 
 						idx = ConvertToParentIndex(idx, this);
 
@@ -145,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 					if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						return Builder.BuildMultipleQuery(Parent, _methodCall);
 
-					return Builder.BuildSql(_methodCall.Type, Parent.SqlQuery.Select.Add(SqlQuery));
+					return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 				}
 
 				throw new NotImplementedException();

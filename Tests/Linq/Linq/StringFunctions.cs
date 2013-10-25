@@ -45,6 +45,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ContainsConstant3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var arr = new[] { "oh", "oh'", "oh\\" };
+
+				var q = from p in db.Person where  arr.Contains(p.FirstName) select p;
+				Assert.AreEqual(0, q.Count());
+			}
+		}
+
+		[Test]
 		public void ContainsParameter1([DataContexts] string context)
 		{
 			var str = "oh";
@@ -342,6 +354,16 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where Sql.Right(p.FirstName, 3) == "ohn" && p.ID == 1 select p;
 				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test]
+		public void RightInSelect([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.ID == 1 select Sql.Right(p.FirstName, 3);
+				Assert.AreEqual("ohn", q.ToList().First());
 			}
 		}
 

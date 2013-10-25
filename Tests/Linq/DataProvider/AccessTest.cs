@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Access;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -309,6 +311,14 @@ namespace Tests.DataProvider
 				Assert.That(conn.Query<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
 				Assert.That(conn.Query<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }).First(), Is.EqualTo("A"));
 			}
+		}
+
+		[Test]
+		public void CreateDatabase([IncludeDataContexts(ProviderName.Access)] string context)
+		{
+			AccessTools.CreateDatabase("TestDatabase", deleteIfExists:true);
+			Assert.IsTrue(File.Exists("TestDatabase.mdb"));
+			AccessTools.DropDatabase  ("TestDatabase");
 		}
 	}
 }

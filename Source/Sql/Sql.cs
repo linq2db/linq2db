@@ -14,7 +14,7 @@ namespace LinqToDB
 	using LinqToDB.Common;
 	using Extensions;
 	using Linq;
-	using SqlBuilder;
+	using SqlQuery;
 
 	public static partial class Sql
 	{
@@ -29,10 +29,26 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0)]
+		public static T? AsNullable<T>(T value)
+			where T : struct
+		{
+			return value;
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0)]
 		public static T ConvertNullable<T>(T? value)
 			where T : struct
 		{
-			return value.Value;
+			return value ?? default(T);
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0)]
+		public static T AsNotNull<T>(T? value)
+			where T : struct
+		{
+			return value ?? default(T);
 		}
 
 		#endregion
@@ -317,15 +333,15 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.SQLite, "LeftStr")]
+		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(PN.SQLite, "LeftStr", PreferServerSide = true)]
 		public static string Left(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length? null: str.Substring(1, length.Value);
 		}
 
-		[Sql.Function]
-		[Sql.Function(PN.SQLite, "RightStr")]
+		[Sql.Function(PreferServerSide = true)]
+		[Sql.Function(PN.SQLite, "RightStr", PreferServerSide = true)]
 		public static string Right(string str, int? length)
 		{
 			return length == null || str == null || str.Length < length?
@@ -530,17 +546,17 @@ namespace LinqToDB
 		class DatePartAttribute : Sql.ExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, false, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, false, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlBuilder.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
 			{
 			}
 

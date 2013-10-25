@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class SybaseDataProvider : DynamicDataProviderBase
@@ -32,9 +33,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			_sqlOptimizer = new SybaseSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return SybaseFactory.AssemblyName; } }
+		public    override string ConnectionNamespace { get { return SybaseTools.AssemblyName; } }
 		protected override string ConnectionTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseConnection"); } }
 		protected override string DataReaderTypeName  { get { return "{1}, {0}".Args(ConnectionNamespace, "Sybase.Data.AseClient.AseDataReader"); } }
 
@@ -85,12 +88,19 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region Overrides
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlProvider(SqlProviderFlags);
+			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SybaseSchemaProvider();
 		}

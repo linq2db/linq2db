@@ -8,11 +8,13 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
+	using System.Diagnostics;
+
 	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 	using SqlProvider;
 
 	public partial class DataConnection : IDataContext
@@ -40,8 +42,8 @@ namespace LinqToDB.Data
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
 			public IDbDataParameter[] Parameters;
-			public SqlQuery           SqlQuery;
-			public ISqlProvider       SqlProvider;
+			public SelectQuery           SelectQuery;
+			public ISqlBuilder       SqlProvider;
 		}
 
 		#region SetQuery
@@ -53,12 +55,12 @@ namespace LinqToDB.Data
 				return new PreparedQuery
 				{
 					Commands      = (string[])query.Context,
-					SqlParameters = query.SqlQuery.Parameters,
-					SqlQuery      = query.SqlQuery
+					SqlParameters = query.SelectQuery.Parameters,
+					SelectQuery   = query.SelectQuery
 				 };
 			}
 
-			var sql    = query.SqlQuery.ProcessParameters();
+			var sql    = query.SelectQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
 			if (!object.ReferenceEquals(sql, newSql))
@@ -67,7 +69,7 @@ namespace LinqToDB.Data
 				sql.IsParameterDependent = true;
 			}
 
-			var sqlProvider = DataProvider.CreateSqlProvider();
+			var sqlProvider = DataProvider.CreateSqlBuilder();
 
 			var cc = sqlProvider.CommandCount(sql);
 			var sb = new StringBuilder();
@@ -78,25 +80,25 @@ namespace LinqToDB.Data
 			{
 				sb.Length = 0;
 
-				sqlProvider.BuildSql(i, sql, sb, 0, 0, false);
+				sqlProvider.BuildSql(i, sql, sb);
 				commands[i] = sb.ToString();
 			}
 
-			if (!query.SqlQuery.IsParameterDependent)
+			if (!query.SelectQuery.IsParameterDependent)
 				query.Context = commands;
 
 			return new PreparedQuery
 			{
 				Commands      = commands,
 				SqlParameters = sql.Parameters,
-				SqlQuery      = sql,
+				SelectQuery      = sql,
 				SqlProvider   = sqlProvider
 			};
 		}
 
-		protected virtual SqlQuery ProcessQuery(SqlQuery sqlQuery)
+		protected virtual SelectQuery ProcessQuery(SelectQuery selectQuery)
 		{
-			return sqlQuery;
+			return selectQuery;
 		}
 
 		void GetParameters(IQueryContext query, PreparedQuery pq)
@@ -139,42 +141,14 @@ namespace LinqToDB.Data
 		{
 			var p = Command.CreateParameter();
 
-			DataType dataType;
+			var dataType = parm.DataType;
 
-			switch (parm.DbType)
+			if (dataType == DataType.Undefined)
 			{
-				case DbType.AnsiString            : dataType = DataType.VarChar;        break;
-				case DbType.Binary                : dataType = DataType.VarBinary;      break;
-				case DbType.Byte                  : dataType = DataType.Byte;           break;
-				case DbType.Boolean               : dataType = DataType.Boolean;        break;
-				case DbType.Currency              : dataType = DataType.Money;          break;
-				case DbType.Date                  : dataType = DataType.Date;           break;
-				case DbType.DateTime              : dataType = DataType.DateTime;       break;
-				case DbType.Decimal               : dataType = DataType.Decimal;        break;
-				case DbType.Double                : dataType = DataType.Double;         break;
-				case DbType.Guid                  : dataType = DataType.Guid;           break;
-				case DbType.Int16                 : dataType = DataType.Int16;          break;
-				case DbType.Int32                 : dataType = DataType.Int32;          break;
-				case DbType.Int64                 : dataType = DataType.Int64;          break;
-				case DbType.SByte                 : dataType = DataType.SByte;          break;
-				case DbType.Single                : dataType = DataType.Single;         break;
-				case DbType.String                : dataType = DataType.NVarChar;       break;
-				case DbType.Time                  : dataType = DataType.Time;           break;
-				case DbType.UInt16                : dataType = DataType.UInt16;         break;
-				case DbType.UInt32                : dataType = DataType.UInt32;         break;
-				case DbType.UInt64                : dataType = DataType.UInt64;         break;
-				case DbType.VarNumeric            : dataType = DataType.VarNumeric;     break;
-				case DbType.AnsiStringFixedLength : dataType = DataType.Char;           break;
-				case DbType.StringFixedLength     : dataType = DataType.NChar;          break;
-				case DbType.Xml                   : dataType = DataType.Xml;            break;
-				case DbType.DateTime2             : dataType = DataType.DateTime2;      break;
-				case DbType.DateTimeOffset        : dataType = DataType.DateTimeOffset; break;
-				default :
-					dataType = MappingSchema.GetDataType(
-						parm.SystemType == typeof(object) && parm.Value != null ?
-							parm.Value.GetType() :
-							parm.SystemType);
-					break;
+				dataType = MappingSchema.GetDataType(
+					parm.SystemType == typeof(object) && parm.Value != null ?
+						parm.Value.GetType() :
+						parm.SystemType);
 			}
 
 			DataProvider.SetParameter(p, name, dataType, parm.Value);
@@ -190,41 +164,47 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
-
-			if (pq.Parameters != null)
-				foreach (var p in pq.Parameters)
-					Command.Parameters.Add(p);
-
-			if (TraceSwitch.TraceInfo)
+			if (pq.Commands.Length == 1)
 			{
-				var now = DateTime.Now;
-				var n   = Command.ExecuteNonQuery();
+				SetCommand(pq.Commands[0]);
 
-				WriteTraceLine("Execution time: {0}. Records affected: {1}.\r\n".Args(DateTime.Now - now, n), TraceSwitch.DisplayName);
+				if (pq.Parameters != null)
+					foreach (var p in pq.Parameters)
+						Command.Parameters.Add(p);
 
-				return n;
+				return ExecuteNonQuery();
 			}
+			else
+			{
+				for (var i = 0; i < pq.Commands.Length; i++)
+				{
+					SetCommand(pq.Commands[i]);
 
-			return Command.ExecuteNonQuery();
+					if (i == 0 && pq.Parameters != null)
+						foreach (var p in pq.Parameters)
+							Command.Parameters.Add(p);
+
+					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
+					{
+						try
+						{
+							ExecuteNonQuery();
+						}
+						catch (Exception)
+						{
+						}
+					}
+					else
+					{
+						ExecuteNonQuery();
+					}
+				}
+
+				return -1;
+			}
 		}
 
 		object IDataContext.ExecuteScalar(object query)
-		{
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = ExecuteScalarInternal(query);
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return ExecuteScalarInternal(query);
-		}
-
-		object ExecuteScalarInternal(object query)
 		{
 			var pq = (PreparedQuery)query;
 
@@ -238,7 +218,7 @@ namespace LinqToDB.Data
 
 			if (DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 			{
-				var sql = pq.SqlQuery;
+				var sql = pq.SelectQuery;
 
 				if (sql.IsInsert && sql.Insert.WithIdentity)
 				{
@@ -257,19 +237,21 @@ namespace LinqToDB.Data
 			{
 				if (idparam != null)
 				{
-					Command.ExecuteNonQuery(); // так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
-					                           // остальные провайдеры должны поддерживать такой режим
+					// так сделано потому, что фаерберд провайдер не возвращает никаких параметров через ExecuteReader
+					// остальные провайдеры должны поддерживать такой режим
+					ExecuteNonQuery();
+
 					return idparam.Value;
 				}
 
-				return Command.ExecuteScalar();
+				return ExecuteScalar();
 			}
 
-			Command.ExecuteNonQuery();
+			ExecuteNonQuery();
 
 			SetCommand(pq.Commands[1]);
 
-			return Command.ExecuteScalar();
+			return ExecuteScalar();
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
@@ -282,17 +264,7 @@ namespace LinqToDB.Data
 				foreach (var p in pq.Parameters)
 					Command.Parameters.Add(p);
 
-			if (TraceSwitch.TraceInfo)
-			{
-				var now = DateTime.Now;
-				var ret = Command.ExecuteReader();
-
-				WriteTraceLine("Execution time: {0}\r\n".Args(DateTime.Now - now), TraceSwitch.DisplayName);
-
-				return ret;
-			}
-
-			return Command.ExecuteReader();
+			return ExecuteReader();
 		}
 
 		void IDataContext.ReleaseQuery(object query)
@@ -307,7 +279,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlProvider();
+			var sqlProvider = pq.SqlProvider ?? DataProvider.CreateSqlBuilder();
 
 			var sb = new StringBuilder();
 
@@ -365,7 +337,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region IDataContext Members
-
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
 
@@ -385,8 +356,8 @@ namespace LinqToDB.Data
 
 			GetParameters(queryContext, query);
 
-			if (TraceSwitch.TraceInfo)
-				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
+//			if (TraceSwitch.TraceInfo)
+//				WriteTraceLine(((IDataContext)this).GetSqlText(query).Replace("\r", ""), TraceSwitch.DisplayName);
 
 			return query;
 		}
@@ -404,14 +375,24 @@ namespace LinqToDB.Data
 			get { return DataProvider.Name; }
 		}
 
-		static Func<ISqlProvider> GetCreateSqlProvider(IDataProvider dp)
+		static Func<ISqlBuilder> GetCreateSqlProvider(IDataProvider dp)
 		{
-			return dp.CreateSqlProvider;
+			return dp.CreateSqlBuilder;
 		}
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get { return GetCreateSqlProvider(DataProvider); }
+		}
+
+		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
+		{
+			return dp.GetSqlOptimizer;
+		}
+
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
+		{
+			get { return GetGetSqlOptimizer(DataProvider); }
 		}
 
 		#endregion

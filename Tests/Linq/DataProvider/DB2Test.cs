@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class DB2Test : DataProviderTestBase
 	{
@@ -266,16 +268,16 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM SYSIBM.SYSDUMMY1"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM SYSIBM.SYSDUMMY1"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) FROM SYSIBM.SYSDUMMY1"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM SYSIBM.SYSDUMMY1"),     Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM SYSIBM.SYSDUMMY1"),    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) FROM SYSIBM.SYSDUMMY1"),    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(5)) FROM SYSIBM.SYSDUMMY1"),    Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20)) FROM SYSIBM.SYSDUMMY1"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20)) FROM SYSIBM.SYSDUMMY1"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(5)) FROM SYSIBM.SYSDUMMY1"),  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20)) FROM SYSIBM.SYSDUMMY1"), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20)) FROM SYSIBM.SYSDUMMY1"), Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as clob) FROM SYSIBM.SYSDUMMY1"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as clob) FROM SYSIBM.SYSDUMMY1"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as clob) FROM SYSIBM.SYSDUMMY1"),        Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as clob) FROM SYSIBM.SYSDUMMY1"),        Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
@@ -374,6 +376,95 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+			}
+		}
+
+		[Table(Name="ALLTYPES")]
+		public class ALLTYPE
+		{
+			[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
+			[Column,     Nullable] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
+			[Column,     Nullable] public int?      INTDATATYPE       { get; set; } // INTEGER
+			[Column,     Nullable] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
+			[Column,     Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
+			[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT
+			[Column,     Nullable] public float?    REALDATATYPE      { get; set; } // REAL
+			[Column,     Nullable] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
+			[Column,     Nullable] public char      CHARDATATYPE      { get; set; } // CHARACTER
+			[Column,     Nullable] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
+			[Column,     Nullable] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
+			[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
+			[Column,     Nullable] public object    BINARYDATATYPE    { get; set; } // CHARACTER
+			[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
+			[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(10)
+			[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
+			[Column,     Nullable] public DateTime? DATEDATATYPE      { get; set; } // DATE
+			[Column,     Nullable] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
+			[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
+			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
+		}
+
+		[Test]
+		public void BulkCopyTest(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				//conn.BeginTransaction();
+				conn.BulkCopy(new BulkCopyOptions { MaxBatchSize = 50000, BulkCopyType = bulkCopyType },
+					Enumerable.Range(0, 100000).Select(n =>
+						new ALLTYPE
+						{
+							ID                = 2000 + n,
+							BIGINTDATATYPE    = 3000 + n,
+							INTDATATYPE       = 4000 + n,
+							SMALLINTDATATYPE  = (short)(5000 + n),
+							DECIMALDATATYPE   = 6000 + n,
+							DECFLOATDATATYPE  = 7000 + n,
+							REALDATATYPE      = 8000 + n,
+							DOUBLEDATATYPE    = 9000 + n,
+							CHARDATATYPE      = 'A',
+							VARCHARDATATYPE   = "",
+							CLOBDATATYPE      = null,
+							DBCLOBDATATYPE    = null,
+							BINARYDATATYPE    = null,
+							VARBINARYDATATYPE = null,
+							BLOBDATATYPE      = new byte[] { 1, 2, 3 },
+							GRAPHICDATATYPE   = null,
+							DATEDATATYPE      = DateTime.Now,
+							TIMEDATATYPE      = null,
+							TIMESTAMPDATATYPE = null,
+							XMLDATATYPE       = null,
+						}));
+
+				//var list = conn.GetTable<ALLTYPE>().ToList();
+
+				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+			}
+		}
+
+		[Test]
+		public void BulkCopyLinqTypes(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					Enumerable.Range(0, 10).Select(n =>
+						new LinqDataTypes
+						{
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
+							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 			}
 		}
 	}

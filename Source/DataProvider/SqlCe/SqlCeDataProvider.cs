@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Mapping;
+	using SchemaProvider;
 	using SqlProvider;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase
@@ -22,8 +23,13 @@ namespace LinqToDB.DataProvider.SqlCe
 			: base(name, mappingSchema)
 		{
 			SqlProviderFlags.IsSubQueryColumnSupported = false;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.IsApplyJoinSupported      = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}
 
 		public    override string ConnectionNamespace { get { return "System.Data.SqlServerCe"; } }
@@ -73,12 +79,19 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region Overrides
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlProvider(SqlProviderFlags);
+			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
+		}
+
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SqlCeSchemaProvider();
 		}
@@ -134,5 +147,33 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		#endregion
+
+		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool deleteIfExists = false)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			CreateFileDatabase(
+				databaseName, deleteIfExists, ".sdf",
+				dbName =>
+				{
+					dynamic eng = Activator.CreateInstance(
+						GetConnectionType().Assembly.GetType("System.Data.SqlServerCe.SqlCeEngine"),
+						"Data Source=" + dbName);
+
+					eng.CreateDatabase();
+
+					var disp = eng as IDisposable;
+
+					if (disp != null)
+						disp.Dispose();
+				});
+		}
+
+		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			DropFileDatabase(databaseName, ".sdf");
+		}
 	}
 }

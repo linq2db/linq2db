@@ -6,10 +6,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.ServiceModel
 {
+	using Expressions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -93,7 +93,7 @@ namespace LinqToDB.ServiceModel
 			{
 				if (_sqlProviderType == null)
 				{
-					var type = GetConfigurationInfo().LinqServiceInfo.SqlProviderType;
+					var type = GetConfigurationInfo().LinqServiceInfo.SqlBuilderType;
 					_sqlProviderType = Type.GetType(type);
 				}
 
@@ -101,6 +101,23 @@ namespace LinqToDB.ServiceModel
 			}
 
 			set { _sqlProviderType = value;  }
+		}
+
+		private        Type _sqlOptimizerType;
+		public virtual Type  SqlOptimizerType
+		{
+			get
+			{
+				if (_sqlOptimizerType == null)
+				{
+					var type = GetConfigurationInfo().LinqServiceInfo.SqlOptimizerType;
+					_sqlOptimizerType = Type.GetType(type);
+				}
+
+				return _sqlOptimizerType;
+			}
+
+			set { _sqlOptimizerType = value;  }
 		}
 
 		SqlProviderFlags IDataContext.SqlProviderFlags
@@ -154,11 +171,11 @@ namespace LinqToDB.ServiceModel
 			return null;
 		}
 
-		static readonly Dictionary<Type,Func<ISqlProvider>> _sqlProviders = new Dictionary<Type, Func<ISqlProvider>>();
+		static readonly Dictionary<Type,Func<ISqlBuilder>> _sqlBuilders = new Dictionary<Type, Func<ISqlBuilder>>();
 
-		Func<ISqlProvider> _createSqlProvider;
+		Func<ISqlBuilder> _createSqlProvider;
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get
 			{
@@ -166,17 +183,57 @@ namespace LinqToDB.ServiceModel
 				{
 					var type = SqlProviderType;
 
-					if (!_sqlProviders.TryGetValue(type, out _createSqlProvider))
+					if (!_sqlBuilders.TryGetValue(type, out _createSqlProvider))
 						lock (_sqlProviderType)
-							if (!_sqlProviders.TryGetValue(type, out _createSqlProvider))
-								_sqlProviders.Add(type, _createSqlProvider =
-									Expression.Lambda<Func<ISqlProvider>>(
+							if (!_sqlBuilders.TryGetValue(type, out _createSqlProvider))
+								_sqlBuilders.Add(type, _createSqlProvider =
+									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructor(new[] { typeof(SqlProviderFlags) }),
-											new Expression[] { Expression.Constant(((IDataContext)this).SqlProviderFlags) })).Compile());
+											type.GetConstructor(new[]
+											{
+												typeof(ISqlOptimizer),
+												typeof(SqlProviderFlags)
+											}),
+											new Expression[]
+											{
+												Expression.Constant(GetSqlOptimizer()),
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)
+											})).Compile());
 				}
 
 				return _createSqlProvider;
+			}
+		}
+
+		static readonly Dictionary<Type,Func<ISqlOptimizer>> _sqlOptimizers = new Dictionary<Type,Func<ISqlOptimizer>>();
+
+		Func<ISqlOptimizer> _getSqlOptimizer;
+
+		public Func<ISqlOptimizer> GetSqlOptimizer
+		{
+			get
+			{
+				if (_getSqlOptimizer == null)
+				{
+					var type = SqlOptimizerType;
+
+					if (!_sqlOptimizers.TryGetValue(type, out _getSqlOptimizer))
+						lock (_sqlOptimizerType)
+							if (!_sqlOptimizers.TryGetValue(type, out _getSqlOptimizer))
+								_sqlOptimizers.Add(type, _getSqlOptimizer =
+									Expression.Lambda<Func<ISqlOptimizer>>(
+										Expression.New(
+											type.GetConstructor(new[]
+											{
+												typeof(SqlProviderFlags)
+											}),
+											new Expression[]
+											{
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)
+											})).Compile());
+				}
+
+				return _getSqlOptimizer;
 			}
 		}
 
@@ -229,7 +286,7 @@ namespace LinqToDB.ServiceModel
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var ctx  = (QueryContext)query;
-			var q    = ctx.Query.SqlQuery.ProcessParameters();
+			var q    = ctx.Query.SelectQuery.ProcessParameters();
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
 
 			if (_batchCounter > 0)
@@ -252,7 +309,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q = ctx.Query.SqlQuery.ProcessParameters();
+			var q = ctx.Query.SelectQuery.ProcessParameters();
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
@@ -268,7 +325,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q      = ctx.Query.SqlQuery.ProcessParameters();
+			var q      = ctx.Query.SelectQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
@@ -287,9 +344,9 @@ namespace LinqToDB.ServiceModel
 
 		string IDataContext.GetSqlText(object query)
 		{
-			var ctx         = (QueryContext)query;
-			var sqlProvider = ((IDataContext)this).CreateSqlProvider();
-			var sb          = new StringBuilder();
+			var ctx        = (QueryContext)query;
+			var sqlBuilder = ((IDataContext)this).CreateSqlProvider();
+			var sb         = new StringBuilder();
 
 			sb
 				.Append("-- ")
@@ -297,12 +354,12 @@ namespace LinqToDB.ServiceModel
 				.Append(' ')
 				.Append(((IDataContext)this).ContextID)
 				.Append(' ')
-				.Append(sqlProvider.Name)
+				.Append(sqlBuilder.Name)
 				.AppendLine();
 
-			if (ctx.Query.SqlQuery.Parameters != null && ctx.Query.SqlQuery.Parameters.Count > 0)
+			if (ctx.Query.SelectQuery.Parameters != null && ctx.Query.SelectQuery.Parameters.Count > 0)
 			{
-				foreach (var p in ctx.Query.SqlQuery.Parameters)
+				foreach (var p in ctx.Query.SelectQuery.Parameters)
 					sb
 						.Append("-- DECLARE ")
 						.Append(p.Name)
@@ -312,7 +369,7 @@ namespace LinqToDB.ServiceModel
 
 				sb.AppendLine();
 
-				foreach (var p in ctx.Query.SqlQuery.Parameters)
+				foreach (var p in ctx.Query.SelectQuery.Parameters)
 				{
 					var value = p.Value;
 
@@ -330,18 +387,18 @@ namespace LinqToDB.ServiceModel
 				sb.AppendLine();
 			}
 
-			var cc       = sqlProvider.CommandCount(ctx.Query.SqlQuery);
+			var cc       = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
 			var commands = new string[cc];
 
 			for (var i = 0; i < cc; i++)
 			{
 				sb.Length = 0;
 
-				sqlProvider.BuildSql(i, ctx.Query.SqlQuery, sb, 0, 0, false);
+				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
 				commands[i] = sb.ToString();
 			}
 
-			if (!ctx.Query.SqlQuery.IsParameterDependent)
+			if (!ctx.Query.SelectQuery.IsParameterDependent)
 				ctx.Query.Context = commands;
 
 			foreach (var command in commands)

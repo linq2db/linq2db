@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Data;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Threading;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Linq.Expressions;
-
 	using Common;
 	using Mapping;
 	using SqlProvider;
@@ -21,7 +20,11 @@ namespace LinqToDB.DataProvider.Informix
 		protected InformixDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsParameterOrderDependent = true;
+			SqlProviderFlags.IsParameterOrderDependent    = true;
+			SqlProviderFlags.IsSubQueryTakeSupported      = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported    = false;
+			SqlProviderFlags.IsGroupByExpressionSupported = false;
+
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd());
@@ -32,6 +35,8 @@ namespace LinqToDB.DataProvider.Informix
 				SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
 				SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
 			}
+
+			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 		}
 
 		static float GetFloat(IDataReader dr, int idx)
@@ -130,9 +135,16 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string ConnectionTypeName  { get { return "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"; } }
 		protected override string DataReaderTypeName  { get { return "IBM.Data.Informix.IfxDataReader, IBM.Data.Informix"; } }
 		
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlProvider(SqlProviderFlags);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

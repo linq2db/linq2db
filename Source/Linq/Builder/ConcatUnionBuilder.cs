@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class ConcatUnionBuilder : MethodCallBuilder
 	{
@@ -23,10 +23,10 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence1 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])));
-			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SqlQuery())));
-			var union     = new SqlQuery.Union(sequence2.SqlQuery, methodCall.Method.Name == "Concat");
+			var sequence2 = new SubQueryContext(builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery())));
+			var union     = new SelectQuery.Union(sequence2.SelectQuery, methodCall.Method.Name == "Concat");
 
-			sequence1.SqlQuery.Unions.Add(union);
+			sequence1.SelectQuery.Unions.Add(union);
 
 			return new UnionContext(sequence1, sequence2, methodCall);
 		}
@@ -92,33 +92,30 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var info in info1)
 				{
-					if (info.Member == null)
+					if (info.Members.Count == 0)
 						throw new InvalidOperationException();
 
 					var member = new Member
 					{
 						SequenceInfo     = info,
-						MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Member)
+						MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Members[0])
 					};
-
-					if (sequence1.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-						throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
 
 					members.Add(new UnionMember { Member = member, Info1 = info });
 				}
 
 				foreach (var info in info2)
 				{
-					if (info.Member == null)
+					if (info.Members.Count == 0)
 						throw new InvalidOperationException();
 
 					var em = members.FirstOrDefault(m =>
 						m.Member.SequenceInfo != null &&
-						m.Member.SequenceInfo.Member == info.Member);
+						m.Member.SequenceInfo.CompareLastMember(info));
 
 					if (em == null)
 					{
-						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Member) };
+						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Members[0]) };
 
 						if (sequence2.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
 							throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
@@ -131,8 +128,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				sequence1.SqlQuery.Select.Columns.Clear();
-				sequence2.SqlQuery.Select.Columns.Clear();
+				sequence1.SelectQuery.Select.Columns.Clear();
+				sequence2.SelectQuery.Select.Columns.Clear();
 
 				for (var i = 0; i < members.Count; i++)
 				{
@@ -140,11 +137,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info1 == null)
 					{
-						member.Info1 = new SqlInfo
+						member.Info1 = new SqlInfo(member.Info2.Members)
 						{
-							Sql    = new SqlValue(null),
-							Query  = sequence1.SqlQuery,
-							Member = member.Info2.Member
+							Sql   = new SqlValue(null),
+							Query = sequence1.SelectQuery,
 						};
 
 						member.Member.SequenceInfo = member.Info1;
@@ -152,81 +148,26 @@ namespace LinqToDB.Linq.Builder
 
 					if (member.Info2 == null)
 					{
-						member.Info2 = new SqlInfo
+						member.Info2 = new SqlInfo(member.Info1.Members)
 						{
-							Sql    = new SqlValue(null),
-							Query  = sequence2.SqlQuery,
-							Member = member.Info1.Member
+							Sql   = new SqlValue(null),
+							Query = sequence2.SelectQuery,
 						};
 					}
 
-					sequence1.SqlQuery.Select.Columns.Add(new SqlQuery.Column(sequence1.SqlQuery, member.Info1.Sql));
-					sequence2.SqlQuery.Select.Columns.Add(new SqlQuery.Column(sequence2.SqlQuery, member.Info2.Sql));
+					sequence1.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence1.SelectQuery, member.Info1.Sql));
+					sequence2.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence2.SelectQuery, member.Info2.Sql));
 
 					member.Member.SequenceInfo.Index = i;
-					//member.Info1.Index = i;
-					//member.Info2.Index = i;
 
-					_members.Add(member.Member.MemberExpression.Member, member.Member);
+					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
 
 				foreach (var key in sequence1.ColumnIndexes.Keys.ToList())
-					sequence1.ColumnIndexes[key] = sequence1.SqlQuery.Select.Add(key);
+					sequence1.ColumnIndexes[key] = sequence1.SelectQuery.Select.Add(key);
 
 				foreach (var key in sequence2.ColumnIndexes.Keys.ToList())
-					sequence2.ColumnIndexes[key] = sequence2.SqlQuery.Select.Add(key);
-
-				/*
-				if (_isObject)
-				{
-					foreach (var info in info1)
-					{
-						if (info.Member == null)
-							throw new InvalidOperationException();
-
-						CheckAndAddMember(sequence1, sequence2, info);
-					}
-
-					info2 = sequence2.ConvertToIndex(null, 0, ConvertFlags.All).OrderBy(_ => _.Index).ToList();
-
-					if (info1.Count != info2.Count)
-					{
-						for (var i = 0; i < info2.Count; i++)
-						{
-							if (i < info1.Count)
-							{
-								if (info1[i].Index != info2[i].Index)
-									throw new InvalidOperationException();
-							}
-							else
-							{
-								CheckAndAddMember(sequence2, sequence1, info2[i]);
-							}
-						}
-					}
-				}
-				else
-					sequence2.ConvertToIndex(null, 0, ConvertFlags.All).OrderBy(_ => _.Index).ToList();
-				*/
-			}
-
-			void CheckAndAddMember(IBuildContext sequence1, IBuildContext sequence2, SqlInfo info)
-			{
-				var member = new Member
-				{
-					SequenceInfo     = info,
-					MemberExpression = Expression.PropertyOrField(_unionParameter, info.Member.Name)
-				};
-
-				if (sequence1.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-					throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
-
-				var idx = sequence2.ConvertToIndex(member.MemberExpression, 1, ConvertFlags.Field);
-
-				if (idx[0].Index != member.SequenceInfo.Index)
-					throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
-
-				_members.Add(member.MemberExpression.Member, member);
+					sequence2.ColumnIndexes[key] = sequence2.SelectQuery.Select.Add(key);
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -290,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var levelExpression = expression.GetLevelExpression(1);
 
-						if (ReferenceEquals(expression, levelExpression))
+						if (ReferenceEquals(expression, levelExpression) && !IsExpression(expression, 1, RequestFor.Object).Result)
 						{
 							var idx = ConvertToIndex(expression, level, ConvertFlags.Field);
 							var n   = idx[0].Index;
@@ -325,12 +266,12 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (idx.Index == -2)
 								{
-									SqlQuery.Select.Columns.Add(new SqlQuery.Column(SqlQuery, idx.Sql));
-									idx.Index = SqlQuery.Select.Columns.Count - 1;
+									SelectQuery.Select.Columns.Add(new SelectQuery.Column(SelectQuery, idx.Sql));
+									idx.Index = SelectQuery.Select.Columns.Count - 1;
 								}
 								else
 								{
-									idx.Index = SqlQuery.Select.Add(idx.Sql);
+									idx.Index = SelectQuery.Select.Add(idx.Sql);
 								}
 							}
 
@@ -373,12 +314,11 @@ namespace LinqToDB.Linq.Builder
 
 									if (member.SqlQueryInfo == null)
 									{
-										member.SqlQueryInfo = new SqlInfo
+										member.SqlQueryInfo = new SqlInfo(member.MemberExpression.Member)
 										{
-											Index  = -2,
-											Sql    = SubQuery.SqlQuery.Select.Columns[member.SequenceInfo.Index],
-											Query  = SqlQuery,
-											Member = member.MemberExpression.Member,
+											Index = -2,
+											Sql   = SubQuery.SelectQuery.Select.Columns[member.SequenceInfo.Index],
+											Query = SelectQuery,
 										};
 									}
 

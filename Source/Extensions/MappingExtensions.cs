@@ -4,7 +4,7 @@ namespace LinqToDB.Extensions
 {
 	using Common;
 	using Mapping;
-	using SqlBuilder;
+	using SqlQuery;
 
 	static class MappingExtensions
 	{

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
+
 using MySql.Data.MySqlClient;
 
 using NUnit.Framework;
@@ -17,7 +19,7 @@ namespace Tests.Exceptions
 		{
 			try
 			{
-				using (var db = LinqToDB.DataProvider.MySql.MySqlFactory.CreateDataConnection(
+				using (var db = LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(
 					"Server=DBHost;Port=3306;Database=nodatabase;Uid=bltoolkit;Pwd=TestPassword;"))
 				{
 					db.GetTable<Person>().ToList();

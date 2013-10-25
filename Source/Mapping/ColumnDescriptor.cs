@@ -35,6 +35,9 @@ namespace LinqToDB.Mapping
 			IsDiscriminator = columnAttribute.IsDiscriminator;
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
+			Length          = columnAttribute.Length;
+			Precision       = columnAttribute.Precision;
+			Scale           = columnAttribute.Scale;
 
 			var defaultCanBeNull = false;
 
@@ -100,6 +103,9 @@ namespace LinqToDB.Mapping
 		public bool           IsPrimaryKey    { get; private set; }
 		public int            PrimaryKeyOrder { get; private set; }
 		public bool           CanBeNull       { get; private set; }
+		public int            Length          { get; private set; }
+		public int            Precision       { get; private set; }
+		public int            Scale           { get; private set; }
 
 		Func<object,object> _getter;
 

@@ -520,5 +520,66 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Table("GrandChild")]
+		class Table3
+		{
+			[PrimaryKey(1)] public int? ParentID;
+			[PrimaryKey(2)] public int? ChildID;
+			[Column]        public int? GrandChildID;
+		}
+
+		[Test]
+		public void UpdateNullablePrimaryKey([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
+
+				if (db is DataConnection)
+					Assert.IsTrue(((DataConnection)db).LastQuery.Contains("IS NULL"));
+
+				db.Update(new Table3 { ParentID = 10000, ChildID = 111, GrandChildID = 1000 });
+
+				if (db is DataConnection)
+					Assert.IsFalse(((DataConnection)db).LastQuery.Contains("IS NULL"));
+			}
+		}
+
+		[Test]
+		public void UpdateTop([DataContexts(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i });
+
+					var rowsAffected = db.Parent
+						.Where(p => p.ParentID >= 1000)
+						.Take(5)
+						.Set(p => p.Value1, 1)
+						.Update();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 	}
 }

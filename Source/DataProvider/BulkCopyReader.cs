@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider
 	class BulkCopyReader : IDataReader
 	{
 		public  readonly ColumnDescriptor[] Columns;
-		private readonly IEnumerable        _collection;
 		private readonly IEnumerator        _enumerator;
 
 		public int Count;
@@ -18,8 +17,7 @@ namespace LinqToDB.DataProvider
 		public BulkCopyReader(EntityDescriptor entityDescriptor, IEnumerable collection)
 		{
 			Columns     = entityDescriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-			_collection = collection;
-			_enumerator = _collection.GetEnumerator();
+			_enumerator = collection.GetEnumerator();
 		}
 
 		#region Implementation of IDisposable
@@ -78,7 +76,7 @@ namespace LinqToDB.DataProvider
 		public decimal     GetDecimal     (int i)           { throw new NotImplementedException(); }
 		public DateTime    GetDateTime    (int i)           { throw new NotImplementedException(); }
 		public IDataReader GetData        (int i)           { throw new NotImplementedException(); }
-		public bool        IsDBNull       (int i)           { throw new NotImplementedException(); }
+		public bool        IsDBNull       (int i)           { return GetValue(i) == null;          }
 
 		object IDataRecord.this[int i]
 		{
@@ -126,7 +124,7 @@ namespace LinqToDB.DataProvider
 
 		public bool IsClosed
 		{
-			get { throw new NotImplementedException(); }
+			get { return false; }
 		}
 
 		public int RecordsAffected

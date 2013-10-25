@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlBuilder;
+	using SqlQuery;
 
-	public abstract class PassThroughContext : IBuildContext
+	abstract class PassThroughContext : IBuildContext
 	{
 		protected PassThroughContext(IBuildContext context)
 		{
@@ -20,10 +20,10 @@ namespace LinqToDB.Linq.Builder
 		string IBuildContext._sqlQueryText { get { return Context._sqlQueryText; } }
 #endif
 
-		public virtual ExpressionBuilder Builder    { get { return Context.Builder;    } }
-		public virtual Expression        Expression { get { return Context.Expression; } }
-		public virtual SqlQuery          SqlQuery   { get { return Context.SqlQuery;   } set { Context.SqlQuery = value; } }
-		public virtual IBuildContext     Parent     { get { return Context.Parent;     } set { Context.Parent   = value; } }
+		public virtual ExpressionBuilder Builder     { get { return Context.Builder;     } }
+		public virtual Expression        Expression  { get { return Context.Expression;  } }
+		public virtual SelectQuery       SelectQuery { get { return Context.SelectQuery; } set { Context.SelectQuery = value; } }
+		public virtual IBuildContext     Parent      { get { return Context.Parent;      } set { Context.Parent      = value; } }
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{

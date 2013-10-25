@@ -2,12 +2,12 @@
 
 namespace LinqToDB.Linq
 {
-	using SqlBuilder;
+	using SqlQuery;
 
 	public interface IQueryContext
 	{
-		SqlQuery       SqlQuery { get; }
-		object         Context  { get; set; }
+		SelectQuery    SelectQuery { get; }
+		object         Context     { get; set; }
 		SqlParameter[] GetParameters();
 	}
 }

@@ -8,6 +8,8 @@ using LinqToDB.Linq;
 
 using NUnit.Framework;
 
+// ReSharper disable UnusedMember.Local
+
 namespace Tests.Linq
 {
 	using Model;
@@ -361,13 +363,40 @@ namespace Tests.Linq
 					   Parent.Select(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID)),
 					db.Parent.Select(p => ChildCount(p)));
 		}
+
+		//////[Test]
+		public void Aggregate1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					group p by p.ParentID into g
+					select new
+					{
+						sum1 = g.Sum  (i => i.Value1),
+						sum2 = g.MySum(i => i.Value1),
+					},
+					from p in db.Parent
+					group p by p.ParentID into g
+					select new
+					{
+						sum1 = g.Sum  (i => i.Value1),
+						sum2 = g.MySum(i => i.Value1),
+					});
+		}
 	}
 
-	public static class PersonExtension
+	public static class FunctionExtension
 	{
-		static public string FullName(this Person person)
+		public static string FullName(this Person person)
 		{
 			return person.LastName + ", " + person.FirstName;
+		}
+
+		[Sql.Function("SUM", ServerSideOnly = true)]
+		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
+		{
+			throw new InvalidOperationException();
 		}
 	}
 }

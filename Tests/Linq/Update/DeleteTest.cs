@@ -264,5 +264,41 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Test]
+		public void DeleteTop([DataContexts(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.MySql,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i });
+
+					var rowsAffected = db.Parent
+						.Where(p => p.ParentID >= 1000)
+						.Take(5)
+						.Delete();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 	}
 }
