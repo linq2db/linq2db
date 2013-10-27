@@ -13,7 +13,19 @@ namespace LinqToDB.Common
 
 	static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => Convert.ChangeType(null, typeof(int), Thread.CurrentThread.CurrentCulture));
+		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null, typeof(int)));
+
+		static object ConvertDefault(object value, Type conversionType)
+		{
+			try
+			{
+				return Convert.ChangeType(value, conversionType, Thread.CurrentThread.CurrentCulture);
+			}
+			catch (Exception ex)
+			{
+				throw new LinqToDBException(string.Format("Cannot convert value '{0}' to type '{1}'", value, conversionType.FullName), ex);
+			}
+		}
 
 		static Expression GetCtor(Type from, Type to, Expression p)
 		{
@@ -154,8 +166,7 @@ namespace LinqToDB.Common
 					Expression.Convert(
 						Expression.Call(_defaultConverter,
 							Expression.Convert(p, typeof(string)),
-							Expression.Constant(to),
-							Expression.Constant(Thread.CurrentThread.CurrentCulture)),
+							Expression.Constant(to)),
 						to),
 					cases.ToArray());
 
@@ -228,8 +239,7 @@ namespace LinqToDB.Common
 						Expression.Convert(
 							Expression.Call(_defaultConverter,
 								Expression.Convert(expression, typeof(object)),
-								Expression.Constant(to),
-								Expression.Constant(Thread.CurrentThread.CurrentCulture)),
+								Expression.Constant(to)),
 							to),
 						cases
 							.Select(f =>
@@ -299,8 +309,7 @@ namespace LinqToDB.Common
 							Expression.Convert(
 								Expression.Call(_defaultConverter,
 									Expression.Convert(expression, typeof(object)),
-									Expression.Constant(to),
-									Expression.Constant(Thread.CurrentThread.CurrentCulture)),
+									Expression.Constant(to)),
 								to),
 							cases.ToArray());
 
@@ -395,8 +404,7 @@ namespace LinqToDB.Common
 							Expression.Convert(
 								Expression.Call(_defaultConverter,
 									Expression.Convert(expression, typeof(object)), 
-									Expression.Constant(to),
-									Expression.Constant(Thread.CurrentThread.CurrentCulture)),
+									Expression.Constant(to)),
 								to),
 							cases.ToArray());
 
@@ -518,8 +526,7 @@ namespace LinqToDB.Common
 
 				var defex = Expression.Call(_defaultConverter,
 					Expression.Convert(p, typeof(object)),
-					Expression.Constant(uto),
-					Expression.Constant(Thread.CurrentThread.CurrentCulture)) as Expression;
+					Expression.Constant(uto)) as Expression;
 
 				if (defex.Type != uto)
 					defex = Expression.Convert(defex, uto);
@@ -532,8 +539,7 @@ namespace LinqToDB.Common
 			{
 				var defex = Expression.Call(_defaultConverter,
 					Expression.Convert(p, typeof(object)),
-					Expression.Constant(to),
-					Expression.Constant(Thread.CurrentThread.CurrentCulture)) as Expression;
+					Expression.Constant(to)) as Expression;
 
 				if (defex.Type != to)
 					defex = Expression.Convert(defex, to);
