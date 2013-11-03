@@ -549,7 +549,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectUnion()
+		public void ObjectUnion([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
