@@ -42,8 +42,8 @@ namespace LinqToDB.Data
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
 			public IDbDataParameter[] Parameters;
-			public SelectQuery           SelectQuery;
-			public ISqlBuilder       SqlProvider;
+			public SelectQuery        SelectQuery;
+			public ISqlBuilder        SqlProvider;
 		}
 
 		#region SetQuery
@@ -91,7 +91,7 @@ namespace LinqToDB.Data
 			{
 				Commands      = commands,
 				SqlParameters = sql.Parameters,
-				SelectQuery      = sql,
+				SelectQuery   = sql,
 				SqlProvider   = sqlProvider
 			};
 		}

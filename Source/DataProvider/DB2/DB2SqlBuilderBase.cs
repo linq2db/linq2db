@@ -7,18 +7,20 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	class DB2SqlBuilder : BasicSqlBuilder
+	abstract class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		public DB2SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		SqlField _identityField;
 
+		protected abstract DB2Version Version { get; }
+
 		public override int CommandCount(SelectQuery selectQuery)
 		{
-			if (selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
+			if (Version == DB2Version.LUW && selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
 			{
 				_identityField = selectQuery.Insert.Into.GetIdentityField();
 
@@ -55,14 +57,19 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
+		protected override void BuildGetIdentity()
+		{
+			if (Version == DB2Version.zOS)
+			{
+				StringBuilder
+					.AppendLine(";")
+					.AppendLine("SELECT IDENTITY_VAL_LOCAL() FROM SYSIBM.SYSDUMMY1");
+			}
+		}
+
 		protected override void BuildCommand(int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT identity_val_local() FROM SYSIBM.SYSDUMMY1");
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new DB2SqlBuilder(SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildSql()
