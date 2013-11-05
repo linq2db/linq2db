@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug.4.0\</OutputPath>
     <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release.4.0\</OutputPath>
     <DefineConstants>TRACE;FW4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -391,6 +391,7 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
   </ItemGroup>
   <ItemGroup />
