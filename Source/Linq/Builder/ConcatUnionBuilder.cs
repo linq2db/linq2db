@@ -6,8 +6,6 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Collections;
-
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
