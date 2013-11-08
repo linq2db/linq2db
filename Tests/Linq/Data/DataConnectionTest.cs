@@ -9,6 +9,8 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+	using System.Configuration;
+
 	using Model;
 
 	[TestFixture]
@@ -17,7 +19,9 @@ namespace Tests.Data
 		[Test]
 		public void Test1([IncludeDataContexts("Northwind")] string context)
 		{
-			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+
+			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);
