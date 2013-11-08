@@ -6,6 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Collections;
+
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
@@ -54,13 +56,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (_isObject)
 				{
-					var type = _methodCall.Method.GetGenericArguments()[0];
-					_unionParameter = Expression.Parameter(type, "t");
+					_type = _methodCall.Method.GetGenericArguments()[0];
+					_unionParameter = Expression.Parameter(_type, "t");
 				}
 
 				Init(sequence1, sequence2);
 			}
 
+			readonly Type                          _type;
 			readonly bool                          _isObject;
 			readonly MethodCallExpression          _methodCall;
 			readonly ParameterExpression           _unionParameter;
@@ -309,8 +312,31 @@ namespace LinqToDB.Linq.Builder
 
 								if (expression == levelExpression)
 								{
-									var ma     = (MemberExpression)expression;
-									var member = _members[ma.Member];
+									var ma = (MemberExpression)expression;
+
+									Member member;
+
+									if (!_members.TryGetValue(ma.Member, out member))
+									{
+										var ed = Builder.MappingSchema.GetEntityDescriptor(_type);
+
+										if (ed.Aliases != null && ed.Aliases.ContainsKey(ma.Member.Name))
+										{
+											var alias = ed[ma.Member.Name];
+
+											if (alias != null)
+											{
+												var cd = ed[alias.MemberName];
+
+												if (cd != null)
+													_members.TryGetValue(cd.MemberInfo, out member);
+											}
+										}
+									}
+
+									if (member == null)
+										throw new LinqToDBException(
+											string.Format("Expression '{0}' is not a field.", expression));
 
 									if (member.SqlQueryInfo == null)
 									{

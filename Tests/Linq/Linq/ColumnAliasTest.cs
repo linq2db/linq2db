@@ -93,5 +93,67 @@ namespace Tests.Linq
 				Assert.That(count, Is.GreaterThan(0));
 			}
 		}
+
+		[Test]
+		public void UnionTest1([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+				(
+					from p in db.GetTable<TestParent>()
+					where p.ID > 2
+					select new
+					{
+						p.ID
+					}
+				).Union(
+					from p in db.GetTable<TestParent>()
+					where p.ID > 2
+					select new
+					{
+						p.ID
+					}
+				);
+
+				var count = q.Count();
+
+				Assert.That(count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void UnionTest2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
+					where p.ID > 1
+					select p;
+
+				var count = q.Count();
+
+				Assert.That(count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test]
+		public void UnionTest3([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
+					select new
+					{
+						p.ID
+					};
+
+				var count = q.ToList().Count;
+
+				Assert.That(count, Is.GreaterThan(0));
+			}
+		}
 	}
 }
