@@ -549,7 +549,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectUnion()
+		public void ObjectUnion([IncludeDataContexts("Northwind")] string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -620,6 +620,19 @@ namespace Tests.Linq
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
 				Assert.IsNotNull(fullJoinSql);
 			}
+		}
+
+		[Test]
+		public void AssosiationUnion([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from c in Child.Union(Child)
+					let p = c.Parent
+					select p.ParentID,
+					from c in db.Child.Union(db.Child)
+					let p = c.Parent
+					select p.ParentID);
 		}
 	}
 }

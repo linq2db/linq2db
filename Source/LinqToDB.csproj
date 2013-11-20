@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug.4.0\</OutputPath>
     <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release.4.0\</OutputPath>
     <DefineConstants>TRACE;FW4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -54,15 +54,17 @@
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSchemaProvider.cs" />
+    <Compile Include="DataProvider\DB2\DB2LUWSqlBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlOptimizer.cs" />
     <Compile Include="DataProvider\DB2\DB2Tools.cs" />
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
     <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSchemaProvider.cs" />
-    <Compile Include="DataProvider\DB2\DB2SqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
+    <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlOptimizer.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
@@ -389,6 +391,7 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
   </ItemGroup>
   <ItemGroup />

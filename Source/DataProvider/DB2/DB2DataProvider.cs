@@ -132,7 +132,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new DB2SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return Version == DB2Version.zOS ?
+				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
+				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;

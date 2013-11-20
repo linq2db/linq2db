@@ -79,7 +79,10 @@
     <Compile Include="DataExtensions.cs" />
     <Compile Include="DataProvider\Access\AccessSqlBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
-    <Compile Include="DataProvider\DB2\DB2SqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2LUWSqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
+    <Compile Include="DataProvider\DB2\DB2Version.cs" />
+    <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />

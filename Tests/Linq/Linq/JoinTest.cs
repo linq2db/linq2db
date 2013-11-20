@@ -646,6 +646,23 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LeftJoin6([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					from ch in Child.Where(c => p.ParentID == c.ParentID).DefaultIfEmpty()
+					where p.ParentID >= 4
+					select new { p, ch }
+					,
+					from p in db.Parent
+					from ch in db.Child.Where(c => p.ParentID == c.ParentID).DefaultIfEmpty()
+					where p.ParentID >= 4
+					select new { p, ch });
+		}
+
+
+		[Test]
 		public void SubQueryJoin([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
