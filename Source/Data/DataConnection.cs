@@ -126,6 +126,11 @@ namespace LinqToDB.Data
 		public static string DefaultConfiguration { get; set; }
 		public static string DefaultDataProvider  { get; set; }
 
+        /// <summary>
+        /// Use plain text query instead of using command parameters
+        /// </summary>
+        public bool UseQueryText { get; set; }
+
 		private static Action<TraceInfo> _onTrace = OnTraceInternal;
 		public  static Action<TraceInfo>  OnTrace
 		{

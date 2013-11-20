@@ -65,6 +65,11 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema       { get; private set; }
 		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
+        /// <summary>
+        /// Use plain text query instead of using command parameters
+        /// </summary>
+        public bool UseQueryText { get; set; }
+
 		public abstract IDbConnection    CreateConnection (string connectionString);
 		public abstract ISqlBuilder      CreateSqlBuilder();
 		public abstract ISqlOptimizer    GetSqlOptimizer ();
