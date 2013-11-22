@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -28,17 +29,35 @@ namespace LinqToDB.Reflection.Emit
 
         public static class Il
         {
+            private static readonly ConcurrentDictionary<Tuple<Type, string>, SetHandler> CreateSetHandlers = new ConcurrentDictionary<Tuple<Type, string>, SetHandler>();
+            private static readonly ConcurrentDictionary<Tuple<Type, string>, GetHandler> CreateGetHandlers = new ConcurrentDictionary<Tuple<Type, string>, GetHandler>();
+            private static readonly ConcurrentDictionary<Tuple<Type, string>, DynamicMethod> CreateMethodHandlers = new ConcurrentDictionary<Tuple<Type, string>, DynamicMethod>();
+            private static readonly ConcurrentDictionary<string, ParamsConstructorDelegate> CreateInstanceHandlers = new ConcurrentDictionary<string, ParamsConstructorDelegate>();
+
             public static object CreateMethodHandler(Type delegateType, object target, Type targetType, string methodName, Type returnType, params Type[] paramsTypes)
             {
-                var dynMethode = DynamicMethodCompiler.ExecMethod(targetType, methodName, returnType, paramsTypes);
+                DynamicMethod dynMethode;
+                Tuple<Type, string> key = new Tuple<Type, string>(targetType, methodName);
+
+                if (!CreateMethodHandlers.TryGetValue(key, out dynMethode))
+                {
+                    dynMethode = DynamicMethodCompiler.ExecMethod(targetType, methodName, returnType, paramsTypes);
+                    CreateMethodHandlers.TryAdd(key, dynMethode);
+                }
 
                 return dynMethode.CreateDelegate(delegateType, target);
             }
 
             public static object CreateInstance(Type type, Type[] constructorArgsTypes, params object[] parameters)
             {
-                var instantiateObjectHandler =
-                    DynamicMethodCompiler.Build(type, constructorArgsTypes);
+                ParamsConstructorDelegate instantiateObjectHandler;
+                string key = type.FullName + constructorArgsTypes.Select(c => c.FullName).Aggregate((s, s1) => s + s1);
+
+                if (!CreateInstanceHandlers.TryGetValue(key, out instantiateObjectHandler))
+                {
+                    instantiateObjectHandler = DynamicMethodCompiler.Build(type, constructorArgsTypes);
+                    CreateInstanceHandlers.TryAdd(key, instantiateObjectHandler);
+                }
 
                 return instantiateObjectHandler(parameters);
             }
@@ -51,29 +70,27 @@ namespace LinqToDB.Reflection.Emit
                 return instantiateObjectHandler();
             }
 
-            public static T CreateInstance<T>()
-            {
-                return (T) CreateInstance(typeof (T), null);
-            }
-
             public static SetHandler CreateSetHandler(Type type, string property)
             {
-                PropertyInfo propertyInfo = type.GetProperty(property);
-                return CreateSetHandler(type, propertyInfo);
+                SetHandler res;
+                Tuple<Type, string> key = new Tuple<Type, string>(type, property);
+
+                if (!CreateSetHandlers.TryGetValue(key, out res))
+                {
+                    PropertyInfo propertyInfo = type.GetProperty(property);
+                    res = CreateSetHandler(type, propertyInfo);
+                    CreateSetHandlers.TryAdd(key, res);
+                }
+                return res;
             }
 
-            public static SetHandler CreateSetHandler(Type type, PropertyInfo propertyInfo)
+            private static SetHandler CreateSetHandler(Type type, PropertyInfo propertyInfo)
             {
                 SetHandler setHandler = DynamicMethodCompiler.CreateSetHandler(type, propertyInfo);
                 return setHandler;
             }
 
-            public static SetHandler CreateSetHandler<T>(string property)
-            {
-                return CreateSetHandler(typeof (T), property);
-            }
-
-            public static GetHandler CreateGetHandler(Type type, PropertyInfo propertyInfo)
+            private static GetHandler CreateGetHandler(Type type, PropertyInfo propertyInfo)
             {
                 GetHandler getHandler = DynamicMethodCompiler.CreateGetHandler(type, propertyInfo);
                 return getHandler;
@@ -81,24 +98,20 @@ namespace LinqToDB.Reflection.Emit
 
             public static GetHandler CreateGetHandler(Type type, string propertyName)
             {
-                PropertyInfo propInfo = type.GetProperty(propertyName);
-                return CreateGetHandler(type, propInfo);
+
+                GetHandler res;
+                Tuple<Type, string> key = new Tuple<Type, string>(type, propertyName);
+
+                if (!CreateGetHandlers.TryGetValue(key, out res))
+                {
+                    PropertyInfo propertyInfo = type.GetProperty(propertyName);
+                    res = CreateGetHandler(type, propertyInfo);
+                    CreateGetHandlers.TryAdd(key, res);
+                }
+                return res;
             }
 
-            public static GetHandler CreateGetHandler<T>(PropertyInfo propertyInfo)
-            {
-                return CreateGetHandler(typeof (T), propertyInfo);
-            }
-
-            public static GetHandler CreateGetHandler<T>(string property)
-            {
-                PropertyInfo propertyInfo = typeof (T).GetProperty(property);
-                return CreateGetHandler<T>(propertyInfo);
-            }
-
-            ///
-            /// Creates a dynamic setter for the property
-            ///
+            [Obsolete]
             public static GenericSetter CreateSetMethod(PropertyInfo propertyInfo)
             {
                 /*
@@ -136,9 +149,7 @@ namespace LinqToDB.Reflection.Emit
                 return (GenericSetter) setter.CreateDelegate(typeof (GenericSetter));
             }
 
-            ///
-            /// Creates a dynamic getter for the property
-            ///
+            [Obsolete]
             public static GenericGetter CreateGetMethod(PropertyInfo propertyInfo)
             {
                 /*

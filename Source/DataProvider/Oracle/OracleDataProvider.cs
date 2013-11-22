@@ -393,11 +393,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-        private IDisposable CreateSqlBulkCopy(IDbConnection connection)
-        {
-            return (IDisposable)FunctionFactory.Il.CreateInstance(_oracleBulkCopy, new[] { _oracleConnection }, connection);
-        }
-
 	    public override int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 	    {
             if (dataConnection == null) throw new ArgumentNullException("dataConnection");
@@ -410,7 +405,7 @@ namespace LinqToDB.DataProvider.Oracle
                 var sb = CreateSqlBuilder();
                 var rd = new BulkCopyReader(ed, source, ignoreSkipOnInsert:true);
 
-                using (var bc = CreateSqlBulkCopy(dataConnection.Connection))
+                using (var bc = (IDisposable)FunctionFactory.Il.CreateInstance(_oracleBulkCopy, new[] { _oracleConnection }, dataConnection.Connection))
                 {
                     var batchSizeHandler = FunctionFactory.Il.CreateSetHandler(_oracleBulkCopy, "BatchSize");
                     var destinationTableNameHandler = FunctionFactory.Il.CreateSetHandler(_oracleBulkCopy, "DestinationTableName");
