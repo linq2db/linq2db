@@ -270,6 +270,7 @@
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.FunctionAttribute.cs" />
+    <Compile Include="Sql\Sql.GroupBy.cs" />
     <Compile Include="Sql\Sql.PropertyAttribute.cs" />
     <Compile Include="Sql\Sql.TableExpressionAttribute.cs" />
     <Compile Include="Sql\Sql.TableFunctionAttribute.cs" />

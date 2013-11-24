@@ -1001,6 +1001,19 @@ namespace LinqToDB.SqlProvider
 			if (SelectQuery.GroupBy.Items.Count == 0)
 				return;
 
+			if (SelectQuery.GroupBy.Items.Count == 1)
+			{
+				var item = SelectQuery.GroupBy.Items[0];
+
+				if (item is SqlValue)
+				{
+					var value = ((SqlValue)item).Value;
+
+					if (value is Sql.GroupBy)
+						return;
+				}
+			}
+
 			AppendIndent();
 
 			StringBuilder.Append("GROUP BY").AppendLine();

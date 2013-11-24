@@ -1559,5 +1559,51 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test]
+		public void GroupByNone([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from parent in Parent
+					group parent by Sql.GroupBy.None into gr
+					select new
+					{
+						Min = gr.Min(p => p.ParentID),
+						Max = gr.Max(p => p.ParentID),
+					},
+					from parent in db.Parent
+					group parent by Sql.GroupBy.None into gr
+					select new
+					{
+						Min = gr.Min(p => p.ParentID),
+						Max = gr.Max(p => p.ParentID),
+					});
+			}
+		}
+
+		[Test]
+		public void GroupByExpression([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var defValue = 10;
+
+				AreEqual(
+					from parent in Parent
+					group parent by Sql.GroupBy.None into gr
+					select new
+					{
+						Min = Sql.AsSql(gr.Min(p => (int?)p.ParentID) ?? defValue),
+					},
+					from parent in db.Parent
+					group parent by Sql.GroupBy.None into gr
+					select new
+					{
+						Min = Sql.AsSql(gr.Min(p => (int?)p.ParentID) ?? defValue),
+					});
+			}
+		}
 	}
 }
