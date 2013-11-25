@@ -177,9 +177,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			BuildInsertOrUpdateQueryAsUpdateInsert();
 		}
 
-		protected override void BuildDateTime(object value)
+		protected override void BuildDateTime(DateTime value)
 		{
-			StringBuilder.Append("'{0:yyyy-MM-ddTHH:mm:ss.fff}'".Args(value));
+			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+
+			if (value.Millisecond == 0)
+			{
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					"'{0:yyyy-MM-dd}'" :
+					"'{0:yyyy-MM-ddTHH:mm:ss}'";
+			}
+
+			StringBuilder.AppendFormat(format, value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

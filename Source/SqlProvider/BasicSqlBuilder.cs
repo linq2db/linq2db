@@ -1855,7 +1855,7 @@ namespace LinqToDB.SqlProvider
 			else if (value is string)   BuildString(value.ToString());
 			else if (value is char)     BuildChar  ((char)value);
 			else if (value is bool)     StringBuilder.Append((bool)value ? "1" : "0");
-			else if (value is DateTime) BuildDateTime(value);
+			else if (value is DateTime) BuildDateTime((DateTime)value);
 			else if (value is Guid)     StringBuilder.Append('\'').Append(value).Append('\'');
 			else if (value is decimal)  StringBuilder.Append(((decimal)value).ToString(_numberFormatInfo));
 			else if (value is double)   StringBuilder.Append(((double) value).ToString(_numberFormatInfo));
@@ -1908,9 +1908,18 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append('\'');
 		}
 
-		protected virtual void BuildDateTime(object value)
+		protected virtual void BuildDateTime(DateTime value)
 		{
-			StringBuilder.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}'", value));
+			var format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+
+			if (value.Millisecond == 0)
+			{
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					"'{0:yyyy-MM-dd}'" :
+					"'{0:yyyy-MM-dd HH:mm:ss}'";
+			}
+
+			StringBuilder.AppendFormat(format, value);
 		}
 
 		#endregion

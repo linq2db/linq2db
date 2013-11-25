@@ -64,11 +64,22 @@ namespace LinqToDB.DataProvider.SQLite
 				base.BuildValue(value);
 		}
 
-		protected override void BuildDateTime(object value)
+		protected override void BuildDateTime(DateTime value)
 		{
-			StringBuilder
-				.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-				.Append('\'');
+			if (value.Millisecond == 0)
+			{
+				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					"'{0:yyyy-MM-dd}'" :
+					"'{0:yyyy-MM-dd HH:mm:ss}'";
+
+				StringBuilder.AppendFormat(format, value);
+			}
+			else
+			{
+				StringBuilder
+					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
+					.Append('\'');
+			}
 		}
 
 		public override object Convert(object value, ConvertType convertType)

@@ -365,9 +365,13 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-		protected override void BuildDateTime(object value)
+		protected override void BuildDateTime(DateTime value)
 		{
-			StringBuilder.Append("#{0:yyyy-MM-dd HH:mm:ss}#".Args(value));
+			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+				"#{0:yyyy-MM-dd}#" :
+				"#{0:yyyy-MM-dd HH:mm:ss}#";
+
+			StringBuilder.AppendFormat(format, value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
