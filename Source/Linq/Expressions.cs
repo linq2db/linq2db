@@ -129,6 +129,31 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		static Expressions()
+		{
+			var members = _members[""];
+
+			#region ToString
+
+			members[M(() => ((Boolean)true).ToString())] = L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Boolean)true).ToString())] = L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Byte)    0)  .ToString())] = L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Char)   '0') .ToString())] = L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Decimal) 0)  .ToString())] = L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Double)  0)  .ToString())] = L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Int16)   0)  .ToString())] = L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Int32)   0)  .ToString())] = L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Int64)   0)  .ToString())] = L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((SByte)   0)  .ToString())] = L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((Single)  0)  .ToString())] = L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((String) "0") .ToString())] = L<String,  String>((String  p0) => p0                            );
+			members[M(() => ((UInt16)  0)  .ToString())] = L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((UInt32)  0)  .ToString())] = L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0));
+			members[M(() => ((UInt64)  0)  .ToString())] = L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0));
+
+			#endregion
+		}
+
 		static public   Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>  Members { get { return _members; } }
 		static readonly Dictionary<string,Dictionary<MemberInfo,LambdaExpression>> _members = new Dictionary<string,Dictionary<MemberInfo,LambdaExpression>>
 		{
@@ -239,25 +264,6 @@ namespace LinqToDB.Linq
 				{ M(() => UInt16.  Parse("")), L<String,UInt16>  ((String p0) => Sql.ConvertTo<UInt16>.  From(p0) ) },
 				{ M(() => UInt32.  Parse("")), L<String,UInt32>  ((String p0) => Sql.ConvertTo<UInt32>.  From(p0) ) },
 				{ M(() => UInt64.  Parse("")), L<String,UInt64>  ((String p0) => Sql.ConvertTo<UInt64>.  From(p0) ) },
-
-				#endregion
-
-				#region ToString
-
-				{ M(() => ((Boolean)true).ToString()), L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Byte)    0)  .ToString()), L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Char)   '0') .ToString()), L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Decimal) 0)  .ToString()), L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Double)  0)  .ToString()), L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int16)   0)  .ToString()), L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int32)   0)  .ToString()), L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Int64)   0)  .ToString()), L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((SByte)   0)  .ToString()), L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((Single)  0)  .ToString()), L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((String) "0") .ToString()), L<String,  String>((String  p0) => p0                             ) },
-				{ M(() => ((UInt16)  0)  .ToString()), L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((UInt32)  0)  .ToString()), L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0) ) },
-				{ M(() => ((UInt64)  0)  .ToString()), L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0) ) },
 
 				#endregion
 
