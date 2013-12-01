@@ -11,6 +11,9 @@
     <iconUrl>http://www.firebirdsql.org/file/about/ds-firebird-logo-64.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Firebird ADO.NET Data provider</description>
+    <releaseNotes />
+    <copyright />
+    <language />
     <tags>firebird firebirsql firebirdclient adonet database</tags>
   </metadata>
 </package>

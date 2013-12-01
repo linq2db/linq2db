@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 // ReSharper disable ClassNeverInstantiated.Local
 
-namespace Data.Linq.UserTests
+namespace Tests.UserTests
 {
 	using Tests;
 

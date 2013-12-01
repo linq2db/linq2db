@@ -11,6 +11,7 @@
     <iconUrl>http://system.data.sqlite.org/images/sqlite32.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The official SQLite database engine for both x86 and x64 along with the ADO.NET provider.</description>
+    <releaseNotes />
     <copyright>Public Domain</copyright>
     <language>en-US</language>
     <tags>sqlite database ado.net provider interop</tags>

@@ -31,3 +31,4 @@ NuGet/*.nupkg
 !*.dll
 !*.exe
 !*.pdb
+linq2db.sln.ide/graph
