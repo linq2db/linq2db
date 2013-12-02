@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 							    ma.Member.IsNullableHasValueMember())
 								break;
 
-							if (Expressions.ConvertMember(MappingSchema, ma.Member) == null)
+							if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) == null)
 							{
 								var ctx = GetContext(context, expr);
 
@@ -356,7 +356,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma = (MemberExpression)e;
-							var l  = Expressions.ConvertMember(MappingSchema, ma.Member);
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
 
 							if (l != null)
 							{
@@ -425,7 +425,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema, pi.Method);
+			var l = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, pi.Method);
 			return l == null ? null : ConvertMethod(pi, l);
 		}
 
@@ -458,7 +458,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertNew(NewExpression pi)
 		{
-			var lambda = Expressions.ConvertMember(MappingSchema, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor);
 
 			if (lambda != null)
 			{
@@ -879,7 +879,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression == null ? null : ex.Expression.Type, ex.Member);
 
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
@@ -908,7 +908,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = Expressions.ConvertMember(MappingSchema, e.Method);
+							var l = Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method);
 
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
@@ -1004,9 +1004,16 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeCompiled
 
+		readonly Dictionary<Expression,bool> _canBeCompiledDic = new Dictionary<Expression,bool>();
+
 		bool CanBeCompiled(Expression expr)
 		{
-			return null == expr.Find(ex =>
+			bool result;
+
+			if (_canBeCompiledDic.TryGetValue(expr, out result))
+				return result;
+
+			_canBeCompiledDic[expr] = result = null == expr.Find(ex =>
 			{
 				if (IsServerSideOnly(ex))
 					return true;
@@ -1031,6 +1038,8 @@ namespace LinqToDB.Linq.Builder
 
 				return false;
 			});
+
+			return result;
 		}
 
 		#endregion

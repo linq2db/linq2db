@@ -51,17 +51,17 @@ namespace LinqToDB.DataProvider.DB2
 
 					if (AutoDetectProvider)
 					{
-						var connectionType = Type.GetType("IBM.Data.DB2.DB2Connection, IBM.Data.DB2", true);
-						var serverTypeProp = connectionType
-							.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
-							.FirstOrDefault(p => p.Name == "eServerType");
-
-						if (serverTypeProp != null)
+						try
 						{
-							var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
+							var connectionType = Type.GetType("IBM.Data.DB2.DB2Connection, IBM.Data.DB2", true);
+							var serverTypeProp = connectionType
+								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
+								.FirstOrDefault(p => p.Name == "eServerType");
 
-							try
+							if (serverTypeProp != null)
 							{
+								var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
+
 								using (var conn = connectionCreator(css.ConnectionString))
 								{
 									conn.Open();
@@ -102,9 +102,9 @@ namespace LinqToDB.DataProvider.DB2
 									return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
 								}
 							}
-							catch (Exception)
-							{
-							}
+						}
+						catch (Exception)
+						{
 						}
 					}
 

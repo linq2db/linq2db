@@ -17,6 +17,7 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
+*.cs.ide
 [Bb]in
 [Dd]ebug*/
 *.lib
