@@ -95,6 +95,27 @@ namespace LinqToDB.DataProvider
 			return l.Compile();
 		}
 
+		protected Func<IDbDataParameter,bool> IsGetParameter(
+			Type connectionType,
+			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
+			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
+		{
+			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
+			var value  = Enum.Parse(dbType, valueName);
+
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var l = Expression.Lambda<Func<IDbDataParameter,bool>>(
+				Expression.Equal(
+					Expression.PropertyOrField(
+						Expression.Convert(p, pType),
+						propertyName),
+					Expression.Constant(value)),
+				p);
+
+			return l.Compile();
+		}
+
 		// SetField<IfxDataReader,Int64>("BIGINT", (r,i) => r.GetBigInt(i));
 		//
 		// protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)

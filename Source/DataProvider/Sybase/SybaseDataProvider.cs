@@ -67,6 +67,7 @@ namespace LinqToDB.DataProvider.Sybase
 			_setTime          = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "Time");
 			_setSmallDateTime = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "SmallDateTime");
 			_setTimestamp     = GetSetParameter(connectionType, "AseParameter", "AseDbType", "AseDbType", "TimeStamp");
+			_isUnsupported    = IsGetParameter (connectionType, "AseParameter", "AseDbType", "AseDbType", "Unsupported");
 		}
 
 		static Action<IDbDataParameter> _setUInt16;
@@ -83,6 +84,8 @@ namespace LinqToDB.DataProvider.Sybase
 		static Action<IDbDataParameter> _setTime;
 		static Action<IDbDataParameter> _setSmallDateTime;
 		static Action<IDbDataParameter> _setTimestamp;
+
+		static Func<IDbDataParameter,bool> _isUnsupported;
 
 		#endregion
 
@@ -161,6 +164,14 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Time          : _setTime         (parameter);               break;
 				case DataType.SmallDateTime : _setSmallDateTime(parameter);               break;
 				case DataType.Timestamp     : _setTimestamp    (parameter);               break;
+				case DataType.DateTime2     : 
+					base.SetParameterType(parameter, dataType);
+
+					if (_isUnsupported(parameter))
+						base.SetParameterType(parameter, DataType.DateTime);
+
+					break;
+
 				default                     : base.SetParameterType(parameter, dataType); break;
 			}
 		}
