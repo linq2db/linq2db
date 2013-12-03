@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>1.0.1.1</version>
+		<version>1.0.2</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -13,11 +13,12 @@
 		<description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</description>
 		<summary />
 		<tags>
-			linq linq2db LinqToDB ORM database DB SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix
+			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix
 		</tags>
 	</metadata>
 	<files>
 		<file src="..\Source\bin\Release.4.0\linq2db.dll"                       target="lib\net40" />
+		<file src="..\Source\bin\Release.4.5\linq2db.dll"                       target="lib\net45" />
 		<file src="..\Source\bin\Release.Silverlight.4\linq2db.Silverlight.dll" target="lib\sl4" />
 		<file src="..\Source\bin\Release.Silverlight.5\linq2db.Silverlight.dll" target="lib\sl5" />
 	</files>
