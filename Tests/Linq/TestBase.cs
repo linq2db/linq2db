@@ -27,9 +27,9 @@ namespace Tests
 			//Configuration.Linq.GenerateExpressionTest = true;
 
 			var providerListFile =
-				File.Exists(@"..\..\..\UserDataProviders.txt") ?
-					@"..\..\..\UserDataProviders.txt" :
-					@"..\..\..\DefaultDataProviders.txt";
+				File.Exists(@"..\..\UserDataProviders.txt") ?
+					@"..\..\UserDataProviders.txt" :
+					@"..\..\DefaultDataProviders.txt";
 
 			UserProviders.AddRange(
 				File.ReadAllLines(providerListFile)

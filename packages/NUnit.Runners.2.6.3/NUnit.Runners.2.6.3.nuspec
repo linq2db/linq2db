@@ -16,8 +16,6 @@ Version 2.6 is the seventh major release of this well-known and well-tested prog
 
 This package includes the NUnit console, gui and pnunit runners and is compatible with all NUnit framework versions 2.0 through 2.6. The NUnit project editor is also included.</description>
     <summary>NUnit is a unit-testing framework for all .Net languages with a strong TDD focus.</summary>
-    <releaseNotes />
-    <copyright />
     <language>en-US</language>
     <tags>nunit test testing tdd runner</tags>
   </metadata>
