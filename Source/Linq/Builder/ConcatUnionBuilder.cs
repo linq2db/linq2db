@@ -46,7 +46,11 @@ namespace LinqToDB.Linq.Builder
 			public UnionContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall)
 				: base(sequence1)
 			{
+				_sequence1  = sequence1;
+				_sequence2  = sequence2;
 				_methodCall = methodCall;
+
+				_sequence2.Parent = this;
 
 				_isObject =
 					sequence1.IsExpression(null, 0, RequestFor.Object).Result ||
@@ -54,11 +58,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (_isObject)
 				{
-					_type = _methodCall.Method.GetGenericArguments()[0];
+					_type           = _methodCall.Method.GetGenericArguments()[0];
 					_unionParameter = Expression.Parameter(_type, "t");
 				}
 
-				Init(sequence1, sequence2);
+				Init();
 			}
 
 			readonly Type                          _type;
@@ -66,6 +70,8 @@ namespace LinqToDB.Linq.Builder
 			readonly MethodCallExpression          _methodCall;
 			readonly ParameterExpression           _unionParameter;
 			readonly Dictionary<MemberInfo,Member> _members = new Dictionary<MemberInfo,Member>(new MemberInfoComparer());
+			readonly SubQueryContext               _sequence1;
+			readonly SubQueryContext               _sequence2;
 
 			class Member
 			{
@@ -81,10 +87,10 @@ namespace LinqToDB.Linq.Builder
 				public SqlInfo Info2;
 			}
 
-			void Init(SubQueryContext sequence1, SubQueryContext sequence2)
+			void Init()
 			{
-				var info1 = sequence1.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
-				var info2 = sequence2.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
+				var info1 = _sequence1.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
+				var info2 = _sequence2.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
 
 				if (!_isObject)
 					return;
@@ -118,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.Members[0]) };
 
-						if (sequence2.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
+						if (_sequence2.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
 							throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
 
 						members.Add(new UnionMember { Member = member, Info2 = info });
@@ -129,8 +135,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				sequence1.SelectQuery.Select.Columns.Clear();
-				sequence2.SelectQuery.Select.Columns.Clear();
+				_sequence1.SelectQuery.Select.Columns.Clear();
+				_sequence2.SelectQuery.Select.Columns.Clear();
 
 				for (var i = 0; i < members.Count; i++)
 				{
@@ -141,7 +147,7 @@ namespace LinqToDB.Linq.Builder
 						member.Info1 = new SqlInfo(member.Info2.Members)
 						{
 							Sql   = new SqlValue(null),
-							Query = sequence1.SelectQuery,
+							Query = _sequence1.SelectQuery,
 						};
 
 						member.Member.SequenceInfo = member.Info1;
@@ -152,23 +158,23 @@ namespace LinqToDB.Linq.Builder
 						member.Info2 = new SqlInfo(member.Info1.Members)
 						{
 							Sql   = new SqlValue(null),
-							Query = sequence2.SelectQuery,
+							Query = _sequence2.SelectQuery,
 						};
 					}
 
-					sequence1.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence1.SelectQuery, member.Info1.Sql));
-					sequence2.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence2.SelectQuery, member.Info2.Sql));
+					_sequence1.SelectQuery.Select.Columns.Add(new SelectQuery.Column(_sequence1.SelectQuery, member.Info1.Sql));
+					_sequence2.SelectQuery.Select.Columns.Add(new SelectQuery.Column(_sequence2.SelectQuery, member.Info2.Sql));
 
 					member.Member.SequenceInfo.Index = i;
 
 					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
 
-				foreach (var key in sequence1.ColumnIndexes.Keys.ToList())
-					sequence1.ColumnIndexes[key] = sequence1.SelectQuery.Select.Add(key);
+				foreach (var key in _sequence1.ColumnIndexes.Keys.ToList())
+					_sequence1.ColumnIndexes[key] = _sequence1.SelectQuery.Select.Add(key);
 
-				foreach (var key in sequence2.ColumnIndexes.Keys.ToList())
-					sequence2.ColumnIndexes[key] = sequence2.SelectQuery.Select.Add(key);
+				foreach (var key in _sequence2.ColumnIndexes.Keys.ToList())
+					_sequence2.ColumnIndexes[key] = _sequence2.SelectQuery.Select.Add(key);
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -245,7 +251,12 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return base.BuildExpression(expression, level);
+				var ret = _sequence1.BuildExpression(expression, level);
+
+				//if (level == 1)
+				//	_sequence2.BuildExpression(expression, level);
+
+				return ret;
 			}
 
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)

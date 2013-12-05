@@ -623,16 +623,38 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssosiationUnion([DataContexts] string context)
+		public void AssosiationUnion1([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from c in Child.Union(Child)
+					from c in    Child.Union(Child)
 					let p = c.Parent
 					select p.ParentID,
 					from c in db.Child.Union(db.Child)
 					let p = c.Parent
 					select p.ParentID);
+		}
+
+		[Test]
+		public void AssosiationUnion2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from c in    Child.Union(Child)
+					select c.Parent.ParentID,
+					from c in db.Child.Union(db.Child)
+					select c.Parent.ParentID);
+		}
+
+		[Test]
+		public void AssosiationConcat2([DataContexts] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from c in    Child.Concat(Child)
+					select c.Parent.ParentID,
+					from c in db.Child.Concat(db.Child)
+					select c.Parent.ParentID);
 		}
 	}
 }
