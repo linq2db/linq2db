@@ -1936,6 +1936,14 @@ namespace LinqToDB.SqlQuery
 							//if (!SqlQuery.From.GetFromQueries().Any(_ => _ == query))
 							//	throw new InvalidOperationException("Wrong column usage.");
 
+							if (SelectQuery.HasUnion)
+							{
+								if (SelectQuery.Unions.Any(u => u.SelectQuery == query))
+								{
+								
+								}
+							}
+
 							break;
 						}
 

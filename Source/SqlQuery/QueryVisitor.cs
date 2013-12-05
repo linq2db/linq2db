@@ -667,6 +667,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			_action2(element);
+
 			if (!_all)
 				_visitedElements.Add(element, element);
 		}
