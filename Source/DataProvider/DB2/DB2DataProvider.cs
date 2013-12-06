@@ -368,10 +368,11 @@ namespace LinqToDB.DataProvider.DB2
 
 									switch (column.DataType)
 									{
-										case DataType.NVarChar:
-										case DataType.Char:
-										case DataType.VarChar:
-										case DataType.NChar:
+										case DataType.NVarChar  :
+										case DataType.Char      :
+										case DataType.VarChar   :
+										case DataType.NChar     :
+										case DataType.Undefined :
 											isString = true;
 											break;
 									}
