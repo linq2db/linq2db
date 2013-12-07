@@ -380,20 +380,20 @@ namespace LinqToDB.DataProvider.DB2
 									if (isString) goto case TypeCode.Int32;
 									goto default;
 
-								case TypeCode.Boolean:
-								case TypeCode.Char:
-								case TypeCode.SByte:
-								case TypeCode.Byte:
-								case TypeCode.Int16:
-								case TypeCode.UInt16:
-								case TypeCode.Int32:
-								case TypeCode.UInt32:
-								case TypeCode.Int64:
-								case TypeCode.UInt64:
-								case TypeCode.Single:
-								case TypeCode.Double:
-								case TypeCode.Decimal:
-								case TypeCode.DateTime:
+								case TypeCode.Boolean  :
+								case TypeCode.Char     :
+								case TypeCode.SByte    :
+								case TypeCode.Byte     :
+								case TypeCode.Int16    :
+								case TypeCode.UInt16   :
+								case TypeCode.Int32    :
+								case TypeCode.UInt32   :
+								case TypeCode.Int64    :
+								case TypeCode.UInt64   :
+								case TypeCode.Single   :
+								case TypeCode.Double   :
+								case TypeCode.Decimal  :
+								case TypeCode.DateTime :
 									//SetParameter(dataParam, "", column.DataType, value);
 
 									buildValue(value);

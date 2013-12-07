@@ -36,14 +36,14 @@ namespace LinqToDB.DataProvider.DB2
 
 			switch (css.ProviderName)
 			{
-				case ""                      :
-				case null                    :
+				case ""             :
+				case null           :
 
 					if (css.Name == "DB2")
 						goto case "DB2";
 					break;
 
-				case "DB2"             :
+				case "DB2"          :
 				case "IBM.Data.DB2" :
 
 					if (css.Name.Contains("LUW") || css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
@@ -73,31 +73,6 @@ namespace LinqToDB.DataProvider.DB2
 										.Compile()();
 
 									var iszOS = serverType.ToString() == "DB2_390";
-
-									/*
-									var iszOS = false;
-									var cmd   = conn.CreateCommand();
-
-									try
-									{
-										cmd.CommandText = "SELECT INST_NAME FROM SYSIBMADM.ENV_INST_INFO";
-										cmd.ExecuteScalar();
-									}
-									catch
-									{
-										try
-										{
-											cmd.CommandText = "SELECT GETVARIABLE('SYSIBM.VERSION') FROM SYSIBM.SYSDUMMY1";
-
-											var version = cmd.ExecuteScalar().ToString();
-
-											iszOS = version.StartsWith("DSN");
-										}
-										catch
-										{
-										}
-									}
-									*/
 
 									return iszOS ? _db2DataProviderzOS : _db2DataProviderLUW;
 								}
