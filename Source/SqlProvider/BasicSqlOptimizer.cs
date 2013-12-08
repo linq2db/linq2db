@@ -791,12 +791,12 @@ namespace LinqToDB.SqlProvider
 
 						switch (expr.Operator)
 						{
-							case SelectQuery.Predicate.Operator.Equal         :
-							case SelectQuery.Predicate.Operator.NotEqual      :
-							case SelectQuery.Predicate.Operator.Greater       :
-							case SelectQuery.Predicate.Operator.GreaterOrEqual:
-							case SelectQuery.Predicate.Operator.Less          :
-							case SelectQuery.Predicate.Operator.LessOrEqual   :
+							case SelectQuery.Predicate.Operator.Equal          :
+							case SelectQuery.Predicate.Operator.NotEqual       :
+							case SelectQuery.Predicate.Operator.Greater        :
+							case SelectQuery.Predicate.Operator.GreaterOrEqual :
+							case SelectQuery.Predicate.Operator.Less           :
+							case SelectQuery.Predicate.Operator.LessOrEqual    :
 								predicate = OptimizeCase(selectQuery, expr);
 								break;
 						}
@@ -807,8 +807,8 @@ namespace LinqToDB.SqlProvider
 
 							switch (expr.Operator)
 							{
-								case SelectQuery.Predicate.Operator.Equal :
-								case SelectQuery.Predicate.Operator.NotEqual :
+								case SelectQuery.Predicate.Operator.Equal      :
+								case SelectQuery.Predicate.Operator.NotEqual   :
 									var expr1 = expr.Expr1;
 									var expr2 = expr.Expr2;
 

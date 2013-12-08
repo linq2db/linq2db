@@ -76,6 +76,7 @@ namespace LinqToDB.SqlQuery
 			ParentSelect         = parentSelect;
 			_createTable         = createTable;
 			IsParameterDependent = parameterDependent;
+
 			_parameters.AddRange(parameters);
 
 			foreach (var col in select.Columns)
