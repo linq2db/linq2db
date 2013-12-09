@@ -335,7 +335,13 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Guid       :
 					if (value is Guid) value = ((Guid)value).ToByteArray();
 					break;
-			}
+                case DataType.Time:
+                    // According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
+                    // Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
+                    if (value is TimeSpan)
+                        dataType = DataType.Undefined;
+                    break;
+            }
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
