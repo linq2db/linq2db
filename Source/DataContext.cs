@@ -28,6 +28,7 @@ namespace LinqToDB
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ContextID           { get; set;         }
 		public MappingSchema MappingSchema       { get; set;         }
+		public bool          InlineParameters    { get; set;         }
 		public string        LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;

@@ -9,6 +9,9 @@ using System.Text;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+
+	using Data;
+
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
@@ -1083,7 +1086,8 @@ namespace LinqToDB.Linq.Builder
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, nm => name = nm);
 
-			p = CreateParameterAccessor(MappingSchema, newExpr, expr, ExpressionParam, ParametersParam, name);
+			p = CreateParameterAccessor(
+				DataContextInfo.DataContext, newExpr, expr, ExpressionParam, ParametersParam, name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1336,7 +1340,7 @@ namespace LinqToDB.Linq.Builder
 					// | (SqlQuery(Select([]) as q), SqlValue(null))
 					// | (SqlValue(null), SqlQuery(Select([]) as q))  =>
 
-					SelectQuery q =
+					var q =
 						l.ElementType == QueryElementType.SqlQuery &&
 						r.ElementType == QueryElementType.SqlValue &&
 						((SqlValue)r).Value == null &&
@@ -1673,7 +1677,7 @@ namespace LinqToDB.Linq.Builder
 
 			var par  = ReplaceParameter(_expressionAccessors, ex, _ => {});
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType) : par, member);
-			var p    = CreateParameterAccessor(MappingSchema, expr, expr, ExpressionParam, ParametersParam, member.Name);
+			var p    = CreateParameterAccessor(DataContextInfo.DataContext, expr, expr, ExpressionParam, ParametersParam, member.Name);
 
 			_parameters.Add(expr, p);
 			CurrentSqlParameters.Add(p);
@@ -1682,7 +1686,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		internal static ParameterAccessor CreateParameterAccessor(
-			MappingSchema       mappingSchema,
+			IDataContext        dataContext,
 			Expression          accessorExpression,
 			Expression          expression,
 			ParameterExpression expressionParam,
@@ -1690,11 +1694,11 @@ namespace LinqToDB.Linq.Builder
 			string              name)
 		{
 			var type        = accessorExpression.Type;
-			var defaultType = Converter.GetDefaultMappingFromEnumType(mappingSchema, type);
+			var defaultType = Converter.GetDefaultMappingFromEnumType(dataContext.MappingSchema, type);
 
 			if (defaultType != null)
 			{
-				var enumMapExpr = mappingSchema.GetConvertExpression(type, defaultType);
+				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
 				accessorExpression = enumMapExpr.GetBody(accessorExpression);
 			}
 
@@ -1706,7 +1710,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression   = expression,
 				Accessor     = mapper.Compile(),
-				SqlParameter = new SqlParameter(accessorExpression.Type, name, null)
+				SqlParameter = new SqlParameter(accessorExpression.Type, name, null) { IsQueryParameter = !dataContext.InlineParameters }
 			};
 		}
 
@@ -1836,7 +1840,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					Expression   = ep.Expression,
 					Accessor     = ep.Accessor,
-					SqlParameter = new SqlParameter(ep.Expression.Type, p.Name, p.Value) { LikeStart = start, LikeEnd = end },
+					SqlParameter = new SqlParameter(ep.Expression.Type, p.Name, p.Value)
+					{
+						LikeStart        = start,
+						LikeEnd          = end,
+						IsQueryParameter = !DataContextInfo.DataContext.InlineParameters
+					},
 				};
 
 				CurrentSqlParameters.Add(ep);

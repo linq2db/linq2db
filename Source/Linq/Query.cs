@@ -518,8 +518,7 @@ namespace LinqToDB.Linq
 				getter = Expression.PropertyOrField(expr.GetBody(getter), "Value");
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext.MappingSchema,
-				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}

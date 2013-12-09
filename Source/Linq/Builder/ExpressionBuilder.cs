@@ -94,13 +94,13 @@ namespace LinqToDB.Linq.Builder
 			_query               = query;
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
-			CompiledParameters = compiledParameters;
-			DataContextInfo    = dataContext;
-			OriginalExpression = expression;
+			CompiledParameters   = compiledParameters;
+			DataContextInfo      = dataContext;
+			OriginalExpression   = expression;
 
-			_visitedExpressions = new HashSet<Expression>();
-			Expression         = ConvertExpressionTree(expression);
-			_visitedExpressions = null;
+			_visitedExpressions  = new HashSet<Expression>();
+			Expression           = ConvertExpressionTree(expression);
+			_visitedExpressions  = null;
 
 			if (Configuration.AvoidSpecificDataProviderAPI)
 			{
