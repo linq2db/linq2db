@@ -65,21 +65,21 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema       { get; private set; }
 		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
-		public delegate IDbConnection OnCreateConnectionDelegate(IDbConnection connection);
-
-		public static OnCreateConnectionDelegate OnCreateConnection { get; set; }
+		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
 
 		public IDbConnection CreateConnection(string connectionString)
 		{
 			var connection = CreateConnectionInternal(connectionString);
-			if (OnCreateConnection != null)
-				connection = OnCreateConnection(connection);
+
+			if (OnConnectionCreated != null)
+				connection = OnConnectionCreated(this, connection);
+
 			return connection;
 		}
 
-		protected abstract IDbConnection    CreateConnectionInternal (string connectionString);
-		public abstract ISqlBuilder      CreateSqlBuilder();
-		public abstract ISqlOptimizer    GetSqlOptimizer ();
+		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
+		public    abstract ISqlBuilder   CreateSqlBuilder();
+		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
 		public virtual void InitCommand(DataConnection dataConnection)
 		{
@@ -125,11 +125,6 @@ namespace LinqToDB.DataProvider
 		#region GetReaderExpression
 
 		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
-
-		static DataProviderBase()
-		{
-			OnCreateConnection = null;
-		}
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
