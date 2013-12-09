@@ -110,6 +110,8 @@
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
+    <Compile Include="Reflection\Emit\DynamicCompilationSpike.cs" />
+    <Compile Include="Reflection\Emit\FunctionFactory.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />

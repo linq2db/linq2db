@@ -366,15 +366,27 @@ namespace LinqToDB.Linq
 		{
 			lock (this)
 			{
-				SetParameters(expr, parameters, idx);
+                bool useQueryText = false;
+#if !SILVERLIGHT
+                useQueryText = dataContext is DataConnection && ((DataConnection)dataContext).UseQueryText;
+#endif
+				SetParameters(expr, parameters, idx, useQueryText);
 				return dataContext.SetQuery(Queries[idx]);
 			}
 		}
 
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
-		void SetParameters(Expression expr, object[] parameters, int idx)
+        void SetParameters(Expression expr, object[] parameters, int idx, bool useQueryText)
 		{
+            QueryInfo query = Queries[idx];
+
+            if (query.UseQueryText != useQueryText)
+            {
+                query.Context = null;
+                query.UseQueryText = useQueryText;
+            }
+
 			foreach (var p in Queries[idx].Parameters)
 			{
 				var value = p.Accessor(expr, parameters);
@@ -428,6 +440,11 @@ namespace LinqToDB.Linq
 					}
 				}
 
+                // Reset the query context sql when the parameters values change. When UseQueryText = true
+                // the query context sql includes the parameters values
+                if (useQueryText && query.Context != null && !Equals(p.SqlParameter.Value, value))
+                    query.Context = null;
+
 				p.SqlParameter.Value = value;
 			}
 		}
@@ -464,6 +481,7 @@ namespace LinqToDB.Linq
 
 			public SelectQuery SelectQuery { get; set; }
 			public object      Context     { get; set; }
+            public bool       UseQueryText { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{

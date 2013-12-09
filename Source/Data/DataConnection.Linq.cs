@@ -70,6 +70,7 @@ namespace LinqToDB.Data
 			}
 
 			var sqlProvider = DataProvider.CreateSqlBuilder();
+            sqlProvider.UseQueryText = UseQueryText;
 
 			var cc = sqlProvider.CommandCount(sql);
 			var sb = new StringBuilder();
@@ -102,7 +103,10 @@ namespace LinqToDB.Data
 		}
 
 		void GetParameters(IQueryContext query, PreparedQuery pq)
-		{
+        {
+            if (UseQueryText)
+                return;
+
 			var parameters = query.GetParameters();
 
 			if (parameters.Length == 0 && pq.SqlParameters.Count == 0)

@@ -33,6 +33,7 @@ namespace LinqToDB.SqlProvider
 
 		#region Support Flags
 
+        public bool UseQueryText { get; set; }
 		public virtual bool IsNestedJoinSupported           { get { return true;  } }
 		public virtual bool IsNestedJoinParenthesisRequired { get { return false; } }
 
@@ -74,7 +75,9 @@ namespace LinqToDB.SqlProvider
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
+                        var sqlProvider = CreateSqlBuilder();
+                        sqlProvider.UseQueryText = UseQueryText;
+                        ((BasicSqlBuilder)sqlProvider).BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
 					}
 				}
 			}
@@ -101,7 +104,9 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && selectQuery.Select.TakeValue != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(0, selectQuery, StringBuilder, indent, skipAlias);
+            var sqlProvider = CreateSqlBuilder();
+            sqlProvider.UseQueryText = UseQueryText;
+			((BasicSqlBuilder)sqlProvider).BuildSql(0, selectQuery, StringBuilder, indent, skipAlias);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -117,7 +122,8 @@ namespace LinqToDB.SqlProvider
 			sb.SqlOptimizer     = SqlOptimizer;
 			sb.SqlProviderFlags = SqlProviderFlags;
 			sb.StringBuilder    = StringBuilder;
-			sb.SkipAlias        = SkipAlias; 
+			sb.SkipAlias        = SkipAlias;
+		    sb.UseQueryText     = UseQueryText;
 
 			return sb;
 		}
@@ -1748,7 +1754,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var parm = (SqlParameter)expr;
 
-						if (parm.IsQueryParameter)
+                        if (!UseQueryText && parm.IsQueryParameter)
 						{
 							var name = Convert(parm.Name, ConvertType.NameToQueryParameter);
 							StringBuilder.Append(name);
