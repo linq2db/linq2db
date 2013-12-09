@@ -86,7 +86,7 @@ namespace LinqToDB.ServiceModel
 			set { _mappingSchema = value; }
 		}
 
-		public  bool           InlineParameters { get; set; }
+		public  bool         InlineParameters { get; set; }
 
 		private        Type _sqlProviderType;
 		public virtual Type  SqlProviderType
