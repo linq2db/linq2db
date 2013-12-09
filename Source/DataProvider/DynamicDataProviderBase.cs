@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider
 
 		Func<string,IDbConnection> _createConnection;
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			if (_createConnection == null)
 			{

@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new SqlConnection(connectionString);
 		}
