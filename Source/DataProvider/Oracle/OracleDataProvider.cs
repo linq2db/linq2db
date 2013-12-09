@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (dataType)
 			{
-				case DataType.DateTimeOffset  :
+				case DataType.DateTimeOffset:
 					if (value is DateTimeOffset)
 					{
 						var dto  = (DateTimeOffset)value;
@@ -327,21 +327,22 @@ namespace LinqToDB.DataProvider.Oracle
 						value = _createOracleTimeStampTZ(dto, zone);
 					}
 					break;
-				case DataType.Boolean    :
+				case DataType.Boolean:
 					dataType = DataType.Byte;
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
-				case DataType.Guid       :
+				case DataType.Guid:
 					if (value is Guid) value = ((Guid)value).ToByteArray();
 					break;
-                case DataType.Time:
-                    // According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
-                    // Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
-                    if (value is TimeSpan)
-                        dataType = DataType.Undefined;
-                    break;
-            }
+				case DataType.Time:
+					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
+					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
+					//
+					if (value is TimeSpan)
+						dataType = DataType.Undefined;
+					break;
+			}
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
