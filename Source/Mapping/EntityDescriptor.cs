@@ -5,6 +5,9 @@ using System.Linq;
 namespace LinqToDB.Mapping
 {
 	using Common;
+
+	using Extensions;
+
 	using Linq;
 	using Reflection;
 
@@ -53,7 +56,7 @@ namespace LinqToDB.Mapping
 			{
 				TableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterfaceEx() && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 

@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly public List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
-#if FW4 || SILVERLIGHT
+#if FW4 || SILVERLIGHT || NETFX_CORE
 
 		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
 		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
@@ -230,13 +230,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var call = (MethodCallExpression)expression;
 
-				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericType)
+				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericTypeEx())
 				{
 					var type = call.Type.GetGenericTypeDefinition();
 
 					if (type == typeof(IQueryable<>) || type == typeof(IEnumerable<>))
 					{
-						var arg = call.Type.GetGenericArguments();
+						var arg = call.Type.GetGenericArgumentsEx();
 
 						if (arg.Length == 1)
 						{
@@ -369,13 +369,13 @@ namespace LinqToDB.Linq.Builder
 		private MethodInfo[] _enumerableMethods;
 		public  MethodInfo[]  EnumerableMethods
 		{
-			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods()); }
+			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx()); }
 		}
 
 		private MethodInfo[] _queryableMethods;
 		public  MethodInfo[]  QueryableMethods
 		{
-			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethods()); }
+			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethodsEx()); }
 		}
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
@@ -404,11 +404,11 @@ namespace LinqToDB.Linq.Builder
 						//
 						if (me.Member.Name == "Count")
 						{
-							var isList = typeof(ICollection).IsAssignableFrom(me.Member.DeclaringType);
+							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
 
 							if (!isList)
-								isList = me.Member.DeclaringType.GetInterfaces()
-									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<>));
+								isList = me.Member.DeclaringType.GetInterfacesEx()
+									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(IList<>));
 
 							if (isList)
 							{
@@ -566,10 +566,10 @@ namespace LinqToDB.Linq.Builder
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
 
 			call   = (MethodCallExpression)OptimizeExpression(call);
 			select = select.MakeGenericMethod(call.Type, expr.Type);
@@ -635,7 +635,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var ex in exprs)
 				{
 					var type   = typeof(ExpressionHoder<,>).MakeGenericType(expr.Type, ex.Type);
-					var fields = type.GetFields();
+					var fields = type.GetFieldsEx();
 
 					expr = Expression.MemberInit(
 						Expression.New(type),
@@ -682,7 +682,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(sequence, method.Arguments[0]) || !ReferenceEquals(predicate, method.Arguments[1]))
 			{
 				var methodInfo  = method.Method.GetGenericMethodDefinition();
-				var genericType = sequence.Type.GetGenericArguments()[0];
+				var genericType = sequence.Type.GetGenericArgumentsEx()[0];
 				var newMethod   = methodInfo.MakeGenericMethod(genericType);
 
 				method = Expression.Call(newMethod, sequence, predicate);
@@ -1147,7 +1147,7 @@ namespace LinqToDB.Linq.Builder
 						if (isGeneric)
 							return true;
 
-						var ts = ps[0].ParameterType.GetGenericArguments();
+						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
 						return ts[0] == types[1] || isDefault && ts[0].IsGenericParameter;
 					}
 				}
@@ -1298,17 +1298,17 @@ namespace LinqToDB.Linq.Builder
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
-				method.Method.GetParameters()[1].ParameterType.GetGenericArguments() :
-				method.Method.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments();
+				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx() :
+				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx();
 		}
 
 		#endregion

@@ -20,7 +20,7 @@ namespace LinqToDB.Extensions
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
-			if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+			if (underlyingType.IsEnumEx() && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 			{
 				if (value != null || systemType == underlyingType)
 				{

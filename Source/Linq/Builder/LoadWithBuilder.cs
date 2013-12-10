@@ -65,11 +65,11 @@ namespace LinqToDB.Linq.Builder
 								goto default;
 
 							var member = ((MemberExpression)expr).Member;
-							var mtype  = member.MemberType == MemberTypes.Field ?
+							var mtype  = member.IsFieldEx() ?
 								((FieldInfo)   member).FieldType :
 								((PropertyInfo)member).PropertyType;
 
-							if (lastMember.ReflectedType != mtype.GetItemType())
+							if (lastMember.ReflectedTypeEx() != mtype.GetItemType())
 								goto default;
 
 							expression = expr;

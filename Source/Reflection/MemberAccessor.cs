@@ -44,7 +44,7 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClassEx() || info.type.IsNullable());
 
 				// Build getter.
 				//
@@ -61,7 +61,7 @@ namespace LinqToDB.Reflection
 							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
-							if (next.Type.IsClass || next.Type.IsNullable())
+							if (next.Type.IsClassEx() || next.Type.IsNullable())
 							{
 								var local = Expression.Variable(next.Type);
 
@@ -101,7 +101,7 @@ namespace LinqToDB.Reflection
 				// Build setter.
 				//
 				{
-					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
+					HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethodEx(true) == null);
 
 					var valueParam = Expression.Parameter(Type, "value");
 
@@ -123,7 +123,7 @@ namespace LinqToDB.Reflection
 								}
 								else
 								{
-									if (next.Type.IsClass || next.Type.IsNullable())
+									if (next.Type.IsClassEx() || next.Type.IsNullable())
 									{
 										var local = Expression.Variable(next.Type);
 
@@ -191,7 +191,7 @@ namespace LinqToDB.Reflection
 			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			HasGetter = true;
-			HasSetter = !(memberInfo is PropertyInfo) || ((PropertyInfo)memberInfo).GetSetMethod(true) != null;
+			HasSetter = !(memberInfo is PropertyInfo) || ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
 
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
@@ -259,21 +259,21 @@ namespace LinqToDB.Reflection
 
 		public T GetAttribute<T>() where T : Attribute
 		{
-			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
+			var attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
 
 			return attrs.Length > 0? (T)attrs[0]: null;
 		}
 
 		public T[] GetAttributes<T>() where T : Attribute
 		{
-			Array attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
+			Array attrs = MemberInfo.GetCustomAttributesEx(typeof(T), true);
 
 			return attrs.Length > 0? (T[])attrs: null;
 		}
 
 		public object[] GetAttributes()
 		{
-			var attrs = MemberInfo.GetCustomAttributes(true);
+			var attrs = MemberInfo.GetCustomAttributesEx(true);
 
 			return attrs.Length > 0? attrs: null;
 		}

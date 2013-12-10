@@ -148,7 +148,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override void SetAlias(string alias)
 		{
+#if NETFX_CORE
+			if (alias.Contains("<"))
+#else
 			if (alias.Contains('<'))
+#endif
 				return;
 
 			if (SelectQuery.From.Tables[0].Alias == null)

@@ -8,6 +8,9 @@ using System.Text;
 namespace LinqToDB.SqlProvider
 {
 	using Common;
+
+	using Extensions;
+
 	using Mapping;
 	using SqlQuery;
 
@@ -1865,11 +1868,11 @@ namespace LinqToDB.SqlProvider
 			{
 				var type = value.GetType();
 
-				if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
 				{
-					type = type.GetGenericArguments()[0];
+					type = type.GetGenericArgumentsEx()[0];
 
-					if (type.IsEnum)
+					if (type.IsEnumEx())
 					{
 						lock (_nullableValueReader)
 						{

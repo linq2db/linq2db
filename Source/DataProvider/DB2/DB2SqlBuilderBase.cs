@@ -184,7 +184,11 @@ namespace LinqToDB.DataProvider.DB2
 
 						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
 							name.StartsWith("_") ||
-							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 

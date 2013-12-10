@@ -102,7 +102,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (name.Length > 0 && name[0] == '"')
 							return name;
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote || name.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 

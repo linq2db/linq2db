@@ -250,7 +250,7 @@ namespace LinqToDB.DataProvider.Access
 					break;
 
 				case "Convert"   :
-					switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 					{
 						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
 						case TypeCode.DateTime :

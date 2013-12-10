@@ -153,13 +153,13 @@ namespace LinqToDB.Linq
 		{
 			public class String : Expressor<string>
 			{
-#if !SILVERLIGHT
-				public static MethodInfo Like11     = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", ""));
-				public static MethodInfo Like12     = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", "", ' '));
+#if !SILVERLIGHT && !NETFX_CORE
+				public static MethodInfo Like11 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", ""));
+				public static MethodInfo Like12 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", "", ' '));
 #endif
 
-				public static MethodInfo Like21     = MethodOf(s => Sql.Like(s, ""));
-				public static MethodInfo Like22     = MethodOf(s => Sql.Like(s, "", ' '));
+				public static MethodInfo Like21 = MethodOf(s => Sql.Like(s, ""));
+				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
 			}
 		}
 	}

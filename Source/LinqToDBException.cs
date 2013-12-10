@@ -64,7 +64,7 @@ namespace LinqToDB
 		{
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBException"/> class

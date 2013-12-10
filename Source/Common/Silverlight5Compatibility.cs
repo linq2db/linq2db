@@ -9,6 +9,7 @@ namespace System
 	{
 	}
 
+#if !NETFX_CORE
 	namespace Collections
 	{
 		namespace Concurrent
@@ -35,6 +36,7 @@ namespace System
 			}
 		}
 	}
+#endif
 
 	namespace Data
 	{

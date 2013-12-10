@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					case 0 : return null;
 					case 1 : return new TableContext(builder, buildInfo, ((IQueryable)((ConstantExpression)buildInfo.Expression).Value).ElementType);
 					case 2 :
-					case 3 : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+					case 3 : return new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArgumentsEx()[0]);
 					case 4 : return ctx.GetContext(buildInfo.Expression, 0, buildInfo);
 					case 5 : return new TableContext(builder, buildInfo);
 				}
@@ -178,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return Table<T>.");
 
-				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
+				OriginalType     = mc.Method.ReturnType.GetGenericArgumentsEx()[0];
 				ObjectType       = GetObjectType();
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
@@ -194,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected Type GetObjectType()
 			{
-				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
+				for (var type = OriginalType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
 				{
 					var mapping = Builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
@@ -251,7 +251,7 @@ namespace LinqToDB.Linq.Builder
 					where
 						cd.Storage != null ||
 						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethod(true) != null
+						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethodEx(true) != null
 					select new
 					{
 						Column = cd,
@@ -755,7 +755,11 @@ namespace LinqToDB.Linq.Builder
 
 			public void SetAlias(string alias)
 			{
+#if NETFX_CORE
+				if (alias.Contains("<"))
+#else
 				if (alias.Contains('<'))
+#endif
 					return;
 
 				if (SqlTable.Alias == null)
@@ -806,12 +810,12 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								var sameType =
-									levelMember.Member.ReflectedType == SqlTable.ObjectType ||
-									levelMember.Member.DeclaringType == SqlTable.ObjectType;
+									levelMember.Member.ReflectedTypeEx() == SqlTable.ObjectType ||
+									levelMember.Member.DeclaringType     == SqlTable.ObjectType;
 
 								if (!sameType)
 								{
-									var mi = SqlTable.ObjectType.GetMember(levelMember.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+									var mi = SqlTable.ObjectType.GetInstanceMemberEx(levelMember.Member.Name);
 									sameType = mi.Any(_ => _.DeclaringType == levelMember.Member.DeclaringType);
 								}
 

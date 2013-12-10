@@ -686,8 +686,8 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						if (e.Type == t ||
-							t.IsEnum && Enum.GetUnderlyingType(t) == e.Type ||
-							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
+							t.IsEnumEx()      && Enum.GetUnderlyingType(t)      == e.Type ||
+							e.Type.IsEnumEx() && Enum.GetUnderlyingType(e.Type) == t)
 							return o;
 
 						return Convert(
@@ -1049,9 +1049,9 @@ namespace LinqToDB.Linq.Builder
 			var lambda = Expression.Lambda<Func<object>>(Expression.Convert(expr, typeof(object)));
 			var v      = lambda.Compile()();
 
-			if (v != null && v.GetType().IsEnum)
+			if (v != null && v.GetType().IsEnumEx())
 			{
-				var attrs = v.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
+				var attrs = v.GetType().GetCustomAttributesEx(typeof(Sql.EnumAttribute), true);
 
 				if (attrs.Length == 0)
 					v = MappingSchema.EnumToValue((Enum)v);
@@ -1195,7 +1195,7 @@ namespace LinqToDB.Linq.Builder
 
 							predicate = ConvertInPredicate(context, expr);
 						}
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 						else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context, e);
 						else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context, e);
 #endif
@@ -1220,7 +1220,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expression;
 
 						if (e.Member.Name == "HasValue" && 
-							e.Member.DeclaringType.IsGenericType && 
+							e.Member.DeclaringType.IsGenericTypeEx() && 
 							e.Member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>))
 						{
 							var expr = ConvertToSql(context, e.Expression);
@@ -1409,7 +1409,7 @@ namespace LinqToDB.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnum)
+			if (!type.ToNullableUnderlying().IsEnumEx())
 				return null;
 
 			var dic = new Dictionary<object, object>();

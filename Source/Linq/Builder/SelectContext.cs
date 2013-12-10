@@ -637,7 +637,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterface)
+											if (nm != null && member.DeclaringType.IsInterfaceEx())
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
 													memberExpression = Members[nm];

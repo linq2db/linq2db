@@ -21,7 +21,11 @@ namespace LinqToDB.SqlQuery
 
 		static SelectQuery()
 		{
-			using (var stream = typeof(SelectQuery).Assembly.GetManifestResourceStream(typeof(SelectQuery), "ReservedWords.txt"))
+#if NETFX_CORE
+			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream("ReservedWords.txt"))
+#else
+			using (var stream = typeof(SelectQuery).AssemblyEx().GetManifestResourceStream(typeof(SelectQuery), "ReservedWords.txt"))
+#endif
 			using (var reader = new StreamReader(stream))
 			{
 				string s;

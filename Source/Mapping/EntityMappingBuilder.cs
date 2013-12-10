@@ -5,8 +5,6 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using SqlQuery;
-
 	public class EntityMappingBuilder<T>
 	{
 		#region Init
@@ -33,6 +31,14 @@ namespace LinqToDB.Mapping
 			return _builder.GetAttributes<TA>(typeof(T));
 		}
 
+#if NETFX_CORE
+		public TA[] GetAttributes<TA>(Type type)
+			where TA : Attribute
+		{
+			return _builder.GetAttributes<TA>(type);
+		}
+#endif
+
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : Attribute
 		{
@@ -48,6 +54,18 @@ namespace LinqToDB.Mapping
 				attrs.Where(a => string.IsNullOrEmpty(configGetter(a))).ToArray() :
 				attrs.Where(a => Configuration ==    configGetter(a)). ToArray();
 		}
+
+#if NETFX_CORE
+		public TA[] GetAttributes<TA>(Type type, Func<TA,string> configGetter)
+			where TA : Attribute
+		{
+			var attrs = GetAttributes<TA>(type);
+
+			return string.IsNullOrEmpty(Configuration) ?
+				attrs.Where(a => string.IsNullOrEmpty(configGetter(a))).ToArray() :
+				attrs.Where(a => Configuration ==    configGetter(a)). ToArray();
+		}
+#endif
 
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo, Func<TA,string> configGetter)
 			where TA : Attribute

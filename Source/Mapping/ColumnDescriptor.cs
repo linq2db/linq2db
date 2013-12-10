@@ -7,6 +7,9 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Data;
 	using Expressions;
+
+	using Extensions;
+
 	using Reflection;
 
 	public class ColumnDescriptor
@@ -17,12 +20,12 @@ namespace LinqToDB.Mapping
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
 
-			if (MemberInfo.MemberType == MemberTypes.Field)
+			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
 				MemberType = fieldInfo.FieldType;
 			}
-			else if (MemberInfo.MemberType == MemberTypes.Property)
+			else if (MemberInfo.IsPropertyEx())
 			{
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType = propertyInfo.PropertyType;

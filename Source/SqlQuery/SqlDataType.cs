@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
 #endif
 
@@ -218,13 +218,13 @@ namespace LinqToDB.SqlQuery
 		{
 			var underlyingType = type;
 
-			if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
-				underlyingType = underlyingType.GetGenericArguments()[0];
+			if (underlyingType.IsGenericTypeEx() && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
+				underlyingType = underlyingType.GetGenericArgumentsEx()[0];
 
-			if (underlyingType.IsEnum)
+			if (underlyingType.IsEnumEx())
 				underlyingType = Enum.GetUnderlyingType(underlyingType);
 
-			switch (Type.GetTypeCode(underlyingType))
+			switch (underlyingType.GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return Boolean;
 				case TypeCode.Char     : return Char;
@@ -257,7 +257,7 @@ namespace LinqToDB.SqlQuery
 				default                : break;
 			}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 			if (underlyingType == typeof(SqlByte))     return SqlByte;
 			if (underlyingType == typeof(SqlInt16))    return SqlInt16;
@@ -309,7 +309,7 @@ namespace LinqToDB.SqlQuery
 				case DataType.VarBinary        : return DbVarBinary;
 				case DataType.VarChar          : return DbVarChar;
 				case DataType.Variant          : return DbVariant;
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 				case DataType.Xml              : return DbXml;
 #endif
 				case DataType.Udt              : return DbUdt;
@@ -326,9 +326,9 @@ namespace LinqToDB.SqlQuery
 
 		public static bool CanBeNull(Type type)
 		{
-			if (type.IsValueType == false ||
-				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
-#if !SILVERLIGHT
+			if (type.IsValueTypeEx() == false ||
+				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+#if !SILVERLIGHT && !NETFX_CORE
 				|| typeof(INullable).IsSameOrParentOf(type)
 #endif
 				)
@@ -401,7 +401,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbGuid           = new SqlDataType(DataType.Guid,           typeof(Guid),                   0,               0,  0);
 
 		public static readonly SqlDataType DbVariant        = new SqlDataType(DataType.Variant,        typeof(Object),                 0,               0,  0);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static readonly SqlDataType DbXml            = new SqlDataType(DataType.Xml,            typeof(SqlXml),                 0,               0,  0);
 #endif
 		public static readonly SqlDataType DbUdt            = new SqlDataType(DataType.Udt,            typeof(Object),                 0,               0,  0);
@@ -429,7 +429,7 @@ namespace LinqToDB.SqlQuery
 #endif
 		public static readonly SqlDataType TimeSpan         = DbTime;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static readonly SqlDataType SqlByte          = new SqlDataType(DataType.Byte,           typeof(SqlByte),                0,               0,  0);
 		public static readonly SqlDataType SqlInt16         = new SqlDataType(DataType.Int16,          typeof(SqlInt16),               0,               0,  0);
 		public static readonly SqlDataType SqlInt32         = new SqlDataType(DataType.Int32,          typeof(SqlInt32),               0,               0,  0);

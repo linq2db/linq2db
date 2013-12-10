@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlParameter(Type systemType, string name, object value)
 		{
-			if (systemType.ToNullableUnderlying().IsEnum)
+			if (systemType.ToNullableUnderlying().IsEnumEx())
 				throw new ArgumentException();
 
 			IsQueryParameter = true;
@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 			DataType         = DataType.Undefined;
 		}
 
-		public SqlParameter(Type systemType, string name, object value, Converter<object,object> valueConverter)
+		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
 			: this(systemType, name, value)
 		{
 			_valueConverter = valueConverter;
@@ -65,8 +65,8 @@ namespace LinqToDB.SqlQuery
 
 		internal List<int>  TakeValues;
 
-		private Converter<object,object> _valueConverter;
-		public  Converter<object,object>  ValueConverter
+		private Func<object,object> _valueConverter;
+		public  Func<object,object>  ValueConverter
 		{
 			get
 			{

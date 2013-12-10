@@ -132,7 +132,7 @@ namespace LinqToDB.Linq
 						if (Configuration.Linq.GenerateExpressionTest)
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 							DataConnection.WriteTraceLine(
 								"Expression test code generated: '" + testFile + "'.", 
 								DataConnection.TraceSwitch.DisplayName);
@@ -147,7 +147,7 @@ namespace LinqToDB.Linq
 						{
 							if (!Configuration.Linq.GenerateExpressionTest)
 							{
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 								DataConnection.WriteTraceLine(
 									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
 									DataConnection.TraceSwitch.DisplayName);
@@ -384,8 +384,8 @@ namespace LinqToDB.Linq
 					var type  = value.GetType();
 					var etype = type.GetItemType();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArguments()[0].IsEnum))
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
 					{
 						var values = new List<object>();
 
@@ -397,7 +397,7 @@ namespace LinqToDB.Linq
 							{
 								var valueType = v.GetType();
 
-								if (valueType.ToNullableUnderlying().IsEnum)
+								if (valueType.ToNullableUnderlying().IsEnumEx())
 								{
 									if (_enumConverters == null)
 										_enumConverters = new ConcurrentDictionary<Type,Func<object,object>>();

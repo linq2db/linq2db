@@ -8,13 +8,16 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using Expressions;
+
+	using Extensions;
+
 	using Mapping;
 
 	public static class Converter
 	{
 		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		static XmlDocument CreateXmlDocument(string str)
 		{
 			var xml = new XmlDocument();
@@ -30,7 +33,7 @@ namespace LinqToDB.Common
 			SetConverter<Binary,         byte[]>     (v => v.ToArray());
 			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
 			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
 #endif
 			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));
@@ -175,7 +178,7 @@ namespace LinqToDB.Common
 
 			if (me != null)
 			{
-				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericType)
+				if (me.Member.Name == "Value" && me.Member.DeclaringType.IsGenericTypeEx())
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}
 

@@ -31,7 +31,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 		protected SqlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)

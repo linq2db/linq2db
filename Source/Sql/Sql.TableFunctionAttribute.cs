@@ -8,6 +8,8 @@ using System.Reflection;
 
 namespace LinqToDB
 {
+	using Extensions;
+
 	using SqlQuery;
 
 	partial class Sql
@@ -54,8 +56,8 @@ namespace LinqToDB
 				{
 					var method = (MethodInfo)member;
 
-					if (method.DeclaringType.IsGenericType)
-						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+					if (method.DeclaringType.IsGenericTypeEx())
+						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
 						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
