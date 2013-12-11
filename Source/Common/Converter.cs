@@ -28,6 +28,7 @@ namespace LinqToDB.Common
 
 		static Converter()
 		{
+			SetConverter<string,         char>       (v => v.Length == 0 ? '\0' : v[0]);
 			SetConverter<string,         Binary>     (v => new Binary(Convert.FromBase64String(v)));
 			SetConverter<Binary,         string>     (v => Convert.ToBase64String(v.ToArray()));
 			SetConverter<Binary,         byte[]>     (v => v.ToArray());
