@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Npgsql</id>
+    <version>2.0.14.1</version>
+    <title>Npgsql</title>
+    <authors>Francisco Figueiredo Jr.,  Josh Cooley,  Dave Page,  Jon Asher,  Brar Piening,  Chris Morgan,  Hiroshi Saito,  Jon Hanna,  Federico Di Gregorio,  Glen Parker,  Shay Rojansky</authors>
+    <owners>Francisco Figueiredo Jr.,  Josh Cooley,  Dave Page,  Jon Asher,  Brar Piening,  Chris Morgan,  Hiroshi Saito,  Jon Hanna,  Federico Di Gregorio,  Glen Parker,  Shay Rojansky</owners>
+    <licenseUrl>http://www.opensource.org/licenses/bsd-license.php</licenseUrl>
+    <projectUrl>http://project.npgsql.org/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Npgsql is a .Net data provider for Postgresql. It allows any program developed for .Net framework to access database server. It is implemented in 100% C# code. Works with Postgresql 7.x and above.</description>
+    <summary>Npgsql is a .Net data provider for Postgresql.</summary>
+    <releaseNotes>This is a small bugfix release with fix for hangs which could happen when connecting to Postgresql 9.3. More info can be found here: http://fxjr.blogspot.com/2013/12/npgsql-2014-released.html</releaseNotes>
+    <copyright>Copyright 2002 - 2013 Npgsql Development Team</copyright>
+    <language>en-US</language>
+    <tags>Npgsql postgres data database Postgresql</tags>
+  </metadata>
+</package>
