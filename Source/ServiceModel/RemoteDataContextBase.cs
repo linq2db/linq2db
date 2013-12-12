@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.ServiceModel
 {
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -147,7 +148,7 @@ namespace LinqToDB.ServiceModel
 
 		static MethodInfo GetReaderMethodInfo(Type type)
 		{
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
 				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
@@ -191,7 +192,7 @@ namespace LinqToDB.ServiceModel
 								_sqlBuilders.Add(type, _createSqlProvider =
 									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructor(new[]
+											type.GetConstructorEx(new[]
 											{
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
@@ -225,7 +226,7 @@ namespace LinqToDB.ServiceModel
 								_sqlOptimizers.Add(type, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructor(new[]
+											type.GetConstructorEx(new[]
 											{
 												typeof(SqlProviderFlags)
 											}),

@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LinqToDB</RootNamespace>
-    <AssemblyName>LinqToDB.WindowsStore</AssemblyName>
+    <AssemblyName>linq2db.WindowsStore</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -264,6 +264,19 @@
     <Compile Include="Reflection\ObjectFactoryAttribute.cs" />
     <Compile Include="Reflection\TypeAccessor.cs" />
     <Compile Include="Reflection\TypeAccessorT.cs" />
+    <Compile Include="ServiceModel\Async\ILinqService.cs" />
+    <Compile Include="ServiceModel\Async\ILinqSoapService.cs" />
+    <Compile Include="ServiceModel\ILinqService.cs" />
+    <Compile Include="ServiceModel\LinqServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\LinqServiceInfo.cs" />
+    <Compile Include="ServiceModel\LinqServiceQuery.cs" />
+    <Compile Include="ServiceModel\LinqServiceResult.cs" />
+    <Compile Include="ServiceModel\LinqServiceSerializer.cs" />
+    <Compile Include="ServiceModel\LinqSoapServiceClient.Silverlight.cs" />
+    <Compile Include="ServiceModel\RemoteDataContextBase.cs" />
+    <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
+    <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
+    <Compile Include="ServiceModel\SoapDataContext.cs" />
     <Compile Include="SqlProvider\BasicSqlBuilder.cs" />
     <Compile Include="SqlProvider\BasicSqlOptimizer.cs" />
     <Compile Include="SqlProvider\ConvertType.cs" />

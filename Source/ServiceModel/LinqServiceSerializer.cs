@@ -63,7 +63,7 @@ namespace LinqToDB.ServiceModel
 
 			static string ConvertToString(Type type, object value)
 			{
-				switch (Type.GetTypeCode(type))
+				switch (type.GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
@@ -395,7 +395,7 @@ namespace LinqToDB.ServiceModel
 				if (str == null)
 					return null;
 
-				switch (Type.GetTypeCode(type))
+				switch (type.GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
@@ -423,7 +423,7 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 					type = LinqService.TypeResolver(str);
 
