@@ -14,9 +14,9 @@ namespace LinqToDB.DataProvider
 
 		public int Count;
 
-		public BulkCopyReader(EntityDescriptor entityDescriptor, IEnumerable collection)
-		{
-			Columns     = entityDescriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+        public BulkCopyReader(EntityDescriptor entityDescriptor, IEnumerable collection, bool ignoreSkipOnInsert = false)
+        {
+            Columns = entityDescriptor.Columns.Where(c => ignoreSkipOnInsert || !c.SkipOnInsert).ToArray();
 			_enumerator = collection.GetEnumerator();
 		}
 
