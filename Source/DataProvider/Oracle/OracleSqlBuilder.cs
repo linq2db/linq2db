@@ -200,15 +200,25 @@ namespace LinqToDB.DataProvider.Oracle
 					.Append(s.Substring(16, 16))
 					.Append("' as raw(16))");
 			}
-			else if (value is DateTime)
-			{
-				StringBuilder.AppendFormat("TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')", value);
-			}
 			else
 				base.BuildValue(value);
 		}
 
-		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
+	    protected override void BuildDateTime(DateTime value)
+	    {
+            var format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+            if (value.Millisecond == 0)
+            {
+                format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+                    "TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
+                    "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+            }
+
+            StringBuilder.AppendFormat(format, value);
+	    }
+
+	    protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
 
