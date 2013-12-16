@@ -124,8 +124,11 @@ namespace LinqToDB.Linq
 
 		#region Helpers
 
-		static bool IsUserNamespace(String typeNamespace)
+		static bool IsUserNamespace(string typeNamespace)
 		{
+			if (typeNamespace == null)
+				return true;
+
 			var dotIndex = typeNamespace.IndexOf('.');
 			var root     = dotIndex != -1 ? typeNamespace.Substring(0, dotIndex) : typeNamespace;
 
