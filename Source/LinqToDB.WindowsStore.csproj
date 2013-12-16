@@ -103,6 +103,7 @@
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />
