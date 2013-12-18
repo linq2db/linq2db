@@ -16,6 +16,8 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleMappingSchema(string configuration) : base(configuration)
 		{
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+
+			SetDataType(typeof(Guid), DataType.Guid);
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)

@@ -216,10 +216,10 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
 			if (options.BulkCopyType == BulkCopyType.RowByRow)
 				return base.BulkCopy(dataConnection, options, source);
-
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -271,7 +271,8 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (_bulkCopyCreator != null)
 				{
-					var rd = new BulkCopyReader(descriptor, source);
+					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
+					var rd      = new BulkCopyReader(this, columns, source);
 
 					using (var bc = _bulkCopyCreator(dataConnection.Connection))
 					{
@@ -282,8 +283,8 @@ namespace LinqToDB.DataProvider.DB2
 
 						dbc.DestinationTableName = tableName;
 
-						for (var i = 0; i < rd.Columns.Length; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, rd.Columns[i].ColumnName));
+						for (var i = 0; i < columns.Count; i++)
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
 
 						dbc.WriteToServer(rd);
 					}
@@ -363,6 +364,7 @@ namespace LinqToDB.DataProvider.DB2
 								case TypeCode.DBNull:
 									sb.Append("NULL");
 									break;
+
 								case TypeCode.String:
 									var isString = false;
 

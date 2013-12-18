@@ -523,7 +523,32 @@ namespace Tests.DataProvider
 
 		#endregion
 
-		#region InsertBatch
+		#region BulkCopy
+
+		[Test]
+		public void BulkCopyLinqTypes(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = bulkCopyType },
+					Enumerable.Range(0, 10).Select(n =>
+						new LinqDataTypes
+						{
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
+							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
 
 		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
 		public class Trade
@@ -538,7 +563,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void InsertBatch1([IncludeDataContexts(CurrentProvider)] string context)
+		public void BulkCopy1([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			var data = new[]
 			{
@@ -559,7 +584,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void InsertBatch2([IncludeDataContexts(CurrentProvider)] string context)
+		public void BulkCopy2([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

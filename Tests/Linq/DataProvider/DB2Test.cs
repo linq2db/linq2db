@@ -452,6 +452,7 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = bulkCopyType },
 					Enumerable.Range(0, 10).Select(n =>
 						new LinqDataTypes
 						{

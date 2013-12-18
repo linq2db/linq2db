@@ -284,9 +284,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (connection != null)
 			{
-				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var sb = CreateSqlBuilder();
-				var rd = new BulkCopyReader(ed, source);
+				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var columns = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
+				var sb      = CreateSqlBuilder();
+				var rd      = new BulkCopyReader(this, columns, source);
 
 				using (var bc = dataConnection.Transaction == null ?
 					new SqlBulkCopy(connection) :
@@ -297,10 +298,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
 
-					for (var i = 0; i < rd.Columns.Length; i++)
+					for (var i = 0; i < columns.Count; i++)
 						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
 							i,
-							sb.Convert(rd.Columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
+							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
 
 					bc.WriteToServer(rd);
 
