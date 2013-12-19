@@ -307,10 +307,10 @@ namespace LinqToDB.DataProvider.DB2
 			var iszOS = Version == DB2Version.zOS;
 
 			{
-				var sb = new StringBuilder();
+				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb
 					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
@@ -333,16 +333,16 @@ namespace LinqToDB.DataProvider.DB2
 						.AppendLine()
 						.Append("VALUES");
 
-				var headerLen = sb.Length;
-				var totalCount = 0;
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
 				var currentCount = 0;
-				var batchSize = options.MaxBatchSize ?? 1000;
+				var batchSize    = options.MaxBatchSize ?? 1000;
 
 				if (batchSize <= 0)
 					batchSize = 1000;
 
 				var parms = new List<DataParameter>();
-				var pidx = 0;
+				var pidx  = 0;
 
 				foreach (var item in source)
 				{
@@ -429,9 +429,9 @@ namespace LinqToDB.DataProvider.DB2
 						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
 
 						parms.Clear();
-						pidx = 0;
+						pidx         = 0;
 						currentCount = 0;
-						sb.Length = headerLen;
+						sb.Length    = headerLen;
 					}
 				}
 
