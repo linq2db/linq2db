@@ -438,6 +438,12 @@ namespace LinqToDB.DataProvider.Oracle
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
+            /*
+             * ﻿OracleBulkCopy doesn't support transaction for all the records, it only support transaction for batches if UseInternalTransaction is specified.
+             * ﻿If BatchSize > 0 and the UseInternalTransaction bulk copy option is specified, each batch of the bulk copy operation occurs within a transaction.
+             * If the connection used to perform the bulk copy operation is already part of a transaction, an InvalidOperationException exception is raised.
+             * If BatchSize > 0 and the UseInternalTransaction option is not specified, rows are sent to the database in batches of size BatchSize, but no transaction-related action is taken.
+             */
 			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
