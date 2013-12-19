@@ -11,6 +11,222 @@ using System.Reflection.Emit;
 
 namespace LinqToDB.Reflection.Emit
 {
+    public class Converter
+    {
+        public static Int16 ToInt16(object value)
+        {
+            return IsDbNull<Int16>(value);
+        }
+
+        public static Int32 ToInt32(object value)
+        {
+            return IsDbNull<Int32>(value);
+        }
+
+        public static Int64 ToInt64(object value)
+        {
+            return IsDbNull<Int64>(value);
+        }
+
+        public static Single ToSingle(object value)
+        {
+            return IsDbNull<Single>(value);
+        }
+
+        public static Boolean ToBoolean(object value)
+        {
+            return IsDbNull<Boolean>(value);
+        }
+
+        public static String ToString(object value)
+        {
+            return IsDbNull<String>(value);
+        }
+
+        public static DateTime ToDateTime(object value)
+        {
+            return IsDbNull<DateTime>(value);
+        }
+
+        public static Decimal ToDecimal(object value)
+        {
+            return IsDbNull<Decimal>(value);
+        }
+
+        public static Double ToDouble(object value)
+        {
+            return IsDbNull<Double>(value);
+        }
+
+        public static Guid ToGuid(object value)
+        {
+            return IsDbNull<Guid>(value);
+        }
+
+        public static Byte ToByte(object value)
+        {
+            return IsDbNull<Byte>(value);
+        }
+
+        public static Byte[] ToBytes(object value)
+        {
+            return IsDbNull<Byte[]>(value);
+        }
+
+        public static DateTime? ToDateTimeNull(object value)
+        {
+            return IsDbNull<DateTime?>(value);
+        }
+
+        public static Int32? ToInt32Null(object value)
+        {
+            return IsDbNull<Int32?>(value);
+        }
+
+        private static T IsDbNull<T>(object value)
+        {
+            return IsDbNull(value, default(T));
+        }
+
+        private static T IsDbNull<T>(object value, T returnedValue)
+        {
+            if (value == DBNull.Value)
+                return returnedValue;
+            return (T) value;
+        }
+    }
+
+    public class Mapper
+    {
+        //Mapping Delegate
+
+        private static Dictionary<Type, Delegate> m_mapperCache;
+
+        private Dictionary<Type, Delegate> MapperCache
+        {
+            get
+            {
+                if (m_mapperCache == null)
+                    m_mapperCache = new Dictionary<Type, Delegate>();
+                return m_mapperCache;
+            }
+        }
+
+        public void ClearMappingCache()
+        {
+            MapperCache.Clear();
+        }
+
+        public T ToT<T>(DbDataReader reader)
+        {
+            if (reader.Read())
+                return ToT<T>(reader, GetMappingMethod<T>());
+            return default(T);
+        }
+
+        public L ToList<L, T>(DbDataReader reader)
+            where L : IList<T>, new()
+            where T : class, new()
+        {
+            ToTDelegate<T> mappingMethod = GetMappingMethod<T>();
+            var list = new L();
+            while (reader.Read())
+                list.Add(ToT<T>(reader, mappingMethod));
+            return list;
+        }
+
+        public IEnumerable<T> ToEnumerable<T>(DbDataReader reader)
+        {
+            ToTDelegate<T> mappingMethod = GetMappingMethod<T>();
+            while (reader.Read())
+                yield return ToT<T>(reader, mappingMethod);
+        }
+
+        private T ToT<T>(DbDataReader reader, ToTDelegate<T> mapper)
+        {
+            return mapper(reader);
+        }
+
+        private ToTDelegate<T> GetMappingMethod<T>()
+        {
+            Type typeT = typeof (T);
+            if (!MapperCache.ContainsKey(typeT))
+            {
+                Type[] methodArgs = {typeof (DbDataReader)};
+                var dm = new DynamicMethod("MapDatareader", typeof (T), methodArgs, typeof (T));
+
+                ILGenerator il = dm.GetILGenerator();
+                il.DeclareLocal(typeof (T));
+                il.Emit(OpCodes.Newobj, typeof (T).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Stloc_0);
+
+                PropertyInfo[] properties = typeT.GetProperties();
+
+                foreach (PropertyInfo info in properties)
+                {
+                    il.Emit(OpCodes.Ldloc_0);
+                    il.Emit(OpCodes.Ldarg_0);
+
+                    il.Emit(OpCodes.Ldstr, info.Name);
+
+                    MethodInfo methodInfo = typeof (DbDataReader).GetMethod("get_Item", new Type[] {typeof (string)});
+                    il.Emit(OpCodes.Callvirt, methodInfo);
+
+                    il.Emit(OpCodes.Call, GetConverterMethod(info.PropertyType));
+
+                    il.Emit(OpCodes.Callvirt, typeof (T).GetMethod("set_" + info.Name, BindingFlags.Public | BindingFlags.Instance));
+                }
+
+                il.Emit(OpCodes.Ldloc_0);
+                il.Emit(OpCodes.Ret);
+                MapperCache.Add(typeof (T), dm.CreateDelegate(typeof (ToTDelegate<T>)));
+            }
+            return MapperCache[typeT] as ToTDelegate<T>;
+        }
+
+        private MethodInfo GetConverterMethod(Type type)
+        {
+            switch (type.Name.ToUpper())
+            {
+                case "INT16":
+                    return CreateConverterMethodInfo("ToInt16");
+                case "INT32":
+                    return CreateConverterMethodInfo("ToInt32");
+                case "INT64":
+                    return CreateConverterMethodInfo("ToInt64");
+                case "SINGLE":
+                    return CreateConverterMethodInfo("ToSingle");
+                case "BOOLEAN":
+                    return CreateConverterMethodInfo("ToBoolean");
+                case "STRING":
+                    return CreateConverterMethodInfo("ToString");
+                case "DATETIME":
+                    return CreateConverterMethodInfo("ToDateTime");
+                case "DECIMAL":
+                    return CreateConverterMethodInfo("ToDecimal");
+                case "DOUBLE":
+                    return CreateConverterMethodInfo("ToDouble");
+                case "GUID":
+                    return CreateConverterMethodInfo("ToGuid");
+                case "BYTE[]":
+                    return CreateConverterMethodInfo("ToBytes");
+                case "BYTE":
+                    return CreateConverterMethodInfo("ToByte");
+                case "NULLABLE`1":
+                    return CreateConverterMethodInfo("ToDateTimeNull");
+            }
+            return null;
+        }
+
+        private MethodInfo CreateConverterMethodInfo(string method)
+        {
+            return typeof (Converter).GetMethod(method, new Type[] {typeof (object)});
+        }
+
+        private delegate T ToTDelegate<T>(DbDataReader reader);
+    }
+
+    // TODO Choose between Mapper and EntityMapper class
     public class EntityMapper
     {
         private static readonly Dictionary<Type, Delegate> cachedMappers = new Dictionary<Type, Delegate>();

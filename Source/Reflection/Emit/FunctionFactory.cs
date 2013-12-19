@@ -25,6 +25,12 @@ namespace LinqToDB.Reflection.Emit
 
         #endregion
 
+
+        public static void ClearHandlers()
+        {
+            Il.ClearIlHandlers();
+        }
+
         #region Nested type: Il
 
         public static class Il
@@ -46,6 +52,14 @@ namespace LinqToDB.Reflection.Emit
                 }
 
                 return dynMethode.CreateDelegate(delegateType, target);
+            }
+
+            public static void ClearIlHandlers()
+            {
+                CreateSetHandlers.Clear();
+                CreateGetHandlers.Clear();
+                CreateMethodHandlers.Clear();
+                CreateInstanceHandlers.Clear();
             }
 
             public static object CreateInstance(Type type, Type[] constructorArgsTypes, params object[] parameters)

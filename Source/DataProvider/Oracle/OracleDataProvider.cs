@@ -2,8 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
+using LinqToDB.Linq;
 using LinqToDB.Reflection.Emit;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -401,12 +406,86 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+	    public override int InsertBatchWithIdentity<T>(
+	        DataConnection dataConnection,
+	        BulkCopyOptions options,
+	        IList<T> source)
+	    {
+	        if (!dataConnection.InlineParameters)
+            {
+                if (source.Distinct().Count() != source.Count)
+                {
+                    throw new Exception("All the elements must be different since BulkCopy will break the PrimaryKey constraint!");
+                }
 
-        public override int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+	            var sqlProvider = CreateSqlBuilder();
+
+	            var sqlTable = new SqlTable<T>(dataConnection.MappingSchema);
+	            var identityExpression = (SqlExpression) sqlProvider.GetIdentityExpression(sqlTable);
+	            if (identityExpression != null)
+	            {
+	                var sequences = ReserveSequenceValues(dataConnection, source.Count(), identityExpression.Expr);
+
+	                foreach (var field in sqlTable.Fields)
+	                {
+	                    if (field.Value.IsIdentity)
+	                    {
+	                        var setHandler = FunctionFactory.Il.CreateSetHandler(sqlTable.ObjectType, field.Value.Name);
+
+	                        int i = 0;
+	                        foreach (var item in source)
+	                        {
+	                            setHandler(item, Converter.ChangeType(sequences[i], field.Value.SystemType));
+	                            i++;
+	                        }
+                            break;
+	                    }
+	                }
+	            }
+	            else
+	            {
+	                throw new Exception("No identity expression found. Use BulkCopy instead!");
+	            }
+
+	            return BulkCopy(dataConnection, options, source);
+	        }
+
+	        return base.InsertBatchWithIdentity(dataConnection, options, source);
+	    }
+
+	    class SequenceId
+        {
+            public decimal LEVEL { get; set; }
+            public decimal Id { get; set; }
+        }
+
+	    private List<Int64> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+	    {
+	        var results = new List<long>();
+
+	        var sql = ((OracleSqlBuilder) CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+
+	        db.SetCommand(sql);
+	        var dr = db.ExecuteReader();
+
+	        var sequenceIds = new Mapper().ToEnumerable<SequenceId>(dr as DbDataReader);
+	        results.AddRange(sequenceIds.Select(e => e.Id).ToList().Select(Convert.ToInt64));
+
+	        return results;
+	    }
+
+	    public override int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
         {
             if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-            var connection = dataConnection.Connection; ;
+            var connection = dataConnection.Connection; 
+
+            /*
+             * ﻿OracleBulkCopy doesn't support transaction for all the records, it only support transaction for batches if UseInternalTransaction is specified.
+             * ﻿If BatchSize > 0 and the UseInternalTransaction bulk copy option is specified, each batch of the bulk copy operation occurs within a transaction.
+             * If the connection used to perform the bulk copy operation is already part of a transaction, an InvalidOperationException exception is raised.
+             * If BatchSize > 0 and the UseInternalTransaction option is not specified, rows are sent to the database in batches of size BatchSize, but no transaction-related action is taken.
+             */
 
             if (connection != null)
             {

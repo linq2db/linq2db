@@ -30,5 +30,6 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider  GetSchemaProvider  ();
 
 		int              BulkCopy<T>        (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
+	    int              InsertBatchWithIdentity<T>(DataConnection dataConnection, BulkCopyOptions options, IList<T> source);
 	}
 }

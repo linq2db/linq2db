@@ -331,5 +331,10 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 		}
+
+	    public string BuildReserveSequenceValuesSql(int count, string sequenceName)
+	    {
+	        return "SELECT level," + sequenceName + " Id from DUAL connect by level <= " + count;
+	    }
 	}
 }
