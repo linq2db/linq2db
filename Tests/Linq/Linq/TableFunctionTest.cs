@@ -137,5 +137,18 @@ namespace Tests.Linq
 				q.ToList();
 			}
 		}
+
+		[Test]
+		public void WithUpdateLock([IncludeDataContexts("Northwind")] string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.WithUpdateLock<Northwind.Category>()
+					select t;
+
+				q.ToList();
+			}
+		}
 	}
 }

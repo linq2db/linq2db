@@ -60,7 +60,14 @@ namespace Tests.Model
 				fieldSelector,
 				text);
 		}
-		
+
 #endif
+
+		[Sql.TableExpression("{0} {1} WITH (UPDLOCK)")]
+		public ITable<T> WithUpdateLock<T>()
+			where T : class 
+		{
+			return GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+		}
 	}
 }
