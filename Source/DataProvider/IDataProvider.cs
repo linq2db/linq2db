@@ -26,10 +26,10 @@ namespace LinqToDB.DataProvider
 		Expression       GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
 		void             SetParameter       (IDbDataParameter parameter, string name, DataType dataType, object value);
+		Type             ConvertParameterType(Type type, DataType dataType);
 
 		ISchemaProvider  GetSchemaProvider  ();
 
 		int              BulkCopy<T>        (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
-	    int              InsertBatchWithIdentity<T>(DataConnection dataConnection, BulkCopyOptions options, IList<T> source);
 	}
 }

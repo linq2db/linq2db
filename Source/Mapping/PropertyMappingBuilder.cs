@@ -116,6 +116,11 @@ namespace LinqToDB.Mapping
 			return SetColumn(a => a.CanBeNull = isNullable);
 		}
 
+		public PropertyMappingBuilder<T> IsNotColumn()
+		{
+			return SetColumn(a => a.IsColumn = false);
+		}
+
 		public PropertyMappingBuilder<T> HasLength(int length)
 		{
 			return SetColumn(a => a.Length = length);

@@ -216,10 +216,14 @@ namespace LinqToDB.DataProvider.DB2
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
 		{
-			if (options.BulkCopyType == BulkCopyType.RowByRow)
-				return base.BulkCopy(dataConnection, options, source);
-
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
+			var bkCopyType = options.BulkCopyType == BulkCopyType.Default ?
+				DB2Tools.DefaultBulkCopyType :
+				options.BulkCopyType;
+
+			if (bkCopyType == BulkCopyType.RowByRow)
+				return base.BulkCopy(dataConnection, options, source);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -231,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
-			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
+			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
 				{
@@ -271,7 +275,8 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (_bulkCopyCreator != null)
 				{
-					var rd = new BulkCopyReader(descriptor, source);
+					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
+					var rd      = new BulkCopyReader(this, columns, source);
 
 					using (var bc = _bulkCopyCreator(dataConnection.Connection))
 					{
@@ -282,8 +287,8 @@ namespace LinqToDB.DataProvider.DB2
 
 						dbc.DestinationTableName = tableName;
 
-						for (var i = 0; i < rd.Columns.Length; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, rd.Columns[i].ColumnName));
+						for (var i = 0; i < columns.Count; i++)
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
 
 						dbc.WriteToServer(rd);
 					}
@@ -306,10 +311,10 @@ namespace LinqToDB.DataProvider.DB2
 			var iszOS = Version == DB2Version.zOS;
 
 			{
-				var sb = new StringBuilder();
+				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb
 					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
@@ -332,16 +337,16 @@ namespace LinqToDB.DataProvider.DB2
 						.AppendLine()
 						.Append("VALUES");
 
-				var headerLen = sb.Length;
-				var totalCount = 0;
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
 				var currentCount = 0;
-				var batchSize = options.MaxBatchSize ?? 1000;
+				var batchSize    = options.MaxBatchSize ?? 1000;
 
 				if (batchSize <= 0)
 					batchSize = 1000;
 
 				var parms = new List<DataParameter>();
-				var pidx = 0;
+				var pidx  = 0;
 
 				foreach (var item in source)
 				{
@@ -363,6 +368,7 @@ namespace LinqToDB.DataProvider.DB2
 								case TypeCode.DBNull:
 									sb.Append("NULL");
 									break;
+
 								case TypeCode.String:
 									var isString = false;
 
@@ -427,9 +433,9 @@ namespace LinqToDB.DataProvider.DB2
 						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
 
 						parms.Clear();
-						pidx = 0;
+						pidx         = 0;
 						currentCount = 0;
-						sb.Length = headerLen;
+						sb.Length    = headerLen;
 					}
 				}
 

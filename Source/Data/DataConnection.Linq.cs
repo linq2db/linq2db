@@ -8,9 +8,6 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using System.Diagnostics;
-
-	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;

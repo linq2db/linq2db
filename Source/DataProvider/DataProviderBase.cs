@@ -183,6 +183,25 @@ namespace LinqToDB.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
+		public virtual Type ConvertParameterType(Type type, DataType dataType)
+		{
+			switch (dataType)
+			{
+				case DataType.Image     :
+				case DataType.Binary    :
+				case DataType.Blob      :
+				case DataType.VarBinary :
+					if (type == typeof(Binary)) return typeof(byte[]);
+					break;
+				case DataType.Xml       :
+					if (type == typeof(XDocument) ||
+						type == typeof(XmlDocument)) return typeof(string);
+					break;
+			}
+
+			return type;
+		}
+
 		public virtual ISchemaProvider GetSchemaProvider()
 		{
 			throw new NotImplementedException();
@@ -287,19 +306,6 @@ namespace LinqToDB.DataProvider
 
 			return n;
 		}
-
-	    public virtual int InsertBatchWithIdentity<T>(DataConnection dataConnection, BulkCopyOptions options, IList<T> source)
-	    {
-            var n = 0;
-
-            foreach (var item in source)
-            {
-                dataConnection.InsertWithIdentity(item);
-                n++;
-            }
-
-            return n;
-	    }
 
 	    #endregion
 	}
