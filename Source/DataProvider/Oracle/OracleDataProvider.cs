@@ -377,6 +377,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
 			switch (dataType)
 			{
 				case DataType.Byte           : parameter.DbType = DbType.Int16;            break;
@@ -487,7 +490,141 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			return base.BulkCopy(dataConnection, options, source);
+			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
+		}
+
+		int MultipleRowsBulkCopy<T>(
+			DataConnection   dataConnection,
+			BulkCopyOptions  options,
+			IEnumerable<T>   source,
+			BasicSqlBuilder  sqlBuilder,
+			EntityDescriptor descriptor,
+			string           tableName)
+		{
+			{
+				var sb         = new StringBuilder();
+				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+
+				sb.AppendLine("INSERT ALL");
+
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
+				var currentCount = 0;
+				var batchSize    = options.MaxBatchSize ?? 1000;
+
+				if (batchSize <= 0)
+					batchSize = 1000;
+
+				var parms = new List<DataParameter>();
+				var pidx = 0;
+
+				foreach (var item in source)
+				{
+					sb.AppendFormat("\tINTO {0} (", tableName);
+
+					foreach (var column in columns)
+						sb
+							.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+							.Append(", ");
+
+					sb.Length -= 2;
+
+					sb.Append(") VALUES (");
+
+					foreach (var column in columns)
+					{
+						var value = column.GetValue(item);
+
+						if (value == null)
+						{
+							sb.Append("NULL");
+						}
+						else
+							switch (Type.GetTypeCode(value.GetType()))
+							{
+								case TypeCode.DBNull:
+									sb.Append("NULL");
+									break;
+
+								case TypeCode.String:
+									var isString = false;
+
+									switch (column.DataType)
+									{
+										case DataType.NVarChar  :
+										case DataType.Char      :
+										case DataType.VarChar   :
+										case DataType.NChar     :
+										case DataType.Undefined :
+											isString = true;
+											break;
+									}
+
+									if (isString) goto case TypeCode.Int32;
+									goto default;
+
+								case TypeCode.Boolean  :
+								case TypeCode.Char     :
+								case TypeCode.SByte    :
+								case TypeCode.Byte     :
+								case TypeCode.Int16    :
+								case TypeCode.UInt16   :
+								case TypeCode.Int32    :
+								case TypeCode.UInt32   :
+								case TypeCode.Int64    :
+								case TypeCode.UInt64   :
+								case TypeCode.Single   :
+								case TypeCode.Double   :
+								case TypeCode.Decimal  :
+								case TypeCode.DateTime :
+									//SetParameter(dataParam, "", column.DataType, value);
+
+									buildValue(value);
+									break;
+
+								default:
+									var name = pname + ++pidx;
+
+									sb.Append(name);
+									parms.Add(new DataParameter("p" + pidx, value, column.DataType));
+
+									break;
+							}
+
+						sb.Append(",");
+					}
+
+					sb.Length--;
+					sb.AppendLine(")");
+
+					totalCount++;
+					currentCount++;
+
+					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
+					{
+						sb.AppendLine("SELECT * FROM dual");
+
+						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
+
+						parms.Clear();
+						pidx = 0;
+						currentCount = 0;
+						sb.Length = headerLen;
+					}
+				}
+
+				if (currentCount > 0)
+				{
+					sb.AppendLine("SELECT * FROM dual");
+
+					dataConnection.Execute(sb.ToString(), parms.ToArray());
+					sb.Length = headerLen;
+				}
+
+				return totalCount;
+			}
 		}
 	}
 }

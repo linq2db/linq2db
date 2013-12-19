@@ -532,6 +532,19 @@ namespace Tests.DataProvider
 		{
 			using (var db = new DataConnection(context))
 			{
+				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				{
+					var ms = new MappingSchema();
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes>()
+							.Property(e => e.GuidValue)
+								.IsNotColumn()
+						;
+
+					db.AddMappingSchema(ms);
+				}
+
 				db.BulkCopy(
 					new BulkCopyOptions { BulkCopyType = bulkCopyType },
 					Enumerable.Range(0, 10).Select(n =>

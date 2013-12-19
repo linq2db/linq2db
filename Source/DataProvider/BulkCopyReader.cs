@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider
 		readonly IEnumerator            _enumerator;
 		readonly Parameter              _valueConverter = new Parameter();
 
-		class Parameter : IDbDataParameter
+		internal class Parameter : IDbDataParameter
 		{
 			public DbType             DbType        { get; set; }
 			public ParameterDirection Direction     { get; set; }
