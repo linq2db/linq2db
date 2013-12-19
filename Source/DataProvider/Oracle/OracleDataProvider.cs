@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -513,7 +515,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+			    var columns    = descriptor.Columns.Where(c => (options.IgnoreSkipOnInsert ?? false) || !c.SkipOnInsert).ToArray();
 				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb.AppendLine("INSERT ALL");
@@ -635,5 +637,69 @@ namespace LinqToDB.DataProvider.Oracle
 				return totalCount;
 			}
 		}
+
+
+        class SequenceId
+        {
+            public decimal LEVEL { get; set; }
+            public decimal Id { get; set; }
+        }
+
+        private List<Int64> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+        {
+            var results = new List<long>();
+
+            var sql = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+
+            db.SetCommand(sql);
+            var dr = db.ExecuteReader();
+
+            var sequenceIds = new LinqToDB.Reflection.Emit.Mapper().ToEnumerable<SequenceId>(dr as DbDataReader);
+            results.AddRange(sequenceIds.Select(e => e.Id).ToList().Select(Convert.ToInt64));
+
+            return results;
+        }
+
+	    public override int InsertBatchWithIdentity<T>(DataConnection dataConnection, IList<T> source)
+	    {
+            var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				.ToString();
+
+            var sqlTable = new SqlTable<T>(dataConnection.MappingSchema);
+            var identityExpression = (SqlExpression)sqlBuilder.GetIdentityExpression(sqlTable);
+            if (identityExpression != null)
+            {
+                var sequences = ReserveSequenceValues(dataConnection, source.Count(), identityExpression.Expr);
+
+                foreach (var field in sqlTable.Fields)
+                {
+                    if (field.Value.IsIdentity)
+                    {
+                        var setHandler = Reflection.Emit.FunctionFactory.Il.CreateSetHandler(sqlTable.ObjectType, field.Value.Name);
+
+                        int i = 0;
+                        foreach (var item in source)
+                        {
+                            setHandler(item, Converter.ChangeType(sequences[i], field.Value.SystemType));
+                            i++;
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("No identity expression found. Use BulkCopy instead!");
+            }
+
+            return MultipleRowsBulkCopy(dataConnection, new BulkCopyOptions {IgnoreSkipOnInsert = true}, source, sqlBuilder, descriptor, tableName);
+	    }
 	}
 }

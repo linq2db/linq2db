@@ -308,5 +308,22 @@ namespace LinqToDB.DataProvider
 		}
 
 	    #endregion
-	}
+
+        #region InsertBatchWithIdentity
+
+        public virtual int InsertBatchWithIdentity<T>(DataConnection dataConnection, IList<T> source)
+        {
+            var n = 0;
+
+            foreach (var item in source)
+            {
+                dataConnection.InsertWithIdentity(item);
+                n++;
+            }
+
+            return n;
+        }
+
+        #endregion
+    }
 }
