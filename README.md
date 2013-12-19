@@ -297,3 +297,29 @@ using (var db = new DbNorthwind())
     .Delete();
 }
 ```
+
+BulkCopy
+------
+
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For faster data inserting DONT use a transaction. If you use a transaction an adhoc implementation of the bulk copy feature has been added in order to insert multiple lines at once. You get faster results then inserting lines one by one, but it's still slower than the database provider bulk copy. So, DONT use transactions whenever you can (Take care of unicity constraints, primary keys, etc .. since bulk copy ignores them at insertion)
+
+```c#
+
+[Table(Name = "ProductsTemp")]
+public class ProductTemp
+{
+  public int ProductID { get; set; }
+
+  [Column(Name = "ProductName"), NotNull]
+  public string Name { get; set; }
+
+  // ... other columns ...
+}
+
+list = List<ProductTemp>
+
+using (var db = new DbNorthwind())
+{
+  db.BulkCopy(list);
+}
+```
