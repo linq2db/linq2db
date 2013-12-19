@@ -218,7 +218,11 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			if (options.BulkCopyType == BulkCopyType.RowByRow)
+			var bkCopyType = options.BulkCopyType == BulkCopyType.Default ?
+				DB2Tools.DefaultBulkCopyType :
+				options.BulkCopyType;
+
+			if (bkCopyType == BulkCopyType.RowByRow)
 				return base.BulkCopy(dataConnection, options, source);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
@@ -231,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
-			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
+			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
 				{

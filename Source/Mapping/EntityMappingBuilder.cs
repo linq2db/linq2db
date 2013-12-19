@@ -258,7 +258,11 @@ namespace LinqToDB.Mapping
 
 						if (attr != null)
 						{
-							modifyExisting(m, overrideAttribute(attr));
+							var na = overrideAttribute(attr);
+
+							modifyExisting(m, na);
+							_builder.HasAttribute(memberInfo, na);
+
 							return;
 						}
 					}

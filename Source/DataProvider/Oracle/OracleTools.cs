@@ -13,6 +13,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static readonly OracleDataProvider _oracleDataProvider = new OracleDataProvider();
 
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
 		static OracleTools()
 		{
 			try

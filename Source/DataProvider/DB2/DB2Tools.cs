@@ -17,6 +17,13 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static bool AutoDetectProvider { get; set; }
 
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
 		static DB2Tools()
 		{
 			AutoDetectProvider = true;

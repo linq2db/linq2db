@@ -668,5 +668,30 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
+
+//		[Test]
+//		public void BulkCopyLinqTypes(
+//			[IncludeDataContexts(CurrentProvider)] string context,
+//			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+//		{
+//			using (var db = new DataConnection(context))
+//			{
+//				db.BulkCopy(
+//					new BulkCopyOptions { BulkCopyType = bulkCopyType },
+//					Enumerable.Range(0, 10).Select(n =>
+//						new LinqDataTypes
+//						{
+//							ID            = 4000 + n,
+//							MoneyValue    = 1000m + n,
+//							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+//							BoolValue     = true,
+//							GuidValue     = Guid.NewGuid(),
+//							SmallIntValue = (short)n
+//						}
+//					));
+//
+//				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+//			}
+//		}
 	}
 }

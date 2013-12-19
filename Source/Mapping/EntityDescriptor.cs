@@ -5,13 +5,9 @@ using System.Linq;
 namespace LinqToDB.Mapping
 {
 	using Common;
-
 	using Extensions;
-
 	using Linq;
 	using Reflection;
-
-	using SqlQuery;
 
 	public class EntityDescriptor
 	{

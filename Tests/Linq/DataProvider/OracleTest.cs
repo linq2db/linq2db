@@ -576,7 +576,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void BulkCopy1([IncludeDataContexts(CurrentProvider)] string context)
+		public void BulkCopy1(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -592,24 +594,43 @@ namespace Tests.DataProvider
 
 			using (var db = new TestDataConnection(context))
 			{
-				db.BulkCopy(5, data);
+				db.BulkCopy(
+					new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
+					data);
 			}
 		}
 
 		[Test]
-		public void BulkCopy2([IncludeDataContexts(CurrentProvider)] string context)
+		public void BulkCopy2(
+			[IncludeDataContexts(CurrentProvider)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
-				db.BulkCopy(2, new[]
+				if (bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
-					new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-					new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-					new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-					new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
-				});
+					var ms = new MappingSchema();
+
+					db.AddMappingSchema(ms);
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes2>()
+							.Property(e => e.GuidValue)
+								.IsNotColumn()
+						;
+				}
+
+				db.BulkCopy(
+					new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+					new[]
+					{
+						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+						new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+						new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+					});
 
 				db.Types2.Delete(_ => _.ID > 1000);
 			}

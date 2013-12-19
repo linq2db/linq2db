@@ -5,6 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
@@ -352,6 +354,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override Type ConvertParameterType(Type type, DataType dataType)
 		{
+			if (type.IsNullable())
+				type = type.ToUnderlying();
+
 			switch (dataType)
 			{
 				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
@@ -414,7 +419,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			if (options.BulkCopyType == BulkCopyType.RowByRow)
+			var bkCopyType = options.BulkCopyType == BulkCopyType.Default ?
+				OracleTools.DefaultBulkCopyType :
+				options.BulkCopyType;
+
+			if (bkCopyType == BulkCopyType.RowByRow)
 				return base.BulkCopy(dataConnection, options, source);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
@@ -427,7 +436,7 @@ namespace LinqToDB.DataProvider.Oracle
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
-			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
+			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
 				{
@@ -475,7 +484,7 @@ namespace LinqToDB.DataProvider.Oracle
 					{
 						dynamic dbc = bc;
 
-						if (options.MaxBatchSize.   HasValue) dbc.MaxBatchSize    = options.MaxBatchSize.   Value;
+						if (options.MaxBatchSize.   HasValue) dbc.BatchSize       = options.MaxBatchSize.   Value;
 						if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
 						dbc.DestinationTableName = tableName;
