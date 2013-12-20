@@ -299,5 +299,17 @@ namespace Tests.Mapping
 			var conv = new MappingSchema("1").GetConverter<int,Enum1>();
 			Assert.That(conv(2), Is.EqualTo(Enum1.Value2));
 		}
+
+        [Test]
+        public void ConvertNullableEnum()
+        {
+            var schema = new MappingSchema("2");
+            Assert.That(schema.GetDefaultValue(typeof(Enum1?)), Is.Null);
+            var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(schema, typeof(Enum1?));
+            Assert.That(mapType, Is.EqualTo(typeof(int?)));
+            var convertedValue = Converter.ChangeType(null, mapType, schema);
+            Assert.IsNull(convertedValue);
+        }
+
 	}
 }
