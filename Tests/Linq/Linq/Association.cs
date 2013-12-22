@@ -400,7 +400,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationInHeirarhy([DataContexts] string context)
+		[DataContextSource]
+		public void AssociationInHeirarhy(string context)
+		//public void AssociationInHeirarhy([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

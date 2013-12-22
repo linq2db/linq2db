@@ -213,6 +213,7 @@
     <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
+    <Compile Include="DataContextTestCase.cs" />
     <Compile Include="DataProvider\InformixTest.cs" />
     <Compile Include="DataProvider\DB2Test.cs" />
     <Compile Include="DataProvider\FirebirdTest.cs" />

@@ -8,6 +8,8 @@ using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
+using IBM.Data.DB2;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -95,6 +97,15 @@ namespace Tests
 			ProviderName.MySql,
 			ProviderName.Sybase,
 		};
+
+		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		public class DataContextSourceAttribute : TestCaseSourceAttribute
+		{
+			public DataContextSourceAttribute()
+				: base(DatabaseTestCase.GetDataContextType(true, null, null), "TestCases")
+			{
+			}
+		}
 
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 		public class DataContextsAttribute : ValuesAttribute
