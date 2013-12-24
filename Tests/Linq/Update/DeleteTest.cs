@@ -134,8 +134,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void AlterDelete([DataContexts(ProviderName.Informix, ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false, ProviderName.Informix)]
+		public void AlterDelete(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

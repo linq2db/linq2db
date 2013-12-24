@@ -12,8 +12,8 @@ namespace Tests.Update
 	[TestFixture]
 	public class BatchTest : TestBase
 	{
-		[Test]
-		public void Transaction([DataContexts(ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false)]
+		public void Transaction(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -37,8 +37,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void NoTransaction([DataContexts(ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false)]
+		public void NoTransaction(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

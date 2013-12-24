@@ -262,8 +262,8 @@ namespace Tests.Linq
 					from p in db.Parent5 select new { p.Children.Count });
 		}
 
-		[Test]
-		public void DoubleJoin([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DoubleJoin(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -271,8 +271,8 @@ namespace Tests.Linq
 					from g in db.GrandChild where g.Child.Parent.Value1 == 1 select g);
 		}
 
-		[Test]
-		public void Projection1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Projection1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -399,10 +399,8 @@ namespace Tests.Linq
 			public Parent Parent { get; set; }
 		}
 
-		[Test]
-		[DataContextSource]
+		[Test, DataContextSource]
 		public void AssociationInHeirarhy(string context)
-		//public void AssociationInHeirarhy([DataContexts] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -413,8 +411,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void LetTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void LetTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -426,8 +424,8 @@ namespace Tests.Linq
 					select new { p.ParentID, Count = chs.Count() });
 		}
 
-		[Test]
-		public void LetTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void LetTest2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

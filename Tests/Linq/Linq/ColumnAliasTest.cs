@@ -52,8 +52,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ProjectionTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ProjectionTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -73,8 +73,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ProjectionTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ProjectionTest2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -94,8 +94,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void UnionTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void UnionTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -122,8 +122,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void UnionTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void UnionTest2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -138,8 +138,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void UnionTest3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void UnionTest3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

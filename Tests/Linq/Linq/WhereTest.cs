@@ -13,8 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class WhereTest : TestBase
 	{
-		[Test]
-		public void MakeSubQuery([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MakeSubQuery(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -24,8 +24,8 @@ namespace Tests.Linq
 					select new Person(p.PersonID - 1) { FirstName = p.FirstName });
 		}
 
-		[Test]
-		public void MakeSubQueryWithParam([DataContexts(ProviderName.Firebird)] string context)
+		[Test, DataContextSource(ProviderName.Firebird)]
+		public void MakeSubQueryWithParam(string context)
 		{
 			var n = 1;
 
@@ -37,8 +37,8 @@ namespace Tests.Linq
 					select new Person(p.PersonID - 1) { FirstName = p.FirstName });
 		}
 
-		[Test]
-		public void DoNotMakeSubQuery([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DoNotMakeSubQuery(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -48,22 +48,22 @@ namespace Tests.Linq
 					select new Person(p2.ID) { FirstName = p2.Name.TrimEnd('\r') });
 		}
 
-		[Test]
-		public void EqualsConst([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsConst(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 select p);
 		}
 
-		[Test]
-		public void EqualsConsts([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsConsts(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && p.FirstName == "John" select p);
 		}
 
-		[Test]
-		public void EqualsConsts2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsConsts2(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -72,16 +72,16 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void EqualsParam([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsParam(string context)
 		{
 			var id = 1;
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == id select p);
 		}
 
-		[Test]
-		public void EqualsParams([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsParams(string context)
 		{
 			var id   = 1;
 			var name = "John";
@@ -89,8 +89,8 @@ namespace Tests.Linq
 				TestOneJohn(from p in db.Person where p.ID == id && p.FirstName == name select p);
 		}
 
-		[Test]
-		public void NullParam1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NullParam1(string context)
 		{
 			var    id   = 1;
 			string name = null;
@@ -98,8 +98,8 @@ namespace Tests.Linq
 				TestOneJohn(from p in db.Person where p.ID == id && p.MiddleName == name select p);
 		}
 
-		[Test]
-		public void NullParam2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NullParam2(string context)
 		{
 			var    id   = 1;
 			string name = null;
@@ -118,8 +118,8 @@ namespace Tests.Linq
 			return 1;
 		}
 
-		[Test]
-		public void MethodParam([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MethodParam(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == TestMethod() select p);
@@ -130,8 +130,8 @@ namespace Tests.Linq
 			return 1;
 		}
 
-		[Test]
-		public void StaticMethodParam([DataContexts] string context)
+		[Test, DataContextSource]
+		public void StaticMethodParam(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == StaticTestMethod() select p);
@@ -163,8 +163,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void MethodParam2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MethodParam2(string context)
 		{
 			MethodParam(1, context);
 			MethodParam(2, context);
@@ -176,114 +176,114 @@ namespace Tests.Linq
 			return from p in db.Person where p.ID == id && p.FirstName == name select p;
 		}
 
-		[Test]
-		public void DirectParams([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DirectParams(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(TestDirectParam(db, 1));
 		}
 
-		[Test]
-		public void BinaryAdd([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BinaryAdd(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID + 1 == 2 select p);
 		}
 
-		[Test]
-		public void BinaryDivide([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BinaryDivide(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID + 9) / 10 == 1 && p.ID == 1 select p);
 		}
 
-		[Test]
-		public void BinaryModulo([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BinaryModulo(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID % 2 == 1 && p.ID == 1 select p);
 		}
 
-		[Test]
-		public void BinaryMultiply([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BinaryMultiply(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID * 10 - 9 == 1 select p);
 		}
 
-		[Test]
-		public void BinaryXor([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void BinaryXor(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID ^ 2) == 3 select p);
 		}
 
-		[Test]
-		public void BinaryAnd([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void BinaryAnd(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID & 3) == 1 select p);
 		}
 
-		[Test]
-		public void BinaryOr([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void BinaryOr(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where (p.ID | 2) == 3 select p);
 		}
 
-		[Test]
-		public void BinarySubtract([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BinarySubtract(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID - 1 == 0 select p);
 		}
 
-		[Test]
-		public void EqualsNull([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsNull(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && p.MiddleName == null select p);
 		}
 
-		[Test]
-		public void EqualsNull2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EqualsNull2(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && null == p.MiddleName select p);
 		}
 
-		[Test]
-		public void NotEqualNull([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NotEqualNull(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && p.FirstName != null select p);
 		}
 
-		[Test]
-		public void NotEqualNull2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NotEqualNull2(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && null != p.FirstName select p);
 		}
 
-		[Test]
-		public void NotTest([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NotTest(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && !(p.MiddleName != null) select p);
 		}
 
-		[Test]
-		public void NotTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NotTest2(string context)
 		{
-			int n = 2;
+			var n = 2;
 			using (var db = GetDataContext(context))
 				TestOneJohn(from p in db.Person where p.ID == 1 && !(p.MiddleName != null && p.ID == n) select p);
 		}
 
-		[Test]
-		public void Coalesce1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce1(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -295,22 +295,22 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void Coalesce2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from p in db.Parent where p.ParentID == 1 ? true : false select p).ToList().Count);
 		}
 
-		[Test]
-		public void Coalesce3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce3(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from p in db.Parent where p.ParentID != 1 ? false : true select p).ToList().Count);
 		}
 
-		[Test]
-		public void Coalesce4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -318,15 +318,15 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID == 1 ? false: true select p);
 		}
 
-		[Test]
-		public void Coalesce5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce5(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, (from p in db.Parent where (p.Value1 == 1 ? 10 : 20) == 10 select p).ToList().Count);
 		}
 
-		[Test]
-		public void Coalesce6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce6(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -334,8 +334,8 @@ namespace Tests.Linq
 					from p in db.Parent where (p.Value1 == 1 ? 10 : 20) == 20 select p);
 		}
 
-		[Test]
-		public void Coalesce7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Coalesce7(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -343,8 +343,8 @@ namespace Tests.Linq
 					from p in db.Parent where (p.ParentID == 1 ? 10 : 20) == 20 select p);
 		}
 
-		[Test]
-		public void Conditional([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Conditional(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -356,8 +356,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void Conditional2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Conditional2(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -369,8 +369,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void Conditional3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Conditional3(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -382,8 +382,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void MultipleQuery1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MultipleQuery1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -399,8 +399,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void MultipleQuery2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MultipleQuery2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

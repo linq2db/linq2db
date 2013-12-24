@@ -15,8 +15,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Common : TestBase
 	{
-		[Test]
-		public void AsQueryable([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AsQueryable(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -24,8 +24,8 @@ namespace Tests.Linq
 					from p in db.Parent from ch in db.Child.AsQueryable() select p);
 		}
 
-		[Test]
-		public void Convert([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Convert(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -33,8 +33,8 @@ namespace Tests.Linq
 					from p in db.Parent from ch in ((IEnumerable<Child>)db.Child).AsQueryable() select p);
 		}
 
-		[Test]
-		public void NewCondition([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NewCondition(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -42,8 +42,8 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1 != null ? p.Value1 : 100 });
 		}
 
-		[Test]
-		public void NewCoalesce([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NewCoalesce(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -51,8 +51,8 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1 ?? 100 });
 		}
 
-		[Test]
-		public void CoalesceNew([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CoalesceNew(string context)
 		{
 			Child ch = null;
 
@@ -62,8 +62,8 @@ namespace Tests.Linq
 					from p in db.Parent select ch ?? new Child { ParentID = p.ParentID });
 		}
 
-		[Test]
-		public void ScalarCondition([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ScalarCondition(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -71,8 +71,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Value1 != null ? p.Value1 : 100);
 		}
 
-		[Test]
-		public void ScalarCoalesce([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ScalarCoalesce(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -80,8 +80,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Value1 ?? 100);
 		}
 
-		[Test]
-		public void ExprCoalesce([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ExprCoalesce(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -94,8 +94,8 @@ namespace Tests.Linq
 			return 100;
 		}
 
-		[Test]
-		public void ClientCoalesce1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ClientCoalesce1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -108,8 +108,8 @@ namespace Tests.Linq
 			return n;
 		}
 
-		[Test]
-		public void ClientCoalesce2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ClientCoalesce2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -117,8 +117,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Value1 ?? GetDefault2(p.ParentID));
 		}
 
-		[Test]
-		public void CoalesceLike([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CoalesceLike(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -136,8 +136,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void PreferServerFunc1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void PreferServerFunc1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -145,8 +145,8 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[Test]
-		public void PreferServerFunc2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void PreferServerFunc2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -167,8 +167,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ClosureTest([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ClosureTest(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreNotEqual(
@@ -206,8 +206,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void NewObjectTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NewObjectTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -221,8 +221,8 @@ namespace Tests.Linq
 					select p1);
 		}
 
-		[Test]
-		public void NewObjectTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NewObjectTest2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -284,8 +284,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Condition1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Condition1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -293,8 +293,8 @@ namespace Tests.Linq
 					from p in db.Person select new { Name = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : !string.IsNullOrEmpty(p.MiddleName) ? p.MiddleName : p.LastName });
 		}
 
-		[Test]
-		public void Condition2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Condition2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -308,8 +308,8 @@ namespace Tests.Linq
 			Person2 = 2
 		}
 
-		[Test]
-		public void ConvertEnum1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ConvertEnum1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -317,8 +317,8 @@ namespace Tests.Linq
 					from p in db.Person where p.ID == (int)PersonID.Person1 select p);
 		}
 
-		[Test]
-		public void ConvertEnum2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ConvertEnum2(string context)
 		{
 			var id = PersonID.Person1;
 
@@ -328,8 +328,8 @@ namespace Tests.Linq
 					from p in db.Person where p.ID == (int)id select p);
 		}
 
-		[Test]
-		public void GroupByUnion1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupByUnion1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -360,8 +360,8 @@ namespace Tests.Linq
 					select tt);
 		}
 
-		[Test]
-		public void GroupByUnion2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupByUnion2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -409,8 +409,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GroupByLeftJoin1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupByLeftJoin1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -455,8 +455,8 @@ namespace Tests.Linq
 			AreEqual(groups1, groups2);
 		}
 
-		[Test]
-		public void ParameterTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ParameterTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

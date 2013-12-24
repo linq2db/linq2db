@@ -101,13 +101,25 @@ namespace Tests
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 		public class DataContextSourceAttribute : TestCaseSourceAttribute
 		{
-			public DataContextSourceAttribute()
-				: base(DatabaseTestCase.GetDataContextType(true, null, null), "TestCases")
+			public DataContextSourceAttribute(params string[] except)
+				: base(DatabaseTestCase.GetDataContextType(true, except, null), "TestCases")
+			{
+			}
+
+			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(DatabaseTestCase.GetDataContextType(includeLinqService, except, null), "TestCases")
 			{
 			}
 		}
 
+		class  A<T>
+			where  : struct
+		{
+			 
+		}
+
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+		//[Obsolete]
 		public class DataContextsAttribute : ValuesAttribute
 		{
 			public DataContextsAttribute(params string[] except)

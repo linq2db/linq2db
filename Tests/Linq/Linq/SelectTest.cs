@@ -287,8 +287,8 @@ namespace Tests.Linq
 			Assert.IsTrue((DateTime.Now - dt).TotalSeconds < 30);
 		}
 
-		[Test]
-		public void MutiplySelect12([DataContexts(ExcludeLinqService = true)] string context)
+		[Test, DataContextSource(false)]
+		public void MutiplySelect12(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -367,8 +367,8 @@ namespace Tests.Linq
 
 		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
 
-		[Test]
-		public void Coalesce3([DataContexts(ExcludeLinqService = true)] string context)
+		[Test, DataContextSource(false)]
+		public void Coalesce3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
