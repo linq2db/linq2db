@@ -416,8 +416,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void HasValue1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void HasValue1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -425,43 +425,43 @@ namespace Tests.Linq
 					from p in db.Parent where p.Value1.HasValue select p);
 		}
 
-		[Test]
-		public void HasValue2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void HasValue2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, (from p in db.Parent where !p.Value1.HasValue select p).ToList().Count);
 		}
 
-		[Test]
-		public void Value([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Value(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, (from p in db.Parent where p.Value1.Value == 1 select p).ToList().Count);
 		}
 
-		[Test]
-		public void CompareNullable1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullable1(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, (from p in db.Parent where p.Value1 == 1 select p).ToList().Count);
 		}
 
-		[Test]
-		public void CompareNullable2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullable2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from p in db.Parent where p.ParentID == p.Value1 && p.Value1 == 1 select p).ToList().Count);
 		}
 
-		[Test]
-		public void CompareNullable3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullable3(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, (from p in db.Parent where p.Value1 == p.ParentID && p.Value1 == 1 select p).ToList().Count);
 		}
 
-		[Test]
-		public void SubQuery([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SubQuery(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -477,8 +477,8 @@ namespace Tests.Linq
 					select t / 1000);
 		}
 
-		[Test]
-		public void AnonymousEqual1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AnonymousEqual1(string context)
 		{
 			var child = new { ParentID = 2, ChildID = 21 };
 
@@ -493,8 +493,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test]
-		public void AnonymousEqual2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AnonymousEqual2(string context)
 		{
 			var child = new { ParentID = 2, ChildID = 21 };
 
@@ -509,8 +509,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test]
-		public void AnonymousEqual3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AnonymousEqual3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -523,8 +523,8 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test]
-		public void AnonymousEqual4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AnonymousEqual4(string context)
 		{
 			var parent = new { ParentID = 2, Value1 = (int?)null };
 
@@ -539,8 +539,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void AnonymousEqual5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AnonymousEqual5(string context)
 		{
 			var parent = new { ParentID = 3, Value1 = (int?)3 };
 
@@ -555,8 +555,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CheckLeftJoin1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckLeftJoin1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -573,8 +573,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CheckLeftJoin2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckLeftJoin2(string context)
 		{
 			using (var data = GetDataContext(context))
 				AreEqual(
@@ -592,8 +592,8 @@ namespace Tests.Linq
 						select p)(data));
 		}
 
-		[Test]
-		public void CheckLeftJoin3([DataContexts(ProviderName.Firebird, ProviderName.Sybase, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Sybase, ProviderName.Access)]
+		public void CheckLeftJoin3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -618,8 +618,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CheckLeftJoin4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckLeftJoin4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -644,8 +644,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CheckNull1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckNull1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -653,8 +653,8 @@ namespace Tests.Linq
 					from p in db.Parent where p != null select p);
 		}
 
-		[Test]
-		public void CheckNull2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckNull2(string context)
 		{
 			int? n = null;
 
@@ -664,8 +664,8 @@ namespace Tests.Linq
 					from p in db.Parent where n != null || p.ParentID > 1 select p);
 		}
 
-		[Test]
-		public void CheckNull3([DataContexts(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Firebird)]
+		public void CheckNull3(string context)
 		{
 			int? n = 1;
 
@@ -675,8 +675,8 @@ namespace Tests.Linq
 					from p in db.Parent where n != null || p.ParentID > 1 select p);
 		}
 
-		[Test]
-		public void CheckCondition1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckCondition1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -689,8 +689,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CheckCondition2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckCondition2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -703,8 +703,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void CompareObject1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareObject1(string context)
 		{
 			var child = (from ch in Child where ch.ParentID == 2 select ch).First();
 
@@ -714,8 +714,8 @@ namespace Tests.Linq
 					from ch in db.Child where ch == child select ch);
 		}
 
-		[Test]
-		public void CompareObject2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareObject2(string context)
 		{
 			var parent = (from p in Parent where p.ParentID == 2 select p).First();
 
@@ -725,8 +725,8 @@ namespace Tests.Linq
 					from p in db.Parent where parent == p select p);
 		}
 
-		[Test]
-		public void CompareObject3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareObject3(string context)
 		{
 			var child = (from ch in Child where ch.ParentID == 2 select ch).First();
 
@@ -736,8 +736,8 @@ namespace Tests.Linq
 					from ch in db.Child where ch != child select ch);
 		}
 
-		[Test]
-		public void OrAnd([DataContexts] string context)
+		[Test, DataContextSource]
+		public void OrAnd(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -750,8 +750,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test]
-		public void NotOrAnd([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NotOrAnd(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -764,8 +764,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test]
-		public void AndOr([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AndOr(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -777,8 +777,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void Contains1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains1(string context)
 		{
 			var words = new [] { "John", "Pupkin" };
 
@@ -793,8 +793,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void Contains2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains2(string context)
 		{
 			IEnumerable<int> ids = new [] { 2, 3 };
 
@@ -810,8 +810,8 @@ namespace Tests.Linq
 			yield return 2;
 		}
 
-		[Test]
-		public void Contains3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -825,8 +825,8 @@ namespace Tests.Linq
 				yield return start + i;
 		}
 
-		[Test]
-		public void Contains4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -834,8 +834,8 @@ namespace Tests.Linq
 					from p in db.Parent where GetIds(1, 2).Contains(p.ParentID) || GetIds(3, 0).Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void Contains5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains5(string context)
 		{
 			IEnumerable<int> ids = new int[0];
 
@@ -845,8 +845,8 @@ namespace Tests.Linq
 					from p in db.Parent where !ids.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void AliasTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AliasTest1(string context)
 		{
 			int user = 3;
 
@@ -856,8 +856,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID == user select p);
 		}
 
-		[Test]
-		public void AliasTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AliasTest2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -865,8 +865,8 @@ namespace Tests.Linq
 					db.Parent.Where(_ => _.ParentID == 3));
 		}
 
-		[Test]
-		public void AliasTest3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AliasTest3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -874,8 +874,8 @@ namespace Tests.Linq
 					db.Parent.Where(_p => _p.ParentID == 3));
 		}
 
-		[Test]
-		public void AliasTest4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AliasTest4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -883,8 +883,8 @@ namespace Tests.Linq
 					db.Parent.Where(тбл => тбл.ParentID == 3));
 		}
 
-		[Test]
-		public void AliasTest5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AliasTest5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -901,8 +901,8 @@ namespace Tests.Linq
 					from r in from o in db.Order select o.Freight * 1000 where r > 100000 select r / 1000);
 		}
 
-		[Test]
-		public void CheckField1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -917,8 +917,8 @@ namespace Tests.Linq
 					select p.p);
 		}
 
-		[Test]
-		public void CheckField2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -932,8 +932,8 @@ namespace Tests.Linq
 					select new { p.p.Value1, p });
 		}
 
-		[Test]
-		public void CheckField3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -947,8 +947,8 @@ namespace Tests.Linq
 					select new { p.p.Value1, p.p });
 		}
 
-		[Test]
-		public void CheckField4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -956,8 +956,8 @@ namespace Tests.Linq
 					db.Parent.Select(p => new { p }).Where(p => p.p.ParentID == 1));
 		}
 
-		[Test]
-		public void CheckField5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -965,8 +965,8 @@ namespace Tests.Linq
 					db.Parent.Select(p => new { Value = p.Value1 + 1, p }).Where(p => p.Value == 2 && p.p.ParentID == 1));
 		}
 
-		[Test]
-		public void CheckField6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CheckField6(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -978,8 +978,8 @@ namespace Tests.Linq
 					where p.p.ParentID == 1 && p.Value > 0 select new { p.p.Value1, p.Value, p.p, p1 = p });
 		}
 
-		[Test]
-		public void SubQuery1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SubQuery1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -994,8 +994,8 @@ namespace Tests.Linq
 					select pp.Value);
 		}
 
-		[Test]
-		public void SearchCondition1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SearchCondition1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

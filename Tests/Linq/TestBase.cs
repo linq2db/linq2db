@@ -112,12 +112,6 @@ namespace Tests
 			}
 		}
 
-		class  A<T>
-			where  : struct
-		{
-			 
-		}
-
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 		//[Obsolete]
 		public class DataContextsAttribute : ValuesAttribute
