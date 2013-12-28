@@ -13,8 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinTest : TestBase
 	{
-		[Test]
-		public void InnerJoin1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin1(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -24,8 +24,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test]
-		public void InnerJoin2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin2(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -35,8 +35,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test]
-		public void InnerJoin3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin3(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -48,8 +48,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.p2.FirstName, LastName = p2.p3.LastName });
 		}
 
-		[Test]
-		public void InnerJoin4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin4(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -60,8 +60,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
 
-		[Test]
-		public void InnerJoin5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin5(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -72,8 +72,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
 
-		[Test]
-		public void InnerJoin6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin6(string context)
 		{
 			using (var db = GetDataContext(context))
 				TestJohn(
@@ -83,8 +83,8 @@ namespace Tests.Linq
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
 
-		[Test]
-		public void InnerJoin7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin7(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -103,8 +103,8 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[Test]
-		public void InnerJoin8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin8(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -122,8 +122,8 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[Test]
-		public void InnerJoin9([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void InnerJoin9(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -137,8 +137,8 @@ namespace Tests.Linq
 					select g);
 		}
 
-		[Test]
-		public void InnerJoin10([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InnerJoin10(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -152,8 +152,8 @@ namespace Tests.Linq
 					select new { p.ParentID, q1.GrandChildID });
 		}
 
-		[Test]
-		public void GroupJoin1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -167,8 +167,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void GroupJoin2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -191,8 +191,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GroupJoin3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -226,8 +226,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GroupJoin4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -257,8 +257,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GroupJoin5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -273,8 +273,8 @@ namespace Tests.Linq
 					select lj1.First());
 		}
 
-		[Test]
-		public void GroupJoin51([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin51(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -299,8 +299,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GroupJoin52([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GroupJoin52(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
