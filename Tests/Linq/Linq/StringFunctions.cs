@@ -724,8 +724,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void CompareOrdinal2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareOrdinal2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -734,8 +734,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Compare1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Compare1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -744,8 +744,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Compare2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Compare2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -754,8 +754,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Compare3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Compare3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -764,8 +764,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Compare4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Compare4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -774,8 +774,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void IsNullOrEmpty1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void IsNullOrEmpty1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -784,8 +784,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void IsNullOrEmpty2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void IsNullOrEmpty2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
