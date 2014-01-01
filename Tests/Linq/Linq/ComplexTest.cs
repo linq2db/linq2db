@@ -16,8 +16,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ComplexTest : TestBase
 	{
-		[Test]
-		public void Contains1([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void Contains1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -59,8 +59,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains2([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void Contains2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -117,8 +117,8 @@ namespace Tests.Linq
 			return value ?? 777;
 		}
 
-		[Test]
-		public void Contains3([DataContexts(ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		public void Contains3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -160,8 +160,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains4([DataContexts(ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		public void Contains4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -201,8 +201,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Join1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Join1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -263,8 +263,8 @@ namespace Tests.Linq
 			return q;
 		}
 
-		[Test]
-		public void Join2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Join2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
