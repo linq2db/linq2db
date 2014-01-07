@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -296,6 +297,50 @@ namespace Tests.Update
 				}
 				finally
 				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+	
+		string ContainsJoin1Impl(TestDataConnection db, int[] arr)
+		{
+			var id = 1000;
+
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				where c.ParentID == id && !arr.Contains(c.ChildID)
+				select p
+			).Delete();
+
+			return db.LastQuery;
+		}
+
+		[Test, DataContextSource(false, ProviderName.Informix)]
+		public void ContainsJoin1(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Child. Delete(c => c.ParentID >= 1000);
+				db.Parent.Delete(c => c.ParentID >= 1000);
+
+				try
+				{
+					var id = 1000;
+
+					db.Insert(new Parent { ParentID = id });
+
+					for (var i = 0; i < 3; i++)
+						db.Insert(new Child { ParentID = id, ChildID = 1000 + i });
+
+					var sql1 = ContainsJoin1Impl(db, new [] { 1000, 1001 });
+					var sql2 = ContainsJoin1Impl(db, new [] { 1002       });
+
+					Assert.That(sql1, Is.Not.EqualTo(sql2));
+				}
+				finally
+				{
+					db.Child. Delete(c => c.ParentID >= 1000);
 					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
