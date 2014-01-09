@@ -108,8 +108,8 @@ namespace Tests.Linq
 		const long VAL1 = 11;
 		const int  RID  = 101;
 
-		[Test]
-		public void EnumMapInsert1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -126,8 +126,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsert2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -144,8 +144,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsert3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsert3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -163,8 +163,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsert4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsert4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -181,8 +181,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhere1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhere1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -200,8 +200,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhere2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhere2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -219,8 +219,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhere3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhere3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -240,8 +240,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhere4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhere4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -261,8 +261,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapUpdate1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapUpdate1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -288,8 +288,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapUpdate2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -315,8 +315,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapUpdate3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapUpdate3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -342,8 +342,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapUpdate4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapUpdate4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -369,8 +369,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectAnon1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectAnon1(string context)
 		{
 			using (var db  = GetDataContext(context))
 			{
@@ -393,8 +393,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectAnon2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectAnon2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -417,8 +417,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectAnon3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectAnon3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -441,8 +441,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectAnon4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectAnon4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -465,8 +465,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDelete1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDelete1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -483,8 +483,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDelete2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDelete2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -501,8 +501,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDelete3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDelete3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -520,8 +520,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDelete4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDelete4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -539,8 +539,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -561,8 +561,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -583,8 +583,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -604,8 +604,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -626,8 +626,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet5(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -648,8 +648,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSet6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSet6(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -669,8 +669,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapContains1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapContains1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -688,8 +688,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapContains2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapContains2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -706,8 +706,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapContains3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapContains3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -725,8 +725,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapContains4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapContains4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -744,8 +744,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectNull1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectNull1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -767,8 +767,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapSelectNull2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectNull2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -790,8 +790,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhereNull1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhereNull1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -811,8 +811,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapWhereNull2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapWhereNull2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -832,8 +832,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertObject1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertObject1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -850,8 +850,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertObject2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertObject2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -868,8 +868,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertObject3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertObject3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -887,8 +887,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertObject4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertObject4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -905,8 +905,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertFromSelectWithParam1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertFromSelectWithParam1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -935,8 +935,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertFromSelectWithParam2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertFromSelectWithParam2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -965,8 +965,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertFromSelectWithParam3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertFromSelectWithParam3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -995,8 +995,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapInsertFromSelectWithParam4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapInsertFromSelectWithParam4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1025,8 +1025,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDeleteEquals1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDeleteEquals1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1043,8 +1043,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDeleteEquals2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDeleteEquals2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1061,8 +1061,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDeleteEquals3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDeleteEquals3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1080,8 +1080,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapDeleteEquals4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapDeleteEquals4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1099,8 +1099,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapCustomPredicate1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapCustomPredicate1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1122,8 +1122,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapCustomPredicate2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapCustomPredicate2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1169,8 +1169,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test_4_1_18_Regression1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test_4_1_18_Regression1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1223,8 +1223,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test_4_1_18_Regression2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test_4_1_18_Regression2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1263,8 +1263,8 @@ namespace Tests.Linq
 			return val;
 		}
 
-		[Test]
-		public void EnumMapSelectNull_Regression([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapSelectNull_Regression(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1301,8 +1301,8 @@ namespace Tests.Linq
 			public TestFlag IntValue;
 		}
 
-		[Test]
-		public void TestFlagEnum([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void TestFlagEnum(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1317,8 +1317,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapIntermediateObject1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapIntermediateObject1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1338,8 +1338,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapIntermediateObject2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapIntermediateObject2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1359,8 +1359,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapIntermediateObject3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapIntermediateObject3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1380,8 +1380,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void EnumMapIntermediateObject4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EnumMapIntermediateObject4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

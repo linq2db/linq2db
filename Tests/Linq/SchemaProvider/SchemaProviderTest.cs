@@ -13,8 +13,8 @@ namespace Tests.SchemaProvider
 	[TestFixture]
 	public class SchemaProviderTest : TestBase
 	{
-		[Test]
-		public void Test([DataContexts(ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false)]
+		public void Test(string context)
 		{
 			SqlServerTools.ResolveSqlTypes("");
 
