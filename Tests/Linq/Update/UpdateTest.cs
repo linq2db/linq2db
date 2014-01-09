@@ -466,10 +466,9 @@ namespace Tests.Update
 			public Table1 Table1;
 		}
 
-		[Test]
-		public void UpdateAssociation5([DataContexts(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite,
-			ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite)]
+		public void UpdateAssociation5(string context)
 		{
 			using (var db = new DataConnection(context))
 			{

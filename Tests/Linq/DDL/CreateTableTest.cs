@@ -16,8 +16,8 @@ namespace Tests.DDL
 			public string Field1;
 		}
 
-		[Test]
-		public void CreateTable1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CreateTable1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

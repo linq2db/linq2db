@@ -12,8 +12,9 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class DmlTest : TestBase
 	{
-		[Test, ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Doctor' table to have a primary key.")]
-		public void InsertOrUpdate1([DataContexts] string context)
+		[Test, DataContextSource]
+		[ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Doctor' table to have a primary key.")]
+		public void InsertOrUpdate1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -32,8 +33,9 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter.")]
-		public void InsertOrUpdate2([DataContexts] string context)
+		[Test, DataContextSource]
+		[ExpectedException(typeof(LinqException), ExpectedMessage = "InsertOrUpdate method requires the 'Patient.PersonID' field to be included in the insert setter.")]
+		public void InsertOrUpdate2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

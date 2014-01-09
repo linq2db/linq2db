@@ -206,6 +206,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
 			switch (dataType)
 			{
 				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using NUnit.Framework;
 
@@ -11,8 +8,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ParameterTest : TestBase
 	{
-		[Test]
-		public void InlineParameter([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InlineParameter(string context)
 		{
 			using (var  db = GetDataContext(context))
 			{

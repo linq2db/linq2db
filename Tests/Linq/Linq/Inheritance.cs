@@ -483,8 +483,8 @@ namespace Tests.Linq
 			public string LastName { get; set; }
 		}
 
-		[Test]
-		public void Test17([DataContexts(ExcludeLinqService=true)] string data)
+		[Test, DataContextSource(false)]
+		public void Test17(string data)
 		{
 			using (var context = GetDataContext(data))
 			{

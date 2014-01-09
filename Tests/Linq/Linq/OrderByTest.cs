@@ -140,8 +140,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void OrderBy6([DataContexts(ExcludeLinqService = true)] string context)
+		[Test, DataContextSource(false)]
+		public void OrderBy6(string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{

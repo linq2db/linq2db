@@ -1,18 +1,16 @@
 ﻿using System;
 
+using NUnit.Framework;
+
 namespace Tests.Linq
 {
-	using System.Linq;
-
 	using LinqToDB;
-
-	using NUnit.Framework;
 
 	[TestFixture]
 	public class AsyncTest : TestBase
 	{
-		[Test]
-		public async void Test([DataContexts(ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false)]
+		public async void Test(string context)
 		{
 			Test1(context);
 
@@ -22,6 +20,8 @@ namespace Tests.Linq
 				Assert.AreNotEqual(list.Length, Is.Not.EqualTo(0));
 			}
 		}
+
+		[Test, DataContextSource(false)]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context + ".LinqService"))

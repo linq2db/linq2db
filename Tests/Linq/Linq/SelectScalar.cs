@@ -12,16 +12,16 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectScalar : TestBase
 	{
-		[Test]
-		public void Parameter1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Parameter1(string context)
 		{
 			var p = 1;
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(p, db.Select(() => p));
 		}
 
-		[Test]
-		public void Parameter2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Parameter2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -30,59 +30,59 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Constant1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Constant1(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, db.Select(() => 1));
 		}
 
-		[Test]
-		public void Constant2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Constant2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, db.Select(() => new { p = 1 }).p);
 		}
 
-		[Test]
-		public void Constant3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Constant3(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, db.Select(() => new Person { ID = 1, FirstName = "John" }).ID);
 		}
 
-		[Test]
-		public void StrLen([DataContexts] string context)
+		[Test, DataContextSource]
+		public void StrLen(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual("1".Length, db.Select(() => "1".Length));
 		}
 
-		[Test]
-		public void IntMaxValue([DataContexts] string context)
+		[Test, DataContextSource]
+		public void IntMaxValue(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(int.MaxValue, db.Select(() => int.MaxValue));
 		}
 
-		[Test]
-		public void Substring([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Substring(string context)
 		{
 			const string s = "123";
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(s.Substring(1), db.Select(() => s.Substring(1)));
 		}
 
-		[Test]
-		public void Add([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Add(string context)
 		{
 			const string s = "123";
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(s.Substring(1).Length + 3, db.Select(() => s.Substring(1).Length + 3));
 		}
 
-		[Test]
-		public void Scalar1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -91,8 +91,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar11([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar11(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -101,8 +101,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -111,8 +111,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar21([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar21(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -121,8 +121,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar22([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar22(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -144,8 +144,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar23([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar23(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -167,8 +167,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -178,8 +178,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar31([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar31(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -190,8 +190,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Scalar4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Scalar4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -211,8 +211,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Function([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Function(string context)
 		{
 			var text = "123";
 
