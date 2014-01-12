@@ -1161,7 +1161,7 @@ namespace LinqToDB.SqlProvider
 				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { QueryType = QueryType.Delete };
+				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };
 
 				selectQuery.ParentSelect = sql;
 				selectQuery.QueryType = QueryType.Select;
@@ -1211,7 +1211,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { QueryType = QueryType.Update };
+					var sql = new SelectQuery { QueryType = QueryType.Update, IsParameterDependent = selectQuery.IsParameterDependent  };
 
 					selectQuery.ParentSelect = sql;
 					selectQuery.QueryType = QueryType.Select;
