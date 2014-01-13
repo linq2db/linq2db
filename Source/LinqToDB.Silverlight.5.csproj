@@ -118,6 +118,7 @@
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
     <Compile Include="Linq\Builder\CastBuilder.cs" />
+    <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
     <Compile Include="Linq\Builder\ContainsBuilder.cs" />
     <Compile Include="Linq\Builder\ConvertFlags.cs" />
