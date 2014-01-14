@@ -580,5 +580,22 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Test, DataContextSource]
+		public void TestUpdateTake(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var entities =
+					from x in db.Parent
+					where x.ParentID > 1000
+					orderby x.ParentID descending
+					select x;
+
+				entities
+					.Take(10)
+					.Update(x => new Parent { Value1 = 1 });
+			}
+		}
 	}
 }

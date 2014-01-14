@@ -516,32 +516,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void CompiledQueryWithExpressionMethodTest([IncludeDataContexts(CurrentProvider)] string context)
-		{
-			using (var db = new DataConnection(context))
-			{
-				var query = CompiledQuery.Compile((DataConnection xdb, DateTime date) => Filter(xdb, date).FirstOrDefault());
-
-				query(db, DateTime.Now);
-			}
-		}
-
-		[ExpressionMethod("FilterExpression")]
-		public static IQueryable<Entity> Filter(DataConnection db, DateTime date)
-		{
-			throw new NotImplementedException();
-		}
-
-		private static Expression<Func<DataConnection, DateTime, IQueryable<Entity>>> FilterExpression()
-		{
-			return (db, date) =>
-				from x in db.GetTable<Entity>()
-				where (x.Time < date)
-				orderby x.Time descending // <- без сортировки работает нормально
-				select x;
-		}
-
 		#region Sequence
 
 		[Test]
