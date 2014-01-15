@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -18,8 +17,8 @@ namespace Tests.Update
 	[TestFixture]
 	public class DeleteTest : TestBase
 	{
-		[Test]
-		public void Delete1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Delete1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,8 +40,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Delete2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Delete2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,8 +63,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Delete3([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Delete3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,8 +86,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Delete4([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Delete4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,8 +109,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Delete5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Delete5(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -156,11 +155,10 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void DeleteMany1([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
-			)] string context)
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird)]
+		public void DeleteMany1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -187,11 +185,11 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void DeleteMany2([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
-			)] string context)
+			)]
+		public void DeleteMany2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -227,11 +225,11 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void DeleteMany3([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
-			)] string context)
+			)]
+		public void DeleteMany3(string context)
 		{
 			var ids = new[] { 1001 };
 
@@ -266,8 +264,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void DeleteTop([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Access,
 			ProviderName.DB2,
 			ProviderName.Firebird,
@@ -277,7 +274,8 @@ namespace Tests.Update
 			ProviderName.SQLite,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000
-			)] string context)
+			)]
+		public void DeleteTop(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
