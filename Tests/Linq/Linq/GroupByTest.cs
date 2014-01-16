@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GroupByTest : TestBase
 	{
-		[Test]
-		public void Simple1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple1(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.PreloadGroups = true;
 
@@ -42,8 +42,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple2(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.PreloadGroups = false;
 
@@ -60,8 +60,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -77,8 +77,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -95,8 +95,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,8 +111,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test]
-		public void Simple6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple6(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -124,8 +124,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple7(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -138,8 +138,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple8(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,8 +150,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Simple9([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Simple9(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

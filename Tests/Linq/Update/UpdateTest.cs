@@ -65,7 +65,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(ProviderName.Informix)]
-		public void Update3([DataContexts] string context)
+		public void Update3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -367,7 +367,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
-		public void UpdateAssociation3([DataContexts] string context)
+		public void UpdateAssociation3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
