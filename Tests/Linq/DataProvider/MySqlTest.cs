@@ -22,7 +22,7 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.MySql;
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestParameters([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -36,7 +36,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestDataTypes([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -84,7 +84,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestDate([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -98,7 +98,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestDateTime([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -114,7 +114,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestChar([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -145,7 +145,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestString([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -165,7 +165,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestBinary([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
@@ -184,7 +184,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -210,7 +210,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestEnum1([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -222,7 +222,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test]
 		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
 		{
 			using (var conn = new DataConnection(context))
