@@ -10,8 +10,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class Inheritance : TestBase
 	{
-		[Test, ExpectedException(typeof(LinqException))]
-		public void Test1([DataContexts] string context)
+		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

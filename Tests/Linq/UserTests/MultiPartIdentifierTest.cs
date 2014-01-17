@@ -73,7 +73,7 @@ namespace Tests.UserTests
 			public List<Table4> Table4s { get; set; }
 		}
 
-		[Test]
+		[Test, DataContextSource]
 		public void Test([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
 		{
 			using (var db = GetDataContext(context))

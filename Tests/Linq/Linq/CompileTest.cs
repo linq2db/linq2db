@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB;
@@ -190,6 +191,32 @@ namespace Tests.Linq
 				Assert.AreEqual(1, query(db, 1).ParentID);
 				Assert.AreEqual(2, query(db, 2).ParentID);
 			}
+		}
+
+		[Test, DataContextSource]
+		public void CompiledQueryWithExpressionMethodTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefault());
+
+				query(db, 1);
+			}
+		}
+
+		[ExpressionMethod("FilterExpression")]
+		public static IQueryable<Parent> Filter(ITestDataContext db, int date)
+		{
+			throw new NotImplementedException();
+		}
+
+		static Expression<Func<ITestDataContext, int, IQueryable<Parent>>> FilterExpression()
+		{
+			return (db, id) =>
+				from x in db.GetTable<Parent>()
+				where x.ParentID == id
+				orderby x.ParentID descending
+				select x;
 		}
 	}
 }

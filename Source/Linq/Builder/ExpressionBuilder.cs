@@ -22,38 +22,39 @@ namespace LinqToDB.Linq.Builder
 
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
-			new TableBuilder         (),
-			new SelectBuilder        (),
-			new SelectManyBuilder    (),
-			new WhereBuilder         (),
-			new OrderByBuilder       (),
-			new GroupByBuilder       (),
-			new JoinBuilder          (),
-			new TakeSkipBuilder      (),
-			new DefaultIfEmptyBuilder(),
-			new DistinctBuilder      (),
-			new FirstSingleBuilder   (),
-			new AggregationBuilder   (),
-			new ScalarSelectBuilder  (),
-			new CountBuilder         (),
-			new PassThroughBuilder   (),
-			new TableAttributeBuilder(),
-			new InsertBuilder        (),
-			new InsertBuilder.Into   (),
-			new InsertBuilder.Value  (),
-			new InsertOrUpdateBuilder(),
-			new UpdateBuilder        (),
-			new UpdateBuilder.Set    (),
-			new DeleteBuilder        (),
-			new ContainsBuilder      (),
-			new AllAnyBuilder        (),
-			new ConcatUnionBuilder   (),
-			new IntersectBuilder     (),
-			new CastBuilder          (),
-			new OfTypeBuilder        (),
-			new AsUpdatableBuilder   (),
-			new LoadWithBuilder      (),
-			new DropBuilder          (),
+			new TableBuilder               (),
+			new SelectBuilder              (),
+			new SelectManyBuilder          (),
+			new WhereBuilder               (),
+			new OrderByBuilder             (),
+			new GroupByBuilder             (),
+			new JoinBuilder                (),
+			new TakeSkipBuilder            (),
+			new DefaultIfEmptyBuilder      (),
+			new DistinctBuilder            (),
+			new FirstSingleBuilder         (),
+			new AggregationBuilder         (),
+			new ScalarSelectBuilder        (),
+			new CountBuilder               (),
+			new PassThroughBuilder         (),
+			new TableAttributeBuilder      (),
+			new InsertBuilder              (),
+			new InsertBuilder.Into         (),
+			new InsertBuilder.Value        (),
+			new InsertOrUpdateBuilder      (),
+			new UpdateBuilder              (),
+			new UpdateBuilder.Set          (),
+			new DeleteBuilder              (),
+			new ContainsBuilder            (),
+			new AllAnyBuilder              (),
+			new ConcatUnionBuilder         (),
+			new IntersectBuilder           (),
+			new CastBuilder                (),
+			new OfTypeBuilder              (),
+			new AsUpdatableBuilder         (),
+			new LoadWithBuilder            (),
+			new DropBuilder                (),
+			new ChangeTypeExpressionBuilder(),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -184,6 +185,18 @@ namespace LinqToDB.Linq.Builder
 
 				n = builder.BuildCounter;
 			}
+
+			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+		}
+
+		[JetBrains.Annotations.NotNull]
+		public ISequenceBuilder GetBuilder(BuildInfo buildInfo)
+		{
+			buildInfo.Expression = buildInfo.Expression.Unwrap();
+
+			foreach (var builder in _builders)
+				if (builder.CanBuild(this, buildInfo))
+					return builder;
 
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}

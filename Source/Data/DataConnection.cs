@@ -87,7 +87,7 @@ namespace LinqToDB.Data
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
 
-		static readonly ConcurrentDictionary<string,int> _configurationIDs = new ConcurrentDictionary<string,int>();
+		static readonly ConcurrentDictionary<string,int> _configurationIDs;
 		static int _maxID;
 
 		private int? _id;
@@ -259,6 +259,8 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
+			_configurationIDs = new ConcurrentDictionary<string,int>();
+
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();

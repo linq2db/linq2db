@@ -25,7 +25,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			selectQuery.FinalizeAndValidate(
+			new SelectQueryOptimizer(selectQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
 				SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -33,7 +33,7 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				selectQuery.FinalizeAndValidate(
+				new SelectQueryOptimizer(selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -79,7 +79,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -252,7 +252,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -758,7 +758,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition :
-					SelectQuery.OptimizeSearchCondition((SelectQuery.SearchCondition)expression);
+					SelectQueryOptimizer.OptimizeSearchCondition((SelectQuery.SearchCondition)expression);
 					break;
 
 				case QueryElementType.SqlExpression   :
@@ -1161,7 +1161,7 @@ namespace LinqToDB.SqlProvider
 				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { QueryType = QueryType.Delete };
+				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };
 
 				selectQuery.ParentSelect = sql;
 				selectQuery.QueryType = QueryType.Select;
@@ -1211,7 +1211,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { QueryType = QueryType.Update };
+					var sql = new SelectQuery { QueryType = QueryType.Update, IsParameterDependent = selectQuery.IsParameterDependent  };
 
 					selectQuery.ParentSelect = sql;
 					selectQuery.QueryType = QueryType.Select;

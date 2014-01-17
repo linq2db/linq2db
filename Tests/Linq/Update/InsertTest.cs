@@ -17,8 +17,8 @@ namespace Tests.Update
 	[TestFixture]
 	public class InsertTest : TestBase
 	{
-		[Test]
-		public void DistinctInsert1([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		public void DistinctInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -48,8 +48,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void DistinctInsert2([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		public void DistinctInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -75,8 +75,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -103,8 +103,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -129,8 +129,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -157,8 +157,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert31([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert31(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -186,8 +186,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -213,8 +213,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert5(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -240,8 +240,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert6(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -265,8 +265,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert7(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -291,8 +291,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert8(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -317,8 +317,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert9([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert9(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -361,8 +361,8 @@ namespace Tests.Update
 			[Column] public short     SmallIntValue;
 		}
 
-		[Test]
-		public void InsertArray1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertArray1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -382,8 +382,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertArray2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertArray2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -408,8 +408,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertArray3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertArray3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -434,8 +434,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertArray4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertArray4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -460,8 +460,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertUnion1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertUnion1(string context)
 		{
 			Child.Count();
 
@@ -493,8 +493,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertEnum1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertEnum1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -527,8 +527,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertEnum2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertEnum2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -553,8 +553,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertEnum3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertEnum3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -579,8 +579,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertNull([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertNull(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -603,8 +603,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertWithIdentity1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertWithIdentity1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -635,8 +635,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertWithIdentity2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertWithIdentity2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -665,8 +665,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertWithIdentity3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertWithIdentity3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -695,8 +695,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertWithIdentity4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertWithIdentity4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -729,8 +729,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertWithIdentity5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertWithIdentity5(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -764,8 +764,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertOrUpdate1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertOrUpdate1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -804,8 +804,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertOrReplace1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertOrReplace1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -839,8 +839,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertOrUpdate3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void InsertOrUpdate3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -955,8 +955,8 @@ namespace Tests.Update
 			public FullName Name;
 		}
 
-		[Test]
-		public void Insert11([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert11(string context)
 		{
 			var p = new TestPerson1 { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = "M" };
 
@@ -975,8 +975,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert12([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert12(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -998,8 +998,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert13([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Insert13(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1026,10 +1026,10 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Insert14([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2000,
-			ProviderName.SqlServer2005, ProviderName.Sybase)] string context)
+			ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void Insert14(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1055,8 +1055,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertSingleIdentity([DataContexts(ProviderName.Informix, ProviderName.SqlCe)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SqlCe)]
+		public void InsertSingleIdentity(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -112,8 +112,17 @@ namespace Tests
 			}
 		}
 
+		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		public class NorthwindDataContext : TestCaseSourceAttribute
+		{
+			public NorthwindDataContext()
+				: base(DatabaseTestCase.GetDataContextType(false, null, new [] { "Northwind" }), "TestCases")
+			{
+			}
+		}
+
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-		//[Obsolete]
+		[Obsolete]
 		public class DataContextsAttribute : ValuesAttribute
 		{
 			public DataContextsAttribute(params string[] except)

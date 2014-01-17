@@ -108,6 +108,7 @@
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
     <Compile Include="Data\TraceInfo.cs" />
+    <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
@@ -322,6 +323,7 @@
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />

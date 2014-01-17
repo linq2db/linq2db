@@ -2,6 +2,7 @@
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -13,6 +14,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using CompiledQuery = LinqToDB.CompiledQuery;
 #if MANAGED_ORACLE
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -482,6 +484,35 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>(PathThroughSql, new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+			}
+		}
+
+		public class AllTypes
+		{
+			[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
+			[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
+			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
+		}
+
+		[Table("t_entity")]
+		public sealed class Entity
+		{
+			[PrimaryKey, Identity]
+			[NotNull, Column("entity_id")] public long Id           { get; set; }
+			[NotNull, Column("time")]      public DateTime Time     { get; set; }
+			[NotNull, Column("duration")]  public TimeSpan Duration { get; set; }
+		}
+
+		[Test]
+		public void TestTimeSpan([IncludeDataContexts(CurrentProvider)] string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BeginTransaction();
+
+				long id = 1;
+
+				db.GetTable<Entity>().Insert(() => new Entity { Id = id + 1, Duration = TimeSpan.FromHours(1) });
 			}
 		}
 
