@@ -16,8 +16,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Mapping : TestBase
 	{
-		[Test]
-		public void Enum1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -25,8 +25,8 @@ namespace Tests.Linq
 					from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p);
 		}
 
-		[Test]
-		public void Enum2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -34,8 +34,8 @@ namespace Tests.Linq
 					from p in db.Person where p.Gender == Gender.Male select p);
 		}
 
-		[Test]
-		public void Enum21([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum21(string context)
 		{
 			var gender = Gender.Male;
 
@@ -45,8 +45,8 @@ namespace Tests.Linq
 					from p in db.Person where p.Gender == gender select p);
 		}
 
-		[Test]
-		public void Enum3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum3(string context)
 		{
 			var fm = Gender.Female;
 
@@ -56,8 +56,8 @@ namespace Tests.Linq
 					from p in db.Person where p.Gender != fm select p);
 		}
 
-		[Test]
-		public void Enum4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -65,8 +65,8 @@ namespace Tests.Linq
 					from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
 		}
 
-		[Test]
-		public void Enum5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -74,8 +74,8 @@ namespace Tests.Linq
 					from p in db.Parent4 where p.Value1 == TypeValue.Value3 select p);
 		}
 
-		[Test]
-		public void Enum6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum6(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -87,8 +87,8 @@ namespace Tests.Linq
 					where p.Value1 == TypeValue.Value1 select p);
 		}
 
-		[Test]
-		public void Enum7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum7(string context)
 		{
 			var v1 = TypeValue.Value1;
 
@@ -114,8 +114,8 @@ namespace Tests.Linq
 			[Column] public TestValue Value1;
 		}
 
-		[Test]
-		public void Enum81([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum81(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
@@ -126,8 +126,8 @@ namespace Tests.Linq
 			public TestValue ID;
 		}
 
-		[Test]
-		public void Enum812([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum812(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<LinqDataTypes>()
@@ -135,8 +135,8 @@ namespace Tests.Linq
 					.Count();
 		}
 
-		[Test]
-		public void Enum82([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum82(string context)
 		{
 			var testValue = TestValue.Value1;
 			using (var db = GetDataContext(context))
@@ -161,8 +161,8 @@ namespace Tests.Linq
 			public Gender9 Gender;
 		}
 
-		[Test]
-		public void Enum9([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Enum9(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
@@ -180,8 +180,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Inner1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Inner1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -191,8 +191,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Inner2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Inner2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -212,8 +212,8 @@ namespace Tests.Linq
 			public ParentObject Parent;
 		}
 
-		[Test]
-		public void Inner3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Inner3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -292,8 +292,8 @@ namespace Tests.Linq
 			public int GetValue() { return 2; }
 		}
 
-		[Test]
-		public void MapIgnore1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MapIgnore1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
