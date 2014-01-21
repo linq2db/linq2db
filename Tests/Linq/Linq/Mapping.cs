@@ -301,8 +301,8 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2 }));
 		}
 
-		[Test]
-		public void MapIgnore2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MapIgnore2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -310,8 +310,8 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2.Length }));
 		}
 
-		[Test]
-		public void MapIgnore3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MapIgnore3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

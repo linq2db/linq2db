@@ -12,8 +12,8 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataExtensionsTest : TestBase
 	{
-		[Test]
-		public void TestScalar1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestScalar1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

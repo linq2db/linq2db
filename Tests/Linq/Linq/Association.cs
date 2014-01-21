@@ -199,8 +199,8 @@ namespace Tests.Linq
 					from p in db.Types group p by p.DateTimeValue.Year into g select g.Key);
 		}
 
-		[Test]
-		public void EqualsNull1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void EqualsNull1(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -208,8 +208,8 @@ namespace Tests.Linq
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
 		}
 
-		[Test]
-		public void EqualsNull2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void EqualsNull2(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -217,8 +217,8 @@ namespace Tests.Linq
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
 		}
 
-		[Test]
-		public void EqualsNull3([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void EqualsNull3(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -226,8 +226,8 @@ namespace Tests.Linq
 					from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
 		}
 
-		[Test]
-		public void StackOverflow1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void StackOverflow1(string context)
 		{
 			using (var db = new NorthwindDB())
 				Assert.AreEqual(

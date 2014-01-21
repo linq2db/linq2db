@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DataContextTest : TestBase
 	{
-		[Test]
-		public void TestContext([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void TestContext(string context)
 		{
 			var ctx = new DataContext(context);
 

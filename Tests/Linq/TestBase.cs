@@ -113,6 +113,20 @@ namespace Tests
 		}
 
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		public class IncludeDataContextSourceAttribute : TestCaseSourceAttribute
+		{
+			public IncludeDataContextSourceAttribute(params string[] include)
+				: base(DatabaseTestCase.GetDataContextType(false, null, include), "TestCases")
+			{
+			}
+
+			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
+				: base(DatabaseTestCase.GetDataContextType(includeLinqService, null, include), "TestCases")
+			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 		public class NorthwindDataContext : TestCaseSourceAttribute
 		{
 			public NorthwindDataContext()
@@ -171,6 +185,7 @@ namespace Tests
 			}
 		}
 
+		[Obsolete]
 		public class IncludeDataContextsAttribute : DataContextsAttribute
 		{
 			public IncludeDataContextsAttribute(params string[] include)
