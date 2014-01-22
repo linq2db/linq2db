@@ -16,8 +16,8 @@ namespace Tests.Data
 	[TestFixture]
 	public class DataConnectionTest : TestBase
 	{
-		[Test]
-		public void Test1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test1(string context)
 		{
 			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
 
@@ -38,15 +38,14 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void Test3([IncludeDataContexts(
+		[Test, IncludeDataContextSource(
 			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
-			ProviderName.Access
-			)] string context)
+			ProviderName.Access)]
+		public void Test3(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

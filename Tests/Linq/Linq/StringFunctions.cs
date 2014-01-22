@@ -425,8 +425,8 @@ namespace Tests.Linq
 			[Column, NotNull] public int CategoryId;
 		}
 
-		[Test]
-		public void Stuff2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Stuff2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

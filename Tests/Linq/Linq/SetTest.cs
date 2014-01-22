@@ -276,8 +276,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test]
-		public void AllNestedTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void AllNestedTest(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -289,8 +289,8 @@ namespace Tests.Linq
 					select c);
 		}
 
-		[Test]
-		public void ComplexAllTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void ComplexAllTest(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -482,8 +482,8 @@ namespace Tests.Linq
 					from p in db.Parent1 where arr.Contains(p) select p);
 		}
 
-		[Test]
-		public void Contains10([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Contains10(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -508,8 +508,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains11([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Contains11(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -527,8 +527,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains12([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Contains12(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -546,8 +546,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains13([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Contains13(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

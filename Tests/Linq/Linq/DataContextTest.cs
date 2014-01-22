@@ -39,8 +39,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TestContextToString([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void TestContextToString(string context)
 		{
 			using (var ctx = new DataContext(context))
 			{

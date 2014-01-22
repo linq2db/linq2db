@@ -888,8 +888,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertBatch1([IncludeDataContexts(ProviderName.Oracle)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Oracle)]
+		public void InsertBatch1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -910,8 +910,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void InsertBatch2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void InsertBatch2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

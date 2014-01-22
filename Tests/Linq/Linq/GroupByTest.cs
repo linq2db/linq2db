@@ -1081,8 +1081,8 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[Test]
-		public void GrooupByAssociation3([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void GrooupByAssociation3(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -1097,8 +1097,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void GrooupByAssociation4([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void GrooupByAssociation4(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -1157,8 +1157,8 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		[Test]
-		public void GroupByAggregate2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void GroupByAggregate2(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -1410,8 +1410,8 @@ namespace Tests.Linq
 					 select g.Select(ch => ch.ChildID).Where(id => id < 30).Count(id => id >= 20)));
 		}
 
-		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataContexts(ProviderName.MySql)] string context)
+		[Test, IncludeDataContextSource(ProviderName.MySql)]
+		public void GroupByExtraFieldBugTest(string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:

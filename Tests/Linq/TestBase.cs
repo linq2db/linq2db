@@ -8,8 +8,6 @@ using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
-using IBM.Data.DB2;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;

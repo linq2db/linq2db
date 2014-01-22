@@ -19,8 +19,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class AccessTest : DataProviderTestBase
 	{
-		[Test]
-		public void TestParameters([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -33,8 +33,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -106,8 +106,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -154,8 +154,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -170,8 +170,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -196,8 +196,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -217,8 +217,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -236,8 +236,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -248,8 +248,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestSqlVariant([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestSqlVariant(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -262,8 +262,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -288,8 +288,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -300,8 +300,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -313,8 +313,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void CreateDatabase([IncludeDataContexts(ProviderName.Access)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		public void CreateDatabase(string context)
 		{
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists:true);
 			Assert.IsTrue(File.Exists("TestDatabase.mdb"));

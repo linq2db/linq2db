@@ -14,8 +14,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class DataExceptionTest : TestBase
 	{
-		[Test]
-		public void ParameterPrefixTest([IncludeDataContexts(ProviderName.MySql)] string context)
+		[Test, IncludeDataContextSource(ProviderName.MySql)]
+		public void ParameterPrefixTest(string context)
 		{
 			try
 			{

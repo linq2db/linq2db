@@ -19,8 +19,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SQLiteTest : TestBase
 	{
-		[Test]
-		public void TestParameters([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -50,8 +50,8 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -128,8 +128,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -178,8 +178,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -194,8 +194,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -240,8 +240,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -280,8 +280,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
@@ -309,8 +309,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -329,8 +329,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestObject([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestObject(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -343,8 +343,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -368,8 +368,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -380,8 +380,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -394,8 +394,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void CreateDatabase([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void CreateDatabase(string context)
 		{
 			SQLiteTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));

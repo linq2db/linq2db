@@ -20,8 +20,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlCeTest : DataProviderTestBase
 	{
-		[Test]
-		public void TestParameters([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -34,8 +34,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -112,8 +112,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -162,8 +162,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -179,8 +179,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -215,8 +215,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -244,8 +244,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
@@ -274,8 +274,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestSqlTypes([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestSqlTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -315,8 +315,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -335,8 +335,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestTimestamp([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestTimestamp(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -350,8 +350,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -376,8 +376,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -388,8 +388,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -402,8 +402,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void CreateDatabase([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void CreateDatabase(string context)
 		{
 			SqlCeTools.CreateDatabase("TestDatabase");
 			Assert.IsTrue(File.Exists("TestDatabase.sdf"));

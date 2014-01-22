@@ -23,8 +23,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestScalar2([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestScalar2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -34,8 +34,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestScalar3([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestScalar3(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -51,8 +51,8 @@ namespace Tests.Data
 			public DateTime Column2;
 		}
 
-		[Test]
-		public void TestObject1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestObject1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -62,8 +62,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestObject2([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestObject2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -138,8 +138,8 @@ namespace Tests.Data
 			public DateTime Column2;
 		}
 
-		[Test]
-		public void TestStruct1([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestStruct1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -149,8 +149,8 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void TestDataReader([IncludeDataContexts(ProviderName.SqlServer)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer)]
+		public void TestDataReader(string context)
 		{
 			using (var conn   = new DataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))

@@ -287,8 +287,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.Value1.Equals(null) select p);
 		}
 
-		[Test]
-		public void Equals4([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Equals4(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
