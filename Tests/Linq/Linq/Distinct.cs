@@ -120,5 +120,14 @@ namespace Tests.Linq
 					(from ch in    Child orderby ch.ParentID select ch.ParentID).Take(4).Distinct(),
 					(from ch in db.Child orderby ch.ParentID select ch.ParentID).Take(4).Distinct());
 		}
+
+		[Test, DataContextSource]
+		public void OrderByDistinct(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from ch in    Child orderby ch.ParentID select ch.ParentID).Distinct(),
+					(from ch in db.Child orderby ch.ParentID select ch.ParentID).Distinct());
+		}
 	}
 }
