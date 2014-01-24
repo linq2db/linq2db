@@ -119,15 +119,13 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		public static bool QuoteIdentifiers = false;
-
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (QuoteIdentifiers)
+					if (FirebirdConfiguration.QuoteIdentifiers)
 					{
 						string name = value.ToString();
 
