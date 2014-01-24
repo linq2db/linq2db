@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-
-using LinqToDB.Extensions;
 
 namespace LinqToDB.SqlQuery
 {
+	using SqlProvider;
+
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SelectQuery selectQuery)
+		public SelectQueryOptimizer(SqlProviderFlags flags, SelectQuery selectQuery)
 		{
+			_flags       = flags;
 			_selectQuery = selectQuery;
 		}
 
+		private readonly SqlProviderFlags _flags;
 		readonly SelectQuery _selectQuery;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
@@ -397,7 +398,7 @@ namespace LinqToDB.SqlQuery
 				if (sql != null && sql != _selectQuery)
 				{
 					sql.ParentSelect = _selectQuery;
-					new SelectQueryOptimizer(sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
+					new SelectQueryOptimizer(_flags, sql).FinalizeAndValidateInternal(isApplySupported, optimizeColumns, tables);
 
 					if (sql.IsParameterDependent)
 						_selectQuery.IsParameterDependent = true;
@@ -723,6 +724,7 @@ namespace LinqToDB.SqlQuery
 
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasUnion && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (!isQueryOK)
 				return childSource;

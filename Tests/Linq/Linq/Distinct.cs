@@ -122,12 +122,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void OrderByDistinct(string context)
+		public void DistinctOrderBy(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from ch in    Child orderby ch.ParentID select ch.ParentID).Distinct(),
-					(from ch in db.Child orderby ch.ParentID select ch.ParentID).Distinct());
+					   Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch),
+					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 	}
 }

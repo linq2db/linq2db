@@ -21,6 +21,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			SqlProviderFlags.AcceptsTakeAsParameter       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
+			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 

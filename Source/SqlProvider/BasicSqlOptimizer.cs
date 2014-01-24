@@ -25,7 +25,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			new SelectQueryOptimizer(selectQuery).FinalizeAndValidate(
+			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
 				SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -33,7 +33,7 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				new SelectQueryOptimizer(selectQuery).FinalizeAndValidate(
+				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
