@@ -404,10 +404,7 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyTest(
-			string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -445,27 +442,40 @@ namespace Tests.DataProvider
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(
-			string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		public void BulkCopyMultipleRows(string context)
 		{
-			using (var db = new DataConnection(context))
-			{
-				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = bulkCopyType },
-					Enumerable.Range(0, 10).Select(n =>
-						new LinqDataTypes
-						{
-							ID            = 4000 + n,
-							MoneyValue    = 1000m + n,
-							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-							BoolValue     = true,
-							GuidValue     = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
+			BulkCopyTest(context, BulkCopyType.MultipleRows);
+		}
 
-				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyProviderSpecific(string context)
+		{
+			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyLinqTypes(string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
 			}
 		}
 	}

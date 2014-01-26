@@ -557,39 +557,41 @@ namespace Tests.DataProvider
 		#region BulkCopy
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopyLinqTypes(string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		public void BulkCopyLinqTypes(string context)
 		{
-			using (var db = new DataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				using (var db = new DataConnection(context))
 				{
-					var ms = new MappingSchema();
+					if (bulkCopyType == BulkCopyType.ProviderSpecific)
+					{
+						var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes>()
-							.Property(e => e.GuidValue)
-								.IsNotColumn()
-						;
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.GuidValue)
+									.IsNotColumn()
+							;
 
-					db.AddMappingSchema(ms);
+						db.AddMappingSchema(ms);
+					}
+
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
-
-				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = bulkCopyType },
-					Enumerable.Range(0, 10).Select(n =>
-						new LinqDataTypes
-						{
-							ID            = 4000 + n,
-							MoneyValue    = 1000m + n,
-							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-							BoolValue     = true,
-							GuidValue     = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
-
-				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 			}
 		}
 
@@ -606,61 +608,65 @@ namespace Tests.DataProvider
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopy1(string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		public void BulkCopy1(string context)
 		{
-			var data = new[]
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				new Trade { ID = 375, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 328, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 348, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 357, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 371, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 333, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1,          ValueAsDate = new DateTime(2011, 1, 5) },
-				new Trade { ID = 353, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1000000000,                                        },
-				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
-			};
+				var data = new[]
+				{
+					new Trade { ID = 375, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 328, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 348, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 357, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 371, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 333, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1,          ValueAsDate = new DateTime(2011, 1, 5) },
+					new Trade { ID = 353, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1000000000,                                        },
+					new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
+				};
 
-			using (var db = new TestDataConnection(context))
-			{
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
-					data);
+				using (var db = new TestDataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
+						data);
+				}
 			}
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
-		public void BulkCopy2(string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		public void BulkCopy2(string context)
 		{
-			using (var db = new TestDataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				db.Types2.Delete(_ => _.ID > 1000);
-
-				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				using (var db = new TestDataConnection(context))
 				{
-					var ms = new MappingSchema();
+					db.Types2.Delete(_ => _.ID > 1000);
 
-					db.AddMappingSchema(ms);
-
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes2>()
-							.Property(e => e.GuidValue)
-								.IsNotColumn()
-						;
-				}
-
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
-					new[]
+					if (bulkCopyType == BulkCopyType.ProviderSpecific)
 					{
-						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-						new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-						new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
-					});
+						var ms = new MappingSchema();
 
-				db.Types2.Delete(_ => _.ID > 1000);
+						db.AddMappingSchema(ms);
+
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes2>()
+								.Property(e => e.GuidValue)
+									.IsNotColumn()
+							;
+					}
+
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
 			}
 		}
 
