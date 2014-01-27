@@ -8,7 +8,7 @@ namespace Tests.Model
 	{
 		public class SequenceTest1
 		{
-			[Column(IsIdentity = true), SequenceName("SequenceTestSeq")]
+			[Column(IsIdentity = true), SequenceName("sequencetestseq")]
 			public int    ID;
 			public string Value;
 		}
@@ -22,7 +22,7 @@ namespace Tests.Model
 
 		public class SequenceTest3
 		{
-			[Identity, SequenceName("SequenceTestSeq")]
+			[Identity, SequenceName("sequencetestseq")]
 			public int    ID;
 			public string Value;
 		}
