@@ -26,5 +26,19 @@ namespace Tests.Model
 			public int    ID;
 			public string Value;
 		}
+
+		[Table(Schema = "test_schema")]
+		public class TestSchemaIdentity
+		{
+			[Column(IsIdentity = true), SequenceName("TestSchemaIdentity_ID_seq")]
+			public int ID;
+		}
+
+		[Table(Schema = "test_schema", Name = "testserialidentity")]
+		public class TestSerialIdentity
+		{
+			[Identity, PrimaryKey]
+			public int ID;
+		}
 	}
 }

@@ -479,5 +479,37 @@ namespace Tests.DataProvider
 				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"));
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.TestSchemaIdentity { }));
+				var id2 = db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Single().ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Delete();
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.TestSerialIdentity { }));
+				var id2 = db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Single().ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Delete();
+			}
+		}
 	}
 }
