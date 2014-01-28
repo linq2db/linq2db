@@ -355,6 +355,12 @@ SELECT
 
 GO
 
+DROP TABLE TestSameName
+GO
+
+DROP TABLE test_schema.TestSameName
+GO
+
 DROP TABLE test_schema.TestSerialIdentity
 GO
 
@@ -381,5 +387,17 @@ GO
 CREATE TABLE test_schema.TestSerialIdentity
 (
 	"ID" serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE test_schema.TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
 )
 GO
