@@ -17,5 +17,14 @@ namespace T4Model.Tests
 				return ValidationResult.Success;
 			}
 		}
+
+
+		private void AddError(string name, string errorMessage)
+		{
+		}
+
+		private void RemoveError(string nameOfEditableInt1)
+		{
+		}
 	}
 }

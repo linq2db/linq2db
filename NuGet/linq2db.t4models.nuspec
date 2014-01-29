@@ -18,7 +18,7 @@
 		</tags>
 	</metadata>
 	<files>
-		<file src="..\..\linq2db\Source\bin\Release\linq2db.dll" target="tools" />
+		<file src="..\..\linq2db\Source\bin\Release.4.0\linq2db.dll" target="tools" />
 		<file src="..\Templates\DataAnnotations.ttinclude"       target="content\LinqToDB.Templates" />
 		<file src="..\Templates\DataModel.ttinclude"             target="content\LinqToDB.Templates" />
 		<file src="..\Templates\EditableObject.ttinclude"        target="content\LinqToDB.Templates" />
