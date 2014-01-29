@@ -29,6 +29,7 @@ namespace MySqlDataContext
 		public ITable<patient>      patients       { get { return this.GetTable<patient>(); } }
 		public ITable<person>       people         { get { return this.GetTable<person>(); } }
 		public ITable<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
+		public ITable<testsamename> testsamenames  { get { return this.GetTable<testsamename>(); } }
 
 		public TestDataDB()
 		{
@@ -208,5 +209,11 @@ namespace MySqlDataContext
 	public partial class testidentity
 	{
 		[PrimaryKey, Identity] public object ID { get; set; } // int(11)
+	}
+
+	[Table("testsamename")]
+	public partial class testsamename
+	{
+		[PrimaryKey, NotNull] public object ID { get; set; } // int(11)
 	}
 }
