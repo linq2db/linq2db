@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -22,21 +23,15 @@ namespace DataModel
 {
 	/// <summary>
 	/// Database       : Northwind
-	/// Data Source    : .
-	/// Server Version : 10.50.4000
+	/// Data Source    : DBHost\SQLSERVER2012
+	/// Server Version : 11.00.2100
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
-		/// <summary>
-		/// Description for Categories table.
-		/// </summary>
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
 		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
 		public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
-		/// <summary>
-		/// Description of Customers table.
-		/// </summary>
 		public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
 		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
 		public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
@@ -74,9 +69,6 @@ namespace DataModel
 
 		#region Alias members
 
-		/// <summary>
-		/// Description for Categories table.
-		/// </summary>
 		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
 		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
 
@@ -130,15 +122,9 @@ namespace DataModel
 		[Column, NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
 	}
 
-	/// <summary>
-	/// Description for Categories table.
-	/// </summary>
 	[Table(Database="Northwind", Name="Categories")]
 	public partial class Category
 	{
-		/// <summary>
-		/// Description of Categories.CategoryID field.
-		/// </summary>
 		[PrimaryKey, Identity   ] public int    CategoryID   { get; set; } // int
 		[Column,     NotNull    ] public string CategoryName { get; set; } // nvarchar(15)
 		[Column,        Nullable] public string Description  { get; set; } // ntext
@@ -155,9 +141,6 @@ namespace DataModel
 		#endregion
 	}
 
-	/// <summary>
-	/// Description for Categories table.
-	/// </summary>
 	[Obsolete("Use Category instead.")]
 	public partial class CATEG : Category
 	{
@@ -179,19 +162,10 @@ namespace DataModel
 		[Column,   NotNull] public string ProductName { get; set; } // nvarchar(40)
 	}
 
-	/// <summary>
-	/// Description of Customers table.
-	/// </summary>
 	[Table(Database="Northwind", Name="Customers")]
 	public partial class Customer
 	{
-		/// <summary>
-		/// Just ID.
-		/// </summary>
 		[PrimaryKey, NotNull    ] public string CustomerID   { get; set; } // nchar(5)
-		/// <summary>
-		/// Name of the Company.
-		/// </summary>
 		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
 		[Column,        Nullable] public string ContactName  { get; set; } // nvarchar(30)
 		[Column,        Nullable] public string ContactTitle { get; set; } // nvarchar(30)
@@ -301,6 +275,12 @@ namespace DataModel
 		public Employee FK_Employees_Employee { get; set; }
 
 		/// <summary>
+		/// FK_Employees_Employees_BackReference
+		/// </summary>
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
+		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
+
+		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
@@ -311,12 +291,6 @@ namespace DataModel
 		/// </summary>
 		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
-
-		/// <summary>
-		/// FK_Employees_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=false)]
-		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
 
 		#endregion
 	}
@@ -397,10 +371,10 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Orders_Shippers
+		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
-		public Shipper Shipper { get; set; }
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
@@ -409,10 +383,10 @@ namespace DataModel
 		public Employee Employee { get; set; }
 
 		/// <summary>
-		/// FK_Orders_Customers
+		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
-		public Customer Customer { get; set; }
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		public Shipper Shipper { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
@@ -518,16 +492,16 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_Products_Suppliers
-		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
-		public Supplier Supplier { get; set; }
-
-		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
 		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
 		public Category Category { get; set; }
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		public Supplier Supplier { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference
@@ -826,105 +800,90 @@ namespace DataModel
 		}
 
 		#endregion
-
-		#region sp_helpdiagrams
-
-		public partial class sp_helpdiagramsResult
-		{
-			public string Database { get; set; }
-			public string Name     { get; set; }
-			public int    ID       { get; set; }
-			public string Owner    { get; set; }
-			public int    OwnerID  { get; set; }
-		}
-
-		public static IEnumerable<sp_helpdiagramsResult> sp_helpdiagrams(this DataConnection dataConnection, string @diagramname, int? @owner_id)
-		{
-			return dataConnection.QueryProc<sp_helpdiagramsResult>("[Northwind]..[sp_helpdiagrams]",
-				new DataParameter("@diagramname", @diagramname),
-				new DataParameter("@owner_id",    @owner_id));
-		}
-
-		#endregion
-
-		#region sp_helpdiagramdefinition
-
-		public partial class sp_helpdiagramdefinitionResult
-		{
-			public int?   version    { get; set; }
-			public byte[] definition { get; set; }
-		}
-
-		public static IEnumerable<sp_helpdiagramdefinitionResult> sp_helpdiagramdefinition(this DataConnection dataConnection, string @diagramname, int? @owner_id)
-		{
-			return dataConnection.QueryProc<sp_helpdiagramdefinitionResult>("[Northwind]..[sp_helpdiagramdefinition]",
-				new DataParameter("@diagramname", @diagramname),
-				new DataParameter("@owner_id",    @owner_id));
-		}
-
-		#endregion
-
-		#region sp_creatediagram
-
-		public static int sp_creatediagram(this DataConnection dataConnection, string @diagramname, int? @owner_id, int? @version, byte[] @definition)
-		{
-			return dataConnection.ExecuteProc("[Northwind]..[sp_creatediagram]",
-				new DataParameter("@diagramname", @diagramname),
-				new DataParameter("@owner_id",    @owner_id),
-				new DataParameter("@version",     @version),
-				new DataParameter("@definition",  @definition));
-		}
-
-		#endregion
-
-		#region sp_renamediagram
-
-		public static int sp_renamediagram(this DataConnection dataConnection, string @diagramname, int? @owner_id, string @new_diagramname)
-		{
-			return dataConnection.ExecuteProc("[Northwind]..[sp_renamediagram]",
-				new DataParameter("@diagramname",     @diagramname),
-				new DataParameter("@owner_id",        @owner_id),
-				new DataParameter("@new_diagramname", @new_diagramname));
-		}
-
-		#endregion
-
-		#region sp_alterdiagram
-
-		public static int sp_alterdiagram(this DataConnection dataConnection, string @diagramname, int? @owner_id, int? @version, byte[] @definition)
-		{
-			return dataConnection.ExecuteProc("[Northwind]..[sp_alterdiagram]",
-				new DataParameter("@diagramname", @diagramname),
-				new DataParameter("@owner_id",    @owner_id),
-				new DataParameter("@version",     @version),
-				new DataParameter("@definition",  @definition));
-		}
-
-		#endregion
-
-		#region sp_dropdiagram
-
-		public static int sp_dropdiagram(this DataConnection dataConnection, string @diagramname, int? @owner_id)
-		{
-			return dataConnection.ExecuteProc("[Northwind]..[sp_dropdiagram]",
-				new DataParameter("@diagramname", @diagramname),
-				new DataParameter("@owner_id",    @owner_id));
-		}
-
-		#endregion
 	}
 
-	public static partial class SqlFunctions
+	public static partial class tableExtensions
 	{
-		#region fn_diagramobjects
-
-		[Sql.Function(Name="fn_diagramobjects", ServerSideOnly=true)]
-		public static int? fn_diagramobjects()
+		public static Category Find(this ITable<Category> table, int CategoryID)
 		{
-			throw new InvalidOperationException();
+			return table.FirstOrDefault(t =>
+				t.CategoryID == CategoryID);
 		}
 
-		#endregion
+		public static Customer Find(this ITable<Customer> table, string CustomerID)
+		{
+			return table.FirstOrDefault(t =>
+				t.CustomerID == CustomerID);
+		}
+
+		public static CustomerCustomerDemo Find(this ITable<CustomerCustomerDemo> table, string CustomerID, string CustomerTypeID)
+		{
+			return table.FirstOrDefault(t =>
+				t.CustomerID     == CustomerID &&
+				t.CustomerTypeID == CustomerTypeID);
+		}
+
+		public static CustomerDemographic Find(this ITable<CustomerDemographic> table, string CustomerTypeID)
+		{
+			return table.FirstOrDefault(t =>
+				t.CustomerTypeID == CustomerTypeID);
+		}
+
+		public static Employee Find(this ITable<Employee> table, int EmployeeID)
+		{
+			return table.FirstOrDefault(t =>
+				t.EmployeeID == EmployeeID);
+		}
+
+		public static EmployeeTerritory Find(this ITable<EmployeeTerritory> table, int EmployeeID, string TerritoryID)
+		{
+			return table.FirstOrDefault(t =>
+				t.EmployeeID  == EmployeeID &&
+				t.TerritoryID == TerritoryID);
+		}
+
+		public static Order Find(this ITable<Order> table, int OrderID)
+		{
+			return table.FirstOrDefault(t =>
+				t.OrderID == OrderID);
+		}
+
+		public static OrderDetail Find(this ITable<OrderDetail> table, int ID, int ProductID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID        == ID &&
+				t.ProductID == ProductID);
+		}
+
+		public static Product Find(this ITable<Product> table, int ProductID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProductID == ProductID);
+		}
+
+		public static Region Find(this ITable<Region> table, int RegionID)
+		{
+			return table.FirstOrDefault(t =>
+				t.RegionID == RegionID);
+		}
+
+		public static Shipper Find(this ITable<Shipper> table, int ShipperID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ShipperID == ShipperID);
+		}
+
+		public static Supplier Find(this ITable<Supplier> table, int SupplierID)
+		{
+			return table.FirstOrDefault(t =>
+				t.SupplierID == SupplierID);
+		}
+
+		public static Territory Find(this ITable<Territory> table, string TerritoryID)
+		{
+			return table.FirstOrDefault(t =>
+				t.TerritoryID == TerritoryID);
+		}
 	}
 
 	/// <summary>
@@ -1140,8 +1099,8 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField1, PKField2, PKField2, PKField1, PKField2, PKField2, PKField1", OtherKey="PKField1, PKField2, PKField1, PKField2, PKField1, PKField2, PKField1, PKField2", CanBeNull=false)]
-		public List<IndexTable2> Patient2 { get; set; }
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		public IndexTable2 Patient2 { get; set; }
 
 		#endregion
 	}
@@ -1157,7 +1116,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField1, PKField2, PKField1, PKField2, PKField1, PKField2, PKField1, PKField2", OtherKey="PKField1, PKField1, PKField2, PKField2, PKField1, PKField2, PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; }
 
 		#endregion
@@ -1256,6 +1215,47 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int?   intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
+				new DataParameter("@id", @id));
+		}
+
+		#endregion
+
 		#region Person_SelectByKey
 
 		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
@@ -1479,47 +1479,6 @@ namespace DataModel
 		}
 
 		#endregion
-
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id));
-		}
-
-		#endregion
 	}
 
 	public static partial class SqlFunctions
@@ -1533,5 +1492,70 @@ namespace DataModel
 		}
 
 		#endregion
+	}
+
+	public static partial class tableExtensions
+	{
+		public static AllType Find(this ITable<AllType> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static AllTypes2 Find(this ITable<AllTypes2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static BinaryData Find(this ITable<BinaryData> table, int BinaryDataID)
+		{
+			return table.FirstOrDefault(t =>
+				t.BinaryDataID == BinaryDataID);
+		}
+
+		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
+		{
+			return table.FirstOrDefault(t =>
+				t.DataTypeID == DataTypeID);
+		}
+
+		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
+		{
+			return table.FirstOrDefault(t =>
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
+		}
+
+		public static IndexTable2 Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
+		{
+			return table.FirstOrDefault(t =>
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
+		}
+
+		public static Patient Find(this ITable<Patient> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Person Find(this ITable<Person> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }

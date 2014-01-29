@@ -11,6 +11,7 @@ Action BeforeGenerateLinqToDBModel = () => {};
 Action AfterGenerateLinqToDBModel = () => {};
 
 bool GenerateObsoleteAttributeForAliases;
+bool GenerateFindExtensions = true;
 bool IsCompactColumns       = true;
 bool IsCompactColumnAliases = true;
 
@@ -24,8 +25,9 @@ void GenerateTypesFromMetadata()
 	if (NamespaceName == null)
 		NamespaceName = "DataModel";
 
-	var props   = new MemberGroup { IsCompact = true };
-	var aliases = new MemberGroup { IsCompact = true, Region = "Alias members" };
+	var props           = new MemberGroup { IsCompact = true };
+	var aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
+	var tableExtensions = new MemberGroup {  };
 
 	if (GenerateConstructors)
 	{
@@ -254,6 +256,26 @@ void GenerateTypesFromMetadata()
 			}
 		}
 
+		if (GenerateFindExtensions && nPKs > 0)
+		{
+			var PKs         = t.Columns.Values.Where(c => c.IsPrimaryKey).ToList();
+			var maxNameLen1 = PKs.Max(c => (int?)c.MemberName.Length) ?? 0;
+			var maxNameLen2 = PKs.Take(nPKs - 1).Max(c => (int?)c.MemberName.Length) ?? 0;
+
+			tableExtensions.Members.Add(
+				new Method(
+					t.TypeName,
+					"Find",
+					new[] { (string.Format("this ITable<{0}> table", t.TypeName)) }
+						.Union(PKs.Select(c => c.Type + " " + c.MemberName)),
+					new[] { "return table.FirstOrDefault(t =>" }
+						.Union(PKs.Select((c,i) => string.Format("\tt.{0}{1} == {0}{3}{2}",
+							c.MemberName, LenDiff(maxNameLen1, c.MemberName), i == nPKs - 1 ? ");" : " &&", i == nPKs - 1 ? "" : LenDiff(maxNameLen2, c.MemberName)))))
+				{
+					IsStatic = true
+				});
+		}
+
 		Model.Types.Add(t);
 
 		if (!string.IsNullOrWhiteSpace(t.AliasTypeName))
@@ -464,7 +486,15 @@ void GenerateTypesFromMetadata()
 		if (funcs.Members.Count > 0)
 			Model.Types.Add(new Class("SqlFunctions", funcs) { IsStatic = true });
 
-		if (tabfs.Members.Count > 0) DataContextObject.Members.Add(tabfs);
+		if (tabfs.Members.Count > 0)
+			DataContextObject.Members.Add(tabfs);
+	}
+
+	if (tableExtensions.Members.Count > 0)
+	{
+		Model.Usings.Add("System.Linq");
+
+		Model.Types.Add(new Class("tableExtensions", tableExtensions) { IsStatic = true });
 	}
 
 	Tables.    Clear();

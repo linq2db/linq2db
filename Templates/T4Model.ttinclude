@@ -1193,8 +1193,8 @@ public partial class Method : MemberBase
 
 	public Method(string type, string name, IEnumerable<string> parameters = null, IEnumerable<string> body = null)
 	{
-		Type       = type;
-		Name       = name;
+		Type = type;
+		Name = name;
 
 		if (parameters != null) Parameters.AddRange(parameters);
 		if (body       != null) Body.      AddRange(body);
