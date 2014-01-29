@@ -442,14 +442,6 @@
             converted to a proper boolean value.
             </remarks>
         </member>
-        <member name="M:System.Data.SQLite.SQLiteConvert.ColumnToType(System.Data.SQLite.SQLiteStatement,System.Int32,System.Data.SQLite.SQLiteType)">
-            <summary>
-            Determines the data type of a column in a statement
-            </summary>
-            <param name="stmt">The statement to retrieve information for</param>
-            <param name="i">The column to retrieve type information on</param>
-            <param name="typ">The SQLiteType to receive the affinity for the given column</param>
-        </member>
         <member name="M:System.Data.SQLite.SQLiteConvert.SQLiteTypeToType(System.Data.SQLite.SQLiteType)">
             <summary>
             Converts a SQLiteType to a .NET Type object
@@ -471,11 +463,12 @@
             <param name="typ">The DbType to get the size of</param>
             <returns></returns>
         </member>
-        <member name="M:System.Data.SQLite.SQLiteConvert.DbTypeToTypeName(System.Data.DbType)">
+        <member name="M:System.Data.SQLite.SQLiteConvert.DbTypeToTypeName(System.Data.DbType,System.Data.SQLite.SQLiteConnectionFlags)">
             <summary>
             Determines the type name for the given database value type.
             </summary>
             <param name="typ">The database value type.</param>
+            <param name="flags">The flags associated with the parent connection object.</param>
             <returns>The type name or an empty string if it cannot be determined.</returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteConvert.DbTypeToType(System.Data.DbType)">
@@ -502,11 +495,12 @@
             provider.
             </returns>
         </member>
-        <member name="M:System.Data.SQLite.SQLiteConvert.TypeNameToDbType(System.String)">
+        <member name="M:System.Data.SQLite.SQLiteConvert.TypeNameToDbType(System.String,System.Data.SQLite.SQLiteConnectionFlags)">
             <summary>
             For a given type name, return a closest-match .NET type
             </summary>
             <param name="Name">The name of the type to match</param>
+            <param name="flags">The flags associated with the parent connection object.</param>
             <returns>The .NET DBType the text evaluates to.</returns>
         </member>
         <member name="F:System.Data.SQLite.SQLiteBase.COR_E_EXCEPTION">
@@ -522,6 +516,12 @@
             global to the process.
             </summary>
             <param name="value">Non-zero to enable memory usage tracking, zero otherwise.</param>
+            <returns>A standard SQLite return code (i.e. zero for success and non-zero for failure).</returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteBase.ReleaseMemory">
+            <summary>
+            Attempts to free as much heap memory as possible for the database connection.
+            </summary>
             <returns>A standard SQLite return code (i.e. zero for success and non-zero for failure).</returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteBase.Shutdown">
@@ -574,6 +574,18 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteBase.GetLastError(System.String)">
+            <summary>
+            Returns the text of the last error issued by SQLite -OR- the specified default error text if
+            none is available from the SQLite core library.
+            </summary>
+            <param name="defValue">
+            The error text to return in the event that one is not available from the SQLite core library.
+            </param>
+            <returns>
+            The error text.
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteBase.ClearPool">
             <summary>
             When pooling is enabled, force this connection to be disposed rather than returned to the pool
@@ -607,7 +619,7 @@
         </member>
         <member name="M:System.Data.SQLite.SQLiteBase.Reset(System.Data.SQLite.SQLiteStatement)">
             <summary>
-            Resets a prepared statement so it can be executed again.  If the error returned is SQLITE_SCHEMA, 
+            Resets a prepared statement so it can be executed again.  If the error returned is SQLITE_SCHEMA,
             transparently attempt to rebuild the SQL statement and throw an error if that was not possible.
             </summary>
             <param name="stmt">The statement to reset</param>
@@ -735,15 +747,15 @@
         </member>
         <member name="M:System.Data.SQLite.SQLiteBase.ResultCode">
             <summary>
-            Returns the numeric result code for the most recent failed SQLite API call 
-            associated with the database connection. 
+            Returns the numeric result code for the most recent failed SQLite API call
+            associated with the database connection.
             </summary>
             <returns>Result code</returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteBase.ExtendedResultCode">
             <summary>
-            Returns the extended numeric result code for the most recent failed SQLite API call 
-            associated with the database connection. 
+            Returns the extended numeric result code for the most recent failed SQLite API call
+            associated with the database connection.
             </summary>
             <returns>Extended result code</returns>
         </member>
@@ -752,8 +764,8 @@
             Add a log message via the SQLite sqlite3_log interface.
             </summary>
             <param name="iErrCode">Error code to be logged with the message.</param>
-            <param name="zMessage">String to be logged.  Unlike the SQLite sqlite3_log() 
-            interface, this should be pre-formatted.  Consider using the 
+            <param name="zMessage">String to be logged.  Unlike the SQLite sqlite3_log()
+            interface, this should be pre-formatted.  Consider using the
             String.Format() function.</param>
             <returns></returns>
         </member>
@@ -951,12 +963,63 @@
             The flags associated with the parent connection object.
             </param>
         </member>
+        <member name="M:System.Data.SQLite.SQLite3.ReleaseMemory">
+            <summary>
+            Attempts to free as much heap memory as possible for the database connection.
+            </summary>
+            <returns>A standard SQLite return code (i.e. zero for success and non-zero for failure).</returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLite3.StaticReleaseMemory(System.Int32,System.Boolean,System.Boolean,System.Int32@,System.Boolean@,System.UInt32@)">
+            <summary>
+            Attempts to free N bytes of heap memory by deallocating non-essential memory
+            allocations held by the database library. Memory used to cache database pages
+            to improve performance is an example of non-essential memory.  This is a no-op
+            returning zero if the SQLite core library was not compiled with the compile-time
+            option SQLITE_ENABLE_MEMORY_MANAGEMENT.  Optionally, attempts to reset and/or
+            compact the Win32 native heap, if applicable.
+            </summary>
+            <param name="nBytes">
+            The requested number of bytes to free.
+            </param>
+            <param name="reset">
+            Non-zero to attempt a heap reset.
+            </param>
+            <param name="compact">
+            Non-zero to attempt heap compaction.
+            </param>
+            <param name="nFree">
+            The number of bytes actually freed.  This value may be zero.
+            </param>
+            <param name="resetOk">
+            This value will be non-zero if the heap reset was successful.
+            </param>
+            <param name="nLargest">
+            The size of the largest committed free block in the heap, in bytes.
+            This value will be zero unless heap compaction is enabled.
+            </param>
+            <returns>
+            A standard SQLite return code (i.e. zero for success and non-zero
+            for failure).
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLite3.Shutdown">
             <summary>
-            Shutdown the SQLite engine so that it can be restarted with different config options.
-            We depend on auto initialization to recover.
+            Shutdown the SQLite engine so that it can be restarted with different
+            configuration options.  We depend on auto initialization to recover.
             </summary>
-            <returns>Returns a result code</returns>
+            <returns>Returns a standard SQLite result code.</returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLite3.StaticShutdown(System.Boolean)">
+            <summary>
+            Shutdown the SQLite engine so that it can be restarted with different
+            configuration options.  We depend on auto initialization to recover.
+            </summary>
+            <param name="directories">
+            Non-zero to reset the database and temporary directories to their
+            default values, which should be null for both.  This parameter has no
+            effect on non-Windows operating systems.
+            </param>
+            <returns>Returns a standard SQLite result code.</returns>
         </member>
         <member name="M:System.Data.SQLite.SQLite3.IsOpen">
             <summary>
@@ -1067,6 +1130,9 @@
             Gets the last SQLite extended error code
         </member>
         <member name="M:System.Data.SQLite.SQLite3.LogMessage(System.Data.SQLite.SQLiteErrorCode,System.String)">
+            Add a log message via the SQLite sqlite3_log interface.
+        </member>
+        <member name="M:System.Data.SQLite.SQLite3.StaticLogMessage(System.Data.SQLite.SQLiteErrorCode,System.String)">
             Add a log message via the SQLite sqlite3_log interface.
         </member>
         <member name="M:System.Data.SQLite.SQLite3.SetLogCallback(System.Data.SQLite.SQLiteLogCallback)">
@@ -1367,6 +1433,12 @@
             be easily discovered via other means.
             </summary>
         </member>
+        <member name="F:System.Data.SQLite.SQLiteConnectionFlags.TraceWarning">
+            <summary>
+            Enable tracing of potentially important [non-fatal] error conditions
+            that cannot be easily reported through other means.
+            </summary>
+        </member>
         <member name="F:System.Data.SQLite.SQLiteConnectionFlags.BindAndGetAllAsText">
             <summary>
             When binding and returning column values, always treat them as though
@@ -1498,8 +1570,8 @@
         <member name="M:System.Data.SQLite.SQLiteCommand.GetFlags(System.Data.SQLite.SQLiteCommand)">
             <summary>
             This method attempts to query the flags associated with the database
-            connection in use.  If the database connection is disposed or any other
-            error occurs, the default flags will be returned.
+            connection in use.  If the database connection is disposed, the default
+            flags will be returned.
             </summary>
             <param name="command">
             The command containing the databse connection to query the flags from.
@@ -2366,6 +2438,25 @@
             <param name="eventArgs">The event data created for the raised event, if
             it was actually raised.</param>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.GetFallbackDefaultIsolationLevel">
+            <summary>
+            Determines and returns the fallback default isolation level when one cannot be
+            obtained from an existing connection instance.
+            </summary>
+            <returns>
+            The fallback default isolation level for this connection instance -OR-
+            <see cref="F:System.Data.IsolationLevel.Unspecified"/> if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.GetDefaultIsolationLevel">
+            <summary>
+            Determines and returns the default isolation level for this connection instance.
+            </summary>
+            <returns>
+            The default isolation level for this connection instance -OR-
+            <see cref="F:System.Data.IsolationLevel.Unspecified"/> if it cannot be determined.
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.BeginTransaction(System.Data.IsolationLevel,System.Boolean)">
             <summary>
             OBSOLETE.  Creates a new SQLiteTransaction if one isn't already active on the connection.
@@ -2623,6 +2714,57 @@
             returns.
             </summary>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.GetMemoryStatistics(System.Collections.Generic.IDictionary{System.String,System.Int64}@)">
+            <summary>
+            Returns various global memory statistics for the SQLite core library via
+            a dictionary of key/value pairs.  Currently, only the "MemoryUsed" and
+            "MemoryHighwater" keys are returned and they have values that correspond
+            to the values that could be obtained via the <see cref="P:System.Data.SQLite.SQLiteConnection.MemoryUsed"/>
+            and <see cref="P:System.Data.SQLite.SQLiteConnection.MemoryHighwater"/> connection properties.
+            </summary>
+            <param name="statistics">
+            This dictionary will be populated with the global memory statistics.  It
+            will be created if necessary.
+            </param>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.ReleaseMemory">
+            <summary>
+            Attempts to free as much heap memory as possible for this database connection.
+            </summary>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.ReleaseMemory(System.Int32,System.Boolean,System.Boolean,System.Int32@,System.Boolean@,System.UInt32@)">
+            <summary>
+            Attempts to free N bytes of heap memory by deallocating non-essential memory
+            allocations held by the database library. Memory used to cache database pages
+            to improve performance is an example of non-essential memory.  This is a no-op
+            returning zero if the SQLite core library was not compiled with the compile-time
+            option SQLITE_ENABLE_MEMORY_MANAGEMENT.  Optionally, attempts to reset and/or
+            compact the Win32 native heap, if applicable.
+            </summary>
+            <param name="nBytes">
+            The requested number of bytes to free.
+            </param>
+            <param name="reset">
+            Non-zero to attempt a heap reset.
+            </param>
+            <param name="compact">
+            Non-zero to attempt heap compaction.
+            </param>
+            <param name="nFree">
+            The number of bytes actually freed.  This value may be zero.
+            </param>
+            <param name="resetOk">
+            This value will be non-zero if the heap reset was successful.
+            </param>
+            <param name="nLargest">
+            The size of the largest committed free block in the heap, in bytes.
+            This value will be zero unless heap compaction is enabled.
+            </param>
+            <returns>
+            A standard SQLite return code (i.e. zero for success and non-zero
+            for failure).
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.SetMemoryStatus(System.Boolean)">
             <summary>
             Sets the status of the memory usage tracking subsystem in the SQLite core library.  By default, this is enabled.
@@ -2633,7 +2775,28 @@
             <returns>A standard SQLite return code (i.e. zero for success and non-zero for failure).</returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.Shutdown">
-            Passes a shutdown request off to SQLite.
+            <summary>
+            Passes a shutdown request to the SQLite core library.  Does not throw
+            an exception if the shutdown request fails.
+            </summary>
+            <returns>
+            A standard SQLite return code (i.e. zero for success and non-zero for
+            failure).
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.Shutdown(System.Boolean,System.Boolean)">
+            <summary>
+            Passes a shutdown request to the SQLite core library.  Throws an
+            exception if the shutdown request fails and the no-throw parameter
+            is non-zero.
+            </summary>
+            <param name="directories">
+            Non-zero to reset the database and temporary directories to their
+            default values, which should be null for both.
+            </param>
+            <param name="noThrow">
+            When non-zero, throw an exception if the shutdown request fails.
+            </param>
         </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.SetExtendedResultCodes(System.Boolean)">
             Enables or disabled extended result codes returned by SQLite
@@ -4938,6 +5101,19 @@
             </summary>
             <returns>True if the command was successful and a new resultset is available, False otherwise.</returns>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteDataReader.GetFlags(System.Data.SQLite.SQLiteDataReader)">
+            <summary>
+            This method attempts to query the flags associated with the database
+            connection in use.  If the database connection is disposed, the default
+            flags will be returned.
+            </summary>
+            <param name="dataReader">
+            The data reader containing the databse connection to query the flags from.
+            </param>
+            <returns>
+            The connection flags value.
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteDataReader.GetSQLiteType(System.Int32)">
             <summary>
             Retrieves the SQLiteType for a given column, and caches it to avoid repetetive interop calls.
@@ -5255,6 +5431,11 @@
         <member name="F:System.Data.SQLite.SQLiteErrorCode.Done">
             <summary>
             sqlite3_step() has finished executing
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteErrorCode.NonExtendedMask">
+            <summary>
+            Used to mask off extended result codes
             </summary>
         </member>
         <member name="T:System.Data.SQLite.SQLiteFactory">
@@ -7371,6 +7552,16 @@
             to pre-allocate space for.
             </param>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteIndexOutputs.CanUseEstimatedRows">
+            <summary>
+            Determines if the native estimatedRows field can be used, based on
+            the available version of the SQLite core library.
+            </summary>
+            <returns>
+            Non-zero if the <see cref="P:System.Data.SQLite.SQLiteIndexOutputs.EstimatedRows"/> property is supported
+            by the SQLite core library.
+            </returns>
+        </member>
         <member name="P:System.Data.SQLite.SQLiteIndexOutputs.ConstraintUsages">
             <summary>
             An array of <see cref="T:System.Data.SQLite.SQLiteIndexConstraintUsage"/> object
@@ -7409,15 +7600,15 @@
             indicates that a default estimated cost value should be used.
             </summary>
         </member>
+        <member name="P:System.Data.SQLite.SQLiteIndexOutputs.EstimatedRows">
+            <summary>
+            Estimated number of rows returned.  Using a null value here
+            indicates that a default estimated rows value should be used.
+            </summary>
+        </member>
         <member name="T:System.Data.SQLite.SQLiteIndex">
             <summary>
             This class represents the various inputs and outputs used with the
-            <see cref="M:System.Data.SQLite.ISQLiteManagedModule.BestIndex(System.Data.SQLite.SQLiteVirtualTable,System.Data.SQLite.SQLiteIndex)"/> method.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.SQLiteIndex.DefaultEstimatedCost">
-            <summary>
-            The default estimated cost for use with the
             <see cref="M:System.Data.SQLite.ISQLiteManagedModule.BestIndex(System.Data.SQLite.SQLiteVirtualTable,System.Data.SQLite.SQLiteIndex)"/> method.
             </summary>
         </member>
@@ -9602,6 +9793,23 @@
             The <see cref="T:System.Int32"/> value to write.
             </param>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteMarshal.WriteInt64(System.IntPtr,System.Int32,System.Int64)">
+            <summary>
+            Writes an <see cref="T:System.Int64"/> value to the specified memory
+            location.
+            </summary>
+            <param name="pointer">
+            The <see cref="T:System.IntPtr"/> object instance representing the base
+            memory location.
+            </param>
+            <param name="offset">
+            The integer offset from the base memory location where the
+            <see cref="T:System.Int64"/> value to be written is located.
+            </param>
+            <param name="value">
+            The <see cref="T:System.Int64"/> value to write.
+            </param>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteMarshal.WriteDouble(System.IntPtr,System.Int32,System.Double)">
             <summary>
             Writes a <see cref="T:System.Double"/> value to the specified memory
@@ -10210,7 +10418,7 @@
             Non-zero upon success.
             </returns>
         </member>
-        <member name="M:System.Data.SQLite.SQLiteModule.SetEstimatedCost(System.Data.SQLite.SQLiteIndex,System.Double)">
+        <member name="M:System.Data.SQLite.SQLiteModule.SetEstimatedCost(System.Data.SQLite.SQLiteIndex,System.Nullable{System.Double})">
             <summary>
             Modifies the specified <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance
             to contain the specified estimated cost.
@@ -10219,7 +10427,8 @@
             The <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance to modify.
             </param>
             <param name="estimatedCost">
-            The estimated cost value to use.
+            The estimated cost value to use.  Using a null value means that the
+            default value provided by the SQLite core library should be used.
             </param>
             <returns>
             Non-zero upon success.
@@ -10229,6 +10438,34 @@
             <summary>
             Modifies the specified <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance
             to contain the default estimated cost.
+            </summary>
+            <param name="index">
+            The <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance to modify.
+            </param>
+            <returns>
+            Non-zero upon success.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteModule.SetEstimatedRows(System.Data.SQLite.SQLiteIndex,System.Nullable{System.Int64})">
+            <summary>
+            Modifies the specified <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance
+            to contain the specified estimated rows.
+            </summary>
+            <param name="index">
+            The <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance to modify.
+            </param>
+            <param name="estimatedRows">
+            The estimated rows value to use.  Using a null value means that the
+            default value provided by the SQLite core library should be used.
+            </param>
+            <returns>
+            Non-zero upon success.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteModule.SetEstimatedRows(System.Data.SQLite.SQLiteIndex)">
+            <summary>
+            Modifies the specified <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance
+            to contain the default estimated rows.
             </summary>
             <param name="index">
             The <see cref="T:System.Data.SQLite.SQLiteIndex"/> object instance to modify.

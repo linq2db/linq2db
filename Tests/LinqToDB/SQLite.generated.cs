@@ -14,7 +14,7 @@ namespace SQLiteDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : TestData
-	/// Server Version : 3.7.17
+	/// Server Version : 3.8.2
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -22,7 +22,7 @@ namespace SQLiteDataContext
 		public ITable<Child>        Children       { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>       Doctors        { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>         Duals          { get { return this.GetTable<Dual>(); } }
-		public ITable<GrandChild>   GrandChilds    { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>   GrandChildren  { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType> LinqDataTypes  { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>       Parents        { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>      Patients       { get { return this.GetTable<Patient>(); } }
@@ -54,10 +54,10 @@ namespace SQLiteDataContext
 		[Column,     Nullable] public double?   floatDataType            { get; set; } // float
 		[Column,     Nullable] public float?    realDataType             { get; set; } // real
 		[Column,     Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
-		[Column,     Nullable] public string    charDataType             { get; set; } // char(2147483647)
+		[Column,     Nullable] public char?     charDataType             { get; set; } // char(1)
 		[Column,     Nullable] public string    varcharDataType          { get; set; } // varchar(2147483647)
 		[Column,     Nullable] public string    textDataType             { get; set; } // text(2147483647)
-		[Column,     Nullable] public string    ncharDataType            { get; set; } // char(2147483647)
+		[Column,     Nullable] public string    ncharDataType            { get; set; } // char(20)
 		[Column,     Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
 		[Column,     Nullable] public string    ntextDataType            { get; set; } // ntext(2147483647)
 		[Column,     Nullable] public byte[]    binaryDataType           { get; set; } // binary
@@ -141,7 +141,7 @@ namespace SQLiteDataContext
 		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
 		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string Gender     { get; set; } // char(2147483647)
+		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
 
