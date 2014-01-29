@@ -19,77 +19,23 @@ namespace PostreSQLDataContext
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<admin>                  admins                  { get { return this.GetTable<admin>(); } }
-		public ITable<alltype>                alltypes                { get { return this.GetTable<alltype>(); } }
-		public ITable<amexfiler>              amexfilers              { get { return this.GetTable<amexfiler>(); } }
-		public ITable<amexsparrpar>           amexsparrpars           { get { return this.GetTable<amexsparrpar>(); } }
-		public ITable<audittrace>             audittraces             { get { return this.GetTable<audittrace>(); } }
-		public ITable<avtal>                  avtals                  { get { return this.GetTable<avtal>(); } }
-		public ITable<avvikelseposter>        avvikelseposters        { get { return this.GetTable<avvikelseposter>(); } }
-		public ITable<babsfiler>              babsfilers              { get { return this.GetTable<babsfiler>(); } }
-		public ITable<babssparrpar>           babssparrpars           { get { return this.GetTable<babssparrpar>(); } }
-		public ITable<bestcentraler>          bestcentralers          { get { return this.GetTable<bestcentraler>(); } }
-		public ITable<cekabfiler>             cekabfilers             { get { return this.GetTable<cekabfiler>(); } }
-		public ITable<cekabsparrpar>          cekabsparrpars          { get { return this.GetTable<cekabsparrpar>(); } }
-		public ITable<Child>                  Children                { get { return this.GetTable<Child>(); } }
-		public ITable<Doctor>                 Doctors                 { get { return this.GetTable<Doctor>(); } }
-		public ITable<doksidhuvud>            doksidhuvuds            { get { return this.GetTable<doksidhuvud>(); } }
-		public ITable<dokument>               dokuments               { get { return this.GetTable<dokument>(); } }
-		public ITable<dtproperty>             dtproperties            { get { return this.GetTable<dtproperty>(); } }
-		public ITable<emvposttyper>           emvposttypers           { get { return this.GetTable<emvposttyper>(); } }
-		public ITable<entity>                 entities                { get { return this.GetTable<entity>(); } }
-		public ITable<fakturaunderlag>        fakturaunderlags        { get { return this.GetTable<fakturaunderlag>(); } }
-		public ITable<fakturor>               fakturors               { get { return this.GetTable<fakturor>(); } }
-		public ITable<filtransferparam>       filtransferparams       { get { return this.GetTable<filtransferparam>(); } }
-		public ITable<firewalllog>            firewalllogs            { get { return this.GetTable<firewalllog>(); } }
-		public ITable<ftpsajter>              ftpsajters              { get { return this.GetTable<ftpsajter>(); } }
-		public ITable<GrandChild>             GrandChilds             { get { return this.GetTable<GrandChild>(); } }
-		public ITable<inrapporter>            inrapporters            { get { return this.GetTable<inrapporter>(); } }
-		public ITable<inutfiler>              inutfilers              { get { return this.GetTable<inutfiler>(); } }
-		public ITable<inutfilerpartner>       inutfilerpartners       { get { return this.GetTable<inutfilerpartner>(); } }
-		public ITable<journalnummer>          journalnummers          { get { return this.GetTable<journalnummer>(); } }
-		public ITable<kortgrupper>            kortgruppers            { get { return this.GetTable<kortgrupper>(); } }
-		public ITable<kortintervallsparrar>   kortintervallsparrars   { get { return this.GetTable<kortintervallsparrar>(); } }
-		public ITable<kortprefix>             kortprefixes            { get { return this.GetTable<kortprefix>(); } }
-		public ITable<kortprefixregler>       kortprefixreglers       { get { return this.GetTable<kortprefixregler>(); } }
-		public ITable<kortsparrar>            kortsparrars            { get { return this.GetTable<kortsparrar>(); } }
-		public ITable<kortsparrar2>           kortsparrar2            { get { return this.GetTable<kortsparrar2>(); } }
-		public ITable<lifez>                  lifezs                  { get { return this.GetTable<lifez>(); } }
-		public ITable<LinqDataType>           LinqDataTypes           { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<logg>                   loggs                   { get { return this.GetTable<logg>(); } }
-		public ITable<loginip>                loginips                { get { return this.GetTable<loginip>(); } }
-		public ITable<loginlogg>              loginloggs              { get { return this.GetTable<loginlogg>(); } }
-		public ITable<miscparam>              miscparams              { get { return this.GetTable<miscparam>(); } }
-		public ITable<nummerserier>           nummerseriers           { get { return this.GetTable<nummerserier>(); } }
-		public ITable<onlineparam>            onlineparams            { get { return this.GetTable<onlineparam>(); } }
-		public ITable<onlinesparrar>          onlinesparrars          { get { return this.GetTable<onlinesparrar>(); } }
-		public ITable<onlinetransaktioner>    onlinetransaktioners    { get { return this.GetTable<onlinetransaktioner>(); } }
-		public ITable<orter>                  orters                  { get { return this.GetTable<orter>(); } }
-		public ITable<parametrar>             parametrars             { get { return this.GetTable<parametrar>(); } }
-		public ITable<Parent>                 Parents                 { get { return this.GetTable<Parent>(); } }
-		public ITable<partner>                partners                { get { return this.GetTable<partner>(); } }
-		public ITable<partnerbatchnr>         partnerbatchnrs         { get { return this.GetTable<partnerbatchnr>(); } }
-		public ITable<partneridbypartner>     partneridbypartners     { get { return this.GetTable<partneridbypartner>(); } }
-		public ITable<partnersfaktulagnr>     partnersfaktulagnrs     { get { return this.GetTable<partnersfaktulagnr>(); } }
-		public ITable<partnersfakturanr>      partnersfakturanrs      { get { return this.GetTable<partnersfakturanr>(); } }
-		public ITable<partnersinrapportrefnr> partnersinrapportrefnrs { get { return this.GetTable<partnersinrapportrefnr>(); } }
-		public ITable<partnerskvittokk>       partnerskvittokks       { get { return this.GetTable<partnerskvittokk>(); } }
-		public ITable<Patient>                Patients                { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                 People                  { get { return this.GetTable<Person>(); } }
-		public ITable<prefix>                 prefixes                { get { return this.GetTable<prefix>(); } }
-		public ITable<provision>              provisions              { get { return this.GetTable<provision>(); } }
-		public ITable<referensnummer>         referensnummers         { get { return this.GetTable<referensnummer>(); } }
-		public ITable<resetransaktioner>      resetransaktioners      { get { return this.GetTable<resetransaktioner>(); } }
-		public ITable<securlog>               securlogs               { get { return this.GetTable<securlog>(); } }
-		public ITable<SequenceTest1>          SequenceTest1           { get { return this.GetTable<SequenceTest1>(); } }
-		public ITable<SequenceTest2>          SequenceTest2           { get { return this.GetTable<SequenceTest2>(); } }
-		public ITable<SequenceTest3>          SequenceTest3           { get { return this.GetTable<SequenceTest3>(); } }
-		public ITable<smsalarm>               smsalarms               { get { return this.GetTable<smsalarm>(); } }
-		public ITable<smstelefonnr>           smstelefonnrs           { get { return this.GetTable<smstelefonnr>(); } }
-		public ITable<svergetaxifilterkort>   svergetaxifilterkorts   { get { return this.GetTable<svergetaxifilterkort>(); } }
-		public ITable<TestIdentity>           TestIdentities          { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<tracy>                  tracies                 { get { return this.GetTable<tracy>(); } }
-		public ITable<wineventlog>            wineventlogs            { get { return this.GetTable<wineventlog>(); } }
+		public ITable<_testsamename>      _testsamename        { get { return this.GetTable<_testsamename>(); } }
+		public ITable<alltype>            alltypes             { get { return this.GetTable<alltype>(); } }
+		public ITable<Child>              Children             { get { return this.GetTable<Child>(); } }
+		public ITable<Doctor>             Doctors              { get { return this.GetTable<Doctor>(); } }
+		public ITable<entity>             entities             { get { return this.GetTable<entity>(); } }
+		public ITable<GrandChild>         GrandChildren        { get { return this.GetTable<GrandChild>(); } }
+		public ITable<LinqDataType>       LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>             Parents              { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>            Patients             { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>             People               { get { return this.GetTable<Person>(); } }
+		public ITable<SequenceTest1>      SequenceTest1        { get { return this.GetTable<SequenceTest1>(); } }
+		public ITable<SequenceTest2>      SequenceTest2        { get { return this.GetTable<SequenceTest2>(); } }
+		public ITable<SequenceTest3>      SequenceTest3        { get { return this.GetTable<SequenceTest3>(); } }
+		public ITable<TestIdentity>       TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<testsamename>       testsamenames        { get { return this.GetTable<testsamename>(); } }
+		public ITable<TestSchemaIdentity> TestSchemaIdentities { get { return this.GetTable<TestSchemaIdentity>(); } }
+		public ITable<testserialidentity> testserialidentities { get { return this.GetTable<testserialidentity>(); } }
 
 		public TestDataDB()
 		{
@@ -101,18 +47,10 @@ namespace PostreSQLDataContext
 		}
 	}
 
-	[Table(Schema="public", Name="admins")]
-	public partial class admin
+	[Table(Schema="public", Name="testsamename")]
+	public partial class _testsamename
 	{
-		[PrimaryKey, Identity] public int       admid              { get; set; } // integer
-		[Column,     Nullable] public string    admnamn            { get; set; } // character varying(50)
-		[Column,     Nullable] public string    admpassword        { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      admstatus          { get; set; } // integer
-		[Column,     Nullable] public string    admoldpasswords    { get; set; } // character varying(300)
-		[Column,     Nullable] public DateTime? admpassworddate    { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    admmobilnr         { get; set; } // character varying(50)
-		[Column,     Nullable] public string    admsmspassword     { get; set; } // character varying(50)
-		[Column,     Nullable] public DateTime? admsmspassworddate { get; set; } // timestamp (6) without time zone
+		[PrimaryKey, Identity] public int id { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="alltypes")]
@@ -151,131 +89,6 @@ namespace PostreSQLDataContext
 		[Column,     Nullable] public string          xmldatatype         { get; set; } // xml
 	}
 
-	[Table(Schema="public", Name="amexfiler")]
-	public partial class amexfiler
-	{
-		[PrimaryKey, NotNull    ] public int       axfid        { get; set; } // integer
-		[Column,        Nullable] public DateTime? axftrsendtid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTime? axfkvhamttid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      axfstatus    { get; set; } // integer
-		[Column,        Nullable] public string    axffilnamn   { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      axffilnr     { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="amexsparrpar")]
-	public partial class amexsparrpar
-	{
-		[PrimaryKey, Identity] public int       aspid      { get; set; } // integer
-		[Column,     Nullable] public string    aspbegtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public string    aspendtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public int?      aspintmin  { get; set; } // integer
-		[Column,     Nullable] public DateTime? aspfiltid  { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public DateTime? asphamttid { get; set; } // timestamp (6) without time zone
-	}
-
-	[Table(Schema="public", Name="audittrace")]
-	public partial class audittrace
-	{
-		[PrimaryKey, Identity] public int       rownumber       { get; set; } // integer
-		[Column,     Nullable] public int?      eventclass      { get; set; } // integer
-		[Column,     Nullable] public string    textdata        { get; set; } // character varying(10485760)
-		[Column,     Nullable] public string    ntusername      { get; set; } // character varying(128)
-		[Column,     Nullable] public int?      clientprocessid { get; set; } // integer
-		[Column,     Nullable] public string    applicationname { get; set; } // character varying(128)
-		[Column,     Nullable] public string    loginname       { get; set; } // character varying(128)
-		[Column,     Nullable] public int?      spid            { get; set; } // integer
-		[Column,     Nullable] public long?     duration        { get; set; } // bigint
-		[Column,     Nullable] public DateTime? starttime       { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public long?     reads           { get; set; } // bigint
-		[Column,     Nullable] public long?     writes          { get; set; } // bigint
-		[Column,     Nullable] public int?      cpu             { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="avtal")]
-	public partial class avtal
-	{
-		[PrimaryKey, Identity] public int     avtid          { get; set; } // integer
-		[Column,     NotNull ] public int     avtpartnernr   { get; set; } // integer
-		[Column,     NotNull ] public int     avtkortgruppnr { get; set; } // integer
-		[Column,     NotNull ] public decimal avtavgiftkr    { get; set; } // numeric(12,2)
-		[Column,     NotNull ] public decimal avtavgiftpc    { get; set; } // numeric(12,3)
-	}
-
-	[Table(Schema="public", Name="avvikelseposter")]
-	public partial class avvikelseposter
-	{
-		[PrimaryKey, Identity   ] public int      avpid              { get; set; } // integer
-		[Column,     NotNull    ] public string   avptransaktionsid  { get; set; } // character varying(50)
-		[Column,     NotNull    ] public string   avpavvikelsetyp    { get; set; } // character varying(3)
-		[Column,     NotNull    ] public int      avputforpartnernr  { get; set; } // integer
-		[Column,     NotNull    ] public int      avputgivpartnernr  { get; set; } // integer
-		[Column,     NotNull    ] public string   avpredovisningsnr  { get; set; } // character varying(50)
-		[Column,     NotNull    ] public DateTime avpdatumtid        { get; set; } // timestamp (6) without time zone
-		[Column,     NotNull    ] public decimal  avpbelopp          { get; set; } // numeric(12,2)
-		[Column,     NotNull    ] public int      avpbehandlad       { get; set; } // integer
-		[Column,        Nullable] public string   avpmeddelandeinfo  { get; set; } // character varying(3000)
-		[Column,        Nullable] public int?     avpfakturanr       { get; set; } // integer
-		[Column,        Nullable] public int?     avpantaldragforsok { get; set; } // integer
-		[Column,        Nullable] public string   avputgivreferens   { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="babsfiler")]
-	public partial class babsfiler
-	{
-		[PrimaryKey, NotNull    ] public int       bbfid        { get; set; } // integer
-		[Column,        Nullable] public DateTime? bbftrsendtid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTime? bbfkvhamttid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      bbfstatus    { get; set; } // integer
-		[Column,        Nullable] public string    bbffilnamn   { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      bbffilnr     { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="babssparrpar")]
-	public partial class babssparrpar
-	{
-		[PrimaryKey, Identity] public int       bspid      { get; set; } // integer
-		[Column,     Nullable] public string    bspbegtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public string    bspendtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public int?      bspintmin  { get; set; } // integer
-		[Column,     Nullable] public DateTime? bspfiltid  { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public DateTime? bsphamttid { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    bspfiltyp  { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="bestcentraler")]
-	public partial class bestcentraler
-	{
-		[PrimaryKey, Identity] public int    bscid        { get; set; } // integer
-		[Column,     Nullable] public string bscort       { get; set; } // character varying(30)
-		[Column,     Nullable] public string bscnamn      { get; set; } // character varying(30)
-		[Column,     Nullable] public string bsctelefon   { get; set; } // character varying(30)
-		[Column,     Nullable] public string bscwebadress { get; set; } // character varying(50)
-		[Column,     Nullable] public int?   bscpartnernr { get; set; } // integer
-		[Column,     Nullable] public int?   ortid        { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="cekabfiler")]
-	public partial class cekabfiler
-	{
-		[PrimaryKey, NotNull    ] public int       ckfid        { get; set; } // integer
-		[Column,        Nullable] public DateTime? ckftrsendtid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTime? ckfkvhamttid { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      ckfstatus    { get; set; } // integer
-		[Column,        Nullable] public string    ckffilnamn   { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      ckffilnr     { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="cekabsparrpar")]
-	public partial class cekabsparrpar
-	{
-		[PrimaryKey, Identity] public int       cspid      { get; set; } // integer
-		[Column,     Nullable] public string    cspbegtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public string    cspendtid  { get; set; } // character varying(5)
-		[Column,     Nullable] public int?      cspintmin  { get; set; } // integer
-		[Column,     Nullable] public DateTime? cspfiltid  { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public DateTime? csphamttid { get; set; } // timestamp (6) without time zone
-	}
-
 	[Table(Schema="public", Name="Child")]
 	public partial class Child
 	{
@@ -300,110 +113,10 @@ namespace PostreSQLDataContext
 		#endregion
 	}
 
-	[Table(Schema="public", Name="doksidhuvud")]
-	public partial class doksidhuvud
-	{
-		[PrimaryKey, Identity] public int    dshid   { get; set; } // integer
-		[Column,     Nullable] public string dshtext { get; set; } // character varying(1000)
-	}
-
-	[Table(Schema="public", Name="dokument")]
-	public partial class dokument
-	{
-		[PrimaryKey, Identity] public int    dokid          { get; set; } // integer
-		[Column,     Nullable] public string doknamn        { get; set; } // character varying(50)
-		[Column,     Nullable] public string dokbeskrivning { get; set; } // character varying(400)
-		[Column,     Nullable] public int?   doksortord     { get; set; } // integer
-		[Column,     Nullable] public byte[] dokdata        { get; set; } // bytea
-		[Column,     Nullable] public int?   dokdatalen     { get; set; } // integer
-		[Column,     Nullable] public string dokconttype    { get; set; } // character varying(100)
-	}
-
-	[Table(Schema="public", Name="dtproperties")]
-	public partial class dtproperty
-	{
-		[PrimaryKey, Identity   ] public int    id       { get; set; } // integer
-		[Column,        Nullable] public int?   objectid { get; set; } // integer
-		[Column,     NotNull    ] public string property { get; set; } // character varying(64)
-		[Column,        Nullable] public string value    { get; set; } // character varying(255)
-		[Column,        Nullable] public string uvalue   { get; set; } // character varying(255)
-		[Column,        Nullable] public byte[] lvalue   { get; set; } // bytea
-		[Column,     NotNull    ] public int    version  { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="emvposttyper")]
-	public partial class emvposttyper
-	{
-		[PrimaryKey, NotNull    ] public int    emkpartnernr      { get; set; } // integer
-		[Column,     NotNull    ] public string emkposttyp        { get; set; } // character varying(10)
-		[Column,        Nullable] public string emkcardschemecode { get; set; } // character varying(50)
-		[Column,        Nullable] public string emkcardschemetext { get; set; } // character varying(50)
-	}
-
 	[Table(Schema="public", Name="entity")]
 	public partial class entity
 	{
 		[Column, NotNull] public string the_name { get; set; } // character varying(255)
-	}
-
-	[Table(Schema="public", Name="fakturaunderlag")]
-	public partial class fakturaunderlag
-	{
-		[PrimaryKey, NotNull    ] public int       faupartnernr    { get; set; } // integer
-		[Column,     NotNull    ] public int       faufaktulagnr   { get; set; } // integer
-		[Column,        Nullable] public int?      faufakturanr    { get; set; } // integer
-		[Column,        Nullable] public DateTime? fautid          { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public decimal?  fausumdebbel    { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      fauantdebresor  { get; set; } // integer
-		[Column,        Nullable] public decimal?  fausumkredbel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      fauantkredresor { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="fakturor")]
-	public partial class fakturor
-	{
-		[PrimaryKey, NotNull    ] public int       fakpartnernr     { get; set; } // integer
-		[Column,     NotNull    ] public int       fakfakturanr     { get; set; } // integer
-		[Column,     NotNull    ] public int       fakutgivartyp    { get; set; } // integer
-		[Column,        Nullable] public DateTime? fakfakturatid    { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public decimal?  faktotgodkbel    { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  faktotprovbel    { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  faktotmomsprov   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  faktotfulagbel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  faktotbel        { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      fakbokjournr     { get; set; } // integer
-		[Column,        Nullable] public int?      fakbetstatus     { get; set; } // integer
-		[Column,        Nullable] public decimal?  faktotchargeback { get; set; } // numeric(12,2)
-	}
-
-	[Table(Schema="public", Name="filtransferparam")]
-	public partial class filtransferparam
-	{
-		[Identity          ] public int    ftpid        { get; set; } // integer
-		[Column,   Nullable] public int?   ftppartnernr { get; set; } // integer
-		[Column,   Nullable] public string ftpfiltyp    { get; set; } // character varying(50)
-		[Column,   Nullable] public string ftpascbin    { get; set; } // character varying(10)
-	}
-
-	[Table(Schema="public", Name="firewalllog")]
-	public partial class firewalllog
-	{
-		[PrimaryKey, Identity] public int       fwlid       { get; set; } // integer
-		[Column,     Nullable] public DateTime? fwldatumtid { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    fwlmessage  { get; set; } // character varying(500)
-	}
-
-	[Table(Schema="public", Name="ftpsajter")]
-	public partial class ftpsajter
-	{
-		[Identity          ] public int    ftsid        { get; set; } // integer
-		[Column,   Nullable] public int?   ftspartnernr { get; set; } // integer
-		[Column,   Nullable] public string ftsadress    { get; set; } // character varying(50)
-		[Column,   Nullable] public string ftskonto     { get; set; } // character varying(50)
-		[Column,   Nullable] public string ftspassord   { get; set; } // character varying(50)
-		[Column,   Nullable] public bool?  ftspassiv    { get; set; } // boolean
-		[Column,   Nullable] public string ftsprotocol  { get; set; } // character varying(50)
-		[Column,   Nullable] public int?   ftskontonr   { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="GrandChild")]
@@ -412,141 +125,6 @@ namespace PostreSQLDataContext
 		[Column, Nullable] public int? ParentID     { get; set; } // integer
 		[Column, Nullable] public int? ChildID      { get; set; } // integer
 		[Column, Nullable] public int? GrandChildID { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="inrapporter")]
-	public partial class inrapporter
-	{
-		[PrimaryKey, NotNull    ] public int       inrpartnernr         { get; set; } // integer
-		[Column,     NotNull    ] public string    inrinrapportrefnr    { get; set; } // character varying(20)
-		[Column,        Nullable] public DateTime? inrinrapporttid      { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public decimal?  inrsuminrapportbel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      inrantinrapportresor { get; set; } // integer
-		[Column,        Nullable] public decimal?  inrsumgodkbel        { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      inrantgodkresor      { get; set; } // integer
-		[Column,        Nullable] public decimal?  inrsumavvisbel       { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?      inrantavvisresor     { get; set; } // integer
-		[Column,        Nullable] public decimal?  inrsumprovisionbel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  inrsummomsprovision  { get; set; } // numeric(12,2)
-	}
-
-	[Table(Schema="public", Name="inutfiler")]
-	public partial class inutfiler
-	{
-		[PrimaryKey, Identity] public int       iufid            { get; set; } // integer
-		[Column,     Nullable] public int?      iufpartnernr     { get; set; } // integer
-		[Column,     Nullable] public DateTime? iufdatumtid      { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    iuffiltyp        { get; set; } // character varying(50)
-		[Column,     Nullable] public string    iufinfo          { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      iufantalpost     { get; set; } // integer
-		[Column,     Nullable] public int?      iufantalladd     { get; set; } // integer
-		[Column,     Nullable] public string    iufhttpconttype  { get; set; } // character varying(50)
-		[Column,     Nullable] public byte[]    iufdata          { get; set; } // bytea
-		[Column,     Nullable] public int?      iufdatalen       { get; set; } // integer
-		[Column,     Nullable] public int?      iufantalsftpladd { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="inutfilerpartners")]
-	public partial class inutfilerpartner
-	{
-		[PrimaryKey, NotNull    ] public int  iufid        { get; set; } // integer
-		[Column,     NotNull    ] public int  iuppartnernr { get; set; } // integer
-		[Column,        Nullable] public int? iupantalladd { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="journalnummer")]
-	public partial class journalnummer
-	{
-		[Column, Nullable] public long? jnrskuld    { get; set; } // bigint
-		[Column, Nullable] public long? jnrfordring { get; set; } // bigint
-	}
-
-	[Table(Schema="public", Name="kortgrupper")]
-	public partial class kortgrupper
-	{
-		[PrimaryKey, Identity   ] public int    kgrid          { get; set; } // integer
-		[Column,     NotNull    ] public int    kgrkortgruppnr { get; set; } // integer
-		[Column,        Nullable] public string kgrkortgrpnamn { get; set; } // character varying(30)
-		[Column,        Nullable] public int?   kgrutgivartyp  { get; set; } // integer
-		[Column,        Nullable] public int?   kgrsortorder   { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="kortintervallsparrar")]
-	public partial class kortintervallsparrar
-	{
-		[PrimaryKey, NotNull    ] public string    kiskortnrbeg    { get; set; } // character varying(24)
-		[Column,     NotNull    ] public string    kiskortnrend    { get; set; } // character varying(24)
-		[Column,        Nullable] public int?      kispartnernr    { get; set; } // integer
-		[Column,        Nullable] public string    kisorsak        { get; set; } // character varying(19)
-		[Column,        Nullable] public string    kisreklamdatum  { get; set; } // character varying(8)
-		[Column,        Nullable] public string    kisborttagdatum { get; set; } // character varying(8)
-		[Column,        Nullable] public DateTime? kissparrtid     { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public char?     kisuppdatkod    { get; set; } // character varying(1)
-	}
-
-	[Table(Schema="public", Name="kortprefix")]
-	public partial class kortprefix
-	{
-		[PrimaryKey, Identity] public int       kpxid           { get; set; } // integer
-		[Column,     Nullable] public string    kpxprefix       { get; set; } // character varying(20)
-		[Column,     Nullable] public char?     kpxpstatus      { get; set; } // character varying(1)
-		[Column,     Nullable] public int?      kpxlangd        { get; set; } // integer
-		[Column,     Nullable] public int?      kpxpartnernr    { get; set; } // integer
-		[Column,     Nullable] public int?      kpxkortgruppnr  { get; set; } // integer
-		[Column,     Nullable] public string    kpxkortutgivare { get; set; } // character varying(50)
-		[Column,     Nullable] public DateTime? kpxuppdattid    { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public int?      kpxaltlangd     { get; set; } // integer
-		[Column,     Nullable] public decimal?  kpxminibel      { get; set; } // numeric(12,2)
-		[Column,     Nullable] public decimal?  kpxidktrbel     { get; set; } // numeric(12,2)
-		[Column,     Nullable] public decimal?  kpxauktktrbel   { get; set; } // numeric(12,2)
-		[Column,     Nullable] public decimal?  kpxmaxibel      { get; set; } // numeric(12,2)
-		[Column,     Nullable] public string    kpxaukttelenr   { get; set; } // character varying(20)
-		[Column,     Nullable] public char?     kpxcsmetdod     { get; set; } // character varying(1)
-		[Column,     Nullable] public string    kpxservkod      { get; set; } // character varying(3)
-	}
-
-	[Table(Schema="public", Name="kortprefixregler")]
-	public partial class kortprefixregler
-	{
-		[Column, NotNull] public string kprprefix { get; set; } // character varying(20)
-		[Column, NotNull] public int    kprlength { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="kortsparrar")]
-	public partial class kortsparrar
-	{
-		[PrimaryKey, Identity   ] public int       kspid        { get; set; } // integer
-		[Column,     NotNull    ] public string    kspkortnr    { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      ksppartnernr { get; set; } // integer
-		[Column,        Nullable] public DateTime? kspsparrtid  { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public string    kspkortutgiv { get; set; } // character varying(2)
-		[Column,        Nullable] public string    kspkorttyp   { get; set; } // character varying(2)
-		[Column,        Nullable] public char?     kspsparrkod  { get; set; } // character varying(1)
-		[Column,        Nullable] public char?     kspuppdatkod { get; set; } // character varying(1)
-		[Column,        Nullable] public short?    kspfullflag  { get; set; } // smallint
-		[Column,        Nullable] public DateTime? ksprevdatum  { get; set; } // timestamp (6) without time zone
-	}
-
-	[Table(Schema="public", Name="kortsparrar2")]
-	public partial class kortsparrar2
-	{
-		[PrimaryKey, Identity   ] public int       kspid        { get; set; } // integer
-		[Column,     NotNull    ] public string    kspkortnr    { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      ksppartnernr { get; set; } // integer
-		[Column,        Nullable] public DateTime? kspsparrtid  { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public string    kspkortutgiv { get; set; } // character varying(2)
-		[Column,        Nullable] public string    kspkorttyp   { get; set; } // character varying(2)
-		[Column,        Nullable] public char?     kspsparrkod  { get; set; } // character varying(1)
-		[Column,        Nullable] public char?     kspuppdatkod { get; set; } // character varying(1)
-		[Column,        Nullable] public short?    kspfullflag  { get; set; } // smallint
-		[Column,        Nullable] public DateTime? ksprevdatum  { get; set; } // timestamp (6) without time zone
-	}
-
-	[Table(Schema="public", Name="lifez")]
-	public partial class lifez
-	{
-		[PrimaryKey, NotNull    ] public int    lfzindex { get; set; } // integer
-		[Column,        Nullable] public byte[] lfzvalue { get; set; } // bytea
 	}
 
 	[Table(Schema="public", Name="LinqDataTypes")]
@@ -564,266 +142,11 @@ namespace PostreSQLDataContext
 		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
 	}
 
-	[Table(Schema="public", Name="logg")]
-	public partial class logg
-	{
-		[PrimaryKey, Identity] public int       logid        { get; set; } // integer
-		[Column,     Nullable] public DateTime? logtid       { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public int?      logpartnernr { get; set; } // integer
-		[Column,     Nullable] public string    logprogram   { get; set; } // character varying(512)
-		[Column,     Nullable] public string    logtext      { get; set; } // character varying(200)
-		[Column,     Nullable] public string    logdetaljer  { get; set; } // character varying(4000)
-		[Column,     Nullable] public string    logdetaljer2 { get; set; } // character varying(4000)
-		[Column,     Nullable] public string    logdetaljer3 { get; set; } // character varying(4000)
-	}
-
-	[Table(Schema="public", Name="loginip")]
-	public partial class loginip
-	{
-		[PrimaryKey, Identity] public int    lipid       { get; set; } // integer
-		[Column,     NotNull ] public string lipipadress { get; set; } // character varying(20)
-	}
-
-	[Table(Schema="public", Name="loginlogg")]
-	public partial class loginlogg
-	{
-		[PrimaryKey, Identity] public int       lilid         { get; set; } // integer
-		[Column,     Nullable] public string    lilloginid    { get; set; } // character varying(50)
-		[Column,     Nullable] public DateTime? lildatumtid   { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public bool?     lilresultat   { get; set; } // boolean
-		[Column,     Nullable] public string    liluserhostip { get; set; } // character varying(50)
-		[Column,     Nullable] public string    lilmessage    { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="miscparam")]
-	public partial class miscparam
-	{
-		[PrimaryKey, Identity] public int    mscid    { get; set; } // integer
-		[Column,     Nullable] public int?   mscmisc0 { get; set; } // integer
-		[Column,     Nullable] public string mscmisc1 { get; set; } // character varying(100)
-		[Column,     Nullable] public string mscmisc2 { get; set; } // character varying(100)
-		[Column,     Nullable] public string mscmisc3 { get; set; } // character varying(100)
-		[Column,     Nullable] public string mscmisc4 { get; set; } // character varying(100)
-	}
-
-	[Table(Schema="public", Name="nummerserier")]
-	public partial class nummerserier
-	{
-		[Column, Nullable] public string nrsid     { get; set; } // character(20)
-		[Column, Nullable] public int?   nrsnummer { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="onlineparam")]
-	public partial class onlineparam
-	{
-		[Identity          ] public int    olpid        { get; set; } // integer
-		[Column,   Nullable] public int?   olponlinenr  { get; set; } // integer
-		[Column,   Nullable] public string olpinrapptid { get; set; } // character varying(5)
-	}
-
-	[Table(Schema="public", Name="onlinesparrar")]
-	public partial class onlinesparrar
-	{
-		[PrimaryKey, Identity] public int       olsid          { get; set; } // integer
-		[Column,     Nullable] public string    olskortnr      { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      olspartnernr   { get; set; } // integer
-		[Column,     Nullable] public DateTime? olssparrtid    { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    olssparrnybort { get; set; } // character varying(5)
-		[Column,     Nullable] public bool?     olssparrflag   { get; set; } // boolean
-	}
-
-	[Table(Schema="public", Name="onlinetransaktioner")]
-	public partial class onlinetransaktioner
-	{
-		[PrimaryKey, Identity] public int       oltid          { get; set; } // integer
-		[Column,     Nullable] public int?      oltutforpart   { get; set; } // integer
-		[Column,     Nullable] public string    oltterminalid  { get; set; } // character varying(20)
-		[Column,     Nullable] public DateTime? olttransdatum  { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    oltkortdata    { get; set; } // character varying(70)
-		[Column,     Nullable] public string    oltkortnr      { get; set; } // character varying(50)
-		[Column,     Nullable] public decimal?  olttransbelopp { get; set; } // numeric(12,2)
-		[Column,     Nullable] public decimal?  oltmomsbelopp  { get; set; } // numeric(12,2)
-		[Column,     Nullable] public int?      oltonlinenr    { get; set; } // integer
-		[Column,     Nullable] public string    oltregmetod    { get; set; } // character varying(2)
-		[Column,     Nullable] public int?      oltutgivpart   { get; set; } // integer
-		[Column,     Nullable] public int?      oltkortgruppnr { get; set; } // integer
-		[Column,     Nullable] public char?     oltdebkred     { get; set; } // character varying(1)
-	}
-
-	[Table(Schema="public", Name="orter")]
-	public partial class orter
-	{
-		[PrimaryKey, Identity] public int     ortid       { get; set; } // integer
-		[Column,     Nullable] public string  ortnamn     { get; set; } // character varying(30)
-		[Column,     Nullable] public double? ortlatitud  { get; set; } // double precision
-		[Column,     Nullable] public double? ortlongitud { get; set; } // double precision
-		[Column,     Nullable] public int?    ortradie    { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="parametrar")]
-	public partial class parametrar
-	{
-		[PrimaryKey, Identity] public int       parid             { get; set; } // integer
-		[Column,     Nullable] public string    parbasdir         { get; set; } // character varying(256)
-		[Column,     Nullable] public decimal?  parmoms           { get; set; } // numeric(6,3)
-		[Column,     Nullable] public int?      paramexfilnr      { get; set; } // integer
-		[Column,     Nullable] public int?      paramexnxtspvdag  { get; set; } // integer
-		[Column,     Nullable] public string    paramexnxtspdatum { get; set; } // character varying(10)
-		[Column,     Nullable] public int?      parcekabfilnr     { get; set; } // integer
-		[Column,     Nullable] public string    parcekabkcv       { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parcekabkey       { get; set; } // character varying(20)
-		[Column,     Nullable] public int?      parbokjournr      { get; set; } // integer
-		[Column,     Nullable] public string    parsmtpserver     { get; set; } // character varying(100)
-		[Column,     Nullable] public string    pareposttpadm     { get; set; } // character varying(100)
-		[Column,     Nullable] public string    pareposttp        { get; set; } // character varying(100)
-		[Column,     Nullable] public string    partpnamn         { get; set; } // character varying(50)
-		[Column,     Nullable] public string    partpgatuadress   { get; set; } // character varying(50)
-		[Column,     Nullable] public string    partpgatunr       { get; set; } // character varying(10)
-		[Column,     Nullable] public string    partppostnr       { get; set; } // character varying(10)
-		[Column,     Nullable] public string    partppostadress   { get; set; } // character varying(50)
-		[Column,     Nullable] public string    partpbesokadress  { get; set; } // character varying(50)
-		[Column,     Nullable] public string    partporgnr        { get; set; } // character varying(20)
-		[Column,     Nullable] public string    partpbankgiro     { get; set; } // character varying(50)
-		[Column,     Nullable] public string    partpbankkonto    { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      parskvalpdag      { get; set; } // integer
-		[Column,     Nullable] public decimal?  parskvalpbel      { get; set; } // numeric(12,2)
-		[Column,     Nullable] public string    partpadmpassword  { get; set; } // character varying(50)
-		[Column,     Nullable] public string    parkt1namn        { get; set; } // character varying(50)
-		[Column,     Nullable] public string    parkt1telefon     { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt1mobil       { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt1epost       { get; set; } // character varying(100)
-		[Column,     Nullable] public string    parkt2namn        { get; set; } // character varying(50)
-		[Column,     Nullable] public string    parkt2telefon     { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt2mobil       { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt2epost       { get; set; } // character varying(100)
-		[Column,     Nullable] public bool?     parsparrtpflag    { get; set; } // boolean
-		[Column,     Nullable] public DateTime? parsparrtptid     { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public bool?     parsparrkkflag    { get; set; } // boolean
-		[Column,     Nullable] public DateTime? parsparrkktid     { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public bool?     parsystemtestflag { get; set; } // boolean
-		[Column,     Nullable] public int?      parresemaxdag     { get; set; } // integer
-		[Column,     Nullable] public int?      parhamtmaxdag     { get; set; } // integer
-		[Column,     Nullable] public string    parinrappbeg      { get; set; } // character varying(5)
-		[Column,     Nullable] public string    parinrappend      { get; set; } // character varying(5)
-		[Column,     Nullable] public string    parbetuppdtid     { get; set; } // character varying(5)
-		[Column,     Nullable] public string    parspckbeg        { get; set; } // character varying(5)
-		[Column,     Nullable] public string    parspckend        { get; set; } // character varying(5)
-		[Column,     Nullable] public DateTime? parspckfiltid     { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public DateTime? parspckhamttid    { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public int?      parspckintmin     { get; set; } // integer
-		[Column,     Nullable] public string    parbokjourtid     { get; set; } // character varying(5)
-		[Column,     Nullable] public string    partpadmpasswordr { get; set; } // character varying(50)
-		[Column,     Nullable] public decimal?  parmaxfakturabel  { get; set; } // numeric(12,2)
-		[Column,     Nullable] public DateTime? parsptprevdatum   { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    parsptpupdtid     { get; set; } // character varying(50)
-		[Column,     Nullable] public bool?     parskapakarta     { get; set; } // boolean
-		[Column,     Nullable] public int?      parbabsfilnr      { get; set; } // integer
-		[Column,     Nullable] public string    parkt3namn        { get; set; } // character varying(50)
-		[Column,     Nullable] public string    parkt3telefon     { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt3mobil       { get; set; } // character varying(20)
-		[Column,     Nullable] public string    parkt3epost       { get; set; } // character varying(100)
-		[Column,     Nullable] public int?      parsftpsparadagar { get; set; } // integer
-	}
-
 	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // integer
 		[Column, Nullable] public int? Value1   { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="partners")]
-	public partial class partner
-	{
-		[PrimaryKey, Identity   ] public int       prtid            { get; set; } // integer
-		[Column,     NotNull    ] public int       prtpartnernr     { get; set; } // integer
-		[Column,        Nullable] public string    prtbenamn        { get; set; } // character varying(100)
-		[Column,        Nullable] public string    prtnamn          { get; set; } // character varying(50)
-		[Column,        Nullable] public string    prtgatuadress    { get; set; } // character varying(50)
-		[Column,        Nullable] public string    prtgatunr        { get; set; } // character varying(10)
-		[Column,        Nullable] public string    prtpostnr        { get; set; } // character varying(6)
-		[Column,        Nullable] public string    prtpostadress    { get; set; } // character varying(50)
-		[Column,        Nullable] public string    prtepost         { get; set; } // character varying(100)
-		[Column,        Nullable] public int?      prtutgivartyp    { get; set; } // integer
-		[Column,        Nullable] public string    prttestprodflag  { get; set; } // character varying(2)
-		[Column,        Nullable] public string    prtckredovisnr   { get; set; } // character varying(15)
-		[Column,        Nullable] public string    prtbankkonto     { get; set; } // character varying(20)
-		[Column,        Nullable] public string    prtaxredovisnr   { get; set; } // character varying(10)
-		[Column,        Nullable] public string    prtpassword      { get; set; } // character varying(50)
-		[Column,        Nullable] public int?      prtfaktulagnr    { get; set; } // integer
-		[Column,        Nullable] public string    prtdnredovisnr   { get; set; } // character varying(20)
-		[Column,        Nullable] public bool?     prtsparreflag    { get; set; } // boolean
-		[Column,        Nullable] public bool?     prtutgivare      { get; set; } // boolean
-		[Column,        Nullable] public bool?     prtutforare      { get; set; } // boolean
-		[Column,        Nullable] public string    prtktknamn       { get; set; } // character varying(50)
-		[Column,        Nullable] public string    prtktktelefon    { get; set; } // character varying(20)
-		[Column,        Nullable] public string    prtktkepost      { get; set; } // character varying(100)
-		[Column,        Nullable] public string    prtfaxnr         { get; set; } // character varying(20)
-		[Column,        Nullable] public string    prttaxameter     { get; set; } // character varying(50)
-		[Column,        Nullable] public bool?     prtonline        { get; set; } // boolean
-		[Column,        Nullable] public string    prtbbredovisnr   { get; set; } // character varying(10)
-		[Column,        Nullable] public string    prtoldpasswords  { get; set; } // character varying(500)
-		[Column,        Nullable] public DateTime? prtpassworddate  { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      prtkontrollgrans { get; set; } // integer
-		[Column,        Nullable] public bool?     prtautogiro      { get; set; } // boolean
-		[Column,        Nullable] public string    prtktkavtnamn    { get; set; } // character varying(50)
-		[Column,        Nullable] public string    prtktkavttelefon { get; set; } // character varying(20)
-		[Column,        Nullable] public string    prtktkavtepost   { get; set; } // character varying(100)
-		[Column,        Nullable] public string    prtorgnr         { get; set; } // character varying(20)
-		[Column,        Nullable] public DateTime? prtmedgivdatum   { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      prtmedgivstatus  { get; set; } // integer
-		[Column,        Nullable] public int?      prtsftpaktiv     { get; set; } // integer
-		[Column,        Nullable] public string    prttbredovisnr   { get; set; } // character varying(15)
-	}
-
-	[Table(Schema="public", Name="partnerbatchnr")]
-	public partial class partnerbatchnr
-	{
-		[PrimaryKey, NotNull] public int pbnpartnernr { get; set; } // integer
-		[Column,     NotNull] public int pbnbatchnr   { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="partneridbypartner")]
-	public partial class partneridbypartner
-	{
-		[Column, NotNull] public int    piddefiningpartnernr  { get; set; } // integer
-		[Column, NotNull] public int    piddescribedpartnernr { get; set; } // integer
-		[Column, NotNull] public string pidpartnerid          { get; set; } // character varying(32)
-	}
-
-	[Table(Schema="public", Name="partnersfaktulagnr")]
-	public partial class partnersfaktulagnr
-	{
-		[Column, Nullable] public int? pfupartnernr  { get; set; } // integer
-		[Column, Nullable] public int? pfufaktulagnr { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="partnersfakturanr")]
-	public partial class partnersfakturanr
-	{
-		[PrimaryKey, NotNull    ] public int  pfapartnernr  { get; set; } // integer
-		[Column,     NotNull    ] public int  pfautgivartyp { get; set; } // integer
-		[Column,        Nullable] public int? pfafakturanr  { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="partnersinrapportrefnr")]
-	public partial class partnersinrapportrefnr
-	{
-		[PrimaryKey, NotNull    ] public int       pirpartnernr      { get; set; } // integer
-		[Column,     NotNull    ] public string    pirinrapportrefnr { get; set; } // character varying(20)
-		[Column,        Nullable] public DateTime? pirinrapporttid   { get; set; } // timestamp (6) without time zone
-	}
-
-	[Table(Schema="public", Name="partnerskvittokk")]
-	public partial class partnerskvittokk
-	{
-		[PrimaryKey, Identity] public int       pkkid             { get; set; } // integer
-		[Column,     Nullable] public DateTime? pkkdatumtid       { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public int?      pkkkortutgivare   { get; set; } // integer
-		[Column,     Nullable] public int?      pkktransfilnr     { get; set; } // integer
-		[Column,     Nullable] public int?      pkkpartnernr      { get; set; } // integer
-		[Column,     Nullable] public string    pkkinrapportrefnr { get; set; } // character varying(9)
-		[Column,     Nullable] public int?      pkkstatus         { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="Patient")]
@@ -869,109 +192,6 @@ namespace PostreSQLDataContext
 		#endregion
 	}
 
-	[Table(Schema="public", Name="prefix")]
-	public partial class prefix
-	{
-		[Column, Nullable] public string col001 { get; set; } // character varying(255)
-		[Column, Nullable] public string col002 { get; set; } // character varying(255)
-		[Column, Nullable] public string col003 { get; set; } // character varying(255)
-		[Column, Nullable] public string col004 { get; set; } // character varying(255)
-		[Column, Nullable] public string col005 { get; set; } // character varying(255)
-		[Column, Nullable] public string col006 { get; set; } // character varying(255)
-		[Column, Nullable] public string col007 { get; set; } // character varying(255)
-		[Column, Nullable] public string col008 { get; set; } // character varying(255)
-		[Column, Nullable] public string col009 { get; set; } // character varying(255)
-		[Column, Nullable] public string col010 { get; set; } // character varying(255)
-		[Column, Nullable] public string col011 { get; set; } // character varying(255)
-		[Column, Nullable] public string col012 { get; set; } // character varying(255)
-		[Column, Nullable] public string col013 { get; set; } // character varying(255)
-		[Column, Nullable] public string col014 { get; set; } // character varying(255)
-		[Column, Nullable] public string col015 { get; set; } // character varying(255)
-		[Column, Nullable] public string col016 { get; set; } // character varying(255)
-	}
-
-	[Table(Schema="public", Name="provision")]
-	public partial class provision
-	{
-		[PrimaryKey, NotNull    ] public int      prvpartnernr      { get; set; } // integer
-		[Column,     NotNull    ] public string   prvinrapportrefnr { get; set; } // character varying(20)
-		[Column,     NotNull    ] public int      prvkortgruppnr    { get; set; } // integer
-		[Column,        Nullable] public int?     prvfakturanr      { get; set; } // integer
-		[Column,        Nullable] public decimal? prvsumgodkbel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public int?     prvantgodkresor   { get; set; } // integer
-		[Column,        Nullable] public decimal? prvprovisionbel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal? prvmomsprovision  { get; set; } // numeric(12,2)
-	}
-
-	[Table(Schema="public", Name="referensnummer")]
-	public partial class referensnummer
-	{
-		[Identity          ] public int  rnrid    { get; set; } // integer
-		[Column,   Nullable] public int? rnrdummy { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="resetransaktioner")]
-	public partial class resetransaktioner
-	{
-		[PrimaryKey, Identity   ] public int       rtrid           { get; set; } // integer
-		[Column,     NotNull    ] public int       rtrutforpart    { get; set; } // integer
-		[Column,     NotNull    ] public int       rtrutgivpart    { get; set; } // integer
-		[Column,     NotNull    ] public string    rtrkortdata     { get; set; } // character varying(70)
-		[Column,     NotNull    ] public string    rtrkortnr       { get; set; } // character varying(50)
-		[Column,        Nullable] public string    rtrutforbc      { get; set; } // character varying(100)
-		[Column,        Nullable] public string    rtrtaxinr       { get; set; } // character varying(6)
-		[Column,        Nullable] public string    rtrforarnr      { get; set; } // character varying(6)
-		[Column,     NotNull    ] public DateTime  rtrstarttid     { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public DateTime? rtrsluttid      { get; set; } // timestamp (6) without time zone
-		[Column,        Nullable] public int?      rtrrestid       { get; set; } // integer
-		[Column,        Nullable] public string    rtrhadress      { get; set; } // character varying(25)
-		[Column,        Nullable] public int?      rtrhgatunr      { get; set; } // integer
-		[Column,        Nullable] public string    rtrhuppgang     { get; set; } // character varying(10)
-		[Column,        Nullable] public string    rtrladress      { get; set; } // character varying(25)
-		[Column,        Nullable] public int?      rtrlgatunr      { get; set; } // integer
-		[Column,        Nullable] public string    rtrluppgang     { get; set; } // character varying(10)
-		[Column,        Nullable] public int?      rtrantviaadr    { get; set; } // integer
-		[Column,        Nullable] public decimal?  rtrreslangd     { get; set; } // numeric(8,1)
-		[Column,        Nullable] public string    rtrbestallnr    { get; set; } // character varying(10)
-		[Column,        Nullable] public decimal?  rtrgrundavg     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrframkbel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrvantebel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrkundkbel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrtariffbel    { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrfastbel      { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrresebel      { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrextrabel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrdricksbel    { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrejdebbel     { get; set; } // numeric(12,2)
-		[Column,        Nullable] public decimal?  rtrrabattbel    { get; set; } // numeric(12,2)
-		[Column,     NotNull    ] public decimal   rtrmomssats     { get; set; } // numeric(4,2)
-		[Column,     NotNull    ] public decimal   rtrmomsbel      { get; set; } // numeric(12,2)
-		[Column,     NotNull    ] public decimal   rtrmomsgrbel    { get; set; } // numeric(12,2)
-		[Column,     NotNull    ] public decimal   rtrfakturabel   { get; set; } // numeric(12,2)
-		[Column,        Nullable] public string    rtrfsedelnr     { get; set; } // character varying(8)
-		[Column,        Nullable] public string    rtrregkomm      { get; set; } // character varying(200)
-		[Column,        Nullable] public string    rtrmeddelubc    { get; set; } // character varying(200)
-		[Column,        Nullable] public string    rtrfordontyp    { get; set; } // character varying(32)
-		[Column,     NotNull    ] public string    rtrinrapprefnr  { get; set; } // character varying(20)
-		[Column,     NotNull    ] public int       rtrfaktulagnr   { get; set; } // integer
-		[Column,        Nullable] public char?     rtrmankortibil  { get; set; } // character varying(1)
-		[Column,        Nullable] public int?      rtrutgivartyp   { get; set; } // integer
-		[Column,        Nullable] public int?      rtrkortgruppnr  { get; set; } // integer
-		[Column,     NotNull    ] public string    rtrrespostid    { get; set; } // character varying(12)
-		[Column,        Nullable] public char?     rtrtestprodflag { get; set; } // character varying(1)
-		[Column,        Nullable] public char?     rtrdebkred      { get; set; } // character varying(1)
-	}
-
-	[Table(Schema="public", Name="securlog")]
-	public partial class securlog
-	{
-		[PrimaryKey, Identity] public int       selid       { get; set; } // integer
-		[Column,     Nullable] public DateTime? seldatumtid { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    sellogtyp   { get; set; } // character varying(50)
-		[Column,     Nullable] public string    selmessage  { get; set; } // character varying(100)
-		[Column,     Nullable] public string    sellongmsg  { get; set; } // character(1000)
-	}
-
 	[Table(Schema="public", Name="SequenceTest1")]
 	public partial class SequenceTest1
 	{
@@ -993,71 +213,27 @@ namespace PostreSQLDataContext
 		[Column,     Nullable] public string Value { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="smsalarm")]
-	public partial class smsalarm
-	{
-		[Identity          ] public int       smsid          { get; set; } // integer
-		[Column,   Nullable] public bool?     smsalarmflag   { get; set; } // boolean
-		[Column,   Nullable] public DateTime? smsalarmtid    { get; set; } // timestamp (6) without time zone
-		[Column,   Nullable] public DateTime? smssendtid     { get; set; } // timestamp (6) without time zone
-		[Column,   Nullable] public string    smssimpin      { get; set; } // character varying(4)
-		[Column,   Nullable] public string    smssimpuk      { get; set; } // character varying(10)
-		[Column,   Nullable] public int?      smscomportno   { get; set; } // integer
-		[Column,   Nullable] public string    smsudpserverip { get; set; } // character varying(20)
-		[Column,   Nullable] public int?      smsudpportno   { get; set; } // integer
-	}
-
-	[Table(Schema="public", Name="smstelefonnr")]
-	public partial class smstelefonnr
-	{
-		[Identity          ] public int    stnid        { get; set; } // integer
-		[Column,   Nullable] public string stntelefonnr { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="svergetaxifilterkort")]
-	public partial class svergetaxifilterkort
-	{
-		[PrimaryKey, NotNull    ] public string    stfkortnr { get; set; } // character varying(24)
-		[Column,        Nullable] public DateTime? stfregtid { get; set; } // timestamp (6) without time zone
-	}
-
 	[Table(Schema="public", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="tracy")]
-	public partial class tracy
+	[Table(Schema="test_schema", Name="testsamename")]
+	public partial class testsamename
 	{
-		[PrimaryKey, Identity] public int       rownumber       { get; set; } // integer
-		[Column,     Nullable] public int?      eventclass      { get; set; } // integer
-		[Column,     Nullable] public string    textdata        { get; set; } // character varying(10485760)
-		[Column,     Nullable] public string    ntusername      { get; set; } // character varying(128)
-		[Column,     Nullable] public int?      clientprocessid { get; set; } // integer
-		[Column,     Nullable] public string    applicationname { get; set; } // character varying(128)
-		[Column,     Nullable] public string    loginname       { get; set; } // character varying(128)
-		[Column,     Nullable] public int?      spid            { get; set; } // integer
-		[Column,     Nullable] public long?     duration        { get; set; } // bigint
-		[Column,     Nullable] public DateTime? starttime       { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public long?     reads           { get; set; } // bigint
-		[Column,     Nullable] public long?     writes          { get; set; } // bigint
-		[Column,     Nullable] public int?      cpu             { get; set; } // integer
+		[PrimaryKey, Identity] public int id { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="wineventlogs")]
-	public partial class wineventlog
+	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
+	public partial class TestSchemaIdentity
 	{
-		[PrimaryKey, Identity] public int       welid             { get; set; } // integer
-		[Column,     Nullable] public string    welmachinename    { get; set; } // character varying(50)
-		[Column,     Nullable] public string    wellogname        { get; set; } // character varying(50)
-		[Column,     Nullable] public string    welentrytype      { get; set; } // character varying(50)
-		[Column,     Nullable] public DateTime? weleventdate      { get; set; } // timestamp (6) without time zone
-		[Column,     Nullable] public string    welmessage        { get; set; } // character varying(1000)
-		[Column,     Nullable] public string    welcategory       { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      welcategorynumber { get; set; } // integer
-		[Column,     Nullable] public string    welsource         { get; set; } // character varying(50)
-		[Column,     Nullable] public int?      weleventid        { get; set; } // integer
-		[Column,     Nullable] public string    welusername       { get; set; } // character varying(50)
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
+	[Table(Schema="test_schema", Name="testserialidentity")]
+	public partial class testserialidentity
+	{
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 }

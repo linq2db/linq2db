@@ -2,12 +2,16 @@
 <#@ output extension=".generated.cs"                                            #>
 <#@ include file="..\..\Templates\LinqToDB.PostgreSQL.ttinclude"                #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"               #>
-<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.12.1\lib\net40\Npgsql.dll" #>
-<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.12.1\lib\net40\Mono.Security.dll" #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll"        #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.14.3\lib\net40\Npgsql.dll" #>
+<#@ assembly name="$(SolutionDir)packages\Npgsql.2.0.14.3\lib\net40\Mono.Security.dll" #>
+<#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll"        #>
 <#
 	NamespaceName = "PostreSQLDataContext";
 
 	LoadPostgreSQLMetadata("DBHost", "5432", "TestData", "postgres", "TestPassword");
+
+	GetTable("testsamename").TypeName = "_testsamename";
+	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
 	GenerateModel();
 #>
