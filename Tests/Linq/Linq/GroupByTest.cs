@@ -1604,5 +1604,55 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, DataContextSource]
+		public void GroupByDate1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types
+					group t by new { t.DateTimeValue.Month, t.DateTimeValue.Year } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Year,
+						month = grp.Key.Month
+					},
+					from t in db.Types
+					group t by new { t.DateTimeValue.Month, t.DateTimeValue.Year } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Year,
+						month = grp.Key.Month
+					});
+			}
+		}
+
+		[Test, DataContextSource]
+		public void GroupByDate2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types2
+					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Year,
+						month = grp.Key.Month
+					},
+					from t in db.Types2
+					group t by new { t.DateTimeValue.Value.Month, t.DateTimeValue.Value.Year } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Year,
+						month = grp.Key.Month
+					});
+			}
+		}
 	}
 }
