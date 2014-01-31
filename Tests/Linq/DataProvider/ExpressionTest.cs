@@ -14,8 +14,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class ExpressionTest : TestBase
 	{
-		[Test]
-		public void Test1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test1(string context)
 		{
 			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
 

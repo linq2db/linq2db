@@ -38,6 +38,7 @@ namespace LinqToDB.DataProvider
 				CanCombineParameters         = true,
 				MaxInListValuesCount         = int.MaxValue,
 				IsGroupByExpressionSupported = true,
+				IsDistinctOrderBySupported   = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

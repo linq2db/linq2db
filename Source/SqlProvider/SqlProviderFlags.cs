@@ -12,6 +12,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsTakeSupported              { get; set; }
 		public bool IsSkipSupported              { get; set; }
 		public bool IsSkipSupportedIfTake        { get; set; }
+		public bool IsDistinctOrderBySupported   { get; set; }
 		public bool IsSubQueryTakeSupported      { get; set; }
 		public bool IsSubQueryColumnSupported    { get; set; }
 		public bool IsCountSubQuerySupported     { get; set; }

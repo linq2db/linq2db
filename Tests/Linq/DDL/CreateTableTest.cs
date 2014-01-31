@@ -44,11 +44,8 @@ namespace Tests.DDL
 			}
 		}
 
-		[Test]
-		public void CreateLocalTempTable1([IncludeDataContexts(
-			ProviderName.SqlServer2008,
-			//ProviderName.DB2,
-			ExcludeLinqService = true)] string context)
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008 /*, ProviderName.DB2*/)]
+		public void CreateLocalTempTable1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

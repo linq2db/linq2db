@@ -866,8 +866,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Join6([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Join6(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{

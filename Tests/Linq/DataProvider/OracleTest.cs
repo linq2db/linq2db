@@ -42,8 +42,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestParameters([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -76,8 +76,8 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -151,8 +151,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -199,8 +199,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDate([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -211,8 +211,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestSmallDateTime([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestSmallDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -223,8 +223,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -239,8 +239,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime2([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDateTime2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -255,8 +255,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTimeOffset([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDateTimeOffset(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -294,8 +294,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -332,8 +332,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -368,8 +368,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] {       0x30, 0x39 };
 			var arr2 = new byte[] { 0, 0, 0x30, 0x39 };
@@ -391,8 +391,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestOracleTypes([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestOracleTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -417,8 +417,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -432,8 +432,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestXml(string context)
 		{
 			if (OracleTools.IsXmlTypeSupported)
 			{
@@ -461,8 +461,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -473,8 +473,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -503,8 +503,8 @@ namespace Tests.DataProvider
 			[NotNull, Column("duration")]  public TimeSpan Duration { get; set; }
 		}
 
-		[Test]
-		public void TestTimeSpan([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestTimeSpan(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -518,8 +518,8 @@ namespace Tests.DataProvider
 
 		#region Sequence
 
-		[Test]
-		public void SequenceInsert([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsert(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -534,8 +534,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsertWithIdentity([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -556,41 +556,42 @@ namespace Tests.DataProvider
 
 		#region BulkCopy
 
-		[Test]
-		public void BulkCopyLinqTypes(
-			[IncludeDataContexts(CurrentProvider)] string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyLinqTypes(string context)
 		{
-			using (var db = new DataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				using (var db = new DataConnection(context))
 				{
-					var ms = new MappingSchema();
+					if (bulkCopyType == BulkCopyType.ProviderSpecific)
+					{
+						var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes>()
-							.Property(e => e.GuidValue)
-								.IsNotColumn()
-						;
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.GuidValue)
+									.IsNotColumn()
+							;
 
-					db.AddMappingSchema(ms);
+						db.AddMappingSchema(ms);
+					}
+
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
-
-				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = bulkCopyType },
-					Enumerable.Range(0, 10).Select(n =>
-						new LinqDataTypes
-						{
-							ID            = 4000 + n,
-							MoneyValue    = 1000m + n,
-							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-							BoolValue     = true,
-							GuidValue     = Guid.NewGuid(),
-							SmallIntValue = (short)n
-						}
-					));
-
-				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 			}
 		}
 
@@ -606,64 +607,66 @@ namespace Tests.DataProvider
 			[Column("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
 		}
 
-		[Test]
-		public void BulkCopy1(
-			[IncludeDataContexts(CurrentProvider)] string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopy1(string context)
 		{
-			var data = new[]
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				new Trade { ID = 375, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 328, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 348, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 357, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 371, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
-				new Trade { ID = 333, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1,          ValueAsDate = new DateTime(2011, 1, 5) },
-				new Trade { ID = 353, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1000000000,                                        },
-				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
-			};
+				var data = new[]
+				{
+					new Trade { ID = 375, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 328, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 348, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 357, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 371, Version = 1, TypeID = 20224, TypeName = "Gas Month",     },
+					new Trade { ID = 333, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1,          ValueAsDate = new DateTime(2011, 1, 5) },
+					new Trade { ID = 353, Version = 1, TypeID = 20224, TypeName = "Gas Month",     ValueAsInteger = 1000000000,                                        },
+					new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
+				};
 
-			using (var db = new TestDataConnection(context))
-			{
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
-					data);
+				using (var db = new TestDataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
+						data);
+				}
 			}
 		}
 
-		[Test]
-		public void BulkCopy2(
-			[IncludeDataContexts(CurrentProvider)] string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopy2(string context)
 		{
-			using (var db = new TestDataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				db.Types2.Delete(_ => _.ID > 1000);
-
-				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				using (var db = new TestDataConnection(context))
 				{
-					var ms = new MappingSchema();
+					db.Types2.Delete(_ => _.ID > 1000);
 
-					db.AddMappingSchema(ms);
-
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes2>()
-							.Property(e => e.GuidValue)
-								.IsNotColumn()
-						;
-				}
-
-				db.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
-					new[]
+					if (bulkCopyType == BulkCopyType.ProviderSpecific)
 					{
-						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
-						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
-						new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
-						new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
-					});
+						var ms = new MappingSchema();
 
-				db.Types2.Delete(_ => _.ID > 1000);
+						db.AddMappingSchema(ms);
+
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes2>()
+								.Property(e => e.GuidValue)
+									.IsNotColumn()
+							;
+					}
+
+					db.BulkCopy(
+						new BulkCopyOptions { MaxBatchSize = 2, BulkCopyType = bulkCopyType },
+						new[]
+						{
+							new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,         BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue = null, IntValue = null    },
+							new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 2,    IntValue = 1532334 },
+							new LinqDataTypes2 { ID = 1005, MoneyValue = 1m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 5,    IntValue = null    },
+							new LinqDataTypes2 { ID = 1006, MoneyValue = 2m, DateTimeValue = DateTime.Now, BoolValue = false, GuidValue = null,                                             SmallIntValue = 6,    IntValue = 153     }
+						});
+
+					db.Types2.Delete(_ => _.ID > 1000);
+				}
 			}
 		}
 

@@ -20,8 +20,8 @@ namespace Tests.DataProvider
 			PassValueSql = "SELECT ID FROM {1} WHERE {0} = ?";
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

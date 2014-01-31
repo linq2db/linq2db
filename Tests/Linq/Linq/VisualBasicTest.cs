@@ -52,8 +52,8 @@ namespace Tests.Linq
 					VisualBasicCommon.SearchCondition1(db));
 		}
 
-		[Test]
-		public void SearchCondition2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void SearchCondition2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

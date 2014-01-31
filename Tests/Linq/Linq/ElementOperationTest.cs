@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ElementOperationTest : TestBase
 	{
-		[Test]
-		public void First([DataContexts] string context)
+		[Test, DataContextSource]
+		public void First(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -21,57 +21,57 @@ namespace Tests.Linq
 					db.Parent.OrderByDescending(p => p.ParentID).First().ParentID);
 		}
 
-		[Test]
-		public void FirstWhere([DataContexts] string context)
+		[Test, DataContextSource]
+		public void FirstWhere(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, db.Parent.First(p => p.ParentID == 2).ParentID);
 		}
 
-		[Test]
-		public void FirstOrDefault([DataContexts] string context)
+		[Test, DataContextSource]
+		public void FirstOrDefault(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.IsNull((from p in db.Parent where p.ParentID == 100 select p).FirstOrDefault());
 		}
 
-		[Test]
-		public void FirstOrDefaultWhere([DataContexts] string context)
+		[Test, DataContextSource]
+		public void FirstOrDefaultWhere(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, db.Parent.FirstOrDefault(p => p.ParentID == 2).ParentID);
 		}
 
-		[Test]
-		public void Single([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Single(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(1, db.Parent.Where(p => p.ParentID == 1).Single().ParentID);
 		}
 
-		[Test]
-		public void SingleWhere([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SingleWhere(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, db.Parent.Single(p => p.ParentID == 2).ParentID);
 		}
 
-		[Test]
-		public void SingleOrDefault([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SingleOrDefault(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.IsNull((from p in db.Parent where p.ParentID == 100 select p).SingleOrDefault());
 		}
 
-		[Test]
-		public void SingleOrDefaultWhere([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SingleOrDefaultWhere(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(2, db.Parent.SingleOrDefault(p => p.ParentID == 2).ParentID);
 		}
 
-		[Test]
-		public void FirstOrDefaultScalar([DataContexts] string context)
+		[Test, DataContextSource]
+		public void FirstOrDefaultScalar(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -79,8 +79,8 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).FirstOrDefault().ParentID);
 		}
 
-		[Test]
-		public void NestedFirstOrDefaultScalar1([DataContexts(ProviderName.Informix, ProviderName.Sybase)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		public void NestedFirstOrDefaultScalar1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -88,8 +88,8 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault().ChildID);
 		}
 
-		[Test]
-		public void NestedFirstOrDefaultScalar2([DataContexts(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase)]
+		public void NestedFirstOrDefaultScalar2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -121,8 +121,8 @@ namespace Tests.Linq
 					});
 		}
 
-		[Test]
-		public void NestedFirstOrDefault1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NestedFirstOrDefault1(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -134,8 +134,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void NestedFirstOrDefault2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NestedFirstOrDefault2(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -147,8 +147,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void NestedFirstOrDefault3([DataContexts(ProviderName.Informix, ProviderName.Firebird)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird)]
+		public void NestedFirstOrDefault3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -156,8 +156,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().FirstOrDefault());
 		}
 
-		[Test]
-		public void NestedFirstOrDefault4([DataContexts(ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL)]
+		public void NestedFirstOrDefault4(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -169,8 +169,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void NestedFirstOrDefault5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NestedFirstOrDefault5(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -182,8 +182,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void NestedSingleOrDefault1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void NestedSingleOrDefault1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -191,8 +191,8 @@ namespace Tests.Linq
 					from p in db.Parent select p.Children.Select(c => c.ParentID).Distinct().SingleOrDefault());
 		}
 
-		[Test]
-		public void FirstOrDefaultEntitySet([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void FirstOrDefaultEntitySet(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -202,8 +202,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void NestedSingleOrDefaultTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void NestedSingleOrDefaultTest(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -213,8 +213,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void MultipleQuery([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void MultipleQuery(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

@@ -153,8 +153,8 @@ namespace Tests.Linq
 					db.Child.Where(c => c.GrandChildren.Count == 2).Concat(db.Child.Where(c => c.GrandChildren.Count() == 3)));
 		}
 
-		[Test]
-		public void Concat7([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Concat7(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -548,8 +548,8 @@ namespace Tests.Linq
 					(from p2 in db.Parent where p2.ParentID <= 3 select new { p = new { p = p2, ParentID = p2.ParentID + 1 } })));
 		}
 
-		[Test]
-		public void ObjectUnion([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void ObjectUnion(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

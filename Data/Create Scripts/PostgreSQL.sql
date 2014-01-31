@@ -354,3 +354,50 @@ SELECT
 	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>')
 
 GO
+
+DROP TABLE TestSameName
+GO
+
+DROP TABLE test_schema.TestSameName
+GO
+
+DROP TABLE test_schema.TestSerialIdentity
+GO
+
+DROP TABLE test_schema."TestSchemaIdentity"
+GO
+
+DROP SEQUENCE test_schema."TestSchemaIdentity_ID_seq"
+GO
+
+DROP SCHEMA test_schema
+GO
+
+CREATE SCHEMA test_schema
+GO
+
+CREATE SEQUENCE test_schema."TestSchemaIdentity_ID_seq" INCREMENT 1 START 1
+GO
+
+CREATE TABLE test_schema."TestSchemaIdentity" (
+	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')
+)
+GO
+
+CREATE TABLE test_schema.TestSerialIdentity
+(
+	"ID" serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE test_schema.TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
+)
+GO

@@ -55,21 +55,22 @@ namespace Tests
 		{
 			switch (contextName)
 			{
-				case LinqToDB.ProviderName.SqlServer2008  : return typeof(SqlServer2008);
-				case LinqToDB.ProviderName.SqlServer2012  : return typeof(SqlServer2012);
-				case LinqToDB.ProviderName.SqlCe          : return typeof(SqlCe);
-				case LinqToDB.ProviderName.SQLite         : return typeof(SQLite);
-				case LinqToDB.ProviderName.Access         : return typeof(Access);
-				case LinqToDB.ProviderName.SqlServer2000  : return typeof(SqlServer2000);
-				case LinqToDB.ProviderName.SqlServer2005  : return typeof(SqlServer2005);
-				case LinqToDB.ProviderName.DB2            : return typeof(DB2);
-				case LinqToDB.ProviderName.Informix       : return typeof(Informix);
-				case LinqToDB.ProviderName.Firebird       : return typeof(Firebird);
-				case LinqToDB.ProviderName.Oracle         : return typeof(Oracle);
-				case LinqToDB.ProviderName.PostgreSQL     : return typeof(PostgreSQL);
-				case LinqToDB.ProviderName.MySql          : return typeof(MySql);
-				case LinqToDB.ProviderName.Sybase         : return typeof(Sybase);
-				case "Northwind"                          : return typeof(Northwind);
+				case LinqToDB.ProviderName.SqlServer     : return typeof(SqlServer);
+				case LinqToDB.ProviderName.SqlServer2008 : return typeof(SqlServer2008);
+				case LinqToDB.ProviderName.SqlServer2012 : return typeof(SqlServer2012);
+				case LinqToDB.ProviderName.SqlCe         : return typeof(SqlCe);
+				case LinqToDB.ProviderName.SQLite        : return typeof(SQLite);
+				case LinqToDB.ProviderName.Access        : return typeof(Access);
+				case LinqToDB.ProviderName.SqlServer2000 : return typeof(SqlServer2000);
+				case LinqToDB.ProviderName.SqlServer2005 : return typeof(SqlServer2005);
+				case LinqToDB.ProviderName.DB2           : return typeof(DB2);
+				case LinqToDB.ProviderName.Informix      : return typeof(Informix);
+				case LinqToDB.ProviderName.Firebird      : return typeof(Firebird);
+				case LinqToDB.ProviderName.Oracle        : return typeof(Oracle);
+				case LinqToDB.ProviderName.PostgreSQL    : return typeof(PostgreSQL);
+				case LinqToDB.ProviderName.MySql         : return typeof(MySql);
+				case LinqToDB.ProviderName.Sybase        : return typeof(Sybase);
+				case "Northwind"                         : return typeof(Northwind);
 			}
 
 			throw new InvalidOperationException();
