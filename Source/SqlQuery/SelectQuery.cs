@@ -2216,6 +2216,9 @@ namespace LinqToDB.SqlQuery
 
 						if (field.ColumnDescriptor != null)
 						{
+						    if (field.ColumnDescriptor.DataType != DataType.Undefined)
+						        p.DataType = field.ColumnDescriptor.DataType;
+
 //							if (field.ColumnDescriptorptor.MapMemberInfo.IsDbTypeSet)
 //								p.DbType = field.ColumnDescriptorptor.MapMemberInfo.DbType;
 //
@@ -2224,6 +2227,21 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
+			    if (expression is SqlValue)
+			    {
+			        var v = (SqlValue) expression;
+
+			        if (column is SqlField)
+			        {
+			            var field = (SqlField) column;
+
+			            if (field.ColumnDescriptor != null)
+			            {
+			                if (field.ColumnDescriptor.DataType != DataType.Undefined)
+			                    v.DataType = field.ColumnDescriptor.DataType;
+			            }
+			        }
+			    }
 			}
 
 			public ISqlExpression Column     { get; set; }

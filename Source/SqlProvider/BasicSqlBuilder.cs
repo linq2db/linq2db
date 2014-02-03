@@ -1710,8 +1710,11 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlValue:
-					BuildValue(((SqlValue)expr).Value);
-					break;
+			        {
+			            var v = (SqlValue) expr;
+			            BuildValue(v.Value, v.DataType);
+			        }
+			        break;
 
 				case QueryElementType.SqlExpression:
 					{
@@ -1757,7 +1760,7 @@ namespace LinqToDB.SqlProvider
 							StringBuilder.Append(name);
 						}
 						else
-							BuildValue(parm.Value);
+							BuildValue(parm.Value, parm.DataType);
 					}
 
 					break;
@@ -1851,6 +1854,11 @@ namespace LinqToDB.SqlProvider
 			PositiveInfinitySymbol   = NumberFormatInfo.InvariantInfo.PositiveInfinitySymbol,
 			PositiveSign             = NumberFormatInfo.InvariantInfo.PositiveSign,
 		};
+
+	    protected virtual void BuildValue(object value, DataType dataType)
+	    {
+	        BuildValue(value);
+	    }
 
 		protected virtual void BuildValue(object value)
 		{
@@ -2589,6 +2597,15 @@ namespace LinqToDB.SqlProvider
 
 			return bsb.BuildValue;
 		}
+
+        internal static Action<object, DataType> GetBuildValueWithDataType(ISqlBuilder sqlBuilder, StringBuilder sb)
+        {
+            var bsb = (BasicSqlBuilder)sqlBuilder;
+
+            bsb.StringBuilder = sb;
+
+            return bsb.BuildValue;
+        }
 
 		#endregion
 	}

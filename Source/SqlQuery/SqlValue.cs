@@ -20,8 +20,9 @@ namespace LinqToDB.SqlQuery
 				SystemType = value.GetType();
 		}
 
-		public object Value      { get; private set; }
-		public Type   SystemType { get; private set; }
+		public object   Value       { get; private set; }
+		public Type     SystemType  { get; private set; }
+        public DataType DataType    { get; set; }
 
 		#region Overrides
 

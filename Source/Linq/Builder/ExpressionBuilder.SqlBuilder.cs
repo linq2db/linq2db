@@ -1326,6 +1326,20 @@ namespace LinqToDB.Linq.Builder
 			var l = ConvertToSql(context, left);
 			var r = ConvertToSql(context, right, true);
 
+		    if (l.ElementType == QueryElementType.SqlField && r.ElementType == QueryElementType.SqlParameter)
+		    {
+		        var sqlField = (SqlField) l;
+                if (sqlField.DataType != DataType.Undefined)
+		            ((SqlParameter) r).DataType = sqlField.DataType;
+		    }
+
+            if (l.ElementType == QueryElementType.SqlField && r.ElementType == QueryElementType.SqlValue)
+            {
+                var sqlField = (SqlField)l;
+                if (sqlField.DataType != DataType.Undefined)
+                    ((SqlValue)r).DataType = sqlField.DataType;
+            }
+
 			switch (nodeType)
 			{
 				case ExpressionType.Equal   :

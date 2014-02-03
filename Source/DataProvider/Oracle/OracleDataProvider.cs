@@ -242,6 +242,7 @@ namespace LinqToDB.DataProvider.Oracle
 			_setDateTime2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "TimeStamp");
 			_setDateTimeOffset = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "TimeStampTZ");
 			_setGuid           = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "Raw");
+            _setNVarchar2      = GetSetParameter(connectionType, "OracleParameter", "OracleDbType", "OracleDbType", "NVarchar2");
 
 			MappingSchema.AddScalarType(_oracleBFile,        GetNullValue(_oracleBFile),        true, DataType.VarChar);    // ?
 			MappingSchema.AddScalarType(_oracleBinary,       GetNullValue(_oracleBinary),       true, DataType.VarBinary);
@@ -380,7 +381,8 @@ namespace LinqToDB.DataProvider.Oracle
 		static Action<IDbDataParameter> _setSmallDateTime;
 		static Action<IDbDataParameter> _setDateTime2;
 		static Action<IDbDataParameter> _setDateTimeOffset;
-		static Action<IDbDataParameter> _setGuid;
+        static Action<IDbDataParameter> _setGuid;
+        static Action<IDbDataParameter> _setNVarchar2;
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -407,6 +409,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTime2      : _setDateTime2        (parameter);           break;
 				case DataType.DateTimeOffset : _setDateTimeOffset   (parameter);           break;
 				case DataType.Guid           : _setGuid             (parameter);           break;
+                case DataType.NVarchar2      : _setNVarchar2        (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
 			}
 		}
@@ -520,7 +523,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			{
 				var sb         = new StringBuilder();
-				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
+				var buildValue = BasicSqlBuilder.GetBuildValueWithDataType(sqlBuilder, sb);
 			    var columns    = descriptor.Columns.Where(c => (options.IgnoreSkipOnInsert ?? false) || !c.SkipOnInsert).ToArray();
 				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
@@ -568,6 +571,9 @@ namespace LinqToDB.DataProvider.Oracle
 								case TypeCode.String:
 									var isString = false;
 
+							        if (column.DataType == DataType.NVarchar2)
+							            goto default;
+
 									switch (column.DataType)
 									{
 										case DataType.NVarChar  :
@@ -595,12 +601,21 @@ namespace LinqToDB.DataProvider.Oracle
 								case TypeCode.Single   :
 								case TypeCode.Double   :
 								case TypeCode.Decimal  :
-								case TypeCode.DateTime :
 									//SetParameter(dataParam, "", column.DataType, value);
 
-									buildValue(value);
+									buildValue(value, DataType.Undefined);
 									break;
-
+                                case TypeCode.DateTime:
+							        if (dataConnection.InlineParameters)
+							        {
+                                        buildValue(value, column.DataType);
+							        }
+							        else
+							        {
+                                       goto default;
+							        }
+                                    
+                                    break;
 								default:
 									var name = pname + ++pidx;
 
@@ -660,7 +675,7 @@ namespace LinqToDB.DataProvider.Oracle
             db.SetCommand(sql);
             var dr = db.ExecuteReader();
 
-            var sequenceIds = new LinqToDB.Reflection.Emit.Mapper().ToEnumerable<SequenceId>(dr as DbDataReader);
+            var sequenceIds = new Reflection.Emit.Mapper().ToEnumerable<SequenceId>(dr as DbDataReader);
             results.AddRange(sequenceIds.Select(e => e.Id).ToList().Select(Convert.ToInt64));
 
             return results;

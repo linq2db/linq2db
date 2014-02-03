@@ -205,5 +205,30 @@ namespace LinqToDB
 		/*
 		Structured	A special data type for specifying structured data contained in table-valued parameters.
 		*/
+
+        /// <summary>
+        /// We need NVarChar2 in order to insert UTF8 string values. The default Odp VarChar2 dbtype doesnt work
+        /// with UTF8 values. Note : Microsoft oracle client uses NVarChar value by default.
+        /// 
+        /// Same as VARCHAR2 except that the column stores values in the  National CS , ie you can store values in Bangla 
+        /// if your National CS is BN8BSCII .If the National CS is of fixed width CS (all characters are represented by
+        ///  a fixed byte ,say 2 bytes for JA16EUCFIXED) , then NVARCHAR2(30) stores 30 Characters.
+        /// Varchar2 works with 8 bit characters where as Nvarchar2 works ith 16 bit characters.
+        /// If you have to store data other than english prefer Nvarchar2 or viceversa.
+        /// 
+        /// NCHAR and NVARCHAR2 are Unicode datatypes that store Unicode character data. The character set of NCHAR and 
+        /// NVARCHAR2 datatypes can only be either AL16UTF16 or UTF8 and is specified at database creation time as the 
+        /// national character set. AL16UTF16 and UTF8 are both Unicode encoding. The NCHAR datatype stores fixed-length 
+        /// character strings that correspond to the national character set.The NVARCHAR2 datatype stores variable length 
+        /// character strings. When you create a table with an NCHAR or NVARCHAR2 column, the maximum size specified is 
+        /// always in character length semantics. Character length semantics is the default and only length semantics for
+        ///  NCHAR or NVARCHAR2. For example, if national character set is UTF8, then the following statement defines the
+        ///  maximum byte length of 90 bytes: CREATE TABLE tab1 (col1 NCHAR(30)); This statement creates a column with 
+        /// maximum character length of 30. The maximum byte length is the multiple of the maximum character length and 
+        /// the maximum number of bytes in each character.
+        /// The maximum length of an NVARCHAR2 column is 4000 bytes. It can hold up to 4000 characters. The actual data
+        ///  is subject to the maximum byte limit of 4000. The two size constraints must be satisfied simultaneously at run time.
+        /// </summary>
+        NVarchar2,
 	}
 }

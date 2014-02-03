@@ -204,18 +204,37 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildValue(value);
 		}
 
-		protected override void BuildDateTime(DateTime value)
+	    protected override void BuildValue(object value, DataType dataType)
+	    {
+	        if (value is DateTime && dataType == DataType.DateTime)
+	        {
+	            BuildDateTime((DateTime)value, DataType.DateTime);
+	        }
+            else
+	            base.BuildValue(value, dataType);
+	    }
+
+	    private void BuildDateTime(DateTime value, DataType dataType)
+        {
+            string dateTimeFunction = dataType == DataType.DateTime ? "TO_DATE" : "TO_TIMESTAMP";
+
+	        var format = dataType == DataType.DateTime
+                ? "{0}('{1:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS')"
+                : "{0}('{1:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+            if (value.Millisecond == 0)
+            {
+                format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+                    "{0}('{1:yyyy-MM-dd}', 'YYYY-MM-DD')" :
+                    "{0}('{1:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+            }
+
+            StringBuilder.AppendFormat(format, dateTimeFunction, value);   
+	    }
+
+	    protected override void BuildDateTime(DateTime value)
 		{
-			var format = "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
-
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
-					"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
-			}
-
-			StringBuilder.AppendFormat(format, value);
+			BuildDateTime(value, DataType.Undefined);
 		}
 
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)

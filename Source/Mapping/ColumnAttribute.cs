@@ -72,7 +72,8 @@ namespace LinqToDB.Mapping
 		public DataType DataType { get; set; }
 
 		/// <summary>
-		/// Gets or sets the name of the database column type.
+		/// Gets or sets the name of the database column type. This value is used when
+		/// creating a table for the corresponding type mapping
 		/// </summary>
 		public string DbType { get; set; }
 
