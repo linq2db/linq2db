@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB.Extensions;
+using LinqToDB.Reflection.Emit;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -321,6 +322,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
+        private object _nVarchar2EnumValue;
+        private SetHandler _oracleDbTypeSetHandler;
+
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)
@@ -353,6 +357,26 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+
+            if (value is string)
+            {
+                // We need NVarChar2 in order to insert UTF8 string values. The default Odp VarChar2 dbtype doesnt work
+                // with UTF8 values. Note : Microsoft oracle client uses NVarChar value by default.
+
+                if (_nVarchar2EnumValue == null)
+                {
+                    var clientNamespace = OracleTools.AssemblyName + ".Client.";
+                    string typeName = clientNamespace + "OracleDbType";
+
+                    var nvarCharType = parameter.GetType().Assembly.GetType(typeName);
+                    var enumValue = Enum.Parse(nvarCharType, "NVarchar2");
+                    _nVarchar2EnumValue = enumValue;
+
+                    _oracleDbTypeSetHandler = FunctionFactory.Il.CreateSetHandler(parameter.GetType(), "OracleDbType");
+                }
+
+                _oracleDbTypeSetHandler(parameter, _nVarchar2EnumValue);
+            }
 		}
 
 		public override Type ConvertParameterType(Type type, DataType dataType)
