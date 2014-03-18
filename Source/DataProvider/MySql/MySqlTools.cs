@@ -11,6 +11,13 @@ namespace LinqToDB.DataProvider.MySql
 	public static class MySqlTools
 	{
 		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
+		
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType; }
+			set { _defaultBulkCopyType = value; }
+		}
 
 		static MySqlTools()
 		{
