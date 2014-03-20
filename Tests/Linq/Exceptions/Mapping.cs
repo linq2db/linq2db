@@ -13,8 +13,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class Mapping : TestBase
 	{
-		[Test, ExpectedException(typeof(LinqException))]
-		public void MapIgnore1([DataContexts] string context)
+		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		public void MapIgnore1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -30,8 +30,8 @@ namespace Tests.Exceptions
 			         public string FirstName;
 		}
 
-		[Test, ExpectedException(typeof(LinqException))]
-		public void MapIgnore2([DataContexts] string context)
+		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		public void MapIgnore2(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null);

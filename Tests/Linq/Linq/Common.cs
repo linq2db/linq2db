@@ -176,8 +176,8 @@ namespace Tests.Linq
 					new Test().TestClosure(db));
 		}
 
-		[Test]
-		public void ExecuteTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void ExecuteTest(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

@@ -73,8 +73,8 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, ExpectedException(typeof(System.Data.SqlClient.SqlException), ExpectedMessage = "Invalid object name 'Parent1'.")]
-		public void ReplaceTableTest([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008), ExpectedException(typeof(System.Data.SqlClient.SqlException), ExpectedMessage = "Invalid object name 'Parent1'.")]
+		public void ReplaceTableTest(string context)
 		{
 			using (var db = new MyDataConnection(context))
 			{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -30,10 +31,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
 						ConvertType.NameToQueryField);
 
+			name = Convert(name, ConvertType.NameToQueryTable);
+
+			var database = GetTableDatabaseName(into);
+			var owner    = GetTableOwnerName   (into);
+
 			AppendIndent()
-				.Append("SELECT currval('")
-				.Append(name)
-				.AppendLine("')");
+				.Append("SELECT currval('");
+
+			BuildTableName(StringBuilder, database, owner, name.ToString());
+
+			StringBuilder.AppendLine("')");
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
@@ -136,9 +144,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
 				var attr = GetSequenceNameAttribute(table, false);
-	
+
 				if (attr != null)
-					return new SqlExpression("nextval('" + attr.SequenceName+"')", Precedence.Primary);
+				{
+					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
+					var database = GetTableDatabaseName(table);
+					var owner    = GetTableOwnerName   (table);
+
+					var sb = BuildTableName(new StringBuilder(), database, owner, name);
+
+					return new SqlExpression("nextval('" + sb + "')", Precedence.Primary);
+				}
 			}
 
 			return base.GetIdentityExpression(table);

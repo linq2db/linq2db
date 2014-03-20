@@ -13,8 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class VisualBasicTest : TestBase
 	{
-		[Test]
-		public void CompareString([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareString(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -22,8 +22,8 @@ namespace Tests.Linq
 					CompilerServices.CompareString(db));
 		}
 
-		[Test]
-		public void CompareString1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareString1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -32,8 +32,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ParameterName([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ParameterName(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -41,8 +41,8 @@ namespace Tests.Linq
 					VisualBasicCommon.ParamenterName(db));
 		}
 
-		[Test]
-		public void SearchCondition1([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void SearchCondition1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -52,8 +52,8 @@ namespace Tests.Linq
 					VisualBasicCommon.SearchCondition1(db));
 		}
 
-		[Test]
-		public void SearchCondition2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void SearchCondition2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{

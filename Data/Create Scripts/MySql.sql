@@ -269,3 +269,28 @@ SELECT
 	'one'
 
 GO
+
+
+DROP TABLE TestSameName
+GO
+
+DROP TABLE test_schema.TestSameName
+GO
+
+DROP SCHEMA test_schema
+GO
+
+CREATE SCHEMA test_schema
+GO
+
+CREATE TABLE test_schema.TestSameName
+(
+	ID int NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE TestSameName
+(
+	ID int NOT NULL PRIMARY KEY
+)
+GO

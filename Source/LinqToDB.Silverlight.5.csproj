@@ -83,6 +83,7 @@
     <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
     <Compile Include="Linq\Builder\CastBuilder.cs" />
+    <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
     <Compile Include="Linq\Builder\ContainsBuilder.cs" />
     <Compile Include="Linq\Builder\ConvertFlags.cs" />
@@ -256,6 +258,7 @@
     <Compile Include="SqlQuery\QueryType.cs" />
     <Compile Include="SqlQuery\QueryVisitor.cs" />
     <Compile Include="SqlQuery\SelectQuery.cs" />
+    <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />

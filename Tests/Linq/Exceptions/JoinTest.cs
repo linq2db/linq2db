@@ -12,8 +12,8 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class JoinTest : TestBase
 	{
-		[Test, ExpectedException(typeof(LinqException))]
-		public void InnerJoin([DataContexts] string context)
+		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		public void InnerJoin(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

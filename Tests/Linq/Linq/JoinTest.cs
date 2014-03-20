@@ -771,8 +771,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void LeftJoinTest2([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void LeftJoinTest2(string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)
 			// Reproduces the problem described here: http://rsdn.ru/forum/prj.rfd/4221837.flat.aspx
@@ -791,8 +791,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void StackOverflow([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void StackOverflow(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -813,8 +813,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ApplyJoin([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void ApplyJoin(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

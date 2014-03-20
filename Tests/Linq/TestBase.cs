@@ -8,8 +8,6 @@ using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
-using IBM.Data.DB2;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -112,8 +110,31 @@ namespace Tests
 			}
 		}
 
+		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		public class IncludeDataContextSourceAttribute : TestCaseSourceAttribute
+		{
+			public IncludeDataContextSourceAttribute(params string[] include)
+				: base(DatabaseTestCase.GetDataContextType(false, null, include), "TestCases")
+			{
+			}
+
+			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
+				: base(DatabaseTestCase.GetDataContextType(includeLinqService, null, include), "TestCases")
+			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		public class NorthwindDataContext : TestCaseSourceAttribute
+		{
+			public NorthwindDataContext()
+				: base(DatabaseTestCase.GetDataContextType(false, null, new [] { "Northwind" }), "TestCases")
+			{
+			}
+		}
+
 		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-		//[Obsolete]
+		[Obsolete]
 		public class DataContextsAttribute : ValuesAttribute
 		{
 			public DataContextsAttribute(params string[] except)
@@ -162,6 +183,7 @@ namespace Tests
 			}
 		}
 
+		[Obsolete]
 		public class IncludeDataContextsAttribute : DataContextsAttribute
 		{
 			public IncludeDataContextsAttribute(params string[] include)

@@ -12,8 +12,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DistinctTest : TestBase
 	{
-		[Test]
-		public void Distinct1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Distinct1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -21,8 +21,8 @@ namespace Tests.Linq
 					(from ch in db.Child select ch.ParentID).Distinct());
 		}
 
-		[Test]
-		public void Distinct2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Distinct2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -30,8 +30,8 @@ namespace Tests.Linq
 					(from p in db.Parent select p.Value1 ?? p.ParentID % 2).Distinct());
 		}
 
-		[Test]
-		public void Distinct3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Distinct3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -39,8 +39,8 @@ namespace Tests.Linq
 					(from p in db.Parent select new { Value = p.Value1 ?? p.ParentID % 2, p.Value1 }).Distinct());
 		}
 
-		[Test]
-		public void Distinct4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Distinct4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -48,8 +48,8 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
-		[Test]
-		public void Distinct5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Distinct5(string context)
 		{
 			var id = 2;
 
@@ -59,8 +59,8 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct());
 		}
 
-		[Test]
-		public void Distinct6([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Distinct6(string context)
 		{
 			var id = 2;
 
@@ -70,8 +70,8 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct());
 		}
 
-		[Test]
-		public void DistinctCount([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DistinctCount(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -91,8 +91,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DistinctMax([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DistinctMax(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,13 +112,22 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TakeDistinct([DataContexts(ProviderName.Sybase, ProviderName.SQLite)] string context)
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SQLite)]
+		public void TakeDistinct(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					(from ch in    Child orderby ch.ParentID select ch.ParentID).Take(4).Distinct(),
 					(from ch in db.Child orderby ch.ParentID select ch.ParentID).Take(4).Distinct());
+		}
+
+		[Test, DataContextSource]
+		public void DistinctOrderBy(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					   Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch),
+					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 	}
 }

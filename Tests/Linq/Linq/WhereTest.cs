@@ -892,8 +892,8 @@ namespace Tests.Linq
 					db.Parent.Where(p_ => p_.ParentID == 3));
 		}
 
-		[Test]
-		public void SelectNestedCalculatedTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void SelectNestedCalculatedTest(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(

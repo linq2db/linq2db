@@ -18,8 +18,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Types : TestBase
 	{
-		[Test]
-		public void Bool1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Bool1(string context)
 		{
 			var value = true;
 
@@ -29,8 +29,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value && true && !false select p);
 		}
 
-		[Test]
-		public void Bool2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Bool2(string context)
 		{
 			var value = true;
 
@@ -40,8 +40,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID > 2 && value || true && !false select p);
 		}
 
-		[Test]
-		public void Bool3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Bool3(string context)
 		{
 			var values = new int[0];
 
@@ -51,8 +51,8 @@ namespace Tests.Linq
 					from p in db.Parent where values.Contains(p.ParentID) && !false || p.ParentID > 2 select p);
 		}
 
-		[Test]
-		public void BoolField1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -60,8 +60,8 @@ namespace Tests.Linq
 					from t in db.Types where t.BoolValue select t.MoneyValue);
 		}
 
-		[Test]
-		public void BoolField2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -69,8 +69,8 @@ namespace Tests.Linq
 					from t in db.Types where !t.BoolValue select t.MoneyValue);
 		}
 
-		[Test]
-		public void BoolField3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -78,8 +78,8 @@ namespace Tests.Linq
 					from t in db.Types where t.BoolValue == true select t.MoneyValue);
 		}
 
-		[Test]
-		public void BoolField4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -87,8 +87,8 @@ namespace Tests.Linq
 					from t in db.Types where t.BoolValue == false select t.MoneyValue);
 		}
 
-		[Test]
-		public void BoolField5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -96,8 +96,8 @@ namespace Tests.Linq
 					from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b == false select p.MoneyValue);
 		}
 
-		[Test]
-		public void BoolField6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolField6(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -105,8 +105,8 @@ namespace Tests.Linq
 					from p in from t in db.Types select new { t.MoneyValue, b = !t.BoolValue } where p.b select p.MoneyValue);
 		}
 
-		[Test]
-		public void BoolResult1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolResult1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -114,8 +114,8 @@ namespace Tests.Linq
 					from p in db.Person select new { p.Patient, IsPatient = p.Patient != null });
 		}
 
-		[Test]
-		public void BoolResult2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolResult2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -123,8 +123,8 @@ namespace Tests.Linq
 					from p in db.Person select new { IsPatient = Sql.AsSql(p.Patient != null) });
 		}
 
-		[Test]
-		public void BoolResult3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolResult3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -132,8 +132,8 @@ namespace Tests.Linq
 					from p in db.Person select Sql.AsSql(p.ID == 1));
 		}
 
-		[Test]
-		public void GuidNew([DataContexts] string context)
+		[Test, DataContextSource]
+		public void GuidNew(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -141,8 +141,8 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue != Guid.NewGuid() select p.GuidValue);
 		}
 
-		[Test]
-		public void Guid1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Guid1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -150,8 +150,8 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue == new Guid("D2F970C0-35AC-4987-9CD5-5BADB1757436") select p.GuidValue);
 		}
 
-		[Test]
-		public void Guid2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Guid2(string context)
 		{
 			var guid3 = new Guid("D2F970C0-35AC-4987-9CD5-5BADB1757436");
 			var guid4 = new Guid("40932fdb-1543-4e4a-ac2c-ca371604fb4b");
@@ -182,8 +182,8 @@ namespace Tests.Linq
 						.Single().GuidValue);
 		}
 
-		[Test]
-		public void ContainsGuid([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsGuid(string context)
 		{
 			var ids = new [] { new Guid("D2F970C0-35AC-4987-9CD5-5BADB1757436") };
 
@@ -193,10 +193,9 @@ namespace Tests.Linq
 					from p in db.Types where ids.Contains(p.GuidValue) select p.GuidValue);
 		}
 
-		[Test]
-		public void NewGuid([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
-			string context)
+		public void NewGuid(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -220,8 +219,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void BinaryLength([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void BinaryLength(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -241,10 +240,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void InsertBinary1([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
-			string context)
+		public void InsertBinary1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -261,8 +259,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void UpdateBinary1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void UpdateBinary1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -279,8 +277,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void UpdateBinary2([DataContexts(ProviderName.SqlCe)] string context)
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void UpdateBinary2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -302,8 +300,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DateTime1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DateTime1(string context)
 		{
 			var dt = Types2[3].DateTimeValue;
 
@@ -313,8 +311,8 @@ namespace Tests.Linq
 					from t in db.Types2 where t.DateTimeValue.Value.Date > dt.Value.Date select t);
 		}
 
-		[Test]
-		public void DateTime21([DataContexts(ProviderName.SQLite)] string context)
+		[Test, DataContextSource(ProviderName.SQLite)]
+		public void DateTime21(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -331,13 +329,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DateTime22(
-			[DataContexts(
+		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
 				ProviderName.SqlServer2000)]
-			string context)
+		public void DateTime22(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -354,13 +350,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DateTime23(
-			[DataContexts(
+		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
 				ProviderName.SqlServer2000)]
-			string context)
+		public void DateTime23(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -380,13 +374,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DateTime24(
-			[DataContexts(
+		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
 				ProviderName.SqlServer2000)]
-			string context)
+		public void DateTime24(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -406,8 +398,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void DateTimeArray1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DateTimeArray1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -415,8 +407,8 @@ namespace Tests.Linq
 					from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
 		}
 
-		[Test]
-		public void DateTimeArray2([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void DateTimeArray2(string context)
 		{
 			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2012, 11, 7, 19, 19, 29, 90) };
 
@@ -426,8 +418,8 @@ namespace Tests.Linq
 					from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
-		[Test]
-		public void DateTimeArray3([DataContexts(ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.Access)]
+		public void DateTimeArray3(string context)
 		{
 			var arr = new List<DateTime?> { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
 
@@ -437,8 +429,8 @@ namespace Tests.Linq
 					from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
-		[Test]
-		public void DateTimeParams([DataContexts] string context)
+		[Test, DataContextSource]
+		public void DateTimeParams(string context)
 		{
 			var arr = new List<DateTime?>
 			{
@@ -470,8 +462,8 @@ namespace Tests.Linq
 			return q.First().Value;
 		}
 
-		[Test]
-		public void Nullable([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Nullable(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -479,8 +471,8 @@ namespace Tests.Linq
 					from p in db.Parent select new { Value = p.Value1.GetValueOrDefault() });
 		}
 
-		[Test]
-		public void Unicode([DataContexts(ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase)] string context)
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase)]
+		public void Unicode(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -515,10 +507,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TestCultureInfo([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Informix //////////////// TODO
-			)] string context)
+			)]
+		public void TestCultureInfo(string context)
 		{
 			var current = Thread.CurrentThread.CurrentCulture;
 
@@ -532,8 +524,8 @@ namespace Tests.Linq
 			Thread.CurrentThread.CurrentCulture = current;
 		}
 
-		[Test]
-		public void SmallInt([DataContexts] string context)
+		[Test, DataContextSource]
+		public void SmallInt(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -556,8 +548,8 @@ namespace Tests.Linq
 			public char   Gender;
 		}
 
-		[Test]
-		public void CharTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CharTest1(string context)
 		{
 			List<PersonCharTest> list;
 
@@ -570,8 +562,8 @@ namespace Tests.Linq
 					from p in db.GetTable<PersonCharTest>() where p.Gender == 'M' select p.PersonID);
 		}
 
-		[Test]
-		public void CharTest2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CharTest2(string context)
 		{
 			List<PersonCharTest> list;
 
@@ -584,8 +576,8 @@ namespace Tests.Linq
 					from p in db.GetTable<PersonCharTest>() where 'M' == p.Gender select p.PersonID);
 		}
 
-		[Test]
-		public void BoolTest31([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolTest31(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -593,8 +585,8 @@ namespace Tests.Linq
 					from t in db.Types2 where t.BoolValue.Value      select t);
 		}
 
-		[Test]
-		public void BoolTest32([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolTest32(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -602,8 +594,8 @@ namespace Tests.Linq
 					from t in db.Types2 where t.BoolValue == true    select t);
 		}
 
-		[Test]
-		public void BoolTest33([DataContexts] string context)
+		[Test, DataContextSource]
+		public void BoolTest33(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -611,8 +603,8 @@ namespace Tests.Linq
 					from t in db.Types2 where true == t.BoolValue    select t);
 		}
 
-		[Test]
-		public void LongTest1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void LongTest1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -627,8 +619,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void CompareNullableInt([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullableInt(string context)
 		{
 			int? param = null;
 
@@ -645,8 +637,8 @@ namespace Tests.Linq
 					from t in db.Parent where param == null || t.Value1 == param select t);
 		}
 
-		[Test]
-		public void CompareNullableBoolean1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullableBoolean1(string context)
 		{
 			bool? param = null;
 
@@ -663,8 +655,8 @@ namespace Tests.Linq
 					from t in db.Types where param == null || t.BoolValue == param select t);
 		}
 
-		[Test]
-		public void CompareNullableBoolean2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullableBoolean2(string context)
 		{
 			short? param1 = null;
 			bool?  param2 = null;
@@ -697,8 +689,8 @@ namespace Tests.Linq
 					select t1);
 		}
 
-		[Test]
-		public void CompareNullableBoolean3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CompareNullableBoolean3(string context)
 		{
 			short? param1 = null;
 			bool?  param2 = false;

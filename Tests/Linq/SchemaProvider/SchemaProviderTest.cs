@@ -48,8 +48,8 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test]
-		public void NorthwindTest([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void NorthwindTest(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
