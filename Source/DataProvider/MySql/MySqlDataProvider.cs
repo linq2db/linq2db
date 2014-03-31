@@ -136,16 +136,25 @@ namespace LinqToDB.DataProvider.MySql
 				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
 				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
-				sb.AppendFormat("INSERT \tINTO {0} (", tableName);
+				sb
+					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
+					.Append("(");
 
 				foreach (var column in columns)
 					sb
+						.AppendLine()
+						.Append("\t")
 						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-						.Append(", ");
+						.Append(",");
 
-				sb.Length -= 2;
+				sb.Length--;
+				sb
+					.AppendLine()
+					.Append(")");
 
-				sb.Append(") VALUES (");
+				sb
+					.AppendLine()
+					.Append("VALUES");
 
 				var headerLen    = sb.Length;
 				var totalCount   = 0;
@@ -160,6 +169,10 @@ namespace LinqToDB.DataProvider.MySql
 
 				foreach (var item in source)
 				{
+					sb
+						.AppendLine()
+						.Append("(");
+
 					foreach (var column in columns)
 					{
 						var value = column.GetValue(item);
@@ -224,30 +237,28 @@ namespace LinqToDB.DataProvider.MySql
 					}
 
 					sb.Length--;
-					sb.AppendLine(")");
+					sb.Append("),");
 
 					totalCount++;
 					currentCount++;
 
 					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
 					{
+						sb.Length--;
+
 						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
 
 						parms.Clear();
-						pidx = 0;
+						pidx         = 0;
 						currentCount = 0;
-						sb.Length = headerLen;
-					}
-					else
-					{
-						sb.Append(",(");
+						sb.Length    = headerLen;
 					}
 				}
 
 				if (currentCount > 0)
 				{
-					//sb.AppendLine("SELECT * FROM dual");
-					sb.Length-=2;
+					sb.Length--;
+
 					dataConnection.Execute(sb.ToString(), parms.ToArray());
 					sb.Length = headerLen;
 				}
