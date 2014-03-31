@@ -68,6 +68,8 @@ namespace Tests.SchemaProvider
 				var table    = dbSchema.Tables.Single(t => t.TableName == "alltypes");
 
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
+
+				Assert.That(table.Columns.Single(c => c.ColumnName == "intUnsignedDataType").MemberType, Is.EqualTo("uint?"));
 			}
 		}
 	}

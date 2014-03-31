@@ -98,20 +98,20 @@ namespace LinqToDB.SchemaProvider
 
 				foreach (var column in columns)
 				{
-					var columnType = column.c.DataType;
-					var systemType = GetSystemType(columnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
+					var dataType   = column.c.DataType;
+					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
 					var isNullable = column.c.IsNullable;
 
 					column.t.Columns.Add(new ColumnSchema
 					{
 						Table           = column.t,
 						ColumnName      = column.c.Name,
-						ColumnType      = column.c.ColumnType ?? GetDbType(columnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+						ColumnType      = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
 						IsNullable      = isNullable,
 						MemberName      = ToValidName(column.c.Name),
 						MemberType      = ToTypeName(systemType, isNullable),
 						SystemType      = systemType ?? typeof(object),
-						DataType        = GetDataType(columnType, column.c.ColumnType),
+						DataType        = GetDataType(dataType, column.c.ColumnType),
 						SkipOnInsert    = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate    = column.c.SkipOnUpdate || column.c.IsIdentity,
 						IsPrimaryKey    = column.pk != null,
@@ -200,7 +200,7 @@ namespace LinqToDB.SchemaProvider
 									on pr.DataType equals dt.TypeName into g1
 								from dt in g1.DefaultIfEmpty()
 
-								let systemType = GetSystemType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale)
+								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
@@ -360,7 +360,7 @@ namespace LinqToDB.SchemaProvider
 				let length     = r.Field<int> ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
-				let systemType = GetSystemType(columnType, dt, length, precision, scale)
+				let systemType = GetSystemType(columnType, null, dt, length, precision, scale)
 
 				select new ColumnSchema
 				{
@@ -402,9 +402,9 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			var systemType = dataType != null ? Type.GetType(dataType.DataType) : null;
+			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
 			if (length == 1 && !GenerateChar1AsString && systemType == typeof(string))
 				systemType = typeof(char);
@@ -483,6 +483,9 @@ namespace LinqToDB.SchemaProvider
 				case "Int16"   : memberType = "short";   break;
 				case "Int32"   : memberType = "int";     break;
 				case "Int64"   : memberType = "long";    break;
+				case "UInt16"  : memberType = "ushort";  break;
+				case "UInt32"  : memberType = "uint";    break;
+				case "UInt64"  : memberType = "ulong";   break;
 				case "Decimal" : memberType = "decimal"; break;
 				case "Single"  : memberType = "float";   break;
 				case "Double"  : memberType = "double";  break;

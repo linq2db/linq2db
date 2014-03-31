@@ -200,14 +200,26 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			switch (columnType)
+			if (columnType != null && columnType.Contains("unsigned"))
+			{
+				switch (dataType.ToLower())
+				{
+					case "smallint"   : return typeof(UInt16);
+					case "int"        : return typeof(UInt32);
+					case "mediumint"  : return typeof(UInt32);
+					case "bigint"     : return typeof(UInt64);
+					case "tiny int"   : return typeof(Byte);
+				}
+			}
+
+			switch (dataType)
 			{
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }
