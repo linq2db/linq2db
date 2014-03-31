@@ -34,6 +34,8 @@ namespace LinqToDB.SchemaProvider
 		protected string[]           ExcludedSchemas;
 		protected bool               GenerateChar1AsString;
 
+		protected Dictionary<string,DataTypeInfo> DataTypesDic;
+
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
 		{
 			if (options == null)
@@ -45,7 +47,12 @@ namespace LinqToDB.SchemaProvider
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
 
-			DataTypes = GetDataTypes(dataConnection);
+			DataTypes    = GetDataTypes(dataConnection);
+			DataTypesDic = new Dictionary<string, DataTypeInfo>(DataTypes.Count, StringComparer.OrdinalIgnoreCase);
+
+			foreach (var dt in DataTypes)
+				if (!DataTypesDic.ContainsKey(dt.TypeName))
+					DataTypesDic.Add(dt.TypeName, dt);
 
 			List<TableSchema>     tables;
 			List<ProcedureSchema> procedures;
@@ -80,10 +87,6 @@ namespace LinqToDB.SchemaProvider
 				var columns =
 					from c  in GetColumns(dataConnection)
 
-					join dt in DataTypes
-						on c.DataType equals dt.TypeName into g1
-					from dt in g1.DefaultIfEmpty()
-
 					join pk in pks
 						on c.TableID + "." + c.Name equals pk.TableID + "." + pk.ColumnName into g2
 					from pk in g2.DefaultIfEmpty()
@@ -91,7 +94,7 @@ namespace LinqToDB.SchemaProvider
 					join t  in tables on c.TableID equals t.ID
 
 					orderby c.Ordinal
-					select new { t, c, dt, pk };
+					select new { t, c, dt = GetDataType(c.DataType), pk };
 
 				foreach (var column in columns)
 				{
@@ -324,6 +327,12 @@ namespace LinqToDB.SchemaProvider
 				Tables        = tables,
 				Procedures    = procedures,
 			});
+		}
+
+		DataTypeInfo GetDataType(string typeName)
+		{
+			DataTypeInfo dt;
+			return DataTypesDic.TryGetValue(typeName, out dt) ? dt : null;
 		}
 
 		protected virtual DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)

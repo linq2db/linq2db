@@ -12,6 +12,28 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			return base.GetDataTypes(dataConnection)
+				.Select(dt =>
+				{
+					if (dt.CreateFormat != null && dt.CreateFormat.EndsWith(" UNSIGNED", StringComparison.OrdinalIgnoreCase))
+					{
+						return new DataTypeInfo
+						{
+							TypeName         = dt.CreateFormat,
+							DataType         = dt.DataType,
+							CreateFormat     = dt.CreateFormat,
+							CreateParameters = dt.CreateParameters,
+							ProviderDbType   = dt.ProviderDbType,
+						};
+					}
+
+					return dt;
+				})
+				.ToList();
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
@@ -140,7 +162,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (dataType.ToUpper())
+			switch (dataType.ToLower())
 			{
 				case "bit"        : return DataType.UInt64;
 				case "blob"       : return DataType.Blob;

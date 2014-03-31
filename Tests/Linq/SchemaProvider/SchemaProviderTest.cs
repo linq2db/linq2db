@@ -57,5 +57,18 @@ namespace Tests.SchemaProvider
 				var dbSchema = sp.GetSchema(conn);
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.MySql)]
+		public void MySqlTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var sp       = conn.DataProvider.GetSchemaProvider();
+				var dbSchema = sp.GetSchema(conn);
+				var table    = dbSchema.Tables.Single(t => t.TableName == "alltypes");
+
+				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
+			}
+		}
 	}
 }
