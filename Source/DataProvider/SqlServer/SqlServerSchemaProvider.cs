@@ -208,16 +208,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			switch (columnType)
+			switch (dataType)
 			{
 				case "hierarchyid" :
 				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
+				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

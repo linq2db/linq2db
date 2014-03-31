@@ -361,7 +361,7 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				AppendIndent();
-				BuildExpression(expr.Column, false, true);
+				BuildExpression(expr.Column, true, true);
 				StringBuilder.Append(" = ");
 
 				var addAlias = false;
