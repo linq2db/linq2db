@@ -272,6 +272,8 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
+				conn.BeginTransaction();
+
 				conn.BulkCopy(new BulkCopyOptions { MaxBatchSize = 50000, BulkCopyType = bulkCopyType },
 					Enumerable.Range(0, 100000).Select(n =>
 						new AllType
