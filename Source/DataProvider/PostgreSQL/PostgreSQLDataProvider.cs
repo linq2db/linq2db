@@ -18,7 +18,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
 

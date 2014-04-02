@@ -622,7 +622,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void AssosiationUnion1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -635,7 +635,7 @@ namespace Tests.Linq
 					select p.ParentID);
 		}
 
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void AssosiationUnion2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -646,7 +646,7 @@ namespace Tests.Linq
 					select c.Parent.ParentID);
 		}
 
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void AssosiationConcat2(string context)
 		{
 			using (var db = GetDataContext(context))
