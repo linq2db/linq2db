@@ -1605,7 +1605,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1630,7 +1630,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void GroupByDate2(string context)
 		{
 			using (var db = GetDataContext(context))
