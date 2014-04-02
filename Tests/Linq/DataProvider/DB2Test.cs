@@ -478,5 +478,20 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestBinarySize(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				conn.GetTable<ALLTYPE>().Insert(() => new ALLTYPE
+				{
+					INTDATATYPE  = 2000,
+					BLOBDATATYPE = new byte[500000],
+				});
+
+				conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE == 2000);
+			}
+		}
 	}
 }
