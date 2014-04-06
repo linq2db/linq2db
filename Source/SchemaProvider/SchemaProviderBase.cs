@@ -191,7 +191,7 @@ namespace LinqToDB.SchemaProvider
 							MemberName          = ToValidName(sp.ProcedureName),
 							IsFunction          = sp.IsFunction,
 							IsTableFunction     = sp.IsTableFunction,
-                                   IsAggregateFunction = sp.IsAggregateFunction,
+							IsAggregateFunction = sp.IsAggregateFunction,
 							IsDefaultSchema     = sp.IsDefaultSchema,
 							Parameters          =
 							(

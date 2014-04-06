@@ -11,8 +11,8 @@ namespace LinqToDB.SchemaProvider
 		public string MemberName          { get; set; }
 		public bool   IsFunction          { get; set; }
 		public bool   IsTableFunction     { get; set; }
-          public bool   IsAggregateFunction { get; set; }
-          public bool   IsDefaultSchema     { get; set; }
+		public bool   IsAggregateFunction { get; set; }
+		public bool   IsDefaultSchema     { get; set; }
 
 		public TableSchema           ResultTable     { get; set; }
 		public Exception             ResultException { get; set; }
