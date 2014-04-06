@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
 
@@ -115,6 +116,54 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			new AssemblyResolver(assembly, "IBM.Data.DB2");
 		}
+
+		#region OnInitialized
+
+		static private  bool                  _isInitialized;
+		static readonly object                _syncAfterInitialized    = new object();
+		static private  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+
+		internal static void Initialized()
+		{
+			if (!_isInitialized)
+			{
+				lock (_syncAfterInitialized)
+				{
+					if (!_isInitialized)
+					{
+						_isInitialized = true;
+
+						foreach (var action in _afterInitializedActions)
+							action();
+						_afterInitializedActions = null;
+					}
+				}
+			}
+		}
+
+		public static void AfterInitialized(Action action)
+		{
+			if (_isInitialized)
+			{
+				action();
+			}
+			else
+			{
+				lock (_syncAfterInitialized)
+				{
+					if (_isInitialized)
+					{
+						action();
+					}
+					else
+					{
+						_afterInitializedActions.Add(action);
+					}
+				}
+			}
+		}
+
+		#endregion
 
 		#region CreateDataConnection
 
