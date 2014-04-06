@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	public struct IsExpressionResult
+	struct IsExpressionResult
 	{
 		public readonly bool          Result;
 		public readonly IBuildContext Context;

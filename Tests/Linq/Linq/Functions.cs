@@ -8,6 +8,8 @@ using LinqToDB.Linq;
 
 using NUnit.Framework;
 
+// ReSharper disable UnusedMember.Local
+
 namespace Tests.Linq
 {
 	using Model;
@@ -15,8 +17,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Functions : TestBase
 	{
-		[Test]
-		public void Contains1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -24,8 +26,8 @@ namespace Tests.Linq
 					from p in db.Parent where new[] { 1, 2 }.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void Contains2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains2(string context)
 		{
 			var arr = new[] { 1, 2 };
 
@@ -35,8 +37,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void Contains3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains3(string context)
 		{
 			var n = 2;
 
@@ -51,8 +53,8 @@ namespace Tests.Linq
 						select p)(data));
 		}
 
-		[Test]
-		public void Contains4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains4(string context)
 		{
 			var arr = new[] { 1, 2 };
 
@@ -67,8 +69,8 @@ namespace Tests.Linq
 						select p)(data));
 		}
 
-		[Test]
-		public void Contains5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains5(string context)
 		{
 			var arr1 = new[] { 1, 2 };
 			var arr2 = new[] { 1, 2, 4 };
@@ -88,8 +90,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Contains6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains6(string context)
 		{
 			var arr = new List<int> { 1, 2 };
 
@@ -99,8 +101,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void Contains7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Contains7(string context)
 		{
 			IEnumerable<int> arr = new[] { 1, 2 };
 
@@ -110,8 +112,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void ContainsKey1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsKey1(string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -125,8 +127,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void ContainsKey2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsKey2(string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -140,8 +142,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.ContainsKey(p.ParentID) select p);
 		}
 
-		[Test]
-		public void ContainsValue1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsValue1(string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -155,8 +157,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void ContainsValue2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsValue2(string context)
 		{
 			var arr = new Dictionary<int,int>
 			{
@@ -170,8 +172,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.ContainsValue(p.ParentID) select p);
 		}
 
-		[Test]
-		public void ContainsHashSet1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsHashSet1(string context)
 		{
 			var arr = new HashSet<int> { 1, 2 };
 
@@ -181,8 +183,8 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-		[Test]
-		public void EmptyContains1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void EmptyContains1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -194,8 +196,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void ContainsString11([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString11(string context)
 		{
 			var arr = new List<string> { "John" };
 
@@ -205,8 +207,8 @@ namespace Tests.Linq
 					from p in db.Person where arr.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void ContainsString12([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString12(string context)
 		{
 			var nm = "John";
 
@@ -216,8 +218,8 @@ namespace Tests.Linq
 					from p in db.Person where new List<string> { nm }.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void ContainsString13([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString13(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -225,8 +227,8 @@ namespace Tests.Linq
 					from p in db.Person where new List<string> { "John" }.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void ContainsString21([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString21(string context)
 		{
 			var arr = new[] { "John" };
 
@@ -236,8 +238,8 @@ namespace Tests.Linq
 					from p in db.Person where arr.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void ContainsString22([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString22(string context)
 		{
 			var nm = "John";
 
@@ -247,8 +249,8 @@ namespace Tests.Linq
 					from p in db.Person where new[] { nm }.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void ContainsString23([DataContexts] string context)
+		[Test, DataContextSource]
+		public void ContainsString23(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -256,8 +258,8 @@ namespace Tests.Linq
 					from p in db.Person where new[] { "John" }.Contains(p.FirstName) select p);
 		}
 
-		[Test]
-		public void Equals1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Equals1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -265,8 +267,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.ParentID.Equals(2) select p);
 		}
 
-		[Test]
-		public void Equals2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Equals2(string context)
 		{
 			var child = (from ch in Child where ch.ParentID == 2 select ch).First();
 
@@ -276,8 +278,8 @@ namespace Tests.Linq
 					from ch in db.Child where !ch.Equals(child) select ch);
 		}
 
-		[Test]
-		public void Equals3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Equals3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -285,8 +287,8 @@ namespace Tests.Linq
 					from p in db.Parent where p.Value1.Equals(null) select p);
 		}
 
-		[Test]
-		public void Equals4([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Equals4(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -294,9 +296,9 @@ namespace Tests.Linq
 					db.Customer.Where(c => !c.Address.Equals(null)));
 		}
 
-		[Test]
-		public void NewGuid1([DataContexts(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(
+			ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		public void NewGuid1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -304,15 +306,15 @@ namespace Tests.Linq
 					from p in db.Types where p.GuidValue != Sql.NewGuid() select p.GuidValue);
 		}
 
-		[Test]
-		public void NewGuid2([DataContexts(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)] string context)
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		public void NewGuid2(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First());
 		}
 
-		[Test]
-		public void CustomFunc([DataContexts] string context)
+		[Test, DataContextSource]
+		public void CustomFunc(string context)
 		{
 			Expressions.MapMember<Person>(p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));
 
@@ -322,8 +324,8 @@ namespace Tests.Linq
 					from p in db.Person where p.FullName() == "Pupkin, John" select p.FullName());
 		}
 
-		[Test]
-		public void Count1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Count1(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -331,8 +333,8 @@ namespace Tests.Linq
 					db.Child.Count(c => c.ParentID == 1));
 		}
 
-		[Test]
-		public void Sum1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Sum1(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
@@ -353,21 +355,48 @@ namespace Tests.Linq
 				(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID));
 		}
 
-		[Test]
-		public void Sum2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Sum2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					   Parent.Select(p => p.Children.Where(c => c.ParentID > 2).Sum(c => c.ParentID * c.ChildID)),
 					db.Parent.Select(p => ChildCount(p)));
 		}
+
+		//////[Test, DataContextSource]
+		public void Aggregate1(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in Parent
+					group p by p.ParentID into g
+					select new
+					{
+						sum1 = g.Sum  (i => i.Value1),
+						sum2 = g.MySum(i => i.Value1),
+					},
+					from p in db.Parent
+					group p by p.ParentID into g
+					select new
+					{
+						sum1 = g.Sum  (i => i.Value1),
+						sum2 = g.MySum(i => i.Value1),
+					});
+		}
 	}
 
-	public static class PersonExtension
+	public static class FunctionExtension
 	{
-		static public string FullName(this Person person)
+		public static string FullName(this Person person)
 		{
 			return person.LastName + ", " + person.FirstName;
+		}
+
+		[Sql.Function("SUM", ServerSideOnly = true)]
+		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
+		{
+			throw new InvalidOperationException();
 		}
 	}
 }

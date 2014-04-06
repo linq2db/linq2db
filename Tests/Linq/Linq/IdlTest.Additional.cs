@@ -44,8 +44,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TestMono03Mono([IncludeDataContexts(ProviderName.MySql)] string context)
+		[Test, IncludeDataContextSource(ProviderName.MySql)]
+		public void TestMono03Mono(string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That(new GenericConcatQuery1(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);

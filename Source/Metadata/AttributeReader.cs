@@ -3,12 +3,14 @@ using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
+	using Extensions;
+
 	public class AttributeReader : IMetadataReader
 	{
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = type.GetCustomAttributes(typeof(T), inherit);
+			var attrs = type.GetCustomAttributesEx(typeof(T), inherit);
 			var arr   = new T[attrs.Length];
 
 			for (var i = 0; i < attrs.Length; i++)
@@ -20,7 +22,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var attrs = memberInfo.GetCustomAttributes(typeof(T), inherit);
+			var attrs = memberInfo.GetCustomAttributesEx(typeof(T), inherit);
 			var arr   = new T[attrs.Length];
 
 			for (var i = 0; i < attrs.Length; i++)

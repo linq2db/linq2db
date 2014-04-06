@@ -2,26 +2,25 @@
 using System.Linq.Expressions;
 
 #if DEBUG
+// ReSharper disable InconsistentNaming
+
 #pragma warning disable 3010
 #endif
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlBuilder;
+	using SqlQuery;
 
-	public interface IBuildContext
+	interface IBuildContext
 	{
 #if DEBUG
-// ReSharper disable InconsistentNaming
-		[CLSCompliant(false)]
 		string _sqlQueryText { get; }
-// ReSharper restore InconsistentNaming
 #endif
 
-		ExpressionBuilder  Builder    { get; }
-		Expression         Expression { get; }
-		SqlQuery           SqlQuery   { get; set; }
-		IBuildContext      Parent     { get; set; }
+		ExpressionBuilder  Builder     { get; }
+		Expression         Expression  { get; }
+		SelectQuery        SelectQuery { get; set; }
+		IBuildContext      Parent      { get; set; }
 
 		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
 		Expression         BuildExpression     (Expression expression, int level);

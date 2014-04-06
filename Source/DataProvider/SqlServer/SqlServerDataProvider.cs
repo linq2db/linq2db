@@ -64,6 +64,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SetProviderField<IDataReader,SqlString  ,SqlString  >((r,i) => r.GetString  (i));
 			}
+
+			_sqlOptimizer              = new SqlServerSqlOptimizer    (SqlProviderFlags);
+			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
+			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 		}
 
 		#endregion
@@ -103,22 +107,37 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new SqlConnection(connectionString);
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlProvider(SqlProviderFlags);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlProvider(SqlProviderFlags);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
 			}
 
 			throw new InvalidOperationException();
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2000SqlOptimizer;
+		readonly ISqlOptimizer _sqlServer2005SqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			switch (Version)
+			{
+				case SqlServerVersion.v2000 : return _sqlServer2000SqlOptimizer;
+				case SqlServerVersion.v2005 : return _sqlServer2005SqlOptimizer;
+			}
+
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -187,6 +206,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
 			switch (dataType)
 			{
 				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;
@@ -255,7 +277,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region BulkCopy
 
 		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T>  source)
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
@@ -263,24 +287,32 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (connection != null)
 			{
-				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var rd = new BulkCopyReader(ed, source);
-				var bc = dataConnection.Transaction == null ?
+				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var columns = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
+				var sb      = CreateSqlBuilder();
+				var rd      = new BulkCopyReader(this, columns, source);
+
+				using (var bc = dataConnection.Transaction == null ?
 					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction);
+					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction))
+				{
+					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
+					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-				bc.BatchSize            = maxBatchSize;
-				bc.DestinationTableName = ed.TableName;
+					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
 
-				for (var i = 0; i < rd.Columns.Length; i++)
-					bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(i, rd.Columns[i].ColumnName));
+					for (var i = 0; i < columns.Count; i++)
+						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
+							i,
+							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
 
-				bc.WriteToServer(rd);
+					bc.WriteToServer(rd);
 
-				return rd.Count;
+					return rd.Count;
+				}
 			}
 
-			return base.BulkCopy(dataConnection, maxBatchSize, source);
+			return base.BulkCopy(dataConnection, options, source);
 		}
 
 		#endregion

@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 
 	class ExpressionTestGenerator
@@ -181,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 						var ex = (MethodCallExpression)expr;
 						var mi = ex.Method;
 
-						var attrs = mi.GetCustomAttributes(typeof(ExtensionAttribute), false);
+						var attrs = mi.GetCustomAttributesEx(typeof(ExtensionAttribute), false);
 
 						if (attrs.Length != 0)
 						{
@@ -494,8 +495,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (type.Namespace != null && type.Namespace.StartsWith("System") ||
 				IsAnonymous(type)                                             ||
-				type.Assembly == GetType().Assembly                           ||
-				type.IsGenericType && type.GetGenericTypeDefinition() != type)
+				type.AssemblyEx() == GetType().AssemblyEx()                   ||
+				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() != type)
 				return;
 
 			var name = type.Name;//.Replace('<', '_').Replace('>', '_').Replace('`', '_').Replace("__f__", "");
@@ -505,16 +506,16 @@ namespace LinqToDB.Linq.Builder
 			if (idx > 0)
 				name = name.Substring(0, idx);
 
-			if (type.IsGenericType)
+			if (type.IsGenericTypeEx())
 				type = type.GetGenericTypeDefinition();
 
-			var baseClasses = new[] { type.BaseType }
+			var baseClasses = new[] { type.BaseTypeEx() }
 				.Where(t => t != null && t != typeof(object))
-				.Concat(type.GetInterfaces()).ToArray();
+				.Concat(type.GetInterfacesEx()).ToArray();
 
-			var ctors = type.GetConstructors().Select(c =>
+			var ctors = type.GetConstructorsEx().Select(c =>
 			{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 				var attrs = c.GetCustomAttributes(false).ToList();
 #else
 				var attrs = c.GetCustomAttributesData();
@@ -529,9 +530,9 @@ namespace LinqToDB.Linq.Builder
 			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
 				ctors.Clear();
 
-			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
+			var members = type.GetFieldsEx().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 				var attrs = f.GetCustomAttributes(false).ToList();
 #else
 				var attrs = f.GetCustomAttributesData();
@@ -542,9 +543,9 @@ namespace LinqToDB.Linq.Builder
 					f.Name);
 			})
 			.Concat(
-				type.GetProperties().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
+				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 					var attrs = p.GetCustomAttributes(false).ToList();
 #else
 					var attrs = p.GetCustomAttributesData();
@@ -554,12 +555,12 @@ namespace LinqToDB.Linq.Builder
 						attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(p.PropertyType),
 						p.Name,
-						type.IsInterface ? "" : "public ");
+						type.IsInterfaceEx() ? "" : "public ");
 				}))
 			.Concat(
-				type.GetMethods().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
+				type.GetMethodsEx().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
 				{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 					var attrs = m.GetCustomAttributes(false).ToList();
 #else
 					var attrs = m.GetCustomAttributesData();
@@ -575,19 +576,19 @@ namespace LinqToDB.Linq.Builder
 						m.IsVirtual  ? "virtual "  :
 						m.IsAbstract ? "abstract " :
 						               "",
-						type.IsInterface ? "" : "public ");
+						type.IsInterfaceEx() ? "" : "public ");
 				}))
 			.ToArray();
 
 			{
-#if SILVERLIGHT
-				var attrs = type.GetCustomAttributes(false).ToList();
+#if SILVERLIGHT || NETFX_CORE
+				var attrs = type.GetCustomAttributesEx(false).ToList();
 #else
 				var attrs = type.GetCustomAttributesData();
 #endif
 
 				_typeBuilder.AppendFormat(
-					type.IsGenericType ?
+					type.IsGenericTypeEx() ?
 @"
 namespace {0}
 {{{8}
@@ -606,13 +607,13 @@ namespace {0}
 }}
 ",
 					type.Namespace,
-					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
+					type.IsInterfaceEx() ? "interface" : type.IsClassEx() ? "class" : "struct",
 					name,
-					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : null,
+					type.IsGenericTypeEx() ? GetTypeNames(type.GetGenericArgumentsEx(), ",") : null,
 					ctors.Count == 0 ? "" : ctors.Aggregate((s,t) => s + "\n" + t),
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
-					type.IsPublic ? "public " : "",
-					type.IsAbstract && !type.IsInterface ? "abstract " : "",
+					type.IsPublicEx() ? "public " : "",
+					type.IsAbstractEx() && !type.IsInterfaceEx() ? "abstract " : "",
 					attrs.Count > 0 ? attrs.Select(a => "\n\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					members.Length > 0 ?
 						(ctors.Count != 0 ? "\n" : "") + members.Aggregate((f1,f2) => f1 + "\n" + f2) :
@@ -652,9 +653,9 @@ namespace {0}
 				return null;
 			}
 
-			if (type.IsGenericType)
+			if (type.IsGenericTypeEx())
 			{
-				var args = type.GetGenericArguments();
+				var args = type.GetGenericArgumentsEx();
 
 				name = "";
 
@@ -690,7 +691,7 @@ namespace {0}
 			return type.ToString();
 		}
 
-		readonly HashSet<MemberInfo> _usedMembers = new HashSet<MemberInfo>();
+		readonly HashSet<object> _usedMembers = new HashSet<object>();
 
 		void VisitMembers(Expression expr)
 		{
@@ -757,16 +758,16 @@ namespace {0}
 
 			_usedTypes.Add(type);
 
-			if (type.IsGenericType)
-				foreach (var arg in type.GetGenericArguments())
+			if (type.IsGenericTypeEx())
+				foreach (var arg in type.GetGenericArgumentsEx())
 					AddType(arg);
 
-			if (type.IsGenericType && type.GetGenericTypeDefinition() != type)
+			if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() != type)
 				AddType(type.GetGenericTypeDefinition());
 
-			AddType(type.BaseType);
+			AddType(type.BaseTypeEx());
 
-			foreach (var i in type.GetInterfaces())
+			foreach (var i in type.GetInterfacesEx())
 				AddType(i);
 		}
 
@@ -791,6 +792,75 @@ namespace {0}
 					}
 			}
 		}
+
+#if NETFX_CORE
+
+		public string GenerateSource(Expression expr)
+		{
+			string fileName = null;
+
+			try
+			{
+				var tf  = Windows.Storage.ApplicationData.Current.TemporaryFolder;
+				var dir = tf.CreateFolderAsync("linq2db", Windows.Storage.CreationCollisionOption.OpenIfExists).AsTask().Result;
+
+				var number = 0;//DateTime.Now.Ticks;
+
+				fileName = Path.Combine("ExpressionTest." + number  + ".cs");
+
+				expr.Visit(new Action<Expression>(VisitMembers));
+				expr.Visit(new Action<Expression>(VisitTypes));
+
+				foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
+					BuildType(type);
+
+				expr.Visit(new Func<Expression,bool>(BuildExpression));
+
+				_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
+
+				var file = dir.CreateFileAsync(fileName, Windows.Storage.CreationCollisionOption.ReplaceExisting).AsTask().Result;
+
+				Windows.Storage.FileIO.WriteTextAsync(
+					file,
+					string.Format(@"//---------------------------------------------------------------------------------------------------
+// This code was generated by LinqToDB.
+//---------------------------------------------------------------------------------------------------
+using System;
+using System.Linq.Expressions;
+
+using NUnit.Framework;
+{0}
+namespace Tests.UserTests
+{{
+	[TestFixture]
+	public class UserTest : TestBase
+	{{
+		[Test]
+		public void Test([DataContexts] string context)
+		{{
+			// {1}
+			using (var db = GetDataContext(context))
+			{{
+				{2};
+			}}
+		}}
+	}}
+}}
+",
+					_typeBuilder,
+					expr,
+					_exprBuilder)).AsTask().RunSynchronously();
+
+				fileName = Path.Combine(dir.Name, fileName);
+			}
+			catch (Exception)
+			{
+			}
+
+			return fileName;
+		}
+
+#else
 
 		public string GenerateSource(Expression expr)
 		{
@@ -867,5 +937,7 @@ namespace Tests.UserTests
 
 			return fileName;
 		}
+
+#endif
 	}
 }

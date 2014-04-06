@@ -11,11 +11,10 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlBuilder;
-	using SqlProvider;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	public partial class ExpressionBuilder
+	partial class ExpressionBuilder
 	{
 		#region Sequence
 
@@ -23,36 +22,39 @@ namespace LinqToDB.Linq.Builder
 
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
-			new TableBuilder         (),
-			new SelectBuilder        (),
-			new SelectManyBuilder    (),
-			new WhereBuilder         (),
-			new OrderByBuilder       (),
-			new GroupByBuilder       (),
-			new JoinBuilder          (),
-			new TakeSkipBuilder      (),
-			new DefaultIfEmptyBuilder(),
-			new DistinctBuilder      (),
-			new FirstSingleBuilder   (),
-			new AggregationBuilder   (),
-			new ScalarSelectBuilder  (),
-			new CountBuilder         (),
-			new PassThroughBuilder   (),
-			new TableAttributeBuilder(),
-			new InsertBuilder        (),
-			new InsertBuilder.Into   (),
-			new InsertBuilder.Value  (),
-			new InsertOrUpdateBuilder(),
-			new UpdateBuilder        (),
-			new UpdateBuilder.Set    (),
-			new DeleteBuilder        (),
-			new ContainsBuilder      (),
-			new AllAnyBuilder        (),
-			new ConcatUnionBuilder   (),
-			new IntersectBuilder     (),
-			new CastBuilder          (),
-			new OfTypeBuilder        (),
-			new AsUpdatableBuilder   (),
+			new TableBuilder               (),
+			new SelectBuilder              (),
+			new SelectManyBuilder          (),
+			new WhereBuilder               (),
+			new OrderByBuilder             (),
+			new GroupByBuilder             (),
+			new JoinBuilder                (),
+			new TakeSkipBuilder            (),
+			new DefaultIfEmptyBuilder      (),
+			new DistinctBuilder            (),
+			new FirstSingleBuilder         (),
+			new AggregationBuilder         (),
+			new ScalarSelectBuilder        (),
+			new CountBuilder               (),
+			new PassThroughBuilder         (),
+			new TableAttributeBuilder      (),
+			new InsertBuilder              (),
+			new InsertBuilder.Into         (),
+			new InsertBuilder.Value        (),
+			new InsertOrUpdateBuilder      (),
+			new UpdateBuilder              (),
+			new UpdateBuilder.Set          (),
+			new DeleteBuilder              (),
+			new ContainsBuilder            (),
+			new AllAnyBuilder              (),
+			new ConcatUnionBuilder         (),
+			new IntersectBuilder           (),
+			new CastBuilder                (),
+			new OfTypeBuilder              (),
+			new AsUpdatableBuilder         (),
+			new LoadWithBuilder            (),
+			new DropBuilder                (),
+			new ChangeTypeExpressionBuilder(),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -72,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly public List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
-#if FW4 || SILVERLIGHT
+#if FW4 || SILVERLIGHT || NETFX_CORE
 
 		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
 		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
@@ -93,13 +95,13 @@ namespace LinqToDB.Linq.Builder
 			_query               = query;
 			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
-			CompiledParameters = compiledParameters;
-			DataContextInfo    = dataContext;
-			OriginalExpression = expression;
+			CompiledParameters   = compiledParameters;
+			DataContextInfo      = dataContext;
+			OriginalExpression   = expression;
 
-			_visitedExpressions = new HashSet<Expression>();
-			Expression         = ConvertExpressionTree(expression);
-			_visitedExpressions = null;
+			_visitedExpressions  = new HashSet<Expression>();
+			Expression           = ConvertExpressionTree(expression);
+			_visitedExpressions  = null;
 
 			if (Configuration.AvoidSpecificDataProviderAPI)
 			{
@@ -124,12 +126,6 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[] CompiledParameters;
 		public readonly List<IBuildContext>   Contexts = new List<IBuildContext>();
 
-		private ISqlProvider _sqlProvider;
-		public  ISqlProvider  SqlProvider
-		{
-			get { return _sqlProvider ?? (_sqlProvider = DataContextInfo.CreateSqlProvider()); }
-		}
-
 		public static readonly ParameterExpression ContextParam     = Expression.Parameter(typeof(QueryContext), "context");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
@@ -148,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal Query<T> Build<T>()
 		{
-			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SqlQuery()));
+			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
 			
 			if (_reorder)
 				lock (_sync)
@@ -189,6 +185,18 @@ namespace LinqToDB.Linq.Builder
 
 				n = builder.BuildCounter;
 			}
+
+			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+		}
+
+		[JetBrains.Annotations.NotNull]
+		public ISequenceBuilder GetBuilder(BuildInfo buildInfo)
+		{
+			buildInfo.Expression = buildInfo.Expression.Unwrap();
+
+			foreach (var builder in _builders)
+				if (builder.CanBuild(this, buildInfo))
+					return builder;
 
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
@@ -235,13 +243,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				var call = (MethodCallExpression)expression;
 
-				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericType)
+				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericTypeEx())
 				{
 					var type = call.Type.GetGenericTypeDefinition();
 
 					if (type == typeof(IQueryable<>) || type == typeof(IEnumerable<>))
 					{
-						var arg = call.Type.GetGenericArguments();
+						var arg = call.Type.GetGenericArgumentsEx();
 
 						if (arg.Length == 1)
 						{
@@ -254,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 
 			SequenceParameter = Expression.Parameter(paramType, "cp");
 
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SqlQuery()), SequenceParameter);
+			var sequence = ConvertSequence(new BuildInfo((IBuildContext)null, expr, new SelectQuery()), SequenceParameter);
 
 			if (sequence != null)
 			{
@@ -374,13 +382,13 @@ namespace LinqToDB.Linq.Builder
 		private MethodInfo[] _enumerableMethods;
 		public  MethodInfo[]  EnumerableMethods
 		{
-			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethods()); }
+			get { return _enumerableMethods ?? (_enumerableMethods = typeof(Enumerable).GetMethodsEx()); }
 		}
 
 		private MethodInfo[] _queryableMethods;
 		public  MethodInfo[]  QueryableMethods
 		{
-			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethods()); }
+			get { return _queryableMethods ?? (_queryableMethods = typeof(Queryable).GetMethodsEx()); }
 		}
 
 		readonly Dictionary<Expression, Expression> _optimizedExpressions = new Dictionary<Expression, Expression>();
@@ -392,12 +400,12 @@ namespace LinqToDB.Linq.Builder
 			if (_optimizedExpressions.TryGetValue(expression, out expr))
 				return expr;
 
-			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,Expression>)OptimizeExpressionImpl);
+			_optimizedExpressions[expression] = expr = expression.Transform((Func<Expression,TransformInfo>)OptimizeExpressionImpl);
 
 			return expr;
 		}
 
-		Expression OptimizeExpressionImpl(Expression expr)
+		TransformInfo OptimizeExpressionImpl(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -409,11 +417,11 @@ namespace LinqToDB.Linq.Builder
 						//
 						if (me.Member.Name == "Count")
 						{
-							var isList = typeof(ICollection).IsAssignableFrom(me.Member.DeclaringType);
+							var isList = typeof(ICollection).IsAssignableFromEx(me.Member.DeclaringType);
 
 							if (!isList)
-								isList = me.Member.DeclaringType.GetInterfaces()
-									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IList<>));
+								isList = me.Member.DeclaringType.GetInterfacesEx()
+									.Any(t => t.IsGenericTypeEx() && t.GetGenericTypeDefinition() == typeof(IList<>));
 
 							if (isList)
 							{
@@ -421,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 									.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
 									.MakeGenericMethod(me.Expression.Type.GetItemType());
 
-								return Expression.Call(null, mi, me.Expression);
+								return new TransformInfo(Expression.Call(null, mi, me.Expression));
 							}
 						}
 
@@ -430,10 +438,10 @@ namespace LinqToDB.Linq.Builder
 							var ex = ConvertIQueriable(expr);
 
 							if (!ReferenceEquals(ex, expr))
-								return ConvertExpressionTree(ex);
+								return new TransformInfo(ConvertExpressionTree(ex));
 						}
 
-						return ConvertSubquery(expr);
+						return new TransformInfo(ConvertSubquery(expr));
 					}
 
 				case ExpressionType.Call :
@@ -444,22 +452,23 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"              : return ConvertWhere     (call);
-								case "GroupBy"            : return ConvertGroupBy   (call);
-								case "SelectMany"         : return ConvertSelectMany(call);
-								case "Select"             : return ConvertSelect    (call);
+								case "Where"              : return new TransformInfo(ConvertWhere     (call));
+								case "GroupBy"            : return new TransformInfo(ConvertGroupBy   (call));
+								case "SelectMany"         : return new TransformInfo(ConvertSelectMany(call));
+								case "Select"             : return new TransformInfo(ConvertSelect    (call));
 								case "LongCount"          :
 								case "Count"              :
 								case "Single"             :
 								case "SingleOrDefault"    :
 								case "First"              :
-								case "FirstOrDefault"     : return ConvertPredicate (call);
+								case "FirstOrDefault"     : return new TransformInfo(ConvertPredicate (call));
 								case "Min"                :
-								case "Max"                : return ConvertSelector  (call, true);
+								case "Max"                : return new TransformInfo(ConvertSelector  (call, true));
 								case "Sum"                :
-								case "Average"            : return ConvertSelector  (call, false);
+								case "Average"            : return new TransformInfo(ConvertSelector  (call, false));
 								case "ElementAt"          :
-								case "ElementAtOrDefault" : return ConvertElementAt (call);
+								case "ElementAtOrDefault" : return new TransformInfo(ConvertElementAt (call));
+								case "LoadWith"           : return new TransformInfo(expr, true);
 							}
 						}
 						else
@@ -467,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 							var l = ConvertMethodExpression(call.Method);
 
 							if (l != null)
-								return OptimizeExpression(ConvertMethod(call, l));
+								return new TransformInfo(OptimizeExpression(ConvertMethod(call, l)));
 
 							if (CompiledParameters == null && typeof(IQueryable).IsSameOrParentOf(expr.Type))
 							{
@@ -478,16 +487,16 @@ namespace LinqToDB.Linq.Builder
 									var ex = ConvertIQueriable(expr);
 
 									if (!ReferenceEquals(ex, expr))
-										return ConvertExpressionTree(ex);
+										return new TransformInfo(ConvertExpressionTree(ex));
 								}
 							}
 						}
 
-						return ConvertSubquery(expr);
+						return new TransformInfo(ConvertSubquery(expr));
 					}
 			}
 
-			return expr;
+			return new TransformInfo(expr);
 		}
 
 		LambdaExpression ConvertMethodExpression(MemberInfo mi)
@@ -570,10 +579,10 @@ namespace LinqToDB.Linq.Builder
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
 
 			call   = (MethodCallExpression)OptimizeExpression(call);
 			select = select.MakeGenericMethod(call.Type, expr.Type);
@@ -639,7 +648,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var ex in exprs)
 				{
 					var type   = typeof(ExpressionHoder<,>).MakeGenericType(expr.Type, ex.Type);
-					var fields = type.GetFields();
+					var fields = type.GetFieldsEx();
 
 					expr = Expression.MemberInit(
 						Expression.New(type),
@@ -686,7 +695,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(sequence, method.Arguments[0]) || !ReferenceEquals(predicate, method.Arguments[1]))
 			{
 				var methodInfo  = method.Method.GetGenericMethodDefinition();
-				var genericType = sequence.Type.GetGenericArguments()[0];
+				var genericType = sequence.Type.GetGenericArgumentsEx()[0];
 				var newMethod   = methodInfo.MakeGenericMethod(genericType);
 
 				method = Expression.Call(newMethod, sequence, predicate);
@@ -1151,7 +1160,7 @@ namespace LinqToDB.Linq.Builder
 						if (isGeneric)
 							return true;
 
-						var ts = ps[0].ParameterType.GetGenericArguments();
+						var ts = ps[0].ParameterType.GetGenericArgumentsEx();
 						return ts[0] == types[1] || isDefault && ts[0].IsGenericParameter;
 					}
 				}
@@ -1302,17 +1311,17 @@ namespace LinqToDB.Linq.Builder
 			return method.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx().Length == 2) :
 				QueryableMethods
 					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+					.First(m => m.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx().Length == 2);
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)
 		{
 			return method.Method.DeclaringType == typeof(Enumerable) ?
-				method.Method.GetParameters()[1].ParameterType.GetGenericArguments() :
-				method.Method.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments();
+				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx() :
+				method.Method.GetParameters()[1].ParameterType.GetGenericArgumentsEx()[0].GetGenericArgumentsEx();
 		}
 
 		#endregion

@@ -17,8 +17,8 @@ namespace Tests.Linq
 	{
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
-		[Test]
-		public void MapMember1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MapMember1(string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
@@ -28,8 +28,8 @@ namespace Tests.Linq
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
-		[Test]
-		public void MapMember2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MapMember2(string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
@@ -39,8 +39,8 @@ namespace Tests.Linq
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
-		[Test]
-		public void MapMember3([DataContexts(ProviderName.SqlCe)] string context)
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void MapMember3(string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
@@ -63,8 +63,8 @@ namespace Tests.Linq
 			return (p, id, n) => p.Children.Count(c => c.ChildID > id) + n;
 		}
 
-		[Test]
-		public void MethodExpression4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MethodExpression4(string context)
 		{
 			var n = 3;
 
@@ -87,8 +87,8 @@ namespace Tests.Linq
 			return (db, p, n) => Sql.AsSql(db.Child.Where(c => c.ParentID == p.ParentID).Count() + n);
 		}
 
-		[Test]
-		public void MethodExpression5([DataContexts(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Firebird)]
+		public void MethodExpression5(string context)
 		{
 			var n = 2;
 
@@ -111,8 +111,8 @@ namespace Tests.Linq
 			return (ch, p) => ch.Where(c => c.ParentID == p.ParentID).Count();
 		}
 
-		[Test]
-		public void MethodExpression6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MethodExpression6(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -133,8 +133,8 @@ namespace Tests.Linq
 			return (ch, p, n) => Sql.AsSql(ch.Where(c => c.ParentID == p.ParentID).Count() + n);
 		}
 
-		[Test]
-		public void MethodExpression7([DataContexts(ProviderName.SqlCe, ProviderName.Firebird)] string context)
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Firebird)]
+		public void MethodExpression7(string context)
 		{
 			var n = 2;
 
@@ -158,8 +158,8 @@ namespace Tests.Linq
 				select p;
 		}
 
-		[Test]
-		public void MethodExpression8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void MethodExpression8(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -305,8 +305,8 @@ namespace Tests.Linq
 			return parent => parent.Children.SelectMany(gc => gc.GrandChildren);
 		}
 
-		[Test]
-		public void AssociationMethodExpression([DataContexts] string context)
+		[Test, DataContextSource]
+		public void AssociationMethodExpression(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

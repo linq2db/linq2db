@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 
 		volatile Type _connectionType;
 
-		private Type GetConnectionType()
+		protected Type GetConnectionType()
 		{
 			if (_connectionType == null)
 				lock (_sync)
@@ -51,19 +51,25 @@ namespace LinqToDB.DataProvider
 
 		Func<string,IDbConnection> _createConnection;
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			if (_createConnection == null)
 			{
-				var p = Expression.Parameter(typeof(string));
-				var l = Expression.Lambda<Func<string,IDbConnection>>(
-					Expression.New(GetConnectionType().GetConstructor(new[] { typeof(string) }), p),
-					p);
-
+				var l = CreateConnectionExpression(GetConnectionType());
 				_createConnection = l.Compile();
 			}
 
 			return _createConnection(connectionString);
+		}
+
+		internal static Expression<Func<string,IDbConnection>> CreateConnectionExpression(Type connectionType)
+		{
+			var p = Expression.Parameter(typeof(string));
+			var l = Expression.Lambda<Func<string,IDbConnection>>(
+				Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p),
+				p);
+
+			return l;
 		}
 
 		#region Expression Helpers
@@ -80,6 +86,27 @@ namespace LinqToDB.DataProvider
 			var p = Expression.Parameter(typeof(IDbDataParameter));
 			var l = Expression.Lambda<Action<IDbDataParameter>>(
 				Expression.Assign(
+					Expression.PropertyOrField(
+						Expression.Convert(p, pType),
+						propertyName),
+					Expression.Constant(value)),
+				p);
+
+			return l.Compile();
+		}
+
+		protected Func<IDbDataParameter,bool> IsGetParameter(
+			Type connectionType,
+			//   ((FbParameter)parameter).   FbDbType =           FbDbType.          TimeStamp;
+			string parameterTypeName, string propertyName, string dbTypeName, string valueName)
+		{
+			var pType  = connectionType.Assembly.GetType(parameterTypeName.Contains(".") ? parameterTypeName : connectionType.Namespace + "." + parameterTypeName, true);
+			var dbType = connectionType.Assembly.GetType(dbTypeName.       Contains(".") ? dbTypeName        : connectionType.Namespace + "." + dbTypeName,        true);
+			var value  = Enum.Parse(dbType, valueName);
+
+			var p = Expression.Parameter(typeof(IDbDataParameter));
+			var l = Expression.Lambda<Func<IDbDataParameter,bool>>(
+				Expression.Equal(
 					Expression.PropertyOrField(
 						Expression.Convert(p, pType),
 						propertyName),

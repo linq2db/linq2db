@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -9,47 +10,62 @@ namespace LinqToDB.DataProvider
 
 	class BulkCopyReader : IDataReader
 	{
-		public  readonly ColumnDescriptor[] Columns;
-		private readonly IEnumerable        _collection;
-		private readonly IEnumerator        _enumerator;
+		public BulkCopyReader(IDataProvider dataProvider, List<ColumnDescriptor> columns, IEnumerable collection)
+		{
+			_dataProvider = dataProvider;
+			_columns      = columns;
+			_enumerator   = collection.GetEnumerator();
+			_columnTypes  = _columns
+				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType) : c.DataType)
+				.ToArray();
+		}
 
 		public int Count;
 
-		public BulkCopyReader(EntityDescriptor entityDescriptor, IEnumerable collection)
+		readonly DataType[]             _columnTypes;
+		readonly IDataProvider          _dataProvider;
+		readonly List<ColumnDescriptor> _columns;
+		readonly IEnumerator            _enumerator;
+		readonly Parameter              _valueConverter = new Parameter();
+
+		internal class Parameter : IDbDataParameter
 		{
-			Columns     = entityDescriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-			_collection = collection;
-			_enumerator = _collection.GetEnumerator();
+			public DbType             DbType        { get; set; }
+			public ParameterDirection Direction     { get; set; }
+			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
+			public string             ParameterName { get; set; }
+			public string             SourceColumn  { get; set; }
+			public DataRowVersion     SourceVersion { get; set; }
+			public object             Value         { get; set; }
+			public byte               Precision     { get; set; }
+			public byte               Scale         { get; set; }
+			public int                Size          { get; set; }
 		}
-
-		#region Implementation of IDisposable
-
-		public void Dispose()
-		{
-		}
-
-		#endregion
 
 		#region Implementation of IDataRecord
 
 		public string GetName(int i)
 		{
-			return Columns[i].ColumnName;
+			return _columns[i].ColumnName;
 		}
 
 		public Type GetFieldType(int i)
 		{
-			return Columns[i].MemberType;
+			return _dataProvider.ConvertParameterType(_columns[i].MemberType, _columnTypes[i]);
 		}
 
 		public object GetValue(int i)
 		{
-			return Columns[i].GetValue(_enumerator.Current);
+			var value = _columns[i].GetValue(_enumerator.Current);
+
+			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
+
+			return _valueConverter.Value;
 		}
 
 		public int FieldCount
 		{
-			get { return Columns.Length; }
+			get { return _columns.Count; }
 		}
 
 		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
@@ -78,7 +94,7 @@ namespace LinqToDB.DataProvider
 		public decimal     GetDecimal     (int i)           { throw new NotImplementedException(); }
 		public DateTime    GetDateTime    (int i)           { throw new NotImplementedException(); }
 		public IDataReader GetData        (int i)           { throw new NotImplementedException(); }
-		public bool        IsDBNull       (int i)           { throw new NotImplementedException(); }
+		public bool        IsDBNull       (int i)           { return GetValue(i) == null;          }
 
 		object IDataRecord.this[int i]
 		{
@@ -126,12 +142,20 @@ namespace LinqToDB.DataProvider
 
 		public bool IsClosed
 		{
-			get { throw new NotImplementedException(); }
+			get { return false; }
 		}
 
 		public int RecordsAffected
 		{
 			get { throw new NotImplementedException(); }
+		}
+
+		#endregion
+
+		#region Implementation of IDisposable
+
+		public void Dispose()
+		{
 		}
 
 		#endregion

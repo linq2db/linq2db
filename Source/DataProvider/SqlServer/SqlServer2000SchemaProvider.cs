@@ -5,6 +5,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
+	using SchemaProvider;
 
 	class SqlServer2000SchemaProvider : SqlServerSchemaProvider
 	{

@@ -149,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool EnforceServerSide(IBuildContext context)
 		{
-			return context.SqlQuery.Select.IsDistinct;
+			return context.SelectQuery.Select.IsDistinct;
 		}
 
 		#endregion
@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 		Expression BuildSql(IBuildContext context, Expression expression)
 		{
 			var sqlex = ConvertToSqlExpression(context, expression);
-			var idx   = context.SqlQuery.Select.Add(sqlex);
+			var idx   = context.SelectQuery.Select.Add(sqlex);
 
 			idx = context.ConvertToParentIndex(idx, context);
 
@@ -335,6 +335,9 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		static readonly MethodInfo _whereMethodInfo =
+			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
+
 		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
@@ -373,9 +376,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
 										var tbl    = Activator.CreateInstance(ttype);
-										var method = typeof(LinqExtensions)
-											.GetMethod("Where", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-											.MakeGenericMethod(e.Type, table.ObjectType, ttype);
+										var method = _whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);
 
 										var me = (MemberExpression)e;
 										var op = Expression.Parameter(table.ObjectType, "t");

@@ -8,8 +8,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class MultipleQuery : TestBase
 	{
-		//[Test]
-		public void Test1([DataContexts] string context)
+		//[Test, DataContextSource]
+		public void Test1(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -21,8 +21,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		//[Test]
-		public void Test2([DataContexts] string context)
+		//[Test, DataContextSource]
+		public void Test2(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -34,8 +34,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void Test3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -43,8 +43,8 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child);
 		}
 
-		[Test]
-		public void Test4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test4(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
@@ -58,8 +58,8 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test]
-		public void Test5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test5(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 

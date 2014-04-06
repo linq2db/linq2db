@@ -8,6 +8,9 @@ using System.Xml;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
+
+	using Expressions;
+
 	using Mapping;
 
 	public class SqlServerMappingSchema : MappingSchema
@@ -62,6 +65,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			if (@from           != to          &&
+				@from.FullName  == to.FullName &&
+				@from.Namespace == "Microsoft.SqlServer.Types")
+			{
+				var p = Expression.Parameter(@from);
+
+				return Expression.Lambda(
+					Expression.Call(to, "Parse", new Type[0],
+						Expression.New(
+							MemberHelper.ConstructorOf(() => new SqlString("")),
+							Expression.Call(
+								Expression.Convert(p, typeof(object)),
+								"ToString",
+								new Type[0]))),
+					p);
+			}
+
+			return base.TryGetConvertExpression(@from, to);
+		}
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema
@@ -69,6 +94,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2000MappingSchema()
 			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
 		{
+		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
 	}
 
@@ -78,6 +108,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
 		{
 		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
 	}
 
 	public class SqlServer2008MappingSchema : MappingSchema
@@ -86,6 +121,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
 		{
 		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
 	}
 
 	public class SqlServer2012MappingSchema : MappingSchema
@@ -93,6 +133,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
 		{
+		}
+
+		public override LambdaExpression TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
 	}
 }

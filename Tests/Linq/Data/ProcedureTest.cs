@@ -20,8 +20,8 @@ namespace Tests.Data
 				new DataParameter("@id", @id));
 		}
 
-		[Test]
-		public void Test([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Test(string context)
 		{
 			using (var db = new DataConnection(context))
 			{

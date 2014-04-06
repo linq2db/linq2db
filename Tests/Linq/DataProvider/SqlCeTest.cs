@@ -3,12 +3,14 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -18,8 +20,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlCeTest : DataProviderTestBase
 	{
-		[Test]
-		public void TestParameters([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -32,8 +34,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -110,8 +112,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -160,15 +162,15 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                 Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                 Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                                   Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"),                                   Is.EqualTo(dateTime));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT DateAdd(day, 0, @p)", DataParameter.DateTime("p", dateTime)),                Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime)),                     Is.EqualTo(dateTime));
@@ -177,8 +179,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -213,8 +215,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -242,21 +244,21 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),      Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),      Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),    Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),    Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"),   Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"),   Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),           Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),         Is.EqualTo(null));
 
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(2))",    DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
@@ -272,8 +274,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestSqlTypes([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestSqlTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -313,8 +315,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -333,8 +335,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestTimestamp([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestTimestamp(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -348,8 +350,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -374,8 +376,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -386,8 +388,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.SqlCe)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -398,6 +400,14 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]
+		public void CreateDatabase(string context)
+		{
+			SqlCeTools.CreateDatabase("TestDatabase");
+			Assert.IsTrue(File.Exists("TestDatabase.sdf"));
+			SqlCeTools.DropDatabase  ("TestDatabase");
 		}
 	}
 }

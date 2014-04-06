@@ -4,7 +4,9 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	public class MemberHelper
+	using LinqToDB.Extensions;
+
+	public static class MemberHelper
 	{
 		public static MemberInfo GetMemeberInfo(LambdaExpression func)
 		{
@@ -40,13 +42,13 @@ namespace LinqToDB.Expressions
 		public static MethodInfo MethodOf<T>(Expression<Func<T,object>> func)
 		{
 			var mi = GetMemeberInfo(func);
-			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethod() : (MethodInfo)mi;
+			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static MethodInfo MethodOf(Expression<Func<object>> func)
 		{
 			var mi = GetMemeberInfo(func);
-			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethod() : (MethodInfo)mi;
+			return mi is PropertyInfo ? ((PropertyInfo)mi).GetGetMethodEx() : (MethodInfo)mi;
 		}
 
 		public static ConstructorInfo ConstructorOf<T>(Expression<Func<T,object>> func)

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.OleDb;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -18,13 +20,17 @@ namespace LinqToDB.DataProvider.Access
 		protected AccessDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter = false;
-			SqlProviderFlags.IsSkipSupported        = false;
+			SqlProviderFlags.AcceptsTakeAsParameter    = false;
+			SqlProviderFlags.IsSkipSupported           = false;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 
 			SetCharField("DBTYPE_WCHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r, i));
+
+			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
 
 		static DateTime GetDateTime(IDataReader dr, int idx)
@@ -40,19 +46,26 @@ namespace LinqToDB.DataProvider.Access
 		public override string ConnectionNamespace { get { return typeof(OleDbConnection).Namespace; } }
 		public override Type   DataReaderType      { get { return typeof(OleDbDataReader);           } }
 		
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
+		}
+
+		public override ISqlBuilder CreateSqlBuilder()
+		{
+			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new AccessSchemaProvider();
-		}
-
-		public override ISqlProvider CreateSqlProvider()
-		{
-			return new AccessSqlProvider(SqlProviderFlags);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
@@ -67,7 +80,6 @@ namespace LinqToDB.DataProvider.Access
 				case DataType.Decimal    :
 				case DataType.VarNumeric : 
 					((OleDbParameter)parameter).OleDbType = OleDbType.Decimal; return;
-					//((OleDbParameter)parameter).OleDbType = OleDbType.Currency; return;
 
 				// OleDbType.DBTimeStamp is locale aware, OleDbType.Date is locale neutral.
 				//
@@ -76,11 +88,54 @@ namespace LinqToDB.DataProvider.Access
 
 				case DataType.Text       : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarChar;  return;
 				case DataType.NText      : ((OleDbParameter)parameter).OleDbType = OleDbType.LongVarWChar; return;
-
-				//case DataType.Int32      : ((OleDbParameter)parameter).OleDbType = OleDbType.Integer; return;
 			}
 
 			base.SetParameterType(parameter, dataType);
+		}
+
+		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
+		class CatalogClass
+		{
+		}
+
+		public void CreateDatabase([JetBrains.Annotations.NotNull] string databaseName, bool   deleteIfExists = false)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(".mdb"))
+				databaseName += ".mdb";
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			var connectionString = string.Format(
+				@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5",
+				databaseName);
+
+			CreateFileDatabase(
+				databaseName, deleteIfExists, ".mdb",
+				dbName =>
+				{
+					dynamic catalog = new CatalogClass();
+
+					var conn = catalog.Create(connectionString);
+
+					if (conn != null)
+						conn.Close();
+				});
+		}
+
+		public void DropDatabase([JetBrains.Annotations.NotNull] string databaseName)
+		{
+			if (databaseName == null) throw new ArgumentNullException("databaseName");
+
+			DropFileDatabase(databaseName, ".mdb");
 		}
 	}
 }

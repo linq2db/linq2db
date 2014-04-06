@@ -27,8 +27,14 @@ namespace LinqToDB.Mapping
 		}
 
 		internal ColumnAttribute(string memberName, ColumnAttribute ca)
+			: this(ca)
 		{
-			MemberName      = memberName + "." + ca.MemberName.TrimStart('.');
+			MemberName = memberName + "." + ca.MemberName.TrimStart('.');
+		}
+
+		internal ColumnAttribute(ColumnAttribute ca)
+		{
+			MemberName      = ca.MemberName;
 			Configuration   = ca.Configuration;
 			Name            = ca.Name;
 			DataType        = ca.DataType;
@@ -43,6 +49,9 @@ namespace LinqToDB.Mapping
 			if (ca.HasCanBeNull())    CanBeNull    = ca.CanBeNull;
 			if (ca.HasIsIdentity())   IsIdentity   = ca.IsIdentity;
 			if (ca.HasIsPrimaryKey()) IsPrimaryKey = ca.IsPrimaryKey;
+			if (ca.HasLength())       Length       = ca.Length;
+			if (ca.HasPrecision())    Precision    = ca.Precision;
+			if (ca.HasScale())        Scale        = ca.Scale;
 		}
 
 		public string Configuration { get; set; }
@@ -146,5 +155,41 @@ namespace LinqToDB.Mapping
 		}
 
 		public bool HasCanBeNull() { return _canBeNull.HasValue; }
+
+		private int? _length;
+		/// <summary>
+		/// Gets or sets the length of the database column.
+		/// </summary>
+		public  int   Length
+		{
+			get { return _length ?? 0; }
+			set { _length = value;         }
+		}
+
+		public bool HasLength() { return _length.HasValue; }
+
+		private int? _precision;
+		/// <summary>
+		/// Gets or sets the precision of the database column.
+		/// </summary>
+		public  int   Precision
+		{
+			get { return _precision ?? 0; }
+			set { _precision = value;         }
+		}
+
+		public bool HasPrecision() { return _precision.HasValue; }
+
+		private int? _scale;
+		/// <summary>
+		/// Gets or sets the Scale of the database column.
+		/// </summary>
+		public  int   Scale
+		{
+			get { return _scale ?? 0; }
+			set { _scale = value;         }
+		}
+
+		public bool HasScale() { return _scale.HasValue; }
 	}
 }

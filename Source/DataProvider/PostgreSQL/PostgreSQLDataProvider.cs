@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Expressions;
-
 	using Mapping;
 	using SqlProvider;
 
@@ -19,7 +18,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
+
 			SetCharField("bpchar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}
 
 		internal Type BitStringType;
@@ -57,15 +61,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
-			SetProviderField(BitStringType,      BitStringType,      "GetBitString");
-			SetProviderField(NpgsqlIntervalType, NpgsqlIntervalType, "GetInterval");
-			SetProviderField(NpgsqlInetType,     NpgsqlInetType,     "GetProviderSpecificValue");
-			SetProviderField(NpgsqlTimeType,     NpgsqlTimeType,     "GetTime");
-			SetProviderField(NpgsqlTimeTZType,   NpgsqlTimeTZType,   "GetTimeTZ");
-			SetProviderField(_npgsqlTimeStamp,   _npgsqlTimeStamp,   "GetTimeStamp");
-			SetProviderField(_npgsqlTimeStampTZ, _npgsqlTimeStampTZ, "GetTimeStampTZ");
-			SetProviderField(_npgsqlDate,        _npgsqlDate,        "GetDate");
-			SetProviderField(NpgsqlMacAddressType,  NpgsqlMacAddressType,  "GetProviderSpecificValue");
+			SetProviderField(BitStringType,        BitStringType,        "GetBitString");
+			SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
+			SetProviderField(NpgsqlInetType,       NpgsqlInetType,       "GetProviderSpecificValue");
+			SetProviderField(NpgsqlTimeType,       NpgsqlTimeType,       "GetTime");
+			SetProviderField(NpgsqlTimeTZType,     NpgsqlTimeTZType,     "GetTimeTZ");
+			SetProviderField(_npgsqlTimeStamp,     _npgsqlTimeStamp,     "GetTimeStamp");
+			SetProviderField(_npgsqlTimeStampTZ,   _npgsqlTimeStampTZ,   "GetTimeStampTZ");
+			SetProviderField(_npgsqlDate,          _npgsqlDate,          "GetDate");
+			SetProviderField(NpgsqlMacAddressType, NpgsqlMacAddressType, "GetProviderSpecificValue");
 
 			{
 				// SetProviderField2<NpgsqlDataReader,DateTimeOffset,NpgsqlTimeStampTZ>((r,i) => (NpgsqlTimeStampTZ)r.GetProviderSpecificValue(i));
@@ -135,9 +139,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string ConnectionTypeName  { get { return "Npgsql.NpgsqlConnection, Npgsql"; } }
 		protected override string DataReaderTypeName  { get { return "Npgsql.NpgsqlDataReader, Npgsql"; } }
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlProvider(SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

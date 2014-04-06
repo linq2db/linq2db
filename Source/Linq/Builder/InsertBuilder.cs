@@ -4,10 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Collections.Generic;
-
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class InsertBuilder : MethodCallBuilder
 	{
@@ -22,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var isSubQuery = sequence.SqlQuery.Select.IsDistinct;
+			var isSubQuery = sequence.SelectQuery.Select.IsDistinct;
 
 			if (isSubQuery)
 				sequence = new SubQueryContext(sequence);
@@ -33,8 +31,8 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 					{
-						foreach (var item in sequence.SqlQuery.Insert.Items)
-							sequence.SqlQuery.Select.Expr(item.Expression);
+						foreach (var item in sequence.SelectQuery.Insert.Items)
+							sequence.SelectQuery.Select.Expr(item.Expression);
 						break;
 					}
 
@@ -45,39 +43,39 @@ namespace LinqToDB.Linq.Builder
 							buildInfo,
 							(LambdaExpression)methodCall.Arguments[1].Unwrap(),
 							sequence,
-							sequence.SqlQuery.Insert.Items,
+							sequence.SelectQuery.Insert.Items,
 							sequence);
 
-						sequence.SqlQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
-						sequence.SqlQuery.From.Tables.Clear();
+						sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
+						sequence.SelectQuery.From.Tables.Clear();
 
 						break;
 					}
 
 				case 3 : // static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 					{
-						var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SqlQuery()));
+						var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 						UpdateBuilder.BuildSetter(
 							builder,
 							buildInfo,
 							(LambdaExpression)methodCall.Arguments[2].Unwrap(),
 							into,
-							sequence.SqlQuery.Insert.Items,
+							sequence.SelectQuery.Insert.Items,
 							sequence);
 
-						sequence.SqlQuery.Select.Columns.Clear();
+						sequence.SelectQuery.Select.Columns.Clear();
 
-						foreach (var item in sequence.SqlQuery.Insert.Items)
-							sequence.SqlQuery.Select.Columns.Add(new SqlQuery.Column(sequence.SqlQuery, item.Expression));
+						foreach (var item in sequence.SelectQuery.Insert.Items)
+							sequence.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence.SelectQuery, item.Expression));
 
-						sequence.SqlQuery.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
+						sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
 
 						break;
 					}
 			}
 
-			var insert = sequence.SqlQuery.Insert;
+			var insert = sequence.SelectQuery.Insert;
 
 			var q = insert.Into.Fields.Values
 #if SL4
@@ -89,23 +87,23 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var field in q)
 			{
-				var expr = builder.SqlProvider.GetIdentityExpression(insert.Into, field, false);
+				var expr = builder.DataContextInfo.CreateSqlBuilder().GetIdentityExpression(insert.Into);
 
 				if (expr != null)
 				{
-					insert.Items.Insert(0, new SqlQuery.SetExpression(field, expr));
+					insert.Items.Insert(0, new SelectQuery.SetExpression(field, expr));
 
 					if (methodCall.Arguments.Count == 3)
 					{
-						sequence.SqlQuery.Select.Columns.Insert(0, new SqlQuery.Column(sequence.SqlQuery, insert.Items[0].Expression));
+						sequence.SelectQuery.Select.Columns.Insert(0, new SelectQuery.Column(sequence.SelectQuery, insert.Items[0].Expression));
 					}
 				}
 			}
 
-			sequence.SqlQuery.QueryType           = QueryType.Insert;
-			sequence.SqlQuery.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
+			sequence.SelectQuery.QueryType           = QueryType.Insert;
+			sequence.SelectQuery.Insert.WithIdentity = methodCall.Method.Name == "InsertWithIdentity";
 
-			return new InsertContext(buildInfo.Parent, sequence, sequence.SqlQuery.Insert.WithIdentity);
+			return new InsertContext(buildInfo.Parent, sequence, sequence.SelectQuery.Insert.WithIdentity);
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -182,13 +180,13 @@ namespace LinqToDB.Linq.Builder
 				//
 				if (source.NodeType == ExpressionType.Constant && ((ConstantExpression)source).Value == null)
 				{
-					sequence = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SqlQuery()));
+					sequence = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
 
-					if (sequence.SqlQuery.Select.IsDistinct)
+					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
-					sequence.SqlQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
-					sequence.SqlQuery.From.Tables.Clear();
+					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
+					sequence.SelectQuery.From.Tables.Clear();
 				}
 				// static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target)
 				//
@@ -196,14 +194,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, source));
 
-					if (sequence.SqlQuery.Select.IsDistinct)
+					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
-					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SqlQuery()));
-					sequence.SqlQuery.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
+					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
+					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
 				}
 
-				sequence.SqlQuery.Select.Columns.Clear();
+				sequence.SelectQuery.Select.Columns.Clear();
 
 				return sequence;
 			}
@@ -232,10 +230,10 @@ namespace LinqToDB.Linq.Builder
 				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 				var update   =                   methodCall.Arguments[2].Unwrap();
 
-				if (sequence.SqlQuery.Insert.Into == null)
+				if (sequence.SelectQuery.Insert.Into == null)
 				{
-					sequence.SqlQuery.Insert.Into = (SqlTable)sequence.SqlQuery.From.Tables[0].Source;
-					sequence.SqlQuery.From.Tables.Clear();
+					sequence.SelectQuery.Insert.Into = (SqlTable)sequence.SelectQuery.From.Tables[0].Source;
+					sequence.SelectQuery.From.Tables.Clear();
 				}
 
 				if (update.NodeType == ExpressionType.Lambda)
@@ -245,8 +243,8 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						(LambdaExpression)update,
 						sequence,
-						sequence.SqlQuery.Insert.Into,
-						sequence.SqlQuery.Insert.Items);
+						sequence.SelectQuery.Insert.Into,
+						sequence.SelectQuery.Insert.Items);
 				else
 					UpdateBuilder.ParseSet(
 						builder,
@@ -254,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 						extract,
 						update,
 						sequence,
-						sequence.SqlQuery.Insert.Items);
+						sequence.SelectQuery.Insert.Items);
 
 				return sequence;
 			}

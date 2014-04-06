@@ -2,7 +2,7 @@
 
 // ReSharper disable CheckNamespace
 
-namespace System
+namespace System.Security
 {
 //	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Delegate, Inherited = false)]
 //	class SerializableAttribute : Attribute

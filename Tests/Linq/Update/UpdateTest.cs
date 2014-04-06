@@ -18,8 +18,8 @@ namespace Tests.Update
 	[TestFixture]
 	public class UpdateTest : TestBase
 	{
-		[Test]
-		public void Update1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Update1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,8 +41,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Update2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,8 +64,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update3([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Update3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,8 +87,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update4([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Update4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -114,8 +114,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update5([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Update5(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -141,8 +141,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update6([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Update6(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -168,8 +168,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update7([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void Update7(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -202,8 +202,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Update8(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -227,11 +227,10 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update9([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
-			string context)
+		public void Update9(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -259,11 +258,10 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void Update10([DataContexts(
+		[Test, DataContextSource(
 			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
-			string context)
+		public void Update10(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -291,8 +289,8 @@ namespace Tests.Update
 			}
 		}
 
-		//[Test]
-		public void Update11([DataContexts] string context)
+		//[Test, DataContextSource]
+		public void Update11(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -306,8 +304,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void UpdateAssociation1([DataContexts(ProviderName.Sybase, ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		public void UpdateAssociation1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -337,8 +335,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void UpdateAssociation2([DataContexts(ProviderName.Sybase, ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		public void UpdateAssociation2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -368,8 +366,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void UpdateAssociation3([DataContexts(ProviderName.Sybase, ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		public void UpdateAssociation3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -399,8 +397,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void UpdateAssociation4([DataContexts(ProviderName.Sybase, ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
+		public void UpdateAssociation4(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -466,10 +464,9 @@ namespace Tests.Update
 			public Table1 Table1;
 		}
 
-		[Test]
-		public void UpdateAssociation5([DataContexts(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite,
-			ExcludeLinqService=true)] string context)
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite)]
+		public void UpdateAssociation5(string context)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -492,8 +489,8 @@ namespace Tests.Update
 			}
 		}
 
-		[Test]
-		public void AsUpdatableTest([DataContexts(ProviderName.Informix)] string context)
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void AsUpdatableTest(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -529,8 +526,8 @@ namespace Tests.Update
 			[Column]        public int? GrandChildID;
 		}
 
-		[Test]
-		public void UpdateNullablePrimaryKey([DataContexts] string context)
+		[Test, DataContextSource]
+		public void UpdateNullablePrimaryKey(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -543,6 +540,75 @@ namespace Tests.Update
 
 				if (db is DataConnection)
 					Assert.IsFalse(((DataConnection)db).LastQuery.Contains("IS NULL"));
+			}
+		}
+
+		[Test, DataContextSource(
+			ProviderName.Access,
+			ProviderName.DB2,
+			ProviderName.Firebird,
+			ProviderName.Informix,
+			ProviderName.PostgreSQL,
+			ProviderName.SQLite,
+			ProviderName.SqlCe,
+			ProviderName.SqlServer2000
+			)]
+		public void UpdateTop(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+
+					for (var i = 0; i < 10; i++)
+						db.Insert(new Parent { ParentID = 1000 + i });
+
+					var rowsAffected = db.Parent
+						.Where(p => p.ParentID >= 1000)
+						.Take(5)
+						.Set(p => p.Value1, 1)
+						.Update();
+
+					Assert.That(rowsAffected, Is.EqualTo(5));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
+
+		// TODO: [Test, DataContextSource]
+		public void TestUpdateTake(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var entities =
+					from x in db.Parent
+					where x.ParentID > 1000
+					orderby x.ParentID descending
+					select x;
+
+				entities
+					.Take(10)
+					.Update(x => new Parent { Value1 = 1 });
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe)]
+		public void UpdateSetSelect(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					where p.ParentID < 10000
+					select p
+				)
+				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID)
+				.Update();
 			}
 		}
 	}

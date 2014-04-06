@@ -341,53 +341,101 @@ namespace LinqToDB.DataProvider.Informix
 				from fk in dataConnection.Query(
 					rd =>
 					{
-						var arr = new string[16];
+						var arr = new string[16][];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value = rd["col" + (i + 1)];
-							arr[i] = value is DBNull ? null : (string)value;
+							var value1 = rd["ThisCol"  + (i + 1)];
+							var value2 = rd["OtherCol" + (i + 1)];
+
+							arr[i] = new[]
+							{
+								value1 is DBNull ? null : (string)value1,
+								value2 is DBNull ? null : (string)value2
+							};
+						}
+
+						var id           = rd["ID"].ToString();
+						var name         = rd["Name"].ToString();
+						var thisTableID  = rd["ThisTableID"]. ToString();
+						var otherTableID = rd["OtherTableID"].ToString();
+
+						if (name.StartsWith("r"))
+						{
+							var ns = name.Substring(1).Split('_');
+
+							if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
+							{
+								name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
+							}
 						}
 
 						return new
 						{
-							TableID        = rd["tabid"].ToString(),
-							PrimaryKeyName = (string)rd["idxname"],
+							Name         = name,
+							ThisTableID  = thisTableID,
+							OtherTableID = otherTableID,
 							arr
 						};
 					}, @"
 						SELECT
-							t.tabid,
-							x.idxname,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
-						FROM systables t
-							JOIN sysindexes x ON t.tabid = x.tabid
-						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
+							r.constrid    as ID,
+							tc.constrname as Name,
+							tc.tabid      as ThisTableID,
+							tt.tabname    as ThisTableName,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part1)  as ThisCol1,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part2)  as ThisCol2,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part3)  as ThisCol3,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part4)  as ThisCol4,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part5)  as ThisCol5,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part6)  as ThisCol6,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part7)  as ThisCol7,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part8)  as ThisCol8,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part9)  as ThisCol9,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part10) as ThisCol10,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part11) as ThisCol11,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part12) as ThisCol12,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part13) as ThisCol13,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part14) as ThisCol14,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part15) as ThisCol15,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = tc.tabid AND c.colno = tx.part16) as ThisCol16,
+							oc.tabid      as OtherTableID,
+							ot.tabname    as OtherTableName,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part1)  as OtherCol1,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part2)  as OtherCol2,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part3)  as OtherCol3,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part4)  as OtherCol4,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part5)  as OtherCol5,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part6)  as OtherCol6,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part7)  as OtherCol7,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part8)  as OtherCol8,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part9)  as OtherCol9,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part10) as OtherCol10,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part11) as OtherCol11,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part12) as OtherCol12,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part13) as OtherCol13,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part14) as OtherCol14,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part15) as OtherCol15,
+							(SELECT colname FROM syscolumns c WHERE c.tabid = oc.tabid AND c.colno = ox.part16) as OtherCol16
+						FROM
+							sysreferences r
+								JOIN sysconstraints tc ON r.constrid = tc.constrid
+									JOIN sysindexes tx ON tc.tabid   = tx.tabid
+									JOIN systables  tt ON tc.tabid   = tt.tabid
+								JOIN sysconstraints oc ON r.primary  = oc.constrid
+									JOIN sysindexes ox ON oc.tabid   = ox.tabid
+									JOIN systables  ot ON oc.tabid   = ot.tabid
+						WHERE
+							oc.constrtype = 'P'")
 				from c in fk.arr.Select((c,i) => new { c, i })
-				where c.c != null
-				join pk in _pks on new { fk.TableID, c.i } equals new { pk.TableID, i = pk.Ordinal }
+				where c.c[0] != null
 				select new ForeingKeyInfo
 				{
-					Name         = fk.PrimaryKeyName.Trim(),
-					ThisTableID  = fk.TableID,
-					ThisColumn   = c.c,
-					OtherTableID = pk.TableID,
-					OtherColumn  = pk.ColumnName,
+					Name         = fk.Name.Trim(),
+					ThisTableID  = fk.ThisTableID,
+					ThisColumn   = c.c[0],
+					OtherTableID = fk.OtherTableID,
+					OtherColumn  = c.c[1],
 					Ordinal      = c.i
 				}
 			).ToList();

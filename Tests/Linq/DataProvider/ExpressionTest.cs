@@ -9,13 +9,17 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.DataProvider
 {
+	using System.Configuration;
+
 	[TestFixture]
 	public class ExpressionTest : TestBase
 	{
-		[Test]
-		public void Test1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test1(string context)
 		{
-			using (var conn = new DataConnection(SqlServerFactory.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+
+			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
 			{
 				conn.SetCommand("SELECT 1");
 

@@ -71,103 +71,115 @@ namespace Tests.Create
 				Console.WriteLine("\nBulkCopy LinqDataTypes\n");
 
 				db.BulkCopy(
-					new LinqDataTypes { ID =  1, MoneyValue =  1.11m, DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100), BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  1 },
-					new LinqDataTypes { ID =  2, MoneyValue =  2.49m, DateTimeValue = new DateTime(2005,  5,  15,  5, 15, 25, 500), BoolValue = false, GuidValue = new Guid("bc663a61-7b40-4681-ac38-f9aaf55b706b"), SmallIntValue =  2 },
-					new LinqDataTypes { ID =  3, MoneyValue =  3.99m, DateTimeValue = new DateTime(2009,  9,  19,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d2f970c0-35ac-4987-9cd5-5badb1757436"), SmallIntValue =  3 },
-					new LinqDataTypes { ID =  4, MoneyValue =  4.50m, DateTimeValue = new DateTime(2009,  9,  20,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("40932fdb-1543-4e4a-ac2c-ca371604fb4b"), SmallIntValue =  4 },
-					new LinqDataTypes { ID =  5, MoneyValue =  5.50m, DateTimeValue = new DateTime(2009,  9,  21,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("febe3eca-cb5f-40b2-ad39-2979d312afca"), SmallIntValue =  5 },
-					new LinqDataTypes { ID =  6, MoneyValue =  6.55m, DateTimeValue = new DateTime(2009,  9,  22,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("8d3c5d1d-47db-4730-9fe7-968f6228a4c0"), SmallIntValue =  6 },
-					new LinqDataTypes { ID =  7, MoneyValue =  7.00m, DateTimeValue = new DateTime(2009,  9,  23,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("48094115-83af-46dd-a906-bff26ee21ee2"), SmallIntValue =  7 },
-					new LinqDataTypes { ID =  8, MoneyValue =  8.99m, DateTimeValue = new DateTime(2009,  9,  24,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("c1139f1f-1335-4cd4-937e-92602f732dd3"), SmallIntValue =  8 },
-					new LinqDataTypes { ID =  9, MoneyValue =  9.63m, DateTimeValue = new DateTime(2009,  9,  25,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("46c5c512-3d4b-4cf7-b4e7-1de080789e5d"), SmallIntValue =  9 },
-					new LinqDataTypes { ID = 10, MoneyValue = 10.77m, DateTimeValue = new DateTime(2009,  9,  26,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("61b2bc55-147f-4b40-93ed-a4aa83602fee"), SmallIntValue = 10 },
-					new LinqDataTypes { ID = 11, MoneyValue = 11.45m, DateTimeValue = new DateTime(2009,  9,  27,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d3021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 11 },
-					new LinqDataTypes { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12 });
+					new []
+					{
+						new LinqDataTypes { ID =  1, MoneyValue =  1.11m, DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100), BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  1 },
+						new LinqDataTypes { ID =  2, MoneyValue =  2.49m, DateTimeValue = new DateTime(2005,  5,  15,  5, 15, 25, 500), BoolValue = false, GuidValue = new Guid("bc663a61-7b40-4681-ac38-f9aaf55b706b"), SmallIntValue =  2 },
+						new LinqDataTypes { ID =  3, MoneyValue =  3.99m, DateTimeValue = new DateTime(2009,  9,  19,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d2f970c0-35ac-4987-9cd5-5badb1757436"), SmallIntValue =  3 },
+						new LinqDataTypes { ID =  4, MoneyValue =  4.50m, DateTimeValue = new DateTime(2009,  9,  20,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("40932fdb-1543-4e4a-ac2c-ca371604fb4b"), SmallIntValue =  4 },
+						new LinqDataTypes { ID =  5, MoneyValue =  5.50m, DateTimeValue = new DateTime(2009,  9,  21,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("febe3eca-cb5f-40b2-ad39-2979d312afca"), SmallIntValue =  5 },
+						new LinqDataTypes { ID =  6, MoneyValue =  6.55m, DateTimeValue = new DateTime(2009,  9,  22,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("8d3c5d1d-47db-4730-9fe7-968f6228a4c0"), SmallIntValue =  6 },
+						new LinqDataTypes { ID =  7, MoneyValue =  7.00m, DateTimeValue = new DateTime(2009,  9,  23,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("48094115-83af-46dd-a906-bff26ee21ee2"), SmallIntValue =  7 },
+						new LinqDataTypes { ID =  8, MoneyValue =  8.99m, DateTimeValue = new DateTime(2009,  9,  24,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("c1139f1f-1335-4cd4-937e-92602f732dd3"), SmallIntValue =  8 },
+						new LinqDataTypes { ID =  9, MoneyValue =  9.63m, DateTimeValue = new DateTime(2009,  9,  25,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("46c5c512-3d4b-4cf7-b4e7-1de080789e5d"), SmallIntValue =  9 },
+						new LinqDataTypes { ID = 10, MoneyValue = 10.77m, DateTimeValue = new DateTime(2009,  9,  26,  9, 19, 29,  90), BoolValue = false, GuidValue = new Guid("61b2bc55-147f-4b40-93ed-a4aa83602fee"), SmallIntValue = 10 },
+						new LinqDataTypes { ID = 11, MoneyValue = 11.45m, DateTimeValue = new DateTime(2009,  9,  27,  9, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("d3021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 11 },
+						new LinqDataTypes { ID = 12, MoneyValue = 11.45m, DateTimeValue = new DateTime(2012, 11,   7, 19, 19, 29,  90), BoolValue = true,  GuidValue = new Guid("03021d18-97f0-4dc0-98d0-f0c7df4a1230"), SmallIntValue = 12 }
+					});
 
 				Console.WriteLine("\nBulkCopy Parent\n");
 
 				db.BulkCopy(
-					new Parent { ParentID = 1, Value1 = 1    },
-					new Parent { ParentID = 2, Value1 = null },
-					new Parent { ParentID = 3, Value1 = 3    },
-					new Parent { ParentID = 4, Value1 = null },
-					new Parent { ParentID = 5, Value1 = 5    },
-					new Parent { ParentID = 6, Value1 = 6    },
-					new Parent { ParentID = 7, Value1 = 1    });
+					new []
+					{
+						new Parent { ParentID = 1, Value1 = 1    },
+						new Parent { ParentID = 2, Value1 = null },
+						new Parent { ParentID = 3, Value1 = 3    },
+						new Parent { ParentID = 4, Value1 = null },
+						new Parent { ParentID = 5, Value1 = 5    },
+						new Parent { ParentID = 6, Value1 = 6    },
+						new Parent { ParentID = 7, Value1 = 1    }
+					});
 
 				Console.WriteLine("\nBulkCopy Child\n");
 
 				db.BulkCopy(
-					new Child { ParentID = 1, ChildID = 11 },
-					new Child { ParentID = 2, ChildID = 21 },
-					new Child { ParentID = 2, ChildID = 22 },
-					new Child { ParentID = 3, ChildID = 31 },
-					new Child { ParentID = 3, ChildID = 32 },
-					new Child { ParentID = 3, ChildID = 33 },
-					new Child { ParentID = 4, ChildID = 41 },
-					new Child { ParentID = 4, ChildID = 42 },
-					new Child { ParentID = 4, ChildID = 43 },
-					new Child { ParentID = 4, ChildID = 44 },
-					new Child { ParentID = 6, ChildID = 61 },
-					new Child { ParentID = 6, ChildID = 62 },
-					new Child { ParentID = 6, ChildID = 63 },
-					new Child { ParentID = 6, ChildID = 64 },
-					new Child { ParentID = 6, ChildID = 65 },
-					new Child { ParentID = 6, ChildID = 66 },
-					new Child { ParentID = 7, ChildID = 77 });
+					new []
+					{
+						new Child { ParentID = 1, ChildID = 11 },
+						new Child { ParentID = 2, ChildID = 21 },
+						new Child { ParentID = 2, ChildID = 22 },
+						new Child { ParentID = 3, ChildID = 31 },
+						new Child { ParentID = 3, ChildID = 32 },
+						new Child { ParentID = 3, ChildID = 33 },
+						new Child { ParentID = 4, ChildID = 41 },
+						new Child { ParentID = 4, ChildID = 42 },
+						new Child { ParentID = 4, ChildID = 43 },
+						new Child { ParentID = 4, ChildID = 44 },
+						new Child { ParentID = 6, ChildID = 61 },
+						new Child { ParentID = 6, ChildID = 62 },
+						new Child { ParentID = 6, ChildID = 63 },
+						new Child { ParentID = 6, ChildID = 64 },
+						new Child { ParentID = 6, ChildID = 65 },
+						new Child { ParentID = 6, ChildID = 66 },
+						new Child { ParentID = 7, ChildID = 77 }
+					});
 
 				Console.WriteLine("\nBulkCopy GrandChild\n");
 
 				db.BulkCopy(
-					new GrandChild { ParentID = 1, ChildID = 11, GrandChildID = 111 },
-					new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 211 },
-					new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 212 },
-					new GrandChild { ParentID = 2, ChildID = 22, GrandChildID = 221 },
-					new GrandChild { ParentID = 2, ChildID = 22, GrandChildID = 222 },
-					new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 311 },
-					new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 312 },
-					new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 313 },
-					new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 321 },
-					new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 322 },
-					new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 323 },
-					new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 331 },
-					new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 332 },
-					new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 333 },
-					new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 411 },
-					new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 412 },
-					new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 413 },
-					new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 414 },
-					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 421 },
-					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 422 },
-					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 423 },
-					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 });
+					new []
+					{
+						new GrandChild { ParentID = 1, ChildID = 11, GrandChildID = 111 },
+						new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 211 },
+						new GrandChild { ParentID = 2, ChildID = 21, GrandChildID = 212 },
+						new GrandChild { ParentID = 2, ChildID = 22, GrandChildID = 221 },
+						new GrandChild { ParentID = 2, ChildID = 22, GrandChildID = 222 },
+						new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 311 },
+						new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 312 },
+						new GrandChild { ParentID = 3, ChildID = 31, GrandChildID = 313 },
+						new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 321 },
+						new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 322 },
+						new GrandChild { ParentID = 3, ChildID = 32, GrandChildID = 323 },
+						new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 331 },
+						new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 332 },
+						new GrandChild { ParentID = 3, ChildID = 33, GrandChildID = 333 },
+						new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 411 },
+						new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 412 },
+						new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 413 },
+						new GrandChild { ParentID = 4, ChildID = 41, GrandChildID = 414 },
+						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 421 },
+						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 422 },
+						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 423 },
+						new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 }
+					});
 
 				if (action != null)
 					action(db.Connection);
 			}
 		}
 
-		[Test] public void DB2       ([IncludeDataContexts(ProviderName.DB2)]           string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
-		[Test] public void Informix  ([IncludeDataContexts(ProviderName.Informix)]      string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
-		[Test] public void Oracle    ([IncludeDataContexts(ProviderName.Oracle)]        string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
-		[Test] public void Firebird  ([IncludeDataContexts(ProviderName.Firebird)]      string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
-		[Test] public void PostgreSQL([IncludeDataContexts(ProviderName.PostgreSQL)]    string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
-		[Test] public void MySql     ([IncludeDataContexts(ProviderName.MySql)]         string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
-		[Test] public void Sql2000   ([IncludeDataContexts(ProviderName.SqlServer2000)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
-		[Test] public void Sql2005   ([IncludeDataContexts(ProviderName.SqlServer2005)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test] public void Sybase    ([IncludeDataContexts(ProviderName.Sybase)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
-		[Test] public void Sql2008   ([IncludeDataContexts(ProviderName.SqlServer2008)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test] public void Sql2012   ([IncludeDataContexts(ProviderName.SqlServer2012)] string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test] public void SqlCe     ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
-		[Test] public void SqlCeData ([IncludeDataContexts(ProviderName.SqlCe)]         string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
-		[Test] public void SQLite    ([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
-		[Test] public void SQLiteData([IncludeDataContexts(ProviderName.SQLite)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
-		[Test] public void Access    ([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
-		[Test] public void AccessData([IncludeDataContexts(ProviderName.Access)]        string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
+		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2       (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
+		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix  (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
+		[Test, IncludeDataContextSource(ProviderName.Oracle)]        public void Oracle    (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird  (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL(string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
+		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql     (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000   (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005   (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase    (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008   (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012   (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe     (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
+		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLite    (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLiteData(string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
+		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access    (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
+		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData(string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
 
 		static void AccessAction(IDbConnection connection)
 		{
-			using (var conn = AccessFactory.CreateDataConnection(connection))
+			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					INSERT INTO AllTypes
@@ -202,7 +214,7 @@ namespace Tests.Create
 
 		static void SQLiteAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes
@@ -224,7 +236,7 @@ namespace Tests.Create
 
 		static void InformixAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteFactory.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes

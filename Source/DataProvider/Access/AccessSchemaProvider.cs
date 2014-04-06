@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
 using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.IO;
-
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -205,18 +204,18 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			if (dataType == null)
+			if (dataTypeInfo == null)
 			{
-				switch (columnType.ToLower())
+				switch (dataType.ToLower())
 				{
 					case "text" : return typeof(string);
 					default     : throw new InvalidOperationException();
 				}
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)

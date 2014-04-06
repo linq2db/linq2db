@@ -15,10 +15,10 @@ namespace LinqToDB.Expressions
 
 		public static bool IsConstantable(this Type type)
 		{
-			if (type.IsEnum)
+			if (type.IsEnumEx())
 				return true;
 
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.Int16   :
 				case TypeCode.Int32   :
@@ -37,7 +37,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (type.IsNullable())
-				return type.GetGenericArguments()[0].IsConstantable();
+				return type.GetGenericArgumentsEx()[0].IsConstantable();
 
 			return false;
 		}
@@ -730,7 +730,7 @@ namespace LinqToDB.Expressions
 					{
 						var ue = (UnaryExpression)ex;
 
-						if (!ue.Operand.Type.IsEnum)
+						if (!ue.Operand.Type.IsEnumEx())
 							return ue.Operand.Unwrap();
 
 						break;

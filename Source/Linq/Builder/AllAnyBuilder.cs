@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class AllAnyBuilder : MethodCallBuilder
 	{
@@ -77,8 +77,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var sql = GetSubQuery(null);
 
-				query.Queries[0].SqlQuery = new SqlQuery();
-				query.Queries[0].SqlQuery.Select.Add(sql);
+				query.Queries[0].SelectQuery = new SelectQuery();
+				query.Queries[0].SelectQuery.Select.Add(sql);
 
 				var expr   = Builder.BuildSql(typeof(bool), 0);
 				var mapper = Builder.BuildMapper<object>(expr);
@@ -97,10 +97,10 @@ namespace LinqToDB.Linq.Builder
 				if (expression == null)
 				{
 					var sql   = GetSubQuery(null);
-					var query = SqlQuery;
+					var query = SelectQuery;
 
 					if (Parent != null)
-						query = Parent.SqlQuery;
+						query = Parent.SelectQuery;
 
 					return new[] { new SqlInfo { Query = query, Sql = sql } };
 				}
@@ -143,11 +143,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_subQuerySql == null)
 				{
-					var cond = new SqlQuery.Condition(
+					var cond = new SelectQuery.Condition(
 						_methodCall.Method.Name == "All",
-						new SqlQuery.Predicate.FuncLike(SqlFunction.CreateExists(SqlQuery)));
+						new SelectQuery.Predicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
 
-					_subQuerySql = new SqlQuery.SearchCondition(cond);
+					_subQuerySql = new SelectQuery.SearchCondition(cond);
 				}
 
 				return _subQuerySql;

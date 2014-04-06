@@ -38,6 +38,8 @@ DROP sequence sq_test_user
 /
 DROP sequence sq_test_user_contract
 /
+DROP table t_entity
+/
 
 
 -- Person Table
@@ -815,4 +817,12 @@ SELECT
 	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')
 FROM dual
+/
+
+create table t_entity
+(
+	entity_id integer primary key,
+	time      date,
+	duration  interval day(3) to second(2)
+)
 /

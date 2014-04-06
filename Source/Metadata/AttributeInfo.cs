@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
@@ -26,7 +25,7 @@ namespace LinqToDB.Metadata
 		{
 			if (_func == null)
 			{
-				var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+				var ctors = type.GetConstructorsEx();
 				var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
 				if (ctor != null)
@@ -37,8 +36,8 @@ namespace LinqToDB.Metadata
 								Expression.New(ctor),
 								(IEnumerable<MemberBinding>)Values.Select(k =>
 								{
-									var member = type.GetMember(k.Key)[0];
-									var mtype   = member.GetMemberType();
+									var member = type.GetPublicMemberEx(k.Key)[0];
+									var mtype  = member.GetMemberType();
 
 									return Expression.Bind(
 										member,

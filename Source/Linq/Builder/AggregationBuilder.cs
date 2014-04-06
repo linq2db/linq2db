@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
@@ -23,18 +23,18 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence.SqlQuery.Select.IsDistinct        ||
-			    sequence.SqlQuery.Select.TakeValue != null ||
-			    sequence.SqlQuery.Select.SkipValue != null ||
-			   !sequence.SqlQuery.GroupBy.IsEmpty)
+			if (sequence.SelectQuery.Select.IsDistinct        ||
+			    sequence.SelectQuery.Select.TakeValue != null ||
+			    sequence.SelectQuery.Select.SkipValue != null ||
+			   !sequence.SelectQuery.GroupBy.IsEmpty)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
 
-			if (sequence.SqlQuery.OrderBy.Items.Count > 0)
+			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
 			{
-				if (sequence.SqlQuery.Select.TakeValue == null && sequence.SqlQuery.Select.SkipValue == null)
-					sequence.SqlQuery.OrderBy.Items.Clear();
+				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
+					sequence.SelectQuery.OrderBy.Items.Clear();
 				else
 					sequence = new SubQueryContext(sequence);
 			}
@@ -42,20 +42,20 @@ namespace LinqToDB.Linq.Builder
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
 			var sql     = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 
-			if (sql.Length == 1 && sql[0] is SqlQuery)
+			if (sql.Length == 1 && sql[0] is SelectQuery)
 			{
-				var query = (SqlQuery)sql[0];
+				var query = (SelectQuery)sql[0];
 
 				if (query.Select.Columns.Count == 1)
 				{
-					var join = SqlQuery.OuterApply(query);
-					context.SqlQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					var join = SelectQuery.OuterApply(query);
+					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 					sql[0] = query.Select.Columns[0];
 				}
 			}
 
-			context.Sql        = context.SqlQuery;
-			context.FieldIndex = context.SqlQuery.Select.Add(
+			context.Sql        = context.SelectQuery;
+			context.FieldIndex = context.SelectQuery.Select.Add(
 				new SqlFunction(methodCall.Type, methodCall.Method.Name, sql));
 
 			return context;
@@ -109,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
+				if (_returnType.IsClassEx() || _methodName == "Sum" || _returnType.IsNullable())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex);
 				}
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						return _index ?? (_index = new[]
 						{
-							new SqlInfo { Query = Parent.SqlQuery, Index = Parent.SqlQuery.Select.Add(Sql), Sql = Sql, }
+							new SqlInfo { Query = Parent.SelectQuery, Index = Parent.SelectQuery.Select.Add(Sql), Sql = Sql, }
 						});
 				}
 

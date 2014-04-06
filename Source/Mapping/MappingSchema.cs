@@ -71,7 +71,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			if (type.IsEnum)
+			if (type.IsEnumEx())
 			{
 				var mapValues = GetMapValues(type);
 
@@ -113,7 +113,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			if (type.IsEnum)
+			if (type.IsEnumEx())
 			{
 				var mapValues = GetMapValues(type);
 
@@ -134,7 +134,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsClass || type.IsNullable();
+			return type.IsClassEx() || type.IsNullable();
 		}
 
 		public void SetCanBeNull(Type type, bool value)
@@ -262,7 +262,7 @@ namespace LinqToDB.Mapping
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
 
-			if (p.Type.IsClass)
+			if (p.Type.IsClassEx())
 				return Expression.Lambda(
 					Expression.Condition(
 						Expression.NotEqual(p, Expression.Constant(null, p.Type)),
@@ -452,8 +452,17 @@ namespace LinqToDB.Mapping
 
 		public IMetadataReader MetadataReader
 		{
-			get { return _schemas[0].MetadataReader;  }
-			set { _schemas[0].MetadataReader = value; }
+			get { return _schemas[0].MetadataReader; }
+			set
+			{
+				_schemas[0].MetadataReader = value;
+				_metadataReaders = null;
+			}
+		}
+
+		public void AddMetadataReader(IMetadataReader reader)
+		{
+			MetadataReader = MetadataReader == null ? reader : new MetadataReader(reader, MetadataReader);
 		}
 
 		IMetadataReader[] _metadataReaders;
@@ -555,6 +564,11 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return new FluentMappingBuilder(this);
+		}
+
 		#endregion
 
 		#region Configuration
@@ -618,7 +632,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(Guid),            DataType.Guid);
 				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
 #endif
 				AddScalarType(typeof(XDocument),       DataType.Xml);
@@ -671,7 +685,7 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
-				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
+				if (type.IsEnumEx() || type.IsPrimitiveEx() || (Configuration.IsStructIsScalarType && type.IsValueTypeEx()))
 					ret = true;
 			}
 
@@ -753,11 +767,11 @@ namespace LinqToDB.Mapping
 
 			var underlyingType = type.ToNullableUnderlying();
 
-			if (underlyingType.IsEnum)
+			if (underlyingType.IsEnumEx())
 			{
 				var fields =
 				(
-					from f in underlyingType.GetFields()
+					from f in underlyingType.GetFieldsEx()
 					where (f.Attributes & EnumField) == EnumField
 					let attrs = GetAttributes<MapValueAttribute>(f, a => a.Configuration)
 					select new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs)

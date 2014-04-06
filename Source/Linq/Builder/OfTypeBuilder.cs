@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Extensions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class OfTypeBuilder : MethodCallBuilder
 	{
@@ -22,25 +22,25 @@ namespace LinqToDB.Linq.Builder
 
 			if (table != null && table.InheritanceMapping.Count > 0)
 			{
-				var objectType = methodCall.Type.GetGenericArguments()[0];
+				var objectType = methodCall.Type.GetGenericArgumentsEx()[0];
 
 				if (table.ObjectType.IsSameOrParentOf(objectType))
 				{
 					var predicate = builder.MakeIsPredicate(table, objectType);
 
-					if (predicate.GetType() != typeof(SqlQuery.Predicate.Expr))
-						sequence.SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
+						sequence.SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 				}
 			}
 			else
 			{
-				var toType   = methodCall.Type.GetGenericArguments()[0];
+				var toType   = methodCall.Type.GetGenericArgumentsEx()[0];
 				var gargs    = methodCall.Arguments[0].Type.GetGenericArguments(typeof(IQueryable<>));
 				var fromType = gargs == null ? typeof(object) : gargs[0];
 
-				if (toType.IsSubclassOf(fromType))
+				if (toType.IsSubclassOfEx(fromType))
 				{
-					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
+					for (var type = toType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
 					{
 						var mapping = builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
-							sequence.SqlQuery.Where.SearchCondition.Conditions.Add(new SqlQuery.Condition(false, predicate));
+							sequence.SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 
 							return new OfTypeContext(sequence, methodCall);
 						}

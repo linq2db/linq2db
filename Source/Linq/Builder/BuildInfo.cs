@@ -3,25 +3,25 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlBuilder;
+	using SqlQuery;
 
-	public class BuildInfo
+	class BuildInfo
 	{
-		public BuildInfo(IBuildContext parent, Expression expression, SqlQuery sqlQuery)
+		public BuildInfo(IBuildContext parent, Expression expression, SelectQuery selectQuery)
 		{
 			Parent     = parent;
 			Expression = expression;
-			SqlQuery   = sqlQuery;
+			SelectQuery   = selectQuery;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
-			: this(buildInfo.Parent, expression, buildInfo.SqlQuery)
+			: this(buildInfo.Parent, expression, buildInfo.SelectQuery)
 		{
 			SequenceInfo = buildInfo;
 		}
 
-		public BuildInfo(BuildInfo buildInfo, Expression expression, SqlQuery sqlQuery)
-			: this(buildInfo.Parent, expression, sqlQuery)
+		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
+			: this(buildInfo.Parent, expression, selectQuery)
 		{
 			SequenceInfo = buildInfo;
 		}
@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 		public BuildInfo     SequenceInfo { get; set; }
 		public IBuildContext Parent       { get; set; }
 		public Expression    Expression   { get; set; }
-		public SqlQuery      SqlQuery     { get; set; }
+		public SelectQuery   SelectQuery  { get; set; }
 		public bool          CopyTable    { get; set; }
 
 		public bool          IsSubQuery   { get { return Parent != null; } }

@@ -15,10 +15,12 @@ namespace LinqToDB.Metadata
 	{
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
+#if !NETFX_CORE
 		public XmlAttributeReader(string xmlFile)
 			: this(xmlFile, Assembly.GetCallingAssembly())
 		{
 		}
+#endif
 
 		public XmlAttributeReader([NotNull] string xmlFile, [NotNull] Assembly assembly)
 		{
@@ -29,7 +31,7 @@ namespace LinqToDB.Metadata
 
 			try
 			{
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);
@@ -63,7 +65,7 @@ namespace LinqToDB.Metadata
 			finally
 			{
 				if (streamReader != null)
-					streamReader.Close();
+					streamReader.Dispose();
 			}
 		}
 
@@ -149,7 +151,7 @@ namespace LinqToDB.Metadata
 			if (_types.TryGetValue(type.FullName, out t) || _types.TryGetValue(type.Name, out t))
 				return t.GetAttribute(typeof(T)).Select(a => (T) a.MakeAttribute(typeof(T))).ToArray();
 
-			return new T[0];
+			return Array<T>.Empty;
 		}
 
 		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
@@ -169,7 +171,7 @@ namespace LinqToDB.Metadata
 				}
 			}
 
-			return new T[0];
+			return Array<T>.Empty;
 		}
 	}
 }

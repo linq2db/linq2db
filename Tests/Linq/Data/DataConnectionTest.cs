@@ -9,15 +9,19 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+	using System.Configuration;
+
 	using Model;
 
 	[TestFixture]
 	public class DataConnectionTest : TestBase
 	{
-		[Test]
-		public void Test1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test1(string context)
 		{
-			using (var conn = new DataConnection(SqlServerFactory.GetDataProvider(), "Server=.;Database=Northwind;Integrated Security=SSPI"))
+			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+
+			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);
@@ -34,15 +38,14 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void Test3([IncludeDataContexts(
+		[Test, IncludeDataContextSource(
 			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2005 + ".1",
-			ProviderName.Access
-			)] string context)
+			ProviderName.Access)]
+		public void Test3(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
@@ -27,15 +28,18 @@ namespace LinqToDB.DataProvider
 			MappingSchema    = mappingSchema;
 			SqlProviderFlags = new SqlProviderFlags
 			{
-				AcceptsTakeAsParameter    = true,
-				IsTakeSupported           = true,
-				IsSkipSupported           = true,
-				IsSubQueryTakeSupported   = true,
-				IsSubQueryColumnSupported = true,
-				IsCountSubQuerySupported  = true,
-				IsInsertOrUpdateSupported = true,
-				CanCombineParameters      = true,
-				MaxInListValuesCount      = int.MaxValue,
+				AcceptsTakeAsParameter         = true,
+				IsTakeSupported                = true,
+				IsSkipSupported                = true,
+				IsSubQueryTakeSupported        = true,
+				IsSubQueryColumnSupported      = true,
+				IsCountSubQuerySupported       = true,
+				IsInsertOrUpdateSupported      = true,
+				CanCombineParameters           = true,
+				MaxInListValuesCount           = int.MaxValue,
+				IsGroupByExpressionSupported   = true,
+				IsDistinctOrderBySupported     = true,
+				IsUpdateSetTableAliasSupported = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -63,8 +67,21 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema       { get; private set; }
 		public          SqlProviderFlags SqlProviderFlags    { get; private set; }
 
-		public abstract IDbConnection    CreateConnection (string connectionString);
-		public abstract ISqlProvider     CreateSqlProvider();
+		public static Func<IDataProvider,IDbConnection,IDbConnection> OnConnectionCreated { get; set; }
+
+		public IDbConnection CreateConnection(string connectionString)
+		{
+			var connection = CreateConnectionInternal(connectionString);
+
+			if (OnConnectionCreated != null)
+				connection = OnConnectionCreated(this, connection);
+
+			return connection;
+		}
+
+		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
+		public    abstract ISqlBuilder   CreateSqlBuilder();
+		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
 		public virtual void InitCommand(DataConnection dataConnection)
 		{
@@ -95,11 +112,6 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
 		}
 
-		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
-		}
-
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
@@ -108,16 +120,6 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
-		}
-
-		protected void SetProviderField2<TP,T,TS>(Expression<Func<TP,int,TS>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
-		}
-
-		protected void SetToTypeField<TP,T>(Expression<Func<TP,int,T>> expr)
-		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T) }] = expr;
 		}
 
 		#endregion
@@ -152,31 +154,6 @@ namespace LinqToDB.DataProvider
 				fieldType);
 		}
 
-		protected virtual MethodInfo GetReaderMethodInfo(IDataRecord reader, int idx, Type toType)
-		{
-			var type = reader.GetFieldType(idx);
-
-			switch (Type.GetTypeCode(type))
-			{
-				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetBoolean (0));
-				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetByte    (0));
-				case TypeCode.Char     : return MemberHelper.MethodOf<IDataRecord>(r => r.GetChar    (0));
-				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt16   (0));
-				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt32   (0));
-				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataRecord>(r => r.GetInt64   (0));
-				case TypeCode.Single   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetFloat   (0));
-				case TypeCode.Double   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDouble  (0));
-				case TypeCode.String   : return MemberHelper.MethodOf<IDataRecord>(r => r.GetString  (0));
-				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDecimal (0));
-				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataRecord>(r => r.GetDateTime(0));
-			}
-
-			if (type == typeof(Guid))   return MemberHelper.MethodOf<IDataRecord>(r => r.GetGuid(0));
-			if (type == typeof(byte[])) return MemberHelper.MethodOf<IDataRecord>(r => r.GetValue(0));
-
-			return null;
-		}
-
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			var st = ((DbDataReader)reader).GetSchemaTable();
@@ -206,6 +183,25 @@ namespace LinqToDB.DataProvider
 			parameter.ParameterName = name;
 			SetParameterType(parameter, dataType);
 			parameter.Value = value ?? DBNull.Value;
+		}
+
+		public virtual Type ConvertParameterType(Type type, DataType dataType)
+		{
+			switch (dataType)
+			{
+				case DataType.Image     :
+				case DataType.Binary    :
+				case DataType.Blob      :
+				case DataType.VarBinary :
+					if (type == typeof(Binary)) return typeof(byte[]);
+					break;
+				case DataType.Xml       :
+					if (type == typeof(XDocument) ||
+						type == typeof(XmlDocument)) return typeof(string);
+					break;
+			}
+
+			return type;
 		}
 
 		public virtual ISchemaProvider GetSchemaProvider()
@@ -253,9 +249,54 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
+		#region Create/Drop Database
+
+		internal static void CreateFileDatabase(
+			string databaseName,
+			bool   deleteIfExists,
+			string extension,
+			Action<string> createDatabase)
+		{
+			databaseName = databaseName.Trim();
+
+			if (!databaseName.ToLower().EndsWith(extension))
+				databaseName += extension;
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			createDatabase(databaseName);
+		}
+
+		internal static void DropFileDatabase(string databaseName, string extension)
+		{
+			databaseName = databaseName.Trim();
+
+			if (File.Exists(databaseName))
+			{
+				File.Delete(databaseName);
+			}
+			else
+			{
+				if (!databaseName.ToLower().EndsWith(extension))
+				{
+					databaseName += extension;
+
+					if (File.Exists(databaseName))
+						File.Delete(databaseName);
+				}
+			}
+		}
+
+		#endregion
+
 		#region BulkCopy
 
-		public virtual int BulkCopy<T>(DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		public virtual int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			var n = 0;
 

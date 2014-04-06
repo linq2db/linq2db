@@ -10,6 +10,8 @@ namespace LinqToDB
 	using Extensions;
 	using Linq;
 
+	using SqlQuery;
+
 	public static class DataExtensions
 	{
 		#region Table Helpers
@@ -193,7 +195,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region InsertOrUpdate
+		#region InsertOrReplace
 
 		public static int InsertOrReplace<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
@@ -248,10 +250,55 @@ namespace LinqToDB
 
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
 		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return Query<T>.Delete(DataContextInfo.Create(dataContext), obj);
 		}
+		#endregion
 
 		#endregion
+
+		#region DDL Operations
+
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContextInfo dataContextInfo,
+			string         tableName       = null,
+			string         databaseName    = null,
+			string         ownerName       = null,
+			string         statementHeader = null,
+			string         statementFooter = null,
+			DefaulNullable defaulNullable  = DefaulNullable.None)
+		{
+			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+			return Query<T>.CreateTable(dataContextInfo,
+				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
+		}
+
+		public static ITable<T> CreateTable<T>([NotNull] this IDataContext dataContext,
+			string         tableName       = null,
+			string         databaseName    = null,
+			string         ownerName       = null,
+			string         statementHeader = null,
+			string         statementFooter = null,
+			DefaulNullable defaulNullable  = DefaulNullable.None)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			return Query<T>.CreateTable(DataContextInfo.Create(dataContext),
+				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
+		}
+
+		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
+			string tableName    = null,
+			string databaseName = null,
+			string ownerName    = null)
+		{
+			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
+		}
+
+		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
+		{
+			if (dataContext == null) throw new ArgumentNullException("dataContext");
+			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
+		}
 
 		#endregion
 	}

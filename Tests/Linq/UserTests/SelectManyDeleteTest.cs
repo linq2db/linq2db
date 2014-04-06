@@ -38,11 +38,11 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class SelectManyDeleteTest : TestBase
 	{
-		[Test]
-		public void Test([DataContexts(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, "Oracle",
+		[Test, DataContextSource(
+			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
 			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
-			)] string context)
+			)]
+		public void Test(string context)
 		{
 			var harnessIds = new int[2];
 

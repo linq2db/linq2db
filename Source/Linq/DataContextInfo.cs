@@ -5,7 +5,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlProvider;
 
-	public class DataContextInfo : IDataContextInfo
+	class DataContextInfo : IDataContextInfo
 	{
 		public DataContextInfo(IDataContext dataContext)
 		{
@@ -25,9 +25,14 @@ namespace LinqToDB.Linq
 		public MappingSchema    MappingSchema    { get { return DataContext.MappingSchema;    } }
 		public SqlProviderFlags SqlProviderFlags { get { return DataContext.SqlProviderFlags; } }
 
-		public ISqlProvider CreateSqlProvider()
+		public ISqlBuilder CreateSqlBuilder()
 		{
 			return DataContext.CreateSqlProvider();
+		}
+
+		public ISqlOptimizer GetSqlOptimizer()
+		{
+			return DataContext.GetSqlOptimizer();
 		}
 
 		public IDataContextInfo Clone(bool forNestedQuery)
@@ -37,7 +42,7 @@ namespace LinqToDB.Linq
 
 		public static IDataContextInfo Create(IDataContext dataContext)
 		{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return new DataContextInfo(dataContext);
 #else

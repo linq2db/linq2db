@@ -6,7 +6,7 @@ namespace Tests
 	{
 		static void Main()
 		{
-			var path = typeof(Create.CreateData).Assembly.Location;
+			var path = typeof(Program).Assembly.Location;
 
 			Console.WriteLine(path);
 

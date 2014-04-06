@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.ServiceModel
 {
 	using Common;
+	using Extensions;
+	using Mapping;
 
 	class ServiceModelDataReader : IDataReader
 	{
@@ -47,7 +48,7 @@ namespace LinqToDB.ServiceModel
 			get { return 0; }
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 		public DataTable GetSchemaTable()
 		{
@@ -222,7 +223,7 @@ namespace LinqToDB.ServiceModel
 			if (type.IsArray && type == typeof(byte[]))
 				return ConvertTo<byte[]>.From(value);
 
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.String   : return value;
 				case TypeCode.Double   : return double.  Parse(value, CultureInfo.InvariantCulture);

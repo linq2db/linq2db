@@ -15,22 +15,22 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Inheritance : TestBase
 	{
-		[Test]
-		public void Test1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, db.ParentInheritance);
 		}
 
-		[Test]
-		public void Test2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(ParentInheritance, db.ParentInheritance.Select(p => p));
 		}
 
-		[Test]
-		public void Test3([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test3(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -38,8 +38,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where p is ParentInheritance1 select p);
 		}
 
-		[Test]
-		public void Test4([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test4(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -47,8 +47,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where !(p is ParentInheritanceNull) select p);
 		}
 
-		[Test]
-		public void Test5([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test5(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -56,8 +56,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance where p is ParentInheritanceValue select p);
 		}
 
-		[Test]
-		public void Test6([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test6(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -66,8 +66,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test7([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test7(string context)
 		{
 #pragma warning disable 183
 			using (var db = GetDataContext(context))
@@ -77,8 +77,8 @@ namespace Tests.Linq
 #pragma warning restore 183
 		}
 
-		[Test]
-		public void Test8([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test8(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -86,8 +86,8 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>());
 		}
 
-		[Test]
-		public void Test9([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test9(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -99,8 +99,8 @@ namespace Tests.Linq
 						.OfType<ParentInheritanceNull>());
 		}
 
-		[Test]
-		public void Test10([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test10(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -108,8 +108,8 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritanceValue>());
 		}
 
-		[Test]
-		public void Test11([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test11(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -118,8 +118,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test12([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test12(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,8 +127,8 @@ namespace Tests.Linq
 					from p in db.ParentInheritance1 where p.ParentID == 1 select p);
 		}
 
-		//[Test]
-		public void Test13([DataContexts] string context)
+		//[Test, DataContextSource]
+		public void Test13(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -140,8 +140,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test]
-		public void TypeCastAsTest1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastAsTest1(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -153,8 +153,8 @@ namespace Tests.Linq
 						.Select(p => p == null ? "NULL" : p.ProductName));
 		}
 
-		[Test]
-		public void TypeCastAsTest11([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastAsTest11(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -166,8 +166,8 @@ namespace Tests.Linq
 						.Select(p => p.p == null ? "NULL" : p.p.ProductName));
 		}
 
-		[Test]
-		public void TypeCastAsTest2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastAsTest2(string context)
 		{
 			using (var db = new NorthwindDB())
 				AreEqual(
@@ -179,8 +179,8 @@ namespace Tests.Linq
 						.Select(p => p == null ? "NULL" : p.ProductName));
 		}
 
-		[Test]
-		public void FirstOrDefault([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void FirstOrDefault(string context)
 		{
 			using (var db = new NorthwindDB())
 				Assert.AreEqual(
@@ -188,8 +188,8 @@ namespace Tests.Linq
 					db.DiscontinuedProduct.FirstOrDefault().ProductID);
 		}
 
-		[Test]
-		public void Cast1([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Cast1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -211,8 +211,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Cast2([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Cast2(string context)
 		{
 			ParentEx.Test(this, context);
 		}
@@ -261,8 +261,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void ReferenceNavigation([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void ReferenceNavigation(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -287,8 +287,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TypeCastIsChildConditional1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastIsChildConditional1(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -304,8 +304,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TypeCastIsChildConditional2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastIsChildConditional2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -320,8 +320,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TypeCastIsChild([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void TypeCastIsChild(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -355,8 +355,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test]
-		public void Test14([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test14(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -365,8 +365,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test15([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test15(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -377,8 +377,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test16([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void Test16(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -454,8 +454,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void QuerySyntaxSimpleTest([DataContexts] string context)
+		[Test, DataContextSource]
+		public void QuerySyntaxSimpleTest(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -483,8 +483,8 @@ namespace Tests.Linq
 			public string LastName { get; set; }
 		}
 
-		[Test]
-		public void Test17([DataContexts(ExcludeLinqService=true)] string data)
+		[Test, DataContextSource(false)]
+		public void Test17(string data)
 		{
 			using (var context = GetDataContext(data))
 			{
@@ -514,8 +514,8 @@ namespace Tests.Linq
 			[Column] public string LastName  { get; set; }
 		}
 
-		[Test]
-		public void Test18([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test18(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -530,8 +530,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Test19([DataContexts] string context)
+		[Test, DataContextSource]
+		public void Test19(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

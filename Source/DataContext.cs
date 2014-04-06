@@ -28,6 +28,7 @@ namespace LinqToDB
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ContextID           { get; set;         }
 		public MappingSchema MappingSchema       { get; set;         }
+		public bool          InlineParameters    { get; set;         }
 		public string        LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
@@ -80,9 +81,14 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlProvider> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider
 		{
-			get { return DataProvider.CreateSqlProvider; }
+			get { return DataProvider.CreateSqlBuilder; }
+		}
+
+		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer
+		{
+			get { return DataProvider.GetSqlOptimizer; }
 		}
 
 		Type IDataContext.DataReaderType

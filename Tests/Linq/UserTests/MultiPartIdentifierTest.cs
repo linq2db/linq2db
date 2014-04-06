@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 // ReSharper disable ClassNeverInstantiated.Local
 
-namespace Data.Linq.UserTests
+namespace Tests.UserTests
 {
 	using Tests;
 
@@ -73,8 +73,8 @@ namespace Data.Linq.UserTests
 			public List<Table4> Table4s { get; set; }
 		}
 
-		[Test]
-		public void Test([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Test(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

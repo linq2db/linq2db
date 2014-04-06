@@ -7,11 +7,14 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Expressions;
 	using Linq;
 
 	public static class LinqExtensions
 	{
 		#region Table Helpers
+
+		static readonly MethodInfo _tableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null, null)).GetGenericMethodDefinition();
 
 		static public ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
@@ -20,11 +23,13 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+				_tableNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
 			return table;
 		}
+
+		static readonly MethodInfo _databaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null, null)).GetGenericMethodDefinition();
 
 		static public ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
@@ -33,11 +38,13 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+				_databaseNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
 			return table;
 		}
+
+		static readonly MethodInfo _ownerNameMethodInfo = MemberHelper.MethodOf(() => OwnerName<int>(null, null)).GetGenericMethodDefinition();
 
 		static public ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
@@ -46,8 +53,28 @@ namespace LinqToDB
 
 			table.Expression = Expression.Call(
 				null,
-				((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+				_ownerNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
+
+			return table;
+		}
+
+		#endregion
+
+		#region LoadWith
+
+		static readonly MethodInfo _loadWithMethodInfo = MemberHelper.MethodOf(() => LoadWith<int>(null, null)).GetGenericMethodDefinition();
+
+		static public ITable<T> LoadWith<T>(
+			[NotNull]                this ITable<T> table,
+			[NotNull, InstantHandle] Expression<Func<T,object>> selector)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			table.Expression = Expression.Call(
+				null,
+				_loadWithMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Quote(selector) });
 
 			return table;
 		}
@@ -75,6 +102,8 @@ namespace LinqToDB
 
 		#region Delete
 
+		static readonly MethodInfo _deleteMethodInfo = MemberHelper.MethodOf(() => Delete<int>(null)).GetGenericMethodDefinition();
+
 		public static int Delete<T>([NotNull] this IQueryable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
@@ -82,9 +111,11 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_deleteMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression }));
 		}
+
+		static readonly MethodInfo _deleteMethodInfo2 = MemberHelper.MethodOf(() => Delete<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Delete<T>(
 			[NotNull]                this IQueryable<T>       source,
@@ -96,13 +127,15 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_deleteMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
 
 		#endregion
 
 		#region Update
+
+		static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, null, null)).GetGenericMethodDefinition();
 
 		public static int Update<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -116,9 +149,11 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_updateMethodInfo.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
+
+		static readonly MethodInfo _updateMethodInfo2 = MemberHelper.MethodOf(() => Update<int>(null, null)).GetGenericMethodDefinition();
 
 		public static int Update<T>(
 			[NotNull]                this IQueryable<T>    source,
@@ -130,9 +165,11 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_updateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(setter) }));
 		}
+
+		static readonly MethodInfo _updateMethodInfo3 = MemberHelper.MethodOf(() => Update<int>(null, null, null)).GetGenericMethodDefinition();
 
 		public static int Update<T>(
 			[NotNull]                this IQueryable<T>       source,
@@ -146,9 +183,11 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_updateMethodInfo3.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression, Expression.Quote(predicate), Expression.Quote(setter) }));
 		}
+
+		static readonly MethodInfo _updateMethodInfo4 = MemberHelper.MethodOf(() => Update<int>(null)).GetGenericMethodDefinition();
 
 		public static int Update<T>([NotNull] this IUpdatable<T> source)
 		{
@@ -159,7 +198,7 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
 
@@ -168,6 +207,8 @@ namespace LinqToDB
 			public IQueryable<T> Query;
 		}
 
+		static readonly MethodInfo _asUpdatableMethodInfo = MemberHelper.MethodOf(() => AsUpdatable<int>(null)).GetGenericMethodDefinition();
+
 		public static IUpdatable<T> AsUpdatable<T>([NotNull] this IQueryable<T> source)
 		{
 			if (source  == null) throw new ArgumentNullException("source");
@@ -175,12 +216,15 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_asUpdatableMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression }));
 
 			return new Updatable<T> { Query = query };
 		}
 
+		static readonly MethodInfo _setMethodInfo = MemberHelper.MethodOf(() =>
+			Set<int,int>((IQueryable<int>)null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
+
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -193,11 +237,14 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { source.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
 			return new Updatable<T> { Query = query };
 		}
+
+		static readonly MethodInfo _setMethodInfo2 = MemberHelper.MethodOf(() =>
+			Set<int,int>((IUpdatable<int>)null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
 
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
@@ -213,11 +260,14 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo2.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
 			return new Updatable<T> { Query = query };
 		}
+
+		static readonly MethodInfo _setMethodInfo3 = MemberHelper.MethodOf(() =>
+			Set<int,int>((IQueryable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
 
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
@@ -231,11 +281,14 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo3.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { source.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
 			return new Updatable<T> { Query = query };
 		}
+
+		static readonly MethodInfo _setMethodInfo4 = MemberHelper.MethodOf(() =>
+			Set<int,int>((IUpdatable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
 
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
@@ -251,11 +304,13 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo4.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(extract), Expression.Quote(update) }));
 
 			return new Updatable<T> { Query = query };
 		}
+
+		static readonly MethodInfo _setMethodInfo5 = MemberHelper.MethodOf(() => Set((IQueryable<int>)null,null,0)).GetGenericMethodDefinition();
 
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IQueryable<T>     source,
@@ -268,12 +323,14 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo5.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { source.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
 
 			return new Updatable<T> { Query = query };
 		}
 
+		static readonly MethodInfo _setMethodInfo6 = MemberHelper.MethodOf(() => Set((IUpdatable<int>)null,null,0)).GetGenericMethodDefinition();
+
 		public static IUpdatable<T> Set<T,TV>(
 			[NotNull]                this IUpdatable<T>    source,
 			[NotNull, InstantHandle] Expression<Func<T,TV>> extract,
@@ -287,7 +344,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_setMethodInfo6.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)) }));
 
 			return new Updatable<T> { Query = query };
@@ -296,6 +353,8 @@ namespace LinqToDB
 		#endregion
 
 		#region Insert
+
+		static readonly MethodInfo _insertMethodInfo = MemberHelper.MethodOf(() => Insert<int>(null,null)).GetGenericMethodDefinition();
 
 		public static int Insert<T>(
 			[NotNull]                this ITable<T>      target,
@@ -309,9 +368,11 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
+
+		static readonly MethodInfo _insertWithIdentityMethodInfo = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null,null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<T>(
 			[NotNull]                this ITable<T>      target,
@@ -325,7 +386,7 @@ namespace LinqToDB
 			return query.Provider.Execute<object>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertWithIdentityMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(setter) }));
 		}
 
@@ -336,6 +397,8 @@ namespace LinqToDB
 			public IQueryable<T> Query;
 		}
 
+		static readonly MethodInfo _intoMethodInfo = MemberHelper.MethodOf(() => Into<int>(null,null)).GetGenericMethodDefinition();
+
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, [NotNull] ITable<T> target)
 		{
 			if (target == null) throw new ArgumentNullException("target");
@@ -345,11 +408,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_intoMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { Expression.Constant(null, typeof(IDataContext)), query.Expression }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo =
+			MemberHelper.MethodOf(() => Value<int,int>((ITable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
 
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this ITable<T>         source,
@@ -365,11 +431,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_valueMethodInfo.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo2 =
+			MemberHelper.MethodOf(() => Value((ITable<int>)null,null,0)).GetGenericMethodDefinition();
 
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this ITable<T>         source,
@@ -384,11 +453,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_valueMethodInfo2.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo3 =
+			MemberHelper.MethodOf(() => Value<int,int>((IValueInsertable<int>)null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
 
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this IValueInsertable<T> source,
@@ -404,11 +476,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_valueMethodInfo3.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo4 =
+			MemberHelper.MethodOf(() => Value((IValueInsertable<int>)null,null,0)).GetGenericMethodDefinition();
 
 		public static IValueInsertable<T> Value<T,TV>(
 			[NotNull]                this IValueInsertable<T> source,
@@ -423,11 +498,13 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
+					_valueMethodInfo4.MakeGenericMethod(new[] { typeof(T), typeof(TV) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)) }));
 
 			return new ValueInsertable<T> { Query = q };
 		}
+
+		static readonly MethodInfo _insertMethodInfo2 = MemberHelper.MethodOf(() => Insert<int>(null)).GetGenericMethodDefinition();
 
 		public static int Insert<T>([NotNull] this IValueInsertable<T> source)
 		{
@@ -438,9 +515,11 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
+
+		static readonly MethodInfo _insertWithIdentityMethodInfo2 = MemberHelper.MethodOf(() => InsertWithIdentity<int>(null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<T>([NotNull] this IValueInsertable<T> source)
 		{
@@ -451,13 +530,16 @@ namespace LinqToDB
 			return query.Provider.Execute<object>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertWithIdentityMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
 
 		#endregion
 
 		#region SelectInsertable
+
+		static readonly MethodInfo _insertMethodInfo3 =
+			MemberHelper.MethodOf(() => Insert<int,int>(null,null,null)).GetGenericMethodDefinition();
 
 		public static int Insert<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -471,9 +553,12 @@ namespace LinqToDB
 			return source.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_insertMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
+
+		static readonly MethodInfo _insertWithIdentityMethodInfo3 =
+			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null,null,null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -487,7 +572,7 @@ namespace LinqToDB
 			return source.Provider.Execute<object>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_insertWithIdentityMethodInfo3.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter) }));
 		}
 
@@ -495,6 +580,9 @@ namespace LinqToDB
 		{
 			public IQueryable<T> Query;
 		}
+
+		static readonly MethodInfo _intoMethodInfo2 =
+			MemberHelper.MethodOf(() => Into<int,int>(null,null)).GetGenericMethodDefinition();
 
 		public static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(
 			[NotNull] this IQueryable<TSource> source,
@@ -505,11 +593,14 @@ namespace LinqToDB
 			var q = source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_intoMethodInfo2.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { source.Expression, ((IQueryable<TTarget>)target).Expression }));
 
 			return new SelectInsertable<TSource,TTarget> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo5 =
+			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,(Expression<Func<int,int>>)null)).GetGenericMethodDefinition();
 
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
@@ -525,11 +616,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
+					_valueMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
 			return new SelectInsertable<TSource,TTarget> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo6 =
+			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,(Expression<Func<int>>)null)).GetGenericMethodDefinition();
 
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
@@ -545,11 +639,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
+					_valueMethodInfo6.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Quote(value) }));
 
 			return new SelectInsertable<TSource,TTarget> { Query = q };
 		}
+
+		static readonly MethodInfo _valueMethodInfo7 =
+			MemberHelper.MethodOf(() => Value<int,int,int>(null,null,0)).GetGenericMethodDefinition();
 
 		public static ISelectInsertable<TSource,TTarget> Value<TSource,TTarget,TValue>(
 			[NotNull]                this ISelectInsertable<TSource,TTarget> source,
@@ -564,11 +661,14 @@ namespace LinqToDB
 			var q = query.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
+					_valueMethodInfo7.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget), typeof(TValue) }),
 					new[] { query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TValue)) }));
 
 			return new SelectInsertable<TSource,TTarget> { Query = q };
 		}
+
+		static readonly MethodInfo _insertMethodInfo4 =
+			MemberHelper.MethodOf(() => Insert<int,int>(null)).GetGenericMethodDefinition();
 
 		public static int Insert<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
 		{
@@ -579,9 +679,12 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_insertMethodInfo4.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { query.Expression }));
 		}
+
+		static readonly MethodInfo _insertWithIdentityMethodInfo4 =
+			MemberHelper.MethodOf(() => InsertWithIdentity<int,int>(null)).GetGenericMethodDefinition();
 
 		public static object InsertWithIdentity<TSource,TTarget>([NotNull] this ISelectInsertable<TSource,TTarget> source)
 		{
@@ -592,7 +695,7 @@ namespace LinqToDB
 			return query.Provider.Execute<object>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					_insertWithIdentityMethodInfo4.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
 					new[] { query.Expression }));
 		}
 
@@ -601,6 +704,9 @@ namespace LinqToDB
 		#endregion
 
 		#region InsertOrUpdate
+
+		static readonly MethodInfo _insertOrUpdateMethodInfo =
+			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null)).GetGenericMethodDefinition();
 
 		public static int InsertOrUpdate<T>(
 			[NotNull]                this ITable<T>        target,
@@ -616,9 +722,12 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertOrUpdateMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter) }));
 		}
+
+		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
+			MemberHelper.MethodOf(() => InsertOrUpdate<int>(null,null,null,null)).GetGenericMethodDefinition();
 
 		public static int InsertOrUpdate<T>(
 			[NotNull]                this ITable<T>        target,
@@ -636,7 +745,7 @@ namespace LinqToDB
 			return query.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_insertOrUpdateMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
 					new[]
 					{
 						query.Expression,
@@ -648,7 +757,28 @@ namespace LinqToDB
 
 		#endregion
 
+		#region DDL Operations
+
+		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null)).GetGenericMethodDefinition();
+
+		public static int Drop<T>([NotNull] this ITable<T> target)
+		{
+			if (target == null) throw new ArgumentNullException("target");
+
+			IQueryable<T> query = target;
+
+			return query.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					_dropMethodInfo2.MakeGenericMethod(new[] { typeof(T) }),
+					new[] { query.Expression }));
+		}
+
+		#endregion
+
 		#region Take / Skip / ElementAt
+
+		static readonly MethodInfo _takeMethodInfo = MemberHelper.MethodOf(() => Take<int>(null,null)).GetGenericMethodDefinition();
 
 		public static IQueryable<TSource> Take<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
@@ -660,9 +790,11 @@ namespace LinqToDB
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }),
+					_takeMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(count) }));
 		}
+
+		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null,null)).GetGenericMethodDefinition();
 
 		public static IQueryable<TSource> Skip<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
@@ -674,9 +806,11 @@ namespace LinqToDB
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }),
+					_skipMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(count) }));
 		}
+
+		static readonly MethodInfo _elementAtMethodInfo = MemberHelper.MethodOf(() => ElementAt<int>(null,null)).GetGenericMethodDefinition();
 
 		public static TSource ElementAt<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
@@ -688,9 +822,11 @@ namespace LinqToDB
 			return source.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }),
+					_elementAtMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
+
+		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null,null)).GetGenericMethodDefinition();
 
 		public static TSource ElementAtOrDefault<TSource>(
 			[NotNull]                this IQueryable<TSource> source,
@@ -702,7 +838,7 @@ namespace LinqToDB
 			return source.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(TSource) }),
+					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
 		}
 

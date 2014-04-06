@@ -5,8 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
-	using SqlBuilder;
+	using SqlQuery;
 
 	class TakeSkipBuilder : MethodCallBuilder
 	{
@@ -32,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				BuildSkip(builder, sequence, sequence.SqlQuery.Select.SkipValue, expr);
+				BuildSkip(builder, sequence, sequence.SelectQuery.Select.SkipValue, expr);
 			}
 
 			return sequence;
@@ -49,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						methodCall.Method.DeclaringType,
 						methodCall.Method.Name,
-						new[] { info.Expression.Type.GetGenericArguments()[0] },
+						new[] { info.Expression.Type.GetGenericArgumentsEx()[0] },
 						info.Expression, methodCall.Arguments[1]);
 					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
 				info.Parameter  = param;
@@ -62,9 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
 		{
-			var sql = sequence.SqlQuery;
-
-			builder.SqlProvider.SqlQuery = sql;
+			var sql = sequence.SelectQuery;
 
 			sql.Select.Take(expr);
 
@@ -109,13 +108,9 @@ namespace LinqToDB.Linq.Builder
 
 		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression prevSkipValue, ISqlExpression expr)
 		{
-			var sql = sequence.SqlQuery;
-
-			builder.SqlProvider.SqlQuery = sql;
+			var sql = sequence.SelectQuery;
 
 			sql.Select.Skip(expr);
-
-			builder.SqlProvider.SqlQuery = sql;
 
 			if (sql.Select.TakeValue != null)
 			{

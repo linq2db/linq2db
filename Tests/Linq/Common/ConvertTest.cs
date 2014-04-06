@@ -118,6 +118,13 @@ namespace Tests.Common
 		}
 
 		[Test]
+		public void ParseChar()
+		{
+			Assert.AreEqual('\0', ConvertTo<char>.From((string)null));
+			Assert.AreEqual('\0', ConvertTo<char>.From(""));
+		}
+
+		[Test]
 		public void ToStringTest()
 		{
 			Convert<DateTime,string>.Expression = d => d.ToString(DateTimeFormatInfo.InvariantInfo);

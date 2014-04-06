@@ -13,8 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TableFunctionTest : TestBase
 	{
-		[Test]
-		public void Func1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Func1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -26,8 +26,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Func2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Func2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,8 +40,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void Func3([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Func3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -57,8 +57,8 @@ namespace Tests.Linq
 		readonly Func<DataConnection,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
 			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
-		[Test]
-		public void CompiledFunc1([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void CompiledFunc1(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -70,8 +70,8 @@ namespace Tests.Linq
 		readonly Func<TestDataConnection,int,IQueryable<Parent>> _f2 = CompiledQuery.Compile(
 			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
-		[Test]
-		public void CompiledFunc2([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void CompiledFunc2(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -80,8 +80,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void WithTabLock([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -93,8 +93,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void FreeText1([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void FreeText1(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -108,8 +108,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void FreeText2([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void FreeText2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -123,8 +123,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void FreeText3([IncludeDataContexts("Northwind")] string context)
+		[Test, NorthwindDataContext]
+		public void FreeText3(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -133,6 +133,19 @@ namespace Tests.Linq
 					join c in db.Category
 					on t.Key equals c.CategoryID
 					select c;
+
+				q.ToList();
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void WithUpdateLock(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.WithUpdateLock<Northwind.Category>()
+					select t;
 
 				q.ToList();
 			}

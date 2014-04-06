@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
+
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -20,10 +25,15 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
+			SqlProviderFlags.IsCountSubQuerySupported    = false;
+			SqlProviderFlags.IsIdentityParameterRequired = true;
+
 			SqlProviderFlags.MaxInListValuesCount = 1000;
 
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
+
+			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 		}
 
 		Type _oracleBFile;
@@ -45,7 +55,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			var typesNamespace = OracleFactory.AssemblyName + ".Types.";
+			var typesNamespace  = OracleTools.AssemblyName + ".Types.";
 
 			_oracleBFile        = connectionType.Assembly.GetType(typesNamespace + "OracleBFile",        true);
 			_oracleBinary       = connectionType.Assembly.GetType(typesNamespace + "OracleBinary",       true);
@@ -183,7 +193,7 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.PropertyOrField(
 								Expression.Convert(
 									Expression.PropertyOrField(p, "Command"),
-									connectionType.Assembly.GetType(OracleFactory.AssemblyName + ".Client.OracleCommand", true)),
+									connectionType.Assembly.GetType(OracleTools.AssemblyName + ".Client.OracleCommand", true)),
 								"BindByName"),
 							Expression.Constant(true)),
 							p
@@ -258,21 +268,35 @@ namespace LinqToDB.DataProvider.Oracle
 		static object GetNullValue(Type type)
 		{
 			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-			return getValue.Compile()();
+			try
+			{
+				return getValue.Compile()();
+			}
+			catch (Exception)
+			{
+				return getValue.Compile()();
+			}
 		}
 
-		public    override string ConnectionNamespace { get { return OracleFactory.AssemblyName + ".Client"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleFactory.AssemblyName, "Client.OracleDataReader"); } }
+		public    override string ConnectionNamespace { get { return OracleTools.AssemblyName + ".Client"; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleConnection"); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(OracleTools.AssemblyName, "Client.OracleDataReader"); } }
 
 		public bool IsXmlTypeSupported
 		{
 			get { return _oracleXmlType != null; }
 		}
 
-		public override ISqlProvider CreateSqlProvider()
+		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlProvider(SqlProviderFlags);
+			return new OracleSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+		}
+
+		readonly ISqlOptimizer _sqlOptimizer;
+
+		public override ISqlOptimizer GetSqlOptimizer()
+		{
+			return _sqlOptimizer;
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -298,7 +322,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (dataType)
 			{
-				case DataType.DateTimeOffset  :
+				case DataType.DateTimeOffset:
 					if (value is DateTimeOffset)
 					{
 						var dto  = (DateTimeOffset)value;
@@ -308,17 +332,39 @@ namespace LinqToDB.DataProvider.Oracle
 						value = _createOracleTimeStampTZ(dto, zone);
 					}
 					break;
-				case DataType.Boolean    :
+				case DataType.Boolean:
 					dataType = DataType.Byte;
 					if (value is bool)
 						value = (bool)value ? (byte)1 : (byte)0;
 					break;
-				case DataType.Guid       :
+				case DataType.Guid:
 					if (value is Guid) value = ((Guid)value).ToByteArray();
+					break;
+				case DataType.Time:
+					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
+					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
+					//
+					if (value is TimeSpan)
+						dataType = DataType.Undefined;
 					break;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+		}
+
+		public override Type ConvertParameterType(Type type, DataType dataType)
+		{
+			if (type.IsNullable())
+				type = type.ToUnderlying();
+
+			switch (dataType)
+			{
+				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return _oracleTimeStampTZ; break;
+				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);       break;
+				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);     break;
+			}
+
+			return base.ConvertParameterType(type, dataType);
 		}
 
 		static Action<IDbDataParameter> _setSingle;
@@ -336,6 +382,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
 			switch (dataType)
 			{
 				case DataType.Byte           : parameter.DbType = DbType.Int16;            break;
@@ -357,6 +406,233 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset : _setDateTimeOffset   (parameter);           break;
 				case DataType.Guid           : _setGuid             (parameter);           break;
 				default                      : base.SetParameterType(parameter, dataType); break;
+			}
+		}
+
+		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
+		static Func<int,string,object>         _columnMappingCreator;
+
+		public override int BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T>  source)
+		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
+			var bkCopyType = options.BulkCopyType == BulkCopyType.Default ?
+				OracleTools.DefaultBulkCopyType :
+				options.BulkCopyType;
+
+			if (bkCopyType == BulkCopyType.RowByRow)
+				return base.BulkCopy(dataConnection, options, source);
+
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				.ToString();
+
+			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
+			{
+				if (_bulkCopyCreator == null)
+				{
+					var connType           = GetConnectionType();
+					var clientNamespace    = OracleTools.AssemblyName + ".Client.";
+					var bulkCopyType       = connType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
+					var columnMappingType  = connType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
+
+					if (bulkCopyType != null)
+					{
+						{
+							var p = Expression.Parameter(typeof(IDbConnection), "p");
+							var l = Expression.Lambda<Func<IDbConnection,IDisposable>>(
+								Expression.Convert(
+									Expression.New(
+										bulkCopyType.GetConstructor(new[] { connType }),
+										Expression.Convert(p, connType)),
+									typeof(IDisposable)),
+								p);
+
+							_bulkCopyCreator = l.Compile();
+						}
+						{
+							var p1 = Expression.Parameter(typeof(int),    "p1");
+							var p2 = Expression.Parameter(typeof(string), "p2");
+							var l  = Expression.Lambda<Func<int,string,object>>(
+								Expression.Convert(
+									Expression.New(
+										columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
+										new [] { p1, p2 }),
+									typeof(object)),
+								p1, p2);
+
+							_columnMappingCreator = l.Compile();
+						}
+					}
+				}
+
+				if (_bulkCopyCreator != null)
+				{
+					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
+					var rd      = new BulkCopyReader(this, columns, source);
+
+					using (var bc = _bulkCopyCreator(dataConnection.Connection))
+					{
+						dynamic dbc = bc;
+
+						if (options.MaxBatchSize.   HasValue) dbc.BatchSize       = options.MaxBatchSize.   Value;
+						if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+
+						dbc.DestinationTableName = tableName;
+
+						for (var i = 0; i < columns.Count; i++)
+							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
+
+						dbc.WriteToServer(rd);
+					}
+
+					return rd.Count;
+				}
+			}
+
+			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
+		}
+
+		int MultipleRowsBulkCopy<T>(
+			DataConnection   dataConnection,
+			BulkCopyOptions  options,
+			IEnumerable<T>   source,
+			BasicSqlBuilder  sqlBuilder,
+			EntityDescriptor descriptor,
+			string           tableName)
+		{
+			{
+				var sb         = new StringBuilder();
+				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+
+				sb.AppendLine("INSERT ALL");
+
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
+				var currentCount = 0;
+				var batchSize    = options.MaxBatchSize ?? 1000;
+
+				if (batchSize <= 0)
+					batchSize = 1000;
+
+				var parms = new List<DataParameter>();
+				var pidx = 0;
+
+				foreach (var item in source)
+				{
+					sb.AppendFormat("\tINTO {0} (", tableName);
+
+					foreach (var column in columns)
+						sb
+							.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+							.Append(", ");
+
+					sb.Length -= 2;
+
+					sb.Append(") VALUES (");
+
+					foreach (var column in columns)
+					{
+						var value = column.GetValue(item);
+
+						if (value == null)
+						{
+							sb.Append("NULL");
+						}
+						else
+							switch (Type.GetTypeCode(value.GetType()))
+							{
+								case TypeCode.DBNull:
+									sb.Append("NULL");
+									break;
+
+								case TypeCode.String:
+									var isString = false;
+
+									switch (column.DataType)
+									{
+										case DataType.NVarChar  :
+										case DataType.Char      :
+										case DataType.VarChar   :
+										case DataType.NChar     :
+										case DataType.Undefined :
+											isString = true;
+											break;
+									}
+
+									if (isString) goto case TypeCode.Int32;
+									goto default;
+
+								case TypeCode.Boolean  :
+								case TypeCode.Char     :
+								case TypeCode.SByte    :
+								case TypeCode.Byte     :
+								case TypeCode.Int16    :
+								case TypeCode.UInt16   :
+								case TypeCode.Int32    :
+								case TypeCode.UInt32   :
+								case TypeCode.Int64    :
+								case TypeCode.UInt64   :
+								case TypeCode.Single   :
+								case TypeCode.Double   :
+								case TypeCode.Decimal  :
+								case TypeCode.DateTime :
+									//SetParameter(dataParam, "", column.DataType, value);
+
+									buildValue(value);
+									break;
+
+								default:
+									var name = pname + ++pidx;
+
+									sb.Append(name);
+									parms.Add(new DataParameter("p" + pidx, value, column.DataType));
+
+									break;
+							}
+
+						sb.Append(",");
+					}
+
+					sb.Length--;
+					sb.AppendLine(")");
+
+					totalCount++;
+					currentCount++;
+
+					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
+					{
+						sb.AppendLine("SELECT * FROM dual");
+
+						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
+
+						parms.Clear();
+						pidx = 0;
+						currentCount = 0;
+						sb.Length = headerLen;
+					}
+				}
+
+				if (currentCount > 0)
+				{
+					sb.AppendLine("SELECT * FROM dual");
+
+					dataConnection.Execute(sb.ToString(), parms.ToArray());
+					sb.Length = headerLen;
+				}
+
+				return totalCount;
 			}
 		}
 	}

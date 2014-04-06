@@ -29,8 +29,8 @@ namespace Tests.DataProvider
 
 		const string CurrentProvider = ProviderName.PostgreSQL;
 
-		[Test]
-		public void TestParameters([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -43,8 +43,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -143,8 +143,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -192,8 +192,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDate([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -206,15 +206,15 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
-				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as timestamp)"),                     Is.EqualTo(dateTime));
-				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as timestamp)"),                     Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime> ("SELECT Cast('2012-12-12 12:12:12' as timestamp)"),                Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as timestamp)"),                Is.EqualTo(dateTime));
 
 				Assert.That(conn.Execute<DateTime> ("SELECT :p", DataParameter.DateTime("p", dateTime)),               Is.EqualTo(dateTime));
 				Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime)),                    Is.EqualTo(dateTime));
@@ -222,8 +222,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -258,8 +258,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -285,8 +285,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
 
@@ -306,8 +306,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -326,8 +326,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -352,8 +352,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -364,8 +364,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -378,8 +378,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsert1([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -394,8 +394,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsert2([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -410,8 +410,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsert3([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsert3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -426,8 +426,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsertWithIdentity1([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -444,8 +444,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-			[Test]
-		public void SequenceInsertWithIdentity2([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity2(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -462,8 +462,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsertWithIdentity3([IncludeDataContexts(ProviderName.PostgreSQL)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -477,6 +477,38 @@ namespace Tests.DataProvider
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.ID == id1).Delete();
 
 				Assert.AreEqual(0, db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.TestSchemaIdentity { }));
+				var id2 = db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Single().ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.TestSchemaIdentity>().Delete();
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SequenceInsertWithIdentity5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Delete();
+
+				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.TestSerialIdentity { }));
+				var id2 = db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Single().ID;
+
+				Assert.AreEqual(id1, id2);
+
+				db.GetTable<PostgreSQLSpecific.TestSerialIdentity>().Delete();
 			}
 		}
 	}

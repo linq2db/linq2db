@@ -106,27 +106,23 @@ namespace LinqToDB.DataProvider.SqlServer
 					fk.COLUMN_NAME                                                 as ThisColumn,
 					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
 					pk.COLUMN_NAME                                                 as OtherColumn,
-					cu.ORDINAL_POSITION                                            as Ordinal
+					pk.ORDINAL_POSITION                                            as Ordinal
 				FROM
 					INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 					JOIN
-						INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE fk
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE fk
 					ON
-						rc.CONSTRAINT_CATALOG = fk.CONSTRAINT_CATALOG AND
-						rc.CONSTRAINT_SCHEMA  = fk.CONSTRAINT_SCHEMA  AND
-						rc.CONSTRAINT_NAME    = fk.CONSTRAINT_NAME
+						fk.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG AND
+						fk.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA  AND
+						fk.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
 					JOIN
-						INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE pk
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE pk
 					ON
-						rc.UNIQUE_CONSTRAINT_CATALOG = pk.CONSTRAINT_CATALOG AND
-						rc.UNIQUE_CONSTRAINT_SCHEMA  = pk.CONSTRAINT_SCHEMA AND
-						rc.UNIQUE_CONSTRAINT_NAME    = pk.CONSTRAINT_NAME
-					JOIN
-						INFORMATION_SCHEMA.KEY_COLUMN_USAGE cu
-					ON
-						rc.CONSTRAINT_CATALOG = cu.CONSTRAINT_CATALOG AND
-						rc.CONSTRAINT_SCHEMA  = cu.CONSTRAINT_SCHEMA  AND
-						rc.CONSTRAINT_NAME    = cu.CONSTRAINT_NAME
+						pk.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG AND
+						pk.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA  AND
+						pk.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
+				WHERE
+					fk.ORDINAL_POSITION = pk.ORDINAL_POSITION
 				ORDER BY
 					ThisTableID,
 					Ordinal")
@@ -214,16 +210,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			switch (columnType)
+			switch (dataType)
 			{
 				case "hierarchyid" :
 				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
+				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

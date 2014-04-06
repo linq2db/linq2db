@@ -21,8 +21,8 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.Firebird;
 
-		[Test]
-		public void TestParameters([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -35,8 +35,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -128,8 +128,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -160,7 +160,6 @@ namespace Tests.DataProvider
 				TestNumeric(conn, byte.MaxValue,    DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,  DataType.UInt16,     "smallint");
 				TestNumeric(conn, uint.MaxValue,    DataType.UInt32,     "smallint int float real");
-				//TestNumeric(conn, ulong.MaxValue,   DataType.UInt64, "bigint");
 
 				TestNumeric(conn, -3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");
 				TestNumeric(conn,  3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");
@@ -180,8 +179,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -196,8 +195,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -229,8 +228,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -256,8 +255,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
@@ -284,8 +283,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -304,8 +303,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -330,8 +329,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -342,8 +341,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(CurrentProvider)] string context)
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -356,8 +355,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsert([IncludeDataContexts(ProviderName.Firebird)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]
+		public void SequenceInsert(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -372,8 +371,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void SequenceInsertWithIdentity([IncludeDataContexts(ProviderName.Firebird)] string context)
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]
+		public void SequenceInsertWithIdentity(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

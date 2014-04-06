@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -18,8 +19,8 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SQLiteTest : TestBase
 	{
-		[Test]
-		public void TestParameters([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -49,8 +50,8 @@ namespace Tests.DataProvider
 			Assert.That(actualValue, Is.EqualTo(expectedValue));
 		}
 
-		[Test]
-		public void TestDataTypes([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -127,8 +128,8 @@ namespace Tests.DataProvider
 			TestNumeric<T?>(conn, (T?)null,      dataType);
 		}
 
-		[Test]
-		public void TestNumerics([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestNumerics(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -152,10 +153,10 @@ namespace Tests.DataProvider
 				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);
 				TestNumeric(conn, short.MinValue,    DataType.Int16);
 				TestNumeric(conn, short.MaxValue,    DataType.Int16);
-				TestNumeric(conn, int.MinValue,      DataType.Int32);
-				TestNumeric(conn, int.MaxValue,      DataType.Int32);
-				TestNumeric(conn, long.MinValue,     DataType.Int64);
-				TestNumeric(conn, long.MaxValue,     DataType.Int64,      "float real");
+				TestNumeric(conn, int.  MinValue,    DataType.Int32);
+				TestNumeric(conn, int.  MaxValue,    DataType.Int32);
+				TestNumeric(conn, long. MinValue,    DataType.Int64);
+				TestNumeric(conn, long. MaxValue,    DataType.Int64,      "float real");
 
 				TestNumeric(conn, byte.MaxValue,     DataType.Byte);
 				TestNumeric(conn, ushort.MaxValue,   DataType.UInt16);
@@ -163,7 +164,7 @@ namespace Tests.DataProvider
 				TestNumeric(conn, ulong.MaxValue,    DataType.UInt64,     "bigint bit decimal int money numeric smallint tinyint float real");
 
 				TestNumeric(conn, -3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
-				TestNumeric(conn, 3.40282306E+38f,   DataType.Single,     "bigint int smallint tinyint");
+				TestNumeric(conn,  3.40282306E+38f,  DataType.Single,     "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn,  1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, decimal.MinValue,  DataType.Decimal,    "bigint bit decimal int money numeric smallint tinyint float real");
@@ -177,8 +178,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestDateTime([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -193,8 +194,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestChar([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -218,53 +219,53 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nvarchar(20))"), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char)",    DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char)",    DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1))", DataParameter.Char    ("p", '1')), Is.EqualTo('1'));
 
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char> ("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
-				Assert.That(conn.Execute<char?>("SELECT @p", DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.VarChar ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.NChar   ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char> ("SELECT @p",                  DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT @p",                  DataParameter.Create  ("p", '1')), Is.EqualTo('1'));
 
 				Assert.That(conn.Execute<char> ("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT @p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 			}
 		}
 
-		[Test]
-		public void TestString([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char)"),         Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),     Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),     Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),       Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar)"),      Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),  Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),          Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),          Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),         Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),         Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),     Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),        Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),    Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nchar(20))"),    Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),      Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"),  Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"),  Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar)"),     Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(20))"), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(20))"), Is.Null);
 
-				Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"),         Is.EqualTo("12345"));
-				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),         Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as ntext)"),        Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"),        Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
@@ -279,8 +280,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestBinary([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
@@ -308,8 +309,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestGuid([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestGuid(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -328,8 +329,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestObject([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestObject(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -342,8 +343,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestXml([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -367,8 +368,8 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test]
-		public void TestEnum1([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -379,8 +380,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void TestEnum2([IncludeDataContexts(ProviderName.SQLite)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -391,6 +392,14 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
 			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void CreateDatabase(string context)
+		{
+			SQLiteTools.CreateDatabase("TestDatabase");
+			Assert.IsTrue(File.Exists ("TestDatabase.sqlite"));
+			SQLiteTools.DropDatabase  ("TestDatabase");
 		}
 	}
 }
