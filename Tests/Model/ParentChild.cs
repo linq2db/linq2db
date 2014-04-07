@@ -76,6 +76,9 @@ namespace Tests.Model
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
 		public List<GrandChild> GrandChildren;
 
+		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID", CanBeNull = false)]
+		public List<GrandChild> GrandChildren1;
+
 		public override bool Equals(object obj)
 		{
 			return Equals(obj as Child);
