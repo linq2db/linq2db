@@ -837,7 +837,11 @@ namespace LinqToDB.Linq
 							if (Configuration.Linq.IgnoreEmptyUpdate)
 								return 0;
 
-							throw new LinqException("There are no fields to update in the type '{0}'.".Args(sqlTable.Name));
+							throw new LinqException(
+								(keys.Count == sqlTable.Fields.Count ?
+									"There are no fields to update in the type '{0}'. No PK is defined or all fields are keys." :
+									"There are no fields to update in the type '{0}'.")
+								.Args(sqlTable.Name));
 						}
 
 						foreach (var field in fields)
