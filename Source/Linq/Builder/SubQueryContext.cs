@@ -39,8 +39,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var le = (LambdaExpression)Expression;
 
-				if (le.Parameters.Count == 1 && null != Expression.Find(
-					e => e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable()))
+				if (le.Parameters.Count == 2 ||
+					le.Parameters.Count == 1 && null != Expression.Find(
+						e => e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable()))
 				{
 					if (le.Body.NodeType == ExpressionType.New)
 					{
