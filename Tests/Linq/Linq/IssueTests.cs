@@ -84,5 +84,26 @@ namespace Tests.Linq
 				Assert.That(column, Is.Null);
 			}
 		}
+
+		// https://github.com/linq2db/linq2db/issues/67
+		//
+		[Test, DataContextSource()]
+		public void Issue67Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in Parent
+					join c in Child on p.ParentID equals c.ParentID into ch
+					select new { p.ParentID, count = ch.Count() } into t
+					where t.count > 0
+					select t,
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID into ch
+					select new { p.ParentID, count = ch.Count() } into t
+					where t.count > 0
+					select t);
+			}
+		}
 	}
 }

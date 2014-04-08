@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 
 				var inner = (GroupJoinSubQueryContext)innerContext;
 
-				inner.Join       = join.JoinedTable;
+				inner.Join          = join.JoinedTable;
 				inner.CounterSelect = counterSql;
 				return new GroupJoinContext(
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
