@@ -95,18 +95,12 @@ namespace Tests.Linq
 				AreEqual(
 					from p in Parent
 					join c in Child on p.ParentID equals c.ParentID into ch
-					select new
-					{
-						p.ParentID, count = ch.Count()
-					} into t
+					select new { p.ParentID, count = ch.Count() } into t
 					where t.count > 0
 					select t,
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into ch
-					select new
-					{
-						p.ParentID, count = ch.Count()
-					} into t
+					select new { p.ParentID, count = ch.Count() } into t
 					where t.count > 0
 					select t);
 			}
