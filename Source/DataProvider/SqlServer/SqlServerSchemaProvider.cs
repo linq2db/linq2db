@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
-				case "tinyint"          : return DataType.SByte;
+				case "tinyint"          : return DataType.Byte;
 				case "date"             : return DataType.Date;
 				case "time"             : return DataType.Time;
 				case "bit"              : return DataType.Boolean;
@@ -214,6 +214,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
+				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
 				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);

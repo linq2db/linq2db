@@ -93,13 +93,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			if (dataTypeInfo == null)
+			switch (dataType.ToLower())
 			{
-				switch (dataType.ToLower())
-				{
-					//case "text" : return typeof(string);
-					default     : throw new InvalidOperationException();
-				}
+				case "tinyint" : return typeof(byte);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
@@ -115,7 +111,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case "float"            : return DataType.Double;
 				case "money"            : return DataType.Money;
 				case "bit"              : return DataType.Boolean;
-				case "tinyint"          : return DataType.SByte;
+				case "tinyint"          : return DataType.Byte;
 				case "bigint"           : return DataType.Int64;
 				case "uniqueidentifier" : return DataType.Guid;
 				case "varbinary"        : return DataType.VarBinary;
