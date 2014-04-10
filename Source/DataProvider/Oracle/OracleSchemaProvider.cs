@@ -195,9 +195,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			if (columnType == "NUMBER" && precision > 0 && scale == 0)
+			if (dataType == "NUMBER" && precision > 0 && scale == 0)
 			{
 				if (precision <  3) return typeof(sbyte);
 				if (precision <  5) return typeof(short);
@@ -205,10 +205,10 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
-			if (columnType.StartsWith("TIMESTAMP"))
-				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
+			if (dataType.StartsWith("TIMESTAMP"))
+				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
 		protected override DataType GetDataType(string dataType, string columnType)

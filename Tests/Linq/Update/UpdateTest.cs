@@ -579,7 +579,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void TestUpdateTake(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -593,6 +593,22 @@ namespace Tests.Update
 				entities
 					.Take(10)
 					.Update(x => new Parent { Value1 = 1 });
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe)]
+		public void UpdateSetSelect(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					where p.ParentID < 10000
+					select p
+				)
+				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11).ParentID)
+				.Update();
 			}
 		}
 	}

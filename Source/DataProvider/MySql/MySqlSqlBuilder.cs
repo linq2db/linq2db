@@ -207,14 +207,21 @@ namespace LinqToDB.DataProvider.MySql
 			return value;
 		}
 
-		protected override StringBuilder BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, string alias, ref bool addAlias)
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool           buildTableName,
+			bool           checkParentheses,
+			string         alias,
+			ref bool       addAlias,
+			bool           throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
 				expr,
 				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
-				ref addAlias);
+				ref addAlias,
+				throwExceptionIfTableNotFound);
 		}
 
 		protected override void BuildInsertOrUpdateQuery()

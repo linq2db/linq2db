@@ -1020,7 +1020,7 @@ namespace LinqToDB.Linq.Builder
 				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
 
 				var psrc = parent.SelectQuery.From[parent.SqlTable];
-				var join = left ? SqlTable.WeakLeftJoin() : IsList ? SqlTable.InnerJoin() : SqlTable.WeakInnerJoin();
+				var join = left ? SqlTable.WeakLeftJoin() : SqlTable.WeakInnerJoin();
 
 				Association           = association;
 				ParentAssociation     = parent;

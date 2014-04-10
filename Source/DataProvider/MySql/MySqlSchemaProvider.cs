@@ -12,6 +12,28 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			return base.GetDataTypes(dataConnection)
+				.Select(dt =>
+				{
+					if (dt.CreateFormat != null && dt.CreateFormat.EndsWith(" UNSIGNED", StringComparison.OrdinalIgnoreCase))
+					{
+						return new DataTypeInfo
+						{
+							TypeName         = dt.CreateFormat,
+							DataType         = dt.DataType,
+							CreateFormat     = dt.CreateFormat,
+							CreateParameters = dt.CreateParameters,
+							ProviderDbType   = dt.ProviderDbType,
+						};
+					}
+
+					return dt;
+				})
+				.ToList();
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
@@ -140,7 +162,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override DataType GetDataType(string dataType, string columnType)
 		{
-			switch (dataType.ToUpper())
+			switch (dataType.ToLower())
 			{
 				case "bit"        : return DataType.UInt64;
 				case "blob"       : return DataType.Blob;
@@ -178,14 +200,26 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			switch (columnType)
+			if (columnType != null && columnType.Contains("unsigned"))
+			{
+				switch (dataType.ToLower())
+				{
+					case "smallint"   : return typeof(UInt16);
+					case "int"        : return typeof(UInt32);
+					case "mediumint"  : return typeof(UInt32);
+					case "bigint"     : return typeof(UInt64);
+					case "tiny int"   : return typeof(Byte);
+				}
+			}
+
+			switch (dataType)
 			{
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }
