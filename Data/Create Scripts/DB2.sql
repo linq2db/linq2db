@@ -139,7 +139,7 @@ CREATE TABLE AllTypes
 
 	binaryDataType           char(5) for bit data,
 	varbinaryDataType        varchar(5) for bit data,
-	blobDataType             blob(10)              NULL,
+	blobDataType             blob                  NULL,
 	graphicDataType          graphic(10)           NULL,
 
 	dateDataType             date                  NULL,

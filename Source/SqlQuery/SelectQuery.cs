@@ -3713,9 +3713,13 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public TableSource GetTableSource(ISqlTableSource table)
+		public ISqlTableSource GetTableSource(ISqlTableSource table)
 		{
 			var ts = From[table];
+
+//			if (ts == null && IsUpdate && Update.Table == table)
+//				return Update.Table;
+
 			return ts == null && ParentSelect != null? ParentSelect.GetTableSource(table) : ts;
 		}
 

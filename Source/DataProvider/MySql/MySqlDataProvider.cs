@@ -1,16 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections.Generic;
-	using System.Text;
-
 	using Common;
-
 	using Data;
-
 	using Mapping;
 	using Reflection;
 	using SqlProvider;
@@ -114,45 +111,55 @@ namespace LinqToDB.DataProvider.MySql
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName = sqlBuilder
+			var tableName  = sqlBuilder
 				.BuildTableName(
 					new StringBuilder(),
-					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).ToString(),
-					descriptor.SchemaName == null ? null : sqlBuilder.Convert(descriptor.SchemaName, ConvertType.NameToOwner).ToString(),
-					descriptor.TableName == null ? null : sqlBuilder.Convert(descriptor.TableName, ConvertType.NameToQueryTable).ToString())
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
 			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
 		}
 
 		int MultipleRowsBulkCopy<T>(
-			DataConnection dataConnection,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
-			BasicSqlBuilder sqlBuilder,
+			DataConnection   dataConnection,
+			BulkCopyOptions  options,
+			IEnumerable<T>   source,
+			BasicSqlBuilder  sqlBuilder,
 			EntityDescriptor descriptor,
 			string tableName)
 		{
 			{
-				var sb = new StringBuilder();
+				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
-				sb.AppendFormat("INSERT \tINTO {0} (", tableName);
+				sb
+					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
+					.Append("(");
+
 				foreach (var column in columns)
 					sb
+						.AppendLine()
+						.Append("\t")
 						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-						.Append(", ");
+						.Append(",");
 
-				sb.Length -= 2;
+				sb.Length--;
+				sb
+					.AppendLine()
+					.Append(")");
 
-				sb.Append(") VALUES (");
+				sb
+					.AppendLine()
+					.Append("VALUES");
 
-				var headerLen = sb.Length;
-				var totalCount = 0;
+				var headerLen    = sb.Length;
+				var totalCount   = 0;
 				var currentCount = 0;
-				var batchSize = options.MaxBatchSize ?? 1000;
+				var batchSize    = options.MaxBatchSize ?? 1000;
 
 				if (batchSize <= 0)
 					batchSize = 1000;
@@ -162,6 +169,10 @@ namespace LinqToDB.DataProvider.MySql
 
 				foreach (var item in source)
 				{
+					sb
+						.AppendLine()
+						.Append("(");
+
 					foreach (var column in columns)
 					{
 						var value = column.GetValue(item);
@@ -226,30 +237,28 @@ namespace LinqToDB.DataProvider.MySql
 					}
 
 					sb.Length--;
-					sb.AppendLine(")");
+					sb.Append("),");
 
 					totalCount++;
 					currentCount++;
 
 					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
 					{
+						sb.Length--;
+
 						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
 
 						parms.Clear();
-						pidx = 0;
+						pidx         = 0;
 						currentCount = 0;
-						sb.Length = headerLen;
-					}
-					else
-					{
-						sb.Append(",(");
+						sb.Length    = headerLen;
 					}
 				}
 
 				if (currentCount > 0)
 				{
-					//sb.AppendLine("SELECT * FROM dual");
-					sb.Length-=2;
+					sb.Length--;
+
 					dataConnection.Execute(sb.ToString(), parms.ToArray());
 					sb.Length = headerLen;
 				}

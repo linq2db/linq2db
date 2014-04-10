@@ -28,17 +28,18 @@ namespace LinqToDB.DataProvider
 			MappingSchema    = mappingSchema;
 			SqlProviderFlags = new SqlProviderFlags
 			{
-				AcceptsTakeAsParameter       = true,
-				IsTakeSupported              = true,
-				IsSkipSupported              = true,
-				IsSubQueryTakeSupported      = true,
-				IsSubQueryColumnSupported    = true,
-				IsCountSubQuerySupported     = true,
-				IsInsertOrUpdateSupported    = true,
-				CanCombineParameters         = true,
-				MaxInListValuesCount         = int.MaxValue,
-				IsGroupByExpressionSupported = true,
-				IsDistinctOrderBySupported   = true,
+				AcceptsTakeAsParameter         = true,
+				IsTakeSupported                = true,
+				IsSkipSupported                = true,
+				IsSubQueryTakeSupported        = true,
+				IsSubQueryColumnSupported      = true,
+				IsCountSubQuerySupported       = true,
+				IsInsertOrUpdateSupported      = true,
+				CanCombineParameters           = true,
+				MaxInListValuesCount           = int.MaxValue,
+				IsGroupByExpressionSupported   = true,
+				IsDistinctOrderBySupported     = true,
+				IsUpdateSetTableAliasSupported = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

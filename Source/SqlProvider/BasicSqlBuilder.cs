@@ -8,9 +8,7 @@ using System.Text;
 namespace LinqToDB.SqlProvider
 {
 	using Common;
-
 	using Extensions;
-
 	using Mapping;
 	using SqlQuery;
 
@@ -108,22 +106,6 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
-
-		BasicSqlBuilder CreateNewSqlBuilder()
-		{
-			var sb = (BasicSqlBuilder)CreateSqlBuilder();
-
-			sb.StringBuilder    = new StringBuilder();
-			sb.SelectQuery      = SelectQuery;
-			sb.Indent           = Indent;
-			sb.BuildStep        = BuildStep;
-			sb.SqlOptimizer     = SqlOptimizer;
-			sb.SqlProviderFlags = SqlProviderFlags;
-			sb.StringBuilder    = StringBuilder;
-			sb.SkipAlias        = SkipAlias; 
-
-			return sb;
-		}
 
 		protected T WithStringBuilder<T>(StringBuilder sb, Func<T> func)
 		{
@@ -301,7 +283,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
-			BuildExpression(expr, true, true, alias, ref addAlias);
+			BuildExpression(expr, true, true, alias, ref addAlias, true);
 		}
 
 		#endregion
@@ -361,7 +343,8 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				AppendIndent();
-				BuildExpression(expr.Column, true, true);
+
+				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
 				StringBuilder.Append(" = ");
 
 				var addAlias = false;
@@ -1604,7 +1587,8 @@ namespace LinqToDB.SqlProvider
 			bool           buildTableName,
 			bool           checkParentheses,
 			string         alias,
-			ref bool       addAlias)
+			ref bool       addAlias,
+			bool           throwExceptionIfTableNotFound = true)
 		{
 			// TODO: check the necessity.
 			//
@@ -1632,23 +1616,26 @@ namespace LinqToDB.SqlProvider
 									//SqlQuery.GetTableSource(field.Table);
 #endif
 
-									throw new SqlException("Table '{0}' not found.", field.Table);
+									if (throwExceptionIfTableNotFound)
+										throw new SqlException("Table '{0}' not found.", field.Table);
 								}
+								else
+								{
+									var table = GetTableAlias(ts);
 
-								var table = GetTableAlias(ts);
+									table = table == null ?
+										GetPhysicalTableName(field.Table, null) :
+										Convert(table, ConvertType.NameToQueryTableAlias).ToString();
 
-								table = table == null ?
-									GetPhysicalTableName(field.Table, null) :
-									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
+									if (string.IsNullOrEmpty(table))
+										throw new SqlException("Table {0} should have an alias.", field.Table);
 
-								if (string.IsNullOrEmpty(table))
-									throw new SqlException("Table {0} should have an alias.", field.Table);
+									addAlias = alias != field.PhysicalName;
 
-								addAlias = alias != field.PhysicalName;
-
-								StringBuilder
-									.Append(table)
-									.Append('.');
+									StringBuilder
+										.Append(table)
+										.Append('.');
+								}
 							}
 
 							StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
@@ -1795,10 +1782,10 @@ namespace LinqToDB.SqlProvider
 			return BuildExpression(expr, true, true, null, ref dummy);
 		}
 
-		protected void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses)
+		protected void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound = true)
 		{
 			var dummy = false;
-			BuildExpression(expr, buildTableName, checkParentheses, null, ref dummy);
+			BuildExpression(expr, buildTableName, checkParentheses, null, ref dummy, throwExceptionIfTableNotFound);
 		}
 
 		protected void BuildExpression(int precedence, ISqlExpression expr)

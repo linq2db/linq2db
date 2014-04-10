@@ -64,6 +64,7 @@
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
     <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
+    <Compile Include="DataProvider\DB2\DB2Types.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />

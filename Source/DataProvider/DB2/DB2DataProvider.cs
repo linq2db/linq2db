@@ -28,68 +28,70 @@ namespace LinqToDB.DataProvider.DB2
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
 
-		Type _db2Int64;  Type _db2Int32;   Type _db2Int16;  Type _db2Decimal; Type _db2DecimalFloat;
-		Type _db2Real;   Type _db2Real370; Type _db2Double; Type _db2String;  Type _db2Clob;
-		Type _db2Binary; Type _db2Blob;    Type _db2Date;   Type _db2Time;    Type _db2TimeStamp;
-		Type _db2Xml;    Type _db2RowId;
-
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_db2Int64        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int64",        true);
-			_db2Int32        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int32",        true);
-			_db2Int16        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int16",        true);
-			_db2Decimal      = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Decimal",      true);
-			_db2DecimalFloat = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DecimalFloat", true);
-			_db2Real         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real",         true);
-			_db2Real370      = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real370",      true);
-			_db2Double       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Double",       true);
-			_db2String       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2String",       true);
-			_db2Clob         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Clob",         true);
-			_db2Binary       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Binary",       true);
-			_db2Blob         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Blob",         true);
-			_db2Date         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Date",         true);
-			_db2Time         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Time",         true);
-			_db2TimeStamp    = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
-			_db2Xml          = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
-			_db2RowId        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
+			DB2Types.ConnectionType = connectionType;
 
-			SetProviderField(_db2Int64,        typeof(Int64),    "GetDB2Int64");
-			SetProviderField(_db2Int32,        typeof(Int32),    "GetDB2Int32");
-			SetProviderField(_db2Int16,        typeof(Int16),    "GetDB2Int16");
-			SetProviderField(_db2Decimal,      typeof(Decimal),  "GetDB2Decimal");
-			SetProviderField(_db2DecimalFloat, typeof(Decimal),  "GetDB2DecimalFloat");
-			SetProviderField(_db2Real,         typeof(Single),   "GetDB2Real");
-			SetProviderField(_db2Real370,      typeof(Single),   "GetDB2Real370");
-			SetProviderField(_db2Double,       typeof(Double),   "GetDB2Double");
-			SetProviderField(_db2String,       typeof(String),   "GetDB2String");
-			SetProviderField(_db2Clob,         typeof(String),   "GetDB2Clob");
-			SetProviderField(_db2Binary,       typeof(byte[]),   "GetDB2Binary");
-			SetProviderField(_db2Blob,         typeof(byte[]),   "GetDB2Blob");
-			SetProviderField(_db2Date,         typeof(DateTime), "GetDB2Date");
-			SetProviderField(_db2Time,         typeof(TimeSpan), "GetDB2Time");
-			SetProviderField(_db2TimeStamp,    typeof(DateTime), "GetDB2TimeStamp");
-			SetProviderField(_db2Xml,          typeof(string),   "GetDB2Xml");
-			SetProviderField(_db2RowId,        typeof(byte[]),   "GetDB2RowId");
+			DB2Types.DB2Int64.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int64",        true);
+			DB2Types.DB2Int32.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int32",        true);
+			DB2Types.DB2Int16.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int16",        true);
+			DB2Types.DB2Decimal.     Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Decimal",      true);
+			DB2Types.DB2DecimalFloat.Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DecimalFloat", true);
+			DB2Types.DB2Real.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real",         true);
+			DB2Types.DB2Real370.     Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real370",      true);
+			DB2Types.DB2Double.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Double",       true);
+			DB2Types.DB2String.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2String",       true);
+			DB2Types.DB2Clob.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Clob",         true);
+			DB2Types.DB2Binary.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Binary",       true);
+			DB2Types.DB2Blob.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Blob",         true);
+			DB2Types.DB2Date.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Date",         true);
+			DB2Types.DB2DateTime.    Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DateTime",     false);
+			DB2Types.DB2Time.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Time",         true);
+			DB2Types.DB2TimeStamp.   Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
+			DB2Types.DB2Xml               = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
+			DB2Types.DB2RowId.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
 
-			MappingSchema.AddScalarType(_db2Int64,        GetNullValue(_db2Int64),        true, DataType.Int64);
-			MappingSchema.AddScalarType(_db2Int32,        GetNullValue(_db2Int32),        true, DataType.Int32);
-			MappingSchema.AddScalarType(_db2Int16,        GetNullValue(_db2Int16),        true, DataType.Int16);
-			MappingSchema.AddScalarType(_db2Decimal,      GetNullValue(_db2Decimal),      true, DataType.Decimal);
-			MappingSchema.AddScalarType(_db2DecimalFloat, GetNullValue(_db2DecimalFloat), true, DataType.Decimal);
-			MappingSchema.AddScalarType(_db2Real,         GetNullValue(_db2Real),         true, DataType.Single);
-			MappingSchema.AddScalarType(_db2Real370,      GetNullValue(_db2Real370),      true, DataType.Single);
-			MappingSchema.AddScalarType(_db2Double,       GetNullValue(_db2Double),       true, DataType.Double);
-			MappingSchema.AddScalarType(_db2String,       GetNullValue(_db2String),       true, DataType.NVarChar);
-			MappingSchema.AddScalarType(_db2Clob,         GetNullValue(_db2Clob),         true, DataType.NText);
-			MappingSchema.AddScalarType(_db2Binary,       GetNullValue(_db2Binary),       true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_db2Blob,         GetNullValue(_db2Blob),         true, DataType.Blob);
-			MappingSchema.AddScalarType(_db2Date,         GetNullValue(_db2Date),         true, DataType.Date);
-			MappingSchema.AddScalarType(_db2Time,         GetNullValue(_db2Time),         true, DataType.Time);
-			MappingSchema.AddScalarType(_db2TimeStamp,    GetNullValue(_db2TimeStamp),    true, DataType.DateTime2);
-			MappingSchema.AddScalarType(_db2Xml,          GetNullValue(_db2Xml),          true, DataType.Xml);
-			MappingSchema.AddScalarType(_db2RowId,        GetNullValue(_db2RowId),        true, DataType.VarBinary);
+			SetProviderField(DB2Types.DB2Int64,        typeof(Int64),    "GetDB2Int64");
+			SetProviderField(DB2Types.DB2Int32,        typeof(Int32),    "GetDB2Int32");
+			SetProviderField(DB2Types.DB2Int16,        typeof(Int16),    "GetDB2Int16");
+			SetProviderField(DB2Types.DB2Decimal,      typeof(Decimal),  "GetDB2Decimal");
+			SetProviderField(DB2Types.DB2DecimalFloat, typeof(Decimal),  "GetDB2DecimalFloat");
+			SetProviderField(DB2Types.DB2Real,         typeof(Single),   "GetDB2Real");
+			SetProviderField(DB2Types.DB2Real370,      typeof(Single),   "GetDB2Real370");
+			SetProviderField(DB2Types.DB2Double,       typeof(Double),   "GetDB2Double");
+			SetProviderField(DB2Types.DB2String,       typeof(String),   "GetDB2String");
+			SetProviderField(DB2Types.DB2Clob,         typeof(String),   "GetDB2Clob");
+			SetProviderField(DB2Types.DB2Binary,       typeof(byte[]),   "GetDB2Binary");
+			SetProviderField(DB2Types.DB2Blob,         typeof(byte[]),   "GetDB2Blob");
+			SetProviderField(DB2Types.DB2Date,         typeof(DateTime), "GetDB2Date");
+			SetProviderField(DB2Types.DB2DateTime,     typeof(DateTime), "GetDB2DateTime");
+			SetProviderField(DB2Types.DB2Time,         typeof(TimeSpan), "GetDB2Time");
+			SetProviderField(DB2Types.DB2TimeStamp,    typeof(DateTime), "GetDB2TimeStamp");
+			SetProviderField(DB2Types.DB2Xml,          typeof(string),   "GetDB2Xml");
+			SetProviderField(DB2Types.DB2RowId,        typeof(byte[]),   "GetDB2RowId");
+
+			MappingSchema.AddScalarType(DB2Types.DB2Int64,        GetNullValue(DB2Types.DB2Int64),        true, DataType.Int64);
+			MappingSchema.AddScalarType(DB2Types.DB2Int32,        GetNullValue(DB2Types.DB2Int32),        true, DataType.Int32);
+			MappingSchema.AddScalarType(DB2Types.DB2Int16,        GetNullValue(DB2Types.DB2Int16),        true, DataType.Int16);
+			MappingSchema.AddScalarType(DB2Types.DB2Decimal,      GetNullValue(DB2Types.DB2Decimal),      true, DataType.Decimal);
+			MappingSchema.AddScalarType(DB2Types.DB2DecimalFloat, GetNullValue(DB2Types.DB2DecimalFloat), true, DataType.Decimal);
+			MappingSchema.AddScalarType(DB2Types.DB2Real,         GetNullValue(DB2Types.DB2Real),         true, DataType.Single);
+			MappingSchema.AddScalarType(DB2Types.DB2Real370,      GetNullValue(DB2Types.DB2Real370),      true, DataType.Single);
+			MappingSchema.AddScalarType(DB2Types.DB2Double,       GetNullValue(DB2Types.DB2Double),       true, DataType.Double);
+			MappingSchema.AddScalarType(DB2Types.DB2String,       GetNullValue(DB2Types.DB2String),       true, DataType.NVarChar);
+			MappingSchema.AddScalarType(DB2Types.DB2Clob,         GetNullValue(DB2Types.DB2Clob),         true, DataType.NText);
+			MappingSchema.AddScalarType(DB2Types.DB2Binary,       GetNullValue(DB2Types.DB2Binary),       true, DataType.VarBinary);
+			MappingSchema.AddScalarType(DB2Types.DB2Blob,         GetNullValue(DB2Types.DB2Blob),         true, DataType.Blob);
+			MappingSchema.AddScalarType(DB2Types.DB2Date,         GetNullValue(DB2Types.DB2Date),         true, DataType.Date);
+			MappingSchema.AddScalarType(DB2Types.DB2DateTime,     GetNullValue(DB2Types.DB2DateTime),     true, DataType.DateTime);
+			MappingSchema.AddScalarType(DB2Types.DB2Time,         GetNullValue(DB2Types.DB2Time),         true, DataType.Time);
+			MappingSchema.AddScalarType(DB2Types.DB2TimeStamp,    GetNullValue(DB2Types.DB2TimeStamp),    true, DataType.DateTime2);
+			MappingSchema.AddScalarType(DB2Types.DB2Xml,          GetNullValue(DB2Types.DB2Xml),          true, DataType.Xml);
+			MappingSchema.AddScalarType(DB2Types.DB2RowId,        GetNullValue(DB2Types.DB2RowId),        true, DataType.VarBinary);
 
 			_setBlob = GetSetParameter(connectionType, "DB2Parameter", "DB2Type", "DB2Type", "Blob");
+
+			DB2Tools.Initialized();
 		}
 
 		static object GetNullValue(Type type)

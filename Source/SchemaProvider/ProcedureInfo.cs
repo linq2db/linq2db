@@ -10,6 +10,7 @@ namespace LinqToDB.SchemaProvider
 		public string ProcedureName;
 		public bool   IsFunction;
 		public bool   IsTableFunction;
+		public bool   IsAggregateFunction;
 		public bool   IsDefaultSchema;
 		public string ProcedureDefinition;
 	}

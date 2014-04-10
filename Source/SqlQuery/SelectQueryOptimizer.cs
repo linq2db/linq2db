@@ -14,12 +14,16 @@ namespace LinqToDB.SqlQuery
 			_selectQuery = selectQuery;
 		}
 
-		private readonly SqlProviderFlags _flags;
-		readonly SelectQuery _selectQuery;
+		readonly SqlProviderFlags _flags;
+		readonly SelectQuery      _selectQuery;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
 #if DEBUG
+			if (_selectQuery.IsUpdate)
+			{
+			}
+
 			var sqlText = _selectQuery.SqlText;
 
 			var dic = new Dictionary<SelectQuery,SelectQuery>();

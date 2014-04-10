@@ -139,6 +139,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					SPECIFIC_NAME                                                                 as ProcedureName,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END as IsFunction,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END as IsTableFunction,
+					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF') 
+					                                                            THEN 1 ELSE 0 END as IsAggregateFunction,
 					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END as IsDefaultSchema
 				FROM
 					INFORMATION_SCHEMA.ROUTINES")
@@ -172,7 +174,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
-				case "tinyint"          : return DataType.SByte;
+				case "tinyint"          : return DataType.Byte;
 				case "date"             : return DataType.Date;
 				case "time"             : return DataType.Time;
 				case "bit"              : return DataType.Boolean;
@@ -208,16 +210,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
 		{
-			switch (columnType)
+			switch (dataType)
 			{
+				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
+				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

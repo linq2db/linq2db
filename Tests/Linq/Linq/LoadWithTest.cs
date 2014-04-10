@@ -10,7 +10,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class LoadWithTest : TestBase
 	{
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void LoadWith1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -31,7 +31,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		// TODO: [Test, DataContextSource]
 		public void LoadWith2(string context)
 		{
 			using (var db = GetDataContext(context))

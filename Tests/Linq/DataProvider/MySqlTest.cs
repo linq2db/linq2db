@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -14,6 +12,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using MySql.Data.Types;
+
+using Tests.Model;
 
 namespace Tests.DataProvider
 {
@@ -233,6 +233,121 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?,string>()(TestEnum.AA) }), Is.EqualTo("A"));
+			}
+		}
+
+		[Table("alltypes")]
+		public partial class AllType
+		{
+			[PrimaryKey, Identity] public int       ID                  { get; set; } // int(11)
+			[Column,     Nullable] public long?     bigintDataType      { get; set; } // bigint(20)
+			[Column,     Nullable] public short?    smallintDataType    { get; set; } // smallint(6)
+			[Column,     Nullable] public sbyte?    tinyintDataType     { get; set; } // tinyint(4)
+			[Column,     Nullable] public int?      mediumintDataType   { get; set; } // mediumint(9)
+			[Column,     Nullable] public int?      intDataType         { get; set; } // int(11)
+			[Column,     Nullable] public decimal?  numericDataType     { get; set; } // decimal(10,0)
+			[Column,     Nullable] public decimal?  decimalDataType     { get; set; } // decimal(10,0)
+			[Column,     Nullable] public double?   doubleDataType      { get; set; } // double
+			[Column,     Nullable] public float?    floatDataType       { get; set; } // float
+			[Column,     Nullable] public DateTime? dateDataType        { get; set; } // date
+			[Column,     Nullable] public DateTime? datetimeDataType    { get; set; } // datetime
+			[Column,     Nullable] public DateTime? timestampDataType   { get; set; } // timestamp
+			[Column,     Nullable] public TimeSpan? timeDataType        { get; set; } // time
+			[Column,     Nullable] public int?      yearDataType        { get; set; } // year(4)
+			[Column,     Nullable] public int?      year2DataType       { get; set; } // year(2)
+			[Column,     Nullable] public int?      year4DataType       { get; set; } // year(4)
+			[Column,     Nullable] public char?     charDataType        { get; set; } // char(1)
+			[Column,     Nullable] public string    varcharDataType     { get; set; } // varchar(20)
+			[Column,     Nullable] public string    textDataType        { get; set; } // text
+			[Column,     Nullable] public byte[]    binaryDataType      { get; set; } // binary(3)
+			[Column,     Nullable] public byte[]    varbinaryDataType   { get; set; } // varbinary(5)
+			[Column,     Nullable] public byte[]    blobDataType        { get; set; } // blob
+			[Column,     Nullable] public UInt64?   bitDataType         { get; set; } // bit(3)
+			[Column,     Nullable] public string    enumDataType        { get; set; } // enum('Green','Red','Blue')
+			[Column,     Nullable] public string    setDataType         { get; set; } // set('one','two')
+			[Column,     Nullable] public uint?     intUnsignedDataType { get; set; } // int(10) unsigned
+		}
+
+		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				conn.BeginTransaction();
+
+				conn.BulkCopy(new BulkCopyOptions { MaxBatchSize = 50000, BulkCopyType = bulkCopyType },
+					Enumerable.Range(0, 100000).Select(n =>
+						new AllType
+						{
+							ID                  = 2000 + n,
+							bigintDataType      = 3000 + n,
+							smallintDataType    = (short)(4000 + n),
+							tinyintDataType     = (sbyte)(5000 + n),
+							mediumintDataType   = 6000 + n,
+							intDataType         = 7000 + n,
+							numericDataType     = 8000 + n,
+							decimalDataType     = 9000 + n,
+							doubleDataType      = 8800 + n,
+							floatDataType       = 7700 + n,
+							dateDataType        = DateTime.Now,
+							datetimeDataType    = DateTime.Now,
+							timestampDataType   = null,
+							timeDataType        = null,
+							yearDataType        = (1000 + n) % 100,
+							year2DataType       = (1000 + n) % 100,
+							year4DataType       = null,
+							charDataType        = 'A',
+							varcharDataType     = "",
+							textDataType        = "",
+							binaryDataType      = null,
+							varbinaryDataType   = null,
+							blobDataType        = new byte[] { 1, 2, 3 },
+							bitDataType         = null,
+							enumDataType        = "Green",
+							setDataType         = "one",
+							intUnsignedDataType = (uint)(5000 + n),
+						}));
+
+				//var list = conn.GetTable<ALLTYPE>().ToList();
+
+				conn.GetTable<DB2Test.ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyMultipleRows(string context)
+		{
+			BulkCopyTest(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyProviderSpecific(string context)
+		{
+			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyLinqTypes(string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
 			}
 		}
 	}

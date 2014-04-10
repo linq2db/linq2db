@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -463,6 +464,44 @@ namespace Tests.Linq
 				ProcessItem(db, 1);
 				ProcessItem(db, 2);
 			}
+		}
+
+		[Table("Person")]
+		public class PersonTest
+		{
+			[Column("FirstName"), PrimaryKey]
+			public string ID;
+		}
+
+		int _i;
+
+		string GetCustKey()
+		{
+			return ++_i % 2 == 0 ? "John" : null;
+		}
+
+		[Test, DataContextSource]
+		public void Issue288Test(string context)
+		{
+			_i = 0;
+
+			using (var db = GetDataContext(context))
+			{
+				var test = db.GetTable<PersonTest>().FirstOrDefault(p => p.ID == GetCustKey());
+
+				Assert.That(test, Is.Null);
+			}
+
+			Assert.That(_i, Is.EqualTo(1));
+
+			using (var db = GetDataContext(context))
+			{
+				var test = db.GetTable<PersonTest>().FirstOrDefault(p => p.ID == GetCustKey());
+
+				Assert.That(test, Is.Not.Null);
+			}
+
+			Assert.That(_i, Is.EqualTo(2));
 		}
 	}
 
