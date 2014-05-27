@@ -180,28 +180,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
-				case DataType.Image      :
-				case DataType.Binary     :
-				case DataType.Blob       :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
 				case DataType.Udt        :
 					{
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							((SqlParameter)parameter).UdtTypeName = s;
 					}
+
 					break;
 			}
 
-			parameter.ParameterName = name;
-			SetParameterType(parameter, dataType);
-			parameter.Value = value ?? DBNull.Value;
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
