@@ -755,8 +755,14 @@ namespace LinqToDB.Linq.Builder
 
 			public void SetAlias(string alias)
 			{
-				if (alias == null || alias.Contains('<'))
+				if (alias == null)
 					return;
+
+#if NETFX_CORE
+				if (alias.Contains("<"))
+#else
+				if (alias.Contains('<'))
+#endif
 
 				if (SqlTable.Alias == null)
 					SqlTable.Alias = alias;
