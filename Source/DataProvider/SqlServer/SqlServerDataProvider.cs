@@ -180,28 +180,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
-				case DataType.Image      :
-				case DataType.Binary     :
-				case DataType.Blob       :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
 				case DataType.Udt        :
 					{
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
 							((SqlParameter)parameter).UdtTypeName = s;
 					}
+
 					break;
 			}
 
-			parameter.ParameterName = name;
-			SetParameterType(parameter, dataType);
-			parameter.Value = value ?? DBNull.Value;
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
@@ -291,11 +280,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				var columns = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 				var sb      = CreateSqlBuilder();
 				var rd      = new BulkCopyReader(this, columns, source);
+				var sqlopt = SqlBulkCopyOptions.Default;
+
+				if (options.CheckConstraints.HasValue)
+					sqlopt |= SqlBulkCopyOptions.CheckConstraints;
 
 				using (var bc = dataConnection.Transaction == null ?
 					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction))
+					new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{
+					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
