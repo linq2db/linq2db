@@ -24,5 +24,18 @@ namespace Tests.Linq
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
 		}
+
+		[Test, DataContextSource]
+		public void TestQueryCacheWithNullParameters(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				int? id = null;
+				Assert.AreEqual(0, db.Person.Where(_ => _.ID == id).Count());
+
+				id = 1;
+				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+			}
+		}
 	}
 }

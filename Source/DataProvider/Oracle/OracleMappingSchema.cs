@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.Oracle
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 
 			SetDataType(typeof(Guid), DataType.Guid);
+
+			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 		}
 
 		public override LambdaExpression TryGetConvertExpression(Type from, Type to)

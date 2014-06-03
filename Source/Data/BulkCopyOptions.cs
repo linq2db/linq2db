@@ -8,5 +8,6 @@ namespace LinqToDB.Data
 		public int?         BulkCopyTimeout    { get; set; }
 		public BulkCopyType BulkCopyType       { get; set; }
 		public bool?        IgnoreSkipOnInsert { get; set; }
+		public bool?        CheckConstraints   { get; set; }
 	}
 }

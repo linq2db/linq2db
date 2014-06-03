@@ -215,6 +215,15 @@ namespace LinqToDB.Linq.Builder
 						var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 						var expr   = builder.ConvertToSqlExpression(ctx, ma.Expression);
 
+						if (expr.ElementType == QueryElementType.SqlParameter)
+						{
+							var parm  = (SqlParameter)expr;
+							var field = (SqlField)column[0].Sql;
+
+							if (parm.DataType == DataType.Undefined)
+								parm.DataType = field.DataType;
+						}
+
 						items.Add(new SelectQuery.SetExpression(column[0].Sql, expr));
 					}
 				}
