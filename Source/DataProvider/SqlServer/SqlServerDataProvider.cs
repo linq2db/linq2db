@@ -285,11 +285,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (options.CheckConstraints.HasValue)
 					sqlopt |= SqlBulkCopyOptions.CheckConstraints;
 
-				using (var bc = dataConnection.Transaction == null ?
-					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
+				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{
-					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
