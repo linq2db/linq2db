@@ -277,13 +277,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (connection != null)
 			{
 				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
+				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 				var sb      = CreateSqlBuilder();
 				var rd      = new BulkCopyReader(this, columns, source);
-				var sqlopt = SqlBulkCopyOptions.Default;
+				var sqlopt  = SqlBulkCopyOptions.Default;
 
-				if (options.CheckConstraints.HasValue)
-					sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+				if (options.CheckConstraints == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+				if (options.KeepIdentity     == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
 
 				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{
