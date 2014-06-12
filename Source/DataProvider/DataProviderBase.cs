@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider
 
 		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
 
-		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader,int,string>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
@@ -174,6 +174,9 @@ namespace LinqToDB.DataProvider
 				case DataType.VarBinary :
 					if (value is Binary) value = ((Binary)value).ToArray();
 					break;
+				case DataType.Int64     :
+					if (value is TimeSpan) value = ((TimeSpan)value).Ticks;
+					break;
 				case DataType.Xml       :
 					     if (value is XDocument)   value = value.ToString();
 					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
@@ -194,6 +197,9 @@ namespace LinqToDB.DataProvider
 				case DataType.Blob      :
 				case DataType.VarBinary :
 					if (type == typeof(Binary)) return typeof(byte[]);
+					break;
+				case DataType.Int64     :
+					if (type == typeof(TimeSpan)) return typeof(long);
 					break;
 				case DataType.Xml       :
 					if (type == typeof(XDocument) ||

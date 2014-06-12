@@ -211,8 +211,8 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
-		static Func<int,string,object>         _columnMappingCreator;
+		static Func<IDbConnection,int,IDisposable> _bulkCopyCreator;
+		static Func<int,string,object>             _columnMappingCreator;
 
 		public override int BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection  dataConnection,
@@ -242,21 +242,24 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				if (_bulkCopyCreator == null)
 				{
-					var connType          = GetConnectionType();
-					var bulkCopyType      = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
-					var columnMappingType = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
+					var connType           = GetConnectionType();
+					var bulkCopyType       = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
+					var bulkCopyOptionType = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyOptions",       false);
+					var columnMappingType  = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
 
 					if (bulkCopyType != null)
 					{
 						{
-							var p = Expression.Parameter(typeof(IDbConnection), "p");
-							var l = Expression.Lambda<Func<IDbConnection,IDisposable>>(
+							var p1 = Expression.Parameter(typeof(IDbConnection), "pc");
+							var p2 = Expression.Parameter(typeof(int),           "po");
+							var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
 								Expression.Convert(
 									Expression.New(
-										bulkCopyType.GetConstructor(new[] { connType }),
-										Expression.Convert(p, connType)),
+										bulkCopyType.GetConstructor(new[] { connType, bulkCopyOptionType }),
+										Expression.Convert(p1, connType),
+										Expression.Convert(p2, bulkCopyOptionType)),
 									typeof(IDisposable)),
-								p);
+								p1, p2);
 
 							_bulkCopyCreator = l.Compile();
 						}
@@ -278,10 +281,15 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (_bulkCopyCreator != null)
 				{
-					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
+					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 					var rd      = new BulkCopyReader(this, columns, source);
 
-					using (var bc = _bulkCopyCreator(dataConnection.Connection))
+					var bcOptions = 0; // Default
+
+					if (options.KeepIdentity == true)
+						bcOptions |= 1; // KeepIdentity = 1, TableLock = 2, Truncate = 4,
+
+					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
 					{
 						dynamic dbc = bc;
 

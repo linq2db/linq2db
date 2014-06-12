@@ -35,6 +35,9 @@ namespace LinqToDB.DataProvider.Oracle
 			SetCharField("Char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("NChar", (r,i) => r.GetString(i).TrimEnd());
 
+//			ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal), ToType = typeof(TimeSpan) }] =
+//				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
+
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
 		}
 

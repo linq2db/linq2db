@@ -316,5 +316,28 @@ namespace Tests.Linq
 					from p in db.Parent
 					select GrandChildren(p).Count());
 		}
+
+		[Test]
+		public void ParameterlessExpression()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var parameter = Expression.Parameter(typeof(Parent));
+				var selector  = Expression.Lambda(parameter, parameter);
+				var table     = db.Parent;
+				var exp       = Expression.Call(
+					typeof(Queryable),
+					"Select",
+					new [] { typeof(Parent), typeof(Parent) },
+					table.Expression,
+					selector);
+
+				var res = table.Provider.CreateQuery<Parent>(exp);
+
+				foreach (var parent in res)
+				{
+				}
+			}
+		}
 	}
 }

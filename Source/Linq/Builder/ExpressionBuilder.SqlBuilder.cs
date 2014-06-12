@@ -1345,7 +1345,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal   :
 				case ExpressionType.NotEqual:
 
-					if (!context.SelectQuery.IsParameterDependent && (l is SqlParameter || r is SqlParameter) && l.CanBeNull() && r.CanBeNull())
+					if (!context.SelectQuery.IsParameterDependent &&
+						(l is SqlParameter && l.CanBeNull() || r is SqlParameter && r.CanBeNull()))
 						context.SelectQuery.IsParameterDependent = true;
 
 					// | (SqlQuery(Select([]) as q), SqlValue(null))

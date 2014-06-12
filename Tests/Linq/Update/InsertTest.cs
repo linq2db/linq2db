@@ -1074,5 +1074,67 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Table("LinqDataTypes")]
+		class TestConvertTable1
+		{
+			[PrimaryKey]                        public int      ID;
+			[Column(DataType = DataType.Int64)] public TimeSpan BigIntValue;
+		}
+
+		[Test, DataContextSource]
+		public void InsertConverted(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var tbl = db.GetTable<TestConvertTable1>();
+
+				try
+				{
+					tbl.Delete(r => r.ID >= 1000);
+
+					var tt = TimeSpan.FromMinutes(1);
+
+					tbl.Insert(() => new TestConvertTable1 { ID = 1001, BigIntValue = tt });
+
+					Assert.AreEqual(tt, tbl.First(t => t.ID == 1001).BigIntValue);
+				}
+				finally
+				{
+					tbl.Delete(r => r.ID >= 1000);
+				}
+			}
+		}
+
+		[Table("LinqDataTypes")]
+		class TestConvertTable2
+		{
+			[PrimaryKey]                        public int       ID;
+			[Column(DataType = DataType.Int64)] public TimeSpan? BigIntValue;
+		}
+
+		[Test, DataContextSource]
+		public void InsertConvertedNullable(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var tbl = db.GetTable<TestConvertTable2>();
+
+				try
+				{
+					tbl.Delete(r => r.ID >= 1000);
+
+					var tt = TimeSpan.FromMinutes(1);
+
+					tbl.Insert(() => new TestConvertTable2 { ID = 1001, BigIntValue = tt });
+
+					Assert.AreEqual(tt, tbl.First(t => t.ID == 1001).BigIntValue);
+				}
+				finally
+				{
+					tbl.Delete(r => r.ID >= 1000);
+				}
+			}
+		}
 	}
 }
