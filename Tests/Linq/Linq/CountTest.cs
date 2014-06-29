@@ -617,5 +617,19 @@ namespace Tests.Linq
 						Count1 = gc.Count() + gc.Count(),
 					});
 		}
+
+		[Test, DataContextSource]
+		public void Count8(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(
+					   Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+				Assert.AreEqual(
+					db.Child.Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
+					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+			}
+		}
 	}
 }
