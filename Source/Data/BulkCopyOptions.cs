@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Data
+﻿namespace LinqToDB.Data
 {
 	public class BulkCopyOptions
 	{

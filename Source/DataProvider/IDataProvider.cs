@@ -18,18 +18,19 @@ namespace LinqToDB.DataProvider
 		MappingSchema    MappingSchema       { get; }
 		SqlProviderFlags SqlProviderFlags    { get; }
 
-		IDbConnection    CreateConnection    (string connectionString);
-		ISqlBuilder      CreateSqlBuilder    ();
-		ISqlOptimizer    GetSqlOptimizer     ();
-		void             InitCommand         (DataConnection dataConnection);
-		object           GetConnectionInfo   (DataConnection dataConnection, string parameterName);
-		Expression       GetReaderExpression (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
-		bool?            IsDBNullAllowed     (IDataReader reader, int idx);
-		void             SetParameter        (IDbDataParameter parameter, string name, DataType dataType, object value);
+		IDbConnection    CreateConnection   (string connectionString);
+		ISqlBuilder      CreateSqlBuilder   ();
+		ISqlOptimizer    GetSqlOptimizer    ();
+		void             InitCommand        (DataConnection dataConnection);
+		object           GetConnectionInfo  (DataConnection dataConnection, string parameterName);
+		Expression       GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
+		bool?            IsDBNullAllowed    (IDataReader reader, int idx);
+		void             SetParameter       (IDbDataParameter parameter, string name, DataType dataType, object value);
 		Type             ConvertParameterType(Type type, DataType dataType);
 
-		ISchemaProvider  GetSchemaProvider   ();
+		ISchemaProvider  GetSchemaProvider  ();
 
-		int              BulkCopy<T>         (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
+		int              BulkCopy<T>        (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
+        int              InsertBatchWithIdentity<T>(DataConnection dataConnection, IList<T> source);
 	}
 }

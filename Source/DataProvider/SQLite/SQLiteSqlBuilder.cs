@@ -161,5 +161,17 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append(")");
 			}
 		}
+
+	    public override StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
+        {
+            // ﻿Tables may be created in the main database, the temp database, or in any attached database.
+            // ﻿The database-names 'main' and 'temp' refer to the main database and the database used for temporary tables.
+            // ﻿The main and temp databases cannot be attached or detached.
+            // ﻿Tables in an attached database can be referred to using the syntax database-name.table-name.
+
+            if (database != null) sb.Append(database).Append(".");
+
+            return sb.Append(table);
+	    }
 	}
 }

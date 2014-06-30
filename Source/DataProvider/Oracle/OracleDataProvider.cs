@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB.Extensions;
+using LinqToDB.Reflection.Emit;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -321,6 +324,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
+        private object _nVarchar2EnumValue;
+        private SetHandler _oracleDbTypeSetHandler;
+
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			switch (dataType)
@@ -353,6 +359,26 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
+
+            if (value is string)
+            {
+                // We need NVarChar2 in order to insert UTF8 string values. The default Odp VarChar2 dbtype doesnt work
+                // with UTF8 values. Note : Microsoft oracle client uses NVarChar value by default.
+
+                if (_nVarchar2EnumValue == null)
+                {
+                    var clientNamespace = OracleTools.AssemblyName + ".Client.";
+                    string typeName = clientNamespace + "OracleDbType";
+
+                    var nvarCharType = parameter.GetType().Assembly.GetType(typeName);
+                    var enumValue = Enum.Parse(nvarCharType, "NVarchar2");
+                    _nVarchar2EnumValue = enumValue;
+
+                    _oracleDbTypeSetHandler = FunctionFactory.Il.CreateSetHandler(parameter.GetType(), "OracleDbType");
+                }
+
+                _oracleDbTypeSetHandler(parameter, _nVarchar2EnumValue);
+            }
 		}
 
 		public override Type ConvertParameterType(Type type, DataType dataType)
@@ -439,6 +465,12 @@ namespace LinqToDB.DataProvider.Oracle
 					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 				.ToString();
 
+            /*
+             * ﻿OracleBulkCopy doesn't support transaction for all the records, it only support transaction for batches if UseInternalTransaction is specified.
+             * ﻿If BatchSize > 0 and the UseInternalTransaction bulk copy option is specified, each batch of the bulk copy operation occurs within a transaction.
+             * If the connection used to perform the bulk copy operation is already part of a transaction, an InvalidOperationException exception is raised.
+             * If BatchSize > 0 and the UseInternalTransaction option is not specified, rows are sent to the database in batches of size BatchSize, but no transaction-related action is taken.
+             */
 			if (bkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
 			{
 				if (_bulkCopyCreator == null)
@@ -516,7 +548,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var sb         = new StringBuilder();
 				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+			    var columns    = descriptor.Columns.Where(c => (options.IgnoreSkipOnInsert ?? false) || !c.SkipOnInsert).ToArray();
 				var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 
 				sb.AppendLine("INSERT ALL");
@@ -638,5 +670,69 @@ namespace LinqToDB.DataProvider.Oracle
 				return totalCount;
 			}
 		}
+
+
+        class SequenceId
+        {
+            public decimal LEVEL { get; set; }
+            public decimal Id { get; set; }
+        }
+
+        private List<Int64> ReserveSequenceValues(DataConnection db, int count, string sequenceName)
+        {
+            var results = new List<long>();
+
+            var sql = ((OracleSqlBuilder)CreateSqlBuilder()).BuildReserveSequenceValuesSql(count, sequenceName);
+
+            db.SetCommand(sql);
+            var dr = db.ExecuteReader();
+
+            var sequenceIds = new LinqToDB.Reflection.Emit.Mapper().ToEnumerable<SequenceId>(dr as DbDataReader);
+            results.AddRange(sequenceIds.Select(e => e.Id).ToList().Select(Convert.ToInt64));
+
+            return results;
+        }
+
+	    public override int InsertBatchWithIdentity<T>(DataConnection dataConnection, IList<T> source)
+	    {
+            var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = sqlBuilder
+				.BuildTableName(
+					new StringBuilder(),
+					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				.ToString();
+
+            var sqlTable = new SqlTable<T>(dataConnection.MappingSchema);
+            var identityExpression = (SqlExpression)sqlBuilder.GetIdentityExpression(sqlTable);
+            if (identityExpression != null)
+            {
+                var sequences = ReserveSequenceValues(dataConnection, source.Count(), identityExpression.Expr);
+
+                foreach (var field in sqlTable.Fields)
+                {
+                    if (field.Value.IsIdentity)
+                    {
+                        var setHandler = Reflection.Emit.FunctionFactory.Il.CreateSetHandler(sqlTable.ObjectType, field.Value.Name);
+
+                        int i = 0;
+                        foreach (var item in source)
+                        {
+                            setHandler(item, Converter.ChangeType(sequences[i], field.Value.SystemType));
+                            i++;
+                        }
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("No identity expression found. Use BulkCopy instead!");
+            }
+
+            return MultipleRowsBulkCopy(dataConnection, new BulkCopyOptions {IgnoreSkipOnInsert = true}, source, sqlBuilder, descriptor, tableName);
+	    }
 	}
 }
