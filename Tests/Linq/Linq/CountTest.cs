@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -629,6 +630,27 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					db.Child.Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
 					db.Child.Select(ch => ch.Parent.ParentID).Count(p => p == 1));
+			}
+		}
+
+		[Table("Child")]
+		class Child2
+		{
+			[Column] public int? ParentID;
+			[Column] public int  ChildID;
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public Parent Parent;
+		}
+
+		[Test, DataContextSource]
+		public void Count9(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(
+					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).ToList().Count(p => p == 1),
+					db.GetTable<Child2>().Select(ch => ch.Parent.ParentID).Count(p => p == 1));
 			}
 		}
 	}
