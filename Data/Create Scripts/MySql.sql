@@ -169,6 +169,7 @@ CREATE TABLE AllTypes
 	enumDataType        enum('Green', 'Red', 'Blue') NULL,
 	setDataType         set('one', 'two')            NULL,
 	intUnsignedDataType int unsigned                 NULL,
+	boolDataType        bool                         NULL,
 
 	CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED (ID)
 )
@@ -204,7 +205,8 @@ INSERT INTO AllTypes
 
 	bitDataType,
 	enumDataType,
-	setDataType
+	setDataType,
+	boolDataType
 )
 SELECT
 	NULL,
@@ -233,6 +235,7 @@ SELECT
 	NULL,
 	NULL,
 
+	NULL,
 	NULL,
 	NULL,
 	NULL
@@ -266,7 +269,8 @@ SELECT
 
 	B'101',
 	'Green',
-	'one'
+	'one',
+	1
 
 GO
 

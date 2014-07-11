@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.MySql
 				case "longtext"   : return DataType.Text;
 				case "double"     : return DataType.Double;
 				case "float"      : return DataType.Single;
-				case "tinyint"    : return DataType.SByte;
+				case "tinyint"    : return columnType == "tinyint(1)" ? DataType.Boolean : DataType.SByte;
 				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
 				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
 				case "year"       : return DataType.Int32;
@@ -216,6 +216,10 @@ namespace LinqToDB.DataProvider.MySql
 
 			switch (dataType)
 			{
+				case "tinyint"   :
+					if (columnType == "tinyint(1)")
+						return typeof(Boolean);
+					break;
 				case "datetime2" : return typeof(DateTime);
 			}
 
