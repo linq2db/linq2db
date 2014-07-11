@@ -3,7 +3,7 @@
 <#@ include file="..\..\Templates\LinqToDB.MySql.ttinclude"       #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
 <#@ assembly name="$(SolutionDir)packages\MySql.Data.6.8.3\lib\net40\MySql.Data.dll" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll" #>
+<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll" #>
 <#
 	NamespaceName = "MySqlDataContext";
 

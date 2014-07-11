@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -62,7 +63,7 @@ namespace DB2DataContext
 		[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
 		[Column,     Nullable] public string    BINARYDATATYPE    { get; set; } // CHARACTER(5)
 		[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
-		[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(10)
+		[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(1048576)
 		[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
 		[Column,     Nullable] public DateTime? DATEDATATYPE      { get; set; } // DATE
 		[Column,     Nullable] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
@@ -214,5 +215,33 @@ namespace DB2DataContext
 		}
 
 		#endregion
+	}
+
+	public static partial class tableExtensions
+	{
+		public static ALLTYPE Find(this ITable<ALLTYPE> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static MASTERTABLE Find(this ITable<MASTERTABLE> table, int ID1, int ID2)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID1 == ID1 &&
+				t.ID2 == ID2);
+		}
+
+		public static Person Find(this ITable<Person> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }

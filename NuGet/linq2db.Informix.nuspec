@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Informix</id>
-		<version>1.0.1</version>
+		<version>1.0.5</version>
 		<title>LINQ to Informix</title>
 		<authors>Igor Tkachev</authors>
 		<owners />

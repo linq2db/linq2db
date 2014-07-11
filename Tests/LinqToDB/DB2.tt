@@ -1,9 +1,9 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True"              #>
-<#@ output extension=".generated.cs"                                     #>
-<#@ include file="..\..\Templates\LinqToDB.DB2.ttinclude"                #>
-<#@ include file="..\..\Templates\PluralizationService.ttinclude"        #>
-<#@ assembly name="E:\Projects\Git\linq2db\Redist\IBM\IBM.Data.DB2.dll"  #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.DB2.ttinclude"         #>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="I:\linq2db\Redist\IBM\IBM.Data.DB2.dll"        #>
+<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll"   #>
 <#
 	NamespaceName = "DB2DataContext";
 
@@ -13,7 +13,7 @@
 
 	GetProcedure("ADMINISTRATOR.PERSON_SELECTBYKEY").ResultTable = GetTable("ADMINISTRATOR.Person");
 
-	//GetColumn("ADMINISTRATOR.Person", "ID").MemberName = "122";
+	//GetColumn("ADMINISTRATOR.Person", "PersonID").MemberName = "122";
 	//GetFK    ("ADMINISTRATOR.Person", "ID1").MemberName = "122";
 
 	GenerateModel();
