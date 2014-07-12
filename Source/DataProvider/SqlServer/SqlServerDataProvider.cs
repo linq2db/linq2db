@@ -2,17 +2,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -138,6 +136,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return _sqlOptimizer;
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
