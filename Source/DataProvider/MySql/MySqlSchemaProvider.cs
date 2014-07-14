@@ -114,11 +114,11 @@ namespace LinqToDB.DataProvider.MySql
 					TableID      = c.Field<string>("TABLE_SCHEMA") + ".." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
@@ -130,11 +130,11 @@ namespace LinqToDB.DataProvider.MySql
 					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
 		{
 			if (columnType != null && columnType.Contains("unsigned"))
 			{

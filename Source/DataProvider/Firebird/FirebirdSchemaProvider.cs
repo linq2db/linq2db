@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird
 					DataType     = dt.TypeName,
 					IsNullable   = Converter.ChangeTypeTo<bool>(c["IS_NULLABLE"]),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					Length       = Converter.ChangeTypeTo<int> (c["COLUMN_SIZE"]),
+					Length       = Converter.ChangeTypeTo<long>(c["COLUMN_SIZE"]),
 					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
 					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity   = false,

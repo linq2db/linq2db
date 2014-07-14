@@ -113,10 +113,10 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType   = dt != null ? dt.TypeName : null,
-					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
-					IsIdentity = Converter.ChangeTypeTo<int>(c["COLUMN_FLAGS"]) == 90,
+					Length     = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					IsIdentity = Converter.ChangeTypeTo<int> (c["COLUMN_FLAGS"]) == 90,
 				}
 			).ToList();
 		}
@@ -204,7 +204,7 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
 		{
 			if (dataTypeInfo == null)
 			{

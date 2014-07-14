@@ -265,9 +265,9 @@ namespace LinqToDB.DataProvider.Informix
 						case    4 : c.DataType = "SMALLFLOAT";       break;
 						case    5 :
 							c.DataType  = "DECIMAL";
-							c.Precision = len / 256;
+							c.Precision = (int)(len / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = len % 256;
+								c.Scale = (int)(len % 256);
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -276,14 +276,14 @@ namespace LinqToDB.DataProvider.Informix
 						case    7 : c.DataType = "DATE";             break;
 						case    8 :
 							c.DataType  = "MONEY";
-							c.Precision = len / 256;
+							c.Precision = (int)(len / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = len % 256;
+								c.Scale = (int)(len % 256);
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
 							c.DataType = "DATETIME";
-							SetDate(c, len);
+							SetDate(c, (int)len);
 							break;
 						case   11 : c.DataType = "BYTE";             break;
 						case   12 : c.DataType = "TEXT";             break;
@@ -293,7 +293,7 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
-							SetDate(c, len);
+							SetDate(c, (int)len);
 							break;
 						case   15 :
 							c.DataType = "NCHAR";

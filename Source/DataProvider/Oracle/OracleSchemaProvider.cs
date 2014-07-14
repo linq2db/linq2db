@@ -95,10 +95,10 @@ namespace LinqToDB.DataProvider.Oracle
 					Name         = c.Field<string>("COLUMN_NAME"),
 					DataType     = c.Field<string>("DATATYPE"),
 					IsNullable   = Converter.ChangeTypeTo<string>(c["NULLABLE"]) == "Y",
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ID"]),
-					Length       = Converter.ChangeTypeTo<int> (c["LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int> (c["PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["SCALE"]),
+					Ordinal      = Converter.ChangeTypeTo<int>   (c["ID"]),
+					Length       = Converter.ChangeTypeTo<long>  (c["LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int>   (c["PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int>   (c["SCALE"]),
 					IsIdentity   = false,
 				}
 			).ToList();
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.Oracle
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long length, int prec, int scale)
 		{
 			switch (columnType)
 			{
@@ -195,7 +195,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
 		{
 			if (dataType == "NUMBER" && precision > 0 && scale == 0)
 			{

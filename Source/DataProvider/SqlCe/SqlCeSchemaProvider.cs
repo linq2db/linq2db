@@ -69,11 +69,11 @@ namespace LinqToDB.DataProvider.SqlCe
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME"),
 					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
-					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length     = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity = false,
 				}
 			).ToList();
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return Path.GetFileNameWithoutExtension(dbConnection.Database);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
 		{
 			switch (dataType.ToLower())
 			{
