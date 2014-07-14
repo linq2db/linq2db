@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -293,7 +294,18 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
+//					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
+					var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var tableName  = sqlBuilder
+						.BuildTableName(
+							new StringBuilder(),
+							descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+							descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+							descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+						.ToString();
+
+					bc.DestinationTableName = tableName;
 
 					for (var i = 0; i < columns.Count; i++)
 						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
