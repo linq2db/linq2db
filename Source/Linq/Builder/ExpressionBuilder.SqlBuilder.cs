@@ -342,11 +342,14 @@ namespace LinqToDB.Linq.Builder
 						{
 							var b = (BinaryExpression)e;
 
+							var equalityLeft  = b.Left as BinaryExpression;
 							var constantRight = b.Right as ConstantExpression;
 
-							if (constantRight != null)
-								if (constantRight.Value is bool && (bool) constantRight.Value == false)
-									return new TransformInfo(b.Left, false);
+							if (equalityLeft != null && constantRight != null)
+								if (equalityLeft.Type.GetGenericTypeDefinition() == typeof (System.Nullable<>))
+									if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
+										if (constantRight.Value is bool && (bool) constantRight.Value == false)
+											return new TransformInfo(equalityLeft, false);
 
 							break;
 						}
