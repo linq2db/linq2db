@@ -236,7 +236,7 @@ namespace Tests.Create
 
 		static void InformixAction(IDbConnection connection)
 		{
-			using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
+			using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
 					UPDATE AllTypes

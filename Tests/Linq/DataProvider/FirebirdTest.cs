@@ -5,9 +5,12 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
+using FirebirdSql.Data.FirebirdClient;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -386,6 +389,22 @@ namespace Tests.DataProvider
 				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
 
 				Assert.AreEqual(0, db.GetTable<FirebirdSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"));
+			}
+		}
+
+		public class AllTypes
+		{
+			[PrimaryKey] public int      ID                { get; set; } // INTEGER
+			[Column]     public DateTime timestampDataType { get; set; } // TIMESTAMP
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]
+		public void DataProviderTest(string context)
+		{
+			using (var con = new FbConnection(DataConnection.GetConnectionString(context)))
+			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
+			{
+				dbm.GetTable<AllTypes>().Where(t => t.timestampDataType == DateTime.Now).ToList();
 			}
 		}
 	}

@@ -403,7 +403,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, int length, int precision, int scale)
+		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -413,7 +413,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long length, int prec, int scale)
 		{
 			var dbType = columnType;
 
@@ -439,7 +439,7 @@ namespace LinqToDB.SchemaProvider
 						}
 					}
 
-					if (paramValues.All(v => v != null && (int)v != 0))
+					if (paramValues.All(v => v != null && (v is int ? (int)v != 0 : (long)v != 0)))
 						dbType = format.Args(paramValues);
 				}
 			}

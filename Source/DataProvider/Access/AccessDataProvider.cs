@@ -4,8 +4,10 @@ using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
 
+
 namespace LinqToDB.DataProvider.Access
 {
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -61,6 +63,11 @@ namespace LinqToDB.DataProvider.Access
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
 			return _sqlOptimizer;
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return typeof(OleDbConnection).IsSameOrParentOf(connection.GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
