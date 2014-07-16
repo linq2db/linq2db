@@ -2,17 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -138,6 +137,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return _sqlOptimizer;
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -277,23 +281,31 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (connection != null)
 			{
 				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
+				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 				var sb      = CreateSqlBuilder();
 				var rd      = new BulkCopyReader(this, columns, source);
-				var sqlopt = SqlBulkCopyOptions.Default;
+				var sqlopt  = SqlBulkCopyOptions.Default;
 
-				if (options.CheckConstraints.HasValue)
-					sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+				if (options.CheckConstraints == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+				if (options.KeepIdentity     == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
 
-				using (var bc = dataConnection.Transaction == null ?
-					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
+				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{
-					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
+//					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
+					var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+					var tableName  = sqlBuilder
+						.BuildTableName(
+							new StringBuilder(),
+							descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
+							descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
+							descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+						.ToString();
+
+					bc.DestinationTableName = tableName;
 
 					for (var i = 0; i < columns.Count; i++)
 						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(

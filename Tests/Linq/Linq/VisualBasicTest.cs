@@ -64,5 +64,45 @@ namespace Tests.Linq
 					VisualBasicCommon.SearchCondition2(db));
 			}
 		}
+
+		[Test, NorthwindDataContext]
+		public void SearchCondition3(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+
+				var cQuery = from order in db.Order
+								where order.OrderDate == new DateTime(1997, 11, 14)
+					select order.OrderID;
+
+				var cSharpResults = cQuery.ToList();
+
+				var vbResults = (VisualBasicCommon.SearchCondition3(db)).ToList();
+
+				AreEqual(
+					cSharpResults,
+					vbResults);
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void SearchCondition4(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+
+				var cQuery = from order in db.Order
+								where order.OrderDate == new DateTime(1997, 11, 14)
+					select order.OrderID;
+
+				var cSharpResults = cQuery.ToList();
+
+				var vbResults = (VisualBasicCommon.SearchCondition4(db)).ToList();
+
+				AreEqual(
+					cSharpResults,
+					vbResults);
+			}
+		}
 	}
 }

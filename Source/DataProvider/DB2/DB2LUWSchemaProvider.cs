@@ -118,8 +118,8 @@ namespace LinqToDB.DataProvider.DB2
 				{
 					TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
 					Name        = rd.ToString(2),
-					Length      = Converter.ChangeTypeTo<int>(rd[3]),
-					Scale       = Converter.ChangeTypeTo<int>(rd[4]),
+					Length      = Converter.ChangeTypeTo<long>(rd[3]),
+					Scale       = Converter.ChangeTypeTo<int> (rd[4]),
 					IsNullable  = rd.ToString(5) == "Y",
 					IsIdentity  = rd.ToString(6) == "Y",
 					Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long length, int prec, int scale)
 		{
 			var type = DataTypes.FirstOrDefault(dt => dt.TypeName == columnType);
 

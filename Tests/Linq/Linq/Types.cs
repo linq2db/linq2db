@@ -549,7 +549,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void CharTest1(string context)
+		public void CharTest11(string context)
 		{
 			List<PersonCharTest> list;
 
@@ -560,6 +560,20 @@ namespace Tests.Linq
 				AreEqual(
 					from p in list                          where p.Gender == 'M' select p.PersonID,
 					from p in db.GetTable<PersonCharTest>() where p.Gender == 'M' select p.PersonID);
+		}
+
+		[Test, DataContextSource]
+		public void CharTest12(string context)
+		{
+			List<PersonCharTest> list;
+
+			using (var db = new TestDataConnection())
+				list = db.GetTable<PersonCharTest>().ToList();
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in list                          where p.Gender == 77 select p.PersonID,
+					from p in db.GetTable<PersonCharTest>() where p.Gender == 77 select p.PersonID);
 		}
 
 		[Test, DataContextSource]

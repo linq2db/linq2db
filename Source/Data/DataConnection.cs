@@ -60,6 +60,10 @@ namespace LinqToDB.Data
 			
 			InitConfig();
 
+			if (!dataProvider.IsCompatibleConnection(connection))
+				throw new LinqToDBException(
+					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, connection));
+
 			DataProvider   = dataProvider;
 			_mappingSchema = DataProvider.MappingSchema;
 			_connection    = connection;
@@ -71,6 +75,10 @@ namespace LinqToDB.Data
 			if (transaction  == null) throw new ArgumentNullException("transaction");
 			
 			InitConfig();
+
+			if (!dataProvider.IsCompatibleConnection(transaction.Connection))
+				throw new LinqToDBException(
+					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, transaction.Connection));
 
 			DataProvider      = dataProvider;
 			_mappingSchema    = DataProvider.MappingSchema;

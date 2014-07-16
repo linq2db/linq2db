@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SqlServerTest : DataProviderTestBase
 	{
@@ -670,29 +672,62 @@ namespace Tests.DataProvider
 			}
 		}
 
-//		[Test]
-//		public void BulkCopyLinqTypes(
-//			[IncludeDataContexts(CurrentProvider)] string context,
-//			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
-//		{
-//			using (var db = new DataConnection(context))
-//			{
-//				db.BulkCopy(
-//					new BulkCopyOptions { BulkCopyType = bulkCopyType },
-//					Enumerable.Range(0, 10).Select(n =>
-//						new LinqDataTypes
-//						{
-//							ID            = 4000 + n,
-//							MoneyValue    = 1000m + n,
-//							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
-//							BoolValue     = true,
-//							GuidValue     = Guid.NewGuid(),
-//							SmallIntValue = (short)n
-//						}
-//					));
-//
-//				db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
-//			}
-//		}
+		[Table(Schema="dbo", Name="LinqDataTypes")]
+		class DataTypes
+		{
+			[Column] public int      ID;
+			[Column] public decimal  MoneyValue;
+			[Column] public DateTime DateTimeValue;
+			[Column] public bool     BoolValue;
+			[Column] public Guid     GuidValue;
+			[Column] public Binary   BinaryValue;
+			[Column] public short    SmallIntValue;
+		}
+
+		[Test, SqlServerDataContext]
+		public void BulkCopyLinqTypesMultipleRows(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows },
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
+						{
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
+							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void BulkCopyLinqTypesProviderSpecific(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
+						{
+							ID            = 4000 + n,
+							MoneyValue    = 1000m + n,
+							DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+							BoolValue     = true,
+							GuidValue     = Guid.NewGuid(),
+							SmallIntValue = (short)n
+						}
+					));
+
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
 	}
 }

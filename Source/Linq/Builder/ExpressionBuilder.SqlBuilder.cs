@@ -337,6 +337,23 @@ namespace LinqToDB.Linq.Builder
 
 				switch (e.NodeType)
 				{
+					//This is to handle VB's weird expression generation when dealing with nullable properties.
+					case ExpressionType.Coalesce:
+						{
+							var b = (BinaryExpression)e;
+
+							var equalityLeft  = b.Left as BinaryExpression;
+							var constantRight = b.Right as ConstantExpression;
+
+							if (equalityLeft != null && constantRight != null)
+								if (equalityLeft.Type.GetGenericTypeDefinition() == typeof (System.Nullable<>))
+									if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
+										if (constantRight.Value is bool && (bool) constantRight.Value == false)
+											return new TransformInfo(equalityLeft, false);
+
+							break;
+						}
+
 					case ExpressionType.New:
 						{
 							var ex = ConvertNew((NewExpression)e);
