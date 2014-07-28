@@ -31,6 +31,16 @@
 				foreach (var c in q)
 					Console.WriteLine(c.ContactName);
 			}
+
+		If you need to use the Microsoft.SqlServer.Types namespace, install the Microsoft.SqlServer.Types nuget, 
+		and replace the following include at the top of this file:
+
+			"$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.Tools.ttinclude"
+
+		with
+
+			"$(ProjectDir)LinqToDB.Templates\LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"
+
 	*/
 
 	NamespaceName = "DataModel";

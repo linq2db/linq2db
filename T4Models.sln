@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\LinqToDB.PostgreSQL.ttinclude = Templates\LinqToDB.PostgreSQL.ttinclude
 		Templates\LinqToDB.SqlCe.ttinclude = Templates\LinqToDB.SqlCe.ttinclude
 		Templates\LinqToDB.SQLite.ttinclude = Templates\LinqToDB.SQLite.ttinclude
+		Templates\LinqToDB.SqlServer.SqlTypes.ttinclude = Templates\LinqToDB.SqlServer.SqlTypes.ttinclude
 		Templates\LinqToDB.SqlServer.ttinclude = Templates\LinqToDB.SqlServer.ttinclude
 		Templates\LinqToDB.Sybase.ttinclude = Templates\LinqToDB.Sybase.ttinclude
 		Templates\LinqToDB.ttinclude = Templates\LinqToDB.ttinclude
@@ -54,6 +55,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\linq2db.SqlServer.SqlTypes.nuspec = NuGet\linq2db.SqlServer.SqlTypes.nuspec
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat

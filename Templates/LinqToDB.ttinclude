@@ -494,7 +494,7 @@ void GenerateTypesFromMetadata()
 	{
 		Model.Usings.Add("System.Linq");
 
-		Model.Types.Add(new Class("tableExtensions", tableExtensions) { IsStatic = true });
+		Model.Types.Add(new Class("TableExtensions", tableExtensions) { IsStatic = true });
 	}
 
 	Tables.    Clear();

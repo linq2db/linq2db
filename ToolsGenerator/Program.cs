@@ -40,7 +40,8 @@ namespace ToolsGenerator
 			CreateProviderFile2(nugetDir, "Oracle.Managed", "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile2(nugetDir, "Oracle.x64",     "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile2(nugetDir, "Oracle.x86",     "Oracle", "Oracle.DataAccess.dll");
-			CreateProviderFile (nugetDir, "SqlServer",                "Microsoft.SqlServer.Types.dll");
+			CreateProviderFile (nugetDir, "SqlServer");
+			CreateProviderFile (nugetDir, "SqlServer.SqlTypes",       "Microsoft.SqlServer.Types.dll");
 			CreateProviderFile (nugetDir, "Sybase",                   "Sybase.AdoNet2.AseClient.dll");
 			CreateProviderFile (nugetDir, "DB2",                      "IBM.Data.DB2.dll");
 			CreateProviderFile (nugetDir, "Informix",                 "IBM.Data.Informix.dll");

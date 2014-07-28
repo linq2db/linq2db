@@ -1,8 +1,5 @@
 <#@ include file="LinqToDB.ttinclude" #>
 <#
-	LinqToDB.DataProvider.SqlServer.SqlServerTools.ResolveSqlTypes(
-		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
-
 	{
 		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;
 		AfterGenerateLinqToDBModel = () =>

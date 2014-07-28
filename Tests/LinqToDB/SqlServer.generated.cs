@@ -676,17 +676,55 @@ namespace DataModel
 
 	public static partial class NorthwindDBStoredProcedures
 	{
-		#region TenMostExpensiveProducts
+		#region CustOrderHist
 
-		public partial class TenMostExpensiveProductsResult
+		public partial class CustOrderHistResult
 		{
-			public string   TenMostExpensiveProducts { get; set; }
-			public decimal? UnitPrice                { get; set; }
+			public string ProductName { get; set; }
+			public int?   Total       { get; set; }
 		}
 
-		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
+		public static IEnumerable<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
 		{
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]");
+			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
+				new DataParameter("@CustomerID", @CustomerID));
+		}
+
+		#endregion
+
+		#region CustOrdersDetail
+
+		public partial class CustOrdersDetailResult
+		{
+			public string   ProductName   { get; set; }
+			public decimal  UnitPrice     { get; set; }
+			public short    Quantity      { get; set; }
+			public int?     Discount      { get; set; }
+			public decimal? ExtendedPrice { get; set; }
+		}
+
+		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
+		{
+			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
+				new DataParameter("@OrderID", @OrderID));
+		}
+
+		#endregion
+
+		#region CustOrdersOrders
+
+		public partial class CustOrdersOrdersResult
+		{
+			public int       OrderID      { get; set; }
+			public DateTime? OrderDate    { get; set; }
+			public DateTime? RequiredDate { get; set; }
+			public DateTime? ShippedDate  { get; set; }
+		}
+
+		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
+		{
+			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
+				new DataParameter("@CustomerID", @CustomerID));
 		}
 
 		#endregion
@@ -731,59 +769,6 @@ namespace DataModel
 
 		#endregion
 
-		#region CustOrdersDetail
-
-		public partial class CustOrdersDetailResult
-		{
-			public string   ProductName   { get; set; }
-			public decimal  UnitPrice     { get; set; }
-			public short    Quantity      { get; set; }
-			public int?     Discount      { get; set; }
-			public decimal? ExtendedPrice { get; set; }
-		}
-
-		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
-		{
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID));
-		}
-
-		#endregion
-
-		#region CustOrdersOrders
-
-		public partial class CustOrdersOrdersResult
-		{
-			public int       OrderID      { get; set; }
-			public DateTime? OrderDate    { get; set; }
-			public DateTime? RequiredDate { get; set; }
-			public DateTime? ShippedDate  { get; set; }
-		}
-
-		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
-		{
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID));
-		}
-
-		#endregion
-
-		#region CustOrderHist
-
-		public partial class CustOrderHistResult
-		{
-			public string ProductName { get; set; }
-			public int?   Total       { get; set; }
-		}
-
-		public static IEnumerable<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
-		{
-			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
-				new DataParameter("@CustomerID", @CustomerID));
-		}
-
-		#endregion
-
 		#region SalesByCategory
 
 		public partial class SalesByCategoryResult
@@ -797,6 +782,21 @@ namespace DataModel
 			return dataConnection.QueryProc<SalesByCategoryResult>("[Northwind]..[SalesByCategory]",
 				new DataParameter("@CategoryName", @CategoryName),
 				new DataParameter("@OrdYear",      @OrdYear));
+		}
+
+		#endregion
+
+		#region TenMostExpensiveProducts
+
+		public partial class TenMostExpensiveProductsResult
+		{
+			public string   TenMostExpensiveProducts { get; set; }
+			public decimal? UnitPrice                { get; set; }
+		}
+
+		public static IEnumerable<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Northwind]..[Ten Most Expensive Products]");
 		}
 
 		#endregion
@@ -979,7 +979,7 @@ namespace DataModel
 		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal
 		[Column,                                       Nullable] public decimal?  smallmoneyDataType       { get; set; } // smallmoney
 		[Column,                                       Nullable] public int?      intDataType              { get; set; } // int
-		[Column,                                       Nullable] public sbyte?    tinyintDataType          { get; set; } // tinyint
+		[Column,                                       Nullable] public byte?     tinyintDataType          { get; set; } // tinyint
 		[Column,                                       Nullable] public decimal?  moneyDataType            { get; set; } // money
 		[Column,                                       Nullable] public double?   floatDataType            { get; set; } // float
 		[Column,                                       Nullable] public float?    realDataType             { get; set; } // real
@@ -1040,7 +1040,7 @@ namespace DataModel
 		[PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
 		[Column,     Nullable] public byte[]    Binary_    { get; set; } // binary(50)
 		[Column,     Nullable] public bool?     Boolean_   { get; set; } // bit
-		[Column,     Nullable] public sbyte?    Byte_      { get; set; } // tinyint
+		[Column,     Nullable] public byte?     Byte_      { get; set; } // tinyint
 		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // varbinary(50)
 		[Column,     Nullable] public char?     Char_      { get; set; } // char(1)
 		[Column,     Nullable] public DateTime? DateTime_  { get; set; } // datetime
@@ -1051,7 +1051,7 @@ namespace DataModel
 		[Column,     Nullable] public int?      Int32_     { get; set; } // int
 		[Column,     Nullable] public long?     Int64_     { get; set; } // bigint
 		[Column,     Nullable] public decimal?  Money_     { get; set; } // money
-		[Column,     Nullable] public sbyte?    SByte_     { get; set; } // tinyint
+		[Column,     Nullable] public byte?     SByte_     { get; set; } // tinyint
 		[Column,     Nullable] public float?    Single_    { get; set; } // real
 		[Column,     Nullable] public byte[]    Stream_    { get; set; } // varbinary(50)
 		[Column,     Nullable] public string    String_    { get; set; } // nvarchar(50)
