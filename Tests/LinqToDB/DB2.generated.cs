@@ -35,6 +35,9 @@ namespace DB2DataContext
 		public ITable<PERSONVIEW>   PERSONVIEWs    { get { return this.GetTable<PERSONVIEW>(); } }
 		public ITable<SLAVETABLE>   SLAVETABLEs    { get { return this.GetTable<SLAVETABLE>(); } }
 		public ITable<TestIdentity> TestIdentities { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestTable>    TestTables     { get { return this.GetTable<TestTable>(); } }
+		public ITable<TestTable2>   TestTable2     { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>   TestTable3     { get { return this.GetTable<TestTable3>(); } }
 
 		public TESTDATADB()
 		{
@@ -204,6 +207,31 @@ namespace DB2DataContext
 		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
+	[Table(Schema="ADMINISTRATOR", Name="TestTable")]
+	public partial class TestTable
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // INTEGER
+		[Column,     NotNull    ] public string    Name        { get; set; } // VARGRAPHIC(50)
+		[Column,        Nullable] public string    Description { get; set; } // VARGRAPHIC(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
+	}
+
+	[Table(Schema="ADMINISTRATOR", Name="TestTable2")]
+	public partial class TestTable2
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // INTEGER
+		[Column,     NotNull    ] public string    Name        { get; set; } // VARGRAPHIC(50)
+		[Column,        Nullable] public string    Description { get; set; } // VARGRAPHIC(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
+	}
+
+	[Table(Schema="ADMINISTRATOR", Name="TestTable3")]
+	public partial class TestTable3
+	{
+		[PrimaryKey, NotNull] public int    ID   { get; set; } // INTEGER
+		[Column,     NotNull] public string Name { get; set; } // VARGRAPHIC(50)
+	}
+
 	public static partial class TESTDATADBStoredProcedures
 	{
 		#region PERSON_SELECTBYKEY
@@ -217,7 +245,7 @@ namespace DB2DataContext
 		#endregion
 	}
 
-	public static partial class tableExtensions
+	public static partial class TableExtensions
 	{
 		public static ALLTYPE Find(this ITable<ALLTYPE> table, int ID)
 		{
@@ -239,6 +267,24 @@ namespace DB2DataContext
 		}
 
 		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable Find(this ITable<TestTable> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

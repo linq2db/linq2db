@@ -8,7 +8,7 @@
 		   rename it, and delete .txt extension. For example:
 
 			MyProject
-				DataModel
+				DataModels
 					Northwind.tt
 
 		2. Modify the connectionString below to connect to your database.

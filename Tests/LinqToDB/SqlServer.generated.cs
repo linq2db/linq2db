@@ -17,8 +17,6 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
-using Microsoft.SqlServer.Types;
-
 namespace DataModel
 {
 	/// <summary>
@@ -802,7 +800,7 @@ namespace DataModel
 		#endregion
 	}
 
-	public static partial class tableExtensions
+	public static partial class TableExtensions
 	{
 		public static Category Find(this ITable<Category> table, int CategoryID)
 		{
@@ -912,6 +910,9 @@ namespace DataModel
 		public ITable<Patient>         Patients         { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>          People           { get { return this.GetTable<Person>(); } }
 		public ITable<TestIdentity>    TestIdentities   { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestTable>       TestTables       { get { return this.GetTable<TestTable>(); } }
+		public ITable<TestTable2>      TestTable2       { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>      TestTable3       { get { return this.GetTable<TestTable3>(); } }
 
 		public TestDataDB()
 		{
@@ -1011,9 +1012,9 @@ namespace DataModel
 		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset
 		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2
 		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time
-		[Column,     Nullable] public SqlHierarchyId? hierarchyidDataType    { get; set; } // hierarchyid
-		[Column,     Nullable] public SqlGeography    geographyDataType      { get; set; } // geography
-		[Column,     Nullable] public SqlGeometry     geometryDataType       { get; set; } // geometry
+		[Column,     Nullable] public object          hierarchyidDataType    { get; set; } // hierarchyid
+		[Column,     Nullable] public object          geographyDataType      { get; set; } // geography
+		[Column,     Nullable] public object          geometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Database="TestData", Name="BinaryData")]
@@ -1211,6 +1212,31 @@ namespace DataModel
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // int
+	}
+
+	[Table(Database="TestData", Name="TestTable")]
+	public partial class TestTable
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // int
+		[Column,     NotNull    ] public string    Name        { get; set; } // nvarchar(50)
+		[Column,        Nullable] public string    Description { get; set; } // nvarchar(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // datetime2
+	}
+
+	[Table(Database="TestData", Name="TestTable2")]
+	public partial class TestTable2
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // int
+		[Column,     NotNull    ] public string    Name        { get; set; } // nvarchar(50)
+		[Column,        Nullable] public string    Description { get; set; } // nvarchar(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // datetime2
+	}
+
+	[Table(Database="TestData", Name="TestTable3")]
+	public partial class TestTable3
+	{
+		[PrimaryKey, NotNull] public int    ID   { get; set; } // int
+		[Column,     NotNull] public string Name { get; set; } // nvarchar(50)
 	}
 
 	public static partial class TestDataDBStoredProcedures
@@ -1494,7 +1520,7 @@ namespace DataModel
 		#endregion
 	}
 
-	public static partial class tableExtensions
+	public static partial class TableExtensions
 	{
 		public static AllType Find(this ITable<AllType> table, int ID)
 		{
@@ -1553,6 +1579,24 @@ namespace DataModel
 		}
 
 		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable Find(this ITable<TestTable> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

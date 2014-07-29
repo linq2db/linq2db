@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -17,7 +18,7 @@ namespace AccessDataContext
 {
 	/// <summary>
 	/// Database       : TestData
-	/// Data Source    : E:\Projects\Git\linq2db\Data\TestData.mdb
+	/// Data Source    : I:\linq2db\Data\TestData.mdb
 	/// Server Version : 04.00.0000
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
@@ -27,7 +28,7 @@ namespace AccessDataContext
 		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
-		public ITable<GrandChild>          GrandChilds          { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GrandChild>          GrandChildren        { get { return this.GetTable<GrandChild>(); } }
 		public ITable<LinqDataType>        LinqDataTypes        { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<LinqDataTypesQuery>  LinqDataTypesQueries { get { return this.GetTable<LinqDataTypesQuery>(); } }
 		public ITable<LinqDataTypesQuery1> LinqDataTypesQuery1  { get { return this.GetTable<LinqDataTypesQuery1>(); } }
@@ -37,8 +38,11 @@ namespace AccessDataContext
 		public ITable<Patient_SelectAll>   Patient_SelectAll    { get { return this.GetTable<Patient_SelectAll>(); } }
 		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
 		public ITable<Person_SelectAll>    Person_SelectAll     { get { return this.GetTable<Person_SelectAll>(); } }
-		public ITable<Scalar_DataReader>   Scalar_DataReader    { get { return this.GetTable<Scalar_DataReader>(); } }
+		public ITable<Scalar_DataReader>   Scalar_DataReaders   { get { return this.GetTable<Scalar_DataReader>(); } }
 		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestTable>           TestTables           { get { return this.GetTable<TestTable>(); } }
+		public ITable<TestTable2>          TestTable2           { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>          TestTable3           { get { return this.GetTable<TestTable3>(); } }
 
 		public TestDataDB()
 		{
@@ -228,6 +232,31 @@ namespace AccessDataContext
 		[PrimaryKey, Identity] public int ID { get; set; } // Long
 	}
 
+	[Table("TestTable")]
+	public partial class TestTable
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // Long
+		[Column,     NotNull    ] public string    Name        { get; set; } // text(50)
+		[Column,        Nullable] public string    Description { get; set; } // text(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // DateTime
+	}
+
+	[Table("TestTable2")]
+	public partial class TestTable2
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // Long
+		[Column,     NotNull    ] public string    Name        { get; set; } // text(50)
+		[Column,        Nullable] public string    Description { get; set; } // text(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // DateTime
+	}
+
+	[Table("TestTable3")]
+	public partial class TestTable3
+	{
+		[PrimaryKey, Identity] public int    ID   { get; set; } // Long
+		[Column,     NotNull ] public string Name { get; set; } // text(50)
+	}
+
 	public static partial class TestDataDBStoredProcedures
 	{
 		#region Patient_SelectByName
@@ -310,5 +339,56 @@ namespace AccessDataContext
 		}
 
 		#endregion
+	}
+
+	public static partial class TableExtensions
+	{
+		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
+		{
+			return table.FirstOrDefault(t =>
+				t.DataTypeID == DataTypeID);
+		}
+
+		public static Doctor Find(this ITable<Doctor> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Patient Find(this ITable<Patient> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Person Find(this ITable<Person> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable Find(this ITable<TestTable> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }

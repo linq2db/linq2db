@@ -2,10 +2,11 @@
 <#@ output extension=".generated.cs"                              #>
 <#@ include file="..\..\Templates\LinqToDB.Access.ttinclude"      #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="E:\Projects\Git\linq2db\Source\bin\Debug\linq2db.dll" #>
+<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll"   #>
 <#
 	NamespaceName = "AccessDataContext";
 
-	LoadAccessMetadata(@"E:\Projects\Git\linq2db\Data\", "TestData.mdb");
+	LoadAccessMetadata(@"I:\linq2db\Data\", "TestData.mdb");
+
 	GenerateModel();
 #>

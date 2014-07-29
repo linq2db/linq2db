@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.t4models</id>
-		<version>1.0.5</version>
+		<version>1.0.6</version>
 		<title>LINQ to DB T4 Models</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -19,25 +19,25 @@
 	</metadata>
 	<files>
 		<file src="..\..\linq2db\Source\bin\Release.4.0\linq2db.dll" target="tools" />
-		<file src="..\Templates\DataAnnotations.ttinclude"       target="content\LinqToDB.Templates" />
-		<file src="..\Templates\DataModel.ttinclude"             target="content\LinqToDB.Templates" />
-		<file src="..\Templates\EditableObject.ttinclude"        target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.Access.ttinclude"       target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.Firebird.ttinclude"     target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.MySql.ttinclude"        target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.Oracle.ttinclude"       target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.PostgreSQL.ttinclude"   target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.SqlCe.ttinclude"        target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.SQLite.ttinclude"       target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"    target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.Sybase.ttinclude"       target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.DB2.ttinclude"          target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.Informix.ttinclude"     target="content\LinqToDB.Templates" />
-		<file src="..\Templates\LinqToDB.ttinclude"              target="content\LinqToDB.Templates" />
-		<file src="..\Templates\NotifyPropertyChanged.ttinclude" target="content\LinqToDB.Templates" />
-		<file src="..\Templates\PluralizationService.ttinclude"  target="content\LinqToDB.Templates" />
-		<file src="..\Templates\T4Model.ttinclude"               target="content\LinqToDB.Templates" />
-		<file src="..\Templates\Validation.ttinclude"            target="content\LinqToDB.Templates" />
-		<file src="LinqToDB.Tools.ttinclude"                     target="content\LinqToDB.Templates" />
+		<file src="..\Templates\DataAnnotations.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="..\Templates\DataModel.ttinclude"                 target="content\LinqToDB.Templates" />
+		<file src="..\Templates\EditableObject.ttinclude"            target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Access.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Firebird.ttinclude"         target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.MySql.ttinclude"            target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Oracle.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.PostgreSQL.ttinclude"       target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.SqlCe.ttinclude"            target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.SQLite.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.SqlServer.ttinclude"        target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Sybase.ttinclude"           target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.DB2.ttinclude"              target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.Informix.ttinclude"         target="content\LinqToDB.Templates" />
+		<file src="..\Templates\LinqToDB.ttinclude"                  target="content\LinqToDB.Templates" />
+		<file src="..\Templates\NotifyPropertyChanged.ttinclude"     target="content\LinqToDB.Templates" />
+		<file src="..\Templates\PluralizationService.ttinclude"      target="content\LinqToDB.Templates" />
+		<file src="..\Templates\T4Model.ttinclude"                   target="content\LinqToDB.Templates" />
+		<file src="..\Templates\Validation.ttinclude"                target="content\LinqToDB.Templates" />
+		<file src="LinqToDB.Tools.ttinclude"                         target="content\LinqToDB.Templates" />
 	</files>
 </package>
