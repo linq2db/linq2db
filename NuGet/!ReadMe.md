@@ -1,5 +1,6 @@
-// Use the following initialization before you call the LoadMetadata() method.
+Use the following initialization before you call the LoadMetadata() method.
 
+```c#
 NamespaceName            = "DataModels";       // Namespace of the generated classes.
 
 DataContextName          = null;               // DataContext class name. If null - database name + "DB".
@@ -29,11 +30,12 @@ IsCompactColumnAliases   = true;               // If true, column alias compact 
 
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
+```
 
 
+Use the following code to modify your model befor you call the GenerateModel() method.
 
-// Use the following code to modify your model befor you call the GenerateModel() method.
-
+```c#
 GetTable("Person").TypeName = "MyName";                                             // Replaces table name.
 GetColumn("Person", "PersonID").MemberName = "ID";                                  // Replaces column PersonID of Person table with ID.
 GetFK("Orders", "FK_Orders_Customers").MemberName      = "Customers";               // Replaces association name.
@@ -46,11 +48,12 @@ foreach (var t in Tables.Values)
 	foreach (var c in t.Columns.Values)
 		if (c.IsPrimaryKey && c.MemberName == t.TypeName + "ID")
 			c.MemberName = "ID";
+```
 
 
+Useful members and data structues.
 
-// Useful members and data structues.
-
+```c#
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();
 Dictionary<string,Procedure> Procedures = new Dictionary<string,Procedure>();
 
@@ -139,3 +142,4 @@ public class Parameter
 	public Type     SystemType;
 	public string   DataType;
 }
+```
