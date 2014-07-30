@@ -1,4 +1,4 @@
-Use the following initialization before you call the LoadMetadata() method.
+* Use the following initialization before you call the LoadMetadata() method.
 
 ```c#
 NamespaceName            = "DataModels";       // Namespace of the generated classes.
@@ -32,8 +32,7 @@ GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines e
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.
 ```
 
-
-Use the following code to modify your model befor you call the GenerateModel() method.
+* Use the following code to modify your model befor you call the GenerateModel() method.
 
 ```c#
 GetTable("Person").TypeName = "MyName";                                             // Replaces table name.
@@ -50,8 +49,7 @@ foreach (var t in Tables.Values)
 			c.MemberName = "ID";
 ```
 
-
-Useful members and data structues.
+* Useful members and data structues.
 
 ```c#
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();
