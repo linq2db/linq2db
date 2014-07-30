@@ -1,3 +1,5 @@
+To create a data model template take a look at one of the CopyMe.XXX.tt.txt file in your LinqToDB.Templates project folder.
+
 * Use the following initialization before you call the LoadMetadata() method.
 
 ```c#

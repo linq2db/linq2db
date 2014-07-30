@@ -22,15 +22,17 @@
 
 		4. To access your database use the following code:
 
-		using (var db = new NorthwindDB())
-		{
-			var q =
-				from c in db.Customers
-				select c;
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from c in db.Customers
+					select c;
 
-			foreach (var c in q)
-				Console.WriteLine(c.ContactName);
-		}
+				foreach (var c in q)
+					Console.WriteLine(c.ContactName);
+			}
+
+		5. See more at https://github.com/linq2db/t4models/blob/master/Templates/!ReadMe.LinqToDB.md.
 	*/
 
 	NamespaceName = "DataModel";
@@ -39,5 +41,6 @@
 	var dataConnection   = LinqToDB.DataProvider.SqlServer.SqlServerFactory.CreateDataConnection(connectionString);
 
 	LoadMetadata(dataConnection);
+
 	GenerateModel();
 #>
