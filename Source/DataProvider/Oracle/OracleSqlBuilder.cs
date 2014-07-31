@@ -160,6 +160,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (type.DataType)
 			{
+				case DataType.DateTime   : StringBuilder.Append("timestamp");    break;
+				case DataType.DateTime2  : StringBuilder.Append("timestamp");    break;
 				case DataType.UInt32     :
 				case DataType.Int64      : StringBuilder.Append("Number(19)");   break;
 				case DataType.SByte      :
@@ -327,7 +329,7 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine  ("BEGIN")
 						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
-						.AppendLine  ("END");
+						.AppendLine  ("END;");
 				}
 			}
 		}
