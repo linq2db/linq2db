@@ -23,9 +23,9 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Npgsql.2.0.14.3\lib\net40\Npgsql.dll"        target="tools" />
-		<file src="..\packages\Npgsql.2.0.14.3\lib\net40\Mono.Security.dll" target="tools" />
-		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"                     target="content\LinqToDB.Templates" />
-		<file src="CopyMe.PostgreSQL.tt.txt"                                target="content\LinqToDB.Templates" />
+		<file src="..\packages\Npgsql.2.1.3\lib\net40\Npgsql.dll"        target="tools" />
+		<file src="..\packages\Npgsql.2.1.3\lib\net40\Mono.Security.dll" target="tools" />
+		<file src="LinqToDB.PostgreSQL.Tools.ttinclude"                  target="content\LinqToDB.Templates" />
+		<file src="CopyMe.PostgreSQL.tt.txt"                             target="content\LinqToDB.Templates" />
 	</files>
 </package>

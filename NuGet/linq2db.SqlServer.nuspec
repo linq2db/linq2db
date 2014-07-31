@@ -22,7 +22,7 @@
 		</dependencies>
 	</metadata>
 	<files>
-		<file src="..\packages\Microsoft.SqlServer.Types.11.0.0\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
+		<file src="..\packages\Microsoft.SqlServer.Types.11.0.1\lib\Net20\Microsoft.SqlServer.Types.dll" target="tools" />
 		<file src="LinqToDB.SqlServer.SqlTypes.Tools.ttinclude"                                          target="content\LinqToDB.Templates" />
 		<file src="LinqToDB.SqlServer.Tools.ttinclude"                                                   target="content\LinqToDB.Templates" />
 		<file src="CopyMe.SqlServer.tt.txt"                                                              target="content\LinqToDB.Templates" />
