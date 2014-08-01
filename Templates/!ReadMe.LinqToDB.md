@@ -42,6 +42,14 @@ GetColumn("Person", "PersonID").MemberName = "ID";                              
 GetFK("Orders", "FK_Orders_Customers").MemberName      = "Customers";               // Replaces association name.
 GetFK("Orders", "FK_Orders_Customers").AssociationType = AssociationType.OneToMany; // Changes association type.
 
+SetTable(string tableName,
+	string TypeName = null,
+	string DataContextPropertyName = null)
+
+	.Column(string columnName, string MemberName = null, string Type = null, bool? IsNullable = null)
+	.FK    (string fkName,     string MemberName = null, AssociationType? AssociationType = null)
+	;
+
 Model.Usings.Add("MyNamespace"); // Adds using of namespace.
 
 // Replaces all the columns where name is 'TableName' + 'ID' with 'ID'.

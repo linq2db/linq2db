@@ -378,6 +378,56 @@ ForeignKey GetForeignKey(string tableName, string fkName)
 }
 
 
+public TableContext SetTable(string tableName,
+	string TypeName                = null,
+	string DataContextPropertyName = null)
+{
+	var ctx = new TableContext { Transformation = this, TableName = tableName };
+
+	if (TypeName != null || DataContextPropertyName != null)
+	{
+		var t = GetTable(tableName);
+
+		if (TypeName                != null) t.TypeName                = TypeName;
+		if (DataContextPropertyName != null) t.DataContextPropertyName = DataContextPropertyName;
+	}
+
+	return ctx;
+}
+
+public class TableContext
+{
+	public GeneratedTextTransformation Transformation;
+	public string                      TableName;
+
+	public TableContext Column(string columnName,
+		string MemberName              = null,
+		string Type                    = null,
+		bool? IsNullable               = null)
+	{
+		var c = Transformation.GetColumn(TableName, columnName);
+
+		if (MemberName != null) c.MemberName = MemberName;
+		if (Type       != null) c.Type       = Type;
+		if (IsNullable != null) c.IsNullable = IsNullable.Value;
+
+		return this;
+	}
+
+	public TableContext FK(string fkName,
+		string           MemberName      = null,
+		AssociationType? AssociationType = null)
+	{
+		var c = Transformation.GetFK(TableName, fkName);
+
+		if (MemberName      != null) c.MemberName      = MemberName;
+		if (AssociationType != null) c.AssociationType = AssociationType.Value;
+
+		return this;
+	}
+}
+
+
 Dictionary<string,Table>     Tables     = new Dictionary<string,Table>    ();
 Dictionary<string,Procedure> Procedures = new Dictionary<string,Procedure>();
 
