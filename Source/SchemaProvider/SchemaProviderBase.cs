@@ -518,6 +518,7 @@ namespace LinqToDB.SchemaProvider
 								OtherTable      = t,
 								ThisColumns     = key.OtherColumns,
 								OtherColumns    = key.ThisColumns,
+								CanBeNull       = true,
 							});
 					}
 				}
