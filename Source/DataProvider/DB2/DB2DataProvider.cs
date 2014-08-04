@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -45,11 +46,11 @@ namespace LinqToDB.DataProvider.DB2
 			DB2Types.DB2Binary.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Binary",       true);
 			DB2Types.DB2Blob.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Blob",         true);
 			DB2Types.DB2Date.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Date",         true);
-			DB2Types.DB2DateTime.    Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DateTime",     false);
 			DB2Types.DB2Time.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Time",         true);
 			DB2Types.DB2TimeStamp.   Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
 			DB2Types.DB2Xml               = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
 			DB2Types.DB2RowId.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
+			DB2Types.DB2DateTime.    Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DateTime",     false);
 
 			SetProviderField(DB2Types.DB2Int64,        typeof(Int64),    "GetDB2Int64");
 			SetProviderField(DB2Types.DB2Int32,        typeof(Int32),    "GetDB2Int32");
@@ -64,7 +65,6 @@ namespace LinqToDB.DataProvider.DB2
 			SetProviderField(DB2Types.DB2Binary,       typeof(byte[]),   "GetDB2Binary");
 			SetProviderField(DB2Types.DB2Blob,         typeof(byte[]),   "GetDB2Blob");
 			SetProviderField(DB2Types.DB2Date,         typeof(DateTime), "GetDB2Date");
-			SetProviderField(DB2Types.DB2DateTime,     typeof(DateTime), "GetDB2DateTime");
 			SetProviderField(DB2Types.DB2Time,         typeof(TimeSpan), "GetDB2Time");
 			SetProviderField(DB2Types.DB2TimeStamp,    typeof(DateTime), "GetDB2TimeStamp");
 			SetProviderField(DB2Types.DB2Xml,          typeof(string),   "GetDB2Xml");
@@ -83,13 +83,29 @@ namespace LinqToDB.DataProvider.DB2
 			MappingSchema.AddScalarType(DB2Types.DB2Binary,       GetNullValue(DB2Types.DB2Binary),       true, DataType.VarBinary);
 			MappingSchema.AddScalarType(DB2Types.DB2Blob,         GetNullValue(DB2Types.DB2Blob),         true, DataType.Blob);
 			MappingSchema.AddScalarType(DB2Types.DB2Date,         GetNullValue(DB2Types.DB2Date),         true, DataType.Date);
-			MappingSchema.AddScalarType(DB2Types.DB2DateTime,     GetNullValue(DB2Types.DB2DateTime),     true, DataType.DateTime);
 			MappingSchema.AddScalarType(DB2Types.DB2Time,         GetNullValue(DB2Types.DB2Time),         true, DataType.Time);
 			MappingSchema.AddScalarType(DB2Types.DB2TimeStamp,    GetNullValue(DB2Types.DB2TimeStamp),    true, DataType.DateTime2);
 			MappingSchema.AddScalarType(DB2Types.DB2Xml,          GetNullValue(DB2Types.DB2Xml),          true, DataType.Xml);
 			MappingSchema.AddScalarType(DB2Types.DB2RowId,        GetNullValue(DB2Types.DB2RowId),        true, DataType.VarBinary);
 
 			_setBlob = GetSetParameter(connectionType, "DB2Parameter", "DB2Type", "DB2Type", "Blob");
+
+			if (DB2Types.DB2DateTime.IsSupported)
+			{
+				SetProviderField(DB2Types.DB2DateTime, typeof(DateTime), "GetDB2DateTime");
+				MappingSchema.AddScalarType(DB2Types.DB2DateTime, GetNullValue(DB2Types.DB2DateTime), true, DataType.DateTime);
+			}
+
+			if (DataConnection.TraceSwitch.TraceInfo)
+			{
+				DataConnection.WriteTraceLine(
+					DataReaderType.Assembly.FullName,
+					DataConnection.TraceSwitch.DisplayName);
+
+				DataConnection.WriteTraceLine(
+					DB2Types.DB2DateTime.IsSupported ? "DB2DateTime is supported." : "DB2DateTime is not supported.",
+					DataConnection.TraceSwitch.DisplayName);
+			}
 
 			DB2Tools.Initialized();
 		}

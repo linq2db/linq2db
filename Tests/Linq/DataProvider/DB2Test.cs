@@ -2,6 +2,7 @@
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -84,9 +85,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT rowid FROM AllTypes WHERE ID = 2").Length, Is.Not.EqualTo(0));
 				//Assert.That(conn.Execute<DB2RowId>("SELECT rowid FROM AllTypes WHERE ID = 2").Value.Length, Is.Not.EqualTo(0));
 
-				            TestType<DB2Clob>    (conn, "clobDataType",      DataType.Text,      skipNotNull:true);
-				            TestType<DB2Blob>    (conn, "blobDataType",      DataType.VarBinary, skipNotNull:true);
-				            TestType<DB2Xml>     (conn, "xmlDataType",       DataType.Xml, skipPass:true);
+				            TestType<DB2Clob>      (conn, "clobDataType",      DataType.Text,      skipNotNull:true);
+				            TestType<DB2Blob>      (conn, "blobDataType",      DataType.VarBinary, skipNotNull:true);
+				            TestType<DB2Xml>       (conn, "xmlDataType",       DataType.Xml, skipPass:true);
 
 				Assert.That(TestType<DB2Decimal?>     (conn, "decimalDataType",   DataType.Decimal).  ToString(),   Is.EqualTo(new DB2Decimal(9999999m).ToString()));
 				Assert.That(TestType<DB2Binary>       (conn, "varbinaryDataType", DataType.VarBinary).ToString(), Is.EqualTo(new DB2Binary(new byte[] { 49, 50, 51, 52 }).ToString()));
@@ -487,13 +488,61 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				conn.GetTable<ALLTYPE>().Insert(() => new ALLTYPE
+				try
 				{
-					INTDATATYPE  = 2000,
-					BLOBDATATYPE = new byte[500000],
-				});
+					var data = new byte[500000];
 
-				conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE == 2000);
+					for (var i = 0; i < data.Length; i++)
+						data[i] = (byte)(i % byte.MaxValue);
+
+					conn.GetTable<ALLTYPE>().Insert(() => new ALLTYPE
+					{
+						INTDATATYPE  = 2000,
+						BLOBDATATYPE = data,
+					});
+
+					var blob = conn.GetTable<ALLTYPE>().First(t => t.INTDATATYPE == 2000).BLOBDATATYPE;
+
+					Assert.AreEqual(data, blob);
+				}
+				finally
+				{
+					conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE == 2000);
+				}
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestClobSize(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				try
+				{
+					var sb = new StringBuilder();
+
+					for (var i = 0; i < 100000; i++)
+						sb.Append(((char)((i % byte.MaxValue) + 32)).ToString());
+
+					var data = sb.ToString();
+
+					conn.GetTable<ALLTYPE>().Insert(() => new ALLTYPE
+					{
+						INTDATATYPE  = 2000,
+						CLOBDATATYPE = data,
+					});
+
+					var blob = conn.GetTable<ALLTYPE>()
+						.Where (t => t.INTDATATYPE == 2000)
+						.Select(t => t.CLOBDATATYPE)
+						.First();
+
+					Assert.AreEqual(data, blob);
+				}
+				finally
+				{
+					conn.GetTable<ALLTYPE>().Delete(p => p.INTDATATYPE == 2000);
+				}
 			}
 		}
 
@@ -508,9 +557,9 @@ namespace Tests.DataProvider
 
 			DB2Tools.AfterInitialized(() =>
 			{
-				int64Value= DB2Types.DB2Int64.CreateInstance(1);
-				int32Value= DB2Types.DB2Int32.CreateInstance(2);
-				int16Value= DB2Types.DB2Int16.CreateInstance(3);
+				int64Value = DB2Types.DB2Int64.CreateInstance(1);
+				int32Value = DB2Types.DB2Int32.CreateInstance(2);
+				int16Value = DB2Types.DB2Int16.CreateInstance(3);
 			});
 
 			using (var conn = new DataConnection(context))
@@ -536,10 +585,18 @@ namespace Tests.DataProvider
 			var binaryValue           = DB2Types.DB2Binary.      CreateInstance(new byte[] { 1 });
 			var blobValue             = DB2Types.DB2Blob.        CreateInstance(new byte[] { 2 });
 			var dateValue             = DB2Types.DB2Date.        CreateInstance(new DateTime(2000, 1, 1));
-			var dateTimeValue1        = DB2Types.DB2DateTime.    CreateInstance(new DateTime(2000, 1, 2));
-			var dateTimeValue2        = DB2Types.DB2DateTime.    CreateInstance(new DateTime(2000, 1, 3).Ticks);
 			var timeValue             = DB2Types.DB2Time.        CreateInstance(new TimeSpan(1, 1, 1));
-			var timeStampValue        = DB2Types.DB2DateTime.    CreateInstance(new DateTime(2000, 1, 4));
+
+			if (DB2Types.DB2DateTime.Type != null)
+			{
+				var dateTimeValue1 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 2));
+				var dateTimeValue2 = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 3).Ticks);
+				var timeStampValue = DB2Types.DB2DateTime.CreateInstance(new DateTime(2000, 1, 4));
+
+				Assert.That(dateTimeValue1.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 2)));
+				Assert.That(dateTimeValue2.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 3)));
+				Assert.That(timeStampValue.Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 4)));
+			}
 
 			Assert.That(decimalValue.         Value, Is.TypeOf<decimal> ().And.EqualTo(4));
 			Assert.That(decimalValueAsDecimal.Value, Is.TypeOf<decimal> ().And.EqualTo(5));
@@ -552,10 +609,7 @@ namespace Tests.DataProvider
 			Assert.That(binaryValue.          Value, Is.TypeOf<byte[]>  ().And.EqualTo(new byte[] { 1 }));
 			Assert.That(blobValue.            Value, Is.TypeOf<byte[]>  ().And.EqualTo(new byte[] { 2 }));
 			Assert.That(dateValue.            Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 1)));
-			Assert.That(dateTimeValue1.       Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 2)));
-			Assert.That(dateTimeValue2.       Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 3)));
 			Assert.That(timeValue.            Value, Is.TypeOf<TimeSpan>().And.EqualTo(new TimeSpan(1, 1, 1)));
-			Assert.That(timeStampValue.       Value, Is.TypeOf<DateTime>().And.EqualTo(new DateTime(2000, 1, 4)));
 
 			DB2Tools.AfterInitialized(() =>
 			{
@@ -568,7 +622,6 @@ namespace Tests.DataProvider
 			Assert.That(int32Value.IsNull, Is.True);
 			Assert.That(int16Value.IsNull, Is.True);
 
-
 			Assert.That(DB2Types.DB2Decimal.     CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2DecimalFloat.CreateInstance().IsNull, Is.False);
 			Assert.That(DB2Types.DB2Real.        CreateInstance().IsNull, Is.True);
@@ -576,10 +629,14 @@ namespace Tests.DataProvider
 			Assert.That(DB2Types.DB2String.      CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2Binary.      CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2Date.        CreateInstance().IsNull, Is.True);
-			Assert.That(DB2Types.DB2DateTime.    CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2Time.        CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2TimeStamp.   CreateInstance().IsNull, Is.True);
 			Assert.That(DB2Types.DB2RowId.       CreateInstance().IsNull, Is.True);
+
+			if (DB2Types.DB2DateTime.Type != null)
+			{
+				Assert.That(DB2Types.DB2DateTime.CreateInstance().IsNull, Is.True);
+			}
 		}
 	}
 }
