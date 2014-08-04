@@ -313,6 +313,16 @@ namespace LinqToDB.DataProvider.Access
 				base.BuildFromClause();
 		}
 
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
+				default                 : base.BuildDataType(type);          break;
+			}
+		}
+
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)

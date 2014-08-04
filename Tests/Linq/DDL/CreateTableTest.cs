@@ -12,8 +12,9 @@ namespace Tests.DDL
 	{
 		class TestTable
 		{
-			public int    ID;
-			public string Field1;
+			public int       ID;
+			public string    Field1;
+			public DateTime? CreatedOn;
 		}
 
 		[Test, DataContextSource]

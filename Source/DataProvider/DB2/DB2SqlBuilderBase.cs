@@ -149,6 +149,16 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.DateTime  : StringBuilder.Append("timestamp"); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
+				default                 : base.BuildDataType(type);          break;
+			}
+		}
+
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
