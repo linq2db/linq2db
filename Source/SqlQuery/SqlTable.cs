@@ -173,15 +173,14 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string             Name            { get; set; }
-		public string             Alias           { get; set; }
-		public string             Database        { get; set; }
-		public string             Owner           { get; set; }
-		public Type               ObjectType      { get; set; }
-		public string             PhysicalName    { get; set; }
-		public List<MemberInfo[]> LoadWith        { get; set; }
-		public SqlTableType       SqlTableType    { get; set; }
-		public ISqlExpression[]   TableArguments  { get; set; }
+		public string           Name           { get; set; }
+		public string           Alias          { get; set; }
+		public string           Database       { get; set; }
+		public string           Owner          { get; set; }
+		public Type             ObjectType     { get; set; }
+		public string           PhysicalName   { get; set; }
+		public SqlTableType     SqlTableType   { get; set; }
+		public ISqlExpression[] TableArguments { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; private set; }
 

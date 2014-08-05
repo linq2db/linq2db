@@ -16,6 +16,21 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
+					from t in db.Child.LoadWith(p => p.Parent)
+					select new { t };
+
+				var ch = q.First();
+
+				Assert.IsNotNull(ch.t.Parent);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void LoadWith2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
 					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child.Parent)
 					select new
 					{
@@ -32,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void LoadWith2(string context)
+		public void LoadWith3(string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -127,9 +127,10 @@ namespace LinqToDB.Linq.Builder
 			public string _sqlQueryText { get { return SelectQuery == null ? "" : SelectQuery.SqlText; } }
 #endif
 
-			public ExpressionBuilder Builder     { get; private set; }
-			public Expression        Expression  { get; private set; }
-			public SelectQuery       SelectQuery { get; set; }
+			public ExpressionBuilder  Builder     { get; private set; }
+			public Expression         Expression  { get; private set; }
+			public SelectQuery        SelectQuery { get; set; }
+			public List<MemberInfo[]> LoadWith    { get; set; }
 
 			public virtual IBuildContext Parent { get; set; }
 

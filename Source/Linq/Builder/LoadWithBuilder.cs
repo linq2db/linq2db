@@ -24,10 +24,10 @@ namespace LinqToDB.Linq.Builder
 			var table    = (TableBuilder.TableContext)sequence;
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			if (table.SqlTable.LoadWith == null)
-				table.SqlTable.LoadWith = new List<MemberInfo[]>();
+			if (table.LoadWith == null)
+				table.LoadWith = new List<MemberInfo[]>();
 
-			table.SqlTable.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).ToArray());
+			table.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).Reverse().ToArray());
 
 			return sequence;
 		}
