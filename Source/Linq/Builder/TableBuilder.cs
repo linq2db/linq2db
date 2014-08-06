@@ -234,6 +234,45 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
+			class LoadWithItem
+			{
+				public MemberInfo         MemberInfo;
+				public List<LoadWithItem> List;
+			}
+
+			IEnumerable<MemberBinding> GetLoadWithBindings(Type objectType)
+			{
+				if (LoadWith == null)
+					yield break;
+
+				Func<IEnumerable<IEnumerable<MemberInfo>>,List<LoadWithItem>> getLoadWith = null; getLoadWith = infos =>
+				(
+					from lw in infos
+					select new
+					{
+						head = lw.First(),
+						tail = lw.Skip(1)
+					}
+					into info
+					group info by info.head into gr
+					select new LoadWithItem
+					{
+						MemberInfo = gr.Key,
+						List       = getLoadWith(from i in gr where i.tail.Any() select i.tail)
+					}
+				).ToList();
+
+				var members = getLoadWith(LoadWith);
+
+				foreach (var member in members)
+				{
+					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+					var ex = BuildExpression(ma, 1);
+
+					yield return Expression.Bind(member.MemberInfo, ex);
+				}
+			}
+
 			ParameterExpression _variable;
 			static int _varIndex;
 
@@ -262,13 +301,18 @@ namespace LinqToDB.Linq.Builder
 
 				Expression expr = Expression.MemberInit(
 					Expression.New(objectType),
-					(IEnumerable<MemberBinding>)members.Where(m => !m.Column.MemberAccessor.IsComplex).Select(m => Expression.Bind(
-						m.Column.Storage == null ?
-							m.Column.MemberAccessor.MemberInfo :
-							Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
-						m.Expr)));
+					members
+						.Where (m => !m.Column.MemberAccessor.IsComplex)
+						.Select(m => (MemberBinding)Expression.Bind(
+							m.Column.Storage == null ?
+								m.Column.MemberAccessor.MemberInfo :
+								Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
+							m.Expr))
+						.Union(GetLoadWithBindings(objectType)));
 
-				if (members.Any(m => m.Column.MemberAccessor.IsComplex))
+				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+
+				if (hasComplex)
 				{
 					var obj   = Expression.Variable(expr.Type);
 					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
@@ -317,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 				return q.ToArray();
 			}
 
-			Expression BuildQuery(Type tableType, TableContext tableContext)
+			protected virtual Expression BuildQuery(Type tableType, TableContext tableContext)
 			{
 				SqlInfo[] info;
 
@@ -1084,6 +1128,17 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return expression;
+			}
+
+			protected override Expression BuildQuery(Type tableType, TableContext tableContext)
+			{
+				if (IsList == false)
+					return base.BuildQuery(tableType, tableContext);
+
+				if (Common.Configuration.Linq.AllowMultipleQuery == false)
+					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
+
+				throw new NotSupportedException();
 			}
 		}
 

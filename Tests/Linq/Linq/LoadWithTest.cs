@@ -17,11 +17,11 @@ namespace Tests.Linq
 			{
 				var q =
 					from t in db.Child.LoadWith(p => p.Parent)
-					select new { t };
+					select t;
 
 				var ch = q.First();
 
-				Assert.IsNotNull(ch.t.Parent);
+				Assert.IsNotNull(ch.Parent);
 			}
 		}
 
