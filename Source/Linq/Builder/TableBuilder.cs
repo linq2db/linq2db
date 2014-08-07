@@ -240,10 +240,10 @@ namespace LinqToDB.Linq.Builder
 				public List<MemberInfo[]> NextLoadWith;
 			}
 
-			IEnumerable<MemberBinding> GetLoadWithBindings(Type objectType)
+			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
 			{
 				if (LoadWith == null)
-					yield break;
+					return;
 
 				Func<IEnumerable<IEnumerable<MemberInfo>>,List<LoadWithItem>> getLoadWith = infos =>
 				(
@@ -274,9 +274,10 @@ namespace LinqToDB.Linq.Builder
 						table.Table.LoadWith = member.NextLoadWith;
 					}
 
-					var ex = BuildExpression(ma, 1);
+					var ex = BuildExpression(ma, 1, parentObject);
+					var ax = Expression.Assign(Expression.MakeMemberAccess(parentObject, member.MemberInfo), ex);
 
-					yield return Expression.Bind(member.MemberInfo, ex);
+					exprs.Add(ax);
 				}
 			}
 
@@ -314,19 +315,26 @@ namespace LinqToDB.Linq.Builder
 							m.Column.Storage == null ?
 								m.Column.MemberAccessor.MemberInfo :
 								Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
-							m.Expr))
-						.Union(GetLoadWithBindings(objectType)));
+							m.Expr)));
 
 				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
 
-				if (hasComplex)
+				if (hasComplex || LoadWith != null)
 				{
 					var obj   = Expression.Variable(expr.Type);
 					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
 
-					exprs.AddRange(
-						members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-							m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+					if (hasComplex)
+					{
+						exprs.AddRange(
+							members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
+								m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+					}
+
+					if (LoadWith != null)
+					{
+						SetLoadWithBindings(objectType, obj, exprs);
+					}
 
 					exprs.Add(obj);
 
@@ -368,7 +376,7 @@ namespace LinqToDB.Linq.Builder
 				return q.ToArray();
 			}
 
-			protected virtual Expression BuildQuery(Type tableType, TableContext tableContext)
+			protected virtual Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
 			{
 				SqlInfo[] info;
 
@@ -463,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildQuery(typeof(T), this);
+				var expr   = BuildQuery(typeof(T), this, null);
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				query.SetQuery(mapper);
@@ -474,6 +482,11 @@ namespace LinqToDB.Linq.Builder
 			#region BuildExpression
 
 			public Expression BuildExpression(Expression expression, int level)
+			{
+				return BuildExpression(expression, level, null);
+			}
+
+			Expression BuildExpression(Expression expression, int level, ParameterExpression parentObject)
 			{
 				// Build table.
 				//
@@ -497,7 +510,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (table.Field == null)
-					return table.Table.BuildQuery(table.Table.OriginalType, table.Table);
+					return table.Table.BuildQuery(table.Table.OriginalType, table.Table, parentObject);
 
 				// Build field.
 				//
@@ -1044,10 +1057,10 @@ namespace LinqToDB.Linq.Builder
 
 		public class AssociatedTableContext : TableContext
 		{
-			public readonly TableContext          ParentAssociation;
+			public readonly TableContext             ParentAssociation;
 			public readonly SelectQuery.JoinedTable  ParentAssociationJoin;
-			public readonly AssociationDescriptor Association;
-			public readonly bool                  IsList;
+			public readonly AssociationDescriptor    Association;
+			public readonly bool                     IsList;
 
 			public override IBuildContext Parent
 			{
@@ -1137,13 +1150,18 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
-			protected override Expression BuildQuery(Type tableType, TableContext tableContext)
+			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
 			{
 				if (IsList == false)
-					return base.BuildQuery(tableType, tableContext);
+					return base.BuildQuery(tableType, tableContext, parentObject);
 
 				if (Common.Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
+
+				//pare
+				//
+				//return Builder.BuildMultipleQuery(ParentAssociation, )
+
 
 				throw new NotSupportedException();
 			}
