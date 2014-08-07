@@ -237,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 			class LoadWithItem
 			{
 				public MemberInfo         MemberInfo;
-				public List<LoadWithItem> List;
+				public List<MemberInfo[]> NextLoadWith;
 			}
 
 			IEnumerable<MemberBinding> GetLoadWithBindings(Type objectType)
@@ -245,20 +245,20 @@ namespace LinqToDB.Linq.Builder
 				if (LoadWith == null)
 					yield break;
 
-				Func<IEnumerable<IEnumerable<MemberInfo>>,List<LoadWithItem>> getLoadWith = null; getLoadWith = infos =>
+				Func<IEnumerable<IEnumerable<MemberInfo>>,List<LoadWithItem>> getLoadWith = infos =>
 				(
 					from lw in infos
 					select new
 					{
 						head = lw.First(),
-						tail = lw.Skip(1)
+						tail = lw.Skip(1).ToArray()
 					}
 					into info
 					group info by info.head into gr
 					select new LoadWithItem
 					{
-						MemberInfo = gr.Key,
-						List       = getLoadWith(from i in gr where i.tail.Any() select i.tail)
+						MemberInfo   = gr.Key,
+						NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
 					}
 				).ToList();
 
@@ -267,6 +267,13 @@ namespace LinqToDB.Linq.Builder
 				foreach (var member in members)
 				{
 					var ma = Expression.MakeMemberAccess(Expression.Constant(null, objectType), member.MemberInfo);
+
+					if (member.NextLoadWith.Count > 0)
+					{
+						var table = FindTable(ma, 1, false);
+						table.Table.LoadWith = member.NextLoadWith;
+					}
+
 					var ex = BuildExpression(ma, 1);
 
 					yield return Expression.Bind(member.MemberInfo, ex);
