@@ -1150,6 +1150,85 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
+			interface ISubQueryHelper
+			{
+				Expression GetSubquery(
+					ExpressionBuilder      builder,
+					AssociatedTableContext tableContext,
+					ParameterExpression    parentObject);
+			}
+
+			class SubQueryHelper<T> : ISubQueryHelper
+				where T : class
+			{
+				public Expression GetSubquery(
+					ExpressionBuilder      builder,
+					AssociatedTableContext tableContext,
+					ParameterExpression    parentObject)
+				{
+					var lContext = Expression.Parameter(typeof(IDataContext), "ctx");
+					var lParent  = Expression.Parameter(typeof(object), "parentObject");
+
+					Expression expression = 
+						Expression.Call(null, MemberHelper.MethodOf(() => DataExtensions.GetTable<T>(null)), lContext);
+
+					var pWhere = Expression.Parameter(typeof(T), "t");
+
+					Expression expr = null;
+
+					for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
+					{
+						var ex = Expression.Equal(
+							Expression.PropertyOrField(pWhere, tableContext.Association.ThisKey[i]),
+							Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.OtherKey[i]));
+
+						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+					}
+
+					var lWhere = Expression.Lambda<Func<T,bool>>(expr, pWhere);
+
+					expression = Expression.Call(null, MemberHelper.MethodOf(() => Queryable.Where(null,(Expression<Func<T,bool>>) null)), expression, lWhere);
+
+					var lambda = Expression.Lambda<Func<IDataContext,object,IEnumerable<T>>>(
+						expression,
+						lContext,
+						lParent);
+					var queryReader = CompiledQuery.Compile(lambda);
+
+					expression = Expression.Call(
+						null,
+						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
+							ExpressionBuilder.ContextParam,
+							Expression.Convert(parentObject, typeof(object)),
+							Expression.Constant(queryReader)
+						);
+
+					var memberType = tableContext.Association.MemberInfo.GetMemberType();
+
+					if (memberType == typeof(List<T>))
+						expression = Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
+
+					return expression;
+				}
+
+				static IEnumerable<T> ExecuteSubQuery(
+					QueryContext                             queryContext,
+					object                                   parentObject,
+					Func<IDataContext,object,IEnumerable<T>> queryReader)
+				{
+					var db = queryContext.GetDataContext();
+
+					try
+					{
+						return queryReader(db.DataContextInfo.DataContext, parentObject);
+					}
+					finally
+					{
+						queryContext.ReleaseDataContext(db);
+					}
+				}
+			}
+
 			protected override Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression parentObject)
 			{
 				if (IsList == false)
@@ -1158,12 +1237,10 @@ namespace LinqToDB.Linq.Builder
 				if (Common.Configuration.Linq.AllowMultipleQuery == false)
 					throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
 
-				//pare
-				//
-				//return Builder.BuildMultipleQuery(ParentAssociation, )
+				var sqtype = typeof(SubQueryHelper<>).MakeGenericType(tableType);
+				var helper = (ISubQueryHelper)Activator.CreateInstance(sqtype);
 
-
-				throw new NotSupportedException();
+				return helper.GetSubquery(Builder, this, parentObject);
 			}
 		}
 

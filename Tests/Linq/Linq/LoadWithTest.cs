@@ -44,6 +44,8 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void LoadWith3(string context)
 		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -60,6 +62,8 @@ namespace Tests.Linq
 
 				q1.ToList();
 			}
+
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
