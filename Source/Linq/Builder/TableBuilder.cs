@@ -1223,13 +1223,6 @@ namespace LinqToDB.Linq.Builder
 					if (l != null)
 						return l.GetBody(expression);
 
-					builder.MappingSchema.InitGenericConvertProvider<T>();
-
-					l = builder.MappingSchema.GetConvertExpression(expression.Type, memberType, false, false);
-
-					if (l != null)
-						return l.GetBody(expression);
-
 					throw new LinqToDBException("Expected constructor '{0}(IEnumerable<{1}>)'".Args(
 						memberType.Name, tableContext.ObjectType));
 				}

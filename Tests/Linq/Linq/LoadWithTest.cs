@@ -64,17 +64,15 @@ namespace Tests.Linq
 						p
 					};
 
-				q.ToList();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				var q1 = q.Select(t => t.p).SelectMany(p => p.Children);
-
-				q1.ToList();
+				Assert.IsNotNull(ch);
 			}
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		class IEnumerableToImmutableListConvertProvider<T> : IGenericConvertProvider
+		class EnumerableToImmutableListConvertProvider<T> : IGenericConvertProvider
 		{
 			public void SetConvertExpression(MappingSchema mappingSchema)
 			{
@@ -88,7 +86,7 @@ namespace Tests.Linq
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
 
-			MappingSchema.Default.SetGenericConvertProvider(typeof(IEnumerableToImmutableListConvertProvider<>));
+			MappingSchema.Default.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
 			using (var db = GetDataContext(context))
 			{
@@ -100,11 +98,9 @@ namespace Tests.Linq
 						p
 					};
 
-				q.ToList();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				var q1 = q.Select(t => t.p).SelectMany(p => p.Children);
-
-				q1.ToList();
+				Assert.IsNotNull(ch);
 			}
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
@@ -117,21 +113,19 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
-
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children3.First().GrandChildren[0].Child.Parent)
+					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child.Parent)
 					select new
 					{
 						p.GrandChildren.Count,
 						p
 					};
 
-				q.ToList();
+				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault();
 
-				var q1 = q.Select(t => t.p).SelectMany(p => p.Children);
-
-				q1.ToList();
+				Assert.IsNotNull(ch);
+				Assert.IsNotNull(ch.Child);
+				Assert.IsNotNull(ch.Child.Parent);
 			}
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
@@ -147,14 +141,14 @@ namespace Tests.Linq
 					select new
 					{
 						p.GrandChildren.Count,
-						p.Parent
+						p
 					};
 
-				q.ToList();
+				var ch = q.AsQueryable().Select(t => t.p).SelectMany(p => p.GrandChildren).FirstOrDefault();
 
-				var q1 = q.Select(t => t.Parent).SelectMany(p => p.Children).Distinct();
-
-				q1.ToList();
+				Assert.IsNotNull(ch);
+				Assert.IsNotNull(ch.Child);
+				Assert.IsNotNull(ch.Child.Parent);
 			}
 		}
 	}

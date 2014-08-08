@@ -151,10 +151,9 @@ namespace LinqToDB.Mapping
 			InitGenericConvertProvider(typeof(T));
 		}
 
-		public void InitGenericConvertProvider(params Type[] types)
+		public bool InitGenericConvertProvider(params Type[] types)
 		{
-			foreach (var info in _schemas)
-				info.InitGenericConvertProvider(types, this);
+			return _schemas.Aggregate(false, (cur, info) => cur || info.InitGenericConvertProvider(types, this));
 		}
 
 		public void SetGenericConvertProvider(Type type)
@@ -308,6 +307,21 @@ namespace LinqToDB.Mapping
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
 					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
+			}
+
+			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
+			var isToGeneric   = to.  IsGenericTypeEx() && !to.  IsGenericTypeDefinitionEx();
+
+			if (isFromGeneric || isToGeneric)
+			{
+				var fromGenericArgs = isFromGeneric ? from.GetGenericArgumentsEx() : Array<Type>.Empty;
+				var toGenericArgs   = isToGeneric   ? to.  GetGenericArgumentsEx() : Array<Type>.Empty;
+
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
+					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+
+				if (InitGenericConvertProvider(args))
+					return GetConverter(from, to, create);
 			}
 
 			if (create)

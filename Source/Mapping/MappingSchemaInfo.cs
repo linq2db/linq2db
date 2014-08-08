@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
@@ -71,27 +74,22 @@ namespace LinqToDB.Mapping
 
 		volatile Dictionary<Type,List<Type[]>> _genericConvertProviders;
 
-		public void InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
+		public bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
 		{
+			var changed = false;
+
 			if (_genericConvertProviders != null)
 			{
 				lock (_genericConvertProviders)
 				{
 					foreach (var type in _genericConvertProviders)
 					{
-						var args = type.Key.GetGenericArguments();
+						var args = type.Key.GetGenericArgumentsEx();
 
 						if (args.Length == types.Length)
 						{
-							foreach (var list in type.Value)
-							{
-								var i = 0;
-
-								for (; i < types.Length && types[i] == list[i]; i++);
-
-								if (i == types.Length)
-									return;
-							}
+							if (type.Value.Aggregate(false, (cur,ts) => cur || ts.SequenceEqual(types)))
+								continue;
 
 							var gtype    = type.Key.MakeGenericType(types);
 							var provider = (IGenericConvertProvider)Activator.CreateInstance(gtype);
@@ -99,10 +97,14 @@ namespace LinqToDB.Mapping
 							provider.SetConvertExpression(new MappingSchema(this));
 
 							type.Value.Add(types);
+
+							changed = true;
 						}
 					}
 				}
 			}
+
+			return changed;
 		}
 
 		public void SetGenericConvertProvider(Type type)
