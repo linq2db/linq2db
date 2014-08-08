@@ -114,6 +114,7 @@
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
+    <Compile Include="Mapping\IGenericConvertProvider.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />

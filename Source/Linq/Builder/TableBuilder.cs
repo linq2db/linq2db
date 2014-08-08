@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
@@ -1205,10 +1207,31 @@ namespace LinqToDB.Linq.Builder
 
 					var memberType = tableContext.Association.MemberInfo.GetMemberType();
 
-					if (memberType == typeof(List<T>))
-						expression = Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
+					if (memberType == typeof(T[]))
+						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToArray<T>(null)), expression);
 
-					return expression;
+					if (memberType.IsSameOrParentOf(typeof(List<T>)))
+						return Expression.Call(null, MemberHelper.MethodOf(() => Enumerable.ToList<T>(null)), expression);
+
+					var ctor = memberType.GetConstructorEx(new[] { typeof(IEnumerable<T>) });
+
+					if (ctor != null)
+						return Expression.New(ctor, expression);
+
+					var l = builder.MappingSchema.GetConvertExpression(expression.Type, memberType, false, false);
+
+					if (l != null)
+						return l.GetBody(expression);
+
+					builder.MappingSchema.InitGenericConvertProvider<T>();
+
+					l = builder.MappingSchema.GetConvertExpression(expression.Type, memberType, false, false);
+
+					if (l != null)
+						return l.GetBody(expression);
+
+					throw new LinqToDBException("Expected constructor '{0}(IEnumerable<{1}>)'".Args(
+						memberType.Name, tableContext.ObjectType));
 				}
 
 				static IEnumerable<T> ExecuteSubQuery(
@@ -1220,7 +1243,8 @@ namespace LinqToDB.Linq.Builder
 
 					try
 					{
-						return queryReader(db.DataContextInfo.DataContext, parentObject);
+						foreach (var item in queryReader(db.DataContextInfo.DataContext, parentObject))
+							yield return item;
 					}
 					finally
 					{

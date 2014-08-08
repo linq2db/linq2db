@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
@@ -62,6 +63,59 @@ namespace LinqToDB.Mapping
 						_canBeNull = new ConcurrentDictionary<Type,bool>();
 
 			_canBeNull[type] = value;
+		}
+
+		#endregion
+
+		#region GenericConvertProvider
+
+		volatile Dictionary<Type,List<Type[]>> _genericConvertProviders;
+
+		public void InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
+		{
+			if (_genericConvertProviders != null)
+			{
+				lock (_genericConvertProviders)
+				{
+					foreach (var type in _genericConvertProviders)
+					{
+						var args = type.Key.GetGenericArguments();
+
+						if (args.Length == types.Length)
+						{
+							foreach (var list in type.Value)
+							{
+								var i = 0;
+
+								for (; i < types.Length && types[i] == list[i]; i++);
+
+								if (i == types.Length)
+									return;
+							}
+
+							var gtype    = type.Key.MakeGenericType(types);
+							var provider = (IGenericConvertProvider)Activator.CreateInstance(gtype);
+
+							provider.SetConvertExpression(new MappingSchema(this));
+
+							type.Value.Add(types);
+						}
+					}
+				}
+			}
+		}
+
+		public void SetGenericConvertProvider(Type type)
+		{
+			if (_genericConvertProviders == null)
+				lock (this)
+					if (_genericConvertProviders == null)
+						_genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+
+			if (!_genericConvertProviders.ContainsKey(type))
+				lock (_genericConvertProviders)
+					if (!_genericConvertProviders.ContainsKey(type))
+						_genericConvertProviders[type] = new List<Type[]>();
 		}
 
 		#endregion

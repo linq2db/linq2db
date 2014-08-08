@@ -235,6 +235,7 @@
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs" />
+    <Compile Include="Mapping\IGenericConvertProvider.cs" />
     <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />

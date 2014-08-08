@@ -144,6 +144,32 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region GenericConvertProvider
+
+		public void InitGenericConvertProvider<T>()
+		{
+			InitGenericConvertProvider(typeof(T));
+		}
+
+		public void InitGenericConvertProvider(params Type[] types)
+		{
+			foreach (var info in _schemas)
+				info.InitGenericConvertProvider(types, this);
+		}
+
+		public void SetGenericConvertProvider(Type type)
+		{
+			if (!type.IsGenericTypeDefinitionEx())
+				throw new LinqToDBException("'{0}' must be a generic type.".Args(type));
+
+			if (!typeof(IGenericConvertProvider).IsSameOrParentOf(type))
+				throw new LinqToDBException("'{0}' must inherit from 'IGenericConvertProvider'.".Args(type));
+
+			_schemas[0].SetGenericConvertProvider(type);
+		}
+
+		#endregion
+
 		#region Convert
 
 		public T ChangeTypeTo<T>(object value)
@@ -604,7 +630,7 @@ namespace LinqToDB.Mapping
 
 		#region DefaultMappingSchema
 
-		MappingSchema(MappingSchemaInfo mappingSchemaInfo)
+		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
 			_schemas = new[] { mappingSchemaInfo };
 		}
