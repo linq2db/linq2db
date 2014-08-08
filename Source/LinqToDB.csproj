@@ -110,6 +110,7 @@
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
     <Compile Include="Data\TraceInfo.cs" />
+    <Compile Include="Expressions\GetItemExpression.cs" />
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />

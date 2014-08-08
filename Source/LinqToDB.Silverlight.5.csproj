@@ -105,6 +105,7 @@
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\GetItemExpression.cs" />
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />

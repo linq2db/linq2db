@@ -236,35 +236,14 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
 			}
 
-			class LoadWithItem
-			{
-				public MemberInfo         MemberInfo;
-				public List<MemberInfo[]> NextLoadWith;
-			}
-
 			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
 			{
-				if (LoadWith == null)
+				var loadWith = GetLoadWith();
+
+				if (loadWith == null)
 					return;
 
-				Func<IEnumerable<IEnumerable<MemberInfo>>,List<LoadWithItem>> getLoadWith = infos =>
-				(
-					from lw in infos
-					select new
-					{
-						head = lw.First(),
-						tail = lw.Skip(1).ToArray()
-					}
-					into info
-					group info by info.head into gr
-					select new LoadWithItem
-					{
-						MemberInfo   = gr.Key,
-						NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
-					}
-				).ToList();
-
-				var members = getLoadWith(LoadWith);
+				var members = GetLoadWith(loadWith);
 
 				foreach (var member in members)
 				{
@@ -320,8 +299,9 @@ namespace LinqToDB.Linq.Builder
 							m.Expr)));
 
 				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
+				var loadWith   = GetLoadWith();
 
-				if (hasComplex || LoadWith != null)
+				if (hasComplex || loadWith != null)
 				{
 					var obj   = Expression.Variable(expr.Type);
 					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
@@ -333,7 +313,7 @@ namespace LinqToDB.Linq.Builder
 								m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
 					}
 
-					if (LoadWith != null)
+					if (loadWith != null)
 					{
 						SetLoadWithBindings(objectType, obj, exprs);
 					}
@@ -709,32 +689,67 @@ namespace LinqToDB.Linq.Builder
 			{
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
 				{
+					var expression = association.Builder.DataContextInfo.DataContext.GetTable<T>();
+
+					var loadWith = association.GetLoadWith();
+
+					if (loadWith != null)
+					{
+						foreach (var members in loadWith)
+						{
+							var pLoadWith  = Expression.Parameter(typeof(T), "t");
+							var isPrevList = false;
+
+							Expression obj = pLoadWith;
+
+							foreach (var member in members)
+							{
+								if (isPrevList)
+									obj = new GetItemExpression(obj);
+
+								obj = Expression.MakeMemberAccess(obj, member);
+
+								isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
+							}
+
+							expression = expression.LoadWith(Expression.Lambda<Func<T,object>>(obj, pLoadWith));
+						}
+					}
+
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
 					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
 					{
 						var p  = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
+						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
 
 						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
-						while (e1.Type != e2.Type)
+						if (e1.Type != e2.Type)
 						{
-							if (e1.Type.IsNullable())
-							{
-								e1 = Expression.PropertyOrField(e1, "Value");
-								continue;
-							}
-
-							if (e2.Type.IsNullable())
-							{
-								e2 = Expression.PropertyOrField(e2, "Value");
-								continue;
-							}
-
-							e2 = Expression.Convert(e2, e1.Type);
+							if (e1.Type.CanConvertTo(e2.Type))
+								e1  = Expression.Convert(e1,  e2.Type);
+							else if (e2.Type.CanConvertTo(e1.Type))
+								e2 = Expression.Convert(e2, e1. Type);
 						}
+
+//						while (e1.Type != e2.Type)
+//						{
+//							if (e1.Type.IsNullable())
+//							{
+//								e1 = Expression.PropertyOrField(e1, "Value");
+//								continue;
+//							}
+//
+//							if (e2.Type.IsNullable())
+//							{
+//								e2 = Expression.PropertyOrField(e2, "Value");
+//								continue;
+//							}
+//
+//							e2 = Expression.Convert(e2, e1.Type);
+//						}
 
 						var ex = Expression.Equal(e1, e2);
 							
@@ -743,7 +758,7 @@ namespace LinqToDB.Linq.Builder
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);
 
-					return association.Builder.DataContextInfo.DataContext.GetTable<T>().Where(predicate).Expression;
+					return expression.Where(predicate).Expression;
 				}
 			}
 
@@ -847,6 +862,37 @@ namespace LinqToDB.Linq.Builder
 			#endregion
 
 			#region Helpers
+
+			protected class LoadWithItem
+			{
+				public MemberInfo         MemberInfo;
+				public List<MemberInfo[]> NextLoadWith;
+			}
+
+			protected List<LoadWithItem> GetLoadWith(List<MemberInfo[]> infos)
+			{
+				return
+				(
+					from lw in infos
+					select new
+					{
+						head = lw.First(),
+						tail = lw.Skip(1).ToArray()
+					}
+					into info
+					group info by info.head into gr
+					select new LoadWithItem
+					{
+						MemberInfo   = gr.Key,
+						NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
+					}
+				).ToList();
+			}
+
+			protected internal virtual List<MemberInfo[]> GetLoadWith()
+			{
+				return LoadWith;
+			}
 
 			SqlField GetField(Expression expression, int level, bool throwException)
 			{
@@ -1152,6 +1198,28 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
+			protected internal override List<MemberInfo[]> GetLoadWith()
+			{
+				if (LoadWith == null)
+				{
+					var loadWith = ParentAssociation.GetLoadWith();
+
+					if (loadWith != null)
+					{
+						foreach (var item in GetLoadWith(loadWith))
+						{
+							if (Association.MemberInfo.EqualsTo(item.MemberInfo))
+							{
+								LoadWith = item.NextLoadWith;
+								break;
+							}
+						}
+					}
+				}
+
+				return LoadWith;
+			}
+
 			interface ISubQueryHelper
 			{
 				Expression GetSubquery(
@@ -1171,30 +1239,62 @@ namespace LinqToDB.Linq.Builder
 					var lContext = Expression.Parameter(typeof(IDataContext), "ctx");
 					var lParent  = Expression.Parameter(typeof(object), "parentObject");
 
-					Expression expression = 
-						Expression.Call(null, MemberHelper.MethodOf(() => DataExtensions.GetTable<T>(null)), lContext);
+					var tableExpression = builder.DataContextInfo.DataContext.GetTable<T>();
 
-					var pWhere = Expression.Parameter(typeof(T), "t");
+					var loadWith = tableContext.GetLoadWith();
 
-					Expression expr = null;
-
-					for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
+					if (loadWith != null)
 					{
-						var ex = Expression.Equal(
-							Expression.PropertyOrField(pWhere, tableContext.Association.ThisKey[i]),
-							Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.OtherKey[i]));
+						foreach (var members in loadWith)
+						{
+							var pLoadWith  = Expression.Parameter(typeof(T), "t");
+							var isPrevList = false;
 
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+							Expression obj = pLoadWith;
+
+							foreach (var member in members)
+							{
+								if (isPrevList)
+									obj = new GetItemExpression(obj);
+
+								obj = Expression.MakeMemberAccess(obj, member);
+
+								isPrevList = typeof(IEnumerable).IsSameOrParentOf(obj.Type);
+							}
+
+							tableExpression = tableExpression.LoadWith(Expression.Lambda<Func<T,object>>(obj, pLoadWith));
+						}
 					}
 
-					var lWhere = Expression.Lambda<Func<T,bool>>(expr, pWhere);
+					Expression expression;
 
-					expression = Expression.Call(null, MemberHelper.MethodOf(() => Queryable.Where(null,(Expression<Func<T,bool>>) null)), expression, lWhere);
+					{ // Where
+						var pWhere = Expression.Parameter(typeof(T), "t");
 
-					var lambda = Expression.Lambda<Func<IDataContext,object,IEnumerable<T>>>(
-						expression,
-						lContext,
-						lParent);
+						Expression expr = null;
+
+						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
+						{
+							Expression thisProp  = Expression.PropertyOrField(pWhere, tableContext.Association.ThisKey[i]);
+							Expression otherProp = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.OtherKey[i]);
+
+							if (thisProp.Type != otherProp.Type)
+							{
+								if (thisProp.Type.CanConvertTo(otherProp.Type))
+									thisProp  = Expression.Convert(thisProp,  otherProp.Type);
+								else if (otherProp.Type.CanConvertTo(thisProp.Type))
+									otherProp = Expression.Convert(otherProp, thisProp. Type);
+							}
+
+							var ex = Expression.Equal(thisProp, otherProp);
+
+							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+						}
+
+						expression = tableExpression.Where(Expression.Lambda<Func<T,bool>>(expr, pWhere)).Expression;
+					}
+
+					var lambda      = Expression.Lambda<Func<IDataContext,object,IEnumerable<T>>>(expression, lContext, lParent);
 					var queryReader = CompiledQuery.Compile(lambda);
 
 					expression = Expression.Call(
@@ -1202,8 +1302,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => ExecuteSubQuery(null, null, null)),
 							ExpressionBuilder.ContextParam,
 							Expression.Convert(parentObject, typeof(object)),
-							Expression.Constant(queryReader)
-						);
+							Expression.Constant(queryReader));
 
 					var memberType = tableContext.Association.MemberInfo.GetMemberType();
 
