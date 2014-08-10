@@ -193,20 +193,25 @@ namespace LinqToDB.DataProvider.SqlServer
 //		}
 
 		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection dataConnection, IEnumerable<T> source,
-			int? maxBatchSize     = null,
-			int? bulkCopyTimeout  = null,
-			bool keepIdentity     = false,
-			bool checkConstraints = false)
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       maxBatchSize       = null,
+			int?                       bulkCopyTimeout    = null,
+			bool                       keepIdentity       = false,
+			bool                       checkConstraints   = false,
+			int                        notifyAfter        = 0,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType     = BulkCopyType.ProviderSpecific,
-					MaxBatchSize     = maxBatchSize,
-					BulkCopyTimeout  = bulkCopyTimeout,
-					KeepIdentity     = keepIdentity,
-					CheckConstraints = checkConstraints,
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					MaxBatchSize       = maxBatchSize,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					KeepIdentity       = keepIdentity,
+					CheckConstraints   = checkConstraints,
+					NotifyAfter        = notifyAfter,
+					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
 		}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
@@ -12,13 +13,6 @@ namespace LinqToDB.DataProvider.Oracle
 		public static string AssemblyName = "Oracle.DataAccess";
 
 		static readonly OracleDataProvider _oracleDataProvider = new OracleDataProvider();
-
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
 
 		static OracleTools()
 		{
@@ -74,6 +68,50 @@ namespace LinqToDB.DataProvider.Oracle
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
 			return new DataConnection(_oracleDataProvider, transaction);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int                        maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.MultipleRows,
+					MaxBatchSize       = maxBatchSize,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
+		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       maxBatchSize       = null,
+			int?                       bulkCopyTimeout    = null,
+			int                        notifyAfter        = 0,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					NotifyAfter        = notifyAfter,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
 		}
 
 		#endregion

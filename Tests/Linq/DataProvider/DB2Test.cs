@@ -417,6 +417,7 @@ namespace Tests.DataProvider
 				{
 					MaxBatchSize       = 50000,
 					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 10000,
 					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				},
 					Enumerable.Range(0, 100000).Select(n =>
@@ -459,7 +460,7 @@ namespace Tests.DataProvider
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void BulkCopyProviderSpecific(string context)
 		{
-			//new DB2BulkCopy("").DB2RowsCopied;
+//			new IBM.Data.DB2.DB2BulkCopy("").NotifyAfter;
 
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}

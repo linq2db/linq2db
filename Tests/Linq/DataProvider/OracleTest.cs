@@ -627,7 +627,13 @@ namespace Tests.DataProvider
 				using (var db = new TestDataConnection(context))
 				{
 					db.BulkCopy(
-						new BulkCopyOptions { MaxBatchSize = 5, BulkCopyType = bulkCopyType },
+						new BulkCopyOptions
+						{
+							MaxBatchSize = 5,
+							BulkCopyType = bulkCopyType,
+							NotifyAfter  = 3,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+						},
 						data);
 				}
 			}

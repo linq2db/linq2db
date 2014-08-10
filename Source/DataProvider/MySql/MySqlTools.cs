@@ -64,13 +64,17 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int                        maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
 		{
 			return dataConnection.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType = BulkCopyType.MultipleRows,
-					MaxBatchSize = maxBatchSize,
+					BulkCopyType       = BulkCopyType.MultipleRows,
+					MaxBatchSize       = maxBatchSize,
+					RowsCopiedCallback = rowsCopiedCallback,
 				}, source);
 		}
 

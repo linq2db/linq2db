@@ -306,48 +306,7 @@ namespace LinqToDB.DataProvider
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return BulkCopy(options.BulkCopyType, dataConnection, options, source);
-		}
-
-		protected virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-		{
-			switch (options.BulkCopyType)
-			{
-				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (dataConnection, options, source);
-				case BulkCopyType.RowByRow     : return RowByRowCopy        (dataConnection, options, source);
-				default                        : return ProviderSpecificCopy(dataConnection, options, source);
-			}
-		}
-
-		protected virtual BulkCopyRowsCopied ProviderSpecificCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-		{
-			return MultipleRowsCopy(dataConnection, options, source);
-		}
-
-		protected virtual BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-		{
-			return RowByRowCopy(dataConnection, options, source);
-		}
-
-		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-		{
-			var rowsCopied = new BulkCopyRowsCopied();
-
-			foreach (var item in source)
-			{
-				dataConnection.Insert(item);
-				rowsCopied.RowsCopied++;
-
-				if (options.RowsCopiedCallback != null && rowsCopied.RowsCopied % 100 == 0)
-				{
-					options.RowsCopiedCallback(rowsCopied);
-
-					if (rowsCopied.Abort)
-						break;
-				}
-			}
-
-			return rowsCopied;
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
 		#endregion
