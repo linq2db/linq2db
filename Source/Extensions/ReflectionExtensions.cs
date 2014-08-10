@@ -1019,6 +1019,50 @@ namespace LinqToDB.Extensions
 				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
+		static Dictionary<Type,HashSet<Type>> _castDic = new Dictionary<Type,HashSet<Type>>
+		{
+			{ typeof(decimal), new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)                } },
+			{ typeof(double),  new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char), typeof(float) } },
+			{ typeof(float),   new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char), typeof(float) } },
+			{ typeof(ulong),   new HashSet<Type> { typeof(byte),  typeof(ushort), typeof(uint),  typeof(char)                                                                                        } },
+			{ typeof(long),    new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(char)                                             } },
+			{ typeof(uint),    new HashSet<Type> { typeof(byte),  typeof(ushort), typeof(char)                                                                                                       } },
+			{ typeof(int),     new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(char)                                                                        } },
+			{ typeof(ushort),  new HashSet<Type> { typeof(byte),  typeof(char)                                                                                                                       } },
+			{ typeof(short),   new HashSet<Type> { typeof(byte)                                                                                                                                      } }
+		};
+
+		public static bool CanConvertTo(this Type fromType, Type toType)
+		{
+			if (fromType == toType)
+				return true;
+
+			if (_castDic.ContainsKey(toType) && _castDic[toType].Contains(fromType))
+				return true;
+
+#if !SILVERLIGHT && !NETFX_CORE
+
+			var tc = TypeDescriptor.GetConverter(fromType);
+
+			if (toType.IsAssignableFrom(fromType))
+				return true; 
+
+			if (tc.CanConvertTo(toType))
+				return true;
+
+			tc = TypeDescriptor.GetConverter(toType);
+
+			if (tc.CanConvertFrom(fromType))
+				return true;
+#endif
+
+			if (fromType.GetMethodsEx()
+				.Any(m => m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit")))
+				return true;
+
+			return false;
+		}
+
 		public static bool EqualsTo(this MemberInfo member1, MemberInfo member2, Type declaringType = null	)
 		{
 			if (ReferenceEquals(member1, member2))

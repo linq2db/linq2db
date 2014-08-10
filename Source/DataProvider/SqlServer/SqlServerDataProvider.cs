@@ -5,7 +5,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -269,57 +268,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 
-		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+		SqlServerBulkCopy _bulkCopy;
+
+		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (_bulkCopy == null)
+				_bulkCopy = new SqlServerBulkCopy(this);
 
-			var connection = dataConnection.Connection as SqlConnection;
-
-			if (connection != null)
-			{
-				var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-				var sb      = CreateSqlBuilder();
-				var rd      = new BulkCopyReader(this, columns, source);
-				var sqlopt  = SqlBulkCopyOptions.Default;
-
-				if (options.CheckConstraints == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
-				if (options.KeepIdentity     == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
-
-				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
-				{
-					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
-					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-
-//					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
-					var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-					var tableName  = sqlBuilder
-						.BuildTableName(
-							new StringBuilder(),
-							descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
-							descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
-							descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
-						.ToString();
-
-					bc.DestinationTableName = tableName;
-
-					for (var i = 0; i < columns.Count; i++)
-						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
-							i,
-							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
-
-					bc.WriteToServer(rd);
-
-					return rd.Count;
-				}
-			}
-
-			return base.BulkCopy(dataConnection, options, source);
+			return _bulkCopy.BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
 		}
+
 
 		#endregion
 	}

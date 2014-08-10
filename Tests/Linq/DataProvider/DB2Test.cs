@@ -413,7 +413,13 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				//conn.BeginTransaction();
-				conn.BulkCopy(new BulkCopyOptions { MaxBatchSize = 50000, BulkCopyType = bulkCopyType },
+				conn.BulkCopy(new BulkCopyOptions
+				{
+					MaxBatchSize       = 50000,
+					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 10000,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				},
 					Enumerable.Range(0, 100000).Select(n =>
 						new ALLTYPE
 						{
@@ -454,6 +460,8 @@ namespace Tests.DataProvider
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void BulkCopyProviderSpecific(string context)
 		{
+//			new IBM.Data.DB2.DB2BulkCopy("").NotifyAfter;
+
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
@@ -465,7 +473,7 @@ namespace Tests.DataProvider
 				using (var db = new DataConnection(context))
 				{
 					db.BulkCopy(
-						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						new BulkCopyOptions { BulkCopyType = bulkCopyType, },
 						Enumerable.Range(0, 10).Select(n =>
 							new LinqDataTypes
 							{

@@ -11,5 +11,8 @@ namespace LinqToDB.Data
 		public bool?        IgnoreSkipOnInsert { get; set; }
 		public bool?        KeepIdentity       { get; set; }
 		public bool?        CheckConstraints   { get; set; }
+		public int          NotifyAfter        { get; set; }
+
+		public Action<BulkCopyRowsCopied> RowsCopiedCallback { get; set; }
 	}
 }

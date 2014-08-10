@@ -105,6 +105,7 @@
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\GetItemExpression.cs" />
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
@@ -193,6 +194,7 @@
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs" />
+    <Compile Include="Mapping\IGenericConvertProvider.cs" />
     <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />

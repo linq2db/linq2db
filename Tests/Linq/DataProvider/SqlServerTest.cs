@@ -690,7 +690,11 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows },
+					new BulkCopyOptions
+					{
+						BulkCopyType       = BulkCopyType.MultipleRows,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
 					Enumerable.Range(0, 10).Select(n =>
 						new DataTypes
 						{
@@ -713,7 +717,11 @@ namespace Tests.DataProvider
 			using (var db = new DataConnection(context))
 			{
 				db.BulkCopy(
-					new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new BulkCopyOptions
+					{
+						BulkCopyType       = BulkCopyType.ProviderSpecific,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
 					Enumerable.Range(0, 10).Select(n =>
 						new DataTypes
 						{

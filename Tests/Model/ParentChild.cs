@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 
 using LinqToDB;
@@ -31,6 +32,9 @@ namespace Tests.Model
 		{
 			get { return Children; }
 		}
+
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public ImmutableList<Child> Children3;
 
 		public override bool Equals(object obj)
 		{
@@ -78,6 +82,9 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID", CanBeNull = false)]
 		public List<GrandChild> GrandChildren1;
+
+		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
+		public GrandChild[] GrandChildren2;
 
 		public override bool Equals(object obj)
 		{

@@ -144,6 +144,31 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region GenericConvertProvider
+
+		public void InitGenericConvertProvider<T>()
+		{
+			InitGenericConvertProvider(typeof(T));
+		}
+
+		public bool InitGenericConvertProvider(params Type[] types)
+		{
+			return _schemas.Aggregate(false, (cur, info) => cur || info.InitGenericConvertProvider(types, this));
+		}
+
+		public void SetGenericConvertProvider(Type type)
+		{
+			if (!type.IsGenericTypeDefinitionEx())
+				throw new LinqToDBException("'{0}' must be a generic type.".Args(type));
+
+			if (!typeof(IGenericConvertProvider).IsSameOrParentOf(type))
+				throw new LinqToDBException("'{0}' must inherit from 'IGenericConvertProvider'.".Args(type));
+
+			_schemas[0].SetGenericConvertProvider(type);
+		}
+
+		#endregion
+
 		#region Convert
 
 		public T ChangeTypeTo<T>(object value)
@@ -282,6 +307,21 @@ namespace LinqToDB.Mapping
 
 				if (li != null && (i == 0 || !li.IsSchemaSpecific))
 					return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.CheckNullLambda, null, false);
+			}
+
+			var isFromGeneric = from.IsGenericTypeEx() && !from.IsGenericTypeDefinitionEx();
+			var isToGeneric   = to.  IsGenericTypeEx() && !to.  IsGenericTypeDefinitionEx();
+
+			if (isFromGeneric || isToGeneric)
+			{
+				var fromGenericArgs = isFromGeneric ? from.GetGenericArgumentsEx() : Array<Type>.Empty;
+				var toGenericArgs   = isToGeneric   ? to.  GetGenericArgumentsEx() : Array<Type>.Empty;
+
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
+					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+
+				if (InitGenericConvertProvider(args))
+					return GetConverter(from, to, create);
 			}
 
 			if (create)
@@ -604,7 +644,7 @@ namespace LinqToDB.Mapping
 
 		#region DefaultMappingSchema
 
-		MappingSchema(MappingSchemaInfo mappingSchemaInfo)
+		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
 			_schemas = new[] { mappingSchemaInfo };
 		}

@@ -24,10 +24,10 @@ namespace LinqToDB.Linq.Builder
 			var table    = (TableBuilder.TableContext)sequence;
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			if (table.SqlTable.LoadWith == null)
-				table.SqlTable.LoadWith = new List<MemberInfo[]>();
+			if (table.LoadWith == null)
+				table.LoadWith = new List<MemberInfo[]>();
 
-			table.SqlTable.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).ToArray());
+			table.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).Reverse().ToArray());
 
 			return sequence;
 		}
@@ -65,9 +65,7 @@ namespace LinqToDB.Linq.Builder
 								goto default;
 
 							var member = ((MemberExpression)expr).Member;
-							var mtype  = member.IsFieldEx() ?
-								((FieldInfo)   member).FieldType :
-								((PropertyInfo)member).PropertyType;
+							var mtype  = member.GetMemberType();
 
 							if (lastMember.ReflectedTypeEx() != mtype.GetItemType())
 								goto default;
@@ -92,6 +90,23 @@ namespace LinqToDB.Linq.Builder
 							expression = mexpr.Expression;
 
 							break;
+						}
+
+					case ExpressionType.ArrayIndex   :
+						{
+							expression = ((BinaryExpression)expression).Left;
+							break;
+						}
+
+					case ExpressionType.Extension    :
+						{
+							if (expression is GetItemExpression)
+							{
+								expression = ((GetItemExpression)expression).Expression;
+								break;
+							}
+
+							goto default;
 						}
 
 					default :

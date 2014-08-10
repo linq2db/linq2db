@@ -304,17 +304,9 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual int BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var n = 0;
-
-			foreach (var item in source)
-			{
-				dataConnection.Insert(item);
-				n++;
-			}
-
-			return n;
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
 		#endregion
