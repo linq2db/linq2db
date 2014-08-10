@@ -98,7 +98,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		public override int BulkCopy<T>([JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
@@ -122,7 +123,7 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
 		}
 
-		int MultipleRowsBulkCopy<T>(
+		BulkCopyRowsCopied MultipleRowsBulkCopy<T>(
 			DataConnection   dataConnection,
 			BulkCopyOptions  options,
 			IEnumerable<T>   source,
@@ -263,7 +264,7 @@ namespace LinqToDB.DataProvider.MySql
 					sb.Length = headerLen;
 				}
 
-				return totalCount;
+				return new BulkCopyRowsCopied { RowsCopied = totalCount };
 			}
 		}
 	}

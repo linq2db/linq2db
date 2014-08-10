@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -168,6 +169,45 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return new DataConnection(_sqlServerDataProvider2008, transaction);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.ProviderSpecific;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+//		public static int MultipleRowsCopy<T>(DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
+//		{
+//			return dataConnection.BulkCopy(
+//				new BulkCopyOptions
+//				{
+//					BulkCopyType = BulkCopyType.MultipleRows,
+//					MaxBatchSize = maxBatchSize,
+//				}, source);
+//		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection dataConnection, IEnumerable<T> source,
+			int? maxBatchSize     = null,
+			int? bulkCopyTimeout  = null,
+			bool keepIdentity     = false,
+			bool checkConstraints = false)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType     = BulkCopyType.ProviderSpecific,
+					MaxBatchSize     = maxBatchSize,
+					BulkCopyTimeout  = bulkCopyTimeout,
+					KeepIdentity     = keepIdentity,
+					CheckConstraints = checkConstraints,
+				}, source);
 		}
 
 		#endregion

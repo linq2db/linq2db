@@ -415,7 +415,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
 		static Func<int,string,object>         _columnMappingCreator;
 
-		public override int BulkCopy<T>(
+		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
@@ -482,6 +482,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToList();
 					var rd      = new BulkCopyReader(this, columns, source);
+					var rc      = new BulkCopyRowsCopied();
 
 					using (var bc = _bulkCopyCreator(dataConnection.Connection))
 					{
@@ -498,14 +499,16 @@ namespace LinqToDB.DataProvider.Oracle
 						dbc.WriteToServer(rd);
 					}
 
-					return rd.Count;
+					rc.RowsCopied = rd.Count;
+
+					return rc;
 				}
 			}
 
 			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
 		}
 
-		int MultipleRowsBulkCopy<T>(
+		BulkCopyRowsCopied MultipleRowsBulkCopy<T>(
 			DataConnection   dataConnection,
 			BulkCopyOptions  options,
 			IEnumerable<T>   source,
@@ -635,7 +638,7 @@ namespace LinqToDB.DataProvider.Oracle
 					sb.Length = headerLen;
 				}
 
-				return totalCount;
+				return new BulkCopyRowsCopied { RowsCopied = totalCount };
 			}
 		}
 	}

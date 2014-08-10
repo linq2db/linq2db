@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
@@ -12,13 +13,6 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		static readonly MySqlDataProvider _mySqlDataProvider = new MySqlDataProvider();
 		
-		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
-		public  static BulkCopyType  DefaultBulkCopyType
-		{
-			get { return _defaultBulkCopyType;  }
-			set { _defaultBulkCopyType = value; }
-		}
-
 		static MySqlTools()
 		{
 			DataConnection.AddDataProvider(_mySqlDataProvider);
@@ -56,6 +50,28 @@ namespace LinqToDB.DataProvider.MySql
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
 			return new DataConnection(_mySqlDataProvider, transaction);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
+			DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType = BulkCopyType.MultipleRows,
+					MaxBatchSize = maxBatchSize,
+				}, source);
 		}
 
 		#endregion

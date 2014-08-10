@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
@@ -23,17 +24,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			get { return _defaultBulkCopyType;  }
 			set { _defaultBulkCopyType = value; }
-		}
-
-		static DB2Tools()
-		{
-			AutoDetectProvider = true;
-
-			DataConnection.AddDataProvider(ProviderName.DB2, _db2DataProviderLUW);
-			DataConnection.AddDataProvider(_db2DataProviderLUW);
-			DataConnection.AddDataProvider(_db2DataProviderzOS);
-
-			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
@@ -195,6 +185,43 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return new DataConnection(_db2DataProviderLUW, transaction);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		static DB2Tools()
+		{
+			AutoDetectProvider = true;
+
+			DataConnection.AddDataProvider(ProviderName.DB2, _db2DataProviderLUW);
+			DataConnection.AddDataProvider(_db2DataProviderLUW);
+			DataConnection.AddDataProvider(_db2DataProviderzOS);
+
+			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+
+		public static BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType = BulkCopyType.MultipleRows,
+					MaxBatchSize = maxBatchSize,
+				}, source);
+		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection dataConnection, IEnumerable<T> source, int? bulkCopyTimeout = null, bool keepIdentity = false)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType    = BulkCopyType.ProviderSpecific,
+					BulkCopyTimeout = bulkCopyTimeout,
+					KeepIdentity    = keepIdentity,
+				}, source);
 		}
 
 		#endregion

@@ -269,7 +269,16 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 
-		public override int BulkCopy<T>(
+		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return base.BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
 			BulkCopyOptions options,
 			IEnumerable<T>  source)
@@ -285,16 +294,27 @@ namespace LinqToDB.DataProvider.SqlServer
 				var sb      = CreateSqlBuilder();
 				var rd      = new BulkCopyReader(this, columns, source);
 				var sqlopt  = SqlBulkCopyOptions.Default;
+				var rc      = new BulkCopyRowsCopied();
 
 				if (options.CheckConstraints == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
 				if (options.KeepIdentity     == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
 
 				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{
+					if (options.RowsCopiedCallback != null)
+					{
+						bc.SqlRowsCopied += (sender,e) =>
+						{
+							rc.RowsCopied = e.RowsCopied;
+							options.RowsCopiedCallback(rc);
+							if (rc.Abort)
+								e.Abort = true;
+						};
+					}
+
 					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
 					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-//					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
 					var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 					var tableName  = sqlBuilder
@@ -314,11 +334,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					bc.WriteToServer(rd);
 
-					return rd.Count;
+					rc.RowsCopied = rd.Count;
+
+					return rc;
 				}
 			}
 
-			return base.BulkCopy(dataConnection, options, source);
+			return base.MultipleRowsCopy(dataConnection, options, source);
 		}
 
 		#endregion

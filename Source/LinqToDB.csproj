@@ -108,6 +108,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
+    <Compile Include="Data\BulkCopyRowsCopied.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
     <Compile Include="Data\TraceInfo.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
