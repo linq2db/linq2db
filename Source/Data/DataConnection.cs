@@ -60,7 +60,7 @@ namespace LinqToDB.Data
 			
 			InitConfig();
 
-			if (!dataProvider.IsCompatibleConnection(connection))
+			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
 				throw new LinqToDBException(
 					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, connection));
 
@@ -76,7 +76,7 @@ namespace LinqToDB.Data
 			
 			InitConfig();
 
-			if (!dataProvider.IsCompatibleConnection(transaction.Connection))
+			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
 				throw new LinqToDBException(
 					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, transaction.Connection));
 
