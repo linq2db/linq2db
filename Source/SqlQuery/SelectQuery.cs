@@ -3412,7 +3412,7 @@ namespace LinqToDB.SqlQuery
 
 					if (p.Expr1 is SqlExpression)
 					{
-						var expr  = (SqlExpression)p.Expr1;
+						var expr = (SqlExpression)p.Expr1;
 
 						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
 						{

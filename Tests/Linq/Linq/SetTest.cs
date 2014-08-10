@@ -587,6 +587,28 @@ namespace Tests.Linq
 				Array.ForEach(ps, p => TestContains(db, p));
 		}
 
+		[Test, DataContextSource]
+		public void Contains15(string context)
+		{
+			var arr = Parent1.Take(2).ToArray();
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Child where arr.Contains(p.Parent1) select p,
+					from p in db.Child where arr.Contains(p.Parent1) select p);
+		}
+
+		[Test, DataContextSource]
+		public void Contains16(string context)
+		{
+			var arr = Child.Take(2).ToArray();
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    GrandChild where arr.Contains(p.Child) select p,
+					from p in db.GrandChild where arr.Contains(p.Child) select p);
+		}
+
 		static void GetData(ITestDataContext db, IEnumerable<int?> d)
 		{
 			var r1 = db.GrandChild
