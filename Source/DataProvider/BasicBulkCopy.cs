@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			switch (options.BulkCopyType)
+			switch (bulkCopyType)
 			{
 				case BulkCopyType.MultipleRows : return MultipleRowsCopy    (dataConnection, options, source);
 				case BulkCopyType.RowByRow     : return RowByRowCopy        (dataConnection, options, source);
