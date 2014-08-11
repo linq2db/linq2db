@@ -1006,5 +1006,22 @@ namespace Tests.Linq
 					where !t.BoolValue && t.MoneyValue > 1 && (t.SmallIntValue == 5 || t.SmallIntValue == 7 || t.SmallIntValue == 8)
 					select t);
 		}
+
+		[Test, DataContextSource]
+		public void GroupBySubQquery(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var p1    = Child;
+				var qry1  = p1.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry12 = p1.Where(x => qry1.Any(y => y == x.ChildID));
+
+				var p2    = db.Child;
+				var qry2  = p2.GroupBy(x => x.ParentID).Select(x => x.Max(y => y.ChildID));
+				var qry22 = p2.Where(x => qry2.Any(y => y == x.ChildID));
+
+				AreEqual(qry12, qry22);
+			}
+		}
 	}
 }

@@ -536,6 +536,9 @@ namespace LinqToDB.Linq.Builder
 								_key.IsExpression(expression, level + 1, requestFlag);
 						}
 					}
+					else if (levelExpression.NodeType == ExpressionType.Call)
+						if (requestFlag == RequestFor.Expression)
+							return IsExpressionResult.True;
 				}
 
 				return IsExpressionResult.False;
