@@ -5,6 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -14,7 +15,7 @@ namespace SQLiteDataContext
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : TestData
-	/// Server Version : 3.8.2
+	/// Server Version : 3.8.5
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -52,10 +53,10 @@ namespace SQLiteDataContext
 		[Column,     Nullable] public byte?     tinyintDataType          { get; set; } // tinyint
 		[Column,     Nullable] public decimal?  moneyDataType            { get; set; } // money
 		[Column,     Nullable] public double?   floatDataType            { get; set; } // float
-		[Column,     Nullable] public float?    realDataType             { get; set; } // real
+		[Column,     Nullable] public double?   realDataType             { get; set; } // real
 		[Column,     Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
 		[Column,     Nullable] public char?     charDataType             { get; set; } // char(1)
-		[Column,     Nullable] public string    varcharDataType          { get; set; } // varchar(2147483647)
+		[Column,     Nullable] public string    varcharDataType          { get; set; } // varchar(20)
 		[Column,     Nullable] public string    textDataType             { get; set; } // text(2147483647)
 		[Column,     Nullable] public string    ncharDataType            { get; set; } // char(20)
 		[Column,     Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
@@ -94,7 +95,7 @@ namespace SQLiteDataContext
 	[Table("Dual")]
 	public partial class Dual
 	{
-		[Column, Nullable] public string Dummy { get; set; } // varchar(2147483647)
+		[Column, Nullable] public string Dummy { get; set; } // varchar(10)
 	}
 
 	[Table("GrandChild")]
@@ -148,7 +149,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Doctor Doctor00 { get; set; }
 
 		#endregion
@@ -158,5 +159,38 @@ namespace SQLiteDataContext
 	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public long ID { get; set; } // integer
+	}
+
+	public static partial class TableExtensions
+	{
+		public static AllType Find(this ITable<AllType> table, long ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static Doctor Find(this ITable<Doctor> table, long PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Patient Find(this ITable<Patient> table, long PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static Person Find(this ITable<Person> table, long PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, long ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }

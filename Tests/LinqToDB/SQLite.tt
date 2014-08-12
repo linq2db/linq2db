@@ -2,7 +2,7 @@
 <#@ output extension=".generated.cs"                              #>
 <#@ include file="..\..\Templates\LinqToDB.SQLite.ttinclude"      #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\System.Data.SQLite.x86.1.0.90.0\lib\net40\System.Data.SQLite.dll" #>
+<#@ assembly name="$(SolutionDir)Tests\LinqToDB\bin\Debug\System.Data.SQLite.dll" #>
 <#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll" #>
 <#
 	NamespaceName = "SQLiteDataContext";
