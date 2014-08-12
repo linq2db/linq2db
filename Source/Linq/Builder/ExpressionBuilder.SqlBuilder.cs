@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -1716,6 +1718,11 @@ namespace LinqToDB.Linq.Builder
 				var enumMapExpr = dataContext.MappingSchema.GetConvertExpression(type, defaultType);
 				accessorExpression = enumMapExpr.GetBody(accessorExpression);
 			}
+
+			var expr = dataContext.MappingSchema.GetConvertExpression(type, typeof(DataParameter), createDefault: false);
+
+			if (expr != null)
+				accessorExpression = Expression.PropertyOrField(expr.GetBody(accessorExpression), "Value");
 
 			var mapper = Expression.Lambda<Func<Expression,object[],object>>(
 				Expression.Convert(accessorExpression, typeof(object)),
