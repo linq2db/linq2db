@@ -7,14 +7,16 @@ namespace LinqToDB
 {
 	public class DataContextTransaction : IDisposable
 	{
-		public DataContextTransaction([NotNull] DataContext dataContext)
+		public DataContextTransaction([NotNull] DataContext dataContext, bool autoCommitOnDispose = false)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 
-			DataContext = dataContext;
+			DataContext         = dataContext;
+			AutoCommitOnDispose = autoCommitOnDispose;
 		}
 
-		public DataContext DataContext { get; set; }
+		public DataContext DataContext         { get; set; }
+		public bool        AutoCommitOnDispose { get; set; }
 
 		int _transactionCounter;
 
@@ -84,7 +86,10 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				db.RollbackTransaction();
+				if (AutoCommitOnDispose)
+					db.CommitTransaction();
+				else
+					db.RollbackTransaction();
 
 				_transactionCounter = 0;
 
