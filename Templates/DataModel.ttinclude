@@ -279,10 +279,25 @@ void LoadMetadata(DataConnection dataConnection)
 		if (keyWords.Contains(t.DataContextPropertyName))
 			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
 
+		t.TypeName                = ConvertToCompilable(t.TypeName);
+		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName);
+
 		foreach (var col in t.Columns.Values)
+		{
 			if (keyWords.Contains(col.MemberName))
 				col.MemberName = "@" + col.MemberName;
+
+			col.MemberName = ConvertToCompilable(col.MemberName);
+
+			if (col.MemberName == t.TypeName)
+				col.MemberName += "_Column";
+		}
 	}
+}
+
+string ConvertToCompilable(string name)
+{
+	return name.Replace('.', '_');
 }
 
 Table GetTable(string name)
