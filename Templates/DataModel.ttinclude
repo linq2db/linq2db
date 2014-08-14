@@ -297,7 +297,7 @@ void LoadMetadata(DataConnection dataConnection)
 
 string ConvertToCompilable(string name)
 {
-	return name.Replace('.', '_');
+	return name.Replace('.', '_').Replace(' ', '_');
 }
 
 Table GetTable(string name)
