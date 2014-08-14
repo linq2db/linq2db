@@ -701,7 +701,7 @@ namespace LinqToDB.Data
 
 		public IDbTransaction Transaction { get; private set; }
 		
-		public virtual DataConnectionTransaction BeginTransaction(bool autoCommitOnDispose = true)
+		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -719,10 +719,10 @@ namespace LinqToDB.Data
 			if (_command != null)
 				_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this, autoCommitOnDispose);
+			return new DataConnectionTransaction(this);
 		}
 
-		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel, bool autoCommitOnDispose = true)
+		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -740,7 +740,7 @@ namespace LinqToDB.Data
 			if (_command != null)
 				_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this, autoCommitOnDispose);
+			return new DataConnectionTransaction(this);
 		}
 
 		public virtual void CommitTransaction()

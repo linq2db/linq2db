@@ -6,16 +6,14 @@ namespace LinqToDB.Data
 {
 	public class DataConnectionTransaction : IDisposable
 	{
-		public DataConnectionTransaction([NotNull] DataConnection dataConnection, bool autoCommitOnDispose)
+		public DataConnectionTransaction([NotNull] DataConnection dataConnection)
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			DataConnection      = dataConnection;
-			AutoCommitOnDispose = autoCommitOnDispose;
+			DataConnection = dataConnection;
 		}
 
-		public DataConnection DataConnection      { get; private set; }
-		public bool           AutoCommitOnDispose { get; set; }
+		public DataConnection DataConnection { get; private set; }
 
 		bool _disposeTransaction = true;
 
@@ -34,12 +32,7 @@ namespace LinqToDB.Data
 		public void Dispose()
 		{
 			if (_disposeTransaction)
-			{
-				if (AutoCommitOnDispose)
-					DataConnection.CommitTransaction();
-				else
-					DataConnection.RollbackTransaction();
-			}
+				DataConnection.RollbackTransaction();
 		}
 	}
 }

@@ -188,18 +188,18 @@ namespace LinqToDB
 			}
 		}
 
-		public DataContextTransaction BeginTransaction(IsolationLevel level, bool autoCommitOnDispose = true)
+		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
-			var dct = new DataContextTransaction(this, autoCommitOnDispose);
+			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction(level);
 
 			return dct;
 		}
 
-		public DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
+		public virtual DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
 		{
-			var dct = new DataContextTransaction(this, autoCommitOnDispose);
+			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction();
 
