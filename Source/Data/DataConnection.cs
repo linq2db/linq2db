@@ -309,46 +309,15 @@ namespace LinqToDB.Data
 
 		static void InitConnectionStrings()
 		{
-			var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
-
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{
-				var configuration    = css.Name;
-				var connectionString = css.ConnectionString;
-				var providerName     = css.ProviderName;
-				var dataProvider     = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
+				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (dataProvider == null)
+				if (DefaultConfiguration == null &&
+					css.ElementInformation.Source != null &&
+					!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
 				{
-					if (string.IsNullOrEmpty(providerName))
-						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.ContainsKey(providerName))
-						dataProvider = _dataProviders[providerName];
-					else if (_dataProviders.ContainsKey(configuration))
-						dataProvider = _dataProviders[configuration];
-					else
-					{
-						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
-
-						switch (providers.Count)
-						{
-							case 0  : dataProvider = defaultDataProvider;                                        break;
-							case 1  : dataProvider = providers[0].Value;                                         break;
-							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
-						}
-					}
-				}
-
-				if (dataProvider != null)
-				{
-					AddConfiguration(configuration, connectionString, dataProvider);
-
-					if (DefaultConfiguration == null &&
-						css.ElementInformation.Source != null &&
-						!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
-					{
-						DefaultConfiguration = css.Name;
-					}
+					DefaultConfiguration = css.Name;
 				}
 			}
 		}
@@ -403,8 +372,65 @@ namespace LinqToDB.Data
 				DataProvider     = dataProvider;
 			}
 
-			public readonly string        ConnectionString;
-			public readonly IDataProvider DataProvider;
+			public ConfigurationInfo(ConnectionStringSettings connectionStringSettings)
+			{
+				ConnectionString = connectionStringSettings.ConnectionString;
+
+				_connectionStringSettings = connectionStringSettings;
+			}
+
+			public  readonly string ConnectionString;
+
+			private readonly ConnectionStringSettings _connectionStringSettings;
+
+			private IDataProvider _dataProvider;
+			public  IDataProvider  DataProvider
+			{
+				get { return _dataProvider ?? (_dataProvider = GetDataProvider(_connectionStringSettings)); }
+				set { _dataProvider = value; }
+			}
+
+			static IDataProvider GetDataProvider(ConnectionStringSettings css)
+			{
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
+				var dataProvider  = _providerDetectors.Select(d => d(css)).FirstOrDefault(dp => dp != null);
+
+				if (dataProvider == null)
+				{
+					var defaultDataProvider = DefaultDataProvider != null ? _dataProviders[DefaultDataProvider] : null;
+
+					if (string.IsNullOrEmpty(providerName))
+						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+					else if (_dataProviders.ContainsKey(providerName))
+						dataProvider = _dataProviders[providerName];
+					else if (_dataProviders.ContainsKey(configuration))
+						dataProvider = _dataProviders[configuration];
+					else
+					{
+						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+
+						switch (providers.Count)
+						{
+							case 0  : dataProvider = defaultDataProvider;                                        break;
+							case 1  : dataProvider = providers[0].Value;                                         break;
+							default : dataProvider = FindProvider(configuration, providers, providers[0].Value); break;
+						}
+					}
+				}
+
+				if (dataProvider != null)
+				{
+					if (DefaultConfiguration == null &&
+						css.ElementInformation.Source != null &&
+						!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+					{
+						DefaultConfiguration = css.Name;
+					}
+				}
+
+				return dataProvider;
+			}
 		}
 
 		static ConfigurationInfo GetConfigurationInfo(string configurationString)
