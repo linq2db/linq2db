@@ -624,7 +624,7 @@ END
 GO
 
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Name.Test') AND type in (N'U'))
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'Name.Test')
 BEGIN DROP TABLE [Name.Test] END
 GO
 
