@@ -47,10 +47,19 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null ||
-			   !sequence.SelectQuery.GroupBy.IsEmpty)
+			    sequence.SelectQuery.Select.SkipValue != null)
 			{
 				sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
+				sequence = new SubQueryContext(sequence);
+			}
+			else if (!sequence.SelectQuery.GroupBy.IsEmpty)
+			{
+				if (!builder.DataContextInfo.SqlProviderFlags.IsSybaseBuggyGroupBy)
+					sequence.SelectQuery.Select.Add(new SqlValue(0));
+				else
+					foreach (var item in sequence.SelectQuery.GroupBy.Items)
+						sequence.SelectQuery.Select.Add(item);
+
 				sequence = new SubQueryContext(sequence);
 			}
 

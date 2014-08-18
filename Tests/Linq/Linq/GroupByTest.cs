@@ -1654,5 +1654,16 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, DataContextSource]
+		public void GroupByCount(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(
+					(from t in    Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count(),
+					(from t in db.Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count());
+			}
+		}
 	}
 }
