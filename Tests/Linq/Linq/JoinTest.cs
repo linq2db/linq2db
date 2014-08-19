@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -538,6 +539,70 @@ namespace Tests.Linq
 							a => a.y.DefaultIfEmpty(),
 							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
 						));
+		}
+
+		[Test, DataContextSource]
+		public void GroupJoinAny1(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					join c in    Child on p.ParentID equals c.ParentID into t
+					select new { p.ParentID, n = t.Any() },
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID into t
+					select new { p.ParentID, n = t.Any() });
+		}
+
+		[Test, DataContextSource]
+		public void GroupJoinAny2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					join c in    Child on p.ParentID equals c.ParentID into t
+					select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() },
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID into t
+					select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() });
+		}
+
+		[Test, DataContextSource]
+		public void GroupJoinAny3(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					let c = from c in    Child where p.ParentID == c.ParentID select c
+					select new { p.ParentID, n = c.Any() },
+					from p in db.Parent
+					let c = from c in db.Child where p.ParentID == c.ParentID select c
+					select new { p.ParentID, n = c.Any() });
+		}
+
+		[Test, DataContextSource]
+		public void GroupJoinAny4(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					select new { p.ParentID, n = (from c in    Child where p.ParentID == c.ParentID select c).Any() },
+					from p in db.Parent
+					select new { p.ParentID, n = (from c in db.Child where p.ParentID == c.ParentID select c).Any() });
+		}
+
+		[Test, DataContextSource]
+		public void GroupJoinAny5(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					join c in    Child on p.ParentID equals c.ParentID into t
+					select new { p.ParentID, n = t.Any() },
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID into t
+					where 1 > 0
+					select new { p.ParentID, n = t.Any() });
 		}
 
 		[Test, DataContextSource]

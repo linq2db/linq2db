@@ -260,10 +260,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (parameters.TryGetValue(e, out idx))
 						{
-							return
-								Expression.Convert(
-									Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
-									e.Type);
+							return Expression.Convert(
+								Expression.ArrayIndex(paramArray, Expression.Constant(idx)),
+								e.Type);
 						}
 
 						return e;
@@ -271,8 +270,6 @@ namespace LinqToDB.Linq.Builder
 
 					// Item reader.
 					//
-// ReSharper disable AssignNullToNotNullAttribute
-
 					var expr = Expression.Call(
 						null,
 						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null)),
@@ -280,8 +277,6 @@ namespace LinqToDB.Linq.Builder
 						Expression.Lambda<Func<TElement,bool>>(
 							Expression.Equal(innerKey, outerParam),
 							new[] { context._innerKeyLambda.Parameters[0] }));
-
-// ReSharper restore AssignNullToNotNullAttribute
 
 					var lambda = Expression.Lambda<Func<IDataContext,TKey,object[],IQueryable<TElement>>>(
 						Expression.Convert(expr, typeof(IQueryable<TElement>)),
@@ -313,6 +308,29 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			interface IGroupJoinCallHelper
+			{
+				Expression GetGroupJoinCall(GroupJoinContext context);
+			}
+
+			class GroupJoinCallHelper<T> : IGroupJoinCallHelper
+			{
+				public Expression GetGroupJoinCall(GroupJoinContext context)
+				{
+					var expr = Expression.Call(
+						null,
+						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
+						context._innerExpression,
+						Expression.Lambda<Func<T,bool>>(
+							Expression.Equal(
+								context._innerKeyLambda.Body.Unwrap(),
+								context._outerKeyLambda.GetBody(context.Lambda.Parameters[0])),
+							new[] { context._innerKeyLambda.Parameters[0] }));
+
+					return expr;
+				}
+			}
+
 			public override Expression BuildExpression(Expression expression, int level)
 			{
 				if (ReferenceEquals(expression, Lambda.Parameters[1]))
@@ -329,6 +347,22 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return _groupExpression;
+				}
+
+				if (expression != null &&
+					expression.NodeType == ExpressionType.Call &&
+					expression.Find(Lambda.Parameters[1]) != null)
+				{
+					var call = (MethodCallExpression)expression;
+
+					var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
+					var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
+
+					var expr = helper.GetGroupJoinCall(this);
+
+					expr = call.Transform(e => e == Lambda.Parameters[1] ? expr : e);
+
+					return Builder.BuildExpression(this, expr);
 				}
 
 				return base.BuildExpression(expression, level);
