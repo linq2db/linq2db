@@ -14,8 +14,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void SetNonQueryParameter(IQueryElement element)
 		{
-			if (element.ElementType == QueryElementType.SqlParameter)
-				((SqlParameter)element).IsQueryParameter = false;
+		    if (element.ElementType == QueryElementType.SqlParameter)
+		    {
+		        var parameter = (SqlParameter) element;
+		        parameter.IsQueryParameter = parameter.DataType == DataType.Blob;
+		    }
 		}
 
 		public override SelectQuery Finalize(SelectQuery selectQuery)
