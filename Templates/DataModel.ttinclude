@@ -416,9 +416,9 @@ public class TableContext
 	public string                      TableName;
 
 	public TableContext Column(string columnName,
-		string MemberName              = null,
-		string Type                    = null,
-		bool? IsNullable               = null)
+		string MemberName = null,
+		string Type       = null,
+		bool?  IsNullable = null)
 	{
 		var c = Transformation.GetColumn(TableName, columnName);
 
@@ -432,7 +432,7 @@ public class TableContext
 	public TableContext FK(string fkName,
 		string           MemberName      = null,
 		AssociationType? AssociationType = null,
-		bool?            CanBeNull = null)
+		bool?            CanBeNull       = null)
 	{
 		var c = Transformation.GetFK(TableName, fkName);
 
