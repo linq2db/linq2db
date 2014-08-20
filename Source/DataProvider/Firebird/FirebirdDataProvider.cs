@@ -78,12 +78,7 @@ namespace LinqToDB.DataProvider.Firebird
 				value = (bool)value ? "1" : "0";
 				dataType = DataType.Char;
 			}
-			else if (value is Guid)
-			{
-				value = value.ToString();
-				dataType = DataType.Char;
-			}
-
+            
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
