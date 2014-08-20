@@ -39,6 +39,25 @@ namespace LinqToDB.Linq.Builder
 							if (Expressions.ConvertMember(MappingSchema, ma.Member) != null)
 								break;
 
+							if (ma.Member.IsNullableValueMember())
+								break;
+
+							if (ma.Member.IsNullableHasValueMember())
+							{
+								Expression e = Expression.NotEqual(
+									ma.Expression, Expression.Constant(null, ma.Expression.Type));
+
+								return new TransformInfo(
+									BuildExpression(
+										context,
+										ma.Expression.Type.IsPrimitive ?
+											Expression.Call(
+												MemberHelper.MethodOf(() => Sql.AsSql(true)),
+												e) :
+											e),
+									true);
+							}
+
 							var ctx = GetContext(context, expr);
 
 							if (ctx != null)
