@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(
 									BuildExpression(
 										context,
-										ma.Expression.Type.IsPrimitive ?
+										ma.Expression.Type.IsPrimitiveEx() ?
 											Expression.Call(
 												MemberHelper.MethodOf(() => Sql.AsSql(true)),
 												e) :
@@ -128,7 +128,8 @@ namespace LinqToDB.Linq.Builder
 
 								if (IsSubQuery(context, ce))
 								{
-									if (!typeof (IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
+									if (ce.IsQueryable())
+									//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
 									{
 										var ctx = GetContext(context, expr);
 

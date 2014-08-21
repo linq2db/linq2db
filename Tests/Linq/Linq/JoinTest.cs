@@ -598,11 +598,14 @@ namespace Tests.Linq
 				AreEqual(
 					from p in    Parent
 					join c in    Child on p.ParentID equals c.ParentID into t
-					select new { p.ParentID, n = t.Any() },
+					select new { n = t.Any() },
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into t
 					where 1 > 0
-					select new { p.ParentID, n = t.Any() });
+					select new { n = t.Any() });
+//					db.Parent.GroupJoin(db.Child, p => p.ParentID, c => c.ParentID, (p, t) => new {p, t})
+//						.Where(@t1 => 1 > 0)
+//						.Select(@t1 => new {n = @t1.t.Any()}));
 		}
 
 		[Test, DataContextSource]

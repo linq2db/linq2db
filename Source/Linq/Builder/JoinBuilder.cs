@@ -349,20 +349,41 @@ namespace LinqToDB.Linq.Builder
 					return _groupExpression;
 				}
 
-				if (expression != null &&
-					expression.NodeType == ExpressionType.Call &&
-					expression.Find(Lambda.Parameters[1]) != null)
+				if (expression != null && expression.NodeType == ExpressionType.Call)
 				{
-					var call = (MethodCallExpression)expression;
+					if (level == 0)
+					{
+						if (expression.Find(Lambda.Parameters[1]) != null)
+						{
+							var call = (MethodCallExpression)expression;
 
-					var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
-					var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
+							var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
+							var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
 
-					var expr = helper.GetGroupJoinCall(this);
+							var expr = helper.GetGroupJoinCall(this);
 
-					expr = call.Transform(e => e == Lambda.Parameters[1] ? expr : e);
+							expr = call.Transform(e => e == Lambda.Parameters[1] ? expr : e);
 
-					return Builder.BuildExpression(this, expr);
+							return Builder.BuildExpression(this, expr);
+						}
+					}
+					else
+					{
+						var levelExpression = expression.GetLevelExpression(level);
+
+						if (levelExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							var memberExpression = GetMemberExpression(
+								((MemberExpression)levelExpression).Member,
+								ReferenceEquals(levelExpression, expression),
+								levelExpression.Type);
+
+							if (memberExpression.Find(Lambda.Parameters[1]) != null)
+							{
+								
+							}
+						}
+					}
 				}
 
 				return base.BuildExpression(expression, level);
