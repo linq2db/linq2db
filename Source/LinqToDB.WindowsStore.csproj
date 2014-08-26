@@ -148,6 +148,7 @@
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
+    <Compile Include="Expressions\IGenericInfoProvider.cs" />
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
@@ -213,6 +214,7 @@
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="Linq\IDataContextInfo.cs" />
+    <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
@@ -236,7 +238,6 @@
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs" />
-    <Compile Include="Mapping\IGenericConvertProvider.cs" />
     <Compile Include="Mapping\InheritanceMapping.cs" />
     <Compile Include="Mapping\InheritanceMappingAttribute.cs" />
     <Compile Include="Mapping\MappingSchema.cs" />

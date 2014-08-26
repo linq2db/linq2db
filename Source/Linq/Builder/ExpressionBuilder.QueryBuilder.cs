@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(
 									BuildExpression(
 										context,
-										ma.Expression.Type.IsPrimitive ?
+										ma.Expression.Type.IsPrimitiveEx() ?
 											Expression.Call(
 												MemberHelper.MethodOf(() => Sql.AsSql(true)),
 												e) :

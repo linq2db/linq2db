@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
+	using Extensions;
 	using Metadata;
 
 	class MappingSchemaInfo
@@ -92,9 +92,9 @@ namespace LinqToDB.Mapping
 								continue;
 
 							var gtype    = type.Key.MakeGenericType(types);
-							var provider = (IGenericConvertProvider)Activator.CreateInstance(gtype);
+							var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype);
 
-							provider.SetConvertExpression(new MappingSchema(this));
+							provider.SetInfo(new MappingSchema(this));
 
 							type.Value.Add(types);
 
