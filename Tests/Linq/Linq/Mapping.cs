@@ -281,6 +281,39 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void MyType4()
+		{
+			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			{
+				try
+				{
+					var id = new MyInt { MyValue = 1001 };
+					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = id, Value1 = 1001 });
+				}
+				finally
+				{
+					db.Parent.Delete(p => p.ParentID >= 1000);
+				}
+			}
+		}
+
+		[Test]
+		public void MyType5()
+		{
+			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema) as TestDataConnection)
+			{
+				try
+				{
+					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
+				}
+				finally
+				{
+					db.Parent.Delete(p => p.ParentID >= 1000);
+				}
+			}
+		}
+
 		[Table("Parent")]
 		class MyParent1
 		{

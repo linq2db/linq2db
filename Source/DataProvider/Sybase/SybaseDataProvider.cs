@@ -22,11 +22,12 @@ namespace LinqToDB.DataProvider.Sybase
 		protected SybaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter   = false;
-			SqlProviderFlags.IsSkipSupported          = false;
-			SqlProviderFlags.IsSubQueryTakeSupported  = false;
-			SqlProviderFlags.IsCountSubQuerySupported = false;
-			SqlProviderFlags.CanCombineParameters     = false;
+			SqlProviderFlags.AcceptsTakeAsParameter    = false;
+			SqlProviderFlags.IsSkipSupported           = false;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.CanCombineParameters      = false;
+			SqlProviderFlags.IsSybaseBuggyGroupBy      = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
