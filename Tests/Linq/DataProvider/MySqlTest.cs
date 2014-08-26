@@ -350,5 +350,24 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestTransaction(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				db.BeginTransaction();
+
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+				Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+				db.RollbackTransaction();
+
+				Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+			}
+		}
 	}
 }
