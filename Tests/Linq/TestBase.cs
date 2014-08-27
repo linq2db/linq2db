@@ -94,6 +94,7 @@ namespace Tests
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
+            ProviderName.SapHana
 		};
 
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]

@@ -243,6 +243,7 @@ namespace LinqToDB.Data
 
 #if DEBUG
 					//var value = rd.GetValue(0);
+				    //return default (T);
 #endif
 
 					try

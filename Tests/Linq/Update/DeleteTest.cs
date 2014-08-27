@@ -157,7 +157,7 @@ namespace Tests.Update
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird)]
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird, ProviderName.SapHana)]
 		public void DeleteMany1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -187,7 +187,7 @@ namespace Tests.Update
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird, ProviderName.SapHana
 			)]
 		public void DeleteMany2(string context)
 		{
@@ -227,7 +227,7 @@ namespace Tests.Update
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird, ProviderName.SapHana
 			)]
 		public void DeleteMany3(string context)
 		{
@@ -273,7 +273,8 @@ namespace Tests.Update
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite,
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000
+			ProviderName.SqlServer2000,
+            ProviderName.SapHana
 			)]
 		public void DeleteTop(string context)
 		{

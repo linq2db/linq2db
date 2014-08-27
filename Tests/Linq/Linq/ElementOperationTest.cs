@@ -79,7 +79,7 @@ namespace Tests.Linq
 					db.Parent.OrderBy(p => p.ParentID).FirstOrDefault().ParentID);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void NestedFirstOrDefaultScalar1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -88,7 +88,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault().ChildID);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase)]
+        [Test, DataContextSource(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase, ProviderName.SapHana)]
 		public void NestedFirstOrDefaultScalar2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -147,7 +147,7 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Firebird, ProviderName.SapHana)]
 		public void NestedFirstOrDefault3(string context)
 		{
 			using (var db = GetDataContext(context))

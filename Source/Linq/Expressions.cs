@@ -1105,6 +1105,25 @@ namespace LinqToDB.Linq
 				}},
 
 				#endregion
+
+                #region SapHana
+
+				{ ProviderName.SapHana, new Dictionary<MemberInfo,LazyMemberInfo> {
+					{ M(() => Sql.Degrees((Decimal?)0)), N(() => L<Decimal?,Decimal?>((Decimal? v) => (Decimal?)         (          v.Value  * (180 / (Decimal)Math.PI)))) },
+					{ M(() => Sql.Degrees((Double?) 0)), N(() => L<Double?, Double?> ((Double?  v) => (Double?)          (          v.Value  * (180 / Math.PI)))) },
+					{ M(() => Sql.Degrees((Int16?)  0)), N(() => L<Int16?,  Int16?>  ((Int16?   v) => (Int16?)           (v.Value * (180 / Math.PI)))) },
+					{ M(() => Sql.Degrees((Int32?)  0)), N(() => L<Int32?,  Int32?>  ((Int32?   v) => (Int32?)  (v.Value * (180 / Math.PI)))) },
+					{ M(() => Sql.Degrees((Int64?)  0)), N(() => L<Int64?,  Int64?>  ((Int64?   v) => (Int64?)  (v.Value * (180 / Math.PI)))) },
+					{ M(() => Sql.Degrees((SByte?)  0)), N(() => L<SByte?,  SByte?>  ((SByte?   v) => (SByte?)  (v.Value * (180 / Math.PI)))) },
+					{ M(() => Sql.Degrees((Single?) 0)), N(() => L<Single?, Single?> ((Single?  v) => (Single?)          (          v.Value  * (180 / Math.PI)))) },
+					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<Double?,Double?>       ((Double? v)          => (double?)Sql.RoundToEven((decimal)v)))    },
+					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<Double?,Int32?,Double?>((Double? v,Int32? p) => (double?)Sql.RoundToEven((decimal)v, p))) },
+                    { M(() => Sql.Stuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32? p2,String p3) =>     AltStuff (p0,  p1, p2, p3)))             },
+
+
+				}},
+
+                #endregion
 			};
 		}
 

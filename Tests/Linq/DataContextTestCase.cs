@@ -70,6 +70,7 @@ namespace Tests
 				case LinqToDB.ProviderName.PostgreSQL    : return typeof(PostgreSQL);
 				case LinqToDB.ProviderName.MySql         : return typeof(MySql);
 				case LinqToDB.ProviderName.Sybase        : return typeof(Sybase);
+                case LinqToDB.ProviderName.SapHana       : return typeof(SapHana);
 				case "Northwind"                         : return typeof(Northwind);
 			}
 
@@ -109,6 +110,7 @@ namespace Tests
 		class PostgreSQL    : DatabaseTestCase { }
 		class Sybase        : DatabaseTestCase { }
 		class Northwind     : DatabaseTestCase { }
+        class SapHana       : DatabaseTestCase { }
 	}
 
 	public class DataContextTestCase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15>
