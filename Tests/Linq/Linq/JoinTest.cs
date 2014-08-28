@@ -261,6 +261,8 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin5(string context)
 		{
+			Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -272,11 +274,15 @@ namespace Tests.Linq
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.First());
+
+			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
 		public void GroupJoin51(string context)
 		{
+			Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 			{
 				var result =
@@ -298,6 +304,8 @@ namespace Tests.Linq
 				Assert.AreEqual(expected.Count, result.Count);
 				AreEqual(expected[0].p1, result[0].p1);
 			}
+
+			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -335,6 +343,8 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin54(string context)
 		{
+			Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -346,6 +356,8 @@ namespace Tests.Linq
 						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1.Count(), p2 = lj1.First() });
+
+			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -421,6 +433,8 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void GroupJoin8(string context)
 		{
+			Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
@@ -430,6 +444,8 @@ namespace Tests.Linq
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into g
 					select new { Child = g.FirstOrDefault() });
+
+			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Test, DataContextSource]
@@ -603,9 +619,6 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID into t
 					where 1 > 0
 					select new { n = t.Any() });
-//					db.Parent.GroupJoin(db.Child, p => p.ParentID, c => c.ParentID, (p, t) => new {p, t})
-//						.Where(@t1 => 1 > 0)
-//						.Select(@t1 => new {n = @t1.t.Any()}));
 		}
 
 		[Test, DataContextSource]
@@ -660,23 +673,23 @@ namespace Tests.Linq
 						.GroupJoin(Child,
 							x => new { x.ParentID, x.Value1 },
 							y => new { y.ParentID, Value1 = (int?)y.ParentID },
-							(x, y) => new { Parent = x, Child = y })
+							(x1, y1) => new { Parent = x1, Child = y1 })
 						.SelectMany(
-							y => y.Child.DefaultIfEmpty(),
-							(x, y) => new { x.Parent, Child = x.Child.FirstOrDefault() })
-						.Where(x => x.Parent.ParentID == 1 && x.Parent.Value1 != null)
-						.OrderBy(x => x.Parent.ParentID)
+							y2 => y2.Child.DefaultIfEmpty(),
+							(x3, y3) => new { x3.Parent, Child = x3.Child.FirstOrDefault() })
+						.Where(x4 => x4.Parent.ParentID == 1 && x4.Parent.Value1 != null)
+						.OrderBy(x5 => x5.Parent.ParentID)
 					,
 					db.Parent
 						.GroupJoin(db.Child,
-							x => new { x.ParentID, x.Value1 },
-							y => new { y.ParentID, Value1 = (int?)y.ParentID },
-							(x, y) => new { Parent = x, Child = y })
+							x1 => new { x1.ParentID, x1.Value1 },
+							y1 => new { y1.ParentID, Value1 = (int?)y1.ParentID },
+							(x2, y2) => new { Parent = x2, Child = y2 })
 						.SelectMany(
-							y => y.Child.DefaultIfEmpty(),
-							(x, y) => new { x.Parent, Child = x.Child.FirstOrDefault() })
-						.Where(x => x.Parent.ParentID == 1 && x.Parent.Value1 != null)
-						.OrderBy(x => x.Parent.ParentID));
+							y3 => y3.Child.DefaultIfEmpty(),
+							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
+						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
+						.OrderBy(x6 => x6.Parent.ParentID));
 		}
 
 		[Table("Child")]

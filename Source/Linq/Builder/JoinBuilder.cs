@@ -351,21 +351,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (expression != null && expression.NodeType == ExpressionType.Call)
 				{
+					Expression replaceExpression = null;
+
 					if (level == 0)
 					{
 						if (expression.Find(Lambda.Parameters[1]) != null)
-						{
-							var call = (MethodCallExpression)expression;
-
-							var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
-							var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
-
-							var expr = helper.GetGroupJoinCall(this);
-
-							expr = call.Transform(e => e == Lambda.Parameters[1] ? expr : e);
-
-							return Builder.BuildExpression(this, expr);
-						}
+							replaceExpression = Lambda.Parameters[1];
 					}
 					else
 					{
@@ -379,10 +370,20 @@ namespace LinqToDB.Linq.Builder
 								levelExpression.Type);
 
 							if (memberExpression.Find(Lambda.Parameters[1]) != null)
-							{
-								
-							}
+								replaceExpression = levelExpression;
 						}
+					}
+
+					if (replaceExpression != null)
+					{
+						var call   = (MethodCallExpression)expression;
+						var gtype  = typeof(GroupJoinCallHelper<>).MakeGenericType(_innerKeyLambda.Parameters[0].Type);
+						var helper = (IGroupJoinCallHelper)Activator.CreateInstance(gtype);
+						var expr   = helper.GetGroupJoinCall(this);
+
+						expr = call.Transform(e => e == replaceExpression ? expr : e);
+
+						return Builder.BuildExpression(this, expr);
 					}
 				}
 

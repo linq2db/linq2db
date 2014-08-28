@@ -132,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 									//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
 									{
 										var ctx = GetContext(context, expr);
-
+								
 										if (ctx != null)
 											return new TransformInfo(ctx.BuildExpression(expr, 0));
 									}
