@@ -873,7 +873,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.Operator == SelectQuery.Predicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
-					.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And .Expr(expr1).Equal.Expr(expr2);
+					/*.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And */.Expr(expr1).Equal.Expr(expr2);
 			else
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNotNull. Or
