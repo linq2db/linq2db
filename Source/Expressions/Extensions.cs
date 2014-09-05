@@ -382,6 +382,11 @@ namespace LinqToDB.Expressions
 			return null;
 		}
 
+		public static Expression Find(this Expression expr, Expression exprToFind)
+		{
+			return expr.Find(e => e == exprToFind);
+		}
+
 		public static Expression Find(this Expression expr, Func<Expression,bool> func)
 		{
 			if (expr == null || func(expr))

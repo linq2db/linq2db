@@ -16,7 +16,7 @@ namespace LinqToDB.Data
 		public bool?        FireTriggers           { get; set; }
 		public bool?        UseInternalTransaction { get; set; }
 
-		public int          NotifyAfter        { get; set; }
+		public int          NotifyAfter            { get; set; }
 
 		public Action<BulkCopyRowsCopied> RowsCopiedCallback { get; set; }
 	}
