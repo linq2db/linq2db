@@ -667,6 +667,8 @@ namespace Tests.Linq
 		[Test, DataContextSource]
 		public void LeftJoin4(string context)
 		{
+			Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = GetDataContext(context))
 				AreEqual(
 					Parent
@@ -690,6 +692,8 @@ namespace Tests.Linq
 							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
+
+			Configuration.Linq.AllowMultipleQuery = false;
 		}
 
 		[Table("Child")]
