@@ -154,24 +154,34 @@ namespace LinqToDB.Linq.Builder
 				outerKeyContext, outerKeySelector,
 				innerKeyContext, innerKeySelector);
 
-			if (predicate != null)
-				join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
-			else
-				join
-					.Expr(builder.ConvertToSql(outerKeyContext, outerKeySelector)).Equal
-					.Expr(builder.ConvertToSql(innerKeyContext, innerKeySelector));
+			if (predicate == null)
+			{
+				predicate = new SelectQuery.Predicate.ExprExpr(
+					builder.ConvertToSql(outerKeyContext, outerKeySelector),
+					SelectQuery.Predicate.Operator.Equal,
+					builder.ConvertToSql(innerKeyContext, innerKeySelector));
+
+				predicate = builder.Convert(outerKeyContext, predicate);
+			}
+
+			join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 
 			predicate = builder.ConvertObjectComparison(
 				ExpressionType.Equal,
 				outerKeyContext, outerKeySelector,
 				countKeyContext, innerKeySelector);
 
-			if (predicate != null)
-				countSelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
-			else
-				countSelect.Where
-					.Expr(builder.ConvertToSql(outerKeyContext, outerKeySelector)).Equal
-					.Expr(builder.ConvertToSql(countKeyContext, innerKeySelector));
+			if (predicate == null)
+			{
+				predicate = new SelectQuery.Predicate.ExprExpr(
+					builder.ConvertToSql(outerKeyContext, outerKeySelector),
+					SelectQuery.Predicate.Operator.Equal,
+					builder.ConvertToSql(countKeyContext, innerKeySelector));
+
+				predicate = builder.Convert(outerKeyContext, predicate);
+			}
+
+			countSelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 		}
 
 		class InnerKeyContext : ExpressionContext

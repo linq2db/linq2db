@@ -1540,7 +1540,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var lmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
 
-				if (!ProcessProjection(lmembers, left) && !ProcessProjection(rmembers, right))
+				var isl = ProcessProjection(lmembers, left);
+				var isr = ProcessProjection(rmembers, right);
+
+				if (!isl && !isr)
 					return null;
 
 				if (lmembers.Count == 0)
@@ -1606,18 +1609,9 @@ namespace LinqToDB.Linq.Builder
 				var lmember = lcol.Members[lcol.Members.Count - 1];
 
 				if (sr)
-				{
-					var info = rightContext.ConvertToSql(Expression.MakeMemberAccess(right, lmember), 0, ConvertFlags.Field).Single();
-					rcol = info.Sql;
-				}
-				else
-				{
-					if (rmembers.Count != 0)
-					{
-						var info = rightContext.ConvertToSql(rmembers[lmember], 0, ConvertFlags.Field)[0];
-						rcol = info.Sql;
-					}
-				}
+					rcol = ConvertToSql(rightContext, Expression.MakeMemberAccess(right, lmember));
+				else if (rmembers.Count != 0)
+					rcol = ConvertToSql(rightContext, rmembers[lmember]);
 
 				var rex =
 					isNull ?
@@ -1639,7 +1633,7 @@ namespace LinqToDB.Linq.Builder
 			return condition;
 		}
 
-		ISqlPredicate ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
+		internal ISqlPredicate ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
 			left  = FindExpression(left);
 			right = FindExpression(right);
