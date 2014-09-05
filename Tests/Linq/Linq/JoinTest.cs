@@ -801,7 +801,7 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.Access)]
 		public void FourTableJoin(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -929,6 +929,52 @@ namespace Tests.Linq
 
 				q.ToList();
 			}
+		}
+
+		[Test, DataContextSource]
+		public void NullJoin1(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p1 in    Parent
+					join p2 in    Parent on new { p1.ParentID, p1.Value1 } equals new { p2.ParentID, p2.Value1 }
+					select p2
+					,
+					from p1 in db.Parent
+					join p2 in db.Parent on new { p1.ParentID, p1.Value1 } equals new { p2.ParentID, p2.Value1 }
+					select p2);
+		}
+
+		[Test, DataContextSource]
+		public void NullJoin2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p1 in    Parent
+					join p2 in    Parent 
+						on     new { a = new { p1.ParentID, p1.Value1 } }
+						equals new { a = new { p2.ParentID, p2.Value1 } }
+					select p2
+					,
+					from p1 in db.Parent
+					join p2 in db.Parent
+						on     new { a = new { p1.ParentID, p1.Value1 } }
+						equals new { a = new { p2.ParentID, p2.Value1 } }
+					select p2);
+		}
+
+		[Test, DataContextSource]
+		public void NullWhereJoin(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p1 in    Parent
+					from p2 in    Parent.Where(p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
+					select p2
+					,
+					from p1 in db.Parent
+					from p2 in db.Parent.Where(p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
+					select p2);
 		}
 	}
 }
