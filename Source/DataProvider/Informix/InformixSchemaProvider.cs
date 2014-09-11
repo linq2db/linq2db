@@ -141,6 +141,8 @@ namespace LinqToDB.DataProvider.Informix
 						FROM systables t
 							JOIN sysindexes x ON t.tabid = x.tabid
 						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
+				group pk by pk.TableID into gr
+				select gr.First() into pk
 				from c in pk.arr.Select((c,i) => new { c, i })
 				where c.c != null
 				select new PrimaryKeyInfo

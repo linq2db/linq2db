@@ -44,6 +44,12 @@ namespace Tests.SchemaProvider
 						Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
 						Assert.That(indexTable.ForeignKeys[0].ThisColumns.Count, Is.EqualTo(2));
 						break;
+
+					case ProviderName.Informix      :
+						Assert.That(
+							dbSchema.Tables.First(t => t.TableName == "testunique").Columns.Count(c => c.IsPrimaryKey),
+							Is.EqualTo(2));
+					break;
 				}
 			}
 		}
