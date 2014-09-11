@@ -167,7 +167,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var expected = (from ch in Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
+				var expected = (from ch in    Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
 				var result   = (from ch in db.Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
 
 				AreEqual(expected[0], result[0]);
@@ -1231,14 +1231,15 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from ch in Child
-					 select ch.ChildID into id
-					 group id by id into g
-					 select g.Max()),
-					(from ch in db.Child
-					 select ch.ChildID into id
-					 group id by id into g
-					 select g.Max()));
+					from ch in Child
+					select ch.ChildID into id
+					group id by id into g
+					select g.Max()
+					,
+					from ch in db.Child
+					select ch.ChildID into id
+					group id by id into g
+					select g.Max());
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]
@@ -1663,6 +1664,27 @@ namespace Tests.Linq
 				Assert.AreEqual(
 					(from t in    Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count(),
 					(from t in db.Child group t by t.ParentID into gr select new { gr.Key, List = gr.ToList() }).Count());
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AggregateAssociation(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Child
+					group t by t.ParentID into grp
+					select new
+					{
+						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+					},
+					from t in db.Child
+					group t by t.ParentID into grp
+					select new
+					{
+						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+					});
 			}
 		}
 	}

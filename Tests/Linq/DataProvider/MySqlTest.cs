@@ -350,5 +350,44 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestTransaction1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				db.BeginTransaction();
+
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+				Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+				db.RollbackTransaction();
+
+				Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestTransaction2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
+
+				using (var tran = db.BeginTransaction())
+				{
+					db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = null });
+
+					Assert.IsNull(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1);
+
+					tran.Rollback();
+
+					Assert.That(1, Is.EqualTo(db.GetTable<Parent>().First(p => p.ParentID == 1).Value1));
+				}
+			}
+		}
 	}
 }

@@ -226,6 +226,7 @@
     <Compile Include="Linq\EnumMapping.cs" />
     <Compile Include="Linq\ExplicitInterfaceTest.cs" />
     <Compile Include="Linq\ParameterTest.cs" />
+    <Compile Include="Linq\AllAnyTest.cs" />
     <Compile Include="Mapping\FluentMappingTest.cs" />
     <Compile Include="Samples\JoinOperators.cs" />
     <Compile Include="SchemaProvider\SchemaProviderTest.cs" />

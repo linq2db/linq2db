@@ -438,5 +438,14 @@ namespace Tests.Linq
 					let chs = p.p.Children
 					select new { p.p.ParentID, Count = chs.Count() });
 		}
+
+		[Test, DataContextSource]
+		public void NullAssociation(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p1 in    Parent select p1.ParentTest,
+					from p1 in db.Parent select p1.ParentTest);
+		}
 	}
 }

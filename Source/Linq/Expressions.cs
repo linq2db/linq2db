@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -15,6 +16,8 @@ using System.Text;
 
 namespace LinqToDB.Linq
 {
+	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 
@@ -27,14 +30,35 @@ namespace LinqToDB.Linq
 			MapMember("", memberInfo, expression);
 		}
 
+		public static void MapMember(MemberInfo memberInfo, IExpressionInfo expressionInfo)
+		{
+			MapMember("", memberInfo, expressionInfo);
+		}
+
 		public static void MapMember(string providerName, MemberInfo memberInfo, LambdaExpression expression)
 		{
-			Dictionary<MemberInfo,LazyMemberInfo> dic;
+			Dictionary<MemberInfo,IExpressionInfo> dic;
 
 			if (!Members.TryGetValue(providerName, out dic))
-				Members.Add(providerName, dic = new Dictionary<MemberInfo,LazyMemberInfo>());
+				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
 
-			dic[memberInfo] = new LazyMemberInfo { Expression = expression };
+			var expr = new LazyExpressionInfo();
+
+			expr.SetExpression(expression);
+
+			dic[memberInfo] = expr;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapMember(string providerName, MemberInfo memberInfo, IExpressionInfo expressionInfo)
+		{
+			Dictionary<MemberInfo,IExpressionInfo> dic;
+
+			if (!Members.TryGetValue(providerName, out dic))
+				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
+
+			var expr = dic[memberInfo] = expressionInfo;
 
 			_checkUserNamespace = false;
 		}
@@ -74,6 +98,56 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region IGenericInfoProvider
+
+		static volatile Dictionary<Type,List<Type[]>> _genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+
+		static bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
+		{
+			var changed = false;
+
+			lock (_genericConvertProviders)
+			{
+				foreach (var type in _genericConvertProviders)
+				{
+					var args = type.Key.GetGenericArgumentsEx();
+
+					if (args.Length == types.Length)
+					{
+						if (type.Value.Aggregate(false, (cur,ts) => cur || ts.SequenceEqual(types)))
+							continue;
+
+						var gtype    = type.Key.MakeGenericType(types);
+						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype);
+
+						provider.SetInfo(new MappingSchema(mappingSchema));
+
+						type.Value.Add(types);
+
+						changed = true;
+					}
+				}
+			}
+
+			return changed;
+		}
+
+		public static void SetGenericInfoProvider(Type type)
+		{
+			if (!type.IsGenericTypeDefinitionEx())
+				throw new LinqToDBException("'{0}' must be a generic type.".Args(type));
+
+			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
+				throw new LinqToDBException("'{0}' must inherit from 'IGenericInfoProvider'.".Args(type));
+
+			if (!_genericConvertProviders.ContainsKey(type))
+				lock (_genericConvertProviders)
+					if (!_genericConvertProviders.ContainsKey(type))
+						_genericConvertProviders[type] = new List<Type[]>();
+		}
+
+		#endregion
+
 		#region Public Members
 
 		static bool _checkUserNamespace = true;
@@ -88,13 +162,38 @@ namespace LinqToDB.Linq
 				_checkUserNamespace = false;
 			}
 
-			Dictionary<MemberInfo,LazyMemberInfo> dic;
-			LazyMemberInfo                        expr;
+			Dictionary<MemberInfo,IExpressionInfo> dic;
+			IExpressionInfo                        expr;
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
 				if (Members.TryGetValue(configuration, out dic))
 					if (dic.TryGetValue(mi, out expr))
-						return expr.Expression;
+						return expr.GetExpression(mappingSchema);
+
+			Type[] args = null;
+
+			if (mi is MethodInfo)
+			{
+				var mm = (MethodInfo)mi;
+
+				var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
+				var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
+
+				if (isTypeGeneric || isMethodGeneric)
+				{
+					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
+					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
+
+					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
+						typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
+				}
+			}
+
+			if (args != null && InitGenericConvertProvider(args, mappingSchema))
+				foreach (var configuration in mappingSchema.ConfigurationList)
+					if (Members.TryGetValue(configuration, out dic))
+						if (dic.TryGetValue(mi, out expr))
+							return expr.GetExpression(mappingSchema);
 
 			if (!Members[""].TryGetValue(mi, out expr))
 			{
@@ -104,10 +203,9 @@ namespace LinqToDB.Linq
 					{
 						if (!Members[""].TryGetValue(mi, out expr))
 						{
-							expr = new LazyMemberInfo
-							{
-								Expression = L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2))
-							};
+							expr = new LazyExpressionInfo();
+
+							((LazyExpressionInfo)expr).SetExpression(L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
 
 							Members[""].Add(mi, expr);
 						}
@@ -115,7 +213,7 @@ namespace LinqToDB.Linq
 				}
 			}
 
-			return expr == null ? null : expr.Expression;
+			return expr == null ? null : expr.GetExpression(mappingSchema);
 		}
 
 		#endregion
@@ -160,22 +258,28 @@ namespace LinqToDB.Linq
 		static LambdaExpression L<T1,T2,T3,T4,TR>       (Expression<Func<T1,T2,T3,T4,TR>>       func) { return func; }
 		static LambdaExpression L<T1,T2,T3,T4,T5,TR>    (Expression<Func<T1,T2,T3,T4,T5,TR>>    func) { return func; }
 		static LambdaExpression L<T1,T2,T3,T4,T5,T6,TR> (Expression<Func<T1,T2,T3,T4,T5,T6,TR>> func) { return func; }
-		static LazyMemberInfo N (Func<LambdaExpression> func) { return new LazyMemberInfo { Lambda = func }; }
+		static LazyExpressionInfo N (Func<LambdaExpression> func) { return new LazyExpressionInfo { Lambda = func }; }
 
 		#endregion
 
-		class LazyMemberInfo
+		class LazyExpressionInfo : IExpressionInfo
 		{
 			public Func<LambdaExpression> Lambda;
 
-			private LambdaExpression _expression;
-			public  LambdaExpression  Expression
+			LambdaExpression _expression;
+
+			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
-				get { return _expression ?? (_expression = Lambda()); }
-				set { _expression = value; }
+				return _expression ?? (_expression = Lambda());
+			}
+
+			public void SetExpression(LambdaExpression expression)
+			{
+				_expression = expression;
 			}
 		}
-		static Dictionary<string,Dictionary<MemberInfo,LazyMemberInfo>> Members
+
+		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> Members
 		{
 			get
 			{
@@ -188,14 +292,55 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		static Dictionary<string,Dictionary<MemberInfo,LazyMemberInfo>> _members;
-		static readonly object                                          _memberSync = new object();
-
-		static Dictionary<string,Dictionary<MemberInfo,LazyMemberInfo>> LoadMembers()
+		interface ISetInfo
 		{
-			return new Dictionary<string,Dictionary<MemberInfo,LazyMemberInfo>>
+			void SetInfo();
+		}
+
+		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
+			where T1 : struct
+		{
+			static T1? _member = null;
+
+			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
-				{ "", new Dictionary<MemberInfo,LazyMemberInfo> {
+				var p = Expression.Parameter(typeof(T1?), "p");
+
+				return Expression.Lambda<Func<T1?,T1>>(
+					Expression.Coalesce(p, Expression.Constant(mappingSchema.GetDefaultValue(typeof(T1)))),
+					p);
+			}
+
+			public void SetInfo()
+			{
+				_members[""][M(() => _member.GetValueOrDefault() )] = this; // N(() => L<T1?,T1>((T1? obj) => obj ?? default(T1)));
+			}
+		}
+
+		class GenericInfoProvider<T> : IGenericInfoProvider
+		{
+			public void SetInfo(MappingSchema mappingSchema)
+			{
+				if (!typeof(T).IsClassEx() && !typeof(T).IsNullable())
+				{
+					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
+					var provider = (ISetInfo)Activator.CreateInstance(gtype);
+
+					provider.SetInfo();
+				}
+			}
+		}
+
+		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> _members;
+		static readonly object                                           _memberSync = new object();
+
+		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
+		{
+			SetGenericInfoProvider(typeof(GenericInfoProvider<>));
+
+			return new Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>
+			{
+				{ "", new Dictionary<MemberInfo,IExpressionInfo> {
 
 					#region String
 
@@ -786,7 +931,7 @@ namespace LinqToDB.Linq
 
 				#region SqlServer
 
-				{ ProviderName.SqlServer, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.SqlServer, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<String,Int32?,Char,String>     ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<String,Int32?,Char,String>     ((String p0,Int32? p1,Char p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")       ), N(() => L<String,String>                 ((String p0)                   => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -802,7 +947,7 @@ namespace LinqToDB.Linq
 
 				#region SqlServer2000
 
-				{ ProviderName.SqlServer2000, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.SqlServer2000, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<Int32?,Int32?,Int32?,Int32?,Int32?,Int32?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
 						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
@@ -815,7 +960,7 @@ namespace LinqToDB.Linq
 
 				#region SqlServer2005
 
-				{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<Int32?,Int32?,Int32?,Int32?,Int32?,Int32?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
 						y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 						h.ToString() + ":" + mm.ToString() + ":" + s.ToString(), 120))) },
@@ -826,7 +971,7 @@ namespace LinqToDB.Linq
 
 				#region SqlCe
 
-				{ ProviderName.SqlCe, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.SqlCe, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left    ("",0)    ), N(() => L<String,Int32?,String>   ((String p0,Int32? p1)       => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right   ("",0)    ), N(() => L<String,Int32?,String>   ((String p0,Int32? p1)       => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<String,Int32?,Char?,String>((String p0,Int32? p1,Char? p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
@@ -844,7 +989,7 @@ namespace LinqToDB.Linq
 
 				#region DB2
 
-				{ ProviderName.DB2, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.DB2, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Space   (0)        ), N(() => L<Int32?,String>       ( p0           => Sql.Convert(Sql.VarChar(1000), Replicate(" ", p0)))) },
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<String,Int32?,Char?,String>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + VarChar(Replicate(p2, p1 - p0.Length), 1000))) },
@@ -866,7 +1011,7 @@ namespace LinqToDB.Linq
 
 				#region Informix
 
-				{ ProviderName.Informix, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.Informix, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String,Int32?,String>     ((String p0,Int32? p1)            => Sql.Substring(p0,  1, p1)))                  },
 					{ M(() => Sql.Right("",0)     ), N(() => L<String,Int32?,String>     ((String p0,Int32? p1)            => Sql.Substring(p0,  p0.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32? p2,String p3) =>     AltStuff (p0,  p1, p2, p3)))             },
@@ -904,7 +1049,7 @@ namespace LinqToDB.Linq
 
 				#region Oracle
 
-				{ ProviderName.Oracle, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.Oracle, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String,Int32?,String>     ((String p0,Int32? p1)            => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right("",0)     ), N(() => L<String,Int32?,String>     ((String p0,Int32? p1)            => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32? p2,String p3) => AltStuff(p0, p1, p2, p3))) },
@@ -933,7 +1078,7 @@ namespace LinqToDB.Linq
 
 				#region Firebird
 
-				{ ProviderName.Firebird, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.Firebird, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M<String>(_  => Sql.Space(0         )), N(() => L<Int32?,String>       ( p0           => Sql.PadRight(" ", p0, ' '))) },
 					{ M<String>(s  => Sql.Stuff(s, 0, 0, s)), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 
@@ -953,7 +1098,7 @@ namespace LinqToDB.Linq
 
 				#region MySql
 
-				{ ProviderName.MySql, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.MySql, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M<String>(s => Sql.Stuff(s, 0, 0, s)), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 
 					{ M(() => Sql.Cosh(0)), N(() => L<Double?,Double?>(v => (Sql.Exp(v) + Sql.Exp(-v)) / 2)) },
@@ -965,7 +1110,7 @@ namespace LinqToDB.Linq
 
 				#region PostgreSQL
 
-				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<String,Int32?,String>              ((p0,p1)                                   => Sql.Substring(p0, 1, p1))) },
 					{ M(() => Sql.Right("",0)     ), N(() => L<String,Int32?,String>              ((String p0,Int32? p1)                     => Sql.Substring(p0, p0.Length - p1 + 1, p1))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32? p2,String p3) => AltStuff(p0, p1, p2, p3))) },
@@ -987,7 +1132,7 @@ namespace LinqToDB.Linq
 
 				#region SQLite
 
-				{ ProviderName.SQLite, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.SQLite, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<String,Int32?,Char?,String>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<String,Int32?,Char?,String>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
@@ -1023,7 +1168,7 @@ namespace LinqToDB.Linq
 
 				#region Sybase
 
-				{ ProviderName.Sybase, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.Sybase, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<String,Int32?,Char?,String>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ')), N(() => L<String,Int32?,Char?,String>((p0,p1,p2) => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 					{ M(() => Sql.Trim    ("")      ), N(() => L<String,String>      ( p0        => Sql.TrimLeft(Sql.TrimRight(p0)))) },
@@ -1051,7 +1196,7 @@ namespace LinqToDB.Linq
 
 				#region Access
 
-				{ ProviderName.Access, new Dictionary<MemberInfo,LazyMemberInfo> {
+				{ ProviderName.Access, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<String,Int32?,Char?,String>        ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<String,Int32?,Char?,String>        ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
