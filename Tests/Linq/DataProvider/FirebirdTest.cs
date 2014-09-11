@@ -428,22 +428,23 @@ namespace Tests.DataProvider
 			}
 		}
 
-	    [Table("LINQDATATYPES")]
-	    class MyLinqDataType
-	    {
-            [Column]
-            public byte[] BinaryValue { get; set; }
-	    }
-        [Test, IncludeDataContextSource(ProviderName.Firebird)]
-	    public void ForcedInlineParametersInSelectClauseTest(string context)
-	    {
-            using (var db = GetDataContext(context))
-            {
-                Assert.AreEqual(10, db.Select(() => Sql.AsSql(10))); // if 10 is not inlined, when FB raise "unknown data type error"
-                
-                var blob = new byte[] {1, 2, 3};
-                db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
-            }
-	    }
+		[Table("LINQDATATYPES")]
+		class MyLinqDataType
+		{
+			[Column]
+			public byte[] BinaryValue { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]
+		public void ForcedInlineParametersInSelectClauseTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(10, db.Select(() => Sql.AsSql(10))); // if 10 is not inlined, when FB raise "unknown data type error"
+
+				var blob = new byte[] {1, 2, 3};
+				db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
+			}
+		}
 	}
 }

@@ -14,39 +14,41 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void SetNonQueryParameter(IQueryElement element)
 		{
-		    if (element.ElementType == QueryElementType.SqlParameter)
-		        ((SqlParameter) element).IsQueryParameter = false;
+			if (element.ElementType == QueryElementType.SqlParameter)
+				((SqlParameter) element).IsQueryParameter = false;
 		}
 
-	    private bool SearchSelectClause(IQueryElement element)
-	    {
-            if (element.ElementType != QueryElementType.SelectClause) return true;
+		private bool SearchSelectClause(IQueryElement element)
+		{
+			if (element.ElementType != QueryElementType.SelectClause) return true;
 
-            new QueryVisitor().VisitParentFirst(element, SetNonQueryParameterInSelectClause);
-            return false;
-	        
-	    }
+			new QueryVisitor().VisitParentFirst(element, SetNonQueryParameterInSelectClause);
 
-	    private bool SetNonQueryParameterInSelectClause(IQueryElement element)
-	    {
-            if (element.ElementType == QueryElementType.SqlParameter)
-            {
-                ((SqlParameter)element).IsQueryParameter = false;
-                return false;
-            }
-            if (element.ElementType == QueryElementType.SqlQuery)
-            {
-                new QueryVisitor().VisitParentFirst(element, SearchSelectClause);
-                return false;
-            }
-            return true;
-	    }
+			return false;
+		}
+
+		private bool SetNonQueryParameterInSelectClause(IQueryElement element)
+		{
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				((SqlParameter)element).IsQueryParameter = false;
+				return false;
+			}
+
+			if (element.ElementType == QueryElementType.SqlQuery)
+			{
+				new QueryVisitor().VisitParentFirst(element, SearchSelectClause);
+				return false;
+			}
+
+			return true;
+		}
 
 		public override SelectQuery Finalize(SelectQuery selectQuery)
 		{
 			CheckAliases(selectQuery, int.MaxValue);
 
-            new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
+			new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
 
 			if (selectQuery.QueryType == QueryType.InsertOrUpdate)
 			{
