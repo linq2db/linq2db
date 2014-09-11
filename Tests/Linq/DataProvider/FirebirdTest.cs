@@ -307,6 +307,24 @@ namespace Tests.DataProvider
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestGuid2(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				AreEqual(
+					from t in      Types2 select t.GuidValue,
+					from t in conn.Types2 select t.GuidValue);
+
+				var dt = (from t in conn.Types2 select t).First();
+
+				conn.Update(dt);
+				conn.Types2.Update(
+					t => t.ID == dt.ID,
+					t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
