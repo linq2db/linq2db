@@ -221,5 +221,17 @@ namespace Tests.Linq
 					   Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault(),
 					db.Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault());
 		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Sybase)]
+		public void SubQueryTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Select(() => new
+				{
+					f1 = db.Parent.Select(p => p.Value1).FirstOrDefault()
+				});
+			}
+		}
 	}
 }

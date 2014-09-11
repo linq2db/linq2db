@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -72,9 +73,9 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		class EnumerableToImmutableListConvertProvider<T> : IGenericConvertProvider
+		class EnumerableToImmutableListConvertProvider<T> : IGenericInfoProvider
 		{
-			public void SetConvertExpression(MappingSchema mappingSchema)
+			public void SetInfo(MappingSchema mappingSchema)
 			{
 				mappingSchema.SetConvertExpression<IEnumerable<T>,ImmutableList<T>>(
 					t => ImmutableList.Create(t.ToArray()));

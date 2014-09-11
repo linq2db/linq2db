@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(
 									BuildExpression(
 										context,
-										ma.Expression.Type.IsPrimitive ?
+										ma.Expression.Type.IsPrimitiveEx() ?
 											Expression.Call(
 												MemberHelper.MethodOf(() => Sql.AsSql(true)),
 												e) :
@@ -126,12 +126,24 @@ namespace LinqToDB.Linq.Builder
 									if (!_skippedExpressions.Contains(arg))
 										_skippedExpressions.Add(arg);
 
+								if (IsSubQuery(context, ce))
+								{
+									if (ce.IsQueryable())
+									//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
+									{
+										var ctx = GetContext(context, expr);
+								
+										if (ctx != null)
+											return new TransformInfo(ctx.BuildExpression(expr, 0));
+									}
+								}
+
 								break;
 							}
 
 							if (IsSubQuery(context, ce))
 							{
-									if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
+								if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
 									return new TransformInfo(BuildMultipleQuery(context, expr));
 
 								return new TransformInfo(GetSubQuery(context, ce).BuildExpression(null, 0));

@@ -6,8 +6,11 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml;
 using System.Xml.Linq;
+
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Xml;
+#endif
 
 namespace LinqToDB.Mapping
 {
@@ -161,8 +164,8 @@ namespace LinqToDB.Mapping
 			if (!type.IsGenericTypeDefinitionEx())
 				throw new LinqToDBException("'{0}' must be a generic type.".Args(type));
 
-			if (!typeof(IGenericConvertProvider).IsSameOrParentOf(type))
-				throw new LinqToDBException("'{0}' must inherit from 'IGenericConvertProvider'.".Args(type));
+			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
+				throw new LinqToDBException("'{0}' must inherit from 'IGenericInfoProvider'.".Args(type));
 
 			_schemas[0].SetGenericConvertProvider(type);
 		}

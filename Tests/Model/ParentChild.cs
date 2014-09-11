@@ -27,6 +27,9 @@ namespace Tests.Model
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<GrandChild> GrandChildren;
 
+		[Association(ThisKey = "ParentID, Value1", OtherKey = "ParentID, Value1")]
+		public Parent ParentTest;
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public IEnumerable<Child> Children2
 		{

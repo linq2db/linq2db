@@ -18,7 +18,7 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
-			: base(ProviderName.Access)
+			: base(ProviderName.SQLite)
 		{
 		}
 
