@@ -656,5 +656,19 @@ namespace Tests.Linq
 					from c in db.Child.Concat(db.Child)
 					select c.Parent.ParentID);
 		}
+
+		[Test, DataContextSource]
+		public void ConcatToString(string context)
+		{
+			string pattern = "1";
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					(from p in Person where p.FirstName.Contains(pattern) select p.FirstName).Concat(
+					(from p in Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10)
+					,
+					(from p in db.Person where Sql.Like(p.FirstName, "1") select p.FirstName).Concat(
+					(from p in db.Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10));
+		}
 	}
 }
