@@ -422,13 +422,11 @@ namespace LinqToDB.DataProvider.Informix
 						FROM
 							sysreferences r
 								JOIN sysconstraints tc ON r.constrid = tc.constrid
-									JOIN sysindexes tx ON tc.tabid   = tx.tabid
+									JOIN sysindexes tx ON tc.tabid   = tx.tabid AND tc.idxname = tx.idxname
 									JOIN systables  tt ON tc.tabid   = tt.tabid
 								JOIN sysconstraints oc ON r.primary  = oc.constrid
-									JOIN sysindexes ox ON oc.tabid   = ox.tabid
-									JOIN systables  ot ON oc.tabid   = ot.tabid
-						WHERE
-							oc.constrtype = 'P'")
+									JOIN sysindexes ox ON oc.tabid   = ox.tabid AND oc.idxname = ox.idxname
+									JOIN systables  ot ON oc.tabid   = ot.tabid")
 				from c in fk.arr.Select((c,i) => new { c, i })
 				where c.c[0] != null
 				select new ForeingKeyInfo
