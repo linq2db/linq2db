@@ -338,6 +338,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
+			var names = new HashSet<string>();
+
 			return
 			(
 				from fk in dataConnection.Query(
@@ -369,6 +371,14 @@ namespace LinqToDB.DataProvider.Informix
 							if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
 							{
 								name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
+
+								var origName = name;
+								var n        = 0;
+
+								while (names.Contains(name))
+									name = origName + "_" + ++n;
+
+								names.Add(name);
 							}
 						}
 
