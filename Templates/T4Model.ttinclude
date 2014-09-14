@@ -830,7 +830,8 @@ public partial class Event : MemberBase
 static Action<GeneratedTextTransformation,Property,bool> WriteProperty = (tt,p,compact) =>
 {
 	var am  = p.AccessModifier.ToString().ToLower();
-	var mdf = p.IsVirtual ? " virtual" : "";
+//	var mdf = p.IsVirtual ? " virtual" : "";
+	var mdf = p.IsAbstract ? " abstract" : p.IsVirtual ? " virtual" : p.IsOverride ? " override" : p.IsStatic ? " static" : "";
 
 	tt.Write("{0}{1}{2}{3} {4}{5} {6}",
 		am,     LenDiff(p.AccessModifierLen, am),
@@ -965,6 +966,9 @@ public partial class Property : MemberBase
 	public bool         IsAuto    = true;
 	public string       InitValue;
 	public bool         IsVirtual;
+	public bool         IsOverride;
+	public bool         IsAbstract;
+	public bool         IsStatic;
 	public bool         HasGetter = true;
 	public bool         HasSetter = true;
 	public List<string> GetBody   = new List<string>();
