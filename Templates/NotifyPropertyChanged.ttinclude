@@ -15,6 +15,7 @@
 	}
 #><#+
 public bool ImplementNotifyPropertyChanging;
+public bool SkipNotifyPropertyChangedImplementation = false;
 
 void NotifyPropertyChangedImpl()
 {
@@ -199,7 +200,7 @@ void NotifyPropertyChangedImpl()
 		{
 			var cl = (Class)p;
 			
-			if (!cl.Interfaces.Contains("INotifyPropertyChanged"))
+			if (!SkipNotifyPropertyChangedImplementation && !cl.Interfaces.Contains("INotifyPropertyChanged"))
 			{
 				if (!Model.Usings.Contains("System.ComponentModel"))
 					Model.Usings.Add("System.ComponentModel");
