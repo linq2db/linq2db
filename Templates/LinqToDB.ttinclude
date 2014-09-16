@@ -8,7 +8,7 @@
 #>
 <#+
 Action BeforeGenerateLinqToDBModel = () => {};
-Action AfterGenerateLinqToDBModel = () => {};
+Action AfterGenerateLinqToDBModel  = () => {};
 
 bool GenerateObsoleteAttributeForAliases;
 bool GenerateFindExtensions = true;
@@ -32,10 +32,16 @@ void GenerateTypesFromMetadata()
 	if (GenerateConstructors)
 	{
 		if (DefaultConfiguration == null)
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name));
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], new[] { "InitDataContext();" }));
 		else
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
-		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }) { AfterSignature = { ": base(configuration)" } });
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], new[] { "InitDataContext();" }) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
+		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }, new[] { "InitDataContext();" }) { AfterSignature = { ": base(configuration)" } });
+
+		DataContextObject.Members.Add(new MemberGroup
+		{
+			IsCompact = true,
+			Members   = { new Method("void", "InitDataContext") { AccessModifier = AccessModifier.Partial } }
+		});
 	}
 
 	if (Tables.Count > 0)
