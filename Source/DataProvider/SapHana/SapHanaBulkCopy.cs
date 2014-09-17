@@ -32,11 +32,14 @@ namespace LinqToDB.DataProvider.SapHana
             if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
             var connection = dataConnection.Connection;
-            var transaction = dataConnection.Transaction;
 
-            if (connection == null) 
+            if (connection == null ) 
+                return MultipleRowsCopy(dataConnection, options, source);
+            if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
                 return MultipleRowsCopy(dataConnection, options, source);
 
+
+            var transaction = dataConnection.Transaction;
             var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
             var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
             var rc = new BulkCopyRowsCopied();

@@ -6,7 +6,10 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Mapping;
+    using System.Data.Common;
+    using System.Globalization;
+
+    using Mapping;
 
 	class BulkCopyReader : IDataReader
 	{
@@ -63,6 +66,19 @@ namespace LinqToDB.DataProvider
 			return _valueConverter.Value;
 		}
 
+	    public int GetValues(object[] values)
+	    {
+	        var count = _columns.Count;
+	        var obj = _enumerator.Current;
+	        for (var it = 0; it < count; ++it)
+	        {
+                var value = _columns[it].GetValue(obj);
+                _dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[it], value);
+	            values[it] = _valueConverter.Value;
+	        }
+	        return count;
+	    }
+
 		public int FieldCount
 		{
 			get { return _columns.Count; }
@@ -78,8 +94,7 @@ namespace LinqToDB.DataProvider
 			throw new NotImplementedException();
 		}
 
-		public string      GetDataTypeName(int i)           { throw new NotImplementedException(); }
-		public int         GetValues      (object[] values) { throw new NotImplementedException(); }
+		public string      GetDataTypeName(int i)           { throw new NotImplementedException(); }		
 		public int         GetOrdinal     (string name)     { throw new NotImplementedException(); }
 		public bool        GetBoolean     (int i)           { throw new NotImplementedException(); }
 		public byte        GetByte        (int i)           { throw new NotImplementedException(); }
@@ -112,17 +127,64 @@ namespace LinqToDB.DataProvider
 
 		public void Close()
 		{
-			throw new NotImplementedException();
+			//do nothing
 		}
 
 		public DataTable GetSchemaTable()
 		{
-			throw new NotImplementedException();
+            var table = new DataTable("SchemaTable")
+            {
+                Locale = CultureInfo.InvariantCulture
+            };
+
+            table.Columns.Add(new DataColumn(SchemaTableColumn.ColumnName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.ColumnOrdinal, typeof(int)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.ColumnSize, typeof(int)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.NumericPrecision, typeof(short)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.NumericScale, typeof(short)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.DataType, typeof(Type)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.ProviderSpecificDataType, typeof(Type)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.NonVersionedProviderType, typeof(int)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.ProviderType, typeof(int)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.IsLong, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.AllowDBNull, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.IsReadOnly, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.IsRowVersion, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.IsUnique, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.IsKey, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.IsAutoIncrement, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.IsHidden, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.BaseCatalogName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.BaseSchemaName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.BaseTableName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.BaseColumnName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableOptionalColumn.BaseServerName, typeof(string)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.IsAliased, typeof(bool)));
+            table.Columns.Add(new DataColumn(SchemaTableColumn.IsExpression, typeof(bool)));
+
+            
+		    for (var i = 0; i < _columns.Count; ++i)
+		    {
+		        var columnDescriptor = _columns[i];                
+                var row = table.NewRow();
+
+                row[SchemaTableColumn.ColumnName] = columnDescriptor.ColumnName;
+                row[SchemaTableColumn.DataType] = _dataProvider.
+                    ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
+                row[SchemaTableColumn.ColumnSize] = columnDescriptor.Length == 0 ? 0x7FFFFFFF : columnDescriptor.Length;
+		        row[SchemaTableColumn.IsKey] = columnDescriptor.IsPrimaryKey;
+                row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
+		        row[SchemaTableColumn.AllowDBNull] = columnDescriptor.CanBeNull;
+
+
+                table.Rows.Add(row);
+            }
+            return table;
 		}
 
 		public bool NextResult()
 		{
-			throw new NotImplementedException();
+		    return false;
 		}
 
 		public bool Read()

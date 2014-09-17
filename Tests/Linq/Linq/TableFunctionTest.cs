@@ -13,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TableFunctionTest : TestBase
 	{
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
 		public void Func1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -26,7 +26,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
 		public void Func2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -40,7 +40,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
 		public void Func3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -57,7 +57,7 @@ namespace Tests.Linq
 		readonly Func<DataConnection,int,IQueryable<Parent>> _f1 = CompiledQuery.Compile(
 			(DataConnection db, int id) => from p in new Model.Functions(db).GetParentByID(id) select p);
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
 		public void CompiledFunc1(string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		readonly Func<TestDataConnection,int,IQueryable<Parent>> _f2 = CompiledQuery.Compile(
 			(TestDataConnection db, int id) => from c in db.Child from p in db.GetParentByID(id) select p);
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
 		public void CompiledFunc2(string context)
 		{
 			using (var db = new TestDataConnection(context))

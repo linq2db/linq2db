@@ -15,11 +15,46 @@ using Tests.Model;
 
 namespace Tests.DataProvider
 {
-    using System.Windows.Forms.VisualStyles;
-
     [TestFixture]
     public class SapHanaTest : DataProviderTestBase
     {
+
+
+        [Table("BulkInsertLowerCaseColumns")]
+        public class BulkInsertLowerCaseColumns
+	    {
+		    [PrimaryKey] public int       ID;
+		    [Column]     public decimal   MoneyValue;
+		    [Column]     public DateTime? DateTimeValue;
+		    [Column]     public bool?     BoolValue;
+		    [Column]     public Guid?     GuidValue;
+		    [Column]     public short?    SmallIntValue;
+		    [Column]     public int?      IntValue;
+		    [Column]     public long?     BigIntValue;
+        }
+
+        [Table("BulkInsertUpperCaseColumns")]
+        public class BulkInsertUpperCaseColumns
+        {
+            [PrimaryKey]
+            public int ID;
+            [Column("MONEYVALUE")]
+            public decimal MoneyValue;
+            [Column("DATETIMEVALUE")]
+            public DateTime? DateTimeValue;
+            [Column("BOOLVALUE")]
+            public bool? BoolValue;
+            [Column("GUIDVALUE")]
+            public Guid? GuidValue;
+            [Column("SMALLINTVALUE")]
+            public short? SmallIntValue;
+            [Column("INTVALUE")]
+            public int? IntValue;
+            [Column("BIGINTVALUE")]
+            public long? BigIntValue;
+        }
+
+
         const string CurrentProvider = ProviderName.SapHana;
 
 
@@ -309,7 +344,7 @@ namespace Tests.DataProvider
             [Column, Nullable]
             public string shorttextDataType { get; set; } // text
             [Column, Nullable]
-            public string ncharDataType { get; set; } // char(20)
+            public char? ncharDataType { get; set; } // char(1)
             [Column, Nullable]
             public string nvarcharDataType { get; set; } // varchar(20)
             [Column, Nullable]
@@ -357,7 +392,7 @@ namespace Tests.DataProvider
                             varcharDataType = "AA",
                             textDataType = "text",
                             shorttextDataType = "shorttext",
-                            ncharDataType = "\u00fc",
+                            ncharDataType = '\u00fc',
                             nvarcharDataType = "A\u00fcfsdf\u00fc",
                             alphanumDataType = "abcQWE654",
                             binaryDataType = new byte[] { 1 },
@@ -382,6 +417,55 @@ namespace Tests.DataProvider
         {
             BulkCopyTest(context, BulkCopyType.ProviderSpecific);
         }
+
+        [Test, IncludeDataContextSource(CurrentProvider)]
+        public void BulkCopyProviderSpecificUpperCaseColumns(string context)
+        {
+            using (var db = new DataConnection(context))
+            {
+                var result = db.BulkCopy(
+                    new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+                    Enumerable.Range(0, 10).Select(n =>
+                        new BulkInsertUpperCaseColumns
+                        {
+                            ID = 4000 + n,
+                            MoneyValue = 1000m + n,
+                            DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+                            BoolValue = true,
+                            GuidValue = Guid.NewGuid(),
+                            SmallIntValue = (short)n
+                        }
+                    ));
+                Assert.That(result.RowsCopied, Is.EqualTo(10));
+                var count = db.GetTable<BulkInsertUpperCaseColumns>().Delete(p => p.ID >= 4000);
+                Assert.That(count, Is.EqualTo(10));
+            }
+        }
+
+        [Test, IncludeDataContextSource(CurrentProvider)]
+        public void BulkCopyProviderSpecificLowerCaseColumns(string context)
+        {
+            using (var db = new DataConnection(context))
+            {
+                var result = db.BulkCopy(
+                    new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+                    Enumerable.Range(0, 10).Select(n =>
+                        new BulkInsertLowerCaseColumns
+                        {
+                            ID = 4000 + n,
+                            MoneyValue = 1000m + n,
+                            DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+                            BoolValue = true,
+                            GuidValue = Guid.NewGuid(),
+                            SmallIntValue = (short)n
+                        }
+                    ));
+                Assert.That(result.RowsCopied, Is.EqualTo(10));
+                var count = db.GetTable<BulkInsertLowerCaseColumns>().Delete(p => p.ID >= 4000);
+                Assert.That(count, Is.EqualTo(10));
+            }
+        }
+        
 
         public void BulkCopyLinqTypes(string context)
         {

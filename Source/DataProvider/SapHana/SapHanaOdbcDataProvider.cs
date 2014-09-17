@@ -1,25 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+    using System.Data.Odbc;
 
-    using Common;
-	using Data;
 	using Extensions;
 	using Mapping;
     using SqlProvider;
 
 
-    public class SapHanaDataProvider : DynamicDataProviderBase
+    public class SapHanaOdbcDataProvider : DataProviderBase
 	{
-		public SapHanaDataProvider()
+		public SapHanaOdbcDataProvider()
             : this(ProviderName.SapHana, new SapHanaMappingSchema())
 		{
 		}
 
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
+		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
             //supported flags
@@ -47,49 +45,29 @@ namespace LinqToDB.DataProvider.SapHana
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return "Sap.Data.Hana"; } }
 
-	    protected override string ConnectionTypeName
-	    {
-	        get
-	        {
-	            return "{0}.{1}, {2}".Args(ConnectionNamespace, "HanaConnection", SapHanaTools.AssemblyName);
-	        }
-	    }
+        public override string ConnectionNamespace { get { return typeof(OdbcConnection).Namespace; } }
+        public override Type DataReaderType { get { return typeof(OdbcDataReader); } }
 
-	    protected override string DataReaderTypeName
-	    {
-	        get
-	        {
-                return "{0}.{1}, {2}".Args(ConnectionNamespace, "HanaDataReader", SapHanaTools.AssemblyName);
-	        }
-	    }
+        public override bool IsCompatibleConnection(IDbConnection connection)
+        {
+            return typeof(OdbcConnection).IsSameOrParentOf(connection.GetType());
+        }
 
-        static Action<IDbDataParameter> _setText;
-        static Action<IDbDataParameter> _setNText;
-        static Action<IDbDataParameter> _setBlob;
-        static Action<IDbDataParameter> _setVarBinary;
+        protected override IDbConnection CreateConnectionInternal(string connectionString)
+        {
+            return new OdbcConnection(connectionString);
+        }
 
 
-
-		protected override void OnConnectionTypeCreated(Type connectionType)
-		{
-            const String paramTypeName = "HanaParameter";
-		    const String dataTypeName = "HanaDbType";
-            _setText = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Text");
-            _setNText = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "NClob");
-            _setBlob = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "Blob");
-            _setVarBinary = GetSetParameter(connectionType, paramTypeName, dataTypeName, dataTypeName, "VarBinary");
-		}
-
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+        public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
             return new SapHanaSchemaProvider();
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+        public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);            
+			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);            
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -106,10 +84,6 @@ namespace LinqToDB.DataProvider.SapHana
 
             switch (dataType)
             {
-                case DataType.NChar:
-                case DataType.Char:
-                    type = typeof (String);
-                    break;
                 case DataType.Boolean: if (type == typeof(bool)) return typeof(byte); break;
                 case DataType.Guid: if (type == typeof(Guid)) return typeof(string); break;
             }
@@ -143,28 +117,30 @@ namespace LinqToDB.DataProvider.SapHana
                 return;
 		    switch (dataType)
 		    {
-                case DataType.Text: _setText(parameter); break;
-                case DataType.Image: _setBlob(parameter);break;
-                case DataType.NText: _setNText(parameter); break;
-                case DataType.Binary: _setVarBinary(parameter); break;
+		        case DataType.Boolean:
+		            parameter.DbType = DbType.Byte;
+		            return;
+                case DataType.Date: 
+                case DataType.DateTime2: ((OdbcParameter)parameter).OdbcType = OdbcType.Date;
+		            return;
 		    }
             base.SetParameterType(parameter, dataType);
 		}
 
-	    private SapHanaBulkCopy _bulkCopy;
+        //private SapHanaBulkCopy _bulkCopy;
 
-        public override BulkCopyRowsCopied BulkCopy<T>(
-            [JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-        {
-            if (_bulkCopy == null)
-                _bulkCopy = new SapHanaBulkCopy(this, GetConnectionType());
+        //public override BulkCopyRowsCopied BulkCopy<T>(
+        //    [JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+        //{
+        //    if (_bulkCopy == null)
+        //        _bulkCopy = new SapHanaBulkCopy(this, GetConnectionType());
 
-            return _bulkCopy.BulkCopy(
-                options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
-                dataConnection,
-                options,
-                source);
-        }
+        //    return _bulkCopy.BulkCopy(
+        //        options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
+        //        dataConnection,
+        //        options,
+        //        source);
+        //}
 
 	}
 }

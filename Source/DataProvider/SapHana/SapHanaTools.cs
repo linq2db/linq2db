@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Data;
-using System.Reflection;
-
-using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -37,10 +33,10 @@ namespace LinqToDB.DataProvider.SapHana
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
             }
-			DataConnection.AddDataProvider(_hanaDataProvider);
+            DataConnection.AddDataProvider(_hanaDataProvider);			
 		}
 
 		public static IDataProvider GetDataProvider()
@@ -48,35 +44,5 @@ namespace LinqToDB.DataProvider.SapHana
 			return _hanaDataProvider;
 		}
 
-		public static void ResolveSapHana([NotNull] string path)
-		{
-			if (path == null) throw new ArgumentNullException("path");
-			new AssemblyResolver(path, AssemblyName);
-		}
-
-		public static void ResolveSapHana([NotNull] Assembly assembly)
-		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
-            new AssemblyResolver(assembly, AssemblyName);
-		}
-
-		#region CreateDataConnection
-
-		public static DataConnection CreateDataConnection(string connectionString)
-		{
-			return new DataConnection(_hanaDataProvider, connectionString);
-		}
-
-		public static DataConnection CreateDataConnection(IDbConnection connection)
-		{
-			return new DataConnection(_hanaDataProvider, connection);
-		}
-
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
-		{
-			return new DataConnection(_hanaDataProvider, transaction);
-		}
-
-		#endregion
 	}
 }

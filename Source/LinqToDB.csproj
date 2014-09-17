@@ -105,6 +105,8 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaOdbcSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaOdbcDataProvider.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaBulkCopy.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaDataProvider.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaFactory.cs" />
