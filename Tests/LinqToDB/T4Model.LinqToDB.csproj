@@ -109,6 +109,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="SapHana.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SapHana.tt</DependentUpon>
+    </Compile>
     <Compile Include="SqlServerTypes\Loader.cs" />
     <Compile Include="Sybase.generated.cs">
       <DependentUpon>Sybase.tt</DependentUpon>
@@ -165,6 +170,10 @@
     <None Include="Firebird.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Firebird.generated.cs</LastGenOutput>
+    </None>
+    <None Include="SapHana.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SapHana.generated.cs</LastGenOutput>
     </None>
     <None Include="Sybase.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

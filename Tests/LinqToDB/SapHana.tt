@@ -1,0 +1,16 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"       #>
+<#@ output extension=".generated.cs"                              #>
+<#@ include file="..\..\Templates\LinqToDB.SapHana.ttinclude"	#>
+<#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
+<#@ assembly name="z:\GitProjects\linq2db\Redist\SAPHana\Sap.Data.Hana.v4.5.dll"   #>
+<#@ assembly name="z:\GitProjects\linq2db\Source\bin\Debug.4.5\linq2db.dll"   #>
+<#
+	NamespaceName = "SapHanaDataContext"; 
+
+	GetSchemaOptions.IncludedSchemas = new[] { "TEST" }; 
+
+
+	LoadSapHanaMetadata("Server=DBHost;Current Schema=TEST;UserID=TEST;Password=TEST12345;");
+
+	GenerateModel();
+#>

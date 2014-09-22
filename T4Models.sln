@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
 		Templates\!ReadMe.LinqToDB.md = Templates\!ReadMe.LinqToDB.md
@@ -16,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\LinqToDB.MySql.ttinclude = Templates\LinqToDB.MySql.ttinclude
 		Templates\LinqToDB.Oracle.ttinclude = Templates\LinqToDB.Oracle.ttinclude
 		Templates\LinqToDB.PostgreSQL.ttinclude = Templates\LinqToDB.PostgreSQL.ttinclude
+		Templates\LinqToDB.SapHana.ttinclude = Templates\LinqToDB.SapHana.ttinclude
 		Templates\LinqToDB.SqlCe.ttinclude = Templates\LinqToDB.SqlCe.ttinclude
 		Templates\LinqToDB.SQLite.ttinclude = Templates\LinqToDB.SQLite.ttinclude
 		Templates\LinqToDB.SqlServer.SqlTypes.ttinclude = Templates\LinqToDB.SqlServer.SqlTypes.ttinclude

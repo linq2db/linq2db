@@ -1,0 +1,33 @@
+<#@ include file="LinqToDB.ttinclude" #>
+<#
+	LinqToDB.DataProvider.SapHana.SapHanaTools.ResolveSapHana(
+		typeof(Sap.Data.Hana.HanaConnection).Assembly);
+
+	Model.Usings.Add("System.Reflection");
+
+
+#><#+
+
+
+LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
+{
+	return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
+}
+
+void LoadSapHanaMetadata(string connectionString)
+{
+	var dataConnection = GetSapHanaConnection(connectionString);
+	LoadMetadata(dataConnection);
+}
+
+void LoadSapHanaMetadata(string server, string schema, string uid, string password)
+{
+	var dataConnection = GetSapHanaConnection(server, schema, uid, password);
+	LoadMetadata(dataConnection);
+}
+#>

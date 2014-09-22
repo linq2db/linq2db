@@ -361,14 +361,15 @@ void GenerateTypesFromMetadata()
 			}
 			else
 			{
-				var spName = "\"" + 
+				var spName = 
 					SqlBuilder.BuildTableName(
 						new System.Text.StringBuilder(),
 						(string)SqlBuilder.Convert(DatabaseName,    LinqToDB.SqlProvider.ConvertType.NameToDatabase),
 						(string)SqlBuilder.Convert(p.Schema,        LinqToDB.SqlProvider.ConvertType.NameToOwner),
 						(string)SqlBuilder.Convert(p.ProcedureName, LinqToDB.SqlProvider.ConvertType.NameToQueryTable)
-					).ToString() +
-					 "\"";
+					).ToString();
+
+				spName = "\"" + spName.Replace("\"", "\\\"") + "\"";
 
 				var inputParameters  = p.ProcParameters.Where(pp => pp.IsIn). ToList();
 				var outputParameters = p.ProcParameters.Where(pp => pp.IsOut).ToList();
