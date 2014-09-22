@@ -234,79 +234,7 @@ namespace LinqToDB.SchemaProvider
 							var procName    = procedure.ProcedureName == null ? null : sqlProvider.Convert(procedure.ProcedureName, ConvertType.NameToQueryTable).ToString();
 							var commandText = sqlProvider.BuildTableName(new StringBuilder(), catalog, schema, procName).ToString();
 
-							CommandType     commandType;
-							DataParameter[] parameters;
-
-							if (procedure.IsTableFunction)
-							{
-								commandText = "SELECT * FROM " + commandText + "(";
-
-								for (var i = 0; i < procedure.Parameters.Count; i++)
-								{
-									if (i != 0)
-										commandText += ",";
-									commandText += "NULL";
-								}
-
-								commandText += ")";
-								commandType = CommandType.Text;
-								parameters  = new DataParameter[0];
-							}
-							else
-							{
-								commandType = CommandType.StoredProcedure;
-								parameters  = procedure.Parameters.Select(p =>
-									new DataParameter
-									{
-										Name      = p.ParameterName,
-										Value     =
-											p.SystemType == typeof(string)   ? "" :
-											p.SystemType == typeof(DateTime) ? DateTime.Now :
-												DefaultValue.GetValue(p.SystemType),
-										DataType  = p.DataType,
-										Size      = p.Size,
-										Direction =
-											p.IsIn ?
-												p.IsOut ?
-													ParameterDirection.InputOutput :
-													ParameterDirection.Input :
-												ParameterDirection.Output
-									}).ToArray();
-							}
-
-							{
-								try
-								{
-									var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
-
-									if (st != null)
-									{
-										procedure.ResultTable = new TableSchema
-										{
-											IsProcedureResult = true,
-											TypeName          = ToValidName(procedure.ProcedureName + "Result"),
-											ForeignKeys       = new List<ForeignKeySchema>(),
-											Columns           = GetProcedureResultColumns(st)
-										};
-
-										foreach (var column in procedure.ResultTable.Columns)
-											column.Table = procedure.ResultTable;
-
-										procedure.SimilarTables =
-										(
-											from  t in tables
-											where t.Columns.Count == procedure.ResultTable.Columns.Count
-											let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-											where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
-											select t
-										).ToList();
-									}
-								}
-								catch (Exception ex)
-								{
-									procedure.ResultException = ex;
-								}
-							}
+							LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
 						}
 
 						options.ProcedureLoadingProgress(procedures.Count, current++);
@@ -330,7 +258,85 @@ namespace LinqToDB.SchemaProvider
 			});
 		}
 
-		DataTypeInfo GetDataType(string typeName)
+	    protected virtual void LoadProcedureTableSchema(DataConnection dataConnection, ProcedureSchema procedure, string commandText,
+	        List<TableSchema> tables)
+	    {
+	        CommandType commandType;
+	        DataParameter[] parameters;
+
+	        if (procedure.IsTableFunction)
+	        {
+	            commandText = "SELECT * FROM " + commandText + "(";
+
+	            for (var i = 0; i < procedure.Parameters.Count; i++)
+	            {
+	                if (i != 0)
+	                    commandText += ",";
+	                commandText += "NULL";
+	            }
+
+	            commandText += ")";
+	            commandType = CommandType.Text;
+	            parameters = new DataParameter[0];
+	        }
+	        else
+	        {
+	            commandType = CommandType.StoredProcedure;
+	            parameters = procedure.Parameters.Select(p =>
+	                new DataParameter
+	                {
+	                    Name = p.ParameterName,
+	                    Value =
+	                        p.SystemType == typeof (string)
+	                            ? ""
+	                            : p.SystemType == typeof (DateTime)
+	                                ? DateTime.Now
+	                                : DefaultValue.GetValue(p.SystemType),
+	                    DataType = p.DataType,
+	                    Size = p.Size,
+	                    Direction =
+	                        p.IsIn
+	                            ? p.IsOut
+	                                ? ParameterDirection.InputOutput
+	                                : ParameterDirection.Input
+	                            : ParameterDirection.Output
+	                }).ToArray();
+	        }
+
+	        try
+	        {
+	            var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
+
+	            if (st != null)
+	            {
+	                procedure.ResultTable = new TableSchema
+	                {
+	                    IsProcedureResult = true,
+	                    TypeName = ToValidName(procedure.ProcedureName + "Result"),
+	                    ForeignKeys = new List<ForeignKeySchema>(),
+	                    Columns = GetProcedureResultColumns(st)
+	                };
+
+	                foreach (var column in procedure.ResultTable.Columns)
+	                    column.Table = procedure.ResultTable;
+
+	                procedure.SimilarTables =
+	                    (
+	                        from t in tables
+	                        where t.Columns.Count == procedure.ResultTable.Columns.Count
+	                        let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new {c1, c2})
+	                        where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+	                        select t
+	                        ).ToList();
+	            }
+	        }
+	        catch (Exception ex)
+	        {
+	            procedure.ResultException = ex;
+	        }
+	    }
+
+	    protected DataTypeInfo GetDataType(string typeName)
 		{
 			DataTypeInfo dt;
 			return DataTypesDic.TryGetValue(typeName, out dt) ? dt : null;
