@@ -346,7 +346,7 @@ void GenerateTypesFromMetadata()
 
 			if (p.IsTableFunction)
 			{
-				var body = string.Format("return GetTable<{0}>(this, (MethodInfo)MethodBase.GetCurrentMethod()", p.ResultTable.TypeName);
+				var body = string.Format("return this.GetTable<{0}>(this, (MethodInfo)MethodBase.GetCurrentMethod()", p.ResultTable.TypeName);
 
 				body += p.ProcParameters.Count == 0 ? ");" : ",";
 
