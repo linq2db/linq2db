@@ -103,6 +103,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
+				case ConvertType.NameToDatabase:
+				case ConvertType.NameToOwner:
 					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
