@@ -324,14 +324,14 @@ void GenerateTypesFromMetadata()
 
 			if (p.IsTableFunction)
 			{
-				p.Attributes.Add(new Attribute("Sql.TableFunction", "Name=\"" + p.ProcedureName + "\""));
+				p.Attributes.Add(new Attribute("Sql.TableFunction", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\""));
 				p.Type = "ITable<" + p.ResultTable.TypeName + ">";
 			}
 			else if (p.IsFunction)
 			{
 				p.IsStatic = true;
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.ProcedureName + "\"", "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\"", "ServerSideOnly=true"));
 			}
 			else
 			{
