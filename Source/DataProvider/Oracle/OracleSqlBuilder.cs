@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
             string dateTimeFunction = dataType == DataType.DateTime ? "TO_DATE" : "TO_TIMESTAMP";
 
 	        var format = dataType == DataType.DateTime
-                ? "{0}('{1:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS')"
+                ? "{0}('{1:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')"
                 : "{0}('{1:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
             if (value.Millisecond == 0)
