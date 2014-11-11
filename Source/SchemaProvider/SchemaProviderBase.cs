@@ -161,6 +161,8 @@ namespace LinqToDB.SchemaProvider
 				}
 
 				#endregion
+
+                tables.AddRange(GetProviderSpecificTables(dataConnection) ?? new List<TableSchema>());
 			}
 			else
 				tables = new List<TableSchema>();
@@ -244,9 +246,12 @@ namespace LinqToDB.SchemaProvider
 					procedures = new List<ProcedureSchema>();
 
 				#endregion
+
+			    procedures.AddRange(GetProviderSpecificProcedures(dataConnection) ?? new List<ProcedureSchema>());
 			}
 			else
 				procedures = new List<ProcedureSchema>();
+                       
 
 			return ProcessSchema(new DatabaseSchema
 			{
@@ -257,6 +262,16 @@ namespace LinqToDB.SchemaProvider
 				Procedures    = procedures,
 			});
 		}
+
+	    protected virtual List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
+	    {
+	        return null;
+	    }
+
+        protected virtual List<ProcedureSchema> GetProviderSpecificProcedures(DataConnection dataConnection)
+	    {
+	        return null;
+	    }
 
 	    protected virtual void LoadProcedureTableSchema(DataConnection dataConnection, ProcedureSchema procedure, string commandText,
 	        List<TableSchema> tables)
@@ -471,7 +486,7 @@ namespace LinqToDB.SchemaProvider
 				.Replace('$', '_')
 				.Replace('#', '_')
 				.Replace('-', '_')
-				;
+                .Replace('/', '_');
 		}
 
 		protected string ToTypeName(Type type, bool isNullable)

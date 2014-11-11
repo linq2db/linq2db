@@ -15,6 +15,14 @@ using Tests.Model;
 
 namespace Tests.DataProvider
 {
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Data.SqlClient;
+    using System.Linq.Expressions;
+    using System.Reflection;
+
+    using LinqToDB.DataProvider.SapHana;
+
     [TestFixture]
     public class SapHanaTest : DataProviderTestBase
     {
@@ -491,5 +499,72 @@ namespace Tests.DataProvider
                 }
             }
         }
+
+        [Test, IncludeDataContextSource(CurrentProvider)]
+        public void CalculationViewLinqQuery(string context)
+        {
+            using (var ctx = new CalcViewInputParameters(context))
+            {
+                var query = ctx.CaParamTest(10,10.01, "mandatory", null, null, "optional")
+                    .Where(x=>x.intmandatory > 0);
+                var result = query.ToList();
+                Assert.That(result.Count, Is.GreaterThan(0));
+            }
+        }
+
+
+        public class CalcViewInputParameters : DataConnection
+        {
+            public CalcViewInputParameters(string configuration) : base(configuration)
+            {
+                
+            }
+
+            public LinqToDB.ITable<VDT_CA_PARAM_TEST> CaParamTest(
+                int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
+                int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
+            {
+                return GetCalculationTable<VDT_CA_PARAM_TEST>(new List<DataParameter>
+                    {
+                        new DataParameter("ipIntMandatory", ipIntMandatory),
+                        new DataParameter("ipDoubleMandatory", ipDoubleMandatory),
+                        new DataParameter("ipStringMandatory", ipStringMandatory),
+                        new DataParameter("ipIntOptional", ipIntOptional),
+                        new DataParameter("ipDoubleOptional", ipDoubleOptional),
+                        new DataParameter("ipStringOptional", ipStringOptional)
+                    });
+            }
+
+            [CalculationViewInputParametersExpression]
+            private LinqToDB.ITable<TTable> GetCalculationTable<TTable>(IEnumerable<DataParameter> pList) where TTable: class
+            {
+                return this.GetTable<TTable>(
+                    this,
+                    ((MethodInfo) (MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable)),
+                    pList
+                    );
+            }
+
+        }
+
+        [Table(Schema = "_SYS_BIC", Name = "VDT/CA_PARAM_TEST")]
+        public partial class VDT_CA_PARAM_TEST
+        {
+            [Column, NotNull]
+            public int commonMiscConstantId { get; set; }
+            [Column, NotNull]
+            public int intmandatory { get; set; }
+            [Column, NotNull]
+            public double doublemandatory { get; set; }
+            [Column, NotNull]
+            public string stringmandatory { get; set; }
+            [Column, Nullable]
+            public int intoptional { get; set; }
+            [Column, Nullable]
+            public double doubleoptional { get; set; }
+            [Column, Nullable]
+            public string stringoptional { get; set; }
+        }
+
     }
 }

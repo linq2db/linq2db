@@ -5,6 +5,12 @@ namespace LinqToDB.SchemaProvider
 {
 	public class TableSchema
 	{
+
+	    public TableSchema()
+	    {
+	        IsProviderSpecific = false;
+	    }
+
 		public string ID                { get; set; }
 		public string CatalogName       { get; set; }
 		public string SchemaName        { get; set; }
@@ -14,6 +20,7 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsView            { get; set; }
 		public bool   IsProcedureResult { get; set; }
 		public string TypeName          { get; set; }
+        public bool   IsProviderSpecific { get; protected set; }
 
 		public List<ColumnSchema>     Columns     { get; set; }
 		public List<ForeignKeySchema> ForeignKeys { get; set; }

@@ -120,9 +120,11 @@ namespace LinqToDB.DataProvider.SapHana
 		        case DataType.Boolean:
 		            parameter.DbType = DbType.Byte;
 		            return;
-                case DataType.Date: 
-                case DataType.DateTime2: ((OdbcParameter)parameter).OdbcType = OdbcType.Date;
-		            return;
+                case DataType.Date:
+                    ((OdbcParameter)parameter).OdbcType = OdbcType.Date;
+                    return;
+                case DataType.DateTime2: ((OdbcParameter)parameter).OdbcType = OdbcType.DateTime;
+                    return;
 		    }
             base.SetParameterType(parameter, dataType);
 		}
