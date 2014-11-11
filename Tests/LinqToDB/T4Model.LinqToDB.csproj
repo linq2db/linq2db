@@ -39,9 +39,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\FirebirdSql.Data.FirebirdClient.4.5.0.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll</HintPath>
     </Reference>
-    <Reference Include="linq2db, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f19f8aed7feff67e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\linq2db\Source\bin\Debug.4.5\linq2db.dll</HintPath>
+    <Reference Include="linq2db">
+      <HintPath>..\..\..\..\Projects\Nordania FIT\Library\SharedArchitecture\linq2db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.SqlServer.Types, Version=11.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <Private>True</Private>

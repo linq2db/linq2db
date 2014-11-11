@@ -10,7 +10,9 @@
 Action BeforeGenerateLinqToDBModel = () => {};
 Action AfterGenerateLinqToDBModel  = () => {};
 
-bool GenerateObsoleteAttributeForAliases;
+Func<Table, MemberBase> GenerateProviderSpecificTable = (Table) => {return null;};
+
+bool GenerateObsoleteAttributeForAliases = false;
 bool GenerateFindExtensions = true;
 bool IsCompactColumns       = true;
 bool IsCompactColumnAliases = true;
@@ -47,13 +49,17 @@ void GenerateTypesFromMetadata()
 	if (Tables.Count > 0)
 		DataContextObject.Members.Insert(0, props);
 
-	foreach (var t in Tables.Values.OrderBy(tbl => tbl.TypeName))
+	foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl=> tbl.TypeName))
 	{
-		var dcProp = new Property(
+		MemberBase dcProp = t.IsProviderSpecific ? 
+			GenerateProviderSpecificTable(t) 
+			: new Property(
 			string.Format("ITable<{0}>", t.TypeName),
 			t.DataContextPropertyName,
 			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
 			null);
+
+		if (dcProp == null) continue;
 
 		props.Members.Add(dcProp);
 
@@ -418,10 +424,12 @@ void GenerateTypesFromMetadata()
 				{
 					var pr = inputParameters[i];
 
-					var str = string.Format("\tnew DataParameter(\"{0}\", {1}{2})",
+					var str = string.Format("\tnew DataParameter(\"{0}\", {1}{2}, {3}{4})",
 						pr.SchemaName,
 						LenDiff(maxLenSchema, pr.SchemaName),
-						pr.ParameterName);
+						pr.ParameterName,
+						LenDiff(maxLenSchema, pr.SchemaName),
+						"DataType." + pr.DataType);
 
 					if (pr.IsOut)
 					{

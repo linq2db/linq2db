@@ -1,5 +1,6 @@
 <#@ assembly name="System.Data"      #>
 <#@ import namespace="System.Data"   #>
+<#@ import namespace="LinqToDB.SchemaProvider"   #>
 <#@ import namespace="LinqToDB.Data" #>
 <#@ include file="T4Model.ttinclude" #>
 <#
@@ -45,6 +46,8 @@ LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 
 LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
 
+Func<TableSchema, Table> LoadProviderSpecificTable = (TableSchema) => { return null;};
+
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
@@ -65,6 +68,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 	DataContextObject.Comment.Add("/ </summary>");
 
 	var tables = db.Tables
+		.Where(t => !t.IsProviderSpecific)
 		.Select(t => new
 		{
 			t,
@@ -81,6 +85,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 					PluralizeDataContextPropertyNames   ? ToPlural  (t.TypeName) :
 					SingularizeDataContextPropertyNames ? ToSingular(t.TypeName) : t.TypeName,
 				IsView                  = t.IsView,
+				IsProviderSpecific      = false,
 				Description             = t.Description,
 				Columns                 = t.Columns.ToDictionary(
 					c => c.ColumnName,
@@ -101,6 +106,17 @@ void LoadServerMetadata(DataConnection dataConnection)
 			}
 		})
 		.ToList();
+
+	tables.AddRange(db.Tables
+		.Where(t => t.IsProviderSpecific)
+		.Select(t => new
+		{
+			t,
+			key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
+			table = LoadProviderSpecificTable(t)
+		})
+		.Where(t => t.table != null)
+	);
 
 	foreach (var t in tables)
 		Tables.Add(t.key, t.table);
@@ -454,6 +470,7 @@ public partial class Table : Class
 	public string TableName               { get; set; }
 	public string DataContextPropertyName { get; set; }
 	public bool   IsView                  { get; set; }
+	public bool   IsProviderSpecific      { get; set; }
 	public string Description             { get; set; }
 	public string AliasPropertyName       { get; set; }
 	public string AliasTypeName           { get; set; }
