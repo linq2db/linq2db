@@ -35,8 +35,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				var sqlopt  = SqlBulkCopyOptions.Default;
 				var rc      = new BulkCopyRowsCopied();
 
-				if (options.CheckConstraints == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
-				if (options.KeepIdentity     == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
+				if (options.CheckConstraints       == true) sqlopt |= SqlBulkCopyOptions.CheckConstraints;
+				if (options.KeepIdentity           == true) sqlopt |= SqlBulkCopyOptions.KeepIdentity;
+				if (options.TableLock              == true) sqlopt |= SqlBulkCopyOptions.TableLock;
+				if (options.KeepNulls              == true) sqlopt |= SqlBulkCopyOptions.KeepNulls;
+				if (options.FireTriggers           == true) sqlopt |= SqlBulkCopyOptions.FireTriggers;
+				if (options.UseInternalTransaction == true) sqlopt |= SqlBulkCopyOptions.UseInternalTransaction;
 
 				using (var bc = new SqlBulkCopy(connection, sqlopt, (SqlTransaction)dataConnection.Transaction))
 				{

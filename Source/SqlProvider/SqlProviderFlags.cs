@@ -23,6 +23,7 @@ namespace LinqToDB.SqlProvider
 		public bool IsGroupByExpressionSupported   { get; set; }
 		public int  MaxInListValuesCount           { get; set; }
 		public bool IsUpdateSetTableAliasSupported { get; set; }
+		public bool IsSybaseBuggyGroupBy           { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{

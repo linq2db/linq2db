@@ -635,5 +635,35 @@ namespace Tests.Linq
 				countByDates.Take(5).ToList();
 			}
 		}
+
+		[Test, DataContextSource(
+			ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+		public void DateTimeSum(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from t in Types
+					group t by t.ID into g
+					select new
+					{
+						ID              = g.Key,
+						Count           = g.Count(),
+						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).Value,
+						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).HasValue,
+						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue).Value),
+					},
+					from t in db.Types
+					group t by t.ID into g
+					select new
+					{
+						ID              = g.Key,
+						Count           = g.Count(),
+						Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).Value,
+						HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue)).HasValue,
+						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue).Value),
+					});
+			}
+		}
 	}
 }

@@ -187,5 +187,23 @@ namespace LinqToDB
 				_dataConnection = null;
 			}
 		}
+
+		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
+		{
+			var dct = new DataContextTransaction(this);
+
+			dct.BeginTransaction(level);
+
+			return dct;
+		}
+
+		public virtual DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
+		{
+			var dct = new DataContextTransaction(this);
+
+			dct.BeginTransaction();
+
+			return dct;
+		}
 	}
 }

@@ -623,3 +623,15 @@ BEGIN
 	SELECT 123 as id, '456' as id
 END
 GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'Name.Test')
+BEGIN DROP TABLE [Name.Test] END
+GO
+
+CREATE TABLE [Name.Test]
+(
+	[Name.Test] int
+)
+GO
+

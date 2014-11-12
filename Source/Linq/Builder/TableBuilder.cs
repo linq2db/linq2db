@@ -721,7 +721,20 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
 					{
-						var p  = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
+						SelectQuery.Predicate.ExprExpr p;
+
+						if (cond.Predicate is SelectQuery.SearchCondition)
+						{
+							p = ((SelectQuery.SearchCondition)cond.Predicate).Conditions
+								.Select(c => c.Predicate)
+								.OfType<SelectQuery.Predicate.ExprExpr>()
+								.First();
+						}
+						else
+						{
+							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
+						}
+
 						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
 
 						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
@@ -1154,7 +1167,14 @@ namespace LinqToDB.Linq.Builder
 					if (!SqlTable.Fields.TryGetValue(association.OtherKey[i], out field2))
 						throw new LinqException("Association key '{0}' not found for type '{1}.", association.OtherKey[i], ObjectType);
 
-					join.Field(field1).Equal.Field(field2);
+//					join.Field(field1).Equal.Field(field2);
+
+					ISqlPredicate predicate = new SelectQuery.Predicate.ExprExpr(
+						field1, SelectQuery.Predicate.Operator.Equal, field2);
+
+					predicate = builder.Convert(parent, predicate);
+
+					join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 				}
 
 				Init();

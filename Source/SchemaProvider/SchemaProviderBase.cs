@@ -174,6 +174,7 @@ namespace LinqToDB.SchemaProvider
 				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder();
 				var procs       = GetProcedures(dataConnection);
 				var procPparams = GetProcedureParameters(dataConnection);
+				var n           = 0;
 
 				if (procs != null)
 				{
@@ -214,7 +215,7 @@ namespace LinqToDB.SchemaProvider
 									IsOut         = pr.IsOut,
 									IsResult      = pr.IsResult,
 									Size          = pr.Length,
-									ParameterName = ToValidName(pr.ParameterName),
+									ParameterName = ToValidName(pr.ParameterName ?? "par" + ++n),
 									ParameterType = ToTypeName(systemType, true),
 									SystemType    = systemType ?? typeof(object),
 									DataType      = GetDataType(pr.DataType, null)

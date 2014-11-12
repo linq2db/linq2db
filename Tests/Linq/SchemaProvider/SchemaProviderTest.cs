@@ -40,10 +40,20 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2005 :
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
+					{
 						var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
 						Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
 						Assert.That(indexTable.ForeignKeys[0].ThisColumns.Count, Is.EqualTo(2));
 						break;
+					}
+
+					case ProviderName.Informix      :
+					{
+						var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
+						Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+						Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
+					}
+					break;
 				}
 			}
 		}

@@ -384,6 +384,15 @@ namespace Tests.Linq
 						sum2 = g.MySum(i => i.Value1),
 					});
 		}
+
+		[Test, DataContextSource]
+		public void GetValueOrDefault(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where p.Value1.GetValueOrDefault() > 0 select new { Value = p.Value1.GetValueOrDefault() },
+					from p in db.Parent where p.Value1.GetValueOrDefault() > 0 select new { Value = p.Value1.GetValueOrDefault() });
+		}
 	}
 
 	public static class FunctionExtension

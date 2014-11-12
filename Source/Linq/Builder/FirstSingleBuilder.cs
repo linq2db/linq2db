@@ -109,7 +109,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null)
 				{
-					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported && Parent.SelectQuery.GroupBy.IsEmpty)
+					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
+						Parent.SelectQuery.GroupBy.IsEmpty &&
+						Parent.SelectQuery.From.Tables.Count > 0)
 					{
 						var join = SelectQuery.OuterApply(SelectQuery);
 

@@ -92,6 +92,13 @@ namespace LinqToDB.Linq
 			Expression       = parseContext.Builder.OriginalExpression;
 		}
 
+		void ClearParameters()
+		{
+			foreach (var query in Queries)
+				foreach (var sqlParameter in query.Parameters)
+					sqlParameter.Expression = null;
+		}
+
 		#endregion
 
 		#region Properties & Fields
@@ -224,6 +231,8 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
 
+			ClearParameters();
+
 			GetElement = (ctx,db,expr,ps) => NonQueryQuery(db, expr, ps);
 		}
 
@@ -254,6 +263,8 @@ namespace LinqToDB.Linq
 
 			if (Queries.Count != 2)
 				throw new InvalidOperationException();
+
+			ClearParameters();
 
 			GetElement = (ctx,db,expr,ps) => NonQueryQuery2(db, expr, ps);
 		}
@@ -296,6 +307,8 @@ namespace LinqToDB.Linq
 
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
+
+			ClearParameters();
 
 			GetElement = (ctx,db,expr,ps) => ScalarQuery<TS>(db, expr, ps);
 		}
@@ -1020,6 +1033,8 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
 
+			ClearParameters();
+
 			GetElement = (ctx,db,expr,ps) => RunQuery(ctx, db,expr, ps, mapper);
 		}
 
@@ -1108,6 +1123,9 @@ namespace LinqToDB.Linq
 		{
 			var query   = GetQuery();
 			var mapInfo = new MapInfo { Expression = expression };
+
+			ClearParameters();
+
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 
@@ -1180,6 +1198,9 @@ namespace LinqToDB.Linq
 		{
 			var query   = GetQuery();
 			var mapInfo = new MapInfo2 { Expression = expression };
+
+			ClearParameters();
+
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 

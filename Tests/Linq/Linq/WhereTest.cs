@@ -510,7 +510,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void AnonymousEqual3(string context)
+		public void AnonymousEqual31(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -520,6 +520,20 @@ namespace Tests.Linq
 					,
 					from ch in db.Child
 					where new { ch.ParentID, ch.ChildID } == new { ParentID = 2, ChildID = 21 }
+					select ch);
+		}
+
+		[Test, DataContextSource]
+		public void AnonymousEqual32(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from ch in Child
+					where ch.ParentID == 2 && ch.ChildID == 21
+					select ch
+					,
+					from ch in db.Child
+					where new { ParentID = 2, ChildID = 21 } == new { ch.ParentID, ch.ChildID }
 					select ch);
 		}
 

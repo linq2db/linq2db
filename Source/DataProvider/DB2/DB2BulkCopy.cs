@@ -59,8 +59,8 @@ namespace LinqToDB.DataProvider.DB2
 
 					var bcOptions = 0; // Default
 
-					if (options.KeepIdentity == true)
-						bcOptions |= 1; // KeepIdentity = 1, TableLock = 2, Truncate = 4,
+					if (options.KeepIdentity == true) bcOptions |= 1; // KeepIdentity = 1, TableLock = 2, Truncate = 4,
+					if (options.TableLock    == true) bcOptions |= 2;
 
 					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
 					{

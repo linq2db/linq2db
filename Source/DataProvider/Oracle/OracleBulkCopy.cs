@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -59,7 +58,8 @@ namespace LinqToDB.DataProvider.Oracle
 					var rc      = new BulkCopyRowsCopied();
 
 					var bcOptions = 0; // Default
-					                   // UseInternalTransaction = 1,
+
+					if (options.UseInternalTransaction == true) bcOptions |= 1; // UseInternalTransaction = 1,
 
 					using (var bc = _bulkCopyCreator(dataConnection.Connection, bcOptions))
 					{

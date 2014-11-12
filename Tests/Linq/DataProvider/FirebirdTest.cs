@@ -17,7 +17,9 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using Model;
+    using LinqToDB.SqlProvider;
+
+    using Model;
 
 	[TestFixture]
 	public class FirebirdTest : DataProviderTestBase
@@ -307,6 +309,24 @@ namespace Tests.DataProvider
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void TestGuid2(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				AreEqual(
+					from t in      Types2 select t.GuidValue,
+					from t in conn.Types2 select t.GuidValue);
+
+				var dt = (from t in conn.Types2 select t).First();
+
+				conn.Update(dt);
+				conn.Types2.Update(
+					t => t.ID == dt.ID,
+					t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -405,6 +425,25 @@ namespace Tests.DataProvider
 			using (var dbm = new DataConnection(new FirebirdDataProvider(), con))
 			{
 				dbm.GetTable<AllTypes>().Where(t => t.timestampDataType == DateTime.Now).ToList();
+			}
+		}
+
+		[Table("LINQDATATYPES")]
+		class MyLinqDataType
+		{
+			[Column]
+			public byte[] BinaryValue { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.Firebird)]
+		public void ForcedInlineParametersInSelectClauseTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(10, db.Select(() => Sql.AsSql(10))); // if 10 is not inlined, when FB raise "unknown data type error"
+
+				var blob = new byte[] {1, 2, 3};
+				db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
 			}
 		}
 	}

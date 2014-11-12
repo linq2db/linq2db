@@ -1040,7 +1040,7 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		Expression GetMemberExpression(MemberInfo member, bool add, Type type)
+		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type)
 		{
 			Expression memberExpression;
 
