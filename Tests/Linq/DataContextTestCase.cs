@@ -150,7 +150,7 @@ namespace Tests
 
 			foreach (var c in cases)
 			{
-				var data  = new TestCaseData(c.isLinqService ? c.name + ".LinqService" : c.name ).SetCategory(c.name);
+				var data  = new TestCaseData(c.isLinqService ? c.name + ".LinqService" : c.name).SetCategory(c.name);
 
 				if (c.isLinqService)
 				{
