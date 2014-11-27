@@ -52,6 +52,9 @@ namespace LinqToDB
 				table.SqlTableType   = SqlTableType.Expression;
 				table.Name           = Expression ?? member.Name;
 				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+
+				if (Schema   != null) table.Owner    = Schema;
+				if (Database != null) table.Database = Database;
 			}
 		}
 	}
