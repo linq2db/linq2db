@@ -145,6 +145,9 @@
       <Private>True</Private>
       <HintPath>..\..\packages\Microsoft.SqlServer.Types.11.0.1\lib\net20\Microsoft.SqlServer.Types.dll</HintPath>
     </Reference>
+    <Reference Include="MiniProfiler">
+      <HintPath>..\..\packages\MiniProfiler.3.1.1.140\lib\net40\MiniProfiler.dll</HintPath>
+    </Reference>
     <Reference Include="Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Npgsql.2.2.3\lib\net45\Mono.Security.dll</HintPath>
@@ -216,6 +219,7 @@
     <Compile Include="DataProvider\MySqlTest.cs" />
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
+    <Compile Include="Data\MiniProfilerTest.cs" />
     <Compile Include="Data\TransactionTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />
     <Compile Include="DDL\CreateTableTest.cs" />
