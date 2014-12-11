@@ -462,6 +462,58 @@ namespace LinqToDB
 			return str == null ? null : str.ToUpper();
 		}
 
+		class ConcatAttribute : Sql.ExpressionAttribute
+		{
+			public ConcatAttribute() : base("")
+			{
+			}
+
+			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			{
+				var arr = new ISqlExpression[args.Length];
+
+				for (var i = 0; i < args.Length; i++)
+				{
+					var arg = args[i];
+
+					if (arg.SystemType == typeof(string))
+					{
+						arr[i] = arg;
+					}
+					else
+					{
+						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
+							100 :
+							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).DataType);
+
+						arr[i] = new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), arg);
+					}
+				}
+
+				if (arr.Length == 1)
+					return arr[0];
+
+				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
+
+				for (var i = 2; i < arr.Length; i++)
+					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
+
+				return expr;
+			}
+		}
+
+		[ConcatAttribute]
+		public static string Concat(params object[] args)
+		{
+			return string.Concat(args);
+		}
+
+		[ConcatAttribute]
+		public static string Concat(params string[] args)
+		{
+			return string.Concat(args);
+		}
+
 		#endregion
 
 		#region Binary Functions
@@ -909,21 +961,6 @@ namespace LinqToDB
 
 		#region Text Functions
 
-		class FreeTextAttribute : Sql.ExpressionAttribute
-		{
-			public FreeTextAttribute()
-				: base(PN.SqlServer)
-			{
-				ServerSideOnly = true;
-			}
-
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
-			{
-				return base.GetExpression(member, args);
-			}
-		}
-
-		//[FreeTextAttribute]
 		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true)]
 		public static bool FreeText(object table, string text)
 		{

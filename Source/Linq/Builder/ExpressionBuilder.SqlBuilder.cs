@@ -827,7 +827,35 @@ namespace LinqToDB.Linq.Builder
 							if (e.Object != null)
 								parms.Add(ConvertToSql(context, e.Object));
 
-							parms.AddRange(e.Arguments.Select(t => ConvertToSql(context, t)));
+							ParameterInfo[] pis = null;
+
+							for (var i = 0; i < e.Arguments.Count; i++)
+							{
+								var arg = e.Arguments[i];
+
+								if (arg is NewArrayExpression)
+								{
+									if (pis == null)
+										pis = e.Method.GetParameters();
+
+									var p = pis[i];
+
+									if (p.GetCustomAttributesEx(true).OfType<ParamArrayAttribute>().Any())
+									{
+										var nae = (NewArrayExpression)arg;
+
+										parms.AddRange(nae.Expressions.Select(a => ConvertToSql(context, a)));
+									}
+									else
+									{
+										parms.Add(ConvertToSql(context, arg));
+									}
+								}
+								else
+								{
+									parms.Add(ConvertToSql(context, arg));
+								}
+							}
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
