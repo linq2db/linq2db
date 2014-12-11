@@ -40,9 +40,16 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void Test1(string context)
 		{
-			using (var mpcon = new MiniProfilerDataContext(context))
+			try
 			{
-				mpcon.GetTable<Northwind.Category>().ToList();
+				using (var mpcon = new MiniProfilerDataContext(context))
+				{
+					mpcon.GetTable<Northwind.Category>().ToList();
+				}
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = false;
 			}
 		}
 	}

@@ -552,6 +552,12 @@ namespace LinqToDB.Linq.Builder
 									new SqlInfo(table.Field.ColumnDescriptor.MemberInfo) { Sql = table.Field }
 								};
 
+							if (expression == null)
+								return new[]
+								{
+									new SqlInfo { Sql = table.Table.SqlTable.All }
+								};
+
 							break;
 						}
 				}

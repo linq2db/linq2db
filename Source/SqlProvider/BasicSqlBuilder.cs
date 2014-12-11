@@ -1600,17 +1600,13 @@ namespace LinqToDB.SqlProvider
 					{
 						var field = (SqlField)expr;
 
-						if (field == field.Table.All)
+						if (buildTableName)
 						{
-							StringBuilder.Append("*");
-						}
-						else
-						{
-							if (buildTableName)
-							{
-								var ts = SelectQuery.GetTableSource(field.Table);
+							var ts = SelectQuery.GetTableSource(field.Table);
 
-								if (ts == null)
+							if (ts == null)
+							{
+								if (field != field.Table.All)
 								{
 #if DEBUG
 									//SqlQuery.GetTableSource(field.Table);
@@ -1619,25 +1615,32 @@ namespace LinqToDB.SqlProvider
 									if (throwExceptionIfTableNotFound)
 										throw new SqlException("Table '{0}' not found.", field.Table);
 								}
-								else
-								{
-									var table = GetTableAlias(ts);
-
-									table = table == null ?
-										GetPhysicalTableName(field.Table, null) :
-										Convert(table, ConvertType.NameToQueryTableAlias).ToString();
-
-									if (string.IsNullOrEmpty(table))
-										throw new SqlException("Table {0} should have an alias.", field.Table);
-
-									addAlias = alias != field.PhysicalName;
-
-									StringBuilder
-										.Append(table)
-										.Append('.');
-								}
 							}
+							else
+							{
+								var table = GetTableAlias(ts);
 
+								table = table == null ?
+									GetPhysicalTableName(field.Table, null) :
+									Convert(table, ConvertType.NameToQueryTableAlias).ToString();
+
+								if (string.IsNullOrEmpty(table))
+									throw new SqlException("Table {0} should have an alias.", field.Table);
+
+								addAlias = alias != field.PhysicalName;
+
+								StringBuilder
+									.Append(table)
+									.Append('.');
+							}
+						}
+
+						if (field == field.Table.All)
+						{
+							StringBuilder.Append("*");
+						}
+						else
+						{
 							StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
 						}
 					}
