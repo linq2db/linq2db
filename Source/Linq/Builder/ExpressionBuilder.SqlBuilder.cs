@@ -21,13 +21,12 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Build Where
 
-		public IBuildContext BuildWhere(IBuildContext parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery)
+		public IBuildContext BuildWhere(IBuildContext parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
 		{
-			var makeHaving = false;
 			var prevParent = sequence.Parent;
-
-			var ctx  = new ExpressionContext(parent, sequence, condition);
-			var expr = ConvertExpression(condition.Body.Unwrap());
+			var ctx        = new ExpressionContext(parent, sequence, condition);
+			var expr       = ConvertExpression(condition.Body.Unwrap());
+			var makeHaving = false;
 
 			if (checkForSubQuery && CheckSubQueryForWhere(ctx, expr, out makeHaving))
 			{
@@ -42,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 			BuildSearchCondition(
 				ctx,
 				expr,
-				makeHaving ?
+				enforceHaving || makeHaving && !ctx.SelectQuery.GroupBy.IsEmpty?
 					ctx.SelectQuery.Having.SearchCondition.Conditions :
 					ctx.SelectQuery.Where. SearchCondition.Conditions);
 
@@ -59,6 +58,9 @@ namespace LinqToDB.Linq.Builder
 
 			expression.Visit(expr =>
 			{
+				if (makeSubQuery)
+					return false;
+
 				if (_subQueryExpressions != null && _subQueryExpressions.Contains(expr))
 				{
 					makeSubQuery = true;
@@ -66,43 +68,61 @@ namespace LinqToDB.Linq.Builder
 					return false;
 				}
 
-				var stopWalking = false;
-
 				switch (expr.NodeType)
 				{
 					case ExpressionType.MemberAccess:
+					{
+						var ma = (MemberExpression)expr;
+
+						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
+							return true;
+
+						if (Expressions.ConvertMember(MappingSchema, ma.Member) != null)
+							return true;
+
+						var ctx = GetContext(context, expr);
+
+						if (ctx == null)
+							return true;
+
+						var expres = ctx.IsExpression(expr, 0, RequestFor.Expression);
+
+						if (expres.Result)
 						{
-							var ma = (MemberExpression)expr;
-
-							if (ma.Member.IsNullableValueMember() ||
-							    ma.Member.IsNullableHasValueMember())
-								break;
-
-							if (Expressions.ConvertMember(MappingSchema, ma.Member) == null)
+							if (expres.Expression != null && IsGrouping(expres.Expression))
 							{
-								var ctx = GetContext(context, expr);
-
-								if (ctx != null)
-								{
-									if (ctx.IsExpression(expr, 0, RequestFor.Expression).Result)
-										makeSubQuery = true;
-									stopWalking = true;
-								}
+								isHaving = true;
+								return false;
 							}
 
-							isWhere = true;
-
-							break;
+							makeSubQuery = true;
 						}
+						else
+						{
+							if (IsGrouping(expr))
+							{
+								isHaving = true;
+								return false;
+							}
+
+							isWhere = ctx.IsExpression(expr, 0, RequestFor.Field).Result;
+						}
+
+						return false;
+					}
 
 					case ExpressionType.Call:
 						{
 							var e = (MethodCallExpression)expr;
 
-							if (e.Method.DeclaringType == typeof(Enumerable) && e.Method.Name != "Contains")
-								return isHaving = true;
+							if (Expressions.ConvertMember(MappingSchema, e.Method) != null)
+								return true;
 
-							isWhere = true;
+							if (IsGrouping(e))
+							{
+								isHaving = true;
+								return false;
+							}
 
 							break;
 						}
@@ -115,7 +135,6 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (ctx.IsExpression(expr, 0, RequestFor.Expression).Result)
 									makeSubQuery = true;
-								stopWalking = true;
 							}
 
 							isWhere = true;
@@ -124,11 +143,35 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 
-				return !stopWalking;
+				return true;
 			});
 
 			makeHaving = isHaving && !isWhere;
 			return makeSubQuery || isHaving && isWhere;
+		}
+
+		bool IsGrouping(Expression expression)
+		{
+			switch (expression.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+				{
+					var ma = (MemberExpression)expression;
+					return ma.Expression != null && typeof(IGrouping<,>).IsSameOrParentOf(ma.Expression.Type);
+				}
+
+				case ExpressionType.Call:
+				{
+					var mce = (MethodCallExpression)expression;
+
+					if (mce.Object != null && typeof(IGrouping<,>).IsSameOrParentOf(mce.Object.Type))
+						return true;
+
+					return mce.Arguments.Any(a => typeof(IGrouping<,>).IsSameOrParentOf(a.Type));
+				}
+			}
+
+			return false;
 		}
 
 		#endregion

@@ -844,6 +844,26 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Having
+
+		static readonly MethodInfo _setMethodInfo7 = MemberHelper.MethodOf(() => Having((IQueryable<int>)null,null)).GetGenericMethodDefinition();
+
+		public static IQueryable<TSource> Having<TSource>(
+			[NotNull]                this IQueryable<TSource>       source,
+			[NotNull, InstantHandle] Expression<Func<TSource,bool>> predicate)
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+
+			return source.Provider.CreateQuery<TSource>( 
+				Expression.Call(
+					null,
+					_setMethodInfo7.MakeGenericMethod(typeof(TSource)), 
+					new[] { source.Expression, Expression.Quote(predicate) }));
+		}
+
+		#endregion
+
 		#region Stub helpers
 
 		public static TOutput Where<TOutput,TSource,TInput>(this TInput source, Func<TSource,bool> predicate)

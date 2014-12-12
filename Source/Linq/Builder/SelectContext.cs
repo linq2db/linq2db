@@ -671,8 +671,8 @@ namespace LinqToDB.Linq.Builder
 											expression,
 											(MemberExpression)levelExpression,
 											level,
-											(n,ctx,ex,l,_) => n == 0 ?
-												new IsExpressionResult(requestFlag == RequestFor.Expression) : 
+											(n,ctx,ex,l,ex1) => n == 0 ?
+												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) : 
 												ctx.IsExpression(ex, l, requestFlag));
 									}
 
