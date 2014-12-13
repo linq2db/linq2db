@@ -94,6 +94,7 @@ namespace Tests
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
+			"SqlAzure.2012"
 		};
 
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]

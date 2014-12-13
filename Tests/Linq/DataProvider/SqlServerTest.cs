@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public SqlServerDataContextAttribute()
-				: base(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)
+				: base(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, "SqlAzure.2012")
 			{
 			}
 		}

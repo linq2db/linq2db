@@ -47,6 +47,8 @@ namespace LinqToDB.SchemaProvider
 
 			var dbConnection = (DbConnection)dataConnection.Connection;
 
+			InitProvider(dataConnection);
+
 			DataTypes    = GetDataTypes(dataConnection);
 			DataTypesDic = new Dictionary<string, DataTypeInfo>(DataTypes.Count, StringComparer.OrdinalIgnoreCase);
 
@@ -386,6 +388,10 @@ namespace LinqToDB.SchemaProvider
 		protected virtual string GetDatabaseName(DbConnection dbConnection)
 		{
 			return dbConnection.Database;
+		}
+
+		protected virtual void InitProvider(DataConnection dataConnection)
+		{
 		}
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)

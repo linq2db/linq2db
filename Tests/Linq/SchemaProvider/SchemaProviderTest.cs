@@ -29,8 +29,8 @@ namespace Tests.SchemaProvider
 
 				var table = dbSchema.Tables.SingleOrDefault(t => t.TableName.ToLower() == "parent");
 
-				Assert.That(table,               Is.Not.Null);
-				Assert.That(table.Columns.Count, Is.EqualTo(2));
+				Assert.That(table,                                           Is.Not.Null);
+				Assert.That(table.Columns.Count(c => c.ColumnName != "_ID"), Is.EqualTo(2));
 
 //				Assert.That(dbSchema.Tables.Single(t => t.TableName.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(1));
 
@@ -40,6 +40,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2005 :
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
+					case "SqlAzure.2012"            :
 					{
 						var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
 						Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));

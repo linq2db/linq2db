@@ -471,18 +471,21 @@ GO
 DROP TABLE GrandChild
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int)
+CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
+
+-- SKIP SqlAzure.2012 BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
+-- SKIP SqlAzure.2012 END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -523,6 +526,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
+	_ID            int IDENTITY  PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -539,6 +543,7 @@ GO
 
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -553,6 +558,7 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
+-- SKIP SqlAzure.2012 END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlServer.2008 END
 
@@ -561,7 +567,7 @@ GO
 
 CREATE TABLE TestIdentity (
 	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
-)
+) ON [PRIMARY]
 GO
 
 
@@ -630,6 +636,7 @@ GO
 
 CREATE TABLE [Name.Test]
 (
+--	ID INT IDENTITY PRIMARY KEY CLUSTERED,
 	[Name.Test] int
 )
 GO

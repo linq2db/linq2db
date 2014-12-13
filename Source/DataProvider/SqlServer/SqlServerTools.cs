@@ -53,11 +53,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
 
-					if (css.Name.Contains("2000") ||
-					    css.Name.Contains("2005") ||
-					    css.Name.Contains("2008") ||
-					    css.Name.Contains("2012"))
-						break;
+					if (css.Name.Contains("2000")) return _sqlServerDataProvider2000;
+					if (css.Name.Contains("2005")) return _sqlServerDataProvider2005;
+					if (css.Name.Contains("2008")) return _sqlServerDataProvider2008;
+					if (css.Name.Contains("2012")) return _sqlServerDataProvider2012;
 
 					if (AutoDetectProvider)
 					{

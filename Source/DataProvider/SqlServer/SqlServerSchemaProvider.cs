@@ -9,9 +9,36 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
+		bool _isAzure;
+
+		protected override void InitProvider(DataConnection dataConnection)
+		{
+			var version = dataConnection.Execute<string>("select @@version");
+
+			_isAzure = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			return dataConnection.Query<TableInfo>(@"
+			return dataConnection.Query<TableInfo>(
+				_isAzure ? @"
+				SELECT
+					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					TABLE_CATALOG                                         as CatalogName,
+					TABLE_SCHEMA                                          as SchemaName,
+					TABLE_NAME                                            as TableName,
+					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END       as IsView,
+					''                                                    as Description,
+					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END      as IsDefaultSchema
+				FROM
+					INFORMATION_SCHEMA.TABLES s
+					LEFT JOIN
+						sys.tables t
+					ON
+						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+				WHERE
+					t.object_id IS NULL OR t.is_ms_shipped <> 1"
+				: @"
 				SELECT
 					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					TABLE_CATALOG                                         as CatalogName,
@@ -72,7 +99,24 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			return dataConnection.Query<ColumnInfo>(@"
+			return dataConnection.Query<ColumnInfo>(
+				_isAzure ? @"
+				SELECT
+					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					COLUMN_NAME                                           as Name,
+					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END       as IsNullable,
+					ORDINAL_POSITION                                      as Ordinal,
+					c.DATA_TYPE                                           as DataType,
+					CHARACTER_MAXIMUM_LENGTH                              as Length,
+					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)         as [Precision],
+					NUMERIC_SCALE                                         as Scale,
+					''                                                    as [Description],
+					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
+					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+				FROM
+					INFORMATION_SCHEMA.COLUMNS c"
+				: @"
 				SELECT
 					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					COLUMN_NAME                                           as Name,
