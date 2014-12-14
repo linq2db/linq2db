@@ -1301,18 +1301,18 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							Expression thisProp  = Expression.PropertyOrField(pWhere, tableContext.Association.ThisKey[i]);
-							Expression otherProp = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.OtherKey[i]);
+							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
+							Expression otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 
-							if (thisProp.Type != otherProp.Type)
+							if (otherProp.Type != thisProp.Type)
 							{
-								if (thisProp.Type.CanConvertTo(otherProp.Type))
-									thisProp  = Expression.Convert(thisProp,  otherProp.Type);
-								else if (otherProp.Type.CanConvertTo(thisProp.Type))
-									otherProp = Expression.Convert(otherProp, thisProp. Type);
+								if (otherProp.Type.CanConvertTo(thisProp.Type))
+									otherProp  = Expression.Convert(otherProp,  thisProp.Type);
+								else if (thisProp.Type.CanConvertTo(otherProp.Type))
+									thisProp = Expression.Convert(thisProp, otherProp. Type);
 							}
 
-							var ex = Expression.Equal(thisProp, otherProp);
+							var ex = Expression.Equal(otherProp, thisProp);
 
 							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 						}
