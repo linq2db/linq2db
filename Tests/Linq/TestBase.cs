@@ -34,7 +34,21 @@ namespace Tests
 			UserProviders.AddRange(
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())
-					.Where (s => s.Length > 0 && !s.StartsWith("--")));
+					.Where (s => s.Length > 0 && !s.StartsWith("--"))
+					.Select(s =>
+					{
+						var ss = s.Split('*');
+						switch (ss.Length)
+						{
+							case 0 : return null;
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
+						}
+					}));
+
+			foreach (var provider in UserProviders)
+				if (provider.ConnectionString != null)
+					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -77,8 +91,14 @@ namespace Tests
 			host.Open();
 		}
 
-		public static readonly List<string> UserProviders = new List<string>();
-		public static readonly List<string> Providers     = new List<string>
+		public class UserProviderInfo
+		{
+			public string Name;
+			public string ConnectionString;
+		}
+
+		public static readonly List<UserProviderInfo> UserProviders = new List<UserProviderInfo>();
+		public static readonly List<string>           Providers     = new List<string>
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
@@ -155,8 +175,8 @@ namespace Tests
 				{
 					var list = Include.Intersect(
 						IncludeLinqService ? 
-							UserProviders.Concat(UserProviders.Select(p => p + ".LinqService")) :
-							UserProviders).
+							UserProviders.Select(p => p.Name).Concat(UserProviders.Select(p => p.Name + ".LinqService")) :
+							UserProviders.Select(p => p.Name)).
 						ToArray();
 
 					return list;
@@ -169,7 +189,7 @@ namespace Tests
 					if (Except != null && Except.Contains(providerName))
 						continue;
 
-					if (!UserProviders.Contains(providerName))
+					if (!UserProviders.Select(p => p.Name).Contains(providerName))
 						continue;
 
 					providers.Add(providerName);

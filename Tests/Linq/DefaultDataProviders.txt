@@ -14,6 +14,7 @@ SQLite
 --SqlServer.2005
 --SqlServer.2008
 --SqlServer.2012
+--SqlAzure.2012  * Server=tcp:----.database.windows.net,1433;Database=TestData;User ID=TestUser@----;Password=;Trusted_Connection=False;Encrypt=True;
 --MySql
 --Oracle
 --PostgreSQL

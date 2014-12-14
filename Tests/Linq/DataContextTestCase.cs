@@ -29,7 +29,7 @@ namespace Tests
 			if (include != null)
 			{
 				var list = include
-					.Intersect(TestBase.UserProviders)
+					.Intersect(TestBase.UserProviders.Select(p => p.Name))
 					.Select (GetContextType)
 					.ToArray();
 
@@ -40,7 +40,7 @@ namespace Tests
 			{
 				var list = TestBase.Providers
 					.Where  (providerName => except == null || !except.Contains(providerName))
-					.Where  (providerName => TestBase.UserProviders.Contains(providerName))
+					.Where  (providerName => TestBase.UserProviders.Select(p => p.Name).Contains(providerName))
 					.Select (GetContextType)
 					.ToArray();
 
