@@ -1536,12 +1536,12 @@ namespace LinqToDB.Linq.Builder
 						if (left.NodeType == ExpressionType.Convert)
 						{
 							l = ConvertToSql(context, operand);
-							r = MappingSchema.GetSqlValue(mapValue);
+							r = MappingSchema.GetSqlValue(type, mapValue);
 						}
 						else
 						{
 							r = ConvertToSql(context, operand);
-							l = MappingSchema.GetSqlValue(mapValue);
+							l = MappingSchema.GetSqlValue(type, mapValue);
 						}
 
 						return Convert(context, new SelectQuery.Predicate.ExprExpr(l, op, r));
