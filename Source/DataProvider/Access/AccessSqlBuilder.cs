@@ -5,15 +5,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -142,7 +141,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override bool ParenthesizeJoin()

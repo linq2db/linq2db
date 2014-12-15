@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

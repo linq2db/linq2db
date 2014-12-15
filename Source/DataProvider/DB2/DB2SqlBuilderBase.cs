@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 

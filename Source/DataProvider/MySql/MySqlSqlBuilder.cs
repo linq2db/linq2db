@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat { get { return "LIMIT {0}"; } }

@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleSqlBuilder : BasicSqlBuilder
 	{
-		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags) 
-			: base(sqlOptimizer, sqlProviderFlags)
+		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildSql()

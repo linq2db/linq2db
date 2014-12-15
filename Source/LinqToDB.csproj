@@ -330,6 +330,7 @@
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
+    <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />

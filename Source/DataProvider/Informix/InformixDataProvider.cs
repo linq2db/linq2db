@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Informix
 		
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

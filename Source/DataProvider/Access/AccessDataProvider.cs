@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

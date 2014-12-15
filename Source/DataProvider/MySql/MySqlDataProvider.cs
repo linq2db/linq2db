@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new MySqlSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

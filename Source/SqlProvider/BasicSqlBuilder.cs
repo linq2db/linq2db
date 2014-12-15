@@ -16,19 +16,21 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 		{
-			SqlOptimizer     = sqlOptimizer;
-			SqlProviderFlags = sqlProviderFlags;
+			SqlOptimizer        = sqlOptimizer;
+			SqlProviderFlags    = sqlProviderFlags;
+			ValueToSqlConverter = valueToSqlConverter;
 		}
 
-		protected SelectQuery      SelectQuery;
-		protected int              Indent;
-		protected Step             BuildStep;
-		protected ISqlOptimizer    SqlOptimizer;
-		protected SqlProviderFlags SqlProviderFlags;
-		protected StringBuilder    StringBuilder;
-		protected bool             SkipAlias;
+		protected SelectQuery         SelectQuery;
+		protected int                 Indent;
+		protected Step                BuildStep;
+		protected ISqlOptimizer       SqlOptimizer;
+		protected SqlProviderFlags    SqlProviderFlags;
+		protected ValueToSqlConverter ValueToSqlConverter;
+		protected StringBuilder       StringBuilder;
+		protected bool                SkipAlias;
 
 		#endregion
 
@@ -1813,7 +1815,7 @@ namespace LinqToDB.SqlProvider
 
 		static readonly Dictionary<Type,INullableValueReader> _nullableValueReader = new Dictionary<Type,INullableValueReader>();
 
-		readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
+		static readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
 		{
 			CurrencyDecimalDigits    = NumberFormatInfo.InvariantInfo.CurrencyDecimalDigits,
 			CurrencyDecimalSeparator = NumberFormatInfo.InvariantInfo.CurrencyDecimalSeparator,

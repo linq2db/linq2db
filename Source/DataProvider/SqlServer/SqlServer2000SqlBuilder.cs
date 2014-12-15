@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -8,8 +7,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2000SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SqlServer2000SqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -17,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)

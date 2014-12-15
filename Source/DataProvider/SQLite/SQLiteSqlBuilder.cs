@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -10,8 +9,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -27,7 +26,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";  } }

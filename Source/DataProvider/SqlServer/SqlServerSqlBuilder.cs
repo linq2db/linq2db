@@ -4,14 +4,13 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
