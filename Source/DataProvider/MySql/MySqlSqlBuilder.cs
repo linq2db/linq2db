@@ -267,18 +267,5 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
-
-		protected override void BuildString(string value)
-		{
-			base.BuildString(value.Replace("\\", "\\\\"));
-		}
-
-		protected override void BuildChar(char value)
-		{
-			if (value == '\\')
-				StringBuilder.Append("\\\\");
-			else
-				base.BuildChar(value);
-		}
 	}
 }

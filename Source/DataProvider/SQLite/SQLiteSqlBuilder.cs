@@ -40,47 +40,6 @@ namespace LinqToDB.DataProvider.SQLite
 				base.BuildFromClause();
 		}
 
-		protected override void BuildValue(object value)
-		{
-			if (value is Guid)
-			{
-				var s = ((Guid)value).ToString("N");
-
-				StringBuilder
-					.Append("Cast(x'")
-					.Append(s.Substring( 6,  2))
-					.Append(s.Substring( 4,  2))
-					.Append(s.Substring( 2,  2))
-					.Append(s.Substring( 0,  2))
-					.Append(s.Substring(10,  2))
-					.Append(s.Substring( 8,  2))
-					.Append(s.Substring(14,  2))
-					.Append(s.Substring(12,  2))
-					.Append(s.Substring(16, 16))
-					.Append("' as blob)");
-			}
-			else
-				base.BuildValue(value);
-		}
-
-		protected override void BuildDateTime(DateTime value)
-		{
-			if (value.Millisecond == 0)
-			{
-				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
-
-				StringBuilder.AppendFormat(format, value);
-			}
-			else
-			{
-				StringBuilder
-					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-					.Append('\'');
-			}
-		}
-
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)

@@ -1846,75 +1846,45 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildValue(object value)
 		{
-			if      (value == null)     StringBuilder.Append("NULL");
-			else if (value is string)   BuildString(value.ToString());
-			else if (value is char)     BuildChar  ((char)value);
-			else if (value is bool)     StringBuilder.Append((bool)value ? "1" : "0");
-			else if (value is DateTime) BuildDateTime((DateTime)value);
-			else if (value is Guid)     StringBuilder.Append('\'').Append(value).Append('\'');
-			else if (value is decimal)  StringBuilder.Append(((decimal)value).ToString(_numberFormatInfo));
-			else if (value is double)   StringBuilder.Append(((double) value).ToString(_numberFormatInfo));
-			else if (value is float)    StringBuilder.Append(((float)  value).ToString(_numberFormatInfo));
-			else if (value is DBNull)   StringBuilder.Append("NULL");
-			else
-			{
-				var type = value.GetType();
+			ValueToSqlConverter.Convert(StringBuilder, value);
 
-				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-				{
-					type = type.GetGenericArgumentsEx()[0];
-
-					if (type.IsEnumEx())
-					{
-						lock (_nullableValueReader)
-						{
-							INullableValueReader reader;
-
-							if (_nullableValueReader.TryGetValue(type, out reader) == false)
-							{
-								reader = (INullableValueReader)Activator.CreateInstance(typeof(NullableValueReader<>).MakeGenericType(type));
-								_nullableValueReader.Add(type, reader);
-							}
-
-							value = reader.GetValue(value);
-						}
-					}
-				}
-
-				StringBuilder.Append(value);
-			}
-		}
-
-		protected virtual void BuildString(string value)
-		{
-			StringBuilder
-				.Append('\'')
-				.Append(value.Replace("'", "''"))
-				.Append('\'');
-		}
-
-		protected virtual void BuildChar(char value)
-		{
-			StringBuilder.Append('\'');
-
-			if (value == '\'') StringBuilder.Append("''");
-			else               StringBuilder.Append(value);
-
-			StringBuilder.Append('\'');
-		}
-
-		protected virtual void BuildDateTime(DateTime value)
-		{
-			var format = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
-
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
-			}
-
-			StringBuilder.AppendFormat(format, value);
+//			if      (value == null)     StringBuilder.Append("NULL");
+//			else if (value is string)   BuildString(value.ToString());
+//			else if (value is char)     BuildChar  ((char)value);
+//			else if (value is bool)     StringBuilder.Append((bool)value ? "1" : "0");
+//			else if (value is DateTime) BuildDateTime((DateTime)value);
+//			else if (value is Guid)     StringBuilder.Append('\'').Append(value).Append('\'');
+//			else if (value is decimal)  StringBuilder.Append(((decimal)value).ToString(_numberFormatInfo));
+//			else if (value is double)   StringBuilder.Append(((double) value).ToString(_numberFormatInfo));
+//			else if (value is float)    StringBuilder.Append(((float)  value).ToString(_numberFormatInfo));
+//			else if (value is DBNull)   StringBuilder.Append("NULL");
+//			else
+//			{
+//				var type = value.GetType();
+//
+//				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+//				{
+//					type = type.GetGenericArgumentsEx()[0];
+//
+//					if (type.IsEnumEx())
+//					{
+//						lock (_nullableValueReader)
+//						{
+//							INullableValueReader reader;
+//
+//							if (_nullableValueReader.TryGetValue(type, out reader) == false)
+//							{
+//								reader = (INullableValueReader)Activator.CreateInstance(typeof(NullableValueReader<>).MakeGenericType(type));
+//								_nullableValueReader.Add(type, reader);
+//							}
+//
+//							value = reader.GetValue(value);
+//						}
+//					}
+//				}
+//
+//				StringBuilder.Append(value);
+//			}
 		}
 
 		#endregion

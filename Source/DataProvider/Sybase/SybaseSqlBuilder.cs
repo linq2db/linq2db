@@ -115,28 +115,6 @@ namespace LinqToDB.DataProvider.Sybase
 				BuildTableName(SelectQuery.From.Tables[0], true, false);
 		}
 
-		protected override void BuildString(string value)
-		{
-			foreach (var ch in value)
-			{
-				if (ch > 127)
-				{
-					StringBuilder.Append("N");
-					break;
-				}
-			}
-
-			base.BuildString(value);
-		}
-
-		protected override void BuildChar(char value)
-		{
-			if (value > 127)
-				StringBuilder.Append("N");
-
-			base.BuildChar(value);
-		}
-
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)

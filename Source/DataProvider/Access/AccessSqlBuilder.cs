@@ -321,7 +321,6 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -372,15 +371,6 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return value;
-		}
-
-		protected override void BuildDateTime(DateTime value)
-		{
-			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-				"#{0:yyyy-MM-dd}#" :
-				"#{0:yyyy-MM-dd HH:mm:ss}#";
-
-			StringBuilder.AppendFormat(format, value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

@@ -59,9 +59,13 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerDataProvider.SetUdtType(type, typeName.Substring(3).ToLower());
 				}
 			}
-			catch (Exception)
+			catch
 			{
 			}
+
+			SetValueToSqlConverter(typeof(String),   (sb,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),     (sb,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
@@ -87,6 +91,51 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return base.TryGetConvertExpression(@from, to);
 		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		{
+			foreach (var ch in value)
+			{
+				if (ch > 127)
+				{
+					stringBuilder.Append("N");
+					break;
+				}
+			}
+
+			stringBuilder
+				.Append('\'')
+				.Append(value.Replace("'", "''"))
+				.Append('\'');
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+		{
+			if (value > 127)
+				stringBuilder.Append("N");
+
+			stringBuilder.Append('\'');
+
+			if (value == '\'') stringBuilder.Append("''");
+			else               stringBuilder.Append(value);
+
+			stringBuilder.Append('\'');
+		}
+
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+		{
+			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+
+			if (value.Millisecond == 0)
+			{
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					"'{0:yyyy-MM-dd}'" :
+					"'{0:yyyy-MM-ddTHH:mm:ss}'";
+			}
+
+			stringBuilder.AppendFormat(format, value);
+		}
+
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema

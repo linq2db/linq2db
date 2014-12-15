@@ -17,25 +17,22 @@ namespace LinqToDB.SqlProvider
 
 		internal void SetDefauls()
 		{
-			if (_converters.Length == 0)
-			{
-				SetConverter(typeof(Boolean),  (sb,v) => sb.Append((bool)v ? "1" : "0"));
-				SetConverter(typeof(Char),     (sb,v) => BuildChar(sb, (char)v));
-				SetConverter(typeof(SByte),    (sb,v) => sb.Append((SByte) v));
-				SetConverter(typeof(Byte),     (sb,v) => sb.Append((Byte)  v));
-				SetConverter(typeof(Int16),    (sb,v) => sb.Append((Int16) v));
-				SetConverter(typeof(UInt16),   (sb,v) => sb.Append((UInt16)v));
-				SetConverter(typeof(Int32),    (sb,v) => sb.Append((Int32) v));
-				SetConverter(typeof(UInt32),   (sb,v) => sb.Append((UInt32)v));
-				SetConverter(typeof(Int64),    (sb,v) => sb.Append((Int64) v));
-				SetConverter(typeof(UInt64),   (sb,v) => sb.Append((UInt64)v));
-				SetConverter(typeof(Single),   (sb,v) => sb.Append(((float)  v).ToString(_numberFormatInfo)));
-				SetConverter(typeof(Double),   (sb,v) => sb.Append(((double) v).ToString(_numberFormatInfo)));
-				SetConverter(typeof(Decimal),  (sb,v) => sb.Append(((decimal)v).ToString(_numberFormatInfo)));
-				SetConverter(typeof(DateTime), (sb,v) => BuildDateTime(sb, (DateTime)v));
-				SetConverter(typeof(String),   (sb,v) => BuildString  (sb, v.ToString()));
-				SetConverter(typeof(Guid),     (sb,v) => sb.Append('\'').Append(v).Append('\''));
-			}
+			SetConverter(typeof(Boolean),  (sb,v) => sb.Append((bool)v ? "1" : "0"));
+			SetConverter(typeof(Char),     (sb,v) => BuildChar(sb, (char)v));
+			SetConverter(typeof(SByte),    (sb,v) => sb.Append((SByte) v));
+			SetConverter(typeof(Byte),     (sb,v) => sb.Append((Byte)  v));
+			SetConverter(typeof(Int16),    (sb,v) => sb.Append((Int16) v));
+			SetConverter(typeof(UInt16),   (sb,v) => sb.Append((UInt16)v));
+			SetConverter(typeof(Int32),    (sb,v) => sb.Append((Int32) v));
+			SetConverter(typeof(UInt32),   (sb,v) => sb.Append((UInt32)v));
+			SetConverter(typeof(Int64),    (sb,v) => sb.Append((Int64) v));
+			SetConverter(typeof(UInt64),   (sb,v) => sb.Append((UInt64)v));
+			SetConverter(typeof(Single),   (sb,v) => sb.Append(((float)  v).ToString(_numberFormatInfo)));
+			SetConverter(typeof(Double),   (sb,v) => sb.Append(((double) v).ToString(_numberFormatInfo)));
+			SetConverter(typeof(Decimal),  (sb,v) => sb.Append(((decimal)v).ToString(_numberFormatInfo)));
+			SetConverter(typeof(DateTime), (sb,v) => BuildDateTime(sb, (DateTime)v));
+			SetConverter(typeof(String),   (sb,v) => BuildString  (sb, v.ToString()));
+			SetConverter(typeof(Guid),     (sb,v) => sb.Append('\'').Append(v).Append('\''));
 		}
 
 		readonly ValueToSqlConverter[]                         _converters;

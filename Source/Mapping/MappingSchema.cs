@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Xml.Linq;
 
 #if !SILVERLIGHT && !NETFX_CORE
@@ -46,12 +47,12 @@ namespace LinqToDB.Mapping
 			if (schemas == null)
 			{
 				ss = Default._schemas;
-				ValueToSqlConverter = new ValueToSqlConverter(null);
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
 			}
 			else if (schemas.Length == 0)
 			{
 				ss = Array<MappingSchemaInfo>.Empty;
-				ValueToSqlConverter = new ValueToSqlConverter(null);
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
 			}
 			else if (schemas.Length == 1)
 			{
@@ -70,8 +71,18 @@ namespace LinqToDB.Mapping
 			Array.Copy(ss, 0, _schemas, 1, ss.Length);
 		}
 
-		internal readonly ValueToSqlConverter ValueToSqlConverter;
 		readonly MappingSchemaInfo[] _schemas;
+
+		#endregion
+
+		#region ValueToSqlConverter
+
+		internal readonly ValueToSqlConverter ValueToSqlConverter;
+
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, converter);
+		}
 
 		#endregion
 
@@ -664,6 +675,8 @@ namespace LinqToDB.Mapping
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
 			_schemas = new[] { mappingSchemaInfo };
+
+			ValueToSqlConverter = new ValueToSqlConverter();
 		}
 
 		public static MappingSchema Default = new DefaultMappingSchema();
