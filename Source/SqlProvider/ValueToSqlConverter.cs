@@ -12,7 +12,7 @@ namespace LinqToDB.SqlProvider
 	{
 		public ValueToSqlConverter(params ValueToSqlConverter[] converters)
 		{
-			_converters = converters ?? Array<ValueToSqlConverter>.Empty;
+			_baseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
 		internal void SetDefauls()
@@ -35,8 +35,9 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(Guid),     (sb,v) => sb.Append('\'').Append(v).Append('\''));
 		}
 
-		readonly ValueToSqlConverter[]                         _converters;
-		readonly Dictionary<Type,Action<StringBuilder,object>> _converterDictionary = new Dictionary<Type,Action<StringBuilder,object>>();
+		readonly ValueToSqlConverter[]                           _baseConverters;
+		readonly Dictionary<Type,  Action<StringBuilder,object>> _basicConverters    = new Dictionary<Type,  Action<StringBuilder,object>>();
+		readonly Dictionary<object,Action<StringBuilder,object>> _dataTypeConverters = new Dictionary<object,Action<StringBuilder,object>>();
 
 		Action<StringBuilder,object> _booleanConverter;
 		Action<StringBuilder,object> _charConverter;
@@ -115,35 +116,48 @@ namespace LinqToDB.SqlProvider
 			stringBuilder.AppendFormat(format, value);
 		}
 
-		interface INullableValueReader
+		public bool TryConvert(StringBuilder stringBuilder, DataType dataType, object value)
 		{
-			object GetValue(object value);
-		}
-
-		class NullableValueReader<T> : INullableValueReader where T : struct
-		{
-			public object GetValue(object value)
+			if (dataType != DataType.Undefined && _dataTypeConverters.Count > 0)
 			{
-				return ((T?)value).Value;
+				if (value == null)
+				{
+					stringBuilder.Append("NULL");
+					return true;
+				}
+
+				Action<StringBuilder,object> converter;
+
+				if (_dataTypeConverters.TryGetValue(new { type = value.GetType(), dataType = dataType }, out converter))
+				{
+					if (converter != null)
+					{
+						converter(stringBuilder, value);
+						return true;
+					}
+				}
 			}
+
+			return TryConvert(stringBuilder, value);
 		}
 
-		static readonly Dictionary<Type,INullableValueReader> _nullableValueReader = new Dictionary<Type,INullableValueReader>();
-
-		public StringBuilder Convert(StringBuilder stringBuilder, object value)
+		public bool TryConvert(StringBuilder stringBuilder, object value)
 		{
 			if (value == null)
-				return stringBuilder.Append("NULL");
+			{
+				stringBuilder.Append("NULL");
+				return true;
+			}
 
 			var type = value.GetType();
 
 			Action<StringBuilder,object> converter = null;
 
-			if (_converterDictionary.Count > 0)
+			if (_basicConverters.Count > 0 && !type.IsEnum)
 			{
 				switch (type.GetTypeCodeEx())
 				{
-					case TypeCode.DBNull   : return stringBuilder.Append("NULL");
+					case TypeCode.DBNull   : stringBuilder.Append("NULL");   return true;
 					case TypeCode.Boolean  : converter = _booleanConverter;  break;
 					case TypeCode.Char     : converter = _charConverter;     break;
 					case TypeCode.SByte    : converter = _sByteConverter;    break;
@@ -159,60 +173,48 @@ namespace LinqToDB.SqlProvider
 					case TypeCode.Decimal  : converter = _decimalConverter;  break;
 					case TypeCode.DateTime : converter = _dateTimeConverter; break;
 					case TypeCode.String   : converter = _stringConverter;   break;
-					default                : _converterDictionary.TryGetValue(type, out converter); break;
-				}
-			}
-
-			if (converter == null)
-			{
-				if (_converters.Length > 0)
-				{
-					foreach (var valueConverter in _converters)
-						if (valueConverter.HasConverter(type))
-							return valueConverter.Convert(stringBuilder, value);
-				}
-
-				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-				{
-					type = type.GetGenericArgumentsEx()[0];
-
-					if (type.IsEnumEx())
-					{
-						lock (_nullableValueReader)
-						{
-							INullableValueReader reader;
-
-							if (_nullableValueReader.TryGetValue(type, out reader) == false)
-							{
-								reader = (INullableValueReader)Activator.CreateInstance(typeof(NullableValueReader<>).MakeGenericType(type));
-								_nullableValueReader.Add(type, reader);
-							}
-
-							value = reader.GetValue(value);
-						}
-					}
+					default                : _basicConverters.TryGetValue(type, out converter); break;
 				}
 			}
 
 			if (converter != null)
 			{
 				converter(stringBuilder, value);
-				return stringBuilder;
+				return true;
 			}
 
-			return stringBuilder.Append(value);
+			if (_baseConverters.Length > 0)
+				foreach (var valueConverter in _baseConverters)
+					if (valueConverter.TryConvert(stringBuilder, value))
+						return true;
+
+			return false;
+		}
+
+		public StringBuilder Convert(StringBuilder stringBuilder, object value)
+		{
+			if (!TryConvert(stringBuilder, value))
+				stringBuilder.Append(value);
+			return stringBuilder;
+		}
+
+		public StringBuilder Convert(StringBuilder stringBuilder, DataType dataType, object value)
+		{
+			if (!TryConvert(stringBuilder, dataType, value))
+				stringBuilder.Append(value);
+			return stringBuilder;
 		}
 
 		public void SetConverter(Type type, Action<StringBuilder,object> converter)
 		{
 			if (converter == null)
 			{
-				if (_converterDictionary.ContainsKey(type))
-					_converterDictionary.Remove(type);
+				if (_basicConverters.ContainsKey(type))
+					_basicConverters.Remove(type);
 			}
 			else
 			{
-				_converterDictionary[type] = converter;
+				_basicConverters[type] = converter;
 
 				switch (type.GetTypeCodeEx())
 				{
@@ -235,16 +237,19 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public bool HasConverter(Type type)
+		public void SetConverter(Type type, DataType dataType, Action<StringBuilder,object> converter)
 		{
-			if (_converterDictionary.ContainsKey(type))
-				return true;
+			var key = new { type, dataType };
 
-			foreach (var valueConverter in _converters)
-				if (valueConverter.HasConverter(type))
-					return true;
-
-			return false;
+			if (converter == null)
+			{
+				if (_dataTypeConverters.ContainsKey(key))
+					_dataTypeConverters.Remove(key);
+			}
+			else
+			{
+				_dataTypeConverters[key] = converter;
+			}
 		}
 	}
 }

@@ -78,19 +78,6 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildFunction(func);
 		}
 
-		public virtual object ConvertBooleanValue(bool value)
-		{
-			return value ? 't' : 'f';
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)

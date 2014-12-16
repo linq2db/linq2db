@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using LinqToDB.Data;
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.DataProvider.MySql
 {
+	using Data;
+	using SqlProvider;
+
 	class MySqlBulkCopy : BasicBulkCopy
 	{
 		public MySqlBulkCopy(MySqlDataProvider dataProvider)
@@ -20,14 +20,14 @@ namespace LinqToDB.DataProvider.MySql
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var sqlBuilder = _dataProvider.CreateSqlBuilder();
-			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, descriptor);
-			var sb         = new StringBuilder();
-			var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-			var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
-			var rowsCopied = new BulkCopyRowsCopied();
+			var sqlBuilder     = _dataProvider.CreateSqlBuilder();
+			var descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName      = GetTableName(sqlBuilder, descriptor);
+			var sb             = new StringBuilder();
+			var valueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
+			var columns        = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+			var pname          = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+			var rowsCopied     = new BulkCopyRowsCopied();
 
 			sb
 				.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
@@ -69,61 +69,13 @@ namespace LinqToDB.DataProvider.MySql
 				{
 					var value = column.GetValue(item);
 
-					if (value == null)
+					if (!valueConverter.TryConvert(sb, column.DataType, value))
 					{
-						sb.Append("NULL");
+						var name = pname + ++pidx;
+
+						sb.Append(name);
+						parms.Add(new DataParameter("p" + pidx, value, column.DataType));
 					}
-					else
-						switch (Type.GetTypeCode(value.GetType()))
-						{
-							case TypeCode.DBNull:
-								sb.Append("NULL");
-								break;
-
-							case TypeCode.String:
-								var isString = false;
-
-								switch (column.DataType)
-								{
-									case DataType.NVarChar:
-									case DataType.Char:
-									case DataType.VarChar:
-									case DataType.NChar:
-									case DataType.Undefined:
-										isString = true;
-										break;
-								}
-
-								if (isString) goto case TypeCode.Int32;
-								goto default;
-
-							case TypeCode.Boolean:
-							case TypeCode.Char:
-							case TypeCode.SByte:
-							case TypeCode.Byte:
-							case TypeCode.Int16:
-							case TypeCode.UInt16:
-							case TypeCode.Int32:
-							case TypeCode.UInt32:
-							case TypeCode.Int64:
-							case TypeCode.UInt64:
-							case TypeCode.Single:
-							case TypeCode.Double:
-							case TypeCode.Decimal:
-							case TypeCode.DateTime:
-								//SetParameter(dataParam, "", column.DataType, value);
-
-								buildValue(value);
-								break;
-
-							default:
-								var name = pname + ++pidx;
-
-								sb.Append(name);
-								parms.Add(new DataParameter("p" + pidx, value, column.DataType));
-
-								break;
-						}
 
 					sb.Append(",");
 				}

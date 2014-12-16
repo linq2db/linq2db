@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SetDataType(typeof(DateTime), DataType.DateTime);
 
+			SetValueToSqlConverter(typeof(bool),     (sb,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(Guid),     (sb,v) => sb.Append("'").Append(((Guid)v).ToString("B")).Append("'"));
 			SetValueToSqlConverter(typeof(DateTime), (sb,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 		}
 

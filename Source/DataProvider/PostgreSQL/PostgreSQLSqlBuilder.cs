@@ -52,14 +52,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
 
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)

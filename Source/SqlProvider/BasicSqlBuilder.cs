@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
 	using Common;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -1405,7 +1403,7 @@ namespace LinqToDB.SqlProvider
 									if (value is ISqlExpression)
 										BuildExpression((ISqlExpression)value);
 									else
-										BuildValue(value);
+										BuildValue(field.DataType, value);
 
 									StringBuilder.Append(", ");
 								}
@@ -1437,7 +1435,7 @@ namespace LinqToDB.SqlProvider
 										else
 										{
 											StringBuilder.Append(" = ");
-											BuildValue(value);
+											BuildValue(field.DataType, value);
 										}
 
 										StringBuilder.Append(" AND ");
@@ -1484,6 +1482,7 @@ namespace LinqToDB.SqlProvider
 			var hasNull    = false;
 			var count      = 0;
 			var longList   = false;
+			var dataType   = DataType.Undefined;
 
 			foreach (var value in values)
 			{
@@ -1514,12 +1513,18 @@ namespace LinqToDB.SqlProvider
 					firstValue = false;
 					BuildExpression(GetPrecedence(predicate), predicate.Expr1);
 					StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
+
+					switch (predicate.Expr1.ElementType)
+					{
+						case QueryElementType.SqlField     : dataType = ((SqlField)    predicate.Expr1).DataType; break;
+						case QueryElementType.SqlParameter : dataType = ((SqlParameter)predicate.Expr1).DataType; break;
+					}
 				}
 
 				if (value is ISqlExpression)
 					BuildExpression((ISqlExpression)value);
 				else
-					BuildValue(value);
+					BuildValue(dataType, value);
 
 				StringBuilder.Append(", ");
 			}
@@ -1702,7 +1707,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlValue:
-					BuildValue(((SqlValue)expr).Value);
+					BuildValue(DataType.Undefined, ((SqlValue)expr).Value);
 					break;
 
 				case QueryElementType.SqlExpression:
@@ -1749,7 +1754,7 @@ namespace LinqToDB.SqlProvider
 							StringBuilder.Append(name);
 						}
 						else
-							BuildValue(parm.Value);
+							BuildValue(parm.DataType, parm.Value);
 					}
 
 					break;
@@ -1800,91 +1805,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildValue
 
-		interface INullableValueReader
+		protected void BuildValue(DataType dataType, object value)
 		{
-			object GetValue(object value);
-		}
-
-		class NullableValueReader<T> : INullableValueReader where T : struct
-		{
-			public object GetValue(object value)
-			{
-				return ((T?)value).Value;
-			}
-		}
-
-		static readonly Dictionary<Type,INullableValueReader> _nullableValueReader = new Dictionary<Type,INullableValueReader>();
-
-		static readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
-		{
-			CurrencyDecimalDigits    = NumberFormatInfo.InvariantInfo.CurrencyDecimalDigits,
-			CurrencyDecimalSeparator = NumberFormatInfo.InvariantInfo.CurrencyDecimalSeparator,
-			CurrencyGroupSeparator   = NumberFormatInfo.InvariantInfo.CurrencyGroupSeparator,
-			CurrencyGroupSizes       = NumberFormatInfo.InvariantInfo.CurrencyGroupSizes,
-			CurrencyNegativePattern  = NumberFormatInfo.InvariantInfo.CurrencyNegativePattern,
-			CurrencyPositivePattern  = NumberFormatInfo.InvariantInfo.CurrencyPositivePattern,
-			CurrencySymbol           = NumberFormatInfo.InvariantInfo.CurrencySymbol,
-			NaNSymbol                = NumberFormatInfo.InvariantInfo.NaNSymbol,
-			NegativeInfinitySymbol   = NumberFormatInfo.InvariantInfo.NegativeInfinitySymbol,
-			NegativeSign             = NumberFormatInfo.InvariantInfo.NegativeSign,
-			NumberDecimalDigits      = NumberFormatInfo.InvariantInfo.NumberDecimalDigits,
-			NumberDecimalSeparator   = ".",
-			NumberGroupSeparator     = NumberFormatInfo.InvariantInfo.NumberGroupSeparator,
-			NumberGroupSizes         = NumberFormatInfo.InvariantInfo.NumberGroupSizes,
-			NumberNegativePattern    = NumberFormatInfo.InvariantInfo.NumberNegativePattern,
-			PercentDecimalDigits     = NumberFormatInfo.InvariantInfo.PercentDecimalDigits,
-			PercentDecimalSeparator  = ".",
-			PercentGroupSeparator    = NumberFormatInfo.InvariantInfo.PercentGroupSeparator,
-			PercentGroupSizes        = NumberFormatInfo.InvariantInfo.PercentGroupSizes,
-			PercentNegativePattern   = NumberFormatInfo.InvariantInfo.PercentNegativePattern,
-			PercentPositivePattern   = NumberFormatInfo.InvariantInfo.PercentPositivePattern,
-			PercentSymbol            = NumberFormatInfo.InvariantInfo.PercentSymbol,
-			PerMilleSymbol           = NumberFormatInfo.InvariantInfo.PerMilleSymbol,
-			PositiveInfinitySymbol   = NumberFormatInfo.InvariantInfo.PositiveInfinitySymbol,
-			PositiveSign             = NumberFormatInfo.InvariantInfo.PositiveSign,
-		};
-
-		protected virtual void BuildValue(object value)
-		{
-			ValueToSqlConverter.Convert(StringBuilder, value);
-
-//			if      (value == null)     StringBuilder.Append("NULL");
-//			else if (value is string)   BuildString(value.ToString());
-//			else if (value is char)     BuildChar  ((char)value);
-//			else if (value is bool)     StringBuilder.Append((bool)value ? "1" : "0");
-//			else if (value is DateTime) BuildDateTime((DateTime)value);
-//			else if (value is Guid)     StringBuilder.Append('\'').Append(value).Append('\'');
-//			else if (value is decimal)  StringBuilder.Append(((decimal)value).ToString(_numberFormatInfo));
-//			else if (value is double)   StringBuilder.Append(((double) value).ToString(_numberFormatInfo));
-//			else if (value is float)    StringBuilder.Append(((float)  value).ToString(_numberFormatInfo));
-//			else if (value is DBNull)   StringBuilder.Append("NULL");
-//			else
-//			{
-//				var type = value.GetType();
-//
-//				if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-//				{
-//					type = type.GetGenericArgumentsEx()[0];
-//
-//					if (type.IsEnumEx())
-//					{
-//						lock (_nullableValueReader)
-//						{
-//							INullableValueReader reader;
-//
-//							if (_nullableValueReader.TryGetValue(type, out reader) == false)
-//							{
-//								reader = (INullableValueReader)Activator.CreateInstance(typeof(NullableValueReader<>).MakeGenericType(type));
-//								_nullableValueReader.Add(type, reader);
-//							}
-//
-//							value = reader.GetValue(value);
-//						}
-//					}
-//				}
-//
-//				StringBuilder.Append(value);
-//			}
+			ValueToSqlConverter.Convert(StringBuilder, dataType, value);
 		}
 
 		#endregion
@@ -1940,7 +1863,7 @@ namespace LinqToDB.SqlProvider
 					if (SqlExpression.NeedsEqual(func.Parameters[i]))
 					{
 						StringBuilder.Append(" = ");
-						BuildValue(true);
+						BuildValue(DataType.Undefined, true);
 					}
 
 					if (StringBuilder.Length - len > 20)
@@ -2192,7 +2115,7 @@ namespace LinqToDB.SqlProvider
 				var p = SelectQuery.Select.SkipValue as SqlParameter;
 
 				if (p != null && !p.IsQueryParameter && SelectQuery.Select.TakeValue is SqlValue)
-					BuildValue((int)p.Value + (int)((SqlValue)(SelectQuery.Select.TakeValue)).Value);
+					BuildValue(DataType.Undefined, (int)p.Value + (int)((SqlValue)(SelectQuery.Select.TakeValue)).Value);
 				else
 					BuildExpression(Add<int>(SelectQuery.Select.SkipValue, SelectQuery.Select.TakeValue));
 
@@ -2537,19 +2460,6 @@ namespace LinqToDB.SqlProvider
 		public virtual string  Name
 		{
 			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
-		}
-
-		#endregion
-
-		#region Internal Helpers
-
-		internal static Action<object> GetBuildValue(ISqlBuilder sqlBuilder, StringBuilder sb)
-		{
-			var bsb = (BasicSqlBuilder)sqlBuilder;
-
-			bsb.StringBuilder = sb;
-
-			return bsb.BuildValue;
 		}
 
 		#endregion

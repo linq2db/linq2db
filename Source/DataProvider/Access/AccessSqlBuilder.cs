@@ -289,16 +289,6 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else if (value is Guid)
-				StringBuilder.Append("'").Append(((Guid)value).ToString("B")).Append("'");
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildUpdateClause()
 		{
 			base.BuildFromClause();
