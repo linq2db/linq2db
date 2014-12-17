@@ -112,6 +112,7 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeBulkCopy.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteBulkCopy.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlOptimizer.cs" />
