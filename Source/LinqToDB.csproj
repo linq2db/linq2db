@@ -110,6 +110,7 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeBulkCopy.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
