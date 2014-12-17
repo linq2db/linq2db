@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.DataProvider
 {
@@ -241,6 +242,65 @@ namespace LinqToDB.DataProvider
 			if (helper.CurrentCount > 0)
 			{
 				helper.StringBuilder.Length -= " UNION ALL".Length;
+				helper.Execute();
+			}
+
+			return helper.RowsCopied;
+		}
+
+		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		{
+			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+
+			helper.StringBuilder
+				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.Append("(");
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\t")
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(",");
+
+			helper.StringBuilder.Length--;
+			helper.StringBuilder
+				.AppendLine()
+				.AppendLine(")")
+				.AppendLine("SELECT * FROM")
+				.Append("(");
+
+			helper.SetHeader();
+
+			foreach (var item in source)
+			{
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\tSELECT ");
+				helper.BuildColumns(item);
+				helper.StringBuilder.Append(from);
+				helper.StringBuilder.Append(" UNION ALL");
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				{
+					helper.StringBuilder.Length -= " UNION ALL".Length;
+					helper.StringBuilder
+						.AppendLine()
+						.Append(")");
+					if (!helper.Execute())
+						return helper.RowsCopied;
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				helper.StringBuilder.Length -= " UNION ALL".Length;
+				helper.StringBuilder
+					.AppendLine()
+					.Append(")");
 				helper.Execute();
 			}
 

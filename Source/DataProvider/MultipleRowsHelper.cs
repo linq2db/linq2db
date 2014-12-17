@@ -55,10 +55,10 @@ namespace LinqToDB.DataProvider
 
 				if (!ValueConverter.TryConvert(StringBuilder, column.DataType, value))
 				{
-					var name = ParameterName + ++ParameterIndex;
+					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					StringBuilder.Append(name);
-					Parameters.Add(new DataParameter("p" + ParameterIndex, value, column.DataType));
+					Parameters.Add(new DataParameter(name, value, column.DataType));
 				}
 
 				StringBuilder.Append(",");

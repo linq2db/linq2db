@@ -88,6 +88,7 @@
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
     <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
+    <Compile Include="DataProvider\Informix\InformixBulkCopy.cs" />
     <Compile Include="DataProvider\MultipleRowsHelper.cs" />
     <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />

@@ -98,15 +98,10 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		MySqlBulkCopy _bulkCopy;
-
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new MySqlBulkCopy();
-
-			return _bulkCopy.BulkCopy(
+			return new MySqlBulkCopy().BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
 				dataConnection,
 				options,
