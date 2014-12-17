@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					StringBuilder.Append(name);
-					Parameters.Add(new DataParameter(name, value, column.DataType));
+					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value, column.DataType));
 				}
 
 				StringBuilder.Append(",");
