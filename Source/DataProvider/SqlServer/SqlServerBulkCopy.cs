@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using LinqToDB.DataProvider.SQLite;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -80,6 +81,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return MultipleRowsCopy(dataConnection, options, source);
+		}
+
+		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
+			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			switch (((SqlServerDataProvider)dataConnection.DataProvider).Version)
+			{
+				case SqlServerVersion.v2000:
+				case SqlServerVersion.v2005: return MultipleRowsCopy2(dataConnection, options, source, "");
+			}
+
+			return MultipleRowsCopy1(dataConnection, options, source);
 		}
 	}
 }

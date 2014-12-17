@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.MySql
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new MySqlBulkCopy(this);
+				_bulkCopy = new MySqlBulkCopy();
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,

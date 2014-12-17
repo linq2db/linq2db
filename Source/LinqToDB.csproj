@@ -57,6 +57,7 @@
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
+    <Compile Include="DataProvider\Access\AccessBulkCopy.cs" />
     <Compile Include="DataProvider\BasicBulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2BulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSchemaProvider.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
     <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
+    <Compile Include="DataProvider\MultipleRowsHelper.cs" />
     <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />

@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this, GetConnectionType());
+				_bulkCopy = new DB2BulkCopy(GetConnectionType());
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
