@@ -101,6 +101,7 @@
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLBulkCopy.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlOptimizer.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLTools.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
