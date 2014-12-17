@@ -13,10 +13,11 @@ using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SQLiteTest : TestBase
 	{

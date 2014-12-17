@@ -14,10 +14,11 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using NpgsqlTypes;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class PostgreSQLTest : DataProviderTestBase
 	{

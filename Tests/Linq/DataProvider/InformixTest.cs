@@ -6,10 +6,11 @@ using LinqToDB.Data;
 using IBM.Data.Informix;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class InformixTest : DataProviderTestBase
 	{

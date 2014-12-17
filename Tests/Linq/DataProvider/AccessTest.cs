@@ -13,10 +13,11 @@ using LinqToDB.DataProvider.Access;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class AccessTest : DataProviderTestBase
 	{
@@ -329,33 +330,6 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
-					db.Execute(@"
-INSERT INTO [LinqDataTypes]
-(
-	[ID],
-	[MoneyValue],
-	[DateTimeValue],
-	[BoolValue],
-	[GuidValue],
-	[BinaryValue],
-	[SmallIntValue]
-)
-values
-(4000,1000,#2001-01-11 01:11:21#,True,'{a95c12c9-b5a4-49ec-ab43-167446be0d96}',NULL,0);
-INSERT INTO [LinqDataTypes]
-(
-	[ID],
-	[MoneyValue],
-	[DateTimeValue],
-	[BoolValue],
-	[GuidValue],
-	[BinaryValue],
-	[SmallIntValue]
-)
-values
-(4001,1001,#2001-01-11 01:11:21#,True,'{9083d25e-73ec-4a52-bd35-e47493f85e32}',NULL,1)");
-
-
 					db.BulkCopy(
 						new BulkCopyOptions { BulkCopyType = bulkCopyType },
 						Enumerable.Range(0, 10).Select(n =>

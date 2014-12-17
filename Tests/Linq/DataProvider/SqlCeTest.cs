@@ -14,10 +14,11 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SqlCeTest : DataProviderTestBase
 	{
