@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Xml;
 using System.Xml.Linq;
@@ -6,6 +7,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -175,6 +177,20 @@ namespace LinqToDB.DataProvider.Sybase
 
 				default                     : base.SetParameterType(parameter, dataType); break;
 			}
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new SybaseBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
 		}
 
 		#endregion
