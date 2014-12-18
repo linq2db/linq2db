@@ -16,11 +16,8 @@ using Tests.Model;
 namespace Tests.DataProvider
 {
     using System.Collections.Generic;
-    using System.Data;
-    using System.Data.SqlClient;
-    using System.Linq.Expressions;
     using System.Reflection;
-
+    using System.Threading.Tasks;
     using LinqToDB.DataProvider.SapHana;
 
     [TestFixture]
@@ -500,6 +497,7 @@ namespace Tests.DataProvider
             }
         }
 
+
         [Test, IncludeDataContextSource(CurrentProvider)]
         public void CalculationViewLinqQuery(string context)
         {
@@ -512,43 +510,41 @@ namespace Tests.DataProvider
             }
         }
 
+        [Test, IncludeDataContextSource(CurrentProvider)]
+        public void CalculationViewLinqQueryCaching(string context)
+        {
+            using (var ctx = new CalcViewInputParameters(context))
+            {
+                var query1 = ctx.CaParamTest(10, 10.01, "mandatory1", null, null, "optional1");
+                var query2 = ctx.CaParamTest(100, 100.001, "mandatory2", null, 10.1, "optional2");
+                Assert.That(query1.SqlText, Is.Not.EqualTo(query2.SqlText));
+            }
+        }
 
         public class CalcViewInputParameters : DataConnection
         {
             public CalcViewInputParameters(string configuration) : base(configuration)
             {
-                
-            }
 
-            public LinqToDB.ITable<VDT_CA_PARAM_TEST> CaParamTest(
-                int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
-                int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
-            {
-                return GetCalculationTable<VDT_CA_PARAM_TEST>(new List<DataParameter>
-                    {
-                        new DataParameter("ipIntMandatory", ipIntMandatory),
-                        new DataParameter("ipDoubleMandatory", ipDoubleMandatory),
-                        new DataParameter("ipStringMandatory", ipStringMandatory),
-                        new DataParameter("ipIntOptional", ipIntOptional),
-                        new DataParameter("ipDoubleOptional", ipDoubleOptional),
-                        new DataParameter("ipStringOptional", ipStringOptional)
-                    });
             }
 
             [CalculationViewInputParametersExpression]
-            private LinqToDB.ITable<TTable> GetCalculationTable<TTable>(IEnumerable<DataParameter> pList) where TTable: class
+            public LinqToDB.ITable<FIT_CA_PARAM_TEST> CaParamTest(
+                int ipIntMandatory, double ipDoubleMandatory, string ipStringMandatory,
+                int? ipIntOptional, double? ipDoubleOptional, string ipStringOptional)
             {
-                return this.GetTable<TTable>(
+                return GetTable<FIT_CA_PARAM_TEST>(
                     this,
-                    ((MethodInfo) (MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable)),
-                    pList
-                    );
+                    (MethodInfo) MethodBase.GetCurrentMethod(),
+                    ipIntMandatory, ipDoubleMandatory,
+                    ipStringMandatory, ipIntOptional,
+                    ipDoubleOptional, ipStringOptional);
             }
-
         }
 
-        [Table(Schema = "_SYS_BIC", Name = "VDT/CA_PARAM_TEST")]
-        public partial class VDT_CA_PARAM_TEST
+
+        [Table(Schema = "_SYS_BIC", Name = "FIT/CA_PARAM_TEST")]
+        public partial class FIT_CA_PARAM_TEST
         {
             [Column, NotNull]
             public int commonMiscConstantId { get; set; }

@@ -13,15 +13,21 @@ namespace LinqToDB.DataProvider.SapHana
 
     class SapHanaSchemaProvider : SchemaProviderBase
     {
-        private String _defaultSchema;
+        protected String DefaultSchema;
+        protected GetHanaSchemaOptions HanaSchemaOptions;
+
+        public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
+        {
+            HanaSchemaOptions = options as GetHanaSchemaOptions;
+            DefaultSchema = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
+            return base.GetSchema(dataConnection, options);
+        }
 
         protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
         {
-            _defaultSchema = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
-
             var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-            var dt =  dts.AsEnumerable()
+            var dt = dts.AsEnumerable()
                 .Select(t => new DataTypeInfo
                 {
                     TypeName = t.Field<string>("TypeName"),
@@ -54,7 +60,7 @@ namespace LinqToDB.DataProvider.SapHana
 		        {
 		            CatalogName = null,
                     Description = comments,
-                    IsDefaultSchema = schemaName == _defaultSchema,
+                    IsDefaultSchema = schemaName == DefaultSchema,
                     IsView = !isTable,
                     SchemaName = schemaName,
                     TableID = schemaName + '.' + tableName,
@@ -72,7 +78,7 @@ namespace LinqToDB.DataProvider.SapHana
                         t.COMMENTS,
                         CAST(1 AS TINYINT) AS IS_TABLE
                     FROM SYS.TABLES AS t
-                    WHERE t.SCHEMA_NAME != '_SYS_BIC'
+                    WHERE t.SCHEMA_NAME != '_SYS_BIC' AND t.IS_USER_DEFINED_TYPE = 'FALSE'
                     UNION ALL
                     SELECT 
                         v.SCHEMA_NAME,
@@ -220,7 +226,7 @@ namespace LinqToDB.DataProvider.SapHana
                     ProcedureID = String.Concat(schema, '.', procedure),
                     CatalogName = null,
                     IsAggregateFunction = false,
-                    IsDefaultSchema = schema == _defaultSchema,
+                    IsDefaultSchema = schema == DefaultSchema,
                     IsFunction = isFunction,
                     IsTableFunction = isTableFunction,
                     ProcedureDefinition = definition,
@@ -254,7 +260,7 @@ namespace LinqToDB.DataProvider.SapHana
                 var schema = rd.GetString(0);
                 var procedure = rd.GetString(1);
                 var parameter = rd.GetString(2);
-                var dataType = rd.GetString(3);
+                var dataType = rd.IsDBNull(3) ? null : rd.GetString(3);
                 var position = rd.GetInt32(4);
                 var paramType = rd.GetString(5);
                 var isResult = rd.GetBoolean(6);
@@ -338,11 +344,13 @@ namespace LinqToDB.DataProvider.SapHana
 
         protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
         {
-            switch (dataType.ToLower())
+            if (dataType != null)
             {
-                case "tinyint": return typeof(byte);
+                switch (dataType.ToLower())
+                {
+                    case "tinyint": return typeof(byte);
+                }
             }
-
             return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
         }
 
@@ -366,11 +374,11 @@ namespace LinqToDB.DataProvider.SapHana
                 case "TIMESTAMP": return DataType.Timestamp;
 
                 case "CHAR": return DataType.Char;
-                case "VARCHAR": 
-                case "ALPHANUM": return DataType.VarChar;
+                case "VARCHAR": return DataType.VarChar;
                 case "TEXT": return DataType.Text;                
                 case "NCHAR": return DataType.NChar;
-                case "SHORTTEXT": 
+                case "ALPHANUM":
+                case "SHORTTEXT":                 
                 case "NVARCHAR": return DataType.NVarChar;
                 
 
@@ -379,7 +387,7 @@ namespace LinqToDB.DataProvider.SapHana
                 
                 case "BLOB": return DataType.Blob;
                 case "CLOB": return DataType.Text;
-                case "NCLOB": return DataType.NText;
+                case "NCLOB": 
                 case "BINTEXT": return DataType.NText;
 
                 case "ST_POINT":
@@ -390,7 +398,6 @@ namespace LinqToDB.DataProvider.SapHana
 			return DataType.Undefined;
 		}
 
-
         protected override void LoadProcedureTableSchema(DataConnection dataConnection, ProcedureSchema procedure, string commandText,
             List<TableSchema> tables)
         {
@@ -400,17 +407,10 @@ namespace LinqToDB.DataProvider.SapHana
             if (procedure.IsTableFunction)
             {
                 commandText = "SELECT * FROM " + commandText + "(";
-
-                for (var i = 0; i < procedure.Parameters.Count; i++)
-                {
-                    if (i != 0)
-                        commandText += ",";
-                    object value = null;
-                    var t = procedure.Parameters[i].SystemType;
-                    if (t.IsValueType)
-                        value = Activator.CreateInstance(t);
-                    commandText += "" + value;
-                }
+                commandText += String.Join(",", procedure.Parameters.Select(p => (
+                    p.SystemType == typeof (DateTime)
+                        ? "'" + DateTime.Now + "'"
+                        : DefaultValue.GetValue(p.SystemType)) ?? "''"));
 
                 commandText += ")";
                 commandType = CommandType.Text;
@@ -419,31 +419,16 @@ namespace LinqToDB.DataProvider.SapHana
             else
             {
                 commandType = CommandType.StoredProcedure;
-                parameters = procedure.Parameters.Select(p =>
-                    new DataParameter
-                    {
-                        Name = p.ParameterName,
-                        Value =
-                            p.SystemType == typeof(string)
-                                ? ""
-                                : p.SystemType == typeof(DateTime)
-                                    ? DateTime.Now
-                                    : DefaultValue.GetValue(p.SystemType),
-                        DataType = p.DataType,
-                        Size = p.Size,
-                        Direction =
-                            p.IsIn
-                                ? p.IsOut
-                                    ? ParameterDirection.InputOutput
-                                    : ParameterDirection.Input
-                                : ParameterDirection.Output
-                    }).ToArray();
+                parameters = HanaSchemaOptions != null
+                    ? (HanaSchemaOptions.GetStoredProcedureParameters(procedure) ??
+                       GetStoredProcedureDataParameters(procedure))
+                    : GetStoredProcedureDataParameters(procedure);
             }
 
             try
             {
                 var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
-
+                procedure.IsLoaded = true;
                 if (st != null)
                 {
                     procedure.ResultTable = new TableSchema
@@ -473,6 +458,47 @@ namespace LinqToDB.DataProvider.SapHana
             }
         }
 
+        private static DataParameter[] GetStoredProcedureDataParameters(ProcedureSchema procedure)
+        {
+            return procedure.Parameters.Select(p =>
+                new DataParameter
+                {
+                    Name = p.ParameterName,
+                    Value =
+                        p.SystemType == typeof (string)
+                            ? ""
+                            : p.SystemType == typeof (DateTime)
+                                ? DateTime.Now
+                                : DefaultValue.GetValue(p.SystemType),
+                    DataType = p.DataType,
+                    Size = p.Size,
+                    Direction =
+                        p.IsIn
+                            ? p.IsOut
+                                ? ParameterDirection.InputOutput
+                                : ParameterDirection.Input
+                            : ParameterDirection.Output
+                }).ToArray();
+        }
+
+        protected override DataTable GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters)
+        {
+            //bug in drivers, SchemaOnly executes statement
+            dataConnection.BeginTransaction();
+            try
+            {
+                using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
+                {
+                    return rd.Reader.GetSchemaTable();
+                }
+            }
+            finally
+            {
+                dataConnection.RollbackTransaction();
+            }
+        }
+
+
         private IEnumerable<TableInfo> GetViewsWithParameters(DataConnection dataConnection)
         {
             var query = dataConnection.Query(x =>
@@ -483,7 +509,7 @@ namespace LinqToDB.DataProvider.SapHana
                 {
                     CatalogName = null,
                     Description = x.IsDBNull(2) ? null : x.GetString(2),
-                    IsDefaultSchema = schemaName == _defaultSchema,
+                    IsDefaultSchema = schemaName == DefaultSchema,
                     IsView = true,
                     SchemaName = schemaName,
                     TableID = schemaName + '.' + tableName,

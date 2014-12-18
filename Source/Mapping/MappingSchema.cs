@@ -863,15 +863,13 @@ namespace LinqToDB.Mapping
 			if (_entityDescriptors == null)
 				_entityDescriptors = new ConcurrentDictionary<Type,EntityDescriptor>();
 
-			EntityDescriptor ed;
-
-			if (!_entityDescriptors.TryGetValue(type, out ed))
-			{
-				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
-				ed.InitInheritanceMapping();
-			}
-
-			return ed;
+            return _entityDescriptors.GetOrAdd(type, t =>
+            {                
+                var descr = new EntityDescriptor(this, t);
+                //initialize before returing
+                descr.InitInheritanceMapping();
+                return descr;
+            });
 		}
 
 		#endregion

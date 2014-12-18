@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.SapHana
 
         public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-            return new SapHanaSchemaProvider();
+            return new SapHanaOdbcSchemaProvider();
 		}
 
         public override ISqlBuilder CreateSqlBuilder()
@@ -128,21 +128,6 @@ namespace LinqToDB.DataProvider.SapHana
 		    }
             base.SetParameterType(parameter, dataType);
 		}
-
-        //private SapHanaBulkCopy _bulkCopy;
-
-        //public override BulkCopyRowsCopied BulkCopy<T>(
-        //    [JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
-        //{
-        //    if (_bulkCopy == null)
-        //        _bulkCopy = new SapHanaBulkCopy(this, GetConnectionType());
-
-        //    return _bulkCopy.BulkCopy(
-        //        options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
-        //        dataConnection,
-        //        options,
-        //        source);
-        //}
 
 	}
 }

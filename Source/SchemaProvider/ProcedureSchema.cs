@@ -13,6 +13,7 @@ namespace LinqToDB.SchemaProvider
 		public bool   IsTableFunction     { get; set; }
 		public bool   IsAggregateFunction { get; set; }
 		public bool   IsDefaultSchema     { get; set; }
+        public bool   IsLoaded            { get; set; }
 
 		public TableSchema           ResultTable     { get; set; }
 		public Exception             ResultException { get; set; }

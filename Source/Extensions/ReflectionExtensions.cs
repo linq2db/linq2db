@@ -465,15 +465,12 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		static readonly Dictionary<Type, object[]> _typeAttributesInternal = new Dictionary<Type, object[]>(10);
+        static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ConcurrentDictionary<Type, object[]>();
 
 		static void GetAttributesTreeInternal(List<object> list, Type type)
 		{
-			object[] attrs;
 
-			if (!_typeAttributesInternal.TryGetValue(type, out attrs))
-				_typeAttributesInternal.Add(type, attrs = type.GetCustomAttributesEx(false));
-
+            var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributesEx(false));
 			list.AddRange(attrs);
 
 			if (type.IsInterfaceEx())
