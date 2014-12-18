@@ -168,6 +168,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 				IsFunction      = p.IsFunction,
 				IsTableFunction = p.IsTableFunction,
 				IsDefaultSchema = p.IsDefaultSchema,
+				IsLoaded        = p.IsLoaded,
 				ResultTable     = p.ResultTable == null ? null :
 					new Table
 					{
@@ -559,6 +560,7 @@ public partial class Procedure : Method
 	public bool   IsFunction      { get; set; }
 	public bool   IsTableFunction { get; set; }
 	public bool   IsDefaultSchema { get; set; }
+	public bool   IsLoaded        { get; set; }
 
 	public Table           ResultTable     { get; set; }
 	public Exception       ResultException { get; set; }

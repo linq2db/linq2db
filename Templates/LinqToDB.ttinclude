@@ -321,10 +321,8 @@ void GenerateTypesFromMetadata()
 		var funcs = new MemberGroup();
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
-		foreach (var p in Procedures.Values)
+		foreach (var p in Procedures.Values.Where(proc => proc.IsLoaded))
 		{
-			if (p.ResultTable == null && p.ResultException != null)
-				continue;
 
 			var proc = new MemberGroup { Region = p.Name };
 
