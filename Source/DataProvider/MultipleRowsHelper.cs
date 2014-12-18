@@ -11,14 +11,15 @@ namespace LinqToDB.DataProvider
 
 	class MultipleRowsHelper<T>
 	{
-		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options)
+		public MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity)
 		{
 			DataConnection = dataConnection;
 			Options        = options;
 			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			Columns        = Descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
+			Columns        = Descriptor.Columns.Where(c =>
+				!c.SkipOnInsert || enforceKeepIdentity && options.KeepIdentity == true && c.IsIdentity).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, Descriptor);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);

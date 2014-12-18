@@ -138,10 +138,15 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			return TryConvert(stringBuilder, value);
+			return TryConvertImpl(stringBuilder, dataType, value);
 		}
 
 		public bool TryConvert(StringBuilder stringBuilder, object value)
+		{
+			return TryConvertImpl(stringBuilder, DataType.Undefined, value);
+		}
+
+		bool TryConvertImpl(StringBuilder stringBuilder, DataType dataType, object value)
 		{
 			if (value == null)
 			{
@@ -153,7 +158,7 @@ namespace LinqToDB.SqlProvider
 
 			Action<StringBuilder,object> converter = null;
 
-			if (_basicConverters.Count > 0 && !type.IsEnum)
+			if (_basicConverters.Count > 0 && !type.IsEnumEx())
 			{
 				switch (type.GetTypeCodeEx())
 				{
@@ -185,8 +190,16 @@ namespace LinqToDB.SqlProvider
 
 			if (_baseConverters.Length > 0)
 				foreach (var valueConverter in _baseConverters)
-					if (valueConverter.TryConvert(stringBuilder, value))
-						return true;
+					if (dataType == DataType.Undefined)
+					{
+						if (valueConverter.TryConvert(stringBuilder, value))
+							return true;
+					}
+					else
+					{
+						if (valueConverter.TryConvert(stringBuilder, dataType, value))
+							return true;
+					}
 
 			return false;
 		}

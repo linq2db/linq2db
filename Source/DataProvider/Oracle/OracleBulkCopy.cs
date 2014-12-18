@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
 
 			helper.StringBuilder.AppendLine("INSERT ALL");
 			helper.SetHeader();

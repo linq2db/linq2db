@@ -317,10 +317,10 @@ CREATE TABLE AllTypes
 	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
 
 	bigintDataType           bigint           NULL,
-	numericDataType          numeric          NULL,
+	numericDataType          numeric(18,1)    NULL,
 	bitDataType              bit              NULL,
 	smallintDataType         smallint         NULL,
-	decimalDataType          decimal          NULL,
+	decimalDataType          decimal(18,1)    NULL,
 	smallmoneyDataType       smallmoney       NULL,
 	intDataType              int              NULL,
 	tinyintDataType          tinyint          NULL,
@@ -350,7 +350,9 @@ CREATE TABLE AllTypes
 	varchar_max_DataType     varchar(4000)    NULL,
 	varbinary_max_DataType   varbinary(4000)  NULL,
 
-	xmlDataType              nvarchar(2000)   NULL
+	xmlDataType              nvarchar(2000)   NULL,
+	datetime2DataType        varchar(50)      NULL,
+	datetimeoffsetDataType   varchar(50)      NULL
 ) ON [PRIMARY]
 GO
 

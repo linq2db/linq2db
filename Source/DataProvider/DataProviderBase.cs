@@ -168,6 +168,14 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
+				case DataType.Char      :
+				case DataType.NChar     :
+				case DataType.VarChar   :
+				case DataType.NVarChar  :
+				case DataType.Text      :
+				case DataType.NText     :
+					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					break;
 				case DataType.Image     :
 				case DataType.Binary    :
 				case DataType.Blob      :
@@ -192,6 +200,14 @@ namespace LinqToDB.DataProvider
 		{
 			switch (dataType)
 			{
+				case DataType.Char      :
+				case DataType.NChar     :
+				case DataType.VarChar   :
+				case DataType.NVarChar  :
+				case DataType.Text      :
+				case DataType.NText     :
+					if (type == typeof(DateTimeOffset)) return typeof(string);
+					break;
 				case DataType.Image     :
 				case DataType.Binary    :
 				case DataType.Blob      :

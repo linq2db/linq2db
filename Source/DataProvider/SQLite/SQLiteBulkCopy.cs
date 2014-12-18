@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy1(dataConnection, options, source);
+			return MultipleRowsCopy1(dataConnection, options, false, source);
 		}
 	}
 }

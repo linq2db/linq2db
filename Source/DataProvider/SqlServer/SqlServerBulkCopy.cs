@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using LinqToDB.DataProvider.SQLite;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -86,13 +85,24 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
+			BulkCopyRowsCopied ret;
+
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, options.KeepIdentity == true);
+
+			if (options.KeepIdentity == true)
+				dataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
+
 			switch (((SqlServerDataProvider)dataConnection.DataProvider).Version)
 			{
-				case SqlServerVersion.v2000:
-				case SqlServerVersion.v2005: return MultipleRowsCopy2(dataConnection, options, source, "");
+				case SqlServerVersion.v2000 :
+				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, dataConnection, options, source, ""); break;
+				default                     : ret = MultipleRowsCopy1(helper, dataConnection, options, source);     break;
 			}
 
-			return MultipleRowsCopy1(dataConnection, options, source);
+			if (options.KeepIdentity == true)
+				dataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+
+			return ret;
 		}
 	}
 }

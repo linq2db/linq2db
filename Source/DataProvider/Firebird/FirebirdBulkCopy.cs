@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(dataConnection, options, source, " FROM rdb$database");
+			return MultipleRowsCopy2(dataConnection, options, false, source, " FROM rdb$database");
 		}
 	}
 }

@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using Microsoft.SqlServer.Types;
 
@@ -735,6 +736,135 @@ namespace Tests.DataProvider
 					));
 
 				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
+			}
+		}
+
+		[Table]
+		class AllTypes
+		{
+			[Identity]
+			[Column(DataType=DataType.Int32),                          NotNull]  public int             ID                       { get; set; }
+			[Column(DataType=DataType.Int64),                          Nullable] public long?           bigintDataType           { get; set; }
+			[Column(DataType=DataType.Decimal),                        Nullable] public decimal?        numericDataType          { get; set; }
+			[Column(DataType=DataType.Boolean),                        Nullable] public bool?           bitDataType              { get; set; }
+			[Column(DataType=DataType.Int16),                          Nullable] public short?          smallintDataType         { get; set; }
+			[Column(DataType=DataType.Decimal),                        Nullable] public decimal?        decimalDataType          { get; set; }
+			[Column(DataType=DataType.SmallMoney),                     Nullable] public decimal?        smallmoneyDataType       { get; set; }
+			[Column(DataType=DataType.Int32),                          Nullable] public int?            intDataType              { get; set; }
+			[Column(DataType=DataType.Byte),                           Nullable] public byte?           tinyintDataType          { get; set; }
+			[Column(DataType=DataType.Money),                          Nullable] public decimal?        moneyDataType            { get; set; }
+			[Column(DataType=DataType.Double),                         Nullable] public double?         floatDataType            { get; set; }
+			[Column(DataType=DataType.Single),                         Nullable] public float?          realDataType             { get; set; }
+			[Column(DataType=DataType.DateTime),                       Nullable] public DateTime?       datetimeDataType         { get; set; }
+			[Column(DataType=DataType.SmallDateTime),                  Nullable] public DateTime?       smalldatetimeDataType    { get; set; }
+			[Column(DataType=DataType.Char,      Length=1),            Nullable] public char?           charDataType             { get; set; }
+			[Column(DataType=DataType.VarChar,   Length=20),           Nullable] public string          varcharDataType          { get; set; }
+			[Column(DataType=DataType.Text),                           Nullable] public string          textDataType             { get; set; }
+			[Column(DataType=DataType.NChar,     Length=20),           Nullable] public string          ncharDataType            { get; set; }
+			[Column(DataType=DataType.NVarChar,  Length=20),           Nullable] public string          nvarcharDataType         { get; set; }
+			[Column(DataType=DataType.NText),                          Nullable] public string          ntextDataType            { get; set; }
+			[Column(DataType=DataType.Binary),                         Nullable] public byte[]          binaryDataType           { get; set; }
+			[Column(DataType=DataType.VarBinary),                      Nullable] public byte[]          varbinaryDataType        { get; set; }
+			[Column(DataType=DataType.Image),                          Nullable] public byte[]          imageDataType            { get; set; }
+			[Column(DataType=DataType.Timestamp,SkipOnInsert=true),    Nullable] public byte[]          timestampDataType        { get; set; }
+			[Column(DataType=DataType.Guid),                           Nullable] public Guid?           uniqueidentifierDataType { get; set; }
+			[Column(DataType=DataType.Variant),                        Nullable] public object          sql_variantDataType      { get; set; }
+			[Column(DataType=DataType.NVarChar,  Length=int.MaxValue), Nullable] public string          nvarchar_max_DataType    { get; set; }
+			[Column(DataType=DataType.VarChar,   Length=int.MaxValue), Nullable] public string          varchar_max_DataType     { get; set; }
+			[Column(DataType=DataType.VarBinary, Length=int.MaxValue), Nullable] public byte[]          varbinary_max_DataType   { get; set; }
+			[Column(DataType=DataType.Xml),                            Nullable] public string          xmlDataType              { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTime2),                      Nullable] public DateTime?       datetime2DataType        { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset),                 Nullable] public DateTimeOffset? datetimeoffsetDataType   { get; set; }
+		}
+
+		static readonly AllTypes[] _allTypeses =
+		{
+			#region data
+			new AllTypes
+			{
+				ID                       = 700,
+			},
+			new AllTypes
+			{
+				ID                       = 701,
+				bigintDataType           = 1,
+				numericDataType          = 1.1m,
+				bitDataType              = true,
+				smallintDataType         = 1,
+				decimalDataType          = 1.1m,
+				smallmoneyDataType       = 1.1m,
+				intDataType              = 1,
+				tinyintDataType          = 1,
+				moneyDataType            = 1.1m,
+				floatDataType            = 1.1d,
+				realDataType             = 1.1f,
+				datetimeDataType         = new DateTime(2014, 12, 17, 21, 2, 58, 123),
+				smalldatetimeDataType    = new DateTime(2014, 12, 17, 21, 3, 0),
+				charDataType             = 'E',
+				varcharDataType          = "E",
+				textDataType             = "E",
+				ncharDataType            = "Ё",
+				nvarcharDataType         = "Ё",
+				ntextDataType            = "Ё",
+				binaryDataType           = new byte[] { 1 },
+				varbinaryDataType        = new byte[] { 1 },
+				imageDataType            = new byte[] { 1, 2, 3, 4, 5 },
+				uniqueidentifierDataType = new Guid(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+				sql_variantDataType      = "1",
+				nvarchar_max_DataType    = "1",
+				varchar_max_DataType     = "1",
+				varbinary_max_DataType   = new byte[] { 1, 2, 3, 4, 50 },
+				xmlDataType              = "<xml />",
+				datetime2DataType        = new DateTime(2014, 12, 17, 21, 2, 58, 123),
+				datetimeoffsetDataType   = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0))
+			},
+			#endregion
+		};
+
+		[Test, SqlServerDataContext]
+		public void BulkCopyAllTypesMultipleRows(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType       = BulkCopyType.MultipleRows,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+						KeepIdentity       = true,
+					},
+					_allTypeses);
+
+				var ids = _allTypeses.Select(at => at.ID).ToArray();
+
+				var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+
+				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+
+				Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+
+				for (var i = 0; i < list.Count; i++)
+					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+			}
+		}
+
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+		{
+			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
+
+			foreach (var column in ed.Columns)
+			{
+				var actualValue = column.GetValue(actual);
+				var testValue   = column.GetValue(test);
+
+				if (column.SkipOnInsert == false)
+					Assert.That(actualValue, Is.EqualTo(testValue), "Column  : {0}", column.MemberName);
 			}
 		}
 	}

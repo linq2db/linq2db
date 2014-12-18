@@ -337,10 +337,10 @@ CREATE TABLE AllTypes
 	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
 
 	bigintDataType           bigint           NULL,
-	numericDataType          numeric          NULL,
+	numericDataType          numeric(18,1)    NULL,
 	bitDataType              bit              NULL,
 	smallintDataType         smallint         NULL,
-	decimalDataType          decimal          NULL,
+	decimalDataType          decimal(18,1)    NULL,
 	smallmoneyDataType       smallmoney       NULL,
 	intDataType              int              NULL,
 	tinyintDataType          tinyint          NULL,
@@ -370,7 +370,22 @@ CREATE TABLE AllTypes
 	varchar_max_DataType     varchar(max)     NULL,
 	varbinary_max_DataType   varbinary(max)   NULL,
 
-	xmlDataType              xml              NULL
+	xmlDataType              xml              NULL,
+
+-- SKIP SqlServer.2005 BEGIN
+	datetime2DataType        datetime2        NULL,
+	datetimeoffsetDataType   datetimeoffset   NULL
+-- SKIP SqlServer.2005 END
+
+-- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
+	datetime2DataType        varchar(50)      NULL,
+	datetimeoffsetDataType   varchar(50)      NULL
+-- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2012 END
+-- SKIP SqlAzure.2012 END
+
 ) ON [PRIMARY]
 GO
 

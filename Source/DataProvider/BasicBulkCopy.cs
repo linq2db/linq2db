@@ -143,10 +143,18 @@ namespace LinqToDB.DataProvider
 		#region MultopleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
-			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+			return MultipleRowsCopy1(
+				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				dataConnection,
+				options,
+				source);
+		}
 
+		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
+			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
 				.Append("(");
@@ -197,10 +205,20 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+			return MultipleRowsCopy2<T>(
+				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				dataConnection,
+				options,
+				source,
+				from);
+		}
 
+		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		{
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
 				.Append("(");
@@ -250,7 +268,7 @@ namespace LinqToDB.DataProvider
 
 		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
 		{
-			var helper = new MultipleRowsHelper<T>(dataConnection, options);
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
 
 			helper.StringBuilder
 				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
