@@ -20,6 +20,12 @@ namespace LinqToDB
 	{
 		#region Common Functions
 
+		[Sql.Expression("*", ServerSideOnly = true)]
+		public static object[] AllColumns()
+		{
+			throw new LinqException("'FreeText' is only server-side method.");
+		}
+
 		[CLSCompliant(false)]
 		[Sql.Expression("{0}", 0, ServerSideOnly = true)]
 		public static T AsSql<T>(T obj)
@@ -141,7 +147,7 @@ namespace LinqToDB
 		[Sql.Property(PN.MySql,         "Unsigned",       ServerSideOnly=true)]
 		[Sql.Property(                  "TinyInt",        ServerSideOnly=true)] public static Byte           TinyInt                           { get { return 0; } }
 
-		[Sql.Property(                  "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }        
+		[Sql.Property(                  "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }
         [Sql.Expression(PN.SapHana,     "Decimal({0},4)", Precedence = Precedence.Primary, ServerSideOnly = true)]
 		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision)            {       return 0;   }
 		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision, int scale) {       return 0;   }
@@ -213,14 +219,14 @@ namespace LinqToDB
 
 		[Sql.Function(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Sql.Function(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
-		[Sql.Function(                                 ServerSideOnly=true)] public static String         VarChar(int length)               {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static String         VarChar(int length)               {       return ""; }
 
 		[Sql.Property(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "NVarChar",       ServerSideOnly=true)]
 		[Sql.Property(                  "VarChar",        ServerSideOnly=true)] public static String  DefaultVarChar                           { get { return ""; } }
 
 		[Sql.Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Function(                                 ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
+		[Sql.Function(                                    ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
 
 		[Sql.Property(PN.DB2,           "Char",           ServerSideOnly=true)]
 		[Sql.Property(                  "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
@@ -261,8 +267,8 @@ namespace LinqToDB
 		[Sql.Function  (PN.Informix, "Substr")]
 		[Sql.Function  (PN.Oracle,   "Substr")]
 		[Sql.Function  (PN.SQLite,   "Substr")]
-        [Sql.Function(PN.SQLite, "Substring")]
-		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})")]        
+		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})")]
+        [Sql.Function  (PN.SapHana,  "Substring")]
 		public static string Substring(string str, int? startIndex, int? length)
 		{
 			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
@@ -274,7 +280,8 @@ namespace LinqToDB
 #if SILVERLIGHT || NETFX_CORE
 			throw new InvalidOperationException();
 #else
-			return matchExpression == null || pattern == null ? false : System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
+			return matchExpression != null && pattern != null &&
+				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
 #endif
 		}
 
@@ -284,8 +291,7 @@ namespace LinqToDB
 #if SILVERLIGHT || NETFX_CORE
 			throw new InvalidOperationException();
 #else
-			return matchExpression == null || pattern == null || escapeCharacter == null ?
-				false :
+			return matchExpression != null && pattern != null && escapeCharacter != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern, escapeCharacter.Value);
 #endif
 		}
@@ -473,6 +479,58 @@ namespace LinqToDB
 			return str == null ? null : str.ToUpper();
 		}
 
+		class ConcatAttribute : Sql.ExpressionAttribute
+		{
+			public ConcatAttribute() : base("")
+			{
+			}
+
+			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			{
+				var arr = new ISqlExpression[args.Length];
+
+				for (var i = 0; i < args.Length; i++)
+				{
+					var arg = args[i];
+
+					if (arg.SystemType == typeof(string))
+					{
+						arr[i] = arg;
+					}
+					else
+					{
+						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
+							100 :
+							SqlDataType.GetMaxDisplaySize(SqlDataType.GetDataType(arg.SystemType).DataType);
+
+						arr[i] = new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), arg);
+					}
+				}
+
+				if (arr.Length == 1)
+					return arr[0];
+
+				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
+
+				for (var i = 2; i < arr.Length; i++)
+					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
+
+				return expr;
+			}
+		}
+
+		[ConcatAttribute]
+		public static string Concat(params object[] args)
+		{
+			return string.Concat(args);
+		}
+
+		[ConcatAttribute]
+		public static string Concat(params string[] args)
+		{
+			return string.Concat(args);
+		}
+
 		#endregion
 
 		#region Binary Functions
@@ -605,14 +663,14 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Sql.Function] // FIXME: LinqToDB.Sql.DatePartAttribute -> DatePart
-		[LinqToDB.Sql.DatePartAttribute(PN.Oracle, "Add{0}", false, 0, 2, 1)]
-		[LinqToDB.Sql.DatePartAttribute(PN.DB2, "{{1}} + {0}", Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.Informix, "{{1}} + Interval({0}", Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "{{1}} + Interval '{{0}} {0}", Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.MySql, "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.SQLite, "DateTime({{1}}, '{{0}} {0}')", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.Access, "DateAdd({0}, {{0}}, {{1}})", true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
-        [LinqToDB.Sql.DatePartAttribute(PN.SapHana, "Add_{0}", true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.Oracle,     "Add{0}",                              false, 0, 2, 1)]
+		[LinqToDB.Sql.DatePartAttribute(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "{{1}} + Interval '{{0}} {0}",         Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",        true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",          true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
+        [LinqToDB.Sql.DatePartAttribute(PN.SapHana,    "Add_{0}",                             true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
 		public static DateTime? DateAdd(DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -647,7 +705,7 @@ namespace LinqToDB
 		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)", true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.Access,     "DatePart({0}, {{0}})",              true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
         [LinqToDB.Sql.DatePartAttribute(PN.SapHana, "{0}", true, new[] { "Year({0})", "Floor((Month({0})-1) / 3) + 1", "Month({0})", "DayOfYear({0})", "DayOfMonth({0})", "Week({0})", "MOD(Weekday({0}) + 1, 7) + 1", "Hour({0})", "Minute({0})", "Second({0})", null }, 0, 1)]
-        public static int? DatePart(DateParts part, DateTime? date)
+		public static int? DatePart(DateParts part, DateTime? date)
 		{
 			if (date == null)
 				return null;
@@ -924,6 +982,16 @@ namespace LinqToDB
 #else
 			return value == null ? null : (Double?) Math.Truncate(value.Value);
 #endif
+		}
+
+		#endregion
+
+		#region Text Functions
+
+		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true)]
+		public static bool FreeText(object table, string text)
+		{
+			throw new LinqException("'FreeText' is only server-side method.");
 		}
 
 		#endregion

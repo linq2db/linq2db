@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -9,6 +9,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class InformixTest : DataProviderTestBase
 	{
@@ -53,6 +55,32 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>      (conn, "textDataType",     DataType.NText,     skipPass:true), Is.EqualTo("BBBBB"));
 				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.Binary,    skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
 				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.VarBinary, skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyLinqTypes(string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
 			}
 		}
 	}

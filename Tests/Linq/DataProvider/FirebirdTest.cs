@@ -17,9 +17,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-    using LinqToDB.SqlProvider;
-
-    using Model;
+	using Model;
 
 	[TestFixture]
 	public class FirebirdTest : DataProviderTestBase
@@ -106,7 +104,7 @@ namespace Tests.DataProvider
 					dataType == DataType.VarNumeric ? "SELECT Cast(@p as decimal(18)) FROM Dual" :
 					dataType == DataType.Money      ? "SELECT Cast(@p as decimal(18)) FROM Dual" :
 					dataType == DataType.SmallMoney ? "SELECT Cast(@p as decimal(18)) FROM Dual" :
-					                                  "SELECT @p                      FROM Dual";
+													  "SELECT @p                      FROM Dual";
 
 				Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 				var value = conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue });
@@ -444,6 +442,32 @@ namespace Tests.DataProvider
 
 				var blob = new byte[] {1, 2, 3};
 				db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void BulkCopyLinqTypes(string context)
+		{
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			{
+				using (var db = new DataConnection(context))
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = Guid.NewGuid(),
+								SmallIntValue = (short)n
+							}
+						));
+
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
 			}
 		}
 	}

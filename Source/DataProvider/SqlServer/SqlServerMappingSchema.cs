@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
 using System.Linq.Expressions;
@@ -59,9 +60,24 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerDataProvider.SetUdtType(type, typeName.Substring(3).ToLower());
 				}
 			}
-			catch (Exception)
+			catch
 			{
 			}
+
+			SetValueToSqlConverter(typeof(String),         (sb,v) => ConvertStringToSql1       (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),           (sb,v) => ConvertCharToSql1         (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,v) => ConvertDateTimeOffsetToSql(sb, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb,v) => ConvertBinaryToSql        (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
+
+			SetValueToSqlConverter(typeof(String), DataType.Char,    (sb,v) => ConvertStringToSql2(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(String), DataType.VarChar, (sb,v) => ConvertStringToSql2(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(String), DataType.Text,    (sb,v) => ConvertStringToSql2(sb, v.ToString()));
+
+			SetValueToSqlConverter(typeof(Char),   DataType.Char,    (sb,v) => ConvertCharToSql2(sb, (char)v));
+			SetValueToSqlConverter(typeof(Char),   DataType.VarChar, (sb,v) => ConvertCharToSql2(sb, (char)v));
+			SetValueToSqlConverter(typeof(Char),   DataType.Text,    (sb,v) => ConvertCharToSql2(sb, (char)v));
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
@@ -86,6 +102,69 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return base.TryGetConvertExpression(@from, to);
+		}
+
+		static void ConvertStringToSql1(StringBuilder stringBuilder, string value)
+		{
+			stringBuilder
+				.Append("N\'")
+				.Append(value.Replace("'", "''"))
+				.Append('\'');
+		}
+
+		static void ConvertStringToSql2(StringBuilder stringBuilder, string value)
+		{
+			stringBuilder
+				.Append('\'')
+				.Append(value.Replace("'", "''"))
+				.Append('\'');
+		}
+
+		static void ConvertCharToSql1(StringBuilder stringBuilder, char value)
+		{
+			stringBuilder.Append("N\'");
+
+			if (value == '\'') stringBuilder.Append("''");
+			else               stringBuilder.Append(value);
+
+			stringBuilder.Append('\'');
+		}
+
+		static void ConvertCharToSql2(StringBuilder stringBuilder, char value)
+		{
+			stringBuilder.Append('\'');
+
+			if (value == '\'') stringBuilder.Append("''");
+			else               stringBuilder.Append(value);
+
+			stringBuilder.Append('\'');
+		}
+
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+		{
+			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+
+			if (value.Millisecond == 0)
+			{
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					"'{0:yyyy-MM-dd}'" :
+					"'{0:yyyy-MM-ddTHH:mm:ss}'";
+			}
+
+			stringBuilder.AppendFormat(format, value);
+		}
+
+		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, DateTimeOffset value)
+		{
+			stringBuilder.AppendFormat("'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'", value);
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("0x");
+
+			foreach (var b in value)
+				stringBuilder.AppendFormat(b.ToString("X2"));
 		}
 	}
 

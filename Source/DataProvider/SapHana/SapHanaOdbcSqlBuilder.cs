@@ -5,13 +5,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlQuery;
+
+    using SqlQuery;
 	using SqlProvider;
 
     class SapHanaOdbcSqlBuilder : BasicSqlBuilder
 	{
-        public SapHanaOdbcSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+        public SapHanaOdbcSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
         
@@ -35,7 +36,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-            return new SapHanaOdbcSqlBuilder(SqlOptimizer, SqlProviderFlags);
+            return new SapHanaOdbcSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
         protected override string LimitFormat { get { return "LIMIT {0}"; } }

@@ -15,12 +15,32 @@ namespace LinqToDB.DataProvider.SapHana
     {
         protected String DefaultSchema;
         protected GetHanaSchemaOptions HanaSchemaOptions;
+        protected bool HaveAccessForCalculationViews;
 
         public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions options = null)
         {
             HanaSchemaOptions = options as GetHanaSchemaOptions;
             DefaultSchema = dataConnection.Execute<string>("SELECT CURRENT_SCHEMA FROM DUMMY");
+            HaveAccessForCalculationViews = CheckAccessForCalculationViews(dataConnection);
             return base.GetSchema(dataConnection, options);
+        }
+
+        private bool CheckAccessForCalculationViews(DataConnection dataConnection)
+        {
+            try
+            {
+                dataConnection.Execute("SELECT 1 FROM _SYS_BI.BIMC_ALL_CUBES LIMIT 1");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var options = HanaSchemaOptions ?? new GetHanaSchemaOptions();
+                if (options.ThrowExceptionIfCalculationViewsNotAuthorized)
+                {
+                    throw;
+                }
+            }
+            return false;
         }
 
         protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
@@ -66,7 +86,13 @@ namespace LinqToDB.DataProvider.SapHana
                     TableID = schemaName + '.' + tableName,
                     TableName = tableName
 		        };
-            }, @"SELECT 
+            }, GetTablesQuery());
+		    return combinedQuery.ToList();
+		}
+
+        private String GetTablesQuery()
+        {
+            var result = @"SELECT 
                     s.SCHEMA_NAME,
                     TABLE_NAME,
                     COMMENTS,
@@ -89,24 +115,27 @@ namespace LinqToDB.DataProvider.SapHana
                     (SELECT *
 		                FROM SYS.VIEWS AS v
 		                WHERE v.IS_VALID = 'TRUE' 
-		                AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC')
-		                UNION ALL
-		                SELECT v.*
-		                FROM SYS.VIEWS AS v
-		                JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
-		                LEFT JOIN (
-			                SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME 
-			                FROM _SYS_BI.BIMC_VARIABLE AS p
-			                GROUP BY p.CUBE_NAME
-		                ) AS p ON c.CUBE_NAME = p.CUBE_NAME
-		                WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL
-                    ) AS v
+		                AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC') ";
+            if (HaveAccessForCalculationViews)
+            {
+                result += @"UNION ALL
+	            SELECT v.*
+	            FROM SYS.VIEWS AS v
+	            JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
+	            LEFT JOIN (
+		            SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME 
+		            FROM _SYS_BI.BIMC_VARIABLE AS p
+		            GROUP BY p.CUBE_NAME
+	            ) AS p ON c.CUBE_NAME = p.CUBE_NAME
+	            WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL";
+            }
+            result += @") AS v
                 ) AS combined
                 JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
                 WHERE s.HAS_PRIVILEGES = 'TRUE' 
-                    AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')");
-		    return combinedQuery.ToList();
-		}
+                    AND s.SCHEMA_NAME NOT IN ('SYS', '_SYS_BI', '_SYS_REPO', '_SYS_STATISTICS')";
+            return result;
+        }
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
 		{
@@ -220,7 +249,7 @@ namespace LinqToDB.DataProvider.SapHana
                 var procedure = rd.GetString(1);
                 var isFunction = rd.GetBoolean(2);
                 var isTableFunction = rd.GetBoolean(3);
-                var definition = rd.GetString(4);
+                var definition = rd.IsDBNull(4) ? null : rd.GetString(4);
                 return new ProcedureInfo
                 {
                     ProcedureID = String.Concat(schema, '.', procedure),
@@ -586,6 +615,8 @@ namespace LinqToDB.DataProvider.SapHana
 
         protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
         {
+            if (!HaveAccessForCalculationViews)
+                return new List<TableSchema>();
             var result =
             (
                 from v in GetViewsWithParameters(dataConnection)

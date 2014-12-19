@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq.Expressions;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -81,7 +83,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new SqlCeSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -175,5 +177,18 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			DropFileDatabase(databaseName, ".sdf");
 		}
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new SqlCeBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SqlCeTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

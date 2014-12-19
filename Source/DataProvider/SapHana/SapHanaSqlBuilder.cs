@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.SapHana
 
     class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+            : base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
         
@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaSqlBuilder(SqlOptimizer, SqlProviderFlags);
+            return new SapHanaSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
         protected override string LimitFormat { get { return "LIMIT {0}"; } }

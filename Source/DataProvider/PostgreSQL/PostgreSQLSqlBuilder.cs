@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -46,19 +46,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
-
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else
-				base.BuildValue(value);
-		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{

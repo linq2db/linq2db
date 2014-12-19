@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void FreeText1(string context)
+		public void FreeTextTable1(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void FreeText2(string context)
+		public void FreeTextTable2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -124,7 +124,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void FreeText3(string context)
+		public void FreeTextTable3(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -135,6 +135,70 @@ namespace Tests.Linq
 					select c;
 
 				q.ToList();
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText1(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(t.Description, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText2(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(Sql.AllColumns(), "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText3(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(t, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText4(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where !Sql.FreeText(t, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
 

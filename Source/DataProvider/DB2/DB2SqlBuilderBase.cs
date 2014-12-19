@@ -9,8 +9,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -104,29 +104,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause();
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is Guid)
-			{
-				var s = ((Guid)value).ToString("N");
-
-				StringBuilder
-					.Append("Cast(x'")
-					.Append(s.Substring( 6,  2))
-					.Append(s.Substring( 4,  2))
-					.Append(s.Substring( 2,  2))
-					.Append(s.Substring( 0,  2))
-					.Append(s.Substring(10,  2))
-					.Append(s.Substring( 8,  2))
-					.Append(s.Substring(14,  2))
-					.Append(s.Substring(12,  2))
-					.Append(s.Substring(16, 16))
-					.Append("' as char(16) for bit data)");
-			}
-			else
-				base.BuildValue(value);
 		}
 
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)

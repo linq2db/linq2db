@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Xml.Linq;
 
 #if !SILVERLIGHT && !NETFX_CORE
@@ -18,6 +19,7 @@ namespace LinqToDB.Mapping
 	using Expressions;
 	using Extensions;
 	using Metadata;
+	using SqlProvider;
 
 	public class MappingSchema
 	{
@@ -43,13 +45,25 @@ namespace LinqToDB.Mapping
 			MappingSchemaInfo[] ss;
 
 			if (schemas == null)
+			{
 				ss = Default._schemas;
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
+			}
 			else if (schemas.Length == 0)
+			{
 				ss = Array<MappingSchemaInfo>.Empty;
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
+			}
 			else if (schemas.Length == 1)
+			{
 				ss = schemas[0]._schemas;
+				ValueToSqlConverter = new ValueToSqlConverter(schemas[0].ValueToSqlConverter);
+			}
 			else
+			{
 				ss = schemas.Where(s => s != null).SelectMany(s => s._schemas).Distinct().ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(schemas.Select(s => s.ValueToSqlConverter).ToArray());
+			}
 
 			_schemas    = new MappingSchemaInfo[ss.Length + 1];
 			_schemas[0] = new MappingSchemaInfo(configuration);
@@ -58,6 +72,22 @@ namespace LinqToDB.Mapping
 		}
 
 		readonly MappingSchemaInfo[] _schemas;
+
+		#endregion
+
+		#region ValueToSqlConverter
+
+		internal readonly ValueToSqlConverter ValueToSqlConverter;
+
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, converter);
+		}
+
+		public void SetValueToSqlConverter(Type type, DataType dataType, Action<StringBuilder,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, dataType, converter);
+		}
 
 		#endregion
 
@@ -650,6 +680,8 @@ namespace LinqToDB.Mapping
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
 			_schemas = new[] { mappingSchemaInfo };
+
+			ValueToSqlConverter = new ValueToSqlConverter();
 		}
 
 		public static MappingSchema Default = new DefaultMappingSchema();
@@ -701,6 +733,8 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float?),          DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 				AddScalarType(typeof(double?),         DataType.Double);
+
+				ValueToSqlConverter.SetDefauls();
 			}
 		}
 
@@ -856,21 +890,30 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
+        ConcurrentDictionary<Type, EntityDescriptor> _entityDescriptors;
 
-		public EntityDescriptor GetEntityDescriptor(Type type)
-		{
-			if (_entityDescriptors == null)
-				_entityDescriptors = new ConcurrentDictionary<Type,EntityDescriptor>();
+        public EntityDescriptor GetEntityDescriptor(Type type)
+        {
+            if (_entityDescriptors == null)
+                _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
 
-            return _entityDescriptors.GetOrAdd(type, t =>
-            {                
-                var descr = new EntityDescriptor(this, t);
-                //initialize before returing
-                descr.InitInheritanceMapping();
-                return descr;
-            });
-		}
+            EntityDescriptor ed;
+
+            if (!_entityDescriptors.TryGetValue(type, out ed))
+            {
+                _entityDescriptors[type] = ed = new EntityDescriptor(this, type);
+                ed.InitInheritanceMapping();
+            }
+
+            return ed;
+        }
+
+        //public EntityDescriptor GetEntityDescriptor(Type type)
+        //{
+        //    if (_entityDescriptors == null)
+        //        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
+        //    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
+        //}
 
 		#endregion
 	}

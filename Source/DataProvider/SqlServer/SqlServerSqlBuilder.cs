@@ -4,14 +4,13 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -77,28 +76,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				BuildPhysicalTable(table, null);
 			else
 				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
-		}
-
-		protected override void BuildString(string value)
-		{
-			foreach (var ch in value)
-			{
-				if (ch > 127)
-				{
-					StringBuilder.Append("N");
-					break;
-				}
-			}
-
-			base.BuildString(value);
-		}
-
-		protected override void BuildChar(char value)
-		{
-			if (value > 127)
-				StringBuilder.Append("N");
-
-			base.BuildChar(value);
 		}
 
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
@@ -175,20 +152,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildInsertOrUpdateQuery()
 		{
 			BuildInsertOrUpdateQueryAsUpdateInsert();
-		}
-
-		protected override void BuildDateTime(DateTime value)
-		{
-			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
-
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-ddTHH:mm:ss}'";
-			}
-
-			StringBuilder.AppendFormat(format, value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

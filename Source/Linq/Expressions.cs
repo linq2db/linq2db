@@ -378,6 +378,15 @@ namespace LinqToDB.Linq
 					{ M(() => "".CompareTo  (1)       ), N(() => L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString()).Value)) },
 #endif
 
+					{ M(() => string.Concat((object)null)                           ), N(() => L<Object,String>                     ((Object p0)                               => p0.ToString()))           },
+					{ M(() => string.Concat((object)null,(object)null)              ), N(() => L<Object,Object,String>              ((Object p0,Object p1)                     => p0.ToString() + p1))      },
+					{ M(() => string.Concat((object)null,(object)null,(object)null) ), N(() => L<Object,Object,Object,String>       ((Object p0,Object p1,Object p2)           => p0.ToString() + p1 + p2)) },
+					{ M(() => string.Concat((object[])null)                         ), N(() => L<Object[],String>                   ((Object[] ps)                             => Sql.Concat(ps)))          },
+					{ M(() => string.Concat("","")                                  ), N(() => L<String,String,String>              ((String p0,String p1)                     => p0 + p1))                 },
+					{ M(() => string.Concat("","","")                               ), N(() => L<String,String,String,String>       ((String p0,String p1,String p2)           => p0 + p1 + p2))            },
+					{ M(() => string.Concat("","","","")                            ), N(() => L<String,String,String,String,String>((String p0,String p1,String p2,String p3) => p0 + p1 + p2 + p3))       },
+					{ M(() => string.Concat((string[])null)                         ), N(() => L<String[],String>                   ((String[] ps)                             => Sql.Concat(ps)))          },
+
 					{ M(() => string.IsNullOrEmpty ("")    ),           N(() => L<String,Boolean>                               ((String p0)                                               => p0 == null || p0.Length == 0)) },
 					{ M(() => string.CompareOrdinal("","")),            N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
 					{ M(() => string.CompareOrdinal("",0,"",0,0)),      N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },

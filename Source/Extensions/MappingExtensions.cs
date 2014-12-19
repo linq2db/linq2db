@@ -30,6 +30,9 @@ namespace LinqToDB.Extensions
 				}
 			}
 
+			if (systemType == typeof(object) && value != null)
+				systemType = value.GetType();
+
 			return new SqlValue(systemType, value);
 		}
 	}

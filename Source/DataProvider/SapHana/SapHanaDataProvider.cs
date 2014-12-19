@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SapHana
             //Message: single-row query returns more than one row
             //when expression returns more than 1 row
             //mark this as supported, it's better to throw exception 
-            //then replace with left join, in which case returns incorrect data
+            //instead of replace with left join, in which case returns incorrect data
             SqlProviderFlags.IsSubQueryColumnSupported = true;            		    
 
 		    SqlProviderFlags.IsTakeSupported = true;
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);            
+			return new SapHanaSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -151,15 +151,11 @@ namespace LinqToDB.DataProvider.SapHana
             base.SetParameterType(parameter, dataType);
 		}
 
-	    private SapHanaBulkCopy _bulkCopy;
-
         public override BulkCopyRowsCopied BulkCopy<T>(
             [JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
         {
-            if (_bulkCopy == null)
-                _bulkCopy = new SapHanaBulkCopy(this, GetConnectionType());
 
-            return _bulkCopy.BulkCopy(
+            return new SapHanaBulkCopy(this, GetConnectionType()).BulkCopy(
                 options.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : options.BulkCopyType,
                 dataConnection,
                 options,

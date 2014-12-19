@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.SapHana
 
         public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);            
+			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);            
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
