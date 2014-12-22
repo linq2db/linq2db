@@ -166,5 +166,42 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+		protected override void BuildDropTableStatement()
+		{
+			var table = SelectQuery.CreateTable.Table;
+
+			StringBuilder.Append("IF  EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine("') AND type in (N'U'))");
+
+			AppendIndent().Append("BEGIN DROP TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine(" END");
+		}
+
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
+				case DataType.Variant   : StringBuilder.Append("Sql_Variant");           return;
+				case DataType.NVarChar  :
+				case DataType.VarChar   :
+				case DataType.VarBinary :
+
+					if (type.Length == int.MaxValue || type.Length < 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(Max)");
+						return;
+					}
+
+					break;
+			}
+
+			base.BuildDataType(type, createDbType);
+		}
 	}
 }

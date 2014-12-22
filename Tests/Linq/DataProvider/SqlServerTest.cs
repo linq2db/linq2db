@@ -878,5 +878,33 @@ namespace Tests.DataProvider
 					Assert.That(actualValue, Is.EqualTo(testValue), "Column  : {0}", column.MemberName);
 			}
 		}
+
+		[Test, SqlServerDataContext]
+		public void CreateAlltypes(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ms = new MappingSchema();
+
+				db.AddMappingSchema(ms);
+
+				ms.GetFluentMappingBuilder()
+					.Entity<AllTypes>()
+						.HasTableName("AllTypeCreateTest");
+
+				try
+				{
+					db.DropTable<AllTypes>();
+				}
+				catch
+				{
+				}
+
+				var table = db.CreateTable<AllTypes>();
+				var list = table.ToList();
+
+				db.DropTable<AllTypes>();
+			}
+		}
 	}
 }

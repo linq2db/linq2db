@@ -26,9 +26,35 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :
-				case DataType.Date           : StringBuilder.Append("DateTime"); break;
-				default                      : base.BuildDataType(type);         break;
+				case DataType.Date           : StringBuilder.Append("DateTime"); return;
+				case DataType.Xml            : StringBuilder.Append("NText");    return;
+				case DataType.NVarChar       :
+
+					if (type.Length == int.MaxValue || type.Length < 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(4000)");
+						return;
+					}
+
+					break;
+
+				case DataType.VarChar        :
+				case DataType.VarBinary      :
+
+					if (type.Length == int.MaxValue || type.Length < 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(8000)");
+						return;
+					}
+
+					break;
 			}
+
+			base.BuildDataType(type, createDbType);
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -40,6 +66,15 @@ namespace LinqToDB.DataProvider.SqlServer
 		public override string  Name
 		{
 			get { return ProviderName.SqlServer2000; }
+		}
+
+		protected override void BuildDropTableStatement()
+		{
+			var table = SelectQuery.CreateTable.Table;
+
+			AppendIndent().Append("DROP TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine();
 		}
 	}
 }
