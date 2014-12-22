@@ -779,6 +779,12 @@ namespace Tests.DataProvider
 			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset),                 Nullable] public DateTimeOffset? datetimeoffsetDataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.Date),                           Nullable] public DateTime?       dateDataType             { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.Time),                           Nullable] public TimeSpan?       timeDataType             { get; set; }
 		}
 
 		static readonly AllTypes[] _allTypeses =
@@ -820,7 +826,9 @@ namespace Tests.DataProvider
 				varbinary_max_DataType   = new byte[] { 1, 2, 3, 4, 50 },
 				xmlDataType              = "<xml />",
 				datetime2DataType        = new DateTime(2014, 12, 17, 21, 2, 58, 123),
-				datetimeoffsetDataType   = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0))
+				datetimeoffsetDataType   = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				dateDataType             = new DateTime(2014, 12, 17),
+				timeDataType             = new TimeSpan(0, 10, 11, 12, 567),
 			},
 			#endregion
 		};
@@ -828,29 +836,32 @@ namespace Tests.DataProvider
 		[Test, SqlServerDataContext]
 		public void BulkCopyAllTypesMultipleRows(string context)
 		{
-			using (var db = new DataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+				using (var db = new DataConnection(context))
+				{
+					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-				db.BulkCopy(
-					new BulkCopyOptions
-					{
-						BulkCopyType       = BulkCopyType.MultipleRows,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
-						KeepIdentity       = true,
-					},
-					_allTypeses);
+					db.BulkCopy(
+						new BulkCopyOptions
+						{
+							BulkCopyType       = bulkCopyType,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+							KeepIdentity       = true,
+						},
+						_allTypeses);
 
-				var ids = _allTypeses.Select(at => at.ID).ToArray();
+					var ids = _allTypeses.Select(at => at.ID).ToArray();
 
-				var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+					var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
 
-				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-				Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
 
-				for (var i = 0; i < list.Count; i++)
-					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+					for (var i = 0; i < list.Count; i++)
+						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+				}
 			}
 		}
 

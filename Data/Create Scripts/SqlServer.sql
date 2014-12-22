@@ -374,14 +374,18 @@ CREATE TABLE AllTypes
 
 -- SKIP SqlServer.2005 BEGIN
 	datetime2DataType        datetime2        NULL,
-	datetimeoffsetDataType   datetimeoffset   NULL
+	datetimeoffsetDataType   datetimeoffset   NULL,
+	dateDataType             date             NULL,
+	timeDataType             time             NULL
 -- SKIP SqlServer.2005 END
 
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
 -- SKIP SqlAzure.2012 BEGIN
 	datetime2DataType        varchar(50)      NULL,
-	datetimeoffsetDataType   varchar(50)      NULL
+	datetimeoffsetDataType   varchar(50)      NULL,
+	dateDataType             varchar(50)      NULL,
+	timeDataType             varchar(50)      NULL
 -- SKIP SqlServer.2008 END
 -- SKIP SqlServer.2012 END
 -- SKIP SqlAzure.2012 END

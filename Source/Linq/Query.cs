@@ -1133,6 +1133,7 @@ namespace LinqToDB.Linq
 		{
 			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
 			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
+			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
 		}
 
 		static IEnumerable<T> Map(
@@ -1154,13 +1155,13 @@ namespace LinqToDB.Linq
 
 				if (mapper == null)
 				{
-					var mapperExpression = mapInfo.Expression.Transform(e =>
+					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
 					{
 						var ex = e as ConvertFromDataReaderExpression;
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
-					mapInfo.Mapper = mapper = mapperExpression.Compile();
+					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}
 
 				T result;

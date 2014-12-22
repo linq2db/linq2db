@@ -67,6 +67,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(String),         (sb,v) => ConvertStringToSql1       (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),           (sb,v) => ConvertCharToSql1         (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb,v) => ConvertTimeSpanToSql      (sb, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,v) => ConvertDateTimeOffsetToSql(sb, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
@@ -142,16 +143,35 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
-			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+			var format =
+				value.Millisecond == 0
+					? value.Hour == 0 && value.Minute == 0 && value.Second == 0
+						? "yyyy-MM-dd"
+						: "yyyy-MM-ddTHH:mm:ss"
+					: "yyyy-MM-ddTHH:mm:ss.fff";
 
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-ddTHH:mm:ss}'";
-			}
+			stringBuilder
+				.Append('\'')
+				.Append(value.ToString(format))
+				.Append('\'')
+				;
+		}
 
-			stringBuilder.AppendFormat(format, value);
+		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, TimeSpan value)
+		{
+			var format = value.Days > 0
+				? value.Milliseconds > 0
+					? "d\\.hh\\:mm\\:ss\\.fff"
+					: "d\\.hh\\:mm\\:ss"
+				: value.Milliseconds > 0
+					? "hh\\:mm\\:ss\\.fff"
+					: "hh\\:mm\\:ss";
+
+			stringBuilder
+				.Append('\'')
+				.Append(value.ToString(format))
+				.Append('\'')
+				;
 		}
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, DateTimeOffset value)
@@ -164,7 +184,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 
 			foreach (var b in value)
-				stringBuilder.AppendFormat(b.ToString("X2"));
+				stringBuilder.Append(b.ToString("X2"));
 		}
 	}
 

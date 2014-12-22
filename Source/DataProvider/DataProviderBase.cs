@@ -174,7 +174,29 @@ namespace LinqToDB.DataProvider
 				case DataType.NVarChar  :
 				case DataType.Text      :
 				case DataType.NText     :
-					if (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					if      (value is DateTimeOffset) value = ((DateTimeOffset)value).ToString("yyyy-MM-ddTHH:mm:ss.ffffff zzz");
+					else if (value is DateTime)
+					{
+						var dt = (DateTime)value;
+						value = dt.ToString(
+							dt.Millisecond == 0
+								? dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0
+									? "yyyy-MM-dd"
+									: "yyyy-MM-ddTHH:mm:ss"
+								: "yyyy-MM-ddTHH:mm:ss.fff");
+					}
+					else if (value is TimeSpan)
+					{
+						var ts = (TimeSpan)value;
+						value = ts.ToString(
+							ts.Days > 0
+								? ts.Milliseconds > 0
+									? "d\\.hh\\:mm\\:ss\\.fff"
+									: "d\\.hh\\:mm\\:ss"
+								: ts.Milliseconds > 0
+									? "hh\\:mm\\:ss\\.fff"
+									: "hh\\:mm\\:ss");
+					}
 					break;
 				case DataType.Image     :
 				case DataType.Binary    :

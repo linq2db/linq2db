@@ -352,7 +352,9 @@ CREATE TABLE AllTypes
 
 	xmlDataType              nvarchar(2000)   NULL,
 	datetime2DataType        varchar(50)      NULL,
-	datetimeoffsetDataType   varchar(50)      NULL
+	datetimeoffsetDataType   varchar(50)      NULL,
+	dateDataType             varchar(50)      NULL,
+	timeDataType             varchar(50)      NULL
 ) ON [PRIMARY]
 GO
 
