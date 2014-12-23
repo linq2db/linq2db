@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	class MultipleRowsHelper<T>
 	{
@@ -20,6 +21,7 @@ namespace LinqToDB.DataProvider
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			Columns        = Descriptor.Columns.Where(c =>
 				!c.SkipOnInsert || enforceKeepIdentity && options.KeepIdentity == true && c.IsIdentity).ToArray();
+			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, Descriptor);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
@@ -31,6 +33,7 @@ namespace LinqToDB.DataProvider
 		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
+		public readonly SqlDataType[]       ColumnTypes;
 		public readonly string              TableName;
 		public readonly string              ParameterName;
 
@@ -50,16 +53,18 @@ namespace LinqToDB.DataProvider
 
 		public void BuildColumns(object item)
 		{
-			foreach (var column in Columns)
+			for (var i = 0; i < Columns.Length; i++)
 			{
-				var value = column.GetValue(item);
+				var column = Columns[i];
+				var value  = column.GetValue(item);
 
-				if (!ValueConverter.TryConvert(StringBuilder, column.DataType, value))
+				if (!ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					StringBuilder.Append(name);
-					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value, column.DataType));
+					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
+						column.DataType));
 				}
 
 				StringBuilder.Append(",");

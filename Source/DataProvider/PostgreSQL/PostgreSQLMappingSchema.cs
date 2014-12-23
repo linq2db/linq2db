@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			SetDataType(typeof(string), DataType.Undefined);
 
-			SetValueToSqlConverter(typeof(bool), (sb,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append(v));
 		}
 	}
 }

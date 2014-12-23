@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -64,21 +65,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 			}
 
-			SetValueToSqlConverter(typeof(String),         (sb,v) => ConvertStringToSql1       (sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),           (sb,v) => ConvertCharToSql1         (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime),       (sb,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan),       (sb,v) => ConvertTimeSpanToSql      (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,v) => ConvertDateTimeOffsetToSql(sb, (DateTimeOffset)v));
-			SetValueToSqlConverter(typeof(byte[]),         (sb,v) => ConvertBinaryToSql        (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),         (sb,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
-
-			SetValueToSqlConverter(typeof(String), DataType.Char,    (sb,v) => ConvertStringToSql2(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(String), DataType.VarChar, (sb,v) => ConvertStringToSql2(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(String), DataType.Text,    (sb,v) => ConvertStringToSql2(sb, v.ToString()));
-
-			SetValueToSqlConverter(typeof(Char),   DataType.Char,    (sb,v) => ConvertCharToSql2(sb, (char)v));
-			SetValueToSqlConverter(typeof(Char),   DataType.VarChar, (sb,v) => ConvertCharToSql2(sb, (char)v));
-			SetValueToSqlConverter(typeof(Char),   DataType.Text,    (sb,v) => ConvertCharToSql2(sb, (char)v));
+			SetValueToSqlConverter(typeof(String),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,v) => ConvertTimeSpanToSql      (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
@@ -105,34 +98,36 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.TryGetConvertExpression(@from, to);
 		}
 
-		static void ConvertStringToSql1(StringBuilder stringBuilder, string value)
+		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
-			stringBuilder
-				.Append("N\'")
-				.Append(value.Replace("'", "''"))
-				.Append('\'');
-		}
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    : break;
+				default               :
+					stringBuilder.Append('N');
+					break;
+			}
 
-		static void ConvertStringToSql2(StringBuilder stringBuilder, string value)
-		{
 			stringBuilder
 				.Append('\'')
 				.Append(value.Replace("'", "''"))
 				.Append('\'');
 		}
 
-		static void ConvertCharToSql1(StringBuilder stringBuilder, char value)
+		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
 		{
-			stringBuilder.Append("N\'");
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    : break;
+				default               :
+					stringBuilder.Append('N');
+					break;
+			}
 
-			if (value == '\'') stringBuilder.Append("''");
-			else               stringBuilder.Append(value);
-
-			stringBuilder.Append('\'');
-		}
-
-		static void ConvertCharToSql2(StringBuilder stringBuilder, char value)
-		{
 			stringBuilder.Append('\'');
 
 			if (value == '\'') stringBuilder.Append("''");
@@ -174,9 +169,22 @@ namespace LinqToDB.DataProvider.SqlServer
 				;
 		}
 
-		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, DateTimeOffset value)
+		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
 		{
-			stringBuilder.AppendFormat("'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'", value);
+			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
+
+			switch (sqlDataType.Scale)
+			{
+				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
+				case 2 : format = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'"; break;
+				case 3 : format = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'"; break;
+				case 4 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'"; break;
+				case 5 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffff zzz}'"; break;
+				case 6 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'"; break;
+				case 7 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'"; break;
+			}
+
+			stringBuilder.AppendFormat(format, value);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

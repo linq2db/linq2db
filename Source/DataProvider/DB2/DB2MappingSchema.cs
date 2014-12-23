@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected DB2MappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(Guid), (sb,v) => ConvertGuidToSql(sb, (Guid)v));
+			SetValueToSqlConverter(typeof(Guid), (sb,dt,v) => ConvertGuidToSql(sb, (Guid)v));
 		}
 
 		internal static readonly DB2MappingSchema Instance = new DB2MappingSchema();
