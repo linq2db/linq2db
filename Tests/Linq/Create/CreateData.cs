@@ -170,6 +170,7 @@ namespace Tests.Create
 		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase       (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource("SqlAzure.2012")]            public void SqlAzure2012 (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe        (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData    (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }

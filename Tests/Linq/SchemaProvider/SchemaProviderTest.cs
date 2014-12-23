@@ -40,6 +40,7 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2005 :
 					case ProviderName.SqlServer2008 :
 					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
 					case "SqlAzure.2012"            :
 					{
 						var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");

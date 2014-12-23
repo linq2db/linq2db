@@ -19,7 +19,7 @@ namespace Tests.Linq
         public class IdlProvidersAttribute : IncludeDataContextSourceAttribute
         {
             public IdlProvidersAttribute()
-                : base(ProviderName.MySql, ProviderName.SQLite, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012)
+                : base(ProviderName.MySql, ProviderName.SQLite, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")
             {
             }
         }
