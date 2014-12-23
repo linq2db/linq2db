@@ -353,6 +353,14 @@ CREATE TABLE AllTypes
 	xmlDataType              nvarchar(2000)   NULL,
 	datetime2DataType        varchar(50)      NULL,
 	datetimeoffsetDataType   varchar(50)      NULL,
+	datetimeoffset0DataType  varchar(50)      NULL,
+	datetimeoffset1DataType  varchar(50)      NULL,
+	datetimeoffset2DataType  varchar(50)      NULL,
+	datetimeoffset3DataType  varchar(50)      NULL,
+	datetimeoffset4DataType  varchar(50)      NULL,
+	datetimeoffset5DataType  varchar(50)      NULL,
+	datetimeoffset6DataType  varchar(50)      NULL,
+	datetimeoffset7DataType  varchar(50)      NULL,
 	dateDataType             varchar(50)      NULL,
 	timeDataType             varchar(50)      NULL
 ) ON [PRIMARY]

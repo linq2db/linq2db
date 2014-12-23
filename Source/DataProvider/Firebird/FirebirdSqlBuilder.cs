@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
+					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;

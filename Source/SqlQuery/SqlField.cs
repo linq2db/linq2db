@@ -44,9 +44,9 @@ namespace LinqToDB.SqlQuery
 		public bool             IsUpdatable      { get; set; }
 		public DataType         DataType         { get; set; }
 		public string           DbType           { get; set; }
-		public int              Length           { get; set; }
-		public int              Precision        { get; set; }
-		public int              Scale            { get; set; }
+		public int?             Length           { get; set; }
+		public int?             Precision        { get; set; }
+		public int?             Scale            { get; set; }
 
 		public ISqlTableSource  Table            { get; set; }
 		public ColumnDescriptor ColumnDescriptor { get; set; }

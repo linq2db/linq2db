@@ -152,21 +152,28 @@ namespace LinqToDB.DataProvider.SqlServer
 				;
 		}
 
-		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, TimeSpan value)
+		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
 		{
-			var format = value.Days > 0
-				? value.Milliseconds > 0
-					? "d\\.hh\\:mm\\:ss\\.fff"
-					: "d\\.hh\\:mm\\:ss"
-				: value.Milliseconds > 0
-					? "hh\\:mm\\:ss\\.fff"
-					: "hh\\:mm\\:ss";
+			if (sqlDataType.DataType == DataType.Int64)
+			{
+				stringBuilder.Append(value.Ticks);
+			}
+			else
+			{
+				var format = value.Days > 0
+					? value.Milliseconds > 0
+						? "d\\.hh\\:mm\\:ss\\.fff"
+						: "d\\.hh\\:mm\\:ss"
+					: value.Milliseconds > 0
+						? "hh\\:mm\\:ss\\.fff"
+						: "hh\\:mm\\:ss";
 
-			stringBuilder
-				.Append('\'')
-				.Append(value.ToString(format))
-				.Append('\'')
-				;
+				stringBuilder
+					.Append('\'')
+					.Append(value.ToString(format))
+					.Append('\'')
+					;
+			}
 		}
 
 		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
@@ -175,6 +182,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (sqlDataType.Scale)
 			{
+				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
 				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
 				case 2 : format = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'"; break;
 				case 3 : format = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'"; break;
