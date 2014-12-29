@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -514,6 +515,39 @@ namespace Tests.Model
 			where T : class 
 		{
 			return _ctx.GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock1<T>()
+		{
+			throw new InvalidOperationException();
+		}
+
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock1<int>()).GetGenericMethodDefinition();
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
+			where T : class 
+		{
+			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
+		}
+	}
+
+	public static class Functions1
+	{
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock<T>()
+		{
+			throw new InvalidOperationException();
+		}
+
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock<int>()).GetGenericMethodDefinition();
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
+			where T : class 
+		{
+			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}
 	}
 }

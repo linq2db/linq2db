@@ -9,14 +9,15 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Where");
+			return methodCall.IsQueryable("Where", "Having");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			var isHaving  = methodCall.Method.Name == "Having";
 			var sequence  = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, true);
+			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving);
 
 			result.SetAlias(condition.Parameters[0].Name);
 

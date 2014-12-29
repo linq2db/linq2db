@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 
 			SetDataType(typeof(string), DataType.Undefined);
+
+			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append(v));
 		}
 	}
 }

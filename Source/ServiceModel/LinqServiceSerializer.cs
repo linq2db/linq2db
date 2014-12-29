@@ -121,6 +121,14 @@ namespace LinqToDB.ServiceModel
 				Builder.Append(' ').Append(value);
 			}
 
+			protected void Append(int? value)
+			{
+				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
+
+				if (value.HasValue)
+					Builder.Append(value.Value);
+			}
+
 			protected void Append(Type value)
 			{
 				Builder.Append(' ').Append(value == null ? 0 : GetType(value));
@@ -233,6 +241,24 @@ namespace LinqToDB.ServiceModel
 			protected int ReadInt()
 			{
 				Get(' ');
+
+				var minus = Get('-');
+				var value = 0;
+
+				for (var c = Peek(); char.IsDigit(c); c = Next())
+					value = value * 10 + ((int)c - '0');
+
+				return minus ? -value : value;
+			}
+
+			protected int? ReadNullableInt()
+			{
+				Get(' ');
+
+				if (Get('0'))
+					return null;
+
+				Get('1');
 
 				var minus = Get('-');
 				var value = 0;
@@ -1063,9 +1089,9 @@ namespace LinqToDB.ServiceModel
 							var isInsertable     = ReadBool();
 							var dataType         = ReadInt();
 							var dbType           = ReadString();
-							var length           = ReadInt();
-							var precision        = ReadInt();
-							var scale            = ReadInt();
+							var length           = ReadNullableInt();
+							var precision        = ReadNullableInt();
+							var scale            = ReadNullableInt();
 
 							obj = new SqlField
 							{
@@ -1163,9 +1189,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var dbType     = (DataType)ReadInt();
 							var systemType = Read<Type>();
-							var length     = ReadInt();
-							var precision  = ReadInt();
-							var scale      = ReadInt();
+							var length     = ReadNullableInt();
+							var precision  = ReadNullableInt();
+							var scale      = ReadNullableInt();
 
 							obj = new SqlDataType(dbType, systemType, length, precision, scale);
 

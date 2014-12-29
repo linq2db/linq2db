@@ -59,6 +59,34 @@ namespace LinqToDB
 			return table;
 		}
 
+		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
+
+		static public ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
+		{
+			if (expression == null) throw new ArgumentNullException("expression");
+
+			table.Expression = Expression.Call(
+				null,
+				_withTableExpressionMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Constant(expression) });
+
+			return table;
+		}
+
+		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null, null)).GetGenericMethodDefinition();
+
+		static public ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
+		{
+			if (args == null) throw new ArgumentNullException("args");
+
+			table.Expression = Expression.Call(
+				null,
+				_with.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Constant(args) });
+
+			return table;
+		}
+
 		#endregion
 
 		#region LoadWith
@@ -840,6 +868,26 @@ namespace LinqToDB
 					null,
 					_elementAtOrDefaultMethodInfo.MakeGenericMethod(new[] { typeof(TSource) }),
 					new[] { source.Expression, Expression.Quote(index) }));
+		}
+
+		#endregion
+
+		#region Having
+
+		static readonly MethodInfo _setMethodInfo7 = MemberHelper.MethodOf(() => Having((IQueryable<int>)null,null)).GetGenericMethodDefinition();
+
+		public static IQueryable<TSource> Having<TSource>(
+			[NotNull]                this IQueryable<TSource>       source,
+			[NotNull, InstantHandle] Expression<Func<TSource,bool>> predicate)
+		{
+			if (source    == null) throw new ArgumentNullException("source");
+			if (predicate == null) throw new ArgumentNullException("predicate");
+
+			return source.Provider.CreateQuery<TSource>( 
+				Expression.Call(
+					null,
+					_setMethodInfo7.MakeGenericMethod(typeof(TSource)), 
+					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
 
 		#endregion

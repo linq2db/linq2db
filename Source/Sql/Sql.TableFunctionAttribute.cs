@@ -48,6 +48,8 @@ namespace LinqToDB
 
 			public string Configuration { get; set; }
 			public string Name          { get; set; }
+			public string Schema        { get; set; }
+			public string Database      { get; set; }
 			public int[]  ArgIndices    { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
@@ -82,6 +84,9 @@ namespace LinqToDB
 				table.Name           = Name ?? member.Name;
 				table.PhysicalName   = Name ?? member.Name;
 				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+
+				if (Schema   != null) table.Owner    = Schema;
+				if (Database != null) table.Database = Database;
 			}
 		}
 	}

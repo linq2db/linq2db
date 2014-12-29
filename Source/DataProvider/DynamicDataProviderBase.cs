@@ -3,7 +3,6 @@ using System.Data;
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider
 {

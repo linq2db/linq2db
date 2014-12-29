@@ -65,6 +65,8 @@ namespace Tests.Linq
 			ProviderName.SqlServer2005,
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014,
+			"SqlAzure.2012",
 			ProviderName.SqlCe)]
 		public void Issue60Test(string context)
 		{

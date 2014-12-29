@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Xml.Linq;
 
 #if !SILVERLIGHT && !NETFX_CORE
@@ -18,6 +19,8 @@ namespace LinqToDB.Mapping
 	using Expressions;
 	using Extensions;
 	using Metadata;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class MappingSchema
 	{
@@ -43,13 +46,25 @@ namespace LinqToDB.Mapping
 			MappingSchemaInfo[] ss;
 
 			if (schemas == null)
+			{
 				ss = Default._schemas;
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
+			}
 			else if (schemas.Length == 0)
+			{
 				ss = Array<MappingSchemaInfo>.Empty;
+				ValueToSqlConverter = new ValueToSqlConverter(Default.ValueToSqlConverter);
+			}
 			else if (schemas.Length == 1)
+			{
 				ss = schemas[0]._schemas;
+				ValueToSqlConverter = new ValueToSqlConverter(schemas[0].ValueToSqlConverter);
+			}
 			else
+			{
 				ss = schemas.Where(s => s != null).SelectMany(s => s._schemas).Distinct().ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(schemas.Select(s => s.ValueToSqlConverter).ToArray());
+			}
 
 			_schemas    = new MappingSchemaInfo[ss.Length + 1];
 			_schemas[0] = new MappingSchemaInfo(configuration);
@@ -58,6 +73,17 @@ namespace LinqToDB.Mapping
 		}
 
 		readonly MappingSchemaInfo[] _schemas;
+
+		#endregion
+
+		#region ValueToSqlConverter
+
+		internal readonly ValueToSqlConverter ValueToSqlConverter;
+
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, converter);
+		}
 
 		#endregion
 
@@ -650,6 +676,8 @@ namespace LinqToDB.Mapping
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
 			_schemas = new[] { mappingSchemaInfo };
+
+			ValueToSqlConverter = new ValueToSqlConverter();
 		}
 
 		public static MappingSchema Default = new DefaultMappingSchema();
@@ -701,6 +729,8 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float?),          DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 				AddScalarType(typeof(double?),         DataType.Double);
+
+				ValueToSqlConverter.SetDefauls();
 			}
 		}
 

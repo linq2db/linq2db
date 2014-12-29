@@ -334,43 +334,80 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
+	ID                       int           NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
 
-	bigintDataType           bigint           NULL,
-	numericDataType          numeric          NULL,
-	bitDataType              bit              NULL,
-	smallintDataType         smallint         NULL,
-	decimalDataType          decimal          NULL,
-	smallmoneyDataType       smallmoney       NULL,
-	intDataType              int              NULL,
-	tinyintDataType          tinyint          NULL,
-	moneyDataType            money            NULL,
-	floatDataType            float            NULL,
-	realDataType             real             NULL,
+	bigintDataType           bigint            NULL,
+	numericDataType          numeric(18,1)     NULL,
+	bitDataType              bit               NULL,
+	smallintDataType         smallint          NULL,
+	decimalDataType          decimal(18,1)     NULL,
+	smallmoneyDataType       smallmoney        NULL,
+	intDataType              int               NULL,
+	tinyintDataType          tinyint           NULL,
+	moneyDataType            money             NULL,
+	floatDataType            float             NULL,
+	realDataType             real              NULL,
 
-	datetimeDataType         datetime         NULL,
-	smalldatetimeDataType    smalldatetime    NULL,
+	datetimeDataType         datetime          NULL,
+	smalldatetimeDataType    smalldatetime     NULL,
 
-	charDataType             char(1)          NULL,
-	varcharDataType          varchar(20)      NULL,
-	textDataType             text             NULL,
-	ncharDataType            nchar(20)        NULL,
-	nvarcharDataType         nvarchar(20)     NULL,
-	ntextDataType            ntext            NULL,
+	charDataType             char(1)           NULL,
+	varcharDataType          varchar(20)       NULL,
+	textDataType             text              NULL,
+	ncharDataType            nchar(20)         NULL,
+	nvarcharDataType         nvarchar(20)      NULL,
+	ntextDataType            ntext             NULL,
 
-	binaryDataType           binary           NULL,
-	varbinaryDataType        varbinary        NULL,
-	imageDataType            image            NULL,
+	binaryDataType           binary            NULL,
+	varbinaryDataType        varbinary         NULL,
+	imageDataType            image             NULL,
 
-	timestampDataType        timestamp        NULL,
-	uniqueidentifierDataType uniqueidentifier NULL,
-	sql_variantDataType      sql_variant      NULL,
+	timestampDataType        timestamp         NULL,
+	uniqueidentifierDataType uniqueidentifier  NULL,
+	sql_variantDataType      sql_variant       NULL,
 
-	nvarchar_max_DataType    nvarchar(max)    NULL,
-	varchar_max_DataType     varchar(max)     NULL,
-	varbinary_max_DataType   varbinary(max)   NULL,
+	nvarchar_max_DataType    nvarchar(max)     NULL,
+	varchar_max_DataType     varchar(max)      NULL,
+	varbinary_max_DataType   varbinary(max)    NULL,
 
-	xmlDataType              xml              NULL
+	xmlDataType              xml               NULL,
+
+-- SKIP SqlServer.2005 BEGIN
+	datetime2DataType        datetime2         NULL,
+	datetimeoffsetDataType   datetimeoffset    NULL,
+	datetimeoffset0DataType  datetimeoffset(0) NULL,
+	datetimeoffset1DataType  datetimeoffset(1) NULL,
+	datetimeoffset2DataType  datetimeoffset(2) NULL,
+	datetimeoffset3DataType  datetimeoffset(3) NULL,
+	datetimeoffset4DataType  datetimeoffset(4) NULL,
+	datetimeoffset5DataType  datetimeoffset(5) NULL,
+	datetimeoffset6DataType  datetimeoffset(6) NULL,
+	datetimeoffset7DataType  datetimeoffset(7) NULL,
+	dateDataType             date              NULL,
+	timeDataType             time              NULL
+-- SKIP SqlServer.2005 END
+
+-- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
+	datetime2DataType        varchar(50)       NULL,
+	datetimeoffsetDataType   varchar(50)       NULL,
+	datetimeoffset0DataType  varchar(50)       NULL,
+	datetimeoffset1DataType  varchar(50)       NULL,
+	datetimeoffset2DataType  varchar(50)       NULL,
+	datetimeoffset3DataType  varchar(50)       NULL,
+	datetimeoffset4DataType  varchar(50)       NULL,
+	datetimeoffset5DataType  varchar(50)       NULL,
+	datetimeoffset6DataType  varchar(50)       NULL,
+	datetimeoffset7DataType  varchar(50)       NULL,
+	dateDataType             varchar(50)       NULL,
+	timeDataType             varchar(50)       NULL
+-- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2014 END
+-- SKIP SqlAzure.2012 END
+
 ) ON [PRIMARY]
 GO
 
@@ -471,18 +508,21 @@ GO
 DROP TABLE GrandChild
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int)
+CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
+
+-- SKIP SqlAzure.2012 BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
+-- SKIP SqlAzure.2012 END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -523,6 +563,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
+	_ID            int IDENTITY  PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -539,6 +580,8 @@ GO
 
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -553,7 +596,9 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
+-- SKIP SqlAzure.2012 END
 -- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2008 END
 
 DROP TABLE TestIdentity
@@ -561,7 +606,7 @@ GO
 
 CREATE TABLE TestIdentity (
 	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
-)
+) ON [PRIMARY]
 GO
 
 
@@ -630,6 +675,7 @@ GO
 
 CREATE TABLE [Name.Test]
 (
+--	ID INT IDENTITY PRIMARY KEY CLUSTERED,
 	[Name.Test] int
 )
 GO

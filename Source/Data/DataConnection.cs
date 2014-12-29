@@ -379,7 +379,7 @@ namespace LinqToDB.Data
 				_connectionStringSettings = connectionStringSettings;
 			}
 
-			public  readonly string ConnectionString;
+			public  string ConnectionString;
 
 			private readonly ConnectionStringSettings _connectionStringSettings;
 
@@ -446,7 +446,10 @@ namespace LinqToDB.Data
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
 			new ConcurrentDictionary<string, ConfigurationInfo>();
 
-		public static void AddConfiguration([JetBrains.Annotations.NotNull] string configuration, [JetBrains.Annotations.NotNull] string connectionString, IDataProvider dataProvider = null)
+		public static void AddConfiguration(
+			[JetBrains.Annotations.NotNull] string configuration,
+			[JetBrains.Annotations.NotNull] string connectionString,
+			IDataProvider dataProvider = null)
 		{
 			if (configuration    == null) throw new ArgumentNullException("configuration");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
@@ -454,6 +457,18 @@ namespace LinqToDB.Data
 			_configurations[configuration] = new ConfigurationInfo(
 				connectionString,
 				dataProvider ?? FindProvider(configuration, _dataProviders, _dataProviders[DefaultDataProvider]));
+		}
+
+		public static void SetConnectionString(
+			[JetBrains.Annotations.NotNull] string configuration,
+			[JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (configuration    == null) throw new ArgumentNullException("configuration");
+			if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+			InitConfig();
+
+			_configurations[configuration].ConnectionString = connectionString;
 		}
 
 		public static string GetConnectionString(string configurationString)

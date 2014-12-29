@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -10,8 +9,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 	class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -27,7 +26,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new SQLiteSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";  } }
@@ -39,47 +38,6 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause();
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is Guid)
-			{
-				var s = ((Guid)value).ToString("N");
-
-				StringBuilder
-					.Append("Cast(x'")
-					.Append(s.Substring( 6,  2))
-					.Append(s.Substring( 4,  2))
-					.Append(s.Substring( 2,  2))
-					.Append(s.Substring( 0,  2))
-					.Append(s.Substring(10,  2))
-					.Append(s.Substring( 8,  2))
-					.Append(s.Substring(14,  2))
-					.Append(s.Substring(12,  2))
-					.Append(s.Substring(16, 16))
-					.Append("' as blob)");
-			}
-			else
-				base.BuildValue(value);
-		}
-
-		protected override void BuildDateTime(DateTime value)
-		{
-			if (value.Millisecond == 0)
-			{
-				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
-
-				StringBuilder.AppendFormat(format, value);
-			}
-			else
-			{
-				StringBuilder
-					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-					.Append('\'');
-			}
 		}
 
 		public override object Convert(object value, ConvertType convertType)

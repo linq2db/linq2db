@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
-
-using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.DataProvider
 {
+	using Data;
+	using Expressions;
+	using Mapping;
+	using SqlProvider;
+
 	class BasicBulkCopy
 	{
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -54,7 +55,7 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected static string GetTableName(ISqlBuilder sqlBuilder, EntityDescriptor descriptor)
+		protected internal static string GetTableName(ISqlBuilder sqlBuilder, EntityDescriptor descriptor)
 		{
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
@@ -63,6 +64,8 @@ namespace LinqToDB.DataProvider
 				descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
 			.ToString();
 		}
+
+		#region ProviderSpecific Support
 
 		protected Func<IDbConnection,int,IDisposable> CreateBulkCopyCreator(
 			Type connectionType, Type bulkCopyType, Type bulkCopyOptionType)
@@ -134,5 +137,194 @@ namespace LinqToDB.DataProvider
 
 			return (obj,action) => eventInfo.AddEventHandler(obj, dgt(action));
 		}
+
+		#endregion
+
+		#region MultopleRows Support
+
+		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
+			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
+		{
+			return MultipleRowsCopy1(
+				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				dataConnection,
+				options,
+				source);
+		}
+
+		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
+			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			helper.StringBuilder
+				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.Append("(");
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\t")
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(",");
+
+			helper.StringBuilder.Length--;
+			helper.StringBuilder
+				.AppendLine()
+				.Append(")");
+
+			helper.StringBuilder
+				.AppendLine()
+				.Append("VALUES");
+
+			helper.SetHeader();
+
+			foreach (var item in source)
+			{
+				helper.StringBuilder
+					.AppendLine()
+					.Append("(");
+				helper.BuildColumns(item);
+				helper.StringBuilder.Append("),");
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				{
+					helper.StringBuilder.Length--;
+					if (!helper.Execute())
+						return helper.RowsCopied;
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				helper.StringBuilder.Length--;
+				helper.Execute();
+			}
+
+			return helper.RowsCopied;
+		}
+
+		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source, string from)
+		{
+			return MultipleRowsCopy2<T>(
+				new MultipleRowsHelper<T>(dataConnection, options, enforceKeepIdentity),
+				dataConnection,
+				options,
+				source,
+				from);
+		}
+
+		protected  BulkCopyRowsCopied MultipleRowsCopy2<T>(
+			MultipleRowsHelper<T> helper, DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		{
+			helper.StringBuilder
+				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.Append("(");
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\t")
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(",");
+
+			helper.StringBuilder.Length--;
+			helper.StringBuilder
+				.AppendLine()
+				.Append(")");
+
+			helper.SetHeader();
+
+			foreach (var item in source)
+			{
+				helper.StringBuilder
+					.AppendLine()
+					.Append("SELECT ");
+				helper.BuildColumns(item);
+				helper.StringBuilder.Append(from);
+				helper.StringBuilder.Append(" UNION ALL");
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				{
+					helper.StringBuilder.Length -= " UNION ALL".Length;
+					if (!helper.Execute())
+						return helper.RowsCopied;
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				helper.StringBuilder.Length -= " UNION ALL".Length;
+				helper.Execute();
+			}
+
+			return helper.RowsCopied;
+		}
+
+		protected  BulkCopyRowsCopied MultipleRowsCopy3<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, string from)
+		{
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
+
+			helper.StringBuilder
+				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.Append("(");
+
+			foreach (var column in helper.Columns)
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\t")
+					.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+					.Append(",");
+
+			helper.StringBuilder.Length--;
+			helper.StringBuilder
+				.AppendLine()
+				.AppendLine(")")
+				.AppendLine("SELECT * FROM")
+				.Append("(");
+
+			helper.SetHeader();
+
+			foreach (var item in source)
+			{
+				helper.StringBuilder
+					.AppendLine()
+					.Append("\tSELECT ");
+				helper.BuildColumns(item);
+				helper.StringBuilder.Append(from);
+				helper.StringBuilder.Append(" UNION ALL");
+
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
+				{
+					helper.StringBuilder.Length -= " UNION ALL".Length;
+					helper.StringBuilder
+						.AppendLine()
+						.Append(")");
+					if (!helper.Execute())
+						return helper.RowsCopied;
+				}
+			}
+
+			if (helper.CurrentCount > 0)
+			{
+				helper.StringBuilder.Length -= " UNION ALL".Length;
+				helper.StringBuilder
+					.AppendLine()
+					.Append(")");
+				helper.Execute();
+			}
+
+			return helper.RowsCopied;
+		}
+
+		#endregion
 	}
 }

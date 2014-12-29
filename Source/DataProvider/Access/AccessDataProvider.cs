@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
+using LinqToDB.Data;
 
 
 namespace LinqToDB.DataProvider.Access
@@ -55,7 +57,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -144,5 +146,19 @@ namespace LinqToDB.DataProvider.Access
 
 			DropFileDatabase(databaseName, ".mdb");
 		}
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+
+			return new AccessBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

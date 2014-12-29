@@ -1054,5 +1054,58 @@ namespace Tests.Linq
 				AreEqual(qry12, qry22);
 			}
 		}
+
+		[Test, DataContextSource]
+		public void HavingTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					Child
+						.GroupBy(c => c.ParentID)
+						.Where(c => c.Count() > 1)
+						.Select(g => new { count = g.Count() }),
+					db.Child
+						.GroupBy(c => c.ParentID)
+						.Where  (c => c.Count() > 1)
+						.Select (g => new { count = g.Count() }));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void HavingTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					Child
+						.GroupBy(c => c.ParentID)
+						.Select (g => new { count = g.Count() })
+						.Where  (c => c.count > 1),
+					db.Child
+						.GroupBy(c => c.ParentID)
+						.Select (g => new { count = g.Count() })
+						.Having (c => c.count > 1)
+						.Where  (c => c.count > 1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void HavingTest3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					Child
+						.GroupBy(c => c.ParentID)
+						.Where  (c => c.Key > 1 && c.Count() > 1)
+						.Select (g => g.Count()),
+					db.Child
+						.GroupBy(c => c.ParentID)
+						.Where  (c => c.Key > 1 && c.Count() > 1)
+						.Having (c => c.Key > 1)
+						.Select (g => g.Count()));
+			}
+		}
 	}
 }

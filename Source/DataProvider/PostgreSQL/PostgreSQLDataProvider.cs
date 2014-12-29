@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Data;
 	using Expressions;
 	using Mapping;
 	using SqlProvider;
@@ -141,7 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -183,5 +185,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new PostgreSQLBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }
