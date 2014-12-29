@@ -129,6 +129,7 @@
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />

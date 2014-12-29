@@ -883,7 +883,6 @@ namespace LinqToDB.SqlProvider
 							StringBuilder.Append(" ");
 						StringBuilder.Append(Convert(alias, ConvertType.NameToQueryTableAlias));
 					}
-					
 				}
 			}
 		}
@@ -2407,33 +2406,27 @@ namespace LinqToDB.SqlProvider
 
 						var sb = new StringBuilder();
 
+						BuildTableName(sb, database, owner, physicalName);
+
 						if (tbl.SqlTableType == SqlTableType.Expression)
 						{
-							if (tbl.TableArguments == null)
-								physicalName = tbl.PhysicalName;
-							else
+							var values = new object[2 + (tbl.TableArguments == null ? 0 : tbl.TableArguments.Length)];
+
+							values[0] = sb.ToString();
+							values[1] = Convert(alias, ConvertType.NameToQueryTableAlias);
+
+							for (var i = 2; i < values.Length; i++)
 							{
-								var values = new object[tbl.TableArguments.Length + 2];
-
-								values[0] = physicalName;
-								values[1] = Convert(alias, ConvertType.NameToQueryTableAlias);
-
-								for (var i = 2; i < values.Length; i++)
-								{
-									var value = tbl.TableArguments[i - 2];
-
-									sb.Length = 0;
-									WithStringBuilder(sb, () => BuildExpression(Precedence.Primary, value));
-									values[i] = sb.ToString();
-								}
-
-								physicalName = string.Format(tbl.Name, values);
+								var value = tbl.TableArguments[i - 2];
 
 								sb.Length = 0;
+								WithStringBuilder(sb, () => BuildExpression(Precedence.Primary, value));
+								values[i] = sb.ToString();
 							}
-						}
 
-						BuildTableName(sb, database, owner, physicalName);
+							sb.Length = 0;
+							sb.AppendFormat(tbl.Name, values);
+						}
 
 						if (tbl.SqlTableType == SqlTableType.Function)
 						{

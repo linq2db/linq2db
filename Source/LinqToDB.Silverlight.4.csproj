@@ -187,6 +187,7 @@
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="Linq\TableT.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Mapping\AssociationAttribute.cs" />
     <Compile Include="Mapping\AssociationDescriptor.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />

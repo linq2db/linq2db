@@ -208,6 +208,7 @@
     <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
     <Compile Include="Linq\Builder\UpdateBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
