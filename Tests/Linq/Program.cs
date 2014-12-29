@@ -6,6 +6,8 @@ namespace Tests
 	{
 		static void Main()
 		{
+			SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+
 			var path = typeof(Program).Assembly.Location;
 
 			Console.WriteLine(path);

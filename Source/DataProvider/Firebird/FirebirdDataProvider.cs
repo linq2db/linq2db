@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlProvider;
 
@@ -51,7 +53,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new FirebirdSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -97,5 +99,20 @@ namespace LinqToDB.DataProvider.Firebird
 
 			base.SetParameterType(parameter, dataType);
 		}
+
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new FirebirdBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? FirebirdTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

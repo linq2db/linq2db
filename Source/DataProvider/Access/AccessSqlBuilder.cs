@@ -5,15 +5,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -142,7 +141,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override bool ParenthesizeJoin()
@@ -290,16 +289,6 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else if (value is Guid)
-				StringBuilder.Append("'").Append(((Guid)value).ToString("B")).Append("'");
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildUpdateClause()
 		{
 			base.BuildFromClause();
@@ -321,7 +310,6 @@ namespace LinqToDB.DataProvider.Access
 				default                 : base.BuildDataType(type);          break;
 			}
 		}
-
 
 		public override object Convert(object value, ConvertType convertType)
 		{
@@ -373,15 +361,6 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return value;
-		}
-
-		protected override void BuildDateTime(DateTime value)
-		{
-			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-				"#{0:yyyy-MM-dd}#" :
-				"#{0:yyyy-MM-dd HH:mm:ss}#";
-
-			StringBuilder.AppendFormat(format, value);
 		}
 
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)

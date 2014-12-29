@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 		protected InformixMappingSchema(string configuration) : base(configuration)
 		{
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
+
+			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append("'").Append((bool)v ? 't' : 'f').Append("'"));
 		}
 	}
 }

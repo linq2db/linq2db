@@ -50,10 +50,10 @@ namespace LinqToDB
 					args.Add(Expression.Constant(parameters[i], type.IsByRef ? type.GetElementType() : type));
 				}
 
-				expr = Expression.Call(Expression.Constant(instance), methodInfo, args); 
+				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
 			}
 			else
-				expr = Expression.Call(Expression.Constant(instance), methodInfo); 
+				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo); 
 
 			return new Table<T>(dataContext, expr);
 		}

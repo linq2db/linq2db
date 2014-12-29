@@ -70,9 +70,9 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB())
 			{
-
-				var cQuery = from order in db.Order
-								where order.OrderDate == new DateTime(1997, 11, 14)
+				var cQuery =
+					from order in db.Order
+					where order.OrderDate == new DateTime(1997, 11, 14)
 					select order.OrderID;
 
 				var cSharpResults = cQuery.ToList();
@@ -90,9 +90,9 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB())
 			{
-
-				var cQuery = from order in db.Order
-								where order.OrderDate == new DateTime(1997, 11, 14)
+				var cQuery =
+					from order in db.Order
+					where order.OrderDate == new DateTime(1997, 11, 14)
 					select order.OrderID;
 
 				var cSharpResults = cQuery.ToList();

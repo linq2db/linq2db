@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -7,6 +8,7 @@ using System.Threading;
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlProvider;
 
@@ -137,7 +139,7 @@ namespace LinqToDB.DataProvider.Informix
 		
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -192,5 +194,19 @@ namespace LinqToDB.DataProvider.Informix
 
 			base.SetParameterType(parameter, dataType);
 		}
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new InformixBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

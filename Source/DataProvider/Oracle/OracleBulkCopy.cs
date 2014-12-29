@@ -7,6 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
+	using Mapping;
 	using SqlProvider;
 
 	class OracleBulkCopy : BasicBulkCopy
@@ -31,7 +32,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-			var sqlBuilder = _dataProvider.CreateSqlBuilder();
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var tableName  = GetTableName(sqlBuilder, descriptor);
 
@@ -108,142 +109,44 @@ namespace LinqToDB.DataProvider.Oracle
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			var sqlBuilder = _dataProvider.CreateSqlBuilder();
-			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, descriptor);
-			var rowsCopied = new BulkCopyRowsCopied();
-			var sb         = new StringBuilder();
-			var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-			var pname      = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
+			var helper = new MultipleRowsHelper<T>(dataConnection, options, false);
 
-			sb.AppendLine("INSERT ALL");
-
-			var headerLen    = sb.Length;
-			var currentCount = 0;
-			var batchSize    = options.MaxBatchSize ?? 1000;
-
-			if (batchSize <= 0)
-				batchSize = 1000;
-
-			var parms = new List<DataParameter>();
-			var pidx = 0;
+			helper.StringBuilder.AppendLine("INSERT ALL");
+			helper.SetHeader();
 
 			foreach (var item in source)
 			{
-				sb.AppendFormat("\tINTO {0} (", tableName);
+				helper.StringBuilder.AppendFormat("\tINTO {0} (", helper.TableName);
 
-				foreach (var column in columns)
-					sb
-						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
+				foreach (var column in helper.Columns)
+					helper.StringBuilder
+						.Append(helper.SqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
 						.Append(", ");
 
-				sb.Length -= 2;
+				helper.StringBuilder.Length -= 2;
 
-				sb.Append(") VALUES (");
+				helper.StringBuilder.Append(") VALUES (");
+				helper.BuildColumns(item);
+				helper.StringBuilder.AppendLine(")");
 
-				foreach (var column in columns)
+				helper.RowsCopied.RowsCopied++;
+				helper.CurrentCount++;
+
+				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > 10000 || helper.StringBuilder.Length > 100000)
 				{
-					var value = column.GetValue(item);
-
-					if (value == null)
-					{
-						sb.Append("NULL");
-					}
-					else
-						switch (Type.GetTypeCode(value.GetType()))
-						{
-							case TypeCode.DBNull:
-								sb.Append("NULL");
-								break;
-
-							case TypeCode.String:
-								var isString = false;
-
-								switch (column.DataType)
-								{
-									case DataType.NVarChar  :
-									case DataType.Char      :
-									case DataType.VarChar   :
-									case DataType.NChar     :
-									case DataType.Undefined :
-										isString = true;
-										break;
-								}
-
-								if (isString) goto case TypeCode.Int32;
-								goto default;
-
-							case TypeCode.Boolean  :
-							case TypeCode.Char     :
-							case TypeCode.SByte    :
-							case TypeCode.Byte     :
-							case TypeCode.Int16    :
-							case TypeCode.UInt16   :
-							case TypeCode.Int32    :
-							case TypeCode.UInt32   :
-							case TypeCode.Int64    :
-							case TypeCode.UInt64   :
-							case TypeCode.Single   :
-							case TypeCode.Double   :
-							case TypeCode.Decimal  :
-							case TypeCode.DateTime :
-								//SetParameter(dataParam, "", column.DataType, value);
-
-								buildValue(value);
-								break;
-
-							default:
-								var name = pname + ++pidx;
-
-								sb.Append(name);
-								parms.Add(new DataParameter("p" + pidx, value, column.DataType));
-
-								break;
-						}
-
-					sb.Append(",");
-				}
-
-				sb.Length--;
-				sb.AppendLine(")");
-
-				rowsCopied.RowsCopied++;
-				currentCount++;
-
-				if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
-				{
-					sb.AppendLine("SELECT * FROM dual");
-
-					dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
-
-					if (options.RowsCopiedCallback != null)
-					{
-						options.RowsCopiedCallback(rowsCopied);
-
-						if (rowsCopied.Abort)
-							return rowsCopied;
-					}
-
-					parms.Clear();
-					pidx         = 0;
-					currentCount = 0;
-					sb.Length    = headerLen;
+					helper.StringBuilder.AppendLine("SELECT * FROM dual");
+					if (!helper.Execute())
+						return helper.RowsCopied;
 				}
 			}
 
-			if (currentCount > 0)
+			if (helper.CurrentCount > 0)
 			{
-				sb.AppendLine("SELECT * FROM dual");
-
-				dataConnection.Execute(sb.ToString(), parms.ToArray());
-				sb.Length = headerLen;
-
-				if (options.RowsCopiedCallback != null)
-					options.RowsCopiedCallback(rowsCopied);
+				helper.StringBuilder.AppendLine("SELECT * FROM dual");
+				helper.Execute();
 			}
 
-			return rowsCopied;
+			return helper.RowsCopied;
 		}
 	}
 }

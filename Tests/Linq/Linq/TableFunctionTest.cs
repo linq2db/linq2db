@@ -93,8 +93,73 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in new Tests.Model.Functions(db).WithTabLock<Parent>().OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in Model.Functions.WithTabLock1<Parent>(db).OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.WithTabLock<Parent>().OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.OwnerName("dbo").With("TABLOCK,UPDLOCK")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTableExpressionTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.OwnerName("dbo").WithTableExpression("{0} {1} with (UpdLock)")
+					select p;
+
+				q.ToList();
+			}
+		}
+
 		[Test, NorthwindDataContext]
-		public void FreeText1(string context)
+		public void FreeTextTable1(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -109,7 +174,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void FreeText2(string context)
+		public void FreeTextTable2(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -124,7 +189,7 @@ namespace Tests.Linq
 		}
 
 		[Test, NorthwindDataContext]
-		public void FreeText3(string context)
+		public void FreeTextTable3(string context)
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -135,6 +200,70 @@ namespace Tests.Linq
 					select c;
 
 				q.ToList();
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText1(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(t.Description, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText2(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(Sql.AllColumns(), "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText3(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where Sql.FreeText(t, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
+			}
+		}
+
+		[Test, NorthwindDataContext]
+		public void FreeText4(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q =
+					from t in db.Category
+					where !Sql.FreeText(t, "sweet")
+					select t;
+
+				var list = q.ToList();
+
+				Assert.That(list.Count, Is.GreaterThan(0));
 			}
 		}
 

@@ -4,14 +4,13 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
 	using SqlQuery;
 	using SqlProvider;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -77,28 +76,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				BuildPhysicalTable(table, null);
 			else
 				StringBuilder.Append(Convert(GetTableAlias(table), ConvertType.NameToQueryTableAlias));
-		}
-
-		protected override void BuildString(string value)
-		{
-			foreach (var ch in value)
-			{
-				if (ch > 127)
-				{
-					StringBuilder.Append("N");
-					break;
-				}
-			}
-
-			base.BuildString(value);
-		}
-
-		protected override void BuildChar(char value)
-		{
-			if (value > 127)
-				StringBuilder.Append("N");
-
-			base.BuildChar(value);
 		}
 
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
@@ -177,20 +154,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			BuildInsertOrUpdateQueryAsUpdateInsert();
 		}
 
-		protected override void BuildDateTime(DateTime value)
-		{
-			var format = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
-
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-ddTHH:mm:ss}'";
-			}
-
-			StringBuilder.AppendFormat(format, value);
-		}
-
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
 			StringBuilder.Append("IDENTITY");
@@ -202,6 +165,43 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
+		}
+
+		protected override void BuildDropTableStatement()
+		{
+			var table = SelectQuery.CreateTable.Table;
+
+			StringBuilder.Append("IF  EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine("') AND type in (N'U'))");
+
+			AppendIndent().Append("BEGIN DROP TABLE ");
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine(" END");
+		}
+
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
+				case DataType.Variant   : StringBuilder.Append("Sql_Variant");           return;
+				case DataType.NVarChar  :
+				case DataType.VarChar   :
+				case DataType.VarBinary :
+
+					if (type.Length == int.MaxValue || type.Length < 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(Max)");
+						return;
+					}
+
+					break;
+			}
+
+			base.BuildDataType(type, createDbType);
 		}
 	}
 }

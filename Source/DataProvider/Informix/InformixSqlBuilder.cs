@@ -10,8 +10,8 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
@@ -76,19 +76,6 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			func = ConvertFunctionParameters(func);
 			base.BuildFunction(func);
-		}
-
-		public virtual object ConvertBooleanValue(bool value)
-		{
-			return value ? 't' : 'f';
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");
-			else
-				base.BuildValue(value);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)

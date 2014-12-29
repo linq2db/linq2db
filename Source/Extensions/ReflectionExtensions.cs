@@ -441,6 +441,15 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static object[] GetCustomAttributesEx(this ParameterInfo parameterInfo, bool inherit)
+		{
+#if NETFX_CORE
+			return parameterInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
+#else
+			return parameterInfo.GetCustomAttributes(inherit);
+#endif
+		}
+
 		static class CacheHelper<T>
 		{
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();

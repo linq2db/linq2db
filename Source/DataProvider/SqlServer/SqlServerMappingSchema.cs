@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -59,9 +61,17 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerDataProvider.SetUdtType(type, typeName.Substring(3).ToLower());
 				}
 			}
-			catch (Exception)
+			catch
 			{
 			}
+
+			SetValueToSqlConverter(typeof(String),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
@@ -86,6 +96,111 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return base.TryGetConvertExpression(@from, to);
+		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
+		{
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    : break;
+				default               :
+					stringBuilder.Append('N');
+					break;
+			}
+
+			stringBuilder
+				.Append('\'')
+				.Append(value.Replace("'", "''"))
+				.Append('\'');
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
+		{
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    : break;
+				default               :
+					stringBuilder.Append('N');
+					break;
+			}
+
+			stringBuilder.Append('\'');
+
+			if (value == '\'') stringBuilder.Append("''");
+			else               stringBuilder.Append(value);
+
+			stringBuilder.Append('\'');
+		}
+
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+		{
+			var format =
+				value.Millisecond == 0
+					? value.Hour == 0 && value.Minute == 0 && value.Second == 0
+						? "yyyy-MM-dd"
+						: "yyyy-MM-ddTHH:mm:ss"
+					: "yyyy-MM-ddTHH:mm:ss.fff";
+
+			stringBuilder
+				.Append('\'')
+				.Append(value.ToString(format))
+				.Append('\'')
+				;
+		}
+
+		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
+		{
+			if (sqlDataType.DataType == DataType.Int64)
+			{
+				stringBuilder.Append(value.Ticks);
+			}
+			else
+			{
+				var format = value.Days > 0
+					? value.Milliseconds > 0
+						? "d\\.hh\\:mm\\:ss\\.fff"
+						: "d\\.hh\\:mm\\:ss"
+					: value.Milliseconds > 0
+						? "hh\\:mm\\:ss\\.fff"
+						: "hh\\:mm\\:ss";
+
+				stringBuilder
+					.Append('\'')
+					.Append(value.ToString(format))
+					.Append('\'')
+					;
+			}
+		}
+
+		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
+		{
+			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
+
+			switch (sqlDataType.Scale)
+			{
+				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
+				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
+				case 2 : format = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'"; break;
+				case 3 : format = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'"; break;
+				case 4 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'"; break;
+				case 5 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffff zzz}'"; break;
+				case 6 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'"; break;
+				case 7 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'"; break;
+			}
+
+			stringBuilder.AppendFormat(format, value);
+		}
+
+		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
+		{
+			stringBuilder.Append("0x");
+
+			foreach (var b in value)
+				stringBuilder.Append(b.ToString("X2"));
 		}
 	}
 

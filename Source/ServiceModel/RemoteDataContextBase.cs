@@ -195,12 +195,14 @@ namespace LinqToDB.ServiceModel
 											type.GetConstructorEx(new[]
 											{
 												typeof(ISqlOptimizer),
-												typeof(SqlProviderFlags)
+												typeof(SqlProviderFlags),
+												typeof(ValueToSqlConverter)
 											}),
 											new Expression[]
 											{
 												Expression.Constant(GetSqlOptimizer()),
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
+												Expression.Constant(((IDataContext)this).SqlProviderFlags),
+												Expression.Constant(((IDataContext)this).MappingSchema.ValueToSqlConverter)
 											})).Compile());
 				}
 

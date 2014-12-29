@@ -13,10 +13,10 @@ using NUnit.Framework;
 
 using MySql.Data.Types;
 
-using Tests.Model;
-
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class MySqlTest : DataProviderTestBase
 	{
