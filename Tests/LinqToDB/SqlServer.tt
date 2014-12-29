@@ -2,8 +2,8 @@
 <#@ output extension=".generated.cs"                               #>
 <#@ include file="..\..\Templates\LinqToDB.SqlServer.ttinclude"    #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude"  #>
-<#@ assembly name="I:\linq2db\packages\Microsoft.SqlServer.Types.11.0.0\lib\Net20\Microsoft.SqlServer.Types.dll" #>
-<#@ assembly name="I:\linq2db\Source\bin\Debug.4.0\linq2db.dll" #>
+<#@ assembly name="I:\linq2db\packages\Microsoft.SqlServer.Types.11.0.2\lib\Net20\Microsoft.SqlServer.Types.dll" #>
+<#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll" #>
 <#
 //	NamespaceName   = "DataContext";
 //	DataContextName = "NorthwindDB";
@@ -20,6 +20,8 @@
 
 	IncludeDefaultSchema = false;
 	GenerateObsoleteAttributeForAliases = true;
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
 
 	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
 

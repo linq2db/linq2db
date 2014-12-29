@@ -14,6 +14,8 @@ bool GenerateObsoleteAttributeForAliases;
 bool GenerateFindExtensions = true;
 bool IsCompactColumns       = true;
 bool IsCompactColumnAliases = true;
+bool GenerateDataTypes      = false;
+bool GenerateDbTypes        = false;
 
 void GenerateTypesFromMetadata()
 {
@@ -108,6 +110,7 @@ void GenerateTypesFromMetadata()
 		var columnAliases = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
 		var nPKs          = t.Columns.Values.Count(c => c.IsPrimaryKey);
 		var allNullable   = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
+		var dbTypeMaxLen  = t.Columns.Values.Max  (c => c.ColumnType.Length);
 
 		foreach (var c in t.Columns.Values)
 		{
@@ -119,6 +122,23 @@ void GenerateTypesFromMetadata()
 			if (c.MemberName != c.ColumnName)
 			{
 				ca.Parameters.Add('"' + c.ColumnName + '"');
+				canBeReplaced = false;
+			}
+
+			if (GenerateDbTypes)
+			{
+				ca.Parameters.Add("DbType=\"" + c.ColumnType + '"');
+				canBeReplaced = false;
+			}
+
+			if (GenerateDataTypes)
+			{
+				var space = GenerateDbTypes ? new string(' ', dbTypeMaxLen - c.ColumnType.Length) : "";
+
+				ca.Parameters.Add(space + "DataType=" + c.DataType);
+				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
+				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
+				if (c.Scale     != null) ca.Parameters.Add("Scale="     + c.Scale);
 				canBeReplaced = false;
 			}
 
@@ -324,7 +344,15 @@ void GenerateTypesFromMetadata()
 
 			if (p.IsTableFunction)
 			{
-				p.Attributes.Add(new Attribute("Sql.TableFunction", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\""));
+				var tableAttrs = new List<string>();
+
+				if (DatabaseName != null) tableAttrs.Add("Database=" + '"' + DatabaseName + '"');
+				if (p.Schema     != null) tableAttrs.Add("Schema="   + '"' + p.Schema     + '"');
+
+				tableAttrs.Add("Name=" + '"' + p.ProcedureName + '"');
+
+				p.Attributes.Add(new Attribute("Sql.TableFunction", tableAttrs.ToArray()));
+
 				p.Type = "ITable<" + p.ResultTable.TypeName + ">";
 			}
 			else if (p.IsFunction)

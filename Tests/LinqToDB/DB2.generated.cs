@@ -35,57 +35,60 @@ namespace DB2DataContext
 		public ITable<PERSONVIEW>   PERSONVIEWs    { get { return this.GetTable<PERSONVIEW>(); } }
 		public ITable<SLAVETABLE>   SLAVETABLEs    { get { return this.GetTable<SLAVETABLE>(); } }
 		public ITable<TestIdentity> TestIdentities { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestTable>    TestTables     { get { return this.GetTable<TestTable>(); } }
 		public ITable<TestTable2>   TestTable2     { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>   TestTable3     { get { return this.GetTable<TestTable3>(); } }
 
 		public TESTDATADB()
 		{
+			InitDataContext();
 		}
 
 		public TESTDATADB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="ALLTYPES")]
 	public partial class ALLTYPE
 	{
-		[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
-		[Column,     Nullable] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
-		[Column,     Nullable] public int?      INTDATATYPE       { get; set; } // INTEGER
-		[Column,     Nullable] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
-		[Column,     Nullable] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
-		[Column,     Nullable] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT
-		[Column,     Nullable] public float?    REALDATATYPE      { get; set; } // REAL
-		[Column,     Nullable] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
-		[Column,     Nullable] public char?     CHARDATATYPE      { get; set; } // CHARACTER(1)
-		[Column,     Nullable] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
-		[Column,     Nullable] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
-		[Column,     Nullable] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
-		[Column,     Nullable] public string    BINARYDATATYPE    { get; set; } // CHARACTER(5)
-		[Column,     Nullable] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
-		[Column,     Nullable] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(1048576)
-		[Column,     Nullable] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
-		[Column,     Nullable] public DateTime? DATEDATATYPE      { get; set; } // DATE
-		[Column,     Nullable] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
-		[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
-		[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
+		[Column(DbType="INTEGER",       DataType=DataType.Int32),                 PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
+		[Column(DbType="BIGINT",        DataType=DataType.Int64),                 Nullable            ] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
+		[Column(DbType="INTEGER",       DataType=DataType.Int32),                 Nullable            ] public int?      INTDATATYPE       { get; set; } // INTEGER
+		[Column(DbType="SMALLINT",      DataType=DataType.Int16),                 Nullable            ] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
+		[Column(DbType="DECIMAL",       DataType=DataType.Decimal, Precision=30), Nullable            ] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
+		[Column(DbType="DECFLOAT(16)",  DataType=DataType.Decimal, Precision=16), Nullable            ] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT(16)
+		[Column(DbType="REAL",          DataType=DataType.Single),                Nullable            ] public float?    REALDATATYPE      { get; set; } // REAL
+		[Column(DbType="DOUBLE",        DataType=DataType.Double),                Nullable            ] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
+		[Column(DbType="CHARACTER(1)",  DataType=DataType.Char, Length=1),        Nullable            ] public char?     CHARDATATYPE      { get; set; } // CHARACTER(1)
+		[Column(DbType="VARCHAR(20)",   DataType=DataType.VarChar, Length=20),    Nullable            ] public string    VARCHARDATATYPE   { get; set; } // VARCHAR(20)
+		[Column(DbType="CLOB(1048576)", DataType=DataType.Text, Length=1048576),  Nullable            ] public string    CLOBDATATYPE      { get; set; } // CLOB(1048576)
+		[Column(DbType="DBCLOB(100)",   DataType=DataType.Text, Length=100),      Nullable            ] public string    DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
+		[Column(DbType="CHARACTER(5)",  DataType=DataType.Char, Length=5),        Nullable            ] public string    BINARYDATATYPE    { get; set; } // CHARACTER(5)
+		[Column(DbType="VARCHAR(5)",    DataType=DataType.VarChar, Length=5),     Nullable            ] public string    VARBINARYDATATYPE { get; set; } // VARCHAR(5)
+		[Column(DbType="BLOB(1048576)", DataType=DataType.Blob, Length=1048576),  Nullable            ] public byte[]    BLOBDATATYPE      { get; set; } // BLOB(1048576)
+		[Column(DbType="GRAPHIC(10)",   DataType=DataType.Text, Length=10),       Nullable            ] public string    GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
+		[Column(DbType="DATE",          DataType=DataType.Date),                  Nullable            ] public DateTime? DATEDATATYPE      { get; set; } // DATE
+		[Column(DbType="TIME",          DataType=DataType.Time),                  Nullable            ] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
+		[Column(DbType="TIMESTAMP",     DataType=DataType.Timestamp),             Nullable            ] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
+		[Column(DbType="XML",           DataType=DataType.Xml),                   Nullable            ] public string    XMLDATATYPE       { get; set; } // XML
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Child")]
 	public partial class Child
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Doctor")]
 	public partial class Doctor
 	{
-		[Column, NotNull] public int    PersonID { get; set; } // INTEGER
-		[Column, NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
+		[Column(DbType="INTEGER",     DataType=DataType.Int32),              NotNull] public int    PersonID { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(50)", DataType=DataType.VarChar, Length=50), NotNull] public string Taxonomy { get; set; } // VARCHAR(50)
 
 		#region Associations
 
@@ -101,38 +104,38 @@ namespace DB2DataContext
 	[Table(Schema="ADMINISTRATOR", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column, Nullable] public int? ParentID     { get; set; } // INTEGER
-		[Column, Nullable] public int? ChildID      { get; set; } // INTEGER
-		[Column, Nullable] public int? GrandChildID { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID     { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ChildID      { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? GrandChildID { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column, Nullable] public int?      ID             { get; set; } // INTEGER
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column, Nullable] public short?    BoolValue      { get; set; } // SMALLINT
-		[Column, Nullable] public string    GuidValue      { get; set; } // CHARACTER(16)
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // BLOB(5000)
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column, Nullable] public int?      IntValue       { get; set; } // INTEGER
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // BIGINT
+		[Column(DbType="INTEGER",       DataType=DataType.Int32),                          Nullable] public int?      ID             { get; set; } // INTEGER
+		[Column(DbType="DECIMAL(10,4)", DataType=DataType.Decimal, Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
+		[Column(DbType="TIMESTAMP",     DataType=DataType.Timestamp),                      Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
+		[Column(DbType="TIMESTAMP",     DataType=DataType.Timestamp),                      Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
+		[Column(DbType="SMALLINT",      DataType=DataType.Int16),                          Nullable] public short?    BoolValue      { get; set; } // SMALLINT
+		[Column(DbType="CHARACTER(16)", DataType=DataType.Char, Length=16),                Nullable] public string    GuidValue      { get; set; } // CHARACTER(16)
+		[Column(DbType="BLOB(5000)",    DataType=DataType.Blob, Length=5000),              Nullable] public byte[]    BinaryValue    { get; set; } // BLOB(5000)
+		[Column(DbType="SMALLINT",      DataType=DataType.Int16),                          Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
+		[Column(DbType="INTEGER",       DataType=DataType.Int32),                          Nullable] public int?      IntValue       { get; set; } // INTEGER
+		[Column(DbType="BIGINT",        DataType=DataType.Int64),                          Nullable] public long?     BigIntValue    { get; set; } // BIGINT
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="MASTERTABLE")]
 	public partial class MASTERTABLE
 	{
-		[PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
-		[PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
 
 		#region Associations
 
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE_BackReference
 		/// </summary>
-		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=false)]
+		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
 		public IEnumerable<SLAVETABLE> SLAVETABLEs { get; set; }
 
 		#endregion
@@ -141,32 +144,32 @@ namespace DB2DataContext
 	[Table(Schema="ADMINISTRATOR", Name="Parent")]
 	public partial class Parent
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column, Nullable] public int? Value1   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Patient")]
 	public partial class Patient
 	{
-		[Column, NotNull] public int    PersonID  { get; set; } // INTEGER
-		[Column, NotNull] public string Diagnosis { get; set; } // VARCHAR(256)
+		[Column(DbType="INTEGER",      DataType=DataType.Int32),               NotNull] public int    PersonID  { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(256)", DataType=DataType.VarChar, Length=256), NotNull] public string Diagnosis { get; set; } // VARCHAR(256)
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // INTEGER
-		[Column,     NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // CHARACTER(1)
+		[Column(DbType="INTEGER",      DataType=DataType.Int32),              PrimaryKey,  Identity] public int    PersonID   { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string FirstName  { get; set; } // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull              ] public string LastName   { get; set; } // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50),    Nullable          ] public string MiddleName { get; set; } // VARCHAR(50)
+		[Column(DbType="CHARACTER(1)", DataType=DataType.Char, Length=1),     NotNull              ] public char   Gender     { get; set; } // CHARACTER(1)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public IEnumerable<Doctor> Doctors { get; set; }
 
 		#endregion
@@ -176,19 +179,19 @@ namespace DB2DataContext
 	[Table(Schema="ADMINISTRATOR", Name="PERSONVIEW")]
 	public partial class PERSONVIEW
 	{
-		[Column, NotNull    ] public int    PersonID   { get; set; } // INTEGER
-		[Column, NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
-		[Column, NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
-		[Column,    Nullable] public string MiddleName { get; set; } // VARCHAR(50)
-		[Column, NotNull    ] public char   Gender     { get; set; } // CHARACTER(1)
+		[Column(DbType="INTEGER",      DataType=DataType.Int32),              NotNull    ] public int    PersonID   { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string FirstName  { get; set; } // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50), NotNull    ] public string LastName   { get; set; } // VARCHAR(50)
+		[Column(DbType="VARCHAR(50)",  DataType=DataType.VarChar, Length=50),    Nullable] public string MiddleName { get; set; } // VARCHAR(50)
+		[Column(DbType="CHARACTER(1)", DataType=DataType.Char, Length=1),     NotNull    ] public char   Gender     { get; set; } // CHARACTER(1)
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="SLAVETABLE")]
 	public partial class SLAVETABLE
 	{
-		[Column,                                  NotNull] public int ID1                        { get; set; } // INTEGER
-		[Column("ID 2222222222222222222222  22"), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
-		[Column("ID 2222222222222222"),           NotNull] public int ID2222222222222222         { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=DataType.Int32),                                  NotNull] public int ID1                        { get; set; } // INTEGER
+		[Column("ID 2222222222222222222222  22", DbType="INTEGER", DataType=DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
+		[Column("ID 2222222222222222", DbType="INTEGER", DataType=DataType.Int32),           NotNull] public int ID2222222222222222         { get; set; } // INTEGER
 
 		#region Associations
 
@@ -204,32 +207,23 @@ namespace DB2DataContext
 	[Table(Schema="ADMINISTRATOR", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // INTEGER
-	}
-
-	[Table(Schema="ADMINISTRATOR", Name="TestTable")]
-	public partial class TestTable
-	{
-		[PrimaryKey, Identity   ] public int       ID          { get; set; } // INTEGER
-		[Column,     NotNull    ] public string    Name        { get; set; } // VARGRAPHIC(50)
-		[Column,        Nullable] public string    Description { get; set; } // VARGRAPHIC(250)
-		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
+		[Column(DbType="INTEGER", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="TestTable2")]
 	public partial class TestTable2
 	{
-		[PrimaryKey, Identity   ] public int       ID          { get; set; } // INTEGER
-		[Column,     NotNull    ] public string    Name        { get; set; } // VARGRAPHIC(50)
-		[Column,        Nullable] public string    Description { get; set; } // VARGRAPHIC(250)
-		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
+		[Column(DbType="INTEGER",         DataType=DataType.Int32),            PrimaryKey,  Identity] public int       ID          { get; set; } // INTEGER
+		[Column(DbType="VARGRAPHIC(50)",  DataType=DataType.Text, Length=50),  NotNull              ] public string    Name        { get; set; } // VARGRAPHIC(50)
+		[Column(DbType="VARGRAPHIC(250)", DataType=DataType.Text, Length=250),    Nullable          ] public string    Description { get; set; } // VARGRAPHIC(250)
+		[Column(DbType="TIMESTAMP",       DataType=DataType.Timestamp),           Nullable          ] public DateTime? CreatedOn   { get; set; } // TIMESTAMP
 	}
 
 	[Table(Schema="ADMINISTRATOR", Name="TestTable3")]
 	public partial class TestTable3
 	{
-		[PrimaryKey, NotNull] public int    ID   { get; set; } // INTEGER
-		[Column,     NotNull] public string Name { get; set; } // VARGRAPHIC(50)
+		[Column(DbType="INTEGER",        DataType=DataType.Int32),           PrimaryKey, NotNull] public int    ID   { get; set; } // INTEGER
+		[Column(DbType="VARGRAPHIC(50)", DataType=DataType.Text, Length=50),             NotNull] public string Name { get; set; } // VARGRAPHIC(50)
 	}
 
 	public static partial class TESTDATADBStoredProcedures
@@ -267,12 +261,6 @@ namespace DB2DataContext
 		}
 
 		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
-		}
-
-		public static TestTable Find(this ITable<TestTable> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
