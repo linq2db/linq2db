@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.MySql
 			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
 			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
 
-			return
+			var ret =
 			(
 				from c in tcs.AsEnumerable()
 				let dataType = c.Field<string>("DATA_TYPE")
@@ -116,9 +116,9 @@ namespace LinqToDB.DataProvider.MySql
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
@@ -132,13 +132,39 @@ namespace LinqToDB.DataProvider.MySql
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
-			).ToList();
+			)
+			.Select(ci =>
+			{
+				switch (ci.DataType)
+				{
+					case "bit"        :
+					case "date"       :
+					case "datetime"   :
+					case "timestamp"  :
+					case "time"       :
+					case "tinyint"    :
+					case "smallint"   :
+					case "int"        :
+					case "year"       :
+					case "mediumint"  :
+					case "bigint"     :
+					case "tiny int"   :
+						ci.Precision = null;
+						ci.Scale     = null;
+						break;
+				}
+
+				return ci;
+			})
+			.ToList();
+
+			return ret;
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
@@ -200,7 +226,7 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (columnType != null && columnType.Contains("unsigned"))
 			{

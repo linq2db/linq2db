@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace LinqToDB.SchemaProvider
 {
-	[DebuggerDisplay("TableID = {TableID}, Name = {Name}, Ordinal = {Ordinal}")]
+	[DebuggerDisplay("TableID = {TableID}, Name = {Name}, DataType = {DataType}, Length = {Length}, Precision = {Precision}, Scale = {Scale}")]
 	public class ColumnInfo
 	{
 		public string TableID;
@@ -12,9 +12,9 @@ namespace LinqToDB.SchemaProvider
 		public int    Ordinal;
 		public string DataType;
 		public string ColumnType;
-		public long   Length;
-		public int    Precision;
-		public int    Scale;
+		public long?  Length;
+		public int?   Precision;
+		public int?   Scale;
 		public string Description;
 		public bool   IsIdentity;
 		public bool   SkipOnInsert;

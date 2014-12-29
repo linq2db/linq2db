@@ -138,6 +138,63 @@ namespace LinqToDB.DataProvider.SqlServer
 						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
 						ORDINAL_POSITION = x.minor_id AND
 						x.name = 'MS_Description'")
+				.Select(c =>
+				{
+					DataTypeInfo dti;
+
+					if (DataTypesDic.TryGetValue(c.DataType, out dti))
+					{
+						switch (dti.CreateParameters)
+						{
+							case null :
+								c.Length    = null;
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "scale" :
+								c.Length = null;
+
+								if (c.Scale.HasValue)
+									c.Precision = null;
+
+								break;
+
+							case "precision,scale" :
+								c.Length = null;
+								break;
+
+							case "max length" :
+								if (c.Length < 0)
+									c.Length = int.MaxValue;
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "length"     :
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "number of bits used to store the mantissa":
+								break;
+
+							default :
+								break;
+						}
+					}
+
+//					switch (c.DataType)
+//					{
+//						case "int" :
+//						case "bigint" :
+//							c.Precision = null;
+//							c.Scale     = null;
+//							break;
+//					}
+
+					return c;
+				})
 				.ToList();
 		}
 
@@ -254,7 +311,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{

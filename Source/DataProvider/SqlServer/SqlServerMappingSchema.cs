@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
 
-			switch (sqlDataType.Scale)
+			switch (sqlDataType.Precision ?? sqlDataType.Scale)
 			{
 				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
 				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;

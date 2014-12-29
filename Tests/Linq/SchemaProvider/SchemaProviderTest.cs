@@ -3,7 +3,6 @@ using System.Linq;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
@@ -42,20 +41,37 @@ namespace Tests.SchemaProvider
 					case ProviderName.SqlServer2012 :
 					case ProviderName.SqlServer2014 :
 					case "SqlAzure.2012"            :
-					{
-						var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
-						Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
-						Assert.That(indexTable.ForeignKeys[0].ThisColumns.Count, Is.EqualTo(2));
+						{
+							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
+							Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
+							Assert.That(indexTable.ForeignKeys[0].ThisColumns.Count, Is.EqualTo(2));
+						}
 						break;
-					}
 
 					case ProviderName.Informix      :
-					{
-						var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
-						Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
-						Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
-					}
-					break;
+						{
+							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
+							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+							Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
+						}
+						break;
+				}
+
+				switch (context)
+				{
+					case ProviderName.SqlServer2008 :
+					case ProviderName.SqlServer2012 :
+					case ProviderName.SqlServer2014 :
+					case "SqlAzure.2012"            :
+						{
+							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
+							var col = tbl.Columns.First(c => c.ColumnName == "datetimeoffset3DataType");
+							Assert.That(col.DataType,  Is.EqualTo(DataType.DateTimeOffset));
+							Assert.That(col.Length,    Is.Null);
+							Assert.That(col.Precision, Is.EqualTo(3));
+							Assert.That(col.Scale,     Is.Null);
+						}
+						break;
 				}
 			}
 		}

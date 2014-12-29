@@ -120,6 +120,9 @@ namespace LinqToDB.SchemaProvider
 						PrimaryKeyOrder = column.pk != null ? column.pk.Ordinal : -1,
 						IsIdentity      = column.c.IsIdentity,
 						Description     = column.c.Description,
+						Length          = column.c.Length,
+						Precision       = column.c.Precision,
+						Scale           = column.c.Scale,
 					});
 				}
 
@@ -204,13 +207,13 @@ namespace LinqToDB.SchemaProvider
 									on pr.DataType equals dt.TypeName into g1
 								from dt in g1.DefaultIfEmpty()
 
-								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale)
+								let systemType = GetSystemType(pr.DataType, null, dt, pr.Length, pr.Precision, pr.Scale)
 
 								orderby pr.Ordinal
 								select new ParameterSchema
 								{
 									SchemaName    = pr.ParameterName,
-									SchemaType    = GetDbType(pr.DataType, dt, pr.Length ?? 0, pr.Precision, pr.Scale),
+									SchemaType    = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale),
 									IsIn          = pr.IsIn,
 									IsOut         = pr.IsOut,
 									IsResult      = pr.IsResult,
@@ -267,7 +270,7 @@ namespace LinqToDB.SchemaProvider
 											p.SystemType == typeof(DateTime) ? DateTime.Now :
 												DefaultValue.GetValue(p.SystemType),
 										DataType  = p.DataType,
-										Size      = p.Size,
+										Size      = (int?)p.Size,
 										Direction =
 											p.IsIn ?
 												p.IsOut ?
@@ -410,7 +413,7 @@ namespace LinqToDB.SchemaProvider
 				.ToList();
 		}
 
-		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			var systemType = dataTypeInfo != null ? Type.GetType(dataTypeInfo.DataType) : null;
 
@@ -420,7 +423,7 @@ namespace LinqToDB.SchemaProvider
 			return systemType;
 		}
 
-		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long length, int prec, int scale)
+		protected virtual string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
 		{
 			var dbType = columnType;
 
@@ -439,14 +442,14 @@ namespace LinqToDB.SchemaProvider
 						switch (paramNames[i].Trim().ToLower())
 						{
 							case "size"       :
-							case "length"     :
-							case "max length" : paramValues[i] = length; break;
-							case "precision"  : paramValues[i] = prec;   break;
-							case "scale"      : paramValues[i] = scale;  break;
+							case "length"     : paramValues[i] = length;        break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length.HasValue ? length.ToString() : null; break;
+							case "precision"  : paramValues[i] = prec;          break;
+							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : prec; break;
 						}
 					}
 
-					if (paramValues.All(v => v != null && (v is int ? (int)v != 0 : (long)v != 0)))
+					if (paramValues.All(v => v != null))
 						dbType = format.Args(paramValues);
 				}
 			}
