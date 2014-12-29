@@ -151,7 +151,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.OwnerName("dbo").WithTableExpression(1== 1 ? "/* 123 */{0} {1}" : "{0} {1} with (UpdLock)")
+					from p in db.Parent.OwnerName("dbo").WithTableExpression("{0} {1} with (UpdLock)")
 					select p;
 
 				q.ToList();
