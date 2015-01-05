@@ -16,6 +16,8 @@ bool GenerateObsoleteAttributeForAliases = false;
 bool GenerateFindExtensions = true;
 bool IsCompactColumns       = true;
 bool IsCompactColumnAliases = true;
+bool GenerateDataTypes      = false;
+bool GenerateDbTypes        = false;
 
 void GenerateTypesFromMetadata()
 {
@@ -110,10 +112,13 @@ void GenerateTypesFromMetadata()
 				aProp.Comment.AddRange(comments);
 		}
 
-		var columns       = new MemberGroup { IsCompact = IsCompactColumns };
-		var columnAliases = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
-		var nPKs          = t.Columns.Values.Count(c => c.IsPrimaryKey);
-		var allNullable   = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
+		var columns        = new MemberGroup { IsCompact = IsCompactColumns };
+		var columnAliases  = new MemberGroup { IsCompact = IsCompactColumnAliases, Region = "Alias members" };
+		var nPKs           = t.Columns.Values.Count(c => c.IsPrimaryKey);
+		var allNullable    = t.Columns.Values.All  (c => c.IsNullable || c.IsIdentity);
+		var nameMaxLen     = t.Columns.Values.Max  (c => c.MemberName == c.ColumnName ? 0 : c.ColumnName.Length);
+		var dbTypeMaxLen   = t.Columns.Values.Max  (c => c.ColumnType.Length);
+		var dataTypeMaxLen = t.Columns.Values.Max  (c => c.DataType.Length);
 
 		foreach (var c in t.Columns.Values)
 		{
@@ -124,7 +129,35 @@ void GenerateTypesFromMetadata()
 
 			if (c.MemberName != c.ColumnName)
 			{
-				ca.Parameters.Add('"' + c.ColumnName + '"');
+				var space = new string(' ', nameMaxLen - c.ColumnName.Length);
+
+				ca.Parameters.Add('"' + c.ColumnName + '"' + space);
+				canBeReplaced = false;
+			}
+			else if (nameMaxLen > 0)
+			{
+				ca.Parameters.Add(new string(' ', nameMaxLen + 2));
+				canBeReplaced = false;
+			}
+
+			if (GenerateDbTypes)
+			{
+				var space = new string(' ', dbTypeMaxLen - c.ColumnType.Length);
+
+				ca.Parameters.Add("DbType=\"" + c.ColumnType + '"' + space);
+				canBeReplaced = false;
+			}
+
+			if (GenerateDataTypes)
+			{
+				var space = new string(' ', dataTypeMaxLen - c.DataType.Length);
+
+				ca.Parameters.Add("DataType=" + c.DataType + space);
+
+				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
+				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
+				if (c.Scale     != null) ca.Parameters.Add("Scale="     + c.Scale);
+
 				canBeReplaced = false;
 			}
 
@@ -328,14 +361,22 @@ void GenerateTypesFromMetadata()
 
 			if (p.IsTableFunction)
 			{
-				p.Attributes.Add(new Attribute("Sql.TableFunction", "Name=\"" + p.ProcedureName + "\""));
+				var tableAttrs = new List<string>();
+
+				if (DatabaseName != null) tableAttrs.Add("Database=" + '"' + DatabaseName + '"');
+				if (p.Schema     != null) tableAttrs.Add("Schema="   + '"' + p.Schema     + '"');
+
+				tableAttrs.Add("Name=" + '"' + p.ProcedureName + '"');
+
+				p.Attributes.Add(new Attribute("Sql.TableFunction", tableAttrs.ToArray()));
+
 				p.Type = "ITable<" + p.ResultTable.TypeName + ">";
 			}
 			else if (p.IsFunction)
 			{
 				p.IsStatic = true;
 				p.Type = p.ProcParameters.Single(pr => pr.IsResult).ParameterType;
-				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.ProcedureName + "\"", "ServerSideOnly=true"));
+				p.Attributes.Add(new Attribute("Sql.Function", "Name=\"" + p.Schema + "."  + p.ProcedureName + "\"", "ServerSideOnly=true"));
 			}
 			else
 			{

@@ -27,8 +27,11 @@ SingularizeClassNames               = true;    // If true, singularizes table cl
 PluralizeDataContextPropertyNames   = true;    // If true, pluralizes DataContext property names.
 SingularizeDataContextPropertyNames = false;   // If true, singularizes DataContex pProperty names.
 
-bool GenerateObsoleteAttributeForAliases = false;
-IsCompactColumnAliases   = true;               // If true, column alias compact view.
+GenerateDataTypes                   = false;   // If true, generates the DataType/Length/Precision/Scale attributes.
+GenerateDbTypes                     = false;   // If true, generates the DbType attribute.
+
+GenerateObsoleteAttributeForAliases = false;   // If true, generates [Obsolete] attribute for aliases.
+IsCompactColumnAliases              = true;    // If true, column alias compact view.
 
 GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" }; // Defines excluded schemas.
 GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };     // Defines only included schemas.

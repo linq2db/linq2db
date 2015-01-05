@@ -22,7 +22,7 @@ namespace DataModel
 	/// <summary>
 	/// Database       : Northwind
 	/// Data Source    : DBHost\SQLSERVER2012
-	/// Server Version : 11.00.2100
+	/// Server Version : 11.00.2218
 	/// </summary>
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
@@ -58,12 +58,16 @@ namespace DataModel
 
 		public NorthwindDB()
 		{
+			InitDataContext();
 		}
 
 		public NorthwindDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 
 		#region Alias members
 
@@ -107,26 +111,26 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Alphabetical list of products")]
 	public partial class AlphabeticalListOfProduct
 	{
-		[Column, NotNull    ] public int      ProductID       { get; set; } // int
-		[Column, NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
-		[Column,    Nullable] public int?     SupplierID      { get; set; } // int
-		[Column,    Nullable] public int?     CategoryID      { get; set; } // int
-		[Column,    Nullable] public string   QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column,    Nullable] public decimal? UnitPrice       { get; set; } // money
-		[Column,    Nullable] public short?   UnitsInStock    { get; set; } // smallint
-		[Column,    Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
-		[Column,    Nullable] public short?   ReorderLevel    { get; set; } // smallint
-		[Column, NotNull    ] public bool     Discontinued    { get; set; } // bit
-		[Column, NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      ProductID       { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable] public int?     SupplierID      { get; set; } // int
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable] public int?     CategoryID      { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20),    Nullable] public string   QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? UnitPrice       { get; set; } // money
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable] public short?   UnitsInStock    { get; set; } // smallint
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable] public short?   ReorderLevel    { get; set; } // smallint
+		[Column(DbType="bit",          DataType=DataType.Boolean),             NotNull    ] public bool     Discontinued    { get; set; } // bit
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName    { get; set; } // nvarchar(15)
 	}
 
 	[Table(Database="Northwind", Name="Categories")]
 	public partial class Category
 	{
-		[PrimaryKey, Identity   ] public int    CategoryID   { get; set; } // int
-		[Column,     NotNull    ] public string CategoryName { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string Description  { get; set; } // ntext
-		[Column,        Nullable] public byte[] Picture      { get; set; } // image
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    CategoryID   { get; set; } // int
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull              ] public string CategoryName { get; set; } // nvarchar(15)
+		[Column(DbType="ntext",        DataType=DataType.NText),                  Nullable          ] public string Description  { get; set; } // ntext
+		[Column(DbType="image",        DataType=DataType.Image),                  Nullable          ] public byte[] Picture      { get; set; } // image
 
 		#region Associations
 
@@ -148,32 +152,32 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Category Sales for 1997")]
 	public partial class CategorySalesFor1997
 	{
-		[Column, NotNull    ] public string   CategoryName  { get; set; } // nvarchar(15)
-		[Column,    Nullable] public decimal? CategorySales { get; set; } // money
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName  { get; set; } // nvarchar(15)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? CategorySales { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Current Product List")]
 	public partial class CurrentProductList
 	{
-		[Identity         ] public int    ProductID   { get; set; } // int
-		[Column,   NotNull] public string ProductName { get; set; } // nvarchar(40)
+		[Column(DbType="int",          DataType=DataType.Int32),               Identity] public int    ProductID   { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull ] public string ProductName { get; set; } // nvarchar(40)
 	}
 
 	[Table(Database="Northwind", Name="Customers")]
 	public partial class Customer
 	{
-		[PrimaryKey, NotNull    ] public string CustomerID   { get; set; } // nchar(5)
-		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
-		[Column,        Nullable] public string ContactName  { get; set; } // nvarchar(30)
-		[Column,        Nullable] public string ContactTitle { get; set; } // nvarchar(30)
-		[Column,        Nullable] public string Address      { get; set; } // nvarchar(60)
-		[Column,        Nullable] public string City         { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string Region       { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string PostalCode   { get; set; } // nvarchar(10)
-		[Column,        Nullable] public string Country      { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
-		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
+		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  PrimaryKey,  NotNull] public string CustomerID   { get; set; } // nchar(5)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),              NotNull] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(30)", DataType=DataType.NVarChar, Length=30),    Nullable         ] public string ContactName  { get; set; } // nvarchar(30)
+		[Column(DbType="nvarchar(30)", DataType=DataType.NVarChar, Length=30),    Nullable         ] public string ContactTitle { get; set; } // nvarchar(30)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable         ] public string Address      { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable         ] public string City         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable         ] public string Region       { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable         ] public string PostalCode   { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable         ] public string Country      { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(24)", DataType=DataType.NVarChar, Length=24),    Nullable         ] public string Phone        { get; set; } // nvarchar(24)
+		[Column(DbType="nvarchar(24)", DataType=DataType.NVarChar, Length=24),    Nullable         ] public string Fax          { get; set; } // nvarchar(24)
 
 		#region Associations
 
@@ -196,17 +200,17 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Customer and Suppliers by City")]
 	public partial class CustomerAndSuppliersByCity
 	{
-		[Column,    Nullable] public string City         { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string ContactName  { get; set; } // nvarchar(30)
-		[Column, NotNull    ] public string Relationship { get; set; } // varchar(9)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string City         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(30)", DataType=DataType.NVarChar, Length=30),    Nullable] public string ContactName  { get; set; } // nvarchar(30)
+		[Column(DbType="varchar(9)",   DataType=DataType.VarChar,  Length=9),  NotNull    ] public string Relationship { get; set; } // varchar(9)
 	}
 
 	[Table(Database="Northwind", Name="CustomerCustomerDemo")]
 	public partial class CustomerCustomerDemo
 	{
-		[PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
-		[PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
+		[Column(DbType="nchar(5)",  DataType=DataType.NChar, Length=5),  PrimaryKey(1), NotNull] public string CustomerID     { get; set; } // nchar(5)
+		[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10), PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } // nchar(10)
 
 		#region Associations
 
@@ -228,8 +232,8 @@ namespace DataModel
 	[Table(Database="Northwind", Name="CustomerDemographics")]
 	public partial class CustomerDemographic
 	{
-		[PrimaryKey, NotNull    ] public string CustomerTypeID { get; set; } // nchar(10)
-		[Column,        Nullable] public string CustomerDesc   { get; set; } // ntext
+		[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10), PrimaryKey,  NotNull] public string CustomerTypeID { get; set; } // nchar(10)
+		[Column(DbType="ntext",     DataType=DataType.NText),               Nullable         ] public string CustomerDesc   { get; set; } // ntext
 
 		#region Associations
 
@@ -245,24 +249,24 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Employees")]
 	public partial class Employee
 	{
-		[PrimaryKey, Identity   ] public int       EmployeeID      { get; set; } // int
-		[Column,     NotNull    ] public string    LastName        { get; set; } // nvarchar(20)
-		[Column,     NotNull    ] public string    FirstName       { get; set; } // nvarchar(10)
-		[Column,        Nullable] public string    Title           { get; set; } // nvarchar(30)
-		[Column,        Nullable] public string    TitleOfCourtesy { get; set; } // nvarchar(25)
-		[Column,        Nullable] public DateTime? BirthDate       { get; set; } // datetime
-		[Column,        Nullable] public DateTime? HireDate        { get; set; } // datetime
-		[Column,        Nullable] public string    Address         { get; set; } // nvarchar(60)
-		[Column,        Nullable] public string    City            { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string    Region          { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string    PostalCode      { get; set; } // nvarchar(10)
-		[Column,        Nullable] public string    Country         { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string    HomePhone       { get; set; } // nvarchar(24)
-		[Column,        Nullable] public string    Extension       { get; set; } // nvarchar(4)
-		[Column,        Nullable] public byte[]    Photo           { get; set; } // image
-		[Column,        Nullable] public string    Notes           { get; set; } // ntext
-		[Column,        Nullable] public int?      ReportsTo       { get; set; } // int
-		[Column,        Nullable] public string    PhotoPath       { get; set; } // nvarchar(255)
+		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey,  Identity] public int       EmployeeID      { get; set; } // int
+		[Column(DbType="nvarchar(20)",  DataType=DataType.NVarChar, Length=20),  NotNull              ] public string    LastName        { get; set; } // nvarchar(20)
+		[Column(DbType="nvarchar(10)",  DataType=DataType.NVarChar, Length=10),  NotNull              ] public string    FirstName       { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(30)",  DataType=DataType.NVarChar, Length=30),     Nullable          ] public string    Title           { get; set; } // nvarchar(30)
+		[Column(DbType="nvarchar(25)",  DataType=DataType.NVarChar, Length=25),     Nullable          ] public string    TitleOfCourtesy { get; set; } // nvarchar(25)
+		[Column(DbType="datetime",      DataType=DataType.DateTime),                Nullable          ] public DateTime? BirthDate       { get; set; } // datetime
+		[Column(DbType="datetime",      DataType=DataType.DateTime),                Nullable          ] public DateTime? HireDate        { get; set; } // datetime
+		[Column(DbType="nvarchar(60)",  DataType=DataType.NVarChar, Length=60),     Nullable          ] public string    Address         { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)",  DataType=DataType.NVarChar, Length=15),     Nullable          ] public string    City            { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)",  DataType=DataType.NVarChar, Length=15),     Nullable          ] public string    Region          { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)",  DataType=DataType.NVarChar, Length=10),     Nullable          ] public string    PostalCode      { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)",  DataType=DataType.NVarChar, Length=15),     Nullable          ] public string    Country         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(24)",  DataType=DataType.NVarChar, Length=24),     Nullable          ] public string    HomePhone       { get; set; } // nvarchar(24)
+		[Column(DbType="nvarchar(4)",   DataType=DataType.NVarChar, Length=4),      Nullable          ] public string    Extension       { get; set; } // nvarchar(4)
+		[Column(DbType="image",         DataType=DataType.Image),                   Nullable          ] public byte[]    Photo           { get; set; } // image
+		[Column(DbType="ntext",         DataType=DataType.NText),                   Nullable          ] public string    Notes           { get; set; } // ntext
+		[Column(DbType="int",           DataType=DataType.Int32),                   Nullable          ] public int?      ReportsTo       { get; set; } // int
+		[Column(DbType="nvarchar(255)", DataType=DataType.NVarChar, Length=255),    Nullable          ] public string    PhotoPath       { get; set; } // nvarchar(255)
 
 		#region Associations
 
@@ -296,8 +300,8 @@ namespace DataModel
 	[Table(Database="Northwind", Name="EmployeeTerritories")]
 	public partial class EmployeeTerritory
 	{
-		[PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
-		[PrimaryKey(2), NotNull] public string TerritoryID { get; set; } // nvarchar(20)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20), PrimaryKey(2), NotNull] public string TerritoryID { get; set; } // nvarchar(20)
 
 		#region Associations
 
@@ -320,51 +324,51 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Invoices")]
 	public partial class Invoice
 	{
-		[Column,    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
-		[Column,    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
-		[Column,    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    CustomerID     { get; set; } // nchar(5)
-		[Column, NotNull    ] public string    CustomerName   { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string    Address        { get; set; } // nvarchar(60)
-		[Column,    Nullable] public string    City           { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    Region         { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
-		[Column,    Nullable] public string    Country        { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string    Salesperson    { get; set; } // nvarchar(31)
-		[Column, NotNull    ] public int       OrderID        { get; set; } // int
-		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // datetime
-		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column, NotNull    ] public string    ShipperName    { get; set; } // nvarchar(40)
-		[Column, NotNull    ] public int       ProductID      { get; set; } // int
-		[Column, NotNull    ] public string    ProductName    { get; set; } // nvarchar(40)
-		[Column, NotNull    ] public decimal   UnitPrice      { get; set; } // money
-		[Column, NotNull    ] public short     Quantity       { get; set; } // smallint
-		[Column, NotNull    ] public float     Discount       { get; set; } // real
-		[Column,    Nullable] public decimal?  ExtendedPrice  { get; set; } // money
-		[Column,    Nullable] public decimal?  Freight        { get; set; } // money
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),     Nullable] public string    CustomerID     { get; set; } // nchar(5)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string    CustomerName   { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable] public string    Address        { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    City           { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Region         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Country        { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(31)", DataType=DataType.NVarChar, Length=31), NotNull    ] public string    Salesperson    { get; set; } // nvarchar(31)
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? OrderDate      { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string    ShipperName    { get; set; } // nvarchar(40)
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       ProductID      { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string    ProductName    { get; set; } // nvarchar(40)
+		[Column(DbType="money",        DataType=DataType.Money),               NotNull    ] public decimal   UnitPrice      { get; set; } // money
+		[Column(DbType="smallint",     DataType=DataType.Int16),               NotNull    ] public short     Quantity       { get; set; } // smallint
+		[Column(DbType="real",         DataType=DataType.Single),              NotNull    ] public float     Discount       { get; set; } // real
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  ExtendedPrice  { get; set; } // money
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
 	}
 
 	[Table(Database="Northwind", Name="Orders")]
 	public partial class Order
 	{
-		[PrimaryKey, Identity] public int       OrderID        { get; set; } // int
-		[Column,     Nullable] public string    CustomerID     { get; set; } // nchar(5)
-		[Column,     Nullable] public int?      EmployeeID     { get; set; } // int
-		[Column,     Nullable] public DateTime? OrderDate      { get; set; } // datetime
-		[Column,     Nullable] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column,     Nullable] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column,     Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,     Nullable] public decimal?  Freight        { get; set; } // money
-		[Column,     Nullable] public string    ShipName       { get; set; } // nvarchar(40)
-		[Column,     Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
-		[Column,     Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
-		[Column,     Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
-		[Column,     Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
-		[Column,     Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, Identity] public int       OrderID        { get; set; } // int
+		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  Nullable            ] public string    CustomerID     { get; set; } // nchar(5)
+		[Column(DbType="int",          DataType=DataType.Int32),               Nullable            ] public int?      EmployeeID     { get; set; } // int
+		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? OrderDate      { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),            Nullable            ] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column(DbType="int",          DataType=DataType.Int32),               Nullable            ] public int?      ShipVia        { get; set; } // int
+		[Column(DbType="money",        DataType=DataType.Money),               Nullable            ] public decimal?  Freight        { get; set; } // money
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), Nullable            ] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60), Nullable            ] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10), Nullable            ] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable            ] public string    ShipCountry    { get; set; } // nvarchar(15)
 
 		#region Associations
 
@@ -398,11 +402,11 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Order Details")]
 	public partial class OrderDetail
 	{
-		[Column("OrderID"), PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
-		[                   PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
-		[Column,                           NotNull] public decimal UnitPrice { get; set; } // money
-		[Column,                           NotNull] public short   Quantity  { get; set; } // smallint
-		[Column,                           NotNull] public float   Discount  { get; set; } // real
+		[Column("OrderID", DbType="int",      DataType=DataType.Int32),  PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
+		[Column(           DbType="int",      DataType=DataType.Int32),  PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
+		[Column(           DbType="money",    DataType=DataType.Money),                 NotNull] public decimal UnitPrice { get; set; } // money
+		[Column(           DbType="smallint", DataType=DataType.Int16),                 NotNull] public short   Quantity  { get; set; } // smallint
+		[Column(           DbType="real",     DataType=DataType.Single),                NotNull] public float   Discount  { get; set; } // real
 
 		#region Associations
 
@@ -430,62 +434,62 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Order Details Extended")]
 	public partial class OrderDetailsExtended
 	{
-		[Column, NotNull    ] public int      OrderID       { get; set; } // int
-		[Column, NotNull    ] public int      ProductID     { get; set; } // int
-		[Column, NotNull    ] public string   ProductName   { get; set; } // nvarchar(40)
-		[Column, NotNull    ] public decimal  UnitPrice     { get; set; } // money
-		[Column, NotNull    ] public short    Quantity      { get; set; } // smallint
-		[Column, NotNull    ] public float    Discount      { get; set; } // real
-		[Column,    Nullable] public decimal? ExtendedPrice { get; set; } // money
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      OrderID       { get; set; } // int
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      ProductID     { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName   { get; set; } // nvarchar(40)
+		[Column(DbType="money",        DataType=DataType.Money),               NotNull    ] public decimal  UnitPrice     { get; set; } // money
+		[Column(DbType="smallint",     DataType=DataType.Int16),               NotNull    ] public short    Quantity      { get; set; } // smallint
+		[Column(DbType="real",         DataType=DataType.Single),              NotNull    ] public float    Discount      { get; set; } // real
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Orders Qry")]
 	public partial class OrdersQry
 	{
-		[Column, NotNull    ] public int       OrderID        { get; set; } // int
-		[Column,    Nullable] public string    CustomerID     { get; set; } // nchar(5)
-		[Column,    Nullable] public int?      EmployeeID     { get; set; } // int
-		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // datetime
-		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column,    Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,    Nullable] public decimal?  Freight        { get; set; } // money
-		[Column,    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
-		[Column,    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
-		[Column,    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string    CompanyName    { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string    Address        { get; set; } // nvarchar(60)
-		[Column,    Nullable] public string    City           { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    Region         { get; set; } // nvarchar(15)
-		[Column,    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
-		[Column,    Nullable] public string    Country        { get; set; } // nvarchar(15)
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
+		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),     Nullable] public string    CustomerID     { get; set; } // nchar(5)
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? OrderDate      { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? RequiredDate   { get; set; } // datetime
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? ShippedDate    { get; set; } // datetime
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable] public int?      ShipVia        { get; set; } // int
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40),    Nullable] public string    ShipName       { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable] public string    ShipAddress    { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipCity       { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipRegion     { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable] public string    ShipPostalCode { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    ShipCountry    { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string    CompanyName    { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable] public string    Address        { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    City           { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Region         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable] public string    PostalCode     { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable] public string    Country        { get; set; } // nvarchar(15)
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Order Subtotals")]
 	public partial class OrderSubtotal
 	{
-		[Column, NotNull    ] public int      OrderID  { get; set; } // int
-		[Column,    Nullable] public decimal? Subtotal { get; set; } // money
+		[Column(DbType="int",   DataType=DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
+		[Column(DbType="money", DataType=DataType.Money),    Nullable] public decimal? Subtotal { get; set; } // money
 	}
 
 	[Table(Database="Northwind", Name="Products")]
 	public partial class Product
 	{
-		[PrimaryKey, Identity   ] public int      ProductID       { get; set; } // int
-		[Column,     NotNull    ] public string   ProductName     { get; set; } // nvarchar(40)
-		[Column,        Nullable] public int?     SupplierID      { get; set; } // int
-		[Column,        Nullable] public int?     CategoryID      { get; set; } // int
-		[Column,        Nullable] public string   QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column,        Nullable] public decimal? UnitPrice       { get; set; } // money
-		[Column,        Nullable] public short?   UnitsInStock    { get; set; } // smallint
-		[Column,        Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
-		[Column,        Nullable] public short?   ReorderLevel    { get; set; } // smallint
-		[Column,     NotNull    ] public bool     Discontinued    { get; set; } // bit
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int      ProductID       { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull              ] public string   ProductName     { get; set; } // nvarchar(40)
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable          ] public int?     SupplierID      { get; set; } // int
+		[Column(DbType="int",          DataType=DataType.Int32),                  Nullable          ] public int?     CategoryID      { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20),    Nullable          ] public string   QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable          ] public decimal? UnitPrice       { get; set; } // money
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable          ] public short?   UnitsInStock    { get; set; } // smallint
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable          ] public short?   UnitsOnOrder    { get; set; } // smallint
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable          ] public short?   ReorderLevel    { get; set; } // smallint
+		[Column(DbType="bit",          DataType=DataType.Boolean),             NotNull              ] public bool     Discontinued    { get; set; } // bit
 
 		#region Associations
 
@@ -514,45 +518,45 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Products Above Average Price")]
 	public partial class ProductsAboveAveragePrice
 	{
-		[Column, NotNull    ] public string   ProductName { get; set; } // nvarchar(40)
-		[Column,    Nullable] public decimal? UnitPrice   { get; set; } // money
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName { get; set; } // nvarchar(40)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? UnitPrice   { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Product Sales for 1997")]
 	public partial class ProductSalesFor1997
 	{
-		[Column, NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
-		[Column,    Nullable] public decimal? ProductSales { get; set; } // money
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Products by Category")]
 	public partial class ProductsByCategory
 	{
-		[Column, NotNull    ] public string CategoryName    { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string ProductName     { get; set; } // nvarchar(40)
-		[Column,    Nullable] public string QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column,    Nullable] public short? UnitsInStock    { get; set; } // smallint
-		[Column, NotNull    ] public bool   Discontinued    { get; set; } // bit
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string CategoryName    { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string ProductName     { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20),    Nullable] public string QuantityPerUnit { get; set; } // nvarchar(20)
+		[Column(DbType="smallint",     DataType=DataType.Int16),                  Nullable] public short? UnitsInStock    { get; set; } // smallint
+		[Column(DbType="bit",          DataType=DataType.Boolean),             NotNull    ] public bool   Discontinued    { get; set; } // bit
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Quarterly Orders")]
 	public partial class QuarterlyOrder
 	{
-		[Column, Nullable] public string CustomerID  { get; set; } // nchar(5)
-		[Column, Nullable] public string CompanyName { get; set; } // nvarchar(40)
-		[Column, Nullable] public string City        { get; set; } // nvarchar(15)
-		[Column, Nullable] public string Country     { get; set; } // nvarchar(15)
+		[Column(DbType="nchar(5)",     DataType=DataType.NChar,    Length=5),  Nullable] public string CustomerID  { get; set; } // nchar(5)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), Nullable] public string CompanyName { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable] public string City        { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), Nullable] public string Country     { get; set; } // nvarchar(15)
 	}
 
 	[Table(Database="Northwind", Name="Region")]
 	public partial class Region
 	{
-		[PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
-		[Column,     NotNull] public string RegionDescription { get; set; } // nchar(50)
+		[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
+		[Column(DbType="nchar(50)", DataType=DataType.NChar, Length=50),             NotNull] public string RegionDescription { get; set; } // nchar(50)
 
 		#region Associations
 
@@ -569,28 +573,28 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Sales by Category")]
 	public partial class SalesByCategory
 	{
-		[Column, NotNull    ] public int      CategoryID   { get; set; } // int
-		[Column, NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
-		[Column, NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
-		[Column,    Nullable] public decimal? ProductSales { get; set; } // money
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int      CategoryID   { get; set; } // int
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } // nvarchar(40)
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Sales Totals by Amount")]
 	public partial class SalesTotalsByAmount
 	{
-		[Column,    Nullable] public decimal?  SaleAmount  { get; set; } // money
-		[Column, NotNull    ] public int       OrderID     { get; set; } // int
-		[Column, NotNull    ] public string    CompanyName { get; set; } // nvarchar(40)
-		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+		[Column(DbType="money",        DataType=DataType.Money),                  Nullable] public decimal?  SaleAmount  { get; set; } // money
+		[Column(DbType="int",          DataType=DataType.Int32),               NotNull    ] public int       OrderID     { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull    ] public string    CompanyName { get; set; } // nvarchar(40)
+		[Column(DbType="datetime",     DataType=DataType.DateTime),               Nullable] public DateTime? ShippedDate { get; set; } // datetime
 	}
 
 	[Table(Database="Northwind", Name="Shippers")]
 	public partial class Shipper
 	{
-		[PrimaryKey, Identity   ] public int    ShipperID   { get; set; } // int
-		[Column,     NotNull    ] public string CompanyName { get; set; } // nvarchar(40)
-		[Column,        Nullable] public string Phone       { get; set; } // nvarchar(24)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    ShipperID   { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull              ] public string CompanyName { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(24)", DataType=DataType.NVarChar, Length=24),    Nullable          ] public string Phone       { get; set; } // nvarchar(24)
 
 		#region Associations
 
@@ -607,35 +611,35 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Summary of Sales by Quarter")]
 	public partial class SummaryOfSalesByQuarter
 	{
-		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
-		[Column, NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,    Nullable] public decimal?  Subtotal    { get; set; } // money
+		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+		[Column(DbType="int",      DataType=DataType.Int32),    NotNull    ] public int       OrderID     { get; set; } // int
+		[Column(DbType="money",    DataType=DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
 	}
 
 	// View
 	[Table(Database="Northwind", Name="Summary of Sales by Year")]
 	public partial class SummaryOfSalesByYear
 	{
-		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // datetime
-		[Column, NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,    Nullable] public decimal?  Subtotal    { get; set; } // money
+		[Column(DbType="datetime", DataType=DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
+		[Column(DbType="int",      DataType=DataType.Int32),    NotNull    ] public int       OrderID     { get; set; } // int
+		[Column(DbType="money",    DataType=DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
 	}
 
 	[Table(Database="Northwind", Name="Suppliers")]
 	public partial class Supplier
 	{
-		[PrimaryKey, Identity   ] public int    SupplierID   { get; set; } // int
-		[Column,     NotNull    ] public string CompanyName  { get; set; } // nvarchar(40)
-		[Column,        Nullable] public string ContactName  { get; set; } // nvarchar(30)
-		[Column,        Nullable] public string ContactTitle { get; set; } // nvarchar(30)
-		[Column,        Nullable] public string Address      { get; set; } // nvarchar(60)
-		[Column,        Nullable] public string City         { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string Region       { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string PostalCode   { get; set; } // nvarchar(10)
-		[Column,        Nullable] public string Country      { get; set; } // nvarchar(15)
-		[Column,        Nullable] public string Phone        { get; set; } // nvarchar(24)
-		[Column,        Nullable] public string Fax          { get; set; } // nvarchar(24)
-		[Column,        Nullable] public string HomePage     { get; set; } // ntext
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    SupplierID   { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=DataType.NVarChar, Length=40), NotNull              ] public string CompanyName  { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(30)", DataType=DataType.NVarChar, Length=30),    Nullable          ] public string ContactName  { get; set; } // nvarchar(30)
+		[Column(DbType="nvarchar(30)", DataType=DataType.NVarChar, Length=30),    Nullable          ] public string ContactTitle { get; set; } // nvarchar(30)
+		[Column(DbType="nvarchar(60)", DataType=DataType.NVarChar, Length=60),    Nullable          ] public string Address      { get; set; } // nvarchar(60)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable          ] public string City         { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable          ] public string Region       { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(10)", DataType=DataType.NVarChar, Length=10),    Nullable          ] public string PostalCode   { get; set; } // nvarchar(10)
+		[Column(DbType="nvarchar(15)", DataType=DataType.NVarChar, Length=15),    Nullable          ] public string Country      { get; set; } // nvarchar(15)
+		[Column(DbType="nvarchar(24)", DataType=DataType.NVarChar, Length=24),    Nullable          ] public string Phone        { get; set; } // nvarchar(24)
+		[Column(DbType="nvarchar(24)", DataType=DataType.NVarChar, Length=24),    Nullable          ] public string Fax          { get; set; } // nvarchar(24)
+		[Column(DbType="ntext",        DataType=DataType.NText),                  Nullable          ] public string HomePage     { get; set; } // ntext
 
 		#region Associations
 
@@ -651,9 +655,9 @@ namespace DataModel
 	[Table(Database="Northwind", Name="Territories")]
 	public partial class Territory
 	{
-		[PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
-		[Column,     NotNull] public string TerritoryDescription { get; set; } // nchar(50)
-		[Column,     NotNull] public int    RegionID             { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=DataType.NVarChar, Length=20), PrimaryKey, NotNull] public string TerritoryID          { get; set; } // nvarchar(20)
+		[Column(DbType="nchar(50)",    DataType=DataType.NChar,    Length=50),             NotNull] public string TerritoryDescription { get; set; } // nchar(50)
+		[Column(DbType="int",          DataType=DataType.Int32),                           NotNull] public int    RegionID             { get; set; } // int
 
 		#region Associations
 
@@ -887,7 +891,7 @@ namespace DataModel
 	/// <summary>
 	/// Database       : TestData
 	/// Data Source    : DBHost\SQLSERVER2008
-	/// Server Version : 10.50.4000
+	/// Server Version : 10.50.4033
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
@@ -916,21 +920,25 @@ namespace DataModel
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 
 		#region Table Functions
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Name="GetParentByID")]
+		[Sql.TableFunction(Database="TestData", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
-			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
+			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(),
 				@id);
 		}
 
@@ -972,101 +980,114 @@ namespace DataModel
 	[Table(Database="TestData", Name="AllTypes")]
 	public partial class AllType
 	{
-		[PrimaryKey,                                   Identity] public int       ID                       { get; set; } // int
-		[Column,                                       Nullable] public long?     bigintDataType           { get; set; } // bigint
-		[Column,                                       Nullable] public decimal?  numericDataType          { get; set; } // numeric
-		[Column,                                       Nullable] public bool?     bitDataType              { get; set; } // bit
-		[Column,                                       Nullable] public short?    smallintDataType         { get; set; } // smallint
-		[Column,                                       Nullable] public decimal?  decimalDataType          { get; set; } // decimal
-		[Column,                                       Nullable] public decimal?  smallmoneyDataType       { get; set; } // smallmoney
-		[Column,                                       Nullable] public int?      intDataType              { get; set; } // int
-		[Column,                                       Nullable] public byte?     tinyintDataType          { get; set; } // tinyint
-		[Column,                                       Nullable] public decimal?  moneyDataType            { get; set; } // money
-		[Column,                                       Nullable] public double?   floatDataType            { get; set; } // float
-		[Column,                                       Nullable] public float?    realDataType             { get; set; } // real
-		[Column,                                       Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
-		[Column,                                       Nullable] public DateTime? smalldatetimeDataType    { get; set; } // smalldatetime
-		[Column,                                       Nullable] public char?     charDataType             { get; set; } // char(1)
-		[Column,                                       Nullable] public string    varcharDataType          { get; set; } // varchar(20)
-		[Column,                                       Nullable] public string    textDataType             { get; set; } // text
-		[Column,                                       Nullable] public string    ncharDataType            { get; set; } // nchar(20)
-		[Column,                                       Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
-		[Column,                                       Nullable] public string    ntextDataType            { get; set; } // ntext
-		[Column,                                       Nullable] public byte[]    binaryDataType           { get; set; } // binary(1)
-		[Column,                                       Nullable] public byte[]    varbinaryDataType        { get; set; } // varbinary(1)
-		[Column,                                       Nullable] public byte[]    imageDataType            { get; set; } // image
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), Nullable] public byte[]    timestampDataType        { get; set; } // timestamp
-		[Column,                                       Nullable] public Guid?     uniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column,                                       Nullable] public object    sql_variantDataType      { get; set; } // sql_variant
-		[Column,                                       Nullable] public string    nvarchar_max_DataType    { get; set; } // nvarchar(-1)
-		[Column,                                       Nullable] public string    varchar_max_DataType     { get; set; } // varchar(-1)
-		[Column,                                       Nullable] public byte[]    varbinary_max_DataType   { get; set; } // varbinary(-1)
-		[Column,                                       Nullable] public string    xmlDataType              { get; set; } // xml
+		[Column(DbType="int",               DataType=DataType.Int32),                                                PrimaryKey, Identity] public int             ID                       { get; set; } // int
+		[Column(DbType="bigint",            DataType=DataType.Int64),                                                Nullable            ] public long?           bigintDataType           { get; set; } // bigint
+		[Column(DbType="numeric(18, 1)",    DataType=DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        numericDataType          { get; set; } // numeric(18, 1)
+		[Column(DbType="bit",               DataType=DataType.Boolean),                                              Nullable            ] public bool?           bitDataType              { get; set; } // bit
+		[Column(DbType="smallint",          DataType=DataType.Int16),                                                Nullable            ] public short?          smallintDataType         { get; set; } // smallint
+		[Column(DbType="decimal(18, 1)",    DataType=DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        decimalDataType          { get; set; } // decimal(18, 1)
+		[Column(DbType="smallmoney",        DataType=DataType.SmallMoney),                                           Nullable            ] public decimal?        smallmoneyDataType       { get; set; } // smallmoney
+		[Column(DbType="int",               DataType=DataType.Int32),                                                Nullable            ] public int?            intDataType              { get; set; } // int
+		[Column(DbType="tinyint",           DataType=DataType.Byte),                                                 Nullable            ] public byte?           tinyintDataType          { get; set; } // tinyint
+		[Column(DbType="money",             DataType=DataType.Money),                                                Nullable            ] public decimal?        moneyDataType            { get; set; } // money
+		[Column(DbType="float",             DataType=DataType.Double),                                               Nullable            ] public double?         floatDataType            { get; set; } // float
+		[Column(DbType="real",              DataType=DataType.Single),                                               Nullable            ] public float?          realDataType             { get; set; } // real
+		[Column(DbType="datetime",          DataType=DataType.DateTime),                                             Nullable            ] public DateTime?       datetimeDataType         { get; set; } // datetime
+		[Column(DbType="smalldatetime",     DataType=DataType.SmallDateTime),                                        Nullable            ] public DateTime?       smalldatetimeDataType    { get; set; } // smalldatetime
+		[Column(DbType="char(1)",           DataType=DataType.Char,           Length=1),                             Nullable            ] public char?           charDataType             { get; set; } // char(1)
+		[Column(DbType="varchar(20)",       DataType=DataType.VarChar,        Length=20),                            Nullable            ] public string          varcharDataType          { get; set; } // varchar(20)
+		[Column(DbType="text",              DataType=DataType.Text),                                                 Nullable            ] public string          textDataType             { get; set; } // text
+		[Column(DbType="nchar(20)",         DataType=DataType.NChar,          Length=20),                            Nullable            ] public string          ncharDataType            { get; set; } // nchar(20)
+		[Column(DbType="nvarchar(20)",      DataType=DataType.NVarChar,       Length=20),                            Nullable            ] public string          nvarcharDataType         { get; set; } // nvarchar(20)
+		[Column(DbType="ntext",             DataType=DataType.NText),                                                Nullable            ] public string          ntextDataType            { get; set; } // ntext
+		[Column(DbType="binary(1)",         DataType=DataType.Binary,         Length=1),                             Nullable            ] public byte[]          binaryDataType           { get; set; } // binary(1)
+		[Column(DbType="varbinary(1)",      DataType=DataType.VarBinary,      Length=1),                             Nullable            ] public byte[]          varbinaryDataType        { get; set; } // varbinary(1)
+		[Column(DbType="image",             DataType=DataType.Image),                                                Nullable            ] public byte[]          imageDataType            { get; set; } // image
+		[Column(DbType="timestamp",         DataType=DataType.Timestamp,      SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]          timestampDataType        { get; set; } // timestamp
+		[Column(DbType="uniqueidentifier",  DataType=DataType.Guid),                                                 Nullable            ] public Guid?           uniqueidentifierDataType { get; set; } // uniqueidentifier
+		[Column(DbType="sql_variant",       DataType=DataType.Variant),                                              Nullable            ] public object          sql_variantDataType      { get; set; } // sql_variant
+		[Column(DbType="nvarchar(max)",     DataType=DataType.NVarChar,       Length=int.MaxValue),                  Nullable            ] public string          nvarchar_max_DataType    { get; set; } // nvarchar(max)
+		[Column(DbType="varchar(max)",      DataType=DataType.VarChar,        Length=int.MaxValue),                  Nullable            ] public string          varchar_max_DataType     { get; set; } // varchar(max)
+		[Column(DbType="varbinary(max)",    DataType=DataType.VarBinary,      Length=int.MaxValue),                  Nullable            ] public byte[]          varbinary_max_DataType   { get; set; } // varbinary(max)
+		[Column(DbType="xml",               DataType=DataType.Xml),                                                  Nullable            ] public string          xmlDataType              { get; set; } // xml
+		[Column(DbType="datetime2(7)",      DataType=DataType.DateTime2,      Precision=7),                          Nullable            ] public DateTime?       datetime2DataType        { get; set; } // datetime2(7)
+		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? datetimeoffsetDataType   { get; set; } // datetimeoffset(7)
+		[Column(DbType="datetimeoffset(0)", DataType=DataType.DateTimeOffset, Precision=0),                          Nullable            ] public DateTimeOffset? datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
+		[Column(DbType="datetimeoffset(1)", DataType=DataType.DateTimeOffset, Precision=1),                          Nullable            ] public DateTimeOffset? datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
+		[Column(DbType="datetimeoffset(2)", DataType=DataType.DateTimeOffset, Precision=2),                          Nullable            ] public DateTimeOffset? datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
+		[Column(DbType="datetimeoffset(3)", DataType=DataType.DateTimeOffset, Precision=3),                          Nullable            ] public DateTimeOffset? datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
+		[Column(DbType="datetimeoffset(4)", DataType=DataType.DateTimeOffset, Precision=4),                          Nullable            ] public DateTimeOffset? datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
+		[Column(DbType="datetimeoffset(5)", DataType=DataType.DateTimeOffset, Precision=5),                          Nullable            ] public DateTimeOffset? datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
+		[Column(DbType="datetimeoffset(6)", DataType=DataType.DateTimeOffset, Precision=6),                          Nullable            ] public DateTimeOffset? datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
+		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
+		[Column(DbType="date",              DataType=DataType.Date),                                                 Nullable            ] public DateTime?       dateDataType             { get; set; } // date
+		[Column(DbType="time(7)",           DataType=DataType.Time,           Precision=7),                          Nullable            ] public TimeSpan?       timeDataType             { get; set; } // time(7)
 	}
 
 	[Table(Database="TestData", Name="AllTypes2")]
 	public partial class AllTypes2
 	{
-		[PrimaryKey, Identity] public int             ID                     { get; set; } // int
-		[Column,     Nullable] public DateTime?       dateDataType           { get; set; } // date
-		[Column,     Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset
-		[Column,     Nullable] public DateTime?       datetime2DataType      { get; set; } // datetime2
-		[Column,     Nullable] public TimeSpan?       timeDataType           { get; set; } // time
-		[Column,     Nullable] public object          hierarchyidDataType    { get; set; } // hierarchyid
-		[Column,     Nullable] public object          geographyDataType      { get; set; } // geography
-		[Column,     Nullable] public object          geometryDataType       { get; set; } // geometry
+		[Column(DbType="int",               DataType=DataType.Int32),                       PrimaryKey, Identity] public int             ID                     { get; set; } // int
+		[Column(DbType="date",              DataType=DataType.Date),                        Nullable            ] public DateTime?       dateDataType           { get; set; } // date
+		[Column(DbType="datetimeoffset(7)", DataType=DataType.DateTimeOffset, Precision=7), Nullable            ] public DateTimeOffset? datetimeoffsetDataType { get; set; } // datetimeoffset(7)
+		[Column(DbType="datetime2(7)",      DataType=DataType.DateTime2,      Precision=7), Nullable            ] public DateTime?       datetime2DataType      { get; set; } // datetime2(7)
+		[Column(DbType="time(7)",           DataType=DataType.Time,           Precision=7), Nullable            ] public TimeSpan?       timeDataType           { get; set; } // time(7)
+		[Column(DbType="hierarchyid",       DataType=DataType.Udt),                         Nullable            ] public object          hierarchyidDataType    { get; set; } // hierarchyid
+		[Column(DbType="geography",         DataType=DataType.Udt),                         Nullable            ] public object          geographyDataType      { get; set; } // geography
+		[Column(DbType="geometry",          DataType=DataType.Udt),                         Nullable            ] public object          geometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Database="TestData", Name="BinaryData")]
 	public partial class BinaryData
 	{
-		[PrimaryKey,                                   Identity] public int    BinaryDataID { get; set; } // int
-		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull ] public byte[] Stamp        { get; set; } // timestamp
-		[Column,                                       NotNull ] public byte[] Data         { get; set; } // varbinary(1024)
+		[Column(DbType="int",             DataType=DataType.Int32),                                           PrimaryKey, Identity] public int    BinaryDataID { get; set; } // int
+		[Column(DbType="timestamp",       DataType=DataType.Timestamp, SkipOnInsert=true, SkipOnUpdate=true), NotNull             ] public byte[] Stamp        { get; set; } // timestamp
+		[Column(DbType="varbinary(1024)", DataType=DataType.VarBinary, Length=1024),                          NotNull             ] public byte[] Data         { get; set; } // varbinary(1024)
 	}
 
 	[Table(Database="TestData", Name="Child")]
 	public partial class Child
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
 		/// This ChildID column
 		/// </summary>
-		[Column, Nullable] public int? ChildID  { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  _ID      { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="DataTypeTest")]
 	public partial class DataTypeTest
 	{
-		[PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
-		[Column,     Nullable] public byte[]    Binary_    { get; set; } // binary(50)
-		[Column,     Nullable] public bool?     Boolean_   { get; set; } // bit
-		[Column,     Nullable] public byte?     Byte_      { get; set; } // tinyint
-		[Column,     Nullable] public byte[]    Bytes_     { get; set; } // varbinary(50)
-		[Column,     Nullable] public char?     Char_      { get; set; } // char(1)
-		[Column,     Nullable] public DateTime? DateTime_  { get; set; } // datetime
-		[Column,     Nullable] public decimal?  Decimal_   { get; set; } // decimal(20, 2)
-		[Column,     Nullable] public double?   Double_    { get; set; } // float
-		[Column,     Nullable] public Guid?     Guid_      { get; set; } // uniqueidentifier
-		[Column,     Nullable] public short?    Int16_     { get; set; } // smallint
-		[Column,     Nullable] public int?      Int32_     { get; set; } // int
-		[Column,     Nullable] public long?     Int64_     { get; set; } // bigint
-		[Column,     Nullable] public decimal?  Money_     { get; set; } // money
-		[Column,     Nullable] public byte?     SByte_     { get; set; } // tinyint
-		[Column,     Nullable] public float?    Single_    { get; set; } // real
-		[Column,     Nullable] public byte[]    Stream_    { get; set; } // varbinary(50)
-		[Column,     Nullable] public string    String_    { get; set; } // nvarchar(50)
-		[Column,     Nullable] public short?    UInt16_    { get; set; } // smallint
-		[Column,     Nullable] public int?      UInt32_    { get; set; } // int
-		[Column,     Nullable] public long?     UInt64_    { get; set; } // bigint
-		[Column,     Nullable] public string    Xml_       { get; set; } // xml
+		[Column(DbType="int",              DataType=DataType.Int32),                            PrimaryKey, Identity] public int       DataTypeID { get; set; } // int
+		[Column(DbType="binary(50)",       DataType=DataType.Binary,    Length=50),             Nullable            ] public byte[]    Binary_    { get; set; } // binary(50)
+		[Column(DbType="bit",              DataType=DataType.Boolean),                          Nullable            ] public bool?     Boolean_   { get; set; } // bit
+		[Column(DbType="tinyint",          DataType=DataType.Byte),                             Nullable            ] public byte?     Byte_      { get; set; } // tinyint
+		[Column(DbType="varbinary(50)",    DataType=DataType.VarBinary, Length=50),             Nullable            ] public byte[]    Bytes_     { get; set; } // varbinary(50)
+		[Column(DbType="char(1)",          DataType=DataType.Char,      Length=1),              Nullable            ] public char?     Char_      { get; set; } // char(1)
+		[Column(DbType="datetime",         DataType=DataType.DateTime),                         Nullable            ] public DateTime? DateTime_  { get; set; } // datetime
+		[Column(DbType="decimal(20, 2)",   DataType=DataType.Decimal,   Precision=20, Scale=2), Nullable            ] public decimal?  Decimal_   { get; set; } // decimal(20, 2)
+		[Column(DbType="float",            DataType=DataType.Double),                           Nullable            ] public double?   Double_    { get; set; } // float
+		[Column(DbType="uniqueidentifier", DataType=DataType.Guid),                             Nullable            ] public Guid?     Guid_      { get; set; } // uniqueidentifier
+		[Column(DbType="smallint",         DataType=DataType.Int16),                            Nullable            ] public short?    Int16_     { get; set; } // smallint
+		[Column(DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      Int32_     { get; set; } // int
+		[Column(DbType="bigint",           DataType=DataType.Int64),                            Nullable            ] public long?     Int64_     { get; set; } // bigint
+		[Column(DbType="money",            DataType=DataType.Money),                            Nullable            ] public decimal?  Money_     { get; set; } // money
+		[Column(DbType="tinyint",          DataType=DataType.Byte),                             Nullable            ] public byte?     SByte_     { get; set; } // tinyint
+		[Column(DbType="real",             DataType=DataType.Single),                           Nullable            ] public float?    Single_    { get; set; } // real
+		[Column(DbType="varbinary(50)",    DataType=DataType.VarBinary, Length=50),             Nullable            ] public byte[]    Stream_    { get; set; } // varbinary(50)
+		[Column(DbType="nvarchar(50)",     DataType=DataType.NVarChar,  Length=50),             Nullable            ] public string    String_    { get; set; } // nvarchar(50)
+		[Column(DbType="smallint",         DataType=DataType.Int16),                            Nullable            ] public short?    UInt16_    { get; set; } // smallint
+		[Column(DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      UInt32_    { get; set; } // int
+		[Column(DbType="bigint",           DataType=DataType.Int64),                            Nullable            ] public long?     UInt64_    { get; set; } // bigint
+		[Column(DbType="xml",              DataType=DataType.Xml),                              Nullable            ] public string    Xml_       { get; set; } // xml
 	}
 
 	[Table(Database="TestData", Name="Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } // nvarchar(50)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    PersonID { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string Taxonomy { get; set; } // nvarchar(50)
 
 		#region Associations
 
@@ -1082,18 +1103,19 @@ namespace DataModel
 	[Table(Database="TestData", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column, Nullable] public int? ParentID     { get; set; } // int
-		[Column, Nullable] public int? ChildID      { get; set; } // int
-		[Column, Nullable] public int? GrandChildID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  _ID          { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="IndexTable")]
 	public partial class IndexTable
 	{
-		[PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
-		[PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
-		[Column,        NotNull] public int UniqueField { get; set; } // int
-		[Column,        NotNull] public int IndexField  { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32),                NotNull] public int UniqueField { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32),                NotNull] public int IndexField  { get; set; } // int
 
 		#region Associations
 
@@ -1109,8 +1131,8 @@ namespace DataModel
 	[Table(Database="TestData", Name="IndexTable2")]
 	public partial class IndexTable2
 	{
-		[PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
-		[PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
 
 		#region Associations
 
@@ -1126,22 +1148,23 @@ namespace DataModel
 	[Table(Database="TestData", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column, Nullable] public int?      ID             { get; set; } // int
-		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column, Nullable] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column, Nullable] public DateTime? DateTimeValue2 { get; set; } // datetime2
-		[Column, Nullable] public bool?     BoolValue      { get; set; } // bit
-		[Column, Nullable] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column, Nullable] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
-		[Column, Nullable] public short?    SmallIntValue  { get; set; } // smallint
-		[Column, Nullable] public int?      IntValue       { get; set; } // int
-		[Column, Nullable] public long?     BigIntValue    { get; set; } // bigint
+		[Column(DbType="int",              DataType=DataType.Int32),                            PrimaryKey, Identity] public int       _ID            { get; set; } // int
+		[Column(DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      ID             { get; set; } // int
+		[Column(DbType="decimal(10, 4)",   DataType=DataType.Decimal,   Precision=10, Scale=4), Nullable            ] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
+		[Column(DbType="datetime",         DataType=DataType.DateTime),                         Nullable            ] public DateTime? DateTimeValue  { get; set; } // datetime
+		[Column(DbType="datetime2(7)",     DataType=DataType.DateTime2, Precision=7),           Nullable            ] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
+		[Column(DbType="bit",              DataType=DataType.Boolean),                          Nullable            ] public bool?     BoolValue      { get; set; } // bit
+		[Column(DbType="uniqueidentifier", DataType=DataType.Guid),                             Nullable            ] public Guid?     GuidValue      { get; set; } // uniqueidentifier
+		[Column(DbType="varbinary(5000)",  DataType=DataType.VarBinary, Length=5000),           Nullable            ] public byte[]    BinaryValue    { get; set; } // varbinary(5000)
+		[Column(DbType="smallint",         DataType=DataType.Int16),                            Nullable            ] public short?    SmallIntValue  { get; set; } // smallint
+		[Column(DbType="int",              DataType=DataType.Int32),                            Nullable            ] public int?      IntValue       { get; set; } // int
+		[Column(DbType="bigint",           DataType=DataType.Int64),                            Nullable            ] public long?     BigIntValue    { get; set; } // bigint
 	}
 
 	[Table(Database="TestData", Name="Name.Test")]
 	public partial class Name_Test
 	{
-		[Column("Name.Test"), Nullable] public int? Name_Test_Column { get; set; } // int
+		[Column("Name.Test", DbType="int", DataType=DataType.Int32), Nullable] public int? Name_Test_Column { get; set; } // int
 	}
 
 	/// <summary>
@@ -1150,32 +1173,34 @@ namespace DataModel
 	[Table(Database="TestData", Name="Parent")]
 	public partial class Parent
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
-		[Column, Nullable] public int? Value1   { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable            ] public int? Value1   { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int  _ID      { get; set; } // int
 	}
 
 	// View
 	[Table(Database="TestData", Name="ParentChildView")]
 	public partial class ParentChildView
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
-		[Column, Nullable] public int? Value1   { get; set; } // int
-		[Column, Nullable] public int? ChildID  { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ChildID  { get; set; } // int
 	}
 
 	// View
 	[Table(Database="TestData", Name="ParentView")]
 	public partial class ParentView
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
-		[Column, Nullable] public int? Value1   { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? ParentID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Nullable] public int? Value1   { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), Identity] public int  _ID      { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } // nvarchar(256)
+		[Column(DbType="int",           DataType=DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
+		[Column(DbType="nvarchar(256)", DataType=DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } // nvarchar(256)
 
 		#region Associations
 
@@ -1191,11 +1216,11 @@ namespace DataModel
 	[Table(Database="TestData", Name="Person")]
 	public partial class Person
 	{
-		[PrimaryKey, Identity   ] public int    PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string FirstName  { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string LastName   { get; set; } // nvarchar(50)
-		[Column,        Nullable] public string MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public char   Gender     { get; set; } // char(1)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey,  Identity] public int    PersonID   { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50), NotNull              ] public string FirstName  { get; set; } // nvarchar(50)
+		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50), NotNull              ] public string LastName   { get; set; } // nvarchar(50)
+		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),    Nullable          ] public string MiddleName { get; set; } // nvarchar(50)
+		[Column(DbType="char(1)",      DataType=DataType.Char,     Length=1),  NotNull              ] public char   Gender     { get; set; } // char(1)
 
 		#region Associations
 
@@ -1217,27 +1242,145 @@ namespace DataModel
 	[Table(Database="TestData", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // int
+		[Column(DbType="int", DataType=DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
 	[Table(Database="TestData", Name="TestTable2")]
 	public partial class TestTable2
 	{
-		[PrimaryKey, Identity   ] public int       ID          { get; set; } // int
-		[Column,     NotNull    ] public string    Name        { get; set; } // nvarchar(50)
-		[Column,        Nullable] public string    Description { get; set; } // nvarchar(250)
-		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // datetime2
+		[Column(DbType="int",           DataType=DataType.Int32),                  PrimaryKey,  Identity] public int       ID          { get; set; } // int
+		[Column(DbType="nvarchar(50)",  DataType=DataType.NVarChar,  Length=50),   NotNull              ] public string    Name        { get; set; } // nvarchar(50)
+		[Column(DbType="nvarchar(250)", DataType=DataType.NVarChar,  Length=250),     Nullable          ] public string    Description { get; set; } // nvarchar(250)
+		[Column(DbType="datetime2(7)",  DataType=DataType.DateTime2, Precision=7),    Nullable          ] public DateTime? CreatedOn   { get; set; } // datetime2(7)
 	}
 
 	[Table(Database="TestData", Name="TestTable3")]
 	public partial class TestTable3
 	{
-		[PrimaryKey, NotNull] public int    ID   { get; set; } // int
-		[Column,     NotNull] public string Name { get; set; } // nvarchar(50)
+		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    ID   { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string Name { get; set; } // nvarchar(50)
 	}
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int?   intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
+				new DataParameter("@id", @id));
+		}
+
+		#endregion
+
+		#region Person_SelectByKey
+
+		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
+				new DataParameter("@id", @id));
+		}
+
+		#endregion
+
+		#region Person_SelectAll
+
+		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
+		}
+
+		#endregion
+
+		#region Person_SelectByName
+
+		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
+				new DataParameter("@firstName", @firstName),
+				new DataParameter("@lastName",  @lastName));
+		}
+
+		#endregion
+
+		#region Person_SelectListByName
+
+		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
+				new DataParameter("@firstName", @firstName),
+				new DataParameter("@lastName",  @lastName));
+		}
+
+		#endregion
+
+		#region Person_Insert
+
+		public partial class Person_InsertResult
+		{
+			public int? PersonID { get; set; }
+		}
+
+		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		{
+			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
+				new DataParameter("@FirstName",  @FirstName),
+				new DataParameter("@LastName",   @LastName),
+				new DataParameter("@MiddleName", @MiddleName),
+				new DataParameter("@Gender",     @Gender));
+		}
+
+		#endregion
+
+		#region Person_Insert_OutputParameter
+
+		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
+				new DataParameter("@FirstName",  @FirstName),
+				new DataParameter("@LastName",   @LastName),
+				new DataParameter("@MiddleName", @MiddleName),
+				new DataParameter("@Gender",     @Gender),
+				new DataParameter("@PersonID",   @PersonID)   { Direction = ParameterDirection.InputOutput });
+
+			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region Person_Update
 
 		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
@@ -1341,37 +1484,6 @@ namespace DataModel
 
 		#endregion
 
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region SelectImplicitColumn
 
 		public partial class SelectImplicitColumnResult
@@ -1389,16 +1501,6 @@ namespace DataModel
 					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
 				},
 				"[TestData]..[SelectImplicitColumn]");
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id));
 		}
 
 		#endregion
@@ -1425,90 +1527,13 @@ namespace DataModel
 		}
 
 		#endregion
-
-		#region Person_SelectByKey
-
-		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
-				new DataParameter("@id", @id));
-		}
-
-		#endregion
-
-		#region Person_SelectAll
-
-		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
-		}
-
-		#endregion
-
-		#region Person_SelectByName
-
-		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
-		}
-
-		#endregion
-
-		#region Person_SelectListByName
-
-		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
-		}
-
-		#endregion
-
-		#region Person_Insert
-
-		public partial class Person_InsertResult
-		{
-			public int? PersonID { get; set; }
-		}
-
-		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
-		{
-			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender",     @Gender));
-		}
-
-		#endregion
-
-		#region Person_Insert_OutputParameter
-
-		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender",     @Gender),
-				new DataParameter("@PersonID",   @PersonID)   { Direction = ParameterDirection.InputOutput });
-
-			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
-
-			return ret;
-		}
-
-		#endregion
 	}
 
 	public static partial class SqlFunctions
 	{
 		#region Scalar_ReturnParameter
 
-		[Sql.Function(Name="Scalar_ReturnParameter", ServerSideOnly=true)]
+		[Sql.Function(Name=".Scalar_ReturnParameter", ServerSideOnly=true)]
 		public static int? Scalar_ReturnParameter()
 		{
 			throw new InvalidOperationException();
@@ -1537,6 +1562,12 @@ namespace DataModel
 				t.BinaryDataID == BinaryDataID);
 		}
 
+		public static Child Find(this ITable<Child> table, int _ID)
+		{
+			return table.FirstOrDefault(t =>
+				t._ID == _ID);
+		}
+
 		public static DataTypeTest Find(this ITable<DataTypeTest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
@@ -1547,6 +1578,12 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static GrandChild Find(this ITable<GrandChild> table, int _ID)
+		{
+			return table.FirstOrDefault(t =>
+				t._ID == _ID);
 		}
 
 		public static IndexTable Find(this ITable<IndexTable> table, int PKField1, int PKField2)
@@ -1561,6 +1598,18 @@ namespace DataModel
 			return table.FirstOrDefault(t =>
 				t.PKField1 == PKField1 &&
 				t.PKField2 == PKField2);
+		}
+
+		public static LinqDataType Find(this ITable<LinqDataType> table, int _ID)
+		{
+			return table.FirstOrDefault(t =>
+				t._ID == _ID);
+		}
+
+		public static Parent Find(this ITable<Parent> table, int _ID)
+		{
+			return table.FirstOrDefault(t =>
+				t._ID == _ID);
 		}
 
 		public static Patient Find(this ITable<Patient> table, int PersonID)

@@ -6,6 +6,9 @@
 <#
 	NamespaceName = "AccessDataContext";
 
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
 	LoadAccessMetadata(@"I:\linq2db\Data\", "TestData.mdb");
 
 	GenerateModel();

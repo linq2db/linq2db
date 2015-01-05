@@ -7,6 +7,9 @@
 <#
 	NamespaceName = "DB2DataContext";
 
+	GenerateDataTypes = true;
+	GenerateDbTypes   = true;
+
 	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
 
 	LoadDB2Metadata("DBHost", "50000", "TESTDATA", "Administrator", "TestPassword");

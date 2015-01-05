@@ -93,6 +93,10 @@ void LoadServerMetadata(DataConnection dataConnection)
 					{
 						ColumnName      = c.ColumnName,
 						ColumnType      = c.ColumnType,
+						DataType        = "DataType." + c.DataType,
+						Length          = c.Length,
+						Precision       = c.Precision,
+						Scale           = c.Scale,
 						IsNullable      = c.IsNullable,
 						IsIdentity      = c.IsIdentity,
 						IsPrimaryKey    = c.IsPrimaryKey,
@@ -262,6 +266,8 @@ string CheckType(Type type, string typeName)
 	return typeName;
 }
 
+Action AfterLoadMetadata = () => {};
+
 void LoadMetadata(DataConnection dataConnection)
 {
 	if (DataContextObject == null)
@@ -310,6 +316,8 @@ void LoadMetadata(DataConnection dataConnection)
 				col.MemberName += "_Column";
 		}
 	}
+
+	AfterLoadMetadata();
 }
 
 string ConvertToCompilable(string name)
@@ -492,6 +500,10 @@ public partial class Column : Property
 	public bool      IsNullable;
 	public bool      IsIdentity;
 	public string    ColumnType; // Type of the column in database
+	public string    DataType;
+	public long?     Length;
+	public int?      Precision;
+	public int?      Scale;
 	public DbType    DbType;
 	public string    Description;
 	public bool      IsPrimaryKey;
@@ -575,7 +587,7 @@ public class Parameter
 	public bool     IsIn          { get; set; }
 	public bool     IsOut         { get; set; }
 	public bool     IsResult      { get; set; }
-	public int?     Size          { get; set; }
+	public long?    Size          { get; set; }
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }
