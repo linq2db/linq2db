@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.SapHana
                 dataConnection.Execute("SELECT 1 FROM _SYS_BI.BIMC_ALL_CUBES LIMIT 1");
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 var options = HanaSchemaOptions ?? new GetHanaSchemaOptions();
                 if (options.ThrowExceptionIfCalculationViewsNotAuthorized)
@@ -371,7 +371,7 @@ namespace LinqToDB.DataProvider.SapHana
             return columnName.IndexOfAny(invalidCharacters) > -1 ? String.Empty : columnName;
         }
 
-        protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+        protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
         {
             if (dataType != null)
             {
@@ -500,7 +500,7 @@ namespace LinqToDB.DataProvider.SapHana
                                 ? DateTime.Now
                                 : DefaultValue.GetValue(p.SystemType),
                     DataType = p.DataType,
-                    Size = p.Size,
+                    Size = (int?)p.Size,
                     Direction =
                         p.IsIn
                             ? p.IsOut
@@ -611,7 +611,6 @@ namespace LinqToDB.DataProvider.SapHana
             ORDER BY v.VIEW_NAME, p.""ORDER""");
             return query.ToList();
         }
-
 
         protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
         {
