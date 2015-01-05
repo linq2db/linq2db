@@ -46,7 +46,7 @@ LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 
 LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
 
-Func<TableSchema, Table> LoadProviderSpecificTable = (TableSchema) => { return null;};
+Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
@@ -119,8 +119,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			key = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
 			table = LoadProviderSpecificTable(t)
 		})
-		.Where(t => t.table != null)
-	);
+		.Where(t => t.table != null));
 
 	foreach (var t in tables)
 		Tables.Add(t.key, t.table);

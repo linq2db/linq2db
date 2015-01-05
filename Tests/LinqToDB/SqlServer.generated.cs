@@ -689,7 +689,7 @@ namespace DataModel
 		public static IEnumerable<CustOrderHistResult> CustOrderHist(this DataConnection dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrderHistResult>("[Northwind]..[CustOrderHist]",
-				new DataParameter("@CustomerID", @CustomerID));
+				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
 		}
 
 		#endregion
@@ -708,7 +708,7 @@ namespace DataModel
 		public static IEnumerable<CustOrdersDetailResult> CustOrdersDetail(this DataConnection dataConnection, int? @OrderID)
 		{
 			return dataConnection.QueryProc<CustOrdersDetailResult>("[Northwind]..[CustOrdersDetail]",
-				new DataParameter("@OrderID", @OrderID));
+				new DataParameter("@OrderID", @OrderID, DataType.Int32));
 		}
 
 		#endregion
@@ -726,7 +726,7 @@ namespace DataModel
 		public static IEnumerable<CustOrdersOrdersResult> CustOrdersOrders(this DataConnection dataConnection, string @CustomerID)
 		{
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[Northwind]..[CustOrdersOrders]",
-				new DataParameter("@CustomerID", @CustomerID));
+				new DataParameter("@CustomerID", @CustomerID, DataType.NChar));
 		}
 
 		#endregion
@@ -746,8 +746,8 @@ namespace DataModel
 		public static IEnumerable<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Northwind]..[Employee Sales by Country]",
-				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date",    @Ending_Date));
+				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
 		}
 
 		#endregion
@@ -765,8 +765,8 @@ namespace DataModel
 		public static IEnumerable<SalesByYearResult> SalesByYear(this DataConnection dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			return dataConnection.QueryProc<SalesByYearResult>("[Northwind]..[Sales by Year]",
-				new DataParameter("@Beginning_Date", @Beginning_Date),
-				new DataParameter("@Ending_Date",    @Ending_Date));
+				new DataParameter("@Beginning_Date", @Beginning_Date, DataType.DateTime),
+				new DataParameter("@Ending_Date",    @Ending_Date,    DataType.DateTime));
 		}
 
 		#endregion
@@ -782,8 +782,8 @@ namespace DataModel
 		public static IEnumerable<SalesByCategoryResult> SalesByCategory(this DataConnection dataConnection, string @CategoryName, string @OrdYear)
 		{
 			return dataConnection.QueryProc<SalesByCategoryResult>("[Northwind]..[SalesByCategory]",
-				new DataParameter("@CategoryName", @CategoryName),
-				new DataParameter("@OrdYear",      @OrdYear));
+				new DataParameter("@CategoryName", @CategoryName, DataType.NVarChar),
+				new DataParameter("@OrdYear",      @OrdYear,      DataType.NVarChar));
 		}
 
 		#endregion
@@ -1283,8 +1283,8 @@ namespace DataModel
 		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt)    { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
 			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
 			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
@@ -1299,7 +1299,7 @@ namespace DataModel
 		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id));
+				new DataParameter("@id", @id, DataType.Int32));
 		}
 
 		#endregion
@@ -1309,7 +1309,7 @@ namespace DataModel
 		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
 		{
 			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
-				new DataParameter("@id", @id));
+				new DataParameter("@id", @id, DataType.Int32));
 		}
 
 		#endregion
@@ -1328,8 +1328,8 @@ namespace DataModel
 		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
 		}
 
 		#endregion
@@ -1339,8 +1339,8 @@ namespace DataModel
 		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
 		}
 
 		#endregion
@@ -1355,10 +1355,10 @@ namespace DataModel
 		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender",     @Gender));
+				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     DataType.Char));
 		}
 
 		#endregion
@@ -1368,11 +1368,11 @@ namespace DataModel
 		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender",     @Gender),
-				new DataParameter("@PersonID",   @PersonID)   { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     DataType.Char),
+				new DataParameter("@PersonID",   @PersonID,   DataType.Int32)    { Direction = ParameterDirection.InputOutput });
 
 			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
 
@@ -1386,11 +1386,11 @@ namespace DataModel
 		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
 		{
 			return dataConnection.ExecuteProc("[TestData]..[Person_Update]",
-				new DataParameter("@PersonID",   @PersonID),
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@Gender",     @Gender));
+				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
+				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     DataType.Char));
 		}
 
 		#endregion
@@ -1400,7 +1400,7 @@ namespace DataModel
 		public static int Person_Delete(this DataConnection dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[TestData]..[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID));
+				new DataParameter("@PersonID", @PersonID, DataType.Int32));
 		}
 
 		#endregion
@@ -1439,8 +1439,8 @@ namespace DataModel
 		public static IEnumerable<Patient_SelectByNameResult> Patient_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.QueryProc<Patient_SelectByNameResult>("[TestData]..[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
 		}
 
 		#endregion
@@ -1450,12 +1450,12 @@ namespace DataModel
 		public static int OutRefTest(this DataConnection dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefTest]",
-				new DataParameter("@ID",             @ID),
-				new DataParameter("@outputID",       @outputID)       { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID)  { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str),
-				new DataParameter("@outputStr",      @outputStr)      { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@ID",             @ID,             DataType.Int32),
+				new DataParameter("@outputID",       @outputID,       DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@inputOutputID",  @inputOutputID,  DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@str",            @str,            DataType.VarChar),
+				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
 			@outputID       = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
 			@inputOutputID  = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
@@ -1472,9 +1472,9 @@ namespace DataModel
 		public static int OutRefEnumTest(this DataConnection dataConnection, string @str, ref string @outputStr, ref string @inputOutputStr)
 		{
 			var ret = dataConnection.ExecuteProc("[TestData]..[OutRefEnumTest]",
-				new DataParameter("@str",            @str),
-				new DataParameter("@outputStr",      @outputStr)      { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@str",            @str,            DataType.VarChar),
+				new DataParameter("@outputStr",      @outputStr,      DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
+				new DataParameter("@inputOutputStr", @inputOutputStr, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
 
 			@outputStr      = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
 			@inputOutputStr = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
@@ -1524,19 +1524,6 @@ namespace DataModel
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[TestData]..[DuplicateColumnNames]");
-		}
-
-		#endregion
-	}
-
-	public static partial class SqlFunctions
-	{
-		#region Scalar_ReturnParameter
-
-		[Sql.Function(Name=".Scalar_ReturnParameter", ServerSideOnly=true)]
-		public static int? Scalar_ReturnParameter()
-		{
-			throw new InvalidOperationException();
 		}
 
 		#endregion

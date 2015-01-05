@@ -58,27 +58,27 @@ namespace AccessDataContext
 	[Table("AllTypes")]
 	public partial class AllType
 	{
-		[Column(DbType="Long",       DataType=DataType.Int32, Precision=10),            Identity] public int       ID                       { get; set; } // Long
-		[Column(DbType="Bit",        DataType=DataType.Boolean, Length=2),              Identity] public bool      bitDataType              { get; set; } // Bit
-		[Column(DbType="Short",      DataType=DataType.Int16, Precision=5),             Nullable] public short?    smallintDataType         { get; set; } // Short
-		[Column(DbType="Decimal",    DataType=DataType.Decimal, Precision=18, Scale=0), Nullable] public decimal?  decimalDataType          { get; set; } // Decimal
-		[Column(DbType="Long",       DataType=DataType.Int32, Precision=10),            Nullable] public int?      intDataType              { get; set; } // Long
-		[Column(DbType="Byte",       DataType=DataType.Byte, Precision=3),              Nullable] public byte?     tinyintDataType          { get; set; } // Byte
-		[Column(DbType="Currency",   DataType=DataType.Money, Precision=19),            Nullable] public decimal?  moneyDataType            { get; set; } // Currency
-		[Column(DbType="Double",     DataType=DataType.Double, Precision=15),           Nullable] public double?   floatDataType            { get; set; } // Double
-		[Column(DbType="Single",     DataType=DataType.Single, Precision=7),            Nullable] public float?    realDataType             { get; set; } // Single
-		[Column(DbType="DateTime",   DataType=DataType.DateTime),                       Nullable] public DateTime? datetimeDataType         { get; set; } // DateTime
-		[Column(DbType="text(1)",    DataType=DataType.NText, Length=1),                Nullable] public char?     charDataType             { get; set; } // text(1)
-		[Column(DbType="text(20)",   DataType=DataType.NText, Length=20),               Nullable] public string    varcharDataType          { get; set; } // text(20)
-		[Column(DbType="text(0)",    DataType=DataType.NText, Length=0),                Nullable] public string    textDataType             { get; set; } // text(0)
-		[Column(DbType="text(20)",   DataType=DataType.NText, Length=20),               Nullable] public string    ncharDataType            { get; set; } // text(20)
-		[Column(DbType="text(20)",   DataType=DataType.NText, Length=20),               Nullable] public string    nvarcharDataType         { get; set; } // text(20)
-		[Column(DbType="text(0)",    DataType=DataType.NText, Length=0),                Nullable] public string    ntextDataType            { get; set; } // text(0)
-		[Column(DbType="image(10)",  DataType=DataType.Undefined, Length=10),           Nullable] public byte[]    binaryDataType           { get; set; } // image(10)
-		[Column(DbType="image(510)", DataType=DataType.Undefined, Length=510),          Nullable] public byte[]    varbinaryDataType        { get; set; } // image(510)
-		[Column(DbType="image(0)",   DataType=DataType.Undefined, Length=0),            Nullable] public byte[]    imageDataType            { get; set; } // image(0)
-		[Column(DbType="image(0)",   DataType=DataType.Undefined, Length=0),            Nullable] public byte[]    oleObjectDataType        { get; set; } // image(0)
-		[Column(DbType="GUID",       DataType=DataType.Guid),                           Nullable] public Guid?     uniqueidentifierDataType { get; set; } // GUID
+		[Column(DbType="Long",       DataType=DataType.Int32,     Precision=10),          Identity] public int       ID                       { get; set; } // Long
+		[Column(DbType="Bit",        DataType=DataType.Boolean,   Length=2),              Identity] public bool      bitDataType              { get; set; } // Bit
+		[Column(DbType="Short",      DataType=DataType.Int16,     Precision=5),           Nullable] public short?    smallintDataType         { get; set; } // Short
+		[Column(DbType="Decimal",    DataType=DataType.Decimal,   Precision=18, Scale=0), Nullable] public decimal?  decimalDataType          { get; set; } // Decimal
+		[Column(DbType="Long",       DataType=DataType.Int32,     Precision=10),          Nullable] public int?      intDataType              { get; set; } // Long
+		[Column(DbType="Byte",       DataType=DataType.Byte,      Precision=3),           Nullable] public byte?     tinyintDataType          { get; set; } // Byte
+		[Column(DbType="Currency",   DataType=DataType.Money,     Precision=19),          Nullable] public decimal?  moneyDataType            { get; set; } // Currency
+		[Column(DbType="Double",     DataType=DataType.Double,    Precision=15),          Nullable] public double?   floatDataType            { get; set; } // Double
+		[Column(DbType="Single",     DataType=DataType.Single,    Precision=7),           Nullable] public float?    realDataType             { get; set; } // Single
+		[Column(DbType="DateTime",   DataType=DataType.DateTime),                         Nullable] public DateTime? datetimeDataType         { get; set; } // DateTime
+		[Column(DbType="text(1)",    DataType=DataType.NText,     Length=1),              Nullable] public char?     charDataType             { get; set; } // text(1)
+		[Column(DbType="text(20)",   DataType=DataType.NText,     Length=20),             Nullable] public string    varcharDataType          { get; set; } // text(20)
+		[Column(DbType="text(0)",    DataType=DataType.NText,     Length=0),              Nullable] public string    textDataType             { get; set; } // text(0)
+		[Column(DbType="text(20)",   DataType=DataType.NText,     Length=20),             Nullable] public string    ncharDataType            { get; set; } // text(20)
+		[Column(DbType="text(20)",   DataType=DataType.NText,     Length=20),             Nullable] public string    nvarcharDataType         { get; set; } // text(20)
+		[Column(DbType="text(0)",    DataType=DataType.NText,     Length=0),              Nullable] public string    ntextDataType            { get; set; } // text(0)
+		[Column(DbType="image(10)",  DataType=DataType.Undefined, Length=10),             Nullable] public byte[]    binaryDataType           { get; set; } // image(10)
+		[Column(DbType="image(510)", DataType=DataType.Undefined, Length=510),            Nullable] public byte[]    varbinaryDataType        { get; set; } // image(510)
+		[Column(DbType="image(0)",   DataType=DataType.Undefined, Length=0),              Nullable] public byte[]    imageDataType            { get; set; } // image(0)
+		[Column(DbType="image(0)",   DataType=DataType.Undefined, Length=0),              Nullable] public byte[]    oleObjectDataType        { get; set; } // image(0)
+		[Column(DbType="GUID",       DataType=DataType.Guid),                             Nullable] public Guid?     uniqueidentifierDataType { get; set; } // GUID
 	}
 
 	[Table("Child")]
@@ -91,28 +91,28 @@ namespace AccessDataContext
 	[Table("DataTypeTest")]
 	public partial class DataTypeTest
 	{
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  PrimaryKey, Identity] public int       DataTypeID { get; set; } // Long
-		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),  Nullable            ] public byte[]    Binary_    { get; set; } // image(0)
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  Nullable            ] public int?      Boolean_   { get; set; } // Long
-		[Column(DbType="Byte",     DataType=DataType.Byte, Precision=3),    Nullable            ] public byte?     Byte_      { get; set; } // Byte
-		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),  Nullable            ] public byte[]    Bytes_     { get; set; } // image(0)
-		[Column(DbType="text(1)",  DataType=DataType.NText, Length=1),      Nullable            ] public char?     Char_      { get; set; } // text(1)
-		[Column(DbType="DateTime", DataType=DataType.DateTime),             Nullable            ] public DateTime? DateTime_  { get; set; } // DateTime
-		[Column(DbType="Currency", DataType=DataType.Money, Precision=19),  Nullable            ] public decimal?  Decimal_   { get; set; } // Currency
-		[Column(DbType="Double",   DataType=DataType.Double, Precision=15), Nullable            ] public double?   Double_    { get; set; } // Double
-		[Column(DbType="GUID",     DataType=DataType.Guid),                 Nullable            ] public Guid?     Guid_      { get; set; } // GUID
-		[Column(DbType="Short",    DataType=DataType.Int16, Precision=5),   Nullable            ] public short?    Int16_     { get; set; } // Short
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  Nullable            ] public int?      Int32_     { get; set; } // Long
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  Nullable            ] public int?      Int64_     { get; set; } // Long
-		[Column(DbType="Currency", DataType=DataType.Money, Precision=19),  Nullable            ] public decimal?  Money_     { get; set; } // Currency
-		[Column(DbType="Byte",     DataType=DataType.Byte, Precision=3),    Nullable            ] public byte?     SByte_     { get; set; } // Byte
-		[Column(DbType="Single",   DataType=DataType.Single, Precision=7),  Nullable            ] public float?    Single_    { get; set; } // Single
-		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),  Nullable            ] public byte[]    Stream_    { get; set; } // image(0)
-		[Column(DbType="text(50)", DataType=DataType.NText, Length=50),     Nullable            ] public string    String_    { get; set; } // text(50)
-		[Column(DbType="Short",    DataType=DataType.Int16, Precision=5),   Nullable            ] public short?    UInt16_    { get; set; } // Short
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  Nullable            ] public int?      UInt32_    { get; set; } // Long
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),  Nullable            ] public int?      UInt64_    { get; set; } // Long
-		[Column(DbType="text(0)",  DataType=DataType.NText, Length=0),      Nullable            ] public string    Xml_       { get; set; } // text(0)
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), PrimaryKey, Identity] public int       DataTypeID { get; set; } // Long
+		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),     Nullable            ] public byte[]    Binary_    { get; set; } // image(0)
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), Nullable            ] public int?      Boolean_   { get; set; } // Long
+		[Column(DbType="Byte",     DataType=DataType.Byte,      Precision=3),  Nullable            ] public byte?     Byte_      { get; set; } // Byte
+		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),     Nullable            ] public byte[]    Bytes_     { get; set; } // image(0)
+		[Column(DbType="text(1)",  DataType=DataType.NText,     Length=1),     Nullable            ] public char?     Char_      { get; set; } // text(1)
+		[Column(DbType="DateTime", DataType=DataType.DateTime),                Nullable            ] public DateTime? DateTime_  { get; set; } // DateTime
+		[Column(DbType="Currency", DataType=DataType.Money,     Precision=19), Nullable            ] public decimal?  Decimal_   { get; set; } // Currency
+		[Column(DbType="Double",   DataType=DataType.Double,    Precision=15), Nullable            ] public double?   Double_    { get; set; } // Double
+		[Column(DbType="GUID",     DataType=DataType.Guid),                    Nullable            ] public Guid?     Guid_      { get; set; } // GUID
+		[Column(DbType="Short",    DataType=DataType.Int16,     Precision=5),  Nullable            ] public short?    Int16_     { get; set; } // Short
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), Nullable            ] public int?      Int32_     { get; set; } // Long
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), Nullable            ] public int?      Int64_     { get; set; } // Long
+		[Column(DbType="Currency", DataType=DataType.Money,     Precision=19), Nullable            ] public decimal?  Money_     { get; set; } // Currency
+		[Column(DbType="Byte",     DataType=DataType.Byte,      Precision=3),  Nullable            ] public byte?     SByte_     { get; set; } // Byte
+		[Column(DbType="Single",   DataType=DataType.Single,    Precision=7),  Nullable            ] public float?    Single_    { get; set; } // Single
+		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),     Nullable            ] public byte[]    Stream_    { get; set; } // image(0)
+		[Column(DbType="text(50)", DataType=DataType.NText,     Length=50),    Nullable            ] public string    String_    { get; set; } // text(50)
+		[Column(DbType="Short",    DataType=DataType.Int16,     Precision=5),  Nullable            ] public short?    UInt16_    { get; set; } // Short
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), Nullable            ] public int?      UInt32_    { get; set; } // Long
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10), Nullable            ] public int?      UInt64_    { get; set; } // Long
+		[Column(DbType="text(0)",  DataType=DataType.NText,     Length=0),     Nullable            ] public string    Xml_       { get; set; } // text(0)
 	}
 
 	[Table("Doctor")]
@@ -139,16 +139,16 @@ namespace AccessDataContext
 	[Table("LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),            Nullable] public int?      ID             { get; set; } // Long
-		[Column(DbType="Decimal",  DataType=DataType.Decimal, Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // Decimal
-		[Column(DbType="DateTime", DataType=DataType.DateTime),                       Nullable] public DateTime? DateTimeValue  { get; set; } // DateTime
-		[Column(DbType="DateTime", DataType=DataType.DateTime),                       Nullable] public DateTime? DateTimeValue2 { get; set; } // DateTime
-		[Column(DbType="Bit",      DataType=DataType.Boolean, Length=2),              Identity] public bool      BoolValue      { get; set; } // Bit
-		[Column(DbType="GUID",     DataType=DataType.Guid),                           Nullable] public Guid?     GuidValue      { get; set; } // GUID
-		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),            Nullable] public byte[]    BinaryValue    { get; set; } // image(0)
-		[Column(DbType="Short",    DataType=DataType.Int16, Precision=5),             Nullable] public short?    SmallIntValue  { get; set; } // Short
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),            Nullable] public int?      IntValue       { get; set; } // Long
-		[Column(DbType="Long",     DataType=DataType.Int32, Precision=10),            Nullable] public int?      BigIntValue    { get; set; } // Long
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10),          Nullable] public int?      ID             { get; set; } // Long
+		[Column(DbType="Decimal",  DataType=DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // Decimal
+		[Column(DbType="DateTime", DataType=DataType.DateTime),                         Nullable] public DateTime? DateTimeValue  { get; set; } // DateTime
+		[Column(DbType="DateTime", DataType=DataType.DateTime),                         Nullable] public DateTime? DateTimeValue2 { get; set; } // DateTime
+		[Column(DbType="Bit",      DataType=DataType.Boolean,   Length=2),              Identity] public bool      BoolValue      { get; set; } // Bit
+		[Column(DbType="GUID",     DataType=DataType.Guid),                             Nullable] public Guid?     GuidValue      { get; set; } // GUID
+		[Column(DbType="image(0)", DataType=DataType.Undefined, Length=0),              Nullable] public byte[]    BinaryValue    { get; set; } // image(0)
+		[Column(DbType="Short",    DataType=DataType.Int16,     Precision=5),           Nullable] public short?    SmallIntValue  { get; set; } // Short
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10),          Nullable] public int?      IntValue       { get; set; } // Long
+		[Column(DbType="Long",     DataType=DataType.Int32,     Precision=10),          Nullable] public int?      BigIntValue    { get; set; } // Long
 	}
 
 	// View
@@ -240,8 +240,8 @@ namespace AccessDataContext
 		public static int Patient_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.ExecuteProc("[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NText),
+				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
 
 		#endregion
@@ -251,7 +251,7 @@ namespace AccessDataContext
 		public static int Person_Delete(this DataConnection dataConnection, int? @PersonID)
 		{
 			return dataConnection.ExecuteProc("[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID));
+				new DataParameter("@PersonID", @PersonID, DataType.Int32));
 		}
 
 		#endregion
@@ -261,10 +261,10 @@ namespace AccessDataContext
 		public static int Person_Insert(this DataConnection dataConnection, string @FirstName, string @MiddleName, string @LastName, string @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@Gender",     @Gender));
+				new DataParameter("@FirstName",  @FirstName,  DataType.NText),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NText),
+				new DataParameter("@LastName",   @LastName,   DataType.NText),
+				new DataParameter("@Gender",     @Gender,     DataType.NText));
 		}
 
 		#endregion
@@ -274,7 +274,7 @@ namespace AccessDataContext
 		public static int Person_SelectByKey(this DataConnection dataConnection, int? @id)
 		{
 			return dataConnection.ExecuteProc("[Person_SelectByKey]",
-				new DataParameter("@id", @id));
+				new DataParameter("@id", @id, DataType.Int32));
 		}
 
 		#endregion
@@ -284,8 +284,8 @@ namespace AccessDataContext
 		public static int Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.ExecuteProc("[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NText),
+				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
 
 		#endregion
@@ -295,8 +295,8 @@ namespace AccessDataContext
 		public static int Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
 		{
 			return dataConnection.ExecuteProc("[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName),
-				new DataParameter("@lastName",  @lastName));
+				new DataParameter("@firstName", @firstName, DataType.NText),
+				new DataParameter("@lastName",  @lastName,  DataType.NText));
 		}
 
 		#endregion
@@ -306,12 +306,12 @@ namespace AccessDataContext
 		public static int Person_Update(this DataConnection dataConnection, int? @id, int? @PersonID, string @FirstName, string @MiddleName, string @LastName, string @Gender)
 		{
 			return dataConnection.ExecuteProc("[Person_Update]",
-				new DataParameter("@id",         @id),
-				new DataParameter("@PersonID",   @PersonID),
-				new DataParameter("@FirstName",  @FirstName),
-				new DataParameter("@MiddleName", @MiddleName),
-				new DataParameter("@LastName",   @LastName),
-				new DataParameter("@Gender",     @Gender));
+				new DataParameter("@id",         @id,         DataType.Int32),
+				new DataParameter("@PersonID",   @PersonID,   DataType.Int32),
+				new DataParameter("@FirstName",  @FirstName,  DataType.NText),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NText),
+				new DataParameter("@LastName",   @LastName,   DataType.NText),
+				new DataParameter("@Gender",     @Gender,     DataType.NText));
 		}
 
 		#endregion

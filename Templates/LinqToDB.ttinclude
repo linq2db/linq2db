@@ -10,7 +10,7 @@
 Action BeforeGenerateLinqToDBModel = () => {};
 Action AfterGenerateLinqToDBModel  = () => {};
 
-Func<Table, MemberBase> GenerateProviderSpecificTable = (Table) => {return null;};
+Func<Table,MemberBase> GenerateProviderSpecificTable = t => null;
 
 bool GenerateObsoleteAttributeForAliases = false;
 bool GenerateFindExtensions = true;
@@ -53,13 +53,13 @@ void GenerateTypesFromMetadata()
 
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl=> tbl.TypeName))
 	{
-		MemberBase dcProp = t.IsProviderSpecific ? 
-			GenerateProviderSpecificTable(t) 
-			: new Property(
-			string.Format("ITable<{0}>", t.TypeName),
-			t.DataContextPropertyName,
-			new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
-			null);
+		MemberBase dcProp = t.IsProviderSpecific ?
+			GenerateProviderSpecificTable(t) :
+			new Property(
+				string.Format("ITable<{0}>", t.TypeName),
+				t.DataContextPropertyName,
+				new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
+				null);
 
 		if (dcProp == null) continue;
 
@@ -356,7 +356,6 @@ void GenerateTypesFromMetadata()
 
 		foreach (var p in Procedures.Values.Where(proc => proc.IsLoaded))
 		{
-
 			var proc = new MemberGroup { Region = p.Name };
 
 			if (p.IsTableFunction)
@@ -457,7 +456,7 @@ void GenerateTypesFromMetadata()
 
 				var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName.   Length) ?? 0;
 				var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName.Length) ?? 0;
-				var maxLenType   = inputParameters.Max(pr => (int?)pr.ParameterType.Length) ?? 0;
+				var maxLenType   = inputParameters.Max(pr => (int?)("DataType." + pr.DataType).Length) ?? 0;
 
 				for (var i = 0; i < inputParameters.Count; i++)
 				{
@@ -467,12 +466,12 @@ void GenerateTypesFromMetadata()
 						pr.SchemaName,
 						LenDiff(maxLenSchema, pr.SchemaName),
 						pr.ParameterName,
-						LenDiff(maxLenSchema, pr.SchemaName),
+						LenDiff(maxLenParam, pr.ParameterName),
 						"DataType." + pr.DataType);
 
 					if (pr.IsOut)
 					{
-						str += LenDiff(maxLenParam, pr.ParameterName);
+						str += LenDiff(maxLenType, "DataType." + pr.DataType);
 						str += " { Direction = " + (pr.IsIn ? "ParameterDirection.InputOutput" : "ParameterDirection.Output");
 
 						if (pr.Size != null && pr.Size.Value != 0)
