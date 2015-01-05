@@ -233,7 +233,7 @@ public partial class Class : TypeBase
 				
 				for (var i = 0; i < aa.Count; i++)
 				{
-					if (i > 0) tt.Write(", ");
+					if (i > 0) SkipSpacesAndInsert(tt, ", ");
 					aa[i].Render(tt);
 				}
 
@@ -282,7 +282,7 @@ public partial class Class : TypeBase
 
 						for (var i = 0; i < attrs.Count; i++)
 						{
-							if (i > 0) tt.Write(", ");
+							if (i > 0) SkipSpacesAndInsert(tt, ", ");
 							attrs[i].Render(tt);
 						}
 
@@ -588,7 +588,7 @@ public partial class MemberGroup : MemberBase
 									{
 										if (ma.attrs[j] != null)
 										{
-											tt.Write(", ");
+											SkipSpacesAndInsert(tt, ", ");
 											commaAdded = true;
 											break;
 										}
@@ -1252,20 +1252,11 @@ static Action<GeneratedTextTransformation,Attribute> WriteAttribute = (tt,a) =>
 				if (a.Parameters[i - 1].All(c => c == ' '))
 					tt.Write("  ");
 				else
-				{
-					var l = tt.GenerationEnvironment.Length;
-
-					for (; l > 0 && tt.GenerationEnvironment[l - 1] == ' '; l--)
-					{
-					}
-
-					tt.GenerationEnvironment.Insert(l, ',');
-					tt.Write(" ");
-				}
+					SkipSpacesAndInsert(tt, ", ");
 			tt.Write(a.Parameters[i]);
 		}
 
-		tt.Write(")");
+		SkipSpacesAndInsert(tt, ")");
 	}
 };
 
@@ -1350,6 +1341,18 @@ public static ITree FindNode(ITree parent, Func<ITree,bool> func)
 
 	return null;
 }
+
+static void SkipSpacesAndInsert(GeneratedTextTransformation tt, string value)
+{
+	var l = tt.GenerationEnvironment.Length;
+
+	for (; l > 0 && tt.GenerationEnvironment[l - 1] == ' '; l--)
+	{
+	}
+
+	tt.GenerationEnvironment.Insert(l, value);
+}
+
 
 string ToCamelCase(string name)
 {
