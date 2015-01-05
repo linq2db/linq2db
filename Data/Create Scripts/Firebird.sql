@@ -15,8 +15,6 @@ DROP PROCEDURE Scalar_ReturnParameter;        COMMIT;
 
 DROP VIEW PersonView;                         COMMIT;
 
-DROP TRIGGER CREATE_BinaryDataID;             COMMIT;
-DROP TRIGGER CHANGE_BinaryData;               COMMIT;
 DROP TRIGGER CREATE_PersonID;                 COMMIT;
 DROP TRIGGER CREATE_DataTypeTest;             COMMIT;
 
