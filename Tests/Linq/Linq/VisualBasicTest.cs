@@ -32,7 +32,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(ProviderName.SapHana)]
 		public void ParameterName(string context)
 		{
 			using (var db = GetDataContext(context))

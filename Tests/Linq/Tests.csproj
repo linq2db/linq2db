@@ -170,6 +170,11 @@
       <Private>True</Private>
       <HintPath>..\..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
     </Reference>
+    <Reference Include="Sap.Data.Hana.v4.5, Version=1.0.80.0, Culture=neutral, PublicKeyToken=0326b8ea63db4bc4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Sybase.AdoNet2.AseClient, Version=2.157.401.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\Sybase\Sybase.AdoNet2.AseClient.dll</HintPath>
@@ -213,6 +218,7 @@
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="DataContextTestCase.cs" />
+    <Compile Include="DataProvider\SapHanaTest.cs" />
     <Compile Include="DataProvider\InformixTest.cs" />
     <Compile Include="DataProvider\DB2Test.cs" />
     <Compile Include="DataProvider\FirebirdTest.cs" />
@@ -336,6 +342,9 @@
     </Content>
     <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
       <Link>Database\Create Scripts\PostgreSQL.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\SapHana.sql">
+      <Link>Database\Create Scripts\SapHana.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
       <Link>Database\Create Scripts\SqlCe.sql</Link>

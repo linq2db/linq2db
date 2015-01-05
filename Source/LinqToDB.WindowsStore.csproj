@@ -133,6 +133,7 @@
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlBuilder.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlBuilder.cs" />

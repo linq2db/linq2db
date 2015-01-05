@@ -115,6 +115,7 @@ namespace Tests
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
+			ProviderName.SapHana,
 			"SqlAzure.2012"
 		};
 

@@ -12,7 +12,7 @@ namespace Tests
 		public static Type GetDataContextType(
 			bool includeLinqService, string[] except, string[] include)
 		{
-			var testCaseType = typeof(DataContextTestCase<,,,,,,,,,,,,,,,,>);
+			var testCaseType = typeof(DataContextTestCase<,,,,,,,,,,,,,,,,,,>);
 			var argTypes     = new Type[testCaseType.GetGenericArguments().Length];
 
 			for (var i = 0; i < argTypes.Length; i++)
@@ -71,6 +71,7 @@ namespace Tests
 				case LinqToDB.ProviderName.PostgreSQL    : return typeof(PostgreSQL);
 				case LinqToDB.ProviderName.MySql         : return typeof(MySql);
 				case LinqToDB.ProviderName.Sybase        : return typeof(Sybase);
+				case LinqToDB.ProviderName.SapHana       : return typeof(SapHana);
 				case "Northwind"                         : return typeof(Northwind);
 				case "SqlAzure.2012"                     : return typeof(SqlAzure2012);
 			}
@@ -113,9 +114,10 @@ namespace Tests
 		class PostgreSQL    : DatabaseTestCase { }
 		class Sybase        : DatabaseTestCase { }
 		class Northwind     : DatabaseTestCase { }
+		class SapHana       : DatabaseTestCase { }
 	}
 
-	public class DataContextTestCase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17>
+	public class DataContextTestCase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T19>
 		where T1  : DatabaseTestCase, new()
 		where T2  : DatabaseTestCase, new()
 		where T3  : DatabaseTestCase, new()
@@ -133,6 +135,8 @@ namespace Tests
 		where T15 : DatabaseTestCase, new()
 		where T16 : DatabaseTestCase, new()
 		where T17 : DatabaseTestCase, new()
+		where T18 : DatabaseTestCase, new()
+		where T19 : DatabaseTestCase, new()
 	{
 		static readonly TestCaseData[] _cases = GetCases().ToArray();
 
@@ -142,8 +146,8 @@ namespace Tests
 			(
 				from t in new DatabaseTestCase[]
 				{
-					new T1(),  new T2(),  new T3(),  new T4(),  new T5(),  new T6(),  new T7(), new T8(), new T9(), new T10(),
-					new T11(), new T12(), new T13(), new T14(), new T15(), new T16(), new T17()
+					new T1(),  new T2(),  new T3(),  new T4(),  new T5(),  new T6(),  new T7(),  new T8(),  new T9(), new T10(),
+					new T11(), new T12(), new T13(), new T14(), new T15(), new T16(), new T17(), new T18(), new T19()
 				}
 				where t.ProviderName != null
 				select t.ProviderName

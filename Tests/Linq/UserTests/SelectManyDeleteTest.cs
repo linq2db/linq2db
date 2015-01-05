@@ -40,7 +40,7 @@ namespace Tests.UserTests
 	{
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird
+			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird, ProviderName.SapHana
 			)]
 		public void Test(string context)
 		{

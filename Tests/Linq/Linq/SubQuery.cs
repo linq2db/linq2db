@@ -210,7 +210,7 @@ namespace Tests.Linq
 					select new { p.ParentID, c.ChildID });
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
 		public void Contains1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -223,7 +223,7 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
 		public void Contains2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -274,7 +274,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql,
-			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix)]
+			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void SubSub2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -495,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase)]
+			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2, ProviderName.Oracle, ProviderName.MySql, ProviderName.Sybase, ProviderName.SapHana)]
 		public void SubSub22(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -488,8 +488,9 @@ GO
 
 
 -- GetParentByID function
-
-DROP FUNCTION GetParentByID
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'GetParentByID')
+BEGIN DROP FUNCTION GetParentByID
+END
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentView') AND type in (N'V'))
