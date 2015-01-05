@@ -152,7 +152,7 @@ namespace LinqToDB.Linq
 
 		static bool _checkUserNamespace = true;
 
-		public static LambdaExpression ConvertMember(MappingSchema mappingSchema, MemberInfo mi)
+		public static LambdaExpression ConvertMember(MappingSchema mappingSchema, Type objectType, MemberInfo mi)
 		{
 			if (_checkUserNamespace)
 			{
@@ -162,55 +162,72 @@ namespace LinqToDB.Linq
 				_checkUserNamespace = false;
 			}
 
-			Dictionary<MemberInfo,IExpressionInfo> dic;
-			IExpressionInfo                        expr;
+			IExpressionInfo expr;
 
-			foreach (var configuration in mappingSchema.ConfigurationList)
-				if (Members.TryGetValue(configuration, out dic))
-					if (dic.TryGetValue(mi, out expr))
-						return expr.GetExpression(mappingSchema);
-
-			Type[] args = null;
-
-			if (mi is MethodInfo)
 			{
-				var mm = (MethodInfo)mi;
+				Dictionary<MemberInfo,IExpressionInfo> dic;
 
-				var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
-				var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
-
-				if (isTypeGeneric || isMethodGeneric)
-				{
-					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
-					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
-
-					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
-						typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
-				}
-			}
-
-			if (args != null && InitGenericConvertProvider(args, mappingSchema))
 				foreach (var configuration in mappingSchema.ConfigurationList)
 					if (Members.TryGetValue(configuration, out dic))
 						if (dic.TryGetValue(mi, out expr))
 							return expr.GetExpression(mappingSchema);
 
-			if (!Members[""].TryGetValue(mi, out expr))
-			{
-				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName == "Microsoft.VisualBasic.CompilerServices.Operators")
+				Type[] args = null;
+
+				if (mi is MethodInfo)
 				{
-					lock (_memberSync)
+					var mm = (MethodInfo)mi;
+
+					var isTypeGeneric   = mm.DeclaringType.IsGenericTypeEx() && !mm.DeclaringType.IsGenericTypeDefinitionEx();
+					var isMethodGeneric = mm.IsGenericMethod && !mm.IsGenericMethodDefinition;
+
+					if (isTypeGeneric || isMethodGeneric)
 					{
-						if (!Members[""].TryGetValue(mi, out expr))
+						var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArgumentsEx() : Array<Type>.Empty;
+						var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
+
+						args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
+							typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
+					}
+				}
+
+				if (args != null && InitGenericConvertProvider(args, mappingSchema))
+					foreach (var configuration in mappingSchema.ConfigurationList)
+						if (Members.TryGetValue(configuration, out dic))
+							if (dic.TryGetValue(mi, out expr))
+								return expr.GetExpression(mappingSchema);
+
+				if (!Members[""].TryGetValue(mi, out expr))
+				{
+					if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType.FullName == "Microsoft.VisualBasic.CompilerServices.Operators")
+					{
+						lock (_memberSync)
 						{
-							expr = new LazyExpressionInfo();
+							if (!Members[""].TryGetValue(mi, out expr))
+							{
+								expr = new LazyExpressionInfo();
 
-							((LazyExpressionInfo)expr).SetExpression(L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
+								((LazyExpressionInfo)expr).SetExpression(L<String,String,Boolean,Int32>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
 
-							Members[""].Add(mi, expr);
+								Members[""].Add(mi, expr);
+							}
 						}
 					}
 				}
+			}
+
+			if (expr == null && objectType != null)
+			{
+				Dictionary<TypeMember,IExpressionInfo> dic;
+
+				var key = new TypeMember(objectType, mi.Name);
+
+				foreach (var configuration in mappingSchema.ConfigurationList)
+					if (_typeMembers.TryGetValue(configuration, out dic))
+						if (dic.TryGetValue(key, out expr))
+							return expr.GetExpression(mappingSchema);
+
+				_typeMembers[""].TryGetValue(key, out expr);
 			}
 
 			return expr == null ? null : expr.GetExpression(mappingSchema);
@@ -463,20 +480,20 @@ namespace LinqToDB.Linq
 
 					#region ToString
 
-					{ M(() => ((Boolean)true).ToString()), N(() => L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Byte)    0)  .ToString()), N(() => L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Char)   '0') .ToString()), N(() => L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Decimal) 0)  .ToString()), N(() => L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Double)  0)  .ToString()), N(() => L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Int16)   0)  .ToString()), N(() => L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Int32)   0)  .ToString()), N(() => L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Int64)   0)  .ToString()), N(() => L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((SByte)   0)  .ToString()), N(() => L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((Single)  0)  .ToString()), N(() => L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Boolean)true).ToString()), N(() => L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Byte)    0)  .ToString()), N(() => L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Char)   '0') .ToString()), N(() => L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Decimal) 0)  .ToString()), N(() => L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Double)  0)  .ToString()), N(() => L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Int16)   0)  .ToString()), N(() => L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Int32)   0)  .ToString()), N(() => L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Int64)   0)  .ToString()), N(() => L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((SByte)   0)  .ToString()), N(() => L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((Single)  0)  .ToString()), N(() => L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0))) },
 					{ M(() => ((String) "0") .ToString()), N(() => L<String,  String>((String  p0) => p0                            )) },
-					{ M(() => ((UInt16)  0)  .ToString()), N(() => L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((UInt32)  0)  .ToString()), N(() => L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0))) },
-					{ M(() => ((UInt64)  0)  .ToString()), N(() => L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((UInt16)  0)  .ToString()), N(() => L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((UInt32)  0)  .ToString()), N(() => L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0))) },
+//					{ M(() => ((UInt64)  0)  .ToString()), N(() => L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0))) },
 
 					#endregion
 
@@ -1278,6 +1295,63 @@ namespace LinqToDB.Linq
 				#endregion
 			};
 		}
+
+		class TypeMember
+		{
+			public TypeMember(Type type, string member)
+			{
+				Type   = type;
+				Member = member;
+			}
+
+			public readonly Type   Type;
+			public readonly string Member;
+
+			public override bool Equals(object obj)
+			{
+				var other = (TypeMember)obj;
+				return Type == other.Type && string.Equals(Member, other.Member);
+			}
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					return (Type.GetHashCode()*397) ^ Member.GetHashCode();
+				}
+			}
+		}
+
+		static TypeMember MT<T>(Expression<Func<object>> func)
+		{
+			return new TypeMember(typeof(T), MemberHelper.GetMemeberInfo(func).Name);
+		}
+
+		static readonly Dictionary<string,Dictionary<TypeMember,IExpressionInfo>> _typeMembers = new Dictionary<string,Dictionary<TypeMember,IExpressionInfo>>
+		{
+			{ "", new Dictionary<TypeMember,IExpressionInfo> {
+
+				#region ToString
+
+				{ MT<Boolean>(() => ((Boolean)true).ToString()), N(() => L<Boolean, String>((Boolean p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Byte   >(() => ((Byte)    0)  .ToString()), N(() => L<Byte,    String>((Byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Char   >(() => ((Char)   '0') .ToString()), N(() => L<Char,    String>((Char    p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Decimal>(() => ((Decimal) 0)  .ToString()), N(() => L<Decimal, String>((Decimal p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Double >(() => ((Double)  0)  .ToString()), N(() => L<Double,  String>((Double  p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Int16  >(() => ((Int16)   0)  .ToString()), N(() => L<Int16,   String>((Int16   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Int32  >(() => ((Int32)   0)  .ToString()), N(() => L<Int32,   String>((Int32   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Int64  >(() => ((Int64)   0)  .ToString()), N(() => L<Int64,   String>((Int64   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<SByte  >(() => ((SByte)   0)  .ToString()), N(() => L<SByte,   String>((SByte   p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<Single >(() => ((Single)  0)  .ToString()), N(() => L<Single,  String>((Single  p0) => Sql.ConvertTo<string>.From(p0) )) },
+//				{ MT<String >(() => ((String) "0") .ToString()), N(() => L<String,  String>((String  p0) => p0                             )) },
+				{ MT<UInt16 >(() => ((UInt16)  0)  .ToString()), N(() => L<UInt16,  String>((UInt16  p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<UInt32 >(() => ((UInt32)  0)  .ToString()), N(() => L<UInt32,  String>((UInt32  p0) => Sql.ConvertTo<string>.From(p0) )) },
+				{ MT<UInt64 >(() => ((UInt64)  0)  .ToString()), N(() => L<UInt64,  String>((UInt64  p0) => Sql.ConvertTo<string>.From(p0) )) },
+
+				#endregion
+
+			}},
+		};
 
 		#region Sql specific
 

@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
 							return true;
 
-						if (Expressions.ConvertMember(MappingSchema, ma.Member) != null)
+						if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) != null)
 							return true;
 
 						var ctx = GetContext(context, expr);
@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var e = (MethodCallExpression)expr;
 
-							if (Expressions.ConvertMember(MappingSchema, e.Method) != null)
+							if (Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method) != null)
 								return true;
 
 							if (IsGrouping(e))
@@ -418,7 +418,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma = (MemberExpression)e;
-							var l  = Expressions.ConvertMember(MappingSchema, ma.Member);
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
 
 							if (l != null)
 							{
@@ -487,7 +487,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema, pi.Method);
+			var l = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, pi.Method);
 			return l == null ? null : ConvertMethod(pi, l);
 		}
 
@@ -520,7 +520,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertNew(NewExpression pi)
 		{
-			var lambda = Expressions.ConvertMember(MappingSchema, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor);
 
 			if (lambda != null)
 			{
@@ -969,7 +969,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression == null ? null : ex.Expression.Type, ex.Member);
 
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
@@ -998,7 +998,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = Expressions.ConvertMember(MappingSchema, e.Method);
+							var l = Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method);
 
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
