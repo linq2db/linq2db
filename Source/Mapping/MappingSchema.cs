@@ -20,6 +20,7 @@ namespace LinqToDB.Mapping
 	using Extensions;
 	using Metadata;
 	using SqlProvider;
+	using SqlQuery;
 
 	public class MappingSchema
 	{
@@ -79,14 +80,9 @@ namespace LinqToDB.Mapping
 
 		internal readonly ValueToSqlConverter ValueToSqlConverter;
 
-		public void SetValueToSqlConverter(Type type, Action<StringBuilder,object> converter)
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
-		}
-
-		public void SetValueToSqlConverter(Type type, DataType dataType, Action<StringBuilder,object> converter)
-		{
-			ValueToSqlConverter.SetConverter(type, dataType, converter);
 		}
 
 		#endregion

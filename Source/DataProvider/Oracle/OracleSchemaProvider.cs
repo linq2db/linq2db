@@ -96,9 +96,9 @@ namespace LinqToDB.DataProvider.Oracle
 					DataType     = c.Field<string>("DATATYPE"),
 					IsNullable   = Converter.ChangeTypeTo<string>(c["NULLABLE"]) == "Y",
 					Ordinal      = Converter.ChangeTypeTo<int>   (c["ID"]),
-					Length       = Converter.ChangeTypeTo<long>  (c["LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>   (c["PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>   (c["SCALE"]),
+					Length       = Converter.ChangeTypeTo<long?> (c["LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int?>  (c["PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int?>  (c["SCALE"]),
 					IsIdentity   = false,
 				}
 			).ToList();
@@ -173,17 +173,17 @@ namespace LinqToDB.DataProvider.Oracle
 					ProcedureID   = schema + "." + name,
 					ParameterName = pp.Field<string>("ARGUMENT_NAME"),
 					DataType      = pp.Field<string>("DATA_TYPE"),
-					Ordinal       = Converter.ChangeTypeTo<int>(pp["POSITION"]),
-					Length        = Converter.ChangeTypeTo<int>(pp["DATA_LENGTH"]),
-					Precision     = Converter.ChangeTypeTo<int>(pp["DATA_PRECISION"]),
-					Scale         = Converter.ChangeTypeTo<int>(pp["DATA_SCALE"]),
+					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]),
+					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]),
+					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]),
+					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]),
 					IsIn          = direction.StartsWith("IN"),
 					IsOut         = direction.EndsWith("OUT"),
 				}
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, long length, int prec, int scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
 		{
 			switch (columnType)
 			{
@@ -195,9 +195,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType == "NUMBER" && precision > 0 && scale == 0)
+			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
 				if (precision <  3) return typeof(sbyte);
 				if (precision <  5) return typeof(short);
@@ -215,27 +215,27 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (dataType)
 			{
-				case "OBJECT"                         : return DataType.Variant;
-				case "BFILE"                          : return DataType.VarBinary;
-				case "BINARY_DOUBLE"                  : return DataType.Double;
-				case "BINARY_FLOAT"                   : return DataType.Single;
-				case "BLOB"                           : return DataType.Blob;
-				case "CHAR"                           : return DataType.Char;
-				case "CLOB"                           : return DataType.Text;
-				case "DATE"                           : return DataType.DateTime;
-				case "FLOAT"                          : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND"         : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH"         : return DataType.Int64;
-				case "LONG"                           : return DataType.Text;
-				case "LONG RAW"                       : return DataType.Binary;
-				case "NCHAR"                          : return DataType.NChar;
-				case "NCLOB"                          : return DataType.NText;
-				case "NUMBER"                         : return DataType.Decimal;
-				case "NVARCHAR2"                      : return DataType.NVarChar;
-				case "RAW"                            : return DataType.Binary;
-				case "VARCHAR2"                       : return DataType.VarChar;
-				case "XMLTYPE"                        : return DataType.Xml;
-				case "ROWID"                          : return DataType.VarChar;
+				case "OBJECT"                 : return DataType.Variant;
+				case "BFILE"                  : return DataType.VarBinary;
+				case "BINARY_DOUBLE"          : return DataType.Double;
+				case "BINARY_FLOAT"           : return DataType.Single;
+				case "BLOB"                   : return DataType.Blob;
+				case "CHAR"                   : return DataType.Char;
+				case "CLOB"                   : return DataType.Text;
+				case "DATE"                   : return DataType.DateTime;
+				case "FLOAT"                  : return DataType.Decimal;
+				case "INTERVAL DAY TO SECOND" : return DataType.Time;
+				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
+				case "LONG"                   : return DataType.Text;
+				case "LONG RAW"               : return DataType.Binary;
+				case "NCHAR"                  : return DataType.NChar;
+				case "NCLOB"                  : return DataType.NText;
+				case "NUMBER"                 : return DataType.Decimal;
+				case "NVARCHAR2"              : return DataType.NVarChar;
+				case "RAW"                    : return DataType.Binary;
+				case "VARCHAR2"               : return DataType.VarChar;
+				case "XMLTYPE"                : return DataType.Xml;
+				case "ROWID"                  : return DataType.VarChar;
 				default:
 					if (dataType.StartsWith("TIMESTAMP"))
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;

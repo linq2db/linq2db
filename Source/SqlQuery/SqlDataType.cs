@@ -26,20 +26,15 @@ namespace LinqToDB.SqlQuery
 			Scale     = defaultType.Scale;
 		}
 
-		public SqlDataType(DataType dbType, int length)
+		public SqlDataType(DataType dbType, int? length)
 		{
-			if (length <= 0) throw new ArgumentOutOfRangeException("length");
-
 			DataType = dbType;
 			Type     = GetDataType(dbType).Type;
 			Length   = length;
 		}
 
-		public SqlDataType(DataType dbType, int precision, int scale)
+		public SqlDataType(DataType dbType, int? precision, int? scale)
 		{
-			if (precision <= 0) throw new ArgumentOutOfRangeException("precision");
-			if (scale     <  0) throw new ArgumentOutOfRangeException("scale");
-
 			DataType  = dbType;
 			Type      = GetDataType(dbType).Type;
 			Precision = precision;
@@ -122,9 +117,9 @@ namespace LinqToDB.SqlQuery
 
 		public DataType DataType  { get; private set; }
 		public Type     Type      { get; private set; }
-		public int      Length    { get; private set; }
-		public int      Precision { get; private set; }
-		public int      Scale     { get; private set; }
+		public int?     Length    { get; private set; }
+		public int?     Precision { get; private set; }
+		public int?     Scale     { get; private set; }
 
 		#endregion
 
@@ -341,7 +336,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Default Types
 
-		internal SqlDataType(DataType dbType, Type type, int length, int precision, int scale)
+		internal SqlDataType(DataType dbType, Type type, int? length, int? precision, int? scale)
 		{
 			DataType  = dbType;
 			Type      = type;

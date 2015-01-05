@@ -102,6 +102,7 @@ namespace Tests
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014,
 			ProviderName.SqlCe,
 			ProviderName.SQLite,
 			ProviderName.Access,

@@ -93,6 +93,71 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in new Tests.Model.Functions(db).WithTabLock<Parent>().OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in Model.Functions.WithTabLock1<Parent>(db).OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTabLock3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.WithTabLock<Parent>().OwnerName("dbo")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.OwnerName("dbo").With("TABLOCK,UPDLOCK")
+					select p;
+
+				q.ToList();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void WithTableExpressionTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.OwnerName("dbo").WithTableExpression("{0} {1} with (UpdLock)")
+					select p;
+
+				q.ToList();
+			}
+		}
+
 		[Test, NorthwindDataContext]
 		public void FreeTextTable1(string context)
 		{

@@ -166,8 +166,8 @@ INSERT INTO DataTypeTest
 	 Single_,  Stream_, String_, UInt16_, UInt32_,   UInt64_,     Xml_)
 VALUES
 	(   NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
-	    NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL);
+		NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL,
+		NULL,     NULL,    NULL,    NULL,    NULL,      NULL,     NULL);
 COMMIT;
 
 INSERT INTO DataTypeTest
@@ -345,7 +345,7 @@ COMMIT;
 
 CREATE VIEW PersonView
 AS
-    SELECT * FROM Person
+	SELECT * FROM Person
 COMMIT;
 
 
@@ -399,17 +399,19 @@ COMMIT;
 
 -- Person_SelectByName
 
-CREATE PROCEDURE Person_SelectByName (
+CREATE PROCEDURE Person_SelectByName
+(
 	in_FirstName VARCHAR(50),
 	in_LastName  VARCHAR(50)
-	)
-RETURNS (
+)
+RETURNS
+(
 	PersonID   int,
 	FirstName  VARCHAR(50),
 	LastName   VARCHAR(50),
 	MiddleName VARCHAR(50),
 	Gender     CHAR(1)
-	)
+)
 AS
 BEGIN
 
@@ -427,12 +429,13 @@ COMMIT;
 
 -- Person_Insert
 
-CREATE PROCEDURE Person_Insert(
+CREATE PROCEDURE Person_Insert
+(
 	FirstName  VARCHAR(50),
 	LastName   VARCHAR(50),
 	MiddleName VARCHAR(50),
 	Gender     CHAR(1)
-	)
+)
 RETURNS (PersonID INTEGER)
 AS
 BEGIN
@@ -449,12 +452,13 @@ COMMIT;
 
 -- Person_Insert_OutputParameter
 
-CREATE PROCEDURE Person_Insert_OutputParameter(
+CREATE PROCEDURE Person_Insert_OutputParameter
+(
 	FirstName  VARCHAR(50),
 	LastName   VARCHAR(50),
 	MiddleName VARCHAR(50),
 	Gender     CHAR(1)
-	)
+)
 RETURNS (PersonID INTEGER)
 AS
 BEGIN
@@ -665,3 +669,16 @@ BEGIN
 END
 COMMIT;
 
+DROP TABLE "CamelCaseName"
+COMMIT;
+
+CREATE TABLE "CamelCaseName"
+(
+	"Id"     INTEGER NOT NULL PRIMARY KEY,
+	Name1    VARCHAR(20),
+	"Name2"  VARCHAR(20),
+	"NAME3"  VARCHAR(20),
+	"_NAME4" VARCHAR(20),
+	"NAME 5" VARCHAR(20)
+)
+COMMIT;

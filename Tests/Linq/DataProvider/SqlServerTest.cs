@@ -27,7 +27,7 @@ namespace Tests.DataProvider
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public SqlServerDataContextAttribute()
-				: base(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, "SqlAzure.2012")
+				: base(ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")
 			{
 			}
 		}
@@ -95,7 +95,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestDataTypes2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -208,7 +208,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -253,7 +253,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestDateTime2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -269,7 +269,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestDateTimeOffset(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -315,7 +315,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestTimeSpan(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -559,7 +559,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestHierarchyID(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -575,7 +575,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestGeometry(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -594,7 +594,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
 		public void TestGeography(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -779,6 +779,36 @@ namespace Tests.DataProvider
 			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset),                 Nullable] public DateTimeOffset? datetimeoffsetDataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=0),         Nullable] public DateTimeOffset? datetimeoffset0DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=1),         Nullable] public DateTimeOffset? datetimeoffset1DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=2),         Nullable] public DateTimeOffset? datetimeoffset2DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=3),         Nullable] public DateTimeOffset? datetimeoffset3DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=4),         Nullable] public DateTimeOffset? datetimeoffset4DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=5),         Nullable] public DateTimeOffset? datetimeoffset5DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=6),         Nullable] public DateTimeOffset? datetimeoffset6DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.DateTimeOffset,Scale=7),         Nullable] public DateTimeOffset? datetimeoffset7DataType   { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.Date),                           Nullable] public DateTime?       dateDataType             { get; set; }
+			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
+			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
+			[Column(DataType=DataType.Time),                           Nullable] public TimeSpan?       timeDataType             { get; set; }
 		}
 
 		static readonly AllTypes[] _allTypeses =
@@ -787,10 +817,6 @@ namespace Tests.DataProvider
 			new AllTypes
 			{
 				ID                       = 700,
-			},
-			new AllTypes
-			{
-				ID                       = 701,
 				bigintDataType           = 1,
 				numericDataType          = 1.1m,
 				bitDataType              = true,
@@ -820,37 +846,54 @@ namespace Tests.DataProvider
 				varbinary_max_DataType   = new byte[] { 1, 2, 3, 4, 50 },
 				xmlDataType              = "<xml />",
 				datetime2DataType        = new DateTime(2014, 12, 17, 21, 2, 58, 123),
-				datetimeoffsetDataType   = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0))
+				datetimeoffsetDataType   = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				datetimeoffset0DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58,   0, new TimeSpan(5, 0, 0)),
+				datetimeoffset1DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 100, new TimeSpan(5, 0, 0)),
+				datetimeoffset2DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 120, new TimeSpan(5, 0, 0)),
+				datetimeoffset3DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				datetimeoffset4DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				datetimeoffset5DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				datetimeoffset6DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				datetimeoffset7DataType  = new DateTimeOffset(2014, 12, 17, 21, 2, 58, 123, new TimeSpan(5, 0, 0)),
+				dateDataType             = new DateTime(2014, 12, 17),
+				timeDataType             = new TimeSpan(0, 10, 11, 12, 567),
+			},
+			new AllTypes
+			{
+				ID                       = 701,
 			},
 			#endregion
 		};
 
 		[Test, SqlServerDataContext]
-		public void BulkCopyAllTypesMultipleRows(string context)
+		public void BulkCopyAllTypes(string context)
 		{
-			using (var db = new DataConnection(context))
+			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+				using (var db = new DataConnection(context))
+				{
+					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-				db.BulkCopy(
-					new BulkCopyOptions
-					{
-						BulkCopyType       = BulkCopyType.MultipleRows,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
-						KeepIdentity       = true,
-					},
-					_allTypeses);
+					db.BulkCopy(
+						new BulkCopyOptions
+						{
+							BulkCopyType       = bulkCopyType,
+							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+							KeepIdentity       = true,
+						},
+						_allTypeses);
 
-				var ids = _allTypeses.Select(at => at.ID).ToArray();
+					var ids = _allTypeses.Select(at => at.ID).ToArray();
 
-				var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+					var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
 
-				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-				Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
 
-				for (var i = 0; i < list.Count; i++)
-					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+					for (var i = 0; i < list.Count; i++)
+						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+				}
 			}
 		}
 
@@ -864,7 +907,41 @@ namespace Tests.DataProvider
 				var testValue   = column.GetValue(test);
 
 				if (column.SkipOnInsert == false)
-					Assert.That(actualValue, Is.EqualTo(testValue), "Column  : {0}", column.MemberName);
+					Assert.That(actualValue, Is.EqualTo(testValue),
+						actualValue is DateTimeOffset
+							? "Column  : {0} {1:yyyy-MM-dd HH:mm:ss.fffffff zzz} {2:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
+							: "Column  : {0}",
+						column.MemberName,
+						actualValue,
+						testValue);
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void CreateAlltypes(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ms = new MappingSchema();
+
+				db.AddMappingSchema(ms);
+
+				ms.GetFluentMappingBuilder()
+					.Entity<AllTypes>()
+						.HasTableName("AllTypeCreateTest");
+
+				try
+				{
+					db.DropTable<AllTypes>();
+				}
+				catch
+				{
+				}
+
+				var table = db.CreateTable<AllTypes>();
+				var list = table.ToList();
+
+				db.DropTable<AllTypes>();
 			}
 		}
 	}

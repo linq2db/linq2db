@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
+					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
@@ -119,20 +119,29 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (FirebirdConfiguration.QuoteIdentifiers)
+					if (value != null && IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None)
 					{
-						string name = value.ToString();
+						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
-							return value;
+							return name;
 
-						return '"' + name + '"';
+						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+							name.StartsWith("_") ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + name + '"';
 					}
 
 					break;

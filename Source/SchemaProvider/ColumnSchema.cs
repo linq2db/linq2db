@@ -18,6 +18,9 @@ namespace LinqToDB.SchemaProvider
 		public DataType    DataType        { get; set; }
 		public bool        SkipOnInsert    { get; set; }
 		public bool        SkipOnUpdate    { get; set; }
+		public long?       Length          { get; set; }
+		public int?        Precision       { get; set; }
+		public int?        Scale           { get; set; }
 
 		public TableSchema Table;
 	}

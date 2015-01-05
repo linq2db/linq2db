@@ -84,6 +84,7 @@
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
     <Compile Include="Linq\Builder\UpdateBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />

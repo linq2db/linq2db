@@ -1084,19 +1084,19 @@ namespace LinqToDB.SqlProvider
 			{
 				var maxPrecision = GetMaxPrecision(from);
 				var maxScale     = GetMaxScale    (from);
-				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale,     maxScale)     : to.Scale;
+				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
+				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
 
 				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.DataType, to.Type, newPrecision, newScale);
+					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);
 			}
 			else if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength >= 0 ? Math.Min(to.Length, maxLength) : to.Length;
+				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
 
 				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength);
+					to = new SqlDataType(to.DataType, to.Type, newLength, null, null);
 			}
 			else if (from.Type == typeof(short) && to.Type == typeof(int))
 				return func.Parameters[2];

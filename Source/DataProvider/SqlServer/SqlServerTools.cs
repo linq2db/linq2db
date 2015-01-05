@@ -57,6 +57,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name.Contains("2005")) return _sqlServerDataProvider2005;
 					if (css.Name.Contains("2008")) return _sqlServerDataProvider2008;
 					if (css.Name.Contains("2012")) return _sqlServerDataProvider2012;
+					if (css.Name.Contains("2014")) return _sqlServerDataProvider2012;
 
 					if (AutoDetectProvider)
 					{
@@ -72,6 +73,7 @@ namespace LinqToDB.DataProvider.SqlServer
 									case  "9" :	return _sqlServerDataProvider2005;
 									case "10" :	return _sqlServerDataProvider2008;
 									case "11" : return _sqlServerDataProvider2012;
+									case "12" : return _sqlServerDataProvider2012;
 								}
 							}
 						}

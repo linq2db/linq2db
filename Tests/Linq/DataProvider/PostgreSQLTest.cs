@@ -538,5 +538,22 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		public class TestTeamplate
+		{
+			public string cdni_cd_cod_numero_item1;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void Issue140(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var list = db.Query<TestTeamplate>("select 1 as cdni_cd_cod_numero_item1").ToList();
+
+				Assert.That(list.Count,                       Is.EqualTo(1));
+				Assert.That(list[0].cdni_cd_cod_numero_item1, Is.EqualTo("1"));
+			}
+		}
 	}
 }

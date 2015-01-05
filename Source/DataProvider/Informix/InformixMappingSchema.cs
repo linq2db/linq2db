@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,v) => sb.Append("'").Append((bool)v ? 't' : 'f').Append("'"));
+			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append("'").Append((bool)v ? 't' : 'f').Append("'"));
 		}
 	}
 }

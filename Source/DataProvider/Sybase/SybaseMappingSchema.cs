@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected SybaseMappingSchema(string configuration) : base(configuration)
 		{
-			SetValueToSqlConverter(typeof(String), (sb,v) => ConvertStringToSql(sb, v.ToString()));
-			SetValueToSqlConverter(typeof(Char),   (sb,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

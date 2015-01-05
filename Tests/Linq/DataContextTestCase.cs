@@ -12,7 +12,7 @@ namespace Tests
 		public static Type GetDataContextType(
 			bool includeLinqService, string[] except, string[] include)
 		{
-			var testCaseType = typeof(DataContextTestCase<,,,,,,,,,,,,,,,>);
+			var testCaseType = typeof(DataContextTestCase<,,,,,,,,,,,,,,,,>);
 			var argTypes     = new Type[testCaseType.GetGenericArguments().Length];
 
 			for (var i = 0; i < argTypes.Length; i++)
@@ -58,6 +58,7 @@ namespace Tests
 				case LinqToDB.ProviderName.SqlServer     : return typeof(SqlServer);
 				case LinqToDB.ProviderName.SqlServer2008 : return typeof(SqlServer2008);
 				case LinqToDB.ProviderName.SqlServer2012 : return typeof(SqlServer2012);
+				case LinqToDB.ProviderName.SqlServer2014 : return typeof(SqlServer2014);
 				case LinqToDB.ProviderName.SqlCe         : return typeof(SqlCe);
 				case LinqToDB.ProviderName.SQLite        : return typeof(SQLite);
 				case LinqToDB.ProviderName.Access        : return typeof(Access);
@@ -106,6 +107,7 @@ namespace Tests
 		class SqlServer2005 : DatabaseTestCase { public override string ProviderName { get { return "SqlServer.2005"; } } }
 		class SqlServer2008 : DatabaseTestCase { public override string ProviderName { get { return "SqlServer.2008"; } } }
 		class SqlServer2012 : DatabaseTestCase { public override string ProviderName { get { return "SqlServer.2012"; } } }
+		class SqlServer2014 : DatabaseTestCase { public override string ProviderName { get { return "SqlServer.2014"; } } }
 		class SqlAzure2012  : DatabaseTestCase { public override string ProviderName { get { return "SqlAzure.2012";  } } }
 		class MySql         : DatabaseTestCase { }
 		class Oracle        : DatabaseTestCase { }
@@ -115,7 +117,7 @@ namespace Tests
         class SapHana       : DatabaseTestCase { }
 	}
 
-	public class DataContextTestCase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16>
+	public class DataContextTestCase<T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17>
 		where T1  : DatabaseTestCase, new()
 		where T2  : DatabaseTestCase, new()
 		where T3  : DatabaseTestCase, new()
@@ -132,6 +134,7 @@ namespace Tests
 		where T14 : DatabaseTestCase, new()
 		where T15 : DatabaseTestCase, new()
 		where T16 : DatabaseTestCase, new()
+		where T17 : DatabaseTestCase, new()
 	{
 		static readonly TestCaseData[] _cases = GetCases().ToArray();
 
@@ -141,8 +144,8 @@ namespace Tests
 			(
 				from t in new DatabaseTestCase[]
 				{
-					new T1(),  new T2(),  new T3(),  new T4(),  new T5(),  new T6(), new T7(), new T8(), new T9(), new T10(),
-					new T11(), new T12(), new T13(), new T14(), new T15(), new T16()
+					new T1(),  new T2(),  new T3(),  new T4(),  new T5(),  new T6(),  new T7(), new T8(), new T9(), new T10(),
+					new T11(), new T12(), new T13(), new T14(), new T15(), new T16(), new T17()
 				}
 				where t.ProviderName != null
 				select t.ProviderName
