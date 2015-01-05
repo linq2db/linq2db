@@ -146,18 +146,6 @@ namespace LinqToDB.DataProvider.Firebird
 
 					break;
 
-					if (FirebirdConfiguration.QuoteIdentifiers)
-					{
-						string name = value.ToString();
-
-						if (name.Length > 0 && name[0] == '"')
-							return value;
-
-						return '"' + name + '"';
-					}
-
-					break;
-
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:

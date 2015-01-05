@@ -184,14 +184,17 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					}
 
-//					switch (c.DataType)
-//					{
-//						case "int" :
-//						case "bigint" :
-//							c.Precision = null;
-//							c.Scale     = null;
-//							break;
-//					}
+					switch (c.DataType)
+					{
+						case "geometry"    :
+						case "geography"   :
+						case "hierarchyid" :
+						case "float"       :
+							c.Length    = null;
+							c.Precision = null;
+							c.Scale     = null;
+							break;
+					}
 
 					return c;
 				})
