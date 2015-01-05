@@ -23,22 +23,23 @@ namespace FirebirdDataContext
 	/// </summary>
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<ALLTYPE>      ALLTYPES       { get { return this.GetTable<ALLTYPE>(); } }
-		public ITable<BINARYDATA>   BINARYDATAs    { get { return this.GetTable<BINARYDATA>(); } }
-		public ITable<CHILD>        Children       { get { return this.GetTable<CHILD>(); } }
-		public ITable<DATATYPETEST> DATATYPETESTs  { get { return this.GetTable<DATATYPETEST>(); } }
-		public ITable<DOCTOR>       DOCTORs        { get { return this.GetTable<DOCTOR>(); } }
-		public ITable<DUAL>         DUALs          { get { return this.GetTable<DUAL>(); } }
-		public ITable<GRANDCHILD>   GRANDCHILDs    { get { return this.GetTable<GRANDCHILD>(); } }
-		public ITable<LINQDATATYPE> LINQDATATYPES  { get { return this.GetTable<LINQDATATYPE>(); } }
-		public ITable<PARENT>       PARENTs        { get { return this.GetTable<PARENT>(); } }
-		public ITable<PATIENT>      PATIENTs       { get { return this.GetTable<PATIENT>(); } }
-		public ITable<PERSON>       People         { get { return this.GetTable<PERSON>(); } }
-		public ITable<PERSONVIEW>   PERSONVIEWs    { get { return this.GetTable<PERSONVIEW>(); } }
-		public ITable<SEQUENCETEST> SEQUENCETESTs  { get { return this.GetTable<SEQUENCETEST>(); } }
-		public ITable<TESTIDENTITY> TESTIDENTITies { get { return this.GetTable<TESTIDENTITY>(); } }
-		public ITable<TESTTABLE2>   TESTTABLE2     { get { return this.GetTable<TESTTABLE2>(); } }
-		public ITable<TESTTABLE3>   TESTTABLE3     { get { return this.GetTable<TESTTABLE3>(); } }
+		public ITable<ALLTYPE>       ALLTYPES       { get { return this.GetTable<ALLTYPE>(); } }
+		public ITable<BINARYDATA>    BINARYDATAs    { get { return this.GetTable<BINARYDATA>(); } }
+		public ITable<CamelCaseName> CamelCaseNames { get { return this.GetTable<CamelCaseName>(); } }
+		public ITable<CHILD>         Children       { get { return this.GetTable<CHILD>(); } }
+		public ITable<DATATYPETEST>  DATATYPETESTs  { get { return this.GetTable<DATATYPETEST>(); } }
+		public ITable<DOCTOR>        DOCTORs        { get { return this.GetTable<DOCTOR>(); } }
+		public ITable<DUAL>          DUALs          { get { return this.GetTable<DUAL>(); } }
+		public ITable<GRANDCHILD>    GRANDCHILDs    { get { return this.GetTable<GRANDCHILD>(); } }
+		public ITable<LINQDATATYPE>  LINQDATATYPES  { get { return this.GetTable<LINQDATATYPE>(); } }
+		public ITable<PARENT>        PARENTs        { get { return this.GetTable<PARENT>(); } }
+		public ITable<PATIENT>       PATIENTs       { get { return this.GetTable<PATIENT>(); } }
+		public ITable<PERSON>        People         { get { return this.GetTable<PERSON>(); } }
+		public ITable<PERSONVIEW>    PERSONVIEWs    { get { return this.GetTable<PERSONVIEW>(); } }
+		public ITable<SEQUENCETEST>  SEQUENCETESTs  { get { return this.GetTable<SEQUENCETEST>(); } }
+		public ITable<TESTIDENTITY>  TESTIDENTITies { get { return this.GetTable<TESTIDENTITY>(); } }
+		public ITable<TESTTABLE2>    TESTTABLE2     { get { return this.GetTable<TESTTABLE2>(); } }
+		public ITable<TESTTABLE3>    TESTTABLE3     { get { return this.GetTable<TESTTABLE3>(); } }
 
 		public TestDataDB()
 		{
@@ -57,28 +58,39 @@ namespace FirebirdDataContext
 	[Table("ALLTYPES")]
 	public partial class ALLTYPE
 	{
-		[Column(DbType="integer",         DataType=DataType.Int32, Length=4, Precision=0, Scale=0),           PrimaryKey,  NotNull] public int       ID                { get; set; } // integer
-		[Column(DbType="bigint",          DataType=DataType.Int64, Length=8, Precision=0, Scale=0),              Nullable         ] public long?     BIGINTDATATYPE    { get; set; } // bigint
-		[Column(DbType="smallint",        DataType=DataType.Int16, Length=2, Precision=0, Scale=0),              Nullable         ] public short?    SMALLINTDATATYPE  { get; set; } // smallint
-		[Column(DbType="decimal(18,0)",   DataType=DataType.Decimal, Length=8, Precision=18, Scale=0),           Nullable         ] public decimal?  DECIMALDATATYPE   { get; set; } // decimal(18,0)
-		[Column(DbType="integer",         DataType=DataType.Int32, Length=4, Precision=0, Scale=0),              Nullable         ] public int?      INTDATATYPE       { get; set; } // integer
-		[Column(DbType="float",           DataType=DataType.Single, Length=4, Precision=0, Scale=0),             Nullable         ] public float?    FLOATDATATYPE     { get; set; } // float
-		[Column(DbType="float",           DataType=DataType.Single, Length=4, Precision=0, Scale=0),             Nullable         ] public float?    REALDATATYPE      { get; set; } // float
-		[Column(DbType="timestamp",       DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),           Nullable         ] public DateTime? TIMESTAMPDATATYPE { get; set; } // timestamp
-		[Column(DbType="char(1)",         DataType=DataType.NChar, Length=1, Precision=0, Scale=0),              Nullable         ] public char?     CHARDATATYPE      { get; set; } // char(1)
-		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),          Nullable         ] public string    VARCHARDATATYPE   { get; set; } // varchar(20)
-		[Column(DbType="blob sub_type 1", DataType=DataType.Text, Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public string    TEXTDATATYPE      { get; set; } // blob sub_type 1
-		[Column(DbType="char(20)",        DataType=DataType.NChar, Length=20, Precision=0, Scale=0),             Nullable         ] public string    NCHARDATATYPE     { get; set; } // char(20)
-		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),          Nullable         ] public string    NVARCHARDATATYPE  { get; set; } // varchar(20)
-		[Column(DbType="blob",            DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BLOBDATATYPE      { get; set; } // blob
+		[Column(DbType="integer",         DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            PrimaryKey,  NotNull] public int       ID                { get; set; } // integer
+		[Column(DbType="bigint",          DataType=DataType.Int64,    Length=8, Precision=0, Scale=0),               Nullable         ] public long?     BIGINTDATATYPE    { get; set; } // bigint
+		[Column(DbType="smallint",        DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    SMALLINTDATATYPE  { get; set; } // smallint
+		[Column(DbType="decimal",         DataType=DataType.Decimal,  Length=8, Precision=18, Scale=0),              Nullable         ] public decimal?  DECIMALDATATYPE   { get; set; } // decimal
+		[Column(DbType="integer",         DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      INTDATATYPE       { get; set; } // integer
+		[Column(DbType="float",           DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    FLOATDATATYPE     { get; set; } // float
+		[Column(DbType="float",           DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    REALDATATYPE      { get; set; } // float
+		[Column(DbType="timestamp",       DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? TIMESTAMPDATATYPE { get; set; } // timestamp
+		[Column(DbType="char(1)",         DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     CHARDATATYPE      { get; set; } // char(1)
+		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    VARCHARDATATYPE   { get; set; } // varchar(20)
+		[Column(DbType="blob sub_type 1", DataType=DataType.Text,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public string    TEXTDATATYPE      { get; set; } // blob sub_type 1
+		[Column(DbType="char(20)",        DataType=DataType.NChar,    Length=20, Precision=0, Scale=0),              Nullable         ] public string    NCHARDATATYPE     { get; set; } // char(20)
+		[Column(DbType="varchar(20)",     DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),              Nullable         ] public string    NVARCHARDATATYPE  { get; set; } // varchar(20)
+		[Column(DbType="blob",            DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BLOBDATATYPE      { get; set; } // blob
 	}
 
 	[Table("BINARYDATA")]
 	public partial class BINARYDATA
 	{
-		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0),           PrimaryKey, NotNull] public int    BINARYDATAID { get; set; } // integer
-		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0),                       NotNull] public int    STAMP        { get; set; } // integer
-		[Column(DbType="blob",    DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0),             NotNull] public byte[] DATA         { get; set; } // blob
+		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0),            PrimaryKey, NotNull] public int    BINARYDATAID { get; set; } // integer
+		[Column(DbType="integer", DataType=DataType.Int32, Length=4, Precision=0, Scale=0),                        NotNull] public int    STAMP        { get; set; } // integer
+		[Column(DbType="blob",    DataType=DataType.Blob,  Length=int.MaxValue, Precision=0, Scale=0),             NotNull] public byte[] DATA         { get; set; } // blob
+	}
+
+	[Table("\"CamelCaseName\"")]
+	public partial class CamelCaseName
+	{
+		[Column("\"Id\"",     DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    Id     { get; set; } // integer
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME1  { get; set; } // varchar(20)
+		[Column("\"Name2\"",  DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string Name2  { get; set; } // varchar(20)
+		[Column(              DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME3  { get; set; } // varchar(20)
+		[Column("\"_NAME4\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string _NAME4 { get; set; } // varchar(20)
+		[Column("\"NAME 5\"", DbType="varchar(20)", DataType=DataType.NVarChar, Length=20, Precision=0, Scale=0),    Nullable         ] public string NAME5  { get; set; } // varchar(20)
 	}
 
 	[Table("CHILD")]
@@ -91,34 +103,34 @@ namespace FirebirdDataContext
 	[Table("DATATYPETEST")]
 	public partial class DATATYPETEST
 	{
-		[Column(DbType="integer",          DataType=DataType.Int32, Length=4, Precision=0, Scale=0),           PrimaryKey,  NotNull] public int       DATATYPEID { get; set; } // integer
-		[Column(DbType="blob",             DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BINARY_    { get; set; } // blob
-		[Column(DbType="char(1)",          DataType=DataType.NChar, Length=1, Precision=0, Scale=0),              Nullable         ] public char?     BOOLEAN_   { get; set; } // char(1)
-		[Column(DbType="smallint",         DataType=DataType.Int16, Length=2, Precision=0, Scale=0),              Nullable         ] public short?    BYTE_      { get; set; } // smallint
-		[Column(DbType="blob",             DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BYTES_     { get; set; } // blob
-		[Column(DbType="char(1)",          DataType=DataType.NChar, Length=1, Precision=0, Scale=0),              Nullable         ] public char?     CHAR_      { get; set; } // char(1)
-		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),           Nullable         ] public DateTime? DATETIME_  { get; set; } // timestamp
-		[Column(DbType="decimal(10,2)",    DataType=DataType.Decimal, Length=8, Precision=10, Scale=2),           Nullable         ] public decimal?  DECIMAL_   { get; set; } // decimal(10,2)
-		[Column(DbType="double precision", DataType=DataType.Double, Length=8, Precision=0, Scale=0),             Nullable         ] public double?   DOUBLE_    { get; set; } // double precision
-		[Column(DbType="char(38)",         DataType=DataType.NChar, Length=38, Precision=0, Scale=0),             Nullable         ] public string    GUID_      { get; set; } // char(38)
-		[Column(DbType="smallint",         DataType=DataType.Int16, Length=2, Precision=0, Scale=0),              Nullable         ] public short?    INT16_     { get; set; } // smallint
-		[Column(DbType="integer",          DataType=DataType.Int32, Length=4, Precision=0, Scale=0),              Nullable         ] public int?      INT32_     { get; set; } // integer
-		[Column(DbType="numeric(11,0)",    DataType=DataType.Decimal, Length=8, Precision=11, Scale=0),           Nullable         ] public decimal?  INT64_     { get; set; } // numeric(11,0)
-		[Column(DbType="decimal(18,4)",    DataType=DataType.Decimal, Length=8, Precision=18, Scale=4),           Nullable         ] public decimal?  MONEY_     { get; set; } // decimal(18,4)
-		[Column(DbType="smallint",         DataType=DataType.Int16, Length=2, Precision=0, Scale=0),              Nullable         ] public short?    SBYTE_     { get; set; } // smallint
-		[Column(DbType="float",            DataType=DataType.Single, Length=4, Precision=0, Scale=0),             Nullable         ] public float?    SINGLE_    { get; set; } // float
-		[Column(DbType="blob",             DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    STREAM_    { get; set; } // blob
-		[Column(DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),          Nullable         ] public string    STRING_    { get; set; } // varchar(50)
-		[Column(DbType="smallint",         DataType=DataType.Int16, Length=2, Precision=0, Scale=0),              Nullable         ] public short?    UINT16_    { get; set; } // smallint
-		[Column(DbType="integer",          DataType=DataType.Int32, Length=4, Precision=0, Scale=0),              Nullable         ] public int?      UINT32_    { get; set; } // integer
-		[Column(DbType="numeric(11,0)",    DataType=DataType.Decimal, Length=8, Precision=11, Scale=0),           Nullable         ] public decimal?  UINT64_    { get; set; } // numeric(11,0)
-		[Column(DbType="char(1000)",       DataType=DataType.NChar, Length=1000, Precision=0, Scale=0),           Nullable         ] public string    XML_       { get; set; } // char(1000)
+		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            PrimaryKey,  NotNull] public int       DATATYPEID { get; set; } // integer
+		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BINARY_    { get; set; } // blob
+		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     BOOLEAN_   { get; set; } // char(1)
+		[Column(DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    BYTE_      { get; set; } // smallint
+		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    BYTES_     { get; set; } // blob
+		[Column(DbType="char(1)",          DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               Nullable         ] public char?     CHAR_      { get; set; } // char(1)
+		[Column(DbType="timestamp",        DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),               Nullable         ] public DateTime? DATETIME_  { get; set; } // timestamp
+		[Column(DbType="decimal(10,2)",    DataType=DataType.Decimal,  Length=8, Precision=10, Scale=2),              Nullable         ] public decimal?  DECIMAL_   { get; set; } // decimal(10,2)
+		[Column(DbType="double precision", DataType=DataType.Double,   Length=8, Precision=0, Scale=0),               Nullable         ] public double?   DOUBLE_    { get; set; } // double precision
+		[Column(DbType="char(38)",         DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),              Nullable         ] public string    GUID_      { get; set; } // char(38)
+		[Column(DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    INT16_     { get; set; } // smallint
+		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      INT32_     { get; set; } // integer
+		[Column(DbType="numeric",          DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  INT64_     { get; set; } // numeric
+		[Column(DbType="decimal(18,4)",    DataType=DataType.Decimal,  Length=8, Precision=18, Scale=4),              Nullable         ] public decimal?  MONEY_     { get; set; } // decimal(18,4)
+		[Column(DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    SBYTE_     { get; set; } // smallint
+		[Column(DbType="float",            DataType=DataType.Single,   Length=4, Precision=0, Scale=0),               Nullable         ] public float?    SINGLE_    { get; set; } // float
+		[Column(DbType="blob",             DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0),    Nullable         ] public byte[]    STREAM_    { get; set; } // blob
+		[Column(DbType="varchar(50)",      DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              Nullable         ] public string    STRING_    { get; set; } // varchar(50)
+		[Column(DbType="smallint",         DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),               Nullable         ] public short?    UINT16_    { get; set; } // smallint
+		[Column(DbType="integer",          DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),               Nullable         ] public int?      UINT32_    { get; set; } // integer
+		[Column(DbType="numeric",          DataType=DataType.Decimal,  Length=8, Precision=11, Scale=0),              Nullable         ] public decimal?  UINT64_    { get; set; } // numeric
+		[Column(DbType="char(1000)",       DataType=DataType.NChar,    Length=1000, Precision=0, Scale=0),            Nullable         ] public string    XML_       { get; set; } // char(1000)
 	}
 
 	[Table("DOCTOR")]
 	public partial class DOCTOR
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32, Length=4, Precision=0, Scale=0),     NotNull] public int    PERSONID { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  NotNull] public int    PERSONID { get; set; } // integer
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), NotNull] public string TAXONOMY { get; set; } // varchar(50)
 
 		#region Associations
@@ -149,16 +161,16 @@ namespace FirebirdDataContext
 	[Table("LINQDATATYPES")]
 	public partial class LINQDATATYPE
 	{
-		[Column(DbType="integer",       DataType=DataType.Int32, Length=4, Precision=0, Scale=0),           Nullable] public int?      ID             { get; set; } // integer
-		[Column(DbType="decimal(10,4)", DataType=DataType.Decimal, Length=8, Precision=10, Scale=4),        Nullable] public decimal?  MONEYVALUE     { get; set; } // decimal(10,4)
-		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),        Nullable] public DateTime? DATETIMEVALUE  { get; set; } // timestamp
-		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),        Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // timestamp
-		[Column(DbType="char(1)",       DataType=DataType.NChar, Length=1, Precision=0, Scale=0),           Nullable] public char?     BOOLVALUE      { get; set; } // char(1)
-		[Column(DbType="char(38)",      DataType=DataType.NChar, Length=38, Precision=0, Scale=0),          Nullable] public string    GUIDVALUE      { get; set; } // char(38)
-		[Column(DbType="blob",          DataType=DataType.Blob, Length=int.MaxValue, Precision=0, Scale=0), Nullable] public byte[]    BINARYVALUE    { get; set; } // blob
-		[Column(DbType="smallint",      DataType=DataType.Int16, Length=2, Precision=0, Scale=0),           Nullable] public short?    SMALLINTVALUE  { get; set; } // smallint
-		[Column(DbType="integer",       DataType=DataType.Int32, Length=4, Precision=0, Scale=0),           Nullable] public int?      INTVALUE       { get; set; } // integer
-		[Column(DbType="bigint",        DataType=DataType.Int64, Length=8, Precision=0, Scale=0),           Nullable] public long?     BIGINTVALUE    { get; set; } // bigint
+		[Column(DbType="integer",       DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            Nullable] public int?      ID             { get; set; } // integer
+		[Column(DbType="decimal(10,4)", DataType=DataType.Decimal,  Length=8, Precision=10, Scale=4),           Nullable] public decimal?  MONEYVALUE     { get; set; } // decimal(10,4)
+		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),            Nullable] public DateTime? DATETIMEVALUE  { get; set; } // timestamp
+		[Column(DbType="timestamp",     DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),            Nullable] public DateTime? DATETIMEVALUE2 { get; set; } // timestamp
+		[Column(DbType="char(1)",       DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),            Nullable] public char?     BOOLVALUE      { get; set; } // char(1)
+		[Column(DbType="char(38)",      DataType=DataType.NChar,    Length=38, Precision=0, Scale=0),           Nullable] public string    GUIDVALUE      { get; set; } // char(38)
+		[Column(DbType="blob",          DataType=DataType.Blob,     Length=int.MaxValue, Precision=0, Scale=0), Nullable] public byte[]    BINARYVALUE    { get; set; } // blob
+		[Column(DbType="smallint",      DataType=DataType.Int16,    Length=2, Precision=0, Scale=0),            Nullable] public short?    SMALLINTVALUE  { get; set; } // smallint
+		[Column(DbType="integer",       DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),            Nullable] public int?      INTVALUE       { get; set; } // integer
+		[Column(DbType="bigint",        DataType=DataType.Int64,    Length=8, Precision=0, Scale=0),            Nullable] public long?     BIGINTVALUE    { get; set; } // bigint
 	}
 
 	[Table("PARENT")]
@@ -171,16 +183,16 @@ namespace FirebirdDataContext
 	[Table("PATIENT")]
 	public partial class PATIENT
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32, Length=4, Precision=0, Scale=0),      NotNull] public int    PERSONID  { get; set; } // integer
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   NotNull] public int    PERSONID  { get; set; } // integer
 		[Column(DbType="varchar(256)", DataType=DataType.NVarChar, Length=256, Precision=0, Scale=0), NotNull] public string DIAGNOSIS { get; set; } // varchar(256)
 
 		#region Associations
 
 		/// <summary>
-		/// INTEG_5465
+		/// INTEG_5617
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public PERSON INTEG5465 { get; set; }
+		public PERSON INTEG5617 { get; set; }
 
 		#endregion
 	}
@@ -188,11 +200,11 @@ namespace FirebirdDataContext
 	[Table("PERSON")]
 	public partial class PERSON
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32, Length=4, Precision=0, Scale=0),     PrimaryKey,  NotNull] public int    PERSONID   { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey,  NotNull] public int    PERSONID   { get; set; } // integer
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string FIRSTNAME  { get; set; } // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),              NotNull] public string LASTNAME   { get; set; } // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),    Nullable         ] public string MIDDLENAME { get; set; } // varchar(50)
-		[Column(DbType="char(1)",     DataType=DataType.NChar, Length=1, Precision=0, Scale=0),                  NotNull] public char   GENDER     { get; set; } // char(1)
+		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),               NotNull] public char   GENDER     { get; set; } // char(1)
 
 		#region Associations
 
@@ -203,10 +215,10 @@ namespace FirebirdDataContext
 		public IEnumerable<DOCTOR> DOCTORs { get; set; }
 
 		/// <summary>
-		/// INTEG_5465_BackReference
+		/// INTEG_5617_BackReference
 		/// </summary>
 		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true)]
-		public IEnumerable<PATIENT> INTEG5465 { get; set; }
+		public IEnumerable<PATIENT> INTEG5617 { get; set; }
 
 		#endregion
 	}
@@ -215,17 +227,17 @@ namespace FirebirdDataContext
 	[Table("PERSONVIEW")]
 	public partial class PERSONVIEW
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32, Length=4, Precision=0, Scale=0),     Nullable] public int?   PERSONID   { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  Nullable] public int?   PERSONID   { get; set; } // integer
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string FIRSTNAME  { get; set; } // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string LASTNAME   { get; set; } // varchar(50)
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0), Nullable] public string MIDDLENAME { get; set; } // varchar(50)
-		[Column(DbType="char(1)",     DataType=DataType.NChar, Length=1, Precision=0, Scale=0),     Nullable] public char?  GENDER     { get; set; } // char(1)
+		[Column(DbType="char(1)",     DataType=DataType.NChar,    Length=1, Precision=0, Scale=0),  Nullable] public char?  GENDER     { get; set; } // char(1)
 	}
 
 	[Table("SEQUENCETEST")]
 	public partial class SEQUENCETEST
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32, Length=4, Precision=0, Scale=0),     PrimaryKey, NotNull] public int    ID     { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID     { get; set; } // integer
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string VALUE_ { get; set; } // varchar(50)
 	}
 
@@ -238,7 +250,7 @@ namespace FirebirdDataContext
 	[Table("TESTTABLE2")]
 	public partial class TESTTABLE2
 	{
-		[Column(DbType="integer",      DataType=DataType.Int32, Length=4, Precision=0, Scale=0),      PrimaryKey,  NotNull] public int       ID          { get; set; } // integer
+		[Column(DbType="integer",      DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),   PrimaryKey,  NotNull] public int       ID          { get; set; } // integer
 		[Column(DbType="varchar(50)",  DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),               NotNull] public string    NAME        { get; set; } // varchar(50)
 		[Column(DbType="varchar(250)", DataType=DataType.NVarChar, Length=250, Precision=0, Scale=0),    Nullable         ] public string    DESCRIPTION { get; set; } // varchar(250)
 		[Column(DbType="timestamp",    DataType=DataType.DateTime, Length=8, Precision=0, Scale=0),      Nullable         ] public DateTime? CREATEDON   { get; set; } // timestamp
@@ -247,7 +259,7 @@ namespace FirebirdDataContext
 	[Table("TESTTABLE3")]
 	public partial class TESTTABLE3
 	{
-		[Column(DbType="integer",     DataType=DataType.Int32, Length=4, Precision=0, Scale=0),     PrimaryKey, NotNull] public int    ID   { get; set; } // integer
+		[Column(DbType="integer",     DataType=DataType.Int32,    Length=4, Precision=0, Scale=0),  PrimaryKey, NotNull] public int    ID   { get; set; } // integer
 		[Column(DbType="varchar(50)", DataType=DataType.NVarChar, Length=50, Precision=0, Scale=0),             NotNull] public string NAME { get; set; } // varchar(50)
 	}
 
@@ -577,6 +589,12 @@ namespace FirebirdDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.BINARYDATAID == BINARYDATAID);
+		}
+
+		public static CamelCaseName Find(this ITable<CamelCaseName> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static DATATYPETEST Find(this ITable<DATATYPETEST> table, int DATATYPEID)

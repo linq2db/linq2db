@@ -1245,7 +1245,26 @@ static Action<GeneratedTextTransformation,Attribute> WriteAttribute = (tt,a) =>
 	if (a.Parameters.Count > 0)
 	{
 		tt.Write("(");
-		tt.Write(string.Join(", ", a.Parameters.ToArray()));
+
+		for (var i = 0; i < a.Parameters.Count; i++)
+		{
+			if (i > 0)
+				if (a.Parameters[i - 1].All(c => c == ' '))
+					tt.Write("  ");
+				else
+				{
+					var l = tt.GenerationEnvironment.Length;
+
+					for (; l > 0 && tt.GenerationEnvironment[l - 1] == ' '; l--)
+					{
+					}
+
+					tt.GenerationEnvironment.Insert(l, ',');
+					tt.Write(" ");
+				}
+			tt.Write(a.Parameters[i]);
+		}
+
 		tt.Write(")");
 	}
 };

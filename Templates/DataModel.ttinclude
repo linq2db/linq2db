@@ -249,6 +249,8 @@ string CheckType(Type type, string typeName)
 	return typeName;
 }
 
+Action AfterLoadMetadata = () => {};
+
 void LoadMetadata(DataConnection dataConnection)
 {
 	if (DataContextObject == null)
@@ -297,6 +299,8 @@ void LoadMetadata(DataConnection dataConnection)
 				col.MemberName += "_Column";
 		}
 	}
+
+	AfterLoadMetadata();
 }
 
 string ConvertToCompilable(string name)
