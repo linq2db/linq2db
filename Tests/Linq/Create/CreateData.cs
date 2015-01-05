@@ -178,7 +178,7 @@ namespace Tests.Create
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLiteData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access       (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
-        [Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana      (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");        }
+		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana      (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");       }
 		static void AccessAction(IDbConnection connection)
 		{
 			using (var conn = AccessTools.CreateDataConnection(connection))

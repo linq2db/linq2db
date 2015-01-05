@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
-    using System.Threading;
+	using System.Threading;
 
-    using Common;
+	using Common;
 	using Extensions;
 	using Linq;
 	using Reflection;
@@ -33,23 +33,24 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
+		public Dictionary<string,string>   Aliases                   { get; private set; }
 
-        private readonly ManualResetEvent _mre = new ManualResetEvent(false);
-        private List<InheritanceMapping> _inheritanceMappings;
-	    public List<InheritanceMapping> InheritanceMapping
-	    {
-            get
-            {
-                if (_inheritanceMappings == null)
-                {
-                    _mre.WaitOne();
-                    _mre.Close();
-                }
-                return _inheritanceMappings;
-            }
-	    }
+		readonly ManualResetEvent _mre = new ManualResetEvent(false);
 
-	    public Dictionary<string,string>   Aliases                   { get; private set; }
+		private List<InheritanceMapping> _inheritanceMappings;
+		public  List<InheritanceMapping>  InheritanceMapping
+		{
+			get
+			{
+				if (_inheritanceMappings == null)
+				{
+					_mre.WaitOne();
+					_mre.Close();
+				}
+
+				return _inheritanceMappings;
+			}
+		}
 
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
@@ -179,12 +180,10 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-        internal void InitInheritanceMapping()
-        {
-
+		internal void InitInheritanceMapping()
+		{
 			var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
-
-			var result = new List<InheritanceMapping>(mappingAttrs.Length);
+			var result       = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
 			{
@@ -208,23 +207,24 @@ namespace LinqToDB.Mapping
 							mapping.Discriminator = column;
 					}
 
-                    result.Add(mapping);
+					result.Add(mapping);
 				}
 
-                var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
+				var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
 
 				if (discriminator == null)
 					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
 
-                foreach (var mapping in result)
+				foreach (var mapping in result)
 					if (mapping.Discriminator == null)
 						mapping.Discriminator = discriminator;
 			}
-            if (_inheritanceMappings == null)
-            {
-                _inheritanceMappings = result;
-                _mre.Set();
-            }
+
+			if (_inheritanceMappings == null)
+			{
+				_inheritanceMappings = result;
+				_mre.Set();
+			}
 		}
 	}
 }

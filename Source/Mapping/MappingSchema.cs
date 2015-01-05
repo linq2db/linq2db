@@ -886,30 +886,30 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-        ConcurrentDictionary<Type, EntityDescriptor> _entityDescriptors;
+		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
 
-        public EntityDescriptor GetEntityDescriptor(Type type)
-        {
-            if (_entityDescriptors == null)
-                _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
+		public EntityDescriptor GetEntityDescriptor(Type type)
+		{
+			if (_entityDescriptors == null)
+				_entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
 
-            EntityDescriptor ed;
+			EntityDescriptor ed;
 
-            if (!_entityDescriptors.TryGetValue(type, out ed))
-            {
-                _entityDescriptors[type] = ed = new EntityDescriptor(this, type);
-                ed.InitInheritanceMapping();
-            }
+			if (!_entityDescriptors.TryGetValue(type, out ed))
+			{
+				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
+				ed.InitInheritanceMapping();
+			}
 
-            return ed;
-        }
+			return ed;
+		}
 
-        //public EntityDescriptor GetEntityDescriptor(Type type)
-        //{
-        //    if (_entityDescriptors == null)
-        //        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-        //    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
-        //}
+		//public EntityDescriptor GetEntityDescriptor(Type type)
+		//{
+		//    if (_entityDescriptors == null)
+		//        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
+		//    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
+		//}
 
 		#endregion
 	}

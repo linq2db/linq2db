@@ -65,8 +65,8 @@ namespace LinqToDB
 		[Sql.Function  (PN.Firebird, "Gen_Uuid", ServerSideOnly=true)]
 		[Sql.Function  (PN.MySql,    "Uuid",     ServerSideOnly=true)]
 		[Sql.Expression(PN.Sybase,   "NewID(1)", ServerSideOnly=true)]
+		[Sql.Expression(PN.SapHana,  "SYSUUID",  ServerSideOnly=true)]
 		[Sql.Function  (             "NewID",    ServerSideOnly=true)]
-        [Sql.Expression(PN.SapHana, "SYSUUID", ServerSideOnly = true)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -126,7 +126,7 @@ namespace LinqToDB
 		[Sql.Property(PN.PostgreSQL,    "Boolean",        ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Boolean",        ServerSideOnly=true)]
 		[Sql.Property(PN.SQLite,        "Boolean",        ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "TinyInt",        ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "TinyInt",        ServerSideOnly=true)]
 		[Sql.Property(                  "Bit",            ServerSideOnly=true)] public static Boolean        Bit                               { get { return false; } }
 
 		[Sql.Property(PN.Oracle,        "Number(19)",     ServerSideOnly=true)]
@@ -148,7 +148,7 @@ namespace LinqToDB
 		[Sql.Property(                  "TinyInt",        ServerSideOnly=true)] public static Byte           TinyInt                           { get { return 0; } }
 
 		[Sql.Property(                  "Decimal",        ServerSideOnly=true)] public static Decimal DefaultDecimal                           { get { return 0; } }
-        [Sql.Expression(PN.SapHana,     "Decimal({0},4)", Precedence = Precedence.Primary, ServerSideOnly = true)]
+		[Sql.Expression(PN.SapHana,     "Decimal({0},4)", ServerSideOnly=true)]
 		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision)            {       return 0;   }
 		[Sql.Function(                                    ServerSideOnly=true)] public static Decimal        Decimal(int precision, int scale) {       return 0;   }
 
@@ -156,7 +156,7 @@ namespace LinqToDB
 		[Sql.Property(PN.Firebird,      "Decimal(18,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "Decimal(19,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Decimal(19,4)",  ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "Decimal(19,4)",  ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "Decimal(19,4)",  ServerSideOnly=true)]
 		[Sql.Property(                  "Money",          ServerSideOnly=true)] public static Decimal        Money                             { get { return 0; } }
 
 		[Sql.Property(PN.Informix,      "Decimal(10,4)",  ServerSideOnly=true)]
@@ -165,11 +165,11 @@ namespace LinqToDB
 		[Sql.Property(PN.PostgreSQL,    "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "Decimal(10,4)",  ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "Decimal(10,4)",  ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "Decimal(10,4)",  ServerSideOnly=true)]
 		[Sql.Property(                  "SmallMoney",     ServerSideOnly=true)] public static Decimal        SmallMoney                        { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "Double",       ServerSideOnly = true)]
+		[Sql.Property(PN.SapHana,       "Double",       ServerSideOnly = true)]
 		[Sql.Property(                  "Float",          ServerSideOnly=true)] public static Double         Float                             { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
@@ -177,7 +177,7 @@ namespace LinqToDB
 
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(                  "DateTime",       ServerSideOnly=true)] public static DateTime       DateTime                          { get { return DateTime.Now; } }
 
 		[Sql.Property(PN.SqlServer2000, "DateTime",       ServerSideOnly=true)]
@@ -187,14 +187,14 @@ namespace LinqToDB
 		[Sql.Property(PN.MySql,         "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.Sybase,        "DateTime",       ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(                  "DateTime2",      ServerSideOnly=true)] public static DateTime       DateTime2                         { get { return DateTime.Now; } }
 
 		[Sql.Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "DateTime",       ServerSideOnly=true)]
 		[Sql.Property(PN.SqlCe,         "DateTime",       ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "SecondDate",     ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "SecondDate",     ServerSideOnly=true)]
 		[Sql.Property(                  "SmallDateTime",  ServerSideOnly=true)] public static DateTime       SmallDateTime                     { get { return DateTime.Now; } }
 
 		[Sql.Property(PN.SqlServer2000, "Datetime",       ServerSideOnly=true)]
@@ -208,7 +208,7 @@ namespace LinqToDB
 		[Sql.Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Sql.Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
-        [Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
+		[Sql.Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
 		[Sql.Property(                  "DateTime",       ServerSideOnly=true)] public static DateTimeOffset DateTimeOffset                    { get { return DateTimeOffset.Now; } }
 
 		[Sql.Function(PN.SqlCe,         "NChar",          ServerSideOnly=true)]
@@ -255,7 +255,6 @@ namespace LinqToDB
 		[Sql.Function(PN.SqlServer, "Len",         PreferServerSide = true)]
 		[Sql.Function(PN.SqlCe,     "Len",         PreferServerSide = true)]
 		[Sql.Function(PN.Sybase,    "Len",         PreferServerSide = true)]
-        [Sql.Function(PN.SapHana,   "Length",      PreferServerSide = true)]
 		public static int? Length(string str)
 		{
 			return str == null ? null : (int?)str.Length;
@@ -268,7 +267,7 @@ namespace LinqToDB
 		[Sql.Function  (PN.Oracle,   "Substr")]
 		[Sql.Function  (PN.SQLite,   "Substr")]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})")]
-        [Sql.Function  (PN.SapHana,  "Substring")]
+		[Sql.Function  (PN.SapHana,  "Substring")]
 		public static string Substring(string str, int? startIndex, int? length)
 		{
 			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
@@ -297,9 +296,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		[Sql.Function(PN.DB2,   "Locate")]
-		[Sql.Function(PN.MySql, "Locate")]
-        [Sql.Function(PN.SapHana, "Locate", 1, 0)]
+		[Sql.Function(PN.DB2,     "Locate")]
+		[Sql.Function(PN.MySql,   "Locate")]
+		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
 		public static int? CharIndex(string value, string str)
 		{
 			if (str == null || value == null)
@@ -309,9 +308,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		[Sql.Function(ProviderName.DB2,   "Locate")]
-		[Sql.Function(ProviderName.MySql, "Locate")]
-        [Sql.Expression(PN.SapHana, "Locate(Substring({1},{2} + 1),{0}) + {2}")]
+		[Sql.Function  (ProviderName.DB2,   "Locate")]
+		[Sql.Function  (ProviderName.MySql, "Locate")]
+		[Sql.Expression(PN.SapHana,         "Locate(Substring({1},{2} + 1),{0}) + {2}")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -321,9 +320,9 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-		[Sql.Function(PN.DB2,   "Locate")]
-		[Sql.Function(PN.MySql, "Locate")]
-        [Sql.Function(PN.SapHana, "Locate")]
+		[Sql.Function(PN.DB2,     "Locate")]
+		[Sql.Function(PN.MySql,   "Locate")]
+		[Sql.Function(PN.SapHana, "Locate")]
 		public static int? CharIndex(char? value, string str)
 		{
 			if (value == null || str == null)
@@ -335,7 +334,7 @@ namespace LinqToDB
 		[Sql.Function]
 		[Sql.Function(ProviderName.DB2,   "Locate")]
 		[Sql.Function(ProviderName.MySql, "Locate")]
-        [Sql.Function(PN.SapHana, "Locate")]
+		[Sql.Function(PN.SapHana,         "Locate")]
 		public static int? CharIndex(char? value, string str, int? startLocation)
 		{
 			if (str == null || value == null || startLocation == null)
@@ -386,7 +385,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Function]
-        [Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
+		[Sql.Expression(ProviderName.SapHana, "Lpad('',{0},' ')")]
 		public static string Space(int? length)
 		{
 			return length == null ? null : "".PadRight(length.Value);
@@ -670,7 +669,7 @@ namespace LinqToDB
 		[LinqToDB.Sql.DatePartAttribute(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",        true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",          true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
-        [LinqToDB.Sql.DatePartAttribute(PN.SapHana,    "Add_{0}",                             true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.SapHana,    "Add_{0}",                             true, new[] { "Years({1}, {0})", "Months({1}, {0} * 3)", "Months({1}, {0})", "Days({1}, {0})", "Days({1}, {0})", "Days({1}, {0} * 7)", "Days({1}, {0})", "Seconds({1}, {0} * 3600)", "Seconds({1}, {0} * 60)", "Seconds({1}, {0})", null }, 0, 1, 2)]
 		public static DateTime? DateAdd(DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -704,7 +703,7 @@ namespace LinqToDB
 		[LinqToDB.Sql.DatePartAttribute(PN.Oracle,     "To_Number(To_Char({{0}}, {0}))",    true,  new[] { "'YYYY'", "'Q'", "'MM'", "'DDD'",   "'DD'", "'WW'", "'D'",      "'HH24'", "'MI'", "'SS'", "'FF'" }, 0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "Cast(StrFTime({0}, {{0}}) as int)", true,  new[] { "'%Y'",   null,  "'%m'", "'%j'",    "'%d'", "'%W'", "'%w'",     "'%H'",   "'%M'", "'%S'", "'%f'" }, 0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.Access,     "DatePart({0}, {{0}})",              true,  new[] { "'yyyy'", "'q'", "'m'",  "'y'",     "'d'",  "'ww'", "'w'",      "'h'",    "'n'", "'s'",   null   }, 0, 1)]
-        [LinqToDB.Sql.DatePartAttribute(PN.SapHana, "{0}", true, new[] { "Year({0})", "Floor((Month({0})-1) / 3) + 1", "Month({0})", "DayOfYear({0})", "DayOfMonth({0})", "Week({0})", "MOD(Weekday({0}) + 1, 7) + 1", "Hour({0})", "Minute({0})", "Second({0})", null }, 0, 1)]
+		[LinqToDB.Sql.DatePartAttribute(PN.SapHana,    "{0}", true, new[] { "Year({0})", "Floor((Month({0})-1) / 3) + 1", "Month({0})", "DayOfYear({0})", "DayOfMonth({0})", "Week({0})", "MOD(Weekday({0}) + 1, 7) + 1", "Hour({0})", "Minute({0})", "Second({0})", null }, 0, 1)]
 		public static int? DatePart(DateParts part, DateTime? date)
 		{
 			if (date == null)
@@ -731,7 +730,7 @@ namespace LinqToDB
 		[CLSCompliant(false)]
 		[Sql.Function]
 		[Sql.Function(PN.MySql, "TIMESTAMPDIFF")]
-        [LinqToDB.Sql.DatePartAttribute(PN.SapHana, "{0}", true, new[] { null, null, null, null, "Days_Between({0}, {1})", null, null, "Seconds_Between({0}, {1}) / 3600", "Seconds_Between({0}, {1}) / 60", "Seconds_Between({0}, {1})", "Nano100_Between({0}, {1}) / 10000" }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.SapHana, "{0}", true, new[] { null, null, null, null, "Days_Between({0}, {1})", null, null, "Seconds_Between({0}, {1}) / 3600", "Seconds_Between({0}, {1}) / 60", "Seconds_Between({0}, {1})", "Nano100_Between({0}, {1}) / 10000" }, 0, 1, 2)]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
@@ -799,12 +798,12 @@ namespace LinqToDB
 
 		[Sql.Function(PN.Informix, "Ceil")]
 		[Sql.Function(PN.Oracle,   "Ceil")]
-        [Sql.Function(PN.SapHana, "Ceil")]
+		[Sql.Function(PN.SapHana,  "Ceil")]
 		[Sql.Function] public static Decimal? Ceiling(Decimal? value) { return value == null ? null : (Decimal?)decimal.Ceiling(value.Value); }
 
 		[Sql.Function(PN.Informix, "Ceil")]
 		[Sql.Function(PN.Oracle,   "Ceil")]
-        [Sql.Function(PN.SapHana, "Ceil")]
+		[Sql.Function(PN.SapHana,  "Ceil")]
 		[Sql.Function] public static Double?  Ceiling(Double?  value) { return value == null ? null : (Double?)Math.Ceiling(value.Value); }
 
 		[Sql.Function] public static Double?  Cos    (Double?  value) { return value == null ? null : (Double?)Math.Cos    (value.Value); }
@@ -834,18 +833,18 @@ namespace LinqToDB
 		[Sql.Function(PN.Oracle,     "Ln")]
 		[Sql.Function(PN.Firebird,   "Ln")]
 		[Sql.Function(PN.PostgreSQL, "Ln")]
-        [Sql.Function(PN.SapHana, "Ln")]
+		[Sql.Function(PN.SapHana,    "Ln")]
 		[Sql.Function] public static Decimal? Log    (Decimal? value) { return value == null ? null : (Decimal?)Math.Log     ((Double)value.Value); }
 
 		[Sql.Function(PN.Informix,   "LogN")]
 		[Sql.Function(PN.Oracle,     "Ln")]
 		[Sql.Function(PN.Firebird,   "Ln")]
 		[Sql.Function(PN.PostgreSQL, "Ln")]
-        [Sql.Function(PN.SapHana,    "Ln")]
+		[Sql.Function(PN.SapHana,    "Ln")]
 		[Sql.Function] public static Double?  Log    (Double?  value) { return value == null ? null : (Double?) Math.Log     (value.Value); }
 
 		[Sql.Function(PN.PostgreSQL, "Log")]
-        [Sql.Expression(PN.SapHana, "Log(10,{0})")]
+		[Sql.Expression(PN.SapHana,  "Log(10,{0})")]
 		[Sql.Function] public static Double?  Log10  (Double?  value) { return value == null ? null : (Double?) Math.Log10   (value.Value); }
 
 		[Sql.Function]
@@ -954,7 +953,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.PostgreSQL, "Trunc({0}, 0)")]
 		[Sql.Expression(PN.MySql,      "Truncate({0}, 0)")]
 		[Sql.Expression(PN.SqlCe,      "Round({0}, 0, 1)")]
-        [Sql.Expression(PN.SapHana, "Round({0}, 0, ROUND_DOWN)")]
+		[Sql.Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)")]
 		[Sql.Function]
 		public static Decimal? Truncate(Decimal? value)
 		{
@@ -973,7 +972,7 @@ namespace LinqToDB
 		[Sql.Expression(PN.PostgreSQL, "Trunc({0}, 0)")]
 		[Sql.Expression(PN.MySql,      "Truncate({0}, 0)")]
 		[Sql.Expression(PN.SqlCe,      "Round({0}, 0, 1)")]
-        [Sql.Expression(PN.SapHana, "Round({0}, 0, ROUND_DOWN)")]
+		[Sql.Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)")]
 		[Sql.Function]
 		public static Double? Truncate(Double? value)
 		{

@@ -332,6 +332,8 @@ namespace LinqToDB.SchemaProvider
 			{
 				var st = GetProcedureSchema(dataConnection, commandText, commandType, parameters);
 
+				procedure.IsLoaded = true;
+
 				if (st != null)
 				{
 					procedure.ResultTable = new TableSchema

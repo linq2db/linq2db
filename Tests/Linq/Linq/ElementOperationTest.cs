@@ -88,7 +88,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.FirstOrDefault().ChildID);
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Oracle, ProviderName.Sybase, ProviderName.SapHana)]
 		public void NestedFirstOrDefaultScalar2(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
-    using Mapping;
+	using Mapping;
 
 	public class SapHanaMappingSchema : MappingSchema
 	{
@@ -12,7 +12,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected SapHanaMappingSchema(string configuration) : base(configuration)
 		{
-    	}
-
+		}
 	}
 }

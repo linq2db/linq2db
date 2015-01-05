@@ -343,6 +343,9 @@
     <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
       <Link>Database\Create Scripts\PostgreSQL.sql</Link>
     </Content>
+    <Content Include="..\..\Data\Create Scripts\SapHana.sql">
+      <Link>Database\Create Scripts\SapHana.sql</Link>
+    </Content>
     <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
       <Link>Database\Create Scripts\SqlCe.sql</Link>
     </Content>

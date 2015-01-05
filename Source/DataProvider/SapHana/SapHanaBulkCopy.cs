@@ -5,129 +5,134 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-    using System.Linq.Expressions;
+	using System.Linq.Expressions;
 
-    using Data;
+	using Data;
 
-    class SapHanaBulkCopy : BasicBulkCopy
-    {
-        public SapHanaBulkCopy(SapHanaDataProvider dataProvider, Type connectionType)
-        {
-            _dataProvider = dataProvider;
-            _connectionType = connectionType;
-        }
+	class SapHanaBulkCopy : BasicBulkCopy
+	{
+		public SapHanaBulkCopy(SapHanaDataProvider dataProvider, Type connectionType)
+		{
+			_dataProvider = dataProvider;
+			_connectionType = connectionType;
+		}
 
-        readonly SapHanaDataProvider _dataProvider;
-        readonly Type _connectionType;
+		readonly SapHanaDataProvider _dataProvider;
+		readonly Type _connectionType;
 
-        Func<IDbConnection, int, IDbTransaction, IDisposable> _bulkCopyCreator;
-        Func<int, string, object> _columnMappingCreator;
-        Action<object, Action<object>> _bulkCopySubscriber;
+		Func<IDbConnection,int,IDbTransaction,IDisposable> _bulkCopyCreator;
+		Func<int,string,object>                            _columnMappingCreator;
+		Action<object,Action<object>>                      _bulkCopySubscriber;
 
-        protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-            [JetBrains.Annotations.NotNull] DataConnection dataConnection,
-            BulkCopyOptions options,
-            IEnumerable<T> source)
-        {
-            if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
+			BulkCopyOptions options,
+			IEnumerable<T> source)
+		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 
-            var connection = dataConnection.Connection;
+			var connection = dataConnection.Connection;
 
-            if (connection == null ) 
-                return MultipleRowsCopy(dataConnection, options, source);
-            if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
-                return MultipleRowsCopy(dataConnection, options, source);
+			if (connection == null )
+				return MultipleRowsCopy(dataConnection, options, source);
 
+			if (!(connection.GetType() == _connectionType || connection.GetType().IsSubclassOf(_connectionType)))
+				return MultipleRowsCopy(dataConnection, options, source);
 
-            var transaction = dataConnection.Transaction;
-            var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-            var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-            var rc = new BulkCopyRowsCopied();
+			var transaction = dataConnection.Transaction;
+			var ed          = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var rc          = new BulkCopyRowsCopied();
 
-            if (_bulkCopyCreator == null)
-            {
-                var clientNamespace = _dataProvider.ConnectionNamespace;
-                var bulkCopyType = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopy", false);
-                var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyOptions", false);
-                var columnMappingType = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
-                var transactionType = _connectionType.Assembly.GetType(clientNamespace + ".HanaTransaction", false);
+			if (_bulkCopyCreator == null)
+			{
+				var clientNamespace    = _dataProvider.ConnectionNamespace;
+				var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopy", false);
+				var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyOptions", false);
+				var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + ".HanaBulkCopyColumnMapping", false);
+				var transactionType    = _connectionType.Assembly.GetType(clientNamespace + ".HanaTransaction", false);
 
-                if (bulkCopyType != null)
-                {
-                    _bulkCopyCreator = SapHanaCreateBulkCopyCreator(_connectionType, bulkCopyType, bulkCopyOptionType, transactionType);
-                    _columnMappingCreator = CreateColumnMappingCreator(columnMappingType);
-                }
-            }
+				if (bulkCopyType != null)
+				{
+					_bulkCopyCreator      = SapHanaCreateBulkCopyCreator(_connectionType, bulkCopyType, bulkCopyOptionType, transactionType);
+					_columnMappingCreator = CreateColumnMappingCreator(columnMappingType);
+				}
+			}
 
-            if (_bulkCopyCreator == null) 
-                return MultipleRowsCopy(dataConnection, options, source);
-            const int hanaOptions = 0; //default;
-            using (var bc = _bulkCopyCreator(connection, hanaOptions, transaction))
-            {
-                dynamic dbc = bc;
+			if (_bulkCopyCreator == null) 
+				return MultipleRowsCopy(dataConnection, options, source);
 
-                if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-                {
-                    if (_bulkCopySubscriber == null)
-                    {
-                        _bulkCopySubscriber = CreateBulkCopySubscriber(bc, "HannaRowsCopied");
-                    }
+			const int hanaOptions = 0; //default;
 
-                    dbc.NotifyAfter = options.NotifyAfter;
+			using (var bc = _bulkCopyCreator(connection, hanaOptions, transaction))
+			{
+				dynamic dbc = bc;
 
-                    _bulkCopySubscriber(bc, arg =>
-                    {
-                        dynamic darg = arg;
-                        rc.RowsCopied = darg.RowsCopied;
-                        options.RowsCopiedCallback(rc);
-                        if (rc.Abort)
-                            darg.Abort = true;
-                    });
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				{
+					if (_bulkCopySubscriber == null)
+					{
+						_bulkCopySubscriber = CreateBulkCopySubscriber(bc, "HannaRowsCopied");
+					}
 
-                }
+					dbc.NotifyAfter = options.NotifyAfter;
 
-                if (options.MaxBatchSize.HasValue) dbc.BatchSize = options.MaxBatchSize.Value;
-                if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+					_bulkCopySubscriber(bc, arg =>
+					{
+						dynamic darg = arg;
+						rc.RowsCopied = darg.RowsCopied;
+						options.RowsCopiedCallback(rc);
+						if (rc.Abort)
+							darg.Abort = true;
+					});
+				}
 
-                var sqlBuilder = _dataProvider.CreateSqlBuilder();
-                var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof (T));
-                var tableName = GetTableName(sqlBuilder, descriptor);
+				if (options.MaxBatchSize.HasValue)    dbc.BatchSize = options.MaxBatchSize.Value;
+				if (options.BulkCopyTimeout.HasValue) dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 
-                dbc.DestinationTableName = tableName;
+				var sqlBuilder = _dataProvider.CreateSqlBuilder();
+				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof (T));
+				var tableName  = GetTableName(sqlBuilder, descriptor);
 
-                for (var i = 0; i < columns.Count; i++)
-                    dbc.ColumnMappings.Add((dynamic) _columnMappingCreator(i, columns[i].ColumnName));
+				dbc.DestinationTableName = tableName;
 
-                var rd = new BulkCopyReader(_dataProvider, columns, source);
-                dbc.WriteToServer(rd);
-                rc.RowsCopied = rd.Count;
-                return rc;
-            }
-        }
+				for (var i = 0; i < columns.Count; i++)
+					dbc.ColumnMappings.Add((dynamic) _columnMappingCreator(i, columns[i].ColumnName));
 
-        private static Func<IDbConnection, int, IDbTransaction, IDisposable> SapHanaCreateBulkCopyCreator(
-            Type connectionType, Type bulkCopyType, Type bulkCopyOptionType, Type externalTransactionConnection)
-        {
-            var p1 = Expression.Parameter(typeof(IDbConnection), "pc");
-            var p2 = Expression.Parameter(typeof(int), "po");
-            var p3 = Expression.Parameter(typeof(IDbTransaction), "pt");
-            var ctor = bulkCopyType.GetConstructor(new[]
-            {
-                connectionType, 
-                bulkCopyOptionType, 
-                externalTransactionConnection
-            });
-            if (ctor == null) return null;
-            var l = Expression.Lambda<Func<IDbConnection, int, IDbTransaction, IDisposable>>(
-                Expression.Convert(
-                    Expression.New(ctor,
-                        Expression.Convert(p1, connectionType),
-                        Expression.Convert(p2, bulkCopyOptionType),
-                        Expression.Convert(p3, externalTransactionConnection)),
-                    typeof(IDisposable)),
-                p1, p2, p3);
+				var rd = new BulkCopyReader(_dataProvider, columns, source);
 
-            return l.Compile();
-        }
-    }
+				dbc.WriteToServer(rd);
+				rc.RowsCopied = rd.Count;
+
+				return rc;
+			}
+		}
+
+		private static Func<IDbConnection, int, IDbTransaction, IDisposable> SapHanaCreateBulkCopyCreator(
+			Type connectionType, Type bulkCopyType, Type bulkCopyOptionType, Type externalTransactionConnection)
+		{
+			var p1   = Expression.Parameter(typeof(IDbConnection),  "pc");
+			var p2   = Expression.Parameter(typeof(int),            "po");
+			var p3   = Expression.Parameter(typeof(IDbTransaction), "pt");
+			var ctor = bulkCopyType.GetConstructor(new[]
+			{
+				connectionType, 
+				bulkCopyOptionType, 
+				externalTransactionConnection
+			});
+
+			if (ctor == null) return null;
+
+			var l = Expression.Lambda<Func<IDbConnection, int, IDbTransaction, IDisposable>>(
+				Expression.Convert(
+					Expression.New(ctor,
+						Expression.Convert(p1, connectionType),
+						Expression.Convert(p2, bulkCopyOptionType),
+						Expression.Convert(p3, externalTransactionConnection)),
+					typeof(IDisposable)),
+				p1, p2, p3);
+
+			return l.Compile();
+		}
+	}
 }

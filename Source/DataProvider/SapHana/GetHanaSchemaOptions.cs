@@ -2,13 +2,12 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Data;
+	using SchemaProvider;
 
-    using Data;
-    using SchemaProvider;
-
-    public class GetHanaSchemaOptions: GetSchemaOptions
-    {
-        public Func<ProcedureSchema, DataParameter[]> GetStoredProcedureParameters = schema => null;
-        public bool ThrowExceptionIfCalculationViewsNotAuthorized = false;
-    }
+	public class GetHanaSchemaOptions: GetSchemaOptions
+	{
+		public Func<ProcedureSchema, DataParameter[]> GetStoredProcedureParameters = schema => null;
+		public bool ThrowExceptionIfCalculationViewsNotAuthorized = false;
+	}
 }

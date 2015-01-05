@@ -250,7 +250,7 @@ namespace Tests.Linq
 			}
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -266,7 +266,7 @@ namespace Tests.Linq
 			}
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest4(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
@@ -300,7 +300,7 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest5(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
@@ -334,7 +334,7 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest6(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery     = true;
@@ -373,7 +373,7 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-        [Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase, ProviderName.SapHana)]
 		public void LetTest7(string context)
 		{
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;

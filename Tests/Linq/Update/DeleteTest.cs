@@ -274,7 +274,7 @@ namespace Tests.Update
 			ProviderName.SQLite,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
-            ProviderName.SapHana
+			ProviderName.SapHana
 			)]
 		public void DeleteTop(string context)
 		{
