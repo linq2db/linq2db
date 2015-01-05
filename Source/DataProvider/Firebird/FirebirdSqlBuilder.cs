@@ -119,12 +119,33 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
+					if (value != null && IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None)
+					{
+						var name = value.ToString();
+
+						if (name.Length > 0 && name[0] == '"')
+							return name;
+
+						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+							name.StartsWith("_") ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + name + '"';
+					}
+
+					break;
+
 					if (FirebirdConfiguration.QuoteIdentifiers)
 					{
 						string name = value.ToString();
