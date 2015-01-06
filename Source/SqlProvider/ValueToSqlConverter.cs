@@ -11,7 +11,7 @@ namespace LinqToDB.SqlProvider
 
 	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,object>;
 
-	class ValueToSqlConverter
+	public class ValueToSqlConverter
 	{
 		public ValueToSqlConverter(params ValueToSqlConverter[] converters)
 		{

@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using SqlQuery;
 
-	class BasicSqlOptimizer : ISqlOptimizer
+	public class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
 

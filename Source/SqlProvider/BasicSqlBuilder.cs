@@ -10,7 +10,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using SqlQuery;
 
-	abstract class BasicSqlBuilder : ISqlBuilder
+	public abstract class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
