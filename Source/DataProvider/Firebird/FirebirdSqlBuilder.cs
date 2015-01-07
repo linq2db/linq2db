@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -241,5 +242,15 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.FbDbType.ToString();
+		}
+
+#endif
 	}
 }

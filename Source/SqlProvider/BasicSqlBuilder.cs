@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -2491,6 +2492,77 @@ namespace LinqToDB.SqlProvider
 		public virtual ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			return null;
+		}
+
+		protected virtual void PrintParameterName(StringBuilder sb, IDbDataParameter parameter)
+		{
+			if (!parameter.ParameterName.StartsWith("@"))
+				sb.Append('@');
+			sb.Append(parameter.ParameterName);
+		}
+
+		protected virtual string GetTypeName(IDbDataParameter parameter)
+		{
+			return null;
+		}
+
+		protected virtual string GetUdtTypeName(IDbDataParameter parameter)
+		{
+			return null;
+		}
+
+		protected virtual string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			return null;
+		}
+
+		protected virtual void PrintParameterType(StringBuilder sb, IDbDataParameter parameter)
+		{
+			var typeName = GetTypeName(parameter);
+			if (!string.IsNullOrEmpty(typeName))
+				sb.Append(typeName).Append(" -- ");
+
+			var udtTypeName = GetUdtTypeName(parameter);
+			if (!string.IsNullOrEmpty(udtTypeName))
+				sb.Append(udtTypeName).Append(" -- ");
+
+			var t1 = GetProviderTypeName(parameter);
+			var t2 = parameter.DbType.ToString();
+
+			sb.Append(t1);
+
+			if (t1 != t2)
+				sb.Append(" -- ").Append(t2);
+		}
+
+		protected virtual void PrintParameterValue(StringBuilder sb, IDbDataParameter parameter)
+		{
+			ValueToSqlConverter.Convert(sb, parameter.Value);
+		}
+
+		public virtual StringBuilder PrintParameters(StringBuilder sb, IDbDataParameter[] parameters)
+		{
+			if (parameters != null && parameters.Length > 0)
+			{
+				foreach (var p in parameters)
+				{
+					sb.Append("DECLARE ");
+					PrintParameterName(sb, p);
+					sb.Append(' ');
+					PrintParameterType(sb, p);
+					sb.AppendLine();
+
+					sb.Append("SET     ");
+					PrintParameterName(sb, p);
+					sb.Append(" = ");
+					ValueToSqlConverter.Convert(sb, p.Value);
+					sb.AppendLine();
+				}
+
+				sb.AppendLine();
+			}
+
+			return sb;
 		}
 
 		private        string _name;

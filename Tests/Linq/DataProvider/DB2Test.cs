@@ -557,6 +557,8 @@ namespace Tests.DataProvider
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void TestTypes(string context)
 		{
+			//IBM.Data.DB2.DB2Parameter p = null;
+			//p.
 			//new IBM.Data.DB2Types.DB2RowId();
 
 			dynamic int64Value = null;

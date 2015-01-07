@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -158,5 +159,15 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			StringBuilder.Append("IDENTITY");
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.SqlDbType.ToString();
+		}
+
+#endif
 	}
 }

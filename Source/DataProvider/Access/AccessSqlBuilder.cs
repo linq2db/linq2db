@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -375,5 +376,14 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+#if !NETFX_CORE && !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+		}
+
+#endif
 	}
 }

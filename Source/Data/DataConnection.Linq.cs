@@ -290,35 +290,7 @@ namespace LinqToDB.Data
 
 			sb.AppendLine();
 
-			if (pq.Parameters != null && pq.Parameters.Length > 0)
-			{
-				foreach (var p in pq.Parameters)
-					sb
-						.Append("-- DECLARE ")
-						.Append(p.ParameterName)
-						.Append(' ')
-						.Append(p.Value == null ? p.DbType.ToString() : p.Value.GetType().Name)
-						.AppendLine();
-
-				sb.AppendLine();
-
-				foreach (var p in pq.Parameters)
-				{
-					var value = p.Value;
-
-					if (value is string || value is char)
-						value = "'" + value.ToString().Replace("'", "''") + "'";
-
-					sb
-						.Append("-- SET ")
-						.Append(p.ParameterName)
-						.Append(" = ")
-						.Append(value)
-						.AppendLine();
-				}
-
-				sb.AppendLine();
-			}
+			sqlProvider.PrintParameters(sb, pq.Parameters);
 
 			foreach (var command in pq.Commands)
 				sb.AppendLine(command);

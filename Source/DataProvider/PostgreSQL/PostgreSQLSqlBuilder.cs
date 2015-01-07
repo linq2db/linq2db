@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -173,5 +174,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			base.BuildCreateTableFieldType(field);
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.NpgsqlDbType.ToString();
+		}
+
+#endif
 	}
 }

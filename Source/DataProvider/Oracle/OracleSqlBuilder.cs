@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -296,5 +297,15 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.OracleDbType.ToString();
+		}
+
+#endif
 	}
 }
