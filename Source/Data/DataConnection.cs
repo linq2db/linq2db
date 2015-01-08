@@ -145,7 +145,7 @@ namespace LinqToDB.Data
 		{
 			if (info.BeforeExecute)
 			{
-				WriteTraceLine(info.GetSqlText(), TraceSwitch.DisplayName);
+				WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
 			}
 			else if (info.TraceLevel == TraceLevel.Error)
 			{

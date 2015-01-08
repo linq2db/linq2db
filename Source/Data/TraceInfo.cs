@@ -17,36 +17,38 @@ namespace LinqToDB.Data
 		public int?           RecordsAffected { get; set; }
 		public Exception      Exception       { get; set; }
 
-		string _sqlText;
-
-		public string GetSqlText()
+		private string _sqlText;
+		public  string  SqlText
 		{
-			if (_sqlText != null)
-				return _sqlText;
+			get
+			{
+				if (_sqlText != null)
+					return _sqlText;
 
-			var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder();
-			var sb          = new StringBuilder();
+				var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder();
+				var sb          = new StringBuilder();
 
-			sb.Append("-- ").Append(DataConnection.ConfigurationString);
+				sb.Append("-- ").Append(DataConnection.ConfigurationString);
 
-			if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
-				sb.Append(' ').Append(DataConnection.DataProvider.Name);
+				if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
+					sb.Append(' ').Append(DataConnection.DataProvider.Name);
 
-			if (DataConnection.DataProvider.Name != sqlProvider.Name)
-				sb.Append(' ').Append(sqlProvider.Name);
+				if (DataConnection.DataProvider.Name != sqlProvider.Name)
+					sb.Append(' ').Append(sqlProvider.Name);
 
-			sb.AppendLine();
+				sb.AppendLine();
 
-			sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
+				sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
 
-			sb.AppendLine(Command.CommandText);
+				sb.AppendLine(Command.CommandText);
 
-			while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
-				sb.Length--;
+				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					sb.Length--;
 
-			sb.AppendLine();
+				sb.AppendLine();
 
-			return _sqlText = sb.ToString();
+				return _sqlText = sb.ToString();
+			}
 		}
 	}
 }
