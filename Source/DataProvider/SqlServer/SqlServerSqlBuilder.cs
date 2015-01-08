@@ -206,13 +206,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataType(type, createDbType);
 		}
 
-		protected override void PrintParameterName(StringBuilder sb, IDbDataParameter parameter)
-		{
-			if (!parameter.ParameterName.StartsWith("@"))
-				sb.Append('@');
-			base.PrintParameterName(sb, parameter);
-		}
-
 #if !NETFX_CORE && !SILVERLIGHT
 
 		protected override string GetTypeName(IDbDataParameter parameter)

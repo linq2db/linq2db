@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Firebird
 		static void SetNonQueryParameter(IQueryElement element)
 		{
 			if (element.ElementType == QueryElementType.SqlParameter)
-				((SqlParameter) element).IsQueryParameter = false;
+				((SqlParameter)element).IsQueryParameter = false;
 		}
 
 		private bool SearchSelectClause(IQueryElement element)

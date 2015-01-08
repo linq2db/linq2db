@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -35,6 +37,23 @@ namespace Tests.Linq
 
 				id = 1;
 				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+			}
+		}
+
+		[Test, DataContextSource]
+		public void AsSqlParameter(string context)
+		{
+			using (var  db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var q1 = db.Parent.Where(p => p.ParentID == id);
+
+				Assert.That(q1.ToString(), Contains.Substring("id").Or.ContainsSubstring("?"));
+
+				var q2 = db.Parent.Where(p => p.ParentID == Sql.AsSql(id));
+
+				Assert.That(q2.ToString(), Is.Not.ContainsSubstring("id").And.Not.ContainsSubstring("?"));
 			}
 		}
 	}

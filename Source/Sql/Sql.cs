@@ -27,7 +27,7 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Sql.Expression("{0}", 0, ServerSideOnly = true)]
+		[Sql.Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true)]
 		public static T AsSql<T>(T obj)
 		{
 			return obj;

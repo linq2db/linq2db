@@ -865,6 +865,11 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
+							var inlineParameters = DataContextInfo.DataContext.InlineParameters;
+
+							if (attr.InlineParameters)
+								DataContextInfo.DataContext.InlineParameters = true;
+
 							var parms = new List<ISqlExpression>();
 
 							if (e.Object != null)
@@ -899,6 +904,8 @@ namespace LinqToDB.Linq.Builder
 									parms.Add(ConvertToSql(context, arg));
 								}
 							}
+
+							DataContextInfo.DataContext.InlineParameters = inlineParameters;
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
