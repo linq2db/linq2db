@@ -169,7 +169,7 @@ namespace LinqToDB
 		[Sql.Property(                  "SmallMoney",     ServerSideOnly=true)] public static Decimal        SmallMoney                        { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
-		[Sql.Property(PN.SapHana,       "Double",       ServerSideOnly = true)]
+		[Sql.Property(PN.SapHana,       "Double",         ServerSideOnly=true)]
 		[Sql.Property(                  "Float",          ServerSideOnly=true)] public static Double         Float                             { get { return 0; } }
 
 		[Sql.Property(PN.MySql,         "Decimal(29,10)", ServerSideOnly=true)]
@@ -295,6 +295,7 @@ namespace LinqToDB
 #endif
 		}
 
+		[CLSCompliant(false)]
 		[Sql.Function]
 		[Sql.Function(PN.DB2,     "Locate")]
 		[Sql.Function(PN.MySql,   "Locate")]
