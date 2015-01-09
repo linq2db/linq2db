@@ -51,7 +51,7 @@ namespace Tests.Linq
 
 				Assert.That(q1.ToString(), Contains.Substring("id").Or.ContainsSubstring("?"));
 
-				var q2 = db.Parent.Where(p => p.ParentID == Sql.AsSql(id));
+				var q2 = db.Parent.Where(p => p.ParentID == Sql.ToSql(id));
 
 				Assert.That(q2.ToString(), Is.Not.ContainsSubstring("id").And.Not.ContainsSubstring("?"));
 			}
