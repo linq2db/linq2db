@@ -2025,8 +2025,7 @@ namespace LinqToDB.Linq.Builder
 			Func<string,ISqlExpression> getSql)
 		{
 			var mapping = inheritanceMapping
-				.Select((m,i) => new { m, i })
-				.Where ( m => m.m.Type == toType && !m.m.IsDefault)
+				.Where (m => m.Type == toType && !m.IsDefault)
 				.ToList();
 
 			switch (mapping.Count)
@@ -2037,16 +2036,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (inheritanceMapping.Any(m => m.Type == toType))
 						{
-							foreach (var m in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => !m.m.IsDefault))
+							foreach (var m in inheritanceMapping.Where(m => !m.IsDefault))
 							{
 								cond.Conditions.Add(
 									new SelectQuery.Condition(
 										false, 
 										Convert(context,
 											new SelectQuery.Predicate.ExprExpr(
-												getSql(inheritanceMapping[m.i].DiscriminatorName),
+												getSql(m.DiscriminatorName),
 												SelectQuery.Predicate.Operator.NotEqual,
-												MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code)))));
 							}
 						}
 						else
@@ -2071,9 +2070,9 @@ namespace LinqToDB.Linq.Builder
 				case 1 :
 					return Convert(context,
 						new SelectQuery.Predicate.ExprExpr(
-							getSql(inheritanceMapping[mapping[0].i].DiscriminatorName),
+							getSql(mapping[0].DiscriminatorName),
 							SelectQuery.Predicate.Operator.Equal,
-							MappingSchema.GetSqlValue(mapping[0].m.Discriminator.MemberType, mapping[0].m.Code)));
+							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code)));
 
 				default:
 					{
@@ -2086,9 +2085,9 @@ namespace LinqToDB.Linq.Builder
 									false,
 									Convert(context,
 										new SelectQuery.Predicate.ExprExpr(
-											getSql(inheritanceMapping[m.i].DiscriminatorName),
+											getSql(m.DiscriminatorName),
 											SelectQuery.Predicate.Operator.Equal,
-											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code))),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code))),
 									true));
 						}
 
