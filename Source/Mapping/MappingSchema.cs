@@ -78,7 +78,7 @@ namespace LinqToDB.Mapping
 
 		#region ValueToSqlConverter
 
-		internal readonly ValueToSqlConverter ValueToSqlConverter;
+		public ValueToSqlConverter ValueToSqlConverter { get; private set; }
 
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
 		{
