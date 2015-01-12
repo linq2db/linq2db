@@ -231,6 +231,7 @@
     <Compile Include="DDL\CreateTableTest.cs" />
     <Compile Include="Linq\AsyncTest.cs" />
     <Compile Include="Linq\ColumnAliasTest.cs" />
+    <Compile Include="Linq\GenerateExpressionTest.cs" />
     <Compile Include="Linq\IssueTests.cs" />
     <Compile Include="Linq\LoadWithTest.cs" />
     <Compile Include="Linq\EnumMapping.cs" />
