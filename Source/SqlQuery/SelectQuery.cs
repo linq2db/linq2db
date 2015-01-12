@@ -2866,6 +2866,8 @@ namespace LinqToDB.SqlQuery
 
 		public class WhereClause : ClauseBase<WhereClause,WhereClause.Next>, IQueryElement, ISqlExpressionWalkable
 		{
+			private SearchCondition _searchCondition;
+
 			public class Next : ClauseBase
 			{
 				internal Next(WhereClause parent) : base(parent.SelectQuery)
@@ -2899,7 +2901,11 @@ namespace LinqToDB.SqlQuery
 				SearchCondition = searchCondition;
 			}
 
-			public SearchCondition SearchCondition { get; private set; }
+			public SearchCondition SearchCondition
+			{
+				get { return _searchCondition; }
+				private set { _searchCondition = value; }
+			}
 
 			public bool IsEmpty
 			{

@@ -2035,16 +2035,34 @@ namespace LinqToDB.Linq.Builder
 					{
 						var cond = new SelectQuery.SearchCondition();
 
-						foreach (var m in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => !m.m.IsDefault))
+						if (inheritanceMapping.Any(m => m.Type == toType))
 						{
-							cond.Conditions.Add(
-								new SelectQuery.Condition(
-									false, 
-									Convert(context,
-										new SelectQuery.Predicate.ExprExpr(
-											getSql(inheritanceMapping[m.i].DiscriminatorName),
-											SelectQuery.Predicate.Operator.NotEqual,
-											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
+							foreach (var m in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => !m.m.IsDefault))
+							{
+								cond.Conditions.Add(
+									new SelectQuery.Condition(
+										false, 
+										Convert(context,
+											new SelectQuery.Predicate.ExprExpr(
+												getSql(inheritanceMapping[m.i].DiscriminatorName),
+												SelectQuery.Predicate.Operator.NotEqual,
+												MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
+							}
+						}
+						else
+						{
+							foreach (var m in inheritanceMapping.Where(m => toType.IsSameOrParentOf(m.Type)))
+							{
+								cond.Conditions.Add(
+									new SelectQuery.Condition(
+										false,
+										Convert(context,
+											new SelectQuery.Predicate.ExprExpr(
+												getSql(m.DiscriminatorName),
+												SelectQuery.Predicate.Operator.Equal,
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code))),
+										true));
+							}
 						}
 
 						return cond;
