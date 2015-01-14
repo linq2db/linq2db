@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 						if (ma.Member.IsNullableValueMember() || ma.Member.IsNullableHasValueMember())
 							return true;
 
-						if (Expressions.ConvertMember(MappingSchema, ma.Member) != null)
+						if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) != null)
 							return true;
 
 						var ctx = GetContext(context, expr);
@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var e = (MethodCallExpression)expr;
 
-							if (Expressions.ConvertMember(MappingSchema, e.Method) != null)
+							if (Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method) != null)
 								return true;
 
 							if (IsGrouping(e))
@@ -418,7 +418,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var ma = (MemberExpression)e;
-							var l  = Expressions.ConvertMember(MappingSchema, ma.Member);
+							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
 
 							if (l != null)
 							{
@@ -487,7 +487,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertMethod(MethodCallExpression pi)
 		{
-			var l = Expressions.ConvertMember(MappingSchema, pi.Method);
+			var l = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, pi.Method);
 			return l == null ? null : ConvertMethod(pi, l);
 		}
 
@@ -520,7 +520,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertNew(NewExpression pi)
 		{
-			var lambda = Expressions.ConvertMember(MappingSchema, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor);
 
 			if (lambda != null)
 			{
@@ -865,6 +865,11 @@ namespace LinqToDB.Linq.Builder
 
 						if (attr != null)
 						{
+							var inlineParameters = DataContextInfo.DataContext.InlineParameters;
+
+							if (attr.InlineParameters)
+								DataContextInfo.DataContext.InlineParameters = true;
+
 							var parms = new List<ISqlExpression>();
 
 							if (e.Object != null)
@@ -899,6 +904,8 @@ namespace LinqToDB.Linq.Builder
 									parms.Add(ConvertToSql(context, arg));
 								}
 							}
+
+							DataContextInfo.DataContext.InlineParameters = inlineParameters;
 
 							return Convert(context, attr.GetExpression(e.Method, parms.ToArray()));
 						}
@@ -969,7 +976,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression == null ? null : ex.Expression.Type, ex.Member);
 
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
@@ -998,7 +1005,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var l = Expressions.ConvertMember(MappingSchema, e.Method);
+							var l = Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method);
 
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
@@ -2018,8 +2025,7 @@ namespace LinqToDB.Linq.Builder
 			Func<string,ISqlExpression> getSql)
 		{
 			var mapping = inheritanceMapping
-				.Select((m,i) => new { m, i })
-				.Where ( m => m.m.Type == toType && !m.m.IsDefault)
+				.Where (m => m.Type == toType && !m.IsDefault)
 				.ToList();
 
 			switch (mapping.Count)
@@ -2028,16 +2034,34 @@ namespace LinqToDB.Linq.Builder
 					{
 						var cond = new SelectQuery.SearchCondition();
 
-						foreach (var m in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => !m.m.IsDefault))
+						if (inheritanceMapping.Any(m => m.Type == toType))
 						{
-							cond.Conditions.Add(
-								new SelectQuery.Condition(
-									false, 
-									Convert(context,
-										new SelectQuery.Predicate.ExprExpr(
-											getSql(inheritanceMapping[m.i].DiscriminatorName),
-											SelectQuery.Predicate.Operator.NotEqual,
-											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code)))));
+							foreach (var m in inheritanceMapping.Where(m => !m.IsDefault))
+							{
+								cond.Conditions.Add(
+									new SelectQuery.Condition(
+										false, 
+										Convert(context,
+											new SelectQuery.Predicate.ExprExpr(
+												getSql(m.DiscriminatorName),
+												SelectQuery.Predicate.Operator.NotEqual,
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code)))));
+							}
+						}
+						else
+						{
+							foreach (var m in inheritanceMapping.Where(m => toType.IsSameOrParentOf(m.Type)))
+							{
+								cond.Conditions.Add(
+									new SelectQuery.Condition(
+										false,
+										Convert(context,
+											new SelectQuery.Predicate.ExprExpr(
+												getSql(m.DiscriminatorName),
+												SelectQuery.Predicate.Operator.Equal,
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code))),
+										true));
+							}
 						}
 
 						return cond;
@@ -2046,9 +2070,9 @@ namespace LinqToDB.Linq.Builder
 				case 1 :
 					return Convert(context,
 						new SelectQuery.Predicate.ExprExpr(
-							getSql(inheritanceMapping[mapping[0].i].DiscriminatorName),
+							getSql(mapping[0].DiscriminatorName),
 							SelectQuery.Predicate.Operator.Equal,
-							MappingSchema.GetSqlValue(mapping[0].m.Discriminator.MemberType, mapping[0].m.Code)));
+							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code)));
 
 				default:
 					{
@@ -2061,9 +2085,9 @@ namespace LinqToDB.Linq.Builder
 									false,
 									Convert(context,
 										new SelectQuery.Predicate.ExprExpr(
-											getSql(inheritanceMapping[m.i].DiscriminatorName),
+											getSql(m.DiscriminatorName),
 											SelectQuery.Predicate.Operator.Equal,
-											MappingSchema.GetSqlValue(m.m.Discriminator.MemberType, m.m.Code))),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code))),
 									true));
 						}
 

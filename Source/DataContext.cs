@@ -24,7 +24,19 @@ namespace LinqToDB
 			MappingSchema       = DataProvider.MappingSchema;
 		}
 
+		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
+			if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+			DataProvider     = dataProvider;
+			ConnectionString = connectionString;
+			ContextID        = DataProvider.Name;
+			MappingSchema    = DataProvider.MappingSchema;
+		}
+
 		public string        ConfigurationString { get; private set; }
+		public string        ConnectionString    { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ContextID           { get; set;         }
 		public MappingSchema MappingSchema       { get; set;         }
@@ -67,7 +79,12 @@ namespace LinqToDB
 
 		internal DataConnection GetDataConnection()
 		{
-			return _dataConnection ?? (_dataConnection = new DataConnection(ConfigurationString));
+			return _dataConnection ??
+			(
+				_dataConnection = ConnectionString != null
+					? new DataConnection(DataProvider, ConnectionString)
+					: new DataConnection(ConfigurationString)
+			);
 		}
 
 		internal void ReleaseQuery()
@@ -160,6 +177,7 @@ namespace LinqToDB
 			var dc = new DataContext(0)
 			{
 				ConfigurationString = ConfigurationString,
+				ConnectionString    = ConnectionString,
 				KeepConnectionAlive = KeepConnectionAlive,
 				DataProvider        = DataProvider,
 				ContextID           = ContextID,

@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using SqlQuery;
 
-	class BasicSqlOptimizer : ISqlOptimizer
+	public class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
 
@@ -1085,7 +1085,7 @@ namespace LinqToDB.SqlProvider
 				var maxPrecision = GetMaxPrecision(from);
 				var maxScale     = GetMaxScale    (from);
 				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0,     maxScale)     : to.Scale;
+				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
 
 				if (to.Precision != newPrecision || to.Scale != newScale)
 					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);

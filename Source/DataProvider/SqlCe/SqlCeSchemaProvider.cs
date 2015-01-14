@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return Path.GetFileNameWithoutExtension(dbConnection.Database);
 		}
 
-		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType.ToLower())
 			{

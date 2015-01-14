@@ -12,10 +12,10 @@ namespace Tests.Data
 	[TestFixture]
 	public class TransactionTest : TestBase
 	{
-		[Test]
-		public void AutoRollbackTransaction()
+		[Test, DataContextSource(false)]
+		public void AutoRollbackTransaction(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new TestDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
@@ -37,10 +37,10 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void CommitTransaction()
+		[Test, DataContextSource(false)]
+		public void CommitTransaction(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new TestDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
@@ -63,10 +63,10 @@ namespace Tests.Data
 			}
 		}
 
-		[Test]
-		public void RollbackTransaction()
+		[Test, DataContextSource(false)]
+		public void RollbackTransaction(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new TestDataConnection(context))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 

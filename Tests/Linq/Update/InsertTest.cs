@@ -1055,7 +1055,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.SqlCe)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.SqlCe, ProviderName.SapHana)]
 		public void InsertSingleIdentity(string context)
 		{
 			using (var db = GetDataContext(context))

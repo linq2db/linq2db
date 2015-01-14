@@ -145,57 +145,7 @@ namespace LinqToDB.Data
 		{
 			if (info.BeforeExecute)
 			{
-				var sqlProvider = info.DataConnection.DataProvider.CreateSqlBuilder();
-				var sb          = new StringBuilder();
-
-				sb.Append("-- ").Append(info.DataConnection.ConfigurationString);
-
-				if (info.DataConnection.ConfigurationString != info.DataConnection.DataProvider.Name)
-					sb.Append(' ').Append(info.DataConnection.DataProvider.Name);
-
-				if (info.DataConnection.DataProvider.Name != sqlProvider.Name)
-					sb.Append(' ').Append(sqlProvider.Name);
-
-				sb.AppendLine();
-
-				if (info.Command.Parameters != null && info.Command.Parameters.Count > 0)
-				{
-					foreach (IDataParameter p in info.Command.Parameters)
-						sb
-							.Append("-- DECLARE ")
-							.Append(p.ParameterName)
-							.Append(' ')
-							.Append(p.Value == null ? p.DbType.ToString() : p.Value.GetType().Name)
-							.AppendLine();
-
-					sb.AppendLine();
-
-					foreach (IDataParameter p in info.Command.Parameters)
-					{
-						var value = p.Value;
-
-						if (value is string || value is char)
-							value = "'" + value.ToString().Replace("'", "''") + "'";
-
-						sb
-							.Append("-- SET ")
-							.Append(p.ParameterName)
-							.Append(" = ")
-							.Append(value)
-							.AppendLine();
-					}
-
-					sb.AppendLine();
-				}
-
-				sb.AppendLine(info.Command.CommandText);
-
-				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
-					sb.Length--;
-
-				sb.AppendLine();
-
-				WriteTraceLine(sb.ToString(), TraceSwitch.DisplayName);
+				WriteTraceLine(info.SqlText, TraceSwitch.DisplayName);
 			}
 			else if (info.TraceLevel == TraceLevel.Error)
 			{
@@ -280,6 +230,7 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
 			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
+		    LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
 			var section = LinqToDBSection.Instance;
 

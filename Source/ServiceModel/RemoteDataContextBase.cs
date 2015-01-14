@@ -392,22 +392,12 @@ namespace LinqToDB.ServiceModel
 				sb.AppendLine();
 			}
 
-			var cc       = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
-			var commands = new string[cc];
+			var cc = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
 
 			for (var i = 0; i < cc; i++)
 			{
-				sb.Length = 0;
-
 				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
-				commands[i] = sb.ToString();
 			}
-
-			if (!ctx.Query.SelectQuery.IsParameterDependent)
-				ctx.Query.Context = commands;
-
-			foreach (var command in commands)
-				sb.AppendLine(command);
 
 			return sb.ToString();
 		}

@@ -261,6 +261,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table(Name = "Child", IsColumnAttributeRequired = false)]
+		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(MyChildBase))]
+		[InheritanceMapping(Code = 11, Type = typeof(MyChild11))]
+		[InheritanceMapping(Code = 21, Type = typeof(MyChild21))]
+		public class MyChildBase
+		{
+			[Column(IsDiscriminator = true)]
+			public int ChildID { get; set; }
+		}
+
+		public class MyChildBase_11_21 : MyChildBase { }
+		public class MyChild11 : MyChildBase_11_21 { }
+		public class MyChild21 : MyChildBase_11_21 { }
+
+		[Test, DataContextSource]
+		public void InheritanceMappingIssue106Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var childIDs = db.GetTable<MyChildBase_11_21>().AsEnumerable()
+					.Select(ch => ch.ChildID)
+					.OrderBy(x => x)
+					.ToList();
+				Assert.IsTrue(childIDs.SequenceEqual(new [] {11, 21} ));
+			}
+		}
+
 		[Test, NorthwindDataContext]
 		public void ReferenceNavigation(string context)
 		{

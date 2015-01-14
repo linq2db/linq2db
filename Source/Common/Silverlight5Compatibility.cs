@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -79,6 +80,32 @@ namespace System
 			//DataTable GetSchemaTable();
 			bool      NextResult();
 			bool      Read();
+		}
+
+		public enum DataRowVersion
+		{
+			Original = 256,
+			Current  = 512,
+			Proposed = 1024,
+			Default  = 1536,
+		}
+
+		public interface IDataParameter
+		{
+			DbType             DbType        { get; set; }
+			ParameterDirection Direction     { get; set; }
+			bool               IsNullable    { get; }
+			string             ParameterName { get; set; }
+			string             SourceColumn  { get; set; }
+			DataRowVersion     SourceVersion { get; set; }
+			object             Value         { get; set; }
+		}
+
+		public interface IDbDataParameter : IDataParameter
+		{
+			byte Precision { get; set; }
+			byte Scale     { get; set; }
+			int  Size      { get; set; }
 		}
 
 		public enum SqlDbType

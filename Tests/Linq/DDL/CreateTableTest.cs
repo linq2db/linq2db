@@ -2,7 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.DDL
@@ -88,5 +88,66 @@ namespace Tests.DDL
 				table.Drop();
 			}
 		}
+
+		enum FieldType1
+		{
+			[MapValue(1)] Value1,
+			[MapValue(2)] Value2,
+		}
+
+		enum FieldType2
+		{
+			[MapValue("A")]  Value1,
+			[MapValue("AA")] Value2,
+		}
+
+		enum FieldType3 : short
+		{
+			Value1,
+			Value2,
+		}
+
+		class TestEnumTable
+		{
+			public FieldType1 Field1;
+			[Column(DataType=DataType.Int32)]
+			public FieldType1? Field11;
+			public FieldType2? Field2;
+			[Column(DataType=DataType.Char, Length=2)]
+			public FieldType2 Field21;
+			public FieldType3 Field3;
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
+		public void CreateTableWithEnum(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					db.DropTable<TestEnumTable>("#TestTable");
+				}
+				catch (Exception)
+				{
+				}
+
+				var table = db.CreateTable<TestEnumTable>();
+
+				table.Insert(() => new TestEnumTable
+				{
+					Field1  = FieldType1.Value1,
+					Field11 = FieldType1.Value1,
+					Field2  = FieldType2.Value1,
+					Field21 = FieldType2.Value1,
+					Field3  = FieldType3.Value1,
+				});
+
+				var list = table.ToList();
+
+				db.DropTable<TestEnumTable>();
+			}
+		}
+
+
 	}
 }

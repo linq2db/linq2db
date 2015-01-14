@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -203,5 +205,24 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			base.BuildDataType(type, createDbType);
 		}
+
+#if !NETFX_CORE && !SILVERLIGHT
+
+		protected override string GetTypeName(IDbDataParameter parameter)
+		{
+			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
+		}
+
+		protected override string GetUdtTypeName(IDbDataParameter parameter)
+		{
+			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
+		}
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
+		}
+
+#endif
 	}
 }

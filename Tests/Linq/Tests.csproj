@@ -160,7 +160,7 @@
       <HintPath>..\..\packages\Npgsql.2.2.3\lib\net45\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="nunit-console-runner">
-      <HintPath>..\..\packages\NUnit.Runners.2.6.3\tools\lib\nunit-console-runner.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.Runners.2.6.4\tools\lib\nunit-console-runner.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -169,6 +169,11 @@
     <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
       <Private>True</Private>
       <HintPath>..\..\packages\odp.net.x86.112.3.20\lib\net40\Oracle.DataAccess.dll</HintPath>
+    </Reference>
+    <Reference Include="Sap.Data.Hana.v4.5, Version=1.0.80.0, Culture=neutral, PublicKeyToken=0326b8ea63db4bc4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Sybase.AdoNet2.AseClient, Version=2.157.401.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -213,6 +218,7 @@
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
     <Compile Include="DataContextTestCase.cs" />
+    <Compile Include="DataProvider\SapHanaTest.cs" />
     <Compile Include="DataProvider\InformixTest.cs" />
     <Compile Include="DataProvider\DB2Test.cs" />
     <Compile Include="DataProvider\FirebirdTest.cs" />
@@ -225,6 +231,7 @@
     <Compile Include="DDL\CreateTableTest.cs" />
     <Compile Include="Linq\AsyncTest.cs" />
     <Compile Include="Linq\ColumnAliasTest.cs" />
+    <Compile Include="Linq\GenerateExpressionTest.cs" />
     <Compile Include="Linq\IssueTests.cs" />
     <Compile Include="Linq\LoadWithTest.cs" />
     <Compile Include="Linq\EnumMapping.cs" />
@@ -336,6 +343,9 @@
     </Content>
     <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
       <Link>Database\Create Scripts\PostgreSQL.sql</Link>
+    </Content>
+    <Content Include="..\..\Data\Create Scripts\SapHana.sql">
+      <Link>Database\Create Scripts\SapHana.sql</Link>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
       <Link>Database\Create Scripts\SqlCe.sql</Link>

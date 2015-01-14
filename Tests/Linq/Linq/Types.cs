@@ -194,7 +194,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access, ProviderName.SapHana)]
 		public void NewGuid(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -332,7 +332,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
-				ProviderName.SqlServer2000)]
+				ProviderName.SqlServer2000, ProviderName.SapHana)]
 		public void DateTime22(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -353,7 +353,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
-				ProviderName.SqlServer2000)]
+				ProviderName.SqlServer2000, ProviderName.SapHana)]
 		public void DateTime23(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,7 +377,7 @@ namespace Tests.Linq
 		[Test, DataContextSource(
 				ProviderName.SqlCe, ProviderName.Access, ProviderName.SqlServer2005, ProviderName.DB2, ProviderName.Informix,
 				ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.Sybase,
-				ProviderName.SqlServer2000)]
+				ProviderName.SqlServer2000, ProviderName.SapHana)]
 		public void DateTime24(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -508,7 +508,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix //////////////// TODO
+			ProviderName.Informix
 			)]
 		public void TestCultureInfo(string context)
 		{

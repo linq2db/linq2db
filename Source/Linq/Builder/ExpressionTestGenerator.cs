@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (MemberExpression)expr;
 
 						e.Expression.Visit(new Func<Expression,bool>(BuildExpression));
-						_exprBuilder.AppendFormat(".{0}", e.Member.Name);
+						_exprBuilder.AppendFormat(".{0}", EncryptName(e.Member.DeclaringType, e.Member.Name, "P"));
 
 						return false;
 					}
@@ -173,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Parameter :
 					{
 						var e = (ParameterExpression)expr;
-						_exprBuilder.Append(e.Name);
+						_exprBuilder.Append(EncryptName(e.Name, "p"));
 						return false;
 					}
 
@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 						else
 							_exprBuilder.Append(GetTypeName(mi.DeclaringType));
 
-						_exprBuilder.Append(".").Append(mi.Name);
+						_exprBuilder.Append(".").Append(EncryptName(mi.DeclaringType, mi.Name, "M"));
 
 						if (mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
@@ -248,7 +248,10 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						_exprBuilder.Append(expr);
+						if (expr.ToString() == "value(" + expr.Type + ")")
+							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
+						else
+							_exprBuilder.Append(expr);
 
 						return true;
 					}
@@ -257,7 +260,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var le = (LambdaExpression)expr;
 						var ps = le.Parameters
-							.Select(p => (GetTypeName(p.Type) + " " + p.Name).TrimStart())
+							.Select(p => (GetTypeName(p.Type) + " " + EncryptName(p.Name, "p")).TrimStart())
 							.Aggregate("", (p1, p2) => p1 + ", " + p2, p => p.TrimStart(',', ' '));
 
 						_exprBuilder.Append("(").Append(ps).Append(") => ");
@@ -289,7 +292,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (ne.Members.Count == 1)
 							{
-								_exprBuilder.AppendFormat("new {{ {0} = ", ne.Members[0].Name);
+								_exprBuilder.AppendFormat("new {{ {0} = ", EncryptName(ne.Members[0].DeclaringType, ne.Members[0].Name, "P"));
 								ne.Arguments[0].Visit(new Func<Expression,bool>(BuildExpression));
 								_exprBuilder.Append(" }}");
 							}
@@ -301,7 +304,7 @@ namespace LinqToDB.Linq.Builder
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
-									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", ne.Members[i].Name);
+									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", EncryptName(ne.Members[i].DeclaringType, ne.Members[i].Name, "P"));
 									ne.Arguments[i].Visit(new Func<Expression,bool>(BuildExpression));
 
 									if (i + 1 < ne.Members.Count)
@@ -337,7 +340,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								case MemberBindingType.Assignment    :
 									var ma = (MemberAssignment)b;
-									_exprBuilder.AppendFormat("{0} = ", ma.Member.Name);
+									_exprBuilder.AppendFormat("{0} = ", EncryptName(ma.Member.DeclaringType, ma.Member.Name, "P"));
 									ma.Expression.Visit(new Func<Expression,bool>(BuildExpression));
 									break;
 								default:
@@ -493,15 +496,15 @@ namespace LinqToDB.Linq.Builder
 
 		void BuildType(Type type)
 		{
-			if (type.Namespace != null && type.Namespace.StartsWith("System") ||
-				IsAnonymous(type)                                             ||
-				type.AssemblyEx() == GetType().AssemblyEx()                   ||
+			if (!IsUserType(type) ||
+				IsAnonymous(type) ||
+				type.AssemblyEx() == GetType().AssemblyEx() ||
 				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() != type)
 				return;
 
-			var name = type.Name;//.Replace('<', '_').Replace('>', '_').Replace('`', '_').Replace("__f__", "");
-
-			var idx = name.LastIndexOf("`");
+			var isUserName = IsUserType(type);
+			var name       = EncryptName(isUserName, type.Name, "T");
+			var idx        = name.LastIndexOf("`");
 
 			if (idx > 0)
 				name = name.Substring(0, idx);
@@ -520,9 +523,13 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = c.GetCustomAttributesData();
 #endif
-				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + p.Name).ToArray();
-				return "{0}\n\t\tpublic {1}({2})\n\t\t{{\n\t\t\tthrow new NotImplementedException();\n\t\t}}".Args(
-					attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
+				return @"{0}
+		public {1}({2})
+		{{
+			throw new NotImplementedException();
+		}}".Args(
+					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					name,
 					ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t));
 			}).ToList();
@@ -537,10 +544,11 @@ namespace LinqToDB.Linq.Builder
 #else
 				var attrs = f.GetCustomAttributesData();
 #endif
-				return "{0}\n\t\tpublic {1} {2};".Args(
-					attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+				return @"{0}
+		public {1} {2};".Args(
+					attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					GetTypeName(f.FieldType),
-					f.Name);
+					EncryptName(isUserName, f.Name, "P"));
 			})
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
@@ -550,11 +558,11 @@ namespace LinqToDB.Linq.Builder
 #else
 					var attrs = p.GetCustomAttributesData();
 #endif
-					return string.Format(
-						"{0}\n\t\t{3}{1} {2} {{ get; set; }}",
-						attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+					return string.Format(@"{0}
+		{3}{1} {2} {{ get; set; }}",
+						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(p.PropertyType),
-						p.Name,
+						EncryptName(isUserName, p.Name, "P"),
 						type.IsInterfaceEx() ? "" : "public ");
 				}))
 			.Concat(
@@ -565,12 +573,15 @@ namespace LinqToDB.Linq.Builder
 #else
 					var attrs = m.GetCustomAttributesData();
 #endif
-					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + p.Name).ToArray();
-					return string.Format(
-						"{0}\n\t\t{5}{4}{1} {2}({3})\n\t\t{{\n\t\t\tthrow new NotImplementedException();\n\t\t}}",
-						attrs.Count > 0 ? attrs.Select(a => "\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + EncryptName(p.Name, "p")).ToArray();
+					return string.Format(@"{0}
+		{5}{4}{1} {2}({3})
+		{{
+			throw new NotImplementedException();
+		}}",
+						attrs.Count > 0 ? attrs.Select(a => "\r\n\t\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 						GetTypeName(m.ReturnType),
-						m.Name,
+						EncryptName(isUserName, m.Name, "M"),
 						ps.Length == 0 ? "" : ps.Aggregate((s,t) => s + ", " + t),
 						m.IsStatic   ? "static "   :
 						m.IsVirtual  ? "virtual "  :
@@ -606,17 +617,17 @@ namespace {0}
 	}}
 }}
 ",
-					type.Namespace,
+					EncryptName(isUserName, type.Namespace, "T"),
 					type.IsInterfaceEx() ? "interface" : type.IsClassEx() ? "class" : "struct",
 					name,
 					type.IsGenericTypeEx() ? GetTypeNames(type.GetGenericArgumentsEx(), ",") : null,
-					ctors.Count == 0 ? "" : ctors.Aggregate((s,t) => s + "\n" + t),
+					ctors.Count == 0 ? "" : ctors.Aggregate((s,t) => s + "\r\n" + t),
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
 					type.IsPublicEx() ? "public " : "",
 					type.IsAbstractEx() && !type.IsInterfaceEx() ? "abstract " : "",
-					attrs.Count > 0 ? attrs.Select(a => "\n\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
+					attrs.Count > 0 ? attrs.Select(a => "\r\n\t" + a.ToString()).Aggregate((a1,a2) => a1 + a2) : "",
 					members.Length > 0 ?
-						(ctors.Count != 0 ? "\n" : "") + members.Aggregate((f1,f2) => f1 + "\n" + f2) :
+						(ctors.Count != 0 ? "\r\n" : "") + members.Aggregate((f1,f2) => f1 + "\r\n" + f2) :
 						"");
 			}
 		}
@@ -632,6 +643,46 @@ namespace {0}
 		bool IsAnonymous(Type type)
 		{
 			return type.Name.StartsWith("<>f__AnonymousType");
+		}
+
+		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
+
+		string EncryptName(Type type, string name, string prefix)
+		{
+			return IsUserType(type) ? EncryptName(name, prefix) : name;
+		}
+
+		string EncryptName(bool isUserType, string name, string prefix)
+		{
+			return isUserType ? EncryptName(name, prefix) : name;
+		}
+
+		string EncryptName(string name, string prefix)
+		{
+			var oldNames = name.Split('.');
+			var newNames = new string[oldNames.Length];
+
+			for (var i = 0; i < oldNames.Length; i++)
+			{
+				string encryptedName;
+
+				if (_nameDic.TryGetValue(prefix + oldNames[i], out encryptedName))
+					newNames[i] = encryptedName;
+				else
+					newNames[i] = _nameDic[prefix + oldNames[i]] = prefix + _nameDic.Count;
+			}
+
+			return string.Join(".", newNames);
+		}
+
+		static public List<string> SystemNamespaces = new List<string>
+		{
+			"System", "LinqToDB", "Microsoft"
+		};
+
+		bool IsUserType(Type type)
+		{
+			return type.Namespace == null || SystemNamespaces.All(ns => type.Namespace != ns && !type.Namespace.StartsWith(ns + '.'));
 		}
 
 		string GetTypeName(Type type)
@@ -688,7 +739,7 @@ namespace {0}
 			if (type.Namespace == "System")
 				return type.Name;
 
-			return type.ToString();
+			return EncryptName(type, type.ToString(), "T");
 		}
 
 		readonly HashSet<object> _usedMembers = new HashSet<object>();
@@ -916,7 +967,7 @@ namespace Tests.UserTests
 }}
 ",
 					_typeBuilder,
-					expr,
+					_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
 					_exprBuilder);
 			}
 			catch(Exception ex)

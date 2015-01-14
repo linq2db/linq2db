@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -119,20 +120,29 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
+
 		public override object Convert(object value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (FirebirdConfiguration.QuoteIdentifiers)
+					if (value != null && IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None)
 					{
-						string name = value.ToString();
+						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
-							return value;
+							return name;
 
-						return '"' + name + '"';
+						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+							name.StartsWith("_") ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + name + '"';
 					}
 
 					break;
@@ -232,5 +242,15 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.FbDbType.ToString();
+		}
+
+#endif
 	}
 }

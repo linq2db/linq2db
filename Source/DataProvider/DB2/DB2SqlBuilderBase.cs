@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -204,5 +205,15 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.DB2Type.ToString();
+		}
+
+#endif
 	}
 }

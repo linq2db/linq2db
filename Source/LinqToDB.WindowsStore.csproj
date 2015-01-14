@@ -126,12 +126,14 @@
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlBuilder.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlBuilder.cs" />

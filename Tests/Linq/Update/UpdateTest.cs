@@ -228,8 +228,16 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.Informix, 
+			ProviderName.SqlCe, 
+			ProviderName.DB2, 
+			ProviderName.Firebird, 
+			ProviderName.Oracle,
+			ProviderName.PostgreSQL, 
+			ProviderName.MySql, 
+			ProviderName.SQLite, 
+			ProviderName.Access, 
+			ProviderName.SapHana)]
 		public void Update9(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -259,8 +267,16 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.SqlCe, ProviderName.DB2, ProviderName.Firebird, ProviderName.Oracle,
-			ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.Informix, 
+			ProviderName.SqlCe, 
+			ProviderName.DB2, 
+			ProviderName.Firebird, 
+			ProviderName.Oracle,
+			ProviderName.PostgreSQL, 
+			ProviderName.MySql, 
+			ProviderName.SQLite, 
+			ProviderName.Access, 
+			ProviderName.SapHana)]
 		public void Update10(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -465,7 +481,15 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite)]
+			ProviderName.Access, 
+			ProviderName.DB2, 
+			ProviderName.Firebird, 
+			ProviderName.Informix, 
+			ProviderName.Oracle, 
+			ProviderName.PostgreSQL, 
+			ProviderName.SqlCe, 
+			ProviderName.SQLite, 
+			ProviderName.SapHana)]
 		public void UpdateAssociation5(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -551,7 +575,8 @@ namespace Tests.Update
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite,
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000
+			ProviderName.SqlServer2000,
+			ProviderName.SapHana
 			)]
 		public void UpdateTop(string context)
 		{

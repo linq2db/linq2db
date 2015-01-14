@@ -474,14 +474,11 @@ namespace LinqToDB.Extensions
 			}
 		}
 
-		static readonly Dictionary<Type, object[]> _typeAttributesInternal = new Dictionary<Type, object[]>(10);
+		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ConcurrentDictionary<Type, object[]>();
 
 		static void GetAttributesTreeInternal(List<object> list, Type type)
 		{
-			object[] attrs;
-
-			if (!_typeAttributesInternal.TryGetValue(type, out attrs))
-				_typeAttributesInternal.Add(type, attrs = type.GetCustomAttributesEx(false));
+			var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributesEx(false));
 
 			list.AddRange(attrs);
 
@@ -1124,7 +1121,7 @@ namespace LinqToDB.Extensions
 
 						foreach (var mi in map.InterfaceMethods)
 							if ((getter2 == null || (getter2.Name == mi.Name && getter2.DeclaringType == mi.DeclaringType)) &&
-							    (getter1 == null || (getter1.Name == mi.Name && getter1.DeclaringType == mi.DeclaringType)))
+								(getter1 == null || (getter1.Name == mi.Name && getter1.DeclaringType == mi.DeclaringType)))
 							{
 								return true;
 							}

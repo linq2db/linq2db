@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
@@ -115,6 +113,7 @@ namespace Tests
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
+			ProviderName.SapHana,
 			"SqlAzure.2012"
 		};
 
@@ -152,65 +151,6 @@ namespace Tests
 			public NorthwindDataContext()
 				: base(DatabaseTestCase.GetDataContextType(false, null, new [] { "Northwind" }), "TestCases")
 			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-		[Obsolete]
-		public class DataContextsAttribute : ValuesAttribute
-		{
-			public DataContextsAttribute(params string[] except)
-			{
-				Except = except;
-			}
-
-			const bool IncludeLinqService = true;
-
-			public string[] Except             { get; set; }
-			public string[] Include            { get; set; }
-			public bool     ExcludeLinqService { get; set; }
-
-			public override IEnumerable GetData(ParameterInfo parameter)
-			{
-				if (Include != null)
-				{
-					var list = Include.Intersect(
-						IncludeLinqService ? 
-							UserProviders.Select(p => p.Name).Concat(UserProviders.Select(p => p.Name + ".LinqService")) :
-							UserProviders.Select(p => p.Name)).
-						ToArray();
-
-					return list;
-				}
-
-				var providers = new List<string>();
-
-				foreach (var providerName in Providers)
-				{
-					if (Except != null && Except.Contains(providerName))
-						continue;
-
-					if (!UserProviders.Select(p => p.Name).Contains(providerName))
-						continue;
-
-					providers.Add(providerName);
-
-					if (IncludeLinqService && !ExcludeLinqService)
-					{
-						providers.Add(providerName + ".LinqService");
-					}
-				}
-
-				return providers.ToArray();
-			}
-		}
-
-		[Obsolete]
-		public class IncludeDataContextsAttribute : DataContextsAttribute
-		{
-			public IncludeDataContextsAttribute(params string[] include)
-			{
-				Include = include;
 			}
 		}
 

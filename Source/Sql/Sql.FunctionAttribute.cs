@@ -47,6 +47,7 @@ namespace LinqToDB
 			public string Name             { get; set; }
 			public bool   ServerSideOnly   { get; set; }
 			public bool   PreferServerSide { get; set; }
+			public bool   InlineParameters { get; set; }
 			public int[]  ArgIndices       { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)

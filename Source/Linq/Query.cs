@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq
 {
@@ -966,12 +967,6 @@ namespace LinqToDB.Linq
 			sqlQuery.CreateTable.StatementHeader = statementHeader;
 			sqlQuery.CreateTable.StatementFooter = statementFooter;
 			sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
-
-			foreach (var field in sqlTable.Fields.Values)
-			{
-				if (field.DataType == DataType.Undefined)
-					field.DataType = dataContextInfo.MappingSchema.GetDataType(field.SystemType);
-			}
 
 			var query = new Query<int>
 			{
