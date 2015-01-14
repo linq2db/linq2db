@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var column in ed.Columns)
 			{
-				Add(new SqlField
+				var field = new SqlField
 				{
 					SystemType       = column.MemberType,
 					Name             = column.MemberName,
@@ -90,7 +90,27 @@ namespace LinqToDB.SqlQuery
 					Precision        = column.Precision,
 					Scale            = column.Scale,
 					ColumnDescriptor = column,
-				});
+				};
+
+				Add(field);
+
+				if (field.DataType == DataType.Undefined)
+				{
+					field.DataType = mappingSchema.GetDataType(field.SystemType);
+
+					if (field.DataType == DataType.Undefined)
+					{
+						int? length;
+						var  canBeNull = field.Nullable;
+
+						field.DataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull, out length);
+
+						if (field.Length == null)
+							field.Length = length;
+
+						field.Nullable = canBeNull;
+					}
+				}
 			}
 
 			var identityField = GetIdentityField();

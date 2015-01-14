@@ -820,6 +820,76 @@ namespace LinqToDB.Mapping
 			_schemas[0].SetDataType(type, dataType);
 		}
 
+		public DataType GetUnderlyingDataType(Type type, ref bool canBeNull, out int? length)
+		{
+			length = null;
+
+			var underlyingType = type.ToNullableUnderlying();
+
+			if (underlyingType.IsEnumEx())
+			{
+				var attrs =
+				(
+					from f in underlyingType.GetFieldsEx()
+					where (f.Attributes & EnumField) == EnumField
+					from attr in GetAttributes<MapValueAttribute>(f, a => a.Configuration).Select(attr => attr)
+					orderby attr.IsDefault ? 0 : 1
+					select attr
+				).ToList();
+
+				if (attrs.Count == 0)
+				{
+					underlyingType = Enum.GetUnderlyingType(underlyingType);
+				}
+				else
+				{
+					var  minLen    = 0;
+					Type valueType = null;
+
+					foreach (var attr in attrs)
+					{
+						if (attr.Value == null)
+						{
+							canBeNull = true;
+						}
+						else
+						{
+							if (valueType == null)
+								valueType = attr.Value.GetType();
+
+							if (attr.Value is string)
+							{
+								var len = attr.Value.ToString().Length;
+
+								if (length == null)
+								{
+									length = minLen = len;
+								}
+								else
+								{
+									if (minLen > len) minLen = len;
+									if (length < len) length = len;
+								}
+							}
+						}
+					}
+
+					var dt = valueType == null ? DataType.Undefined : GetDataType(valueType);
+
+					if (dt == DataType.NVarChar && minLen == length)
+						dt = DataType.NChar;
+
+					return dt;
+				}
+			}
+
+			if (underlyingType != type)
+				return GetDataType(underlyingType);
+
+			return DataType.Undefined;
+		}
+
+
 		#endregion
 
 		#region GetMapValues
