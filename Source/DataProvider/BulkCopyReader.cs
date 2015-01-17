@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider
 			_columns      = columns;
 			_enumerator   = collection.GetEnumerator();
 			_columnTypes  = _columns
-				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType) : c.DataType)
+				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType)
 				.ToArray();
 		}
 

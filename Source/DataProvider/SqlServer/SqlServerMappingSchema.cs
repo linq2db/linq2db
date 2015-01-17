@@ -5,15 +5,13 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
-
 	using Expressions;
-
 	using Mapping;
+	using SqlQuery;
 
 	public class SqlServerMappingSchema : MappingSchema
 	{
@@ -72,6 +70,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), int.MaxValue));
 		}
 
 		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();

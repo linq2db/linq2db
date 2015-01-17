@@ -4,6 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Access
 {
 	using Mapping;
+	using SqlQuery;
 
 	public class AccessMappingSchema : MappingSchema
 	{
@@ -18,6 +19,8 @@ namespace LinqToDB.DataProvider.Access
 			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.Append("'").Append(((Guid)v).ToString("B")).Append("'"));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)

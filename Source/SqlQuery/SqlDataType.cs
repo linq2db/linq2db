@@ -121,6 +121,23 @@ namespace LinqToDB.SqlQuery
 		public int?     Precision { get; private set; }
 		public int?     Scale     { get; private set; }
 
+		public static readonly SqlDataType Undefined = new SqlDataType(DataType.Undefined, typeof(object), null, null, null);
+
+		public bool IsCharDataType
+		{
+			get
+			{
+				switch (DataType)
+				{
+					case DataType.Char     :
+					case DataType.NChar    :
+					case DataType.VarChar  :
+					case DataType.NVarChar : return true;
+					default                : return false;
+				}
+			}
+		}
+
 		#endregion
 
 		#region Static Members

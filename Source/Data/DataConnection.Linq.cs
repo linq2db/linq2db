@@ -145,7 +145,7 @@ namespace LinqToDB.Data
 				dataType = MappingSchema.GetDataType(
 					parm.SystemType == typeof(object) && parm.Value != null ?
 						parm.Value.GetType() :
-						parm.SystemType);
+						parm.SystemType).DataType;
 			}
 
 			DataProvider.SetParameter(p, name, dataType, parm.Value);

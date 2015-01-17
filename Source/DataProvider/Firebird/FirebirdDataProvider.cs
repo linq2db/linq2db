@@ -100,7 +100,6 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(parameter, dataType);
 		}
 
-
 		#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(

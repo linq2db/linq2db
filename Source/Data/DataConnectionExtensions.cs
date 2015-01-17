@@ -578,7 +578,7 @@ namespace LinqToDB.Data
 				var value    = parameter.Value;
 
 				if (dataType == DataType.Undefined && value != null)
-					dataType = dataConnection.MappingSchema.GetDataType(value.GetType());
+					dataType = dataConnection.MappingSchema.GetDataType(value.GetType()).DataType;
 
 				if (parameter.Direction != null) p.Direction = parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      = parameter.Size.     Value;
@@ -717,7 +717,7 @@ namespace LinqToDB.Data
 											Expression.Constant(m.ColumnName)),
 										Expression.Bind(
 											_dataParameterDataType,
-											Expression.Constant(dataConnection.MappingSchema.GetDataType(memberType))),
+											Expression.Constant(dataConnection.MappingSchema.GetDataType(memberType).DataType)),
 										Expression.Bind(
 											_dataParameterValue,
 											Expression.Convert(valueGetter, typeof(object))));

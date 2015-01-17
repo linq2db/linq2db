@@ -14,6 +14,7 @@ namespace Tests.DDL
 		{
 			public int       ID;
 			public string    Field1;
+			public string    Field2;
 			public DateTime? CreatedOn;
 		}
 
