@@ -12,8 +12,10 @@ namespace Tests.Update
 	[TestFixture]
 	public class MergeTest : TestBase
 	{
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
-		public void Merge1(string context)
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
+			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void Merge(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -21,12 +23,14 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2008)]
-		public void Merge2(string context)
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithDelete(string context)
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Merge(false, db.Types2);
+				db.Merge(true, db.Types2);
 			}
 		}
 	}

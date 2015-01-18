@@ -282,6 +282,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				source);
 		}
 
+		#endregion
+
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		{
+			return new SqlServerMerge().Merge(dataConnection, delete, source);
+		}
 
 		#endregion
 	}

@@ -217,5 +217,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		#region Extensions
+
+		public static void SetIdentityInsert<T>(this DataConnection dataConnection, ITable<T> table, bool isOn)
+		{
+			dataConnection.Execute("SET IDENTITY_INSERT ");
+		}
+
+		#endregion
 	}
 }

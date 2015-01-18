@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Data;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -430,5 +427,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		{
+			if (delete)
+				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
+
+			return new OracleMerge().Merge(dataConnection, delete, source);
+		}
+
+		#endregion
 	}
 }

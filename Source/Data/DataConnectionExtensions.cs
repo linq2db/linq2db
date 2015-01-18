@@ -778,7 +778,7 @@ namespace LinqToDB.Data
 
 		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source)
 		{
-			return Merge(dataConnection, true, source);
+			return Merge(dataConnection, false, source);
 		}
 
 		#endregion
