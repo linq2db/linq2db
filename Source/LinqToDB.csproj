@@ -58,6 +58,7 @@
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
     <Compile Include="DataProvider\Access\AccessBulkCopy.cs" />
+    <Compile Include="DataProvider\BasicMerge.cs" />
     <Compile Include="DataProvider\BasicBulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2BulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSchemaProvider.cs" />
@@ -124,7 +125,7 @@
     <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaSqlOptimizer.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaTools.cs" />
-    <Compile Include="DataProvider\SapHana\ViewWithParametersTableSchema.cs" />	
+    <Compile Include="DataProvider\SapHana\ViewWithParametersTableSchema.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeBulkCopy.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteBulkCopy.cs" />

@@ -768,5 +768,19 @@ namespace LinqToDB.Data
 		}
 
 		#endregion
+
+		#region Merge
+
+		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		{
+			return dataConnection.DataProvider.Merge(dataConnection, delete, source);
+		}
+
+		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source)
+		{
+			return Merge(dataConnection, true, source);
+		}
+
+		#endregion
 	}
 }
