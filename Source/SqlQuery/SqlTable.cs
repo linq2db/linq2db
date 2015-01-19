@@ -6,8 +6,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Reflection;
-
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource

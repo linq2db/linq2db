@@ -9,9 +9,9 @@ namespace LinqToDB.Linq.Builder
 	{
 		public BuildInfo(IBuildContext parent, Expression expression, SelectQuery selectQuery)
 		{
-			Parent     = parent;
-			Expression = expression;
-			SelectQuery   = selectQuery;
+			Parent      = parent;
+			Expression  = expression;
+			SelectQuery = selectQuery;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)

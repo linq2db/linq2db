@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -24,10 +25,67 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
 				{
-					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
+					var countSelect = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall);
+					
+					if (countSelect.From.Tables.Count == 1 && countSelect.From.Tables[0].Source is SelectQuery)
 					{
-						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
-					};
+						var sq = (SelectQuery)countSelect.From.Tables[0].Source;
+
+						if (sq.From.Tables.Count == 1 && sq.From.Tables[0].Source is SqlTable)
+						{
+							var ct = (SqlTable)sq.From.Tables[0].Source;
+
+							var newQuery = sequence.SelectQuery.Clone();
+
+							if (newQuery.From.Tables.Count > 0 && newQuery.From.Tables[0].Source is SelectQuery)
+							{
+								var csq = (SelectQuery)newQuery.From.Tables[0].Source;
+
+								if (csq.From.Tables.Count == 1 && csq.From.Tables[0].Source is SqlTable)
+								{
+									var cct = (SqlTable)csq.From.Tables[0].Source;
+
+									if (ct.ObjectType == cct.ObjectType)
+									{
+										foreach (var cond in countSelect.Where.SearchCondition.Conditions)
+										{
+											var newCond = new QueryVisitor().Convert(cond, ex =>
+											{
+												if (ex.ElementType == QueryElementType.Column)
+												{
+													var c = (SelectQuery.Column)ex;
+													var f = c.Expression as SqlField;
+
+													if (f != null && f.Table == ct)
+													{
+														var cf = cct.Fields.Values.FirstOrDefault(fld => fld.Name == f.Name);
+
+														if (cf != null)
+														{
+															var cc = csq.Select.Columns[csq.Select.Add(cf)];
+															return cc;
+														}
+													}
+												}
+
+												return ex;
+											});
+
+											newQuery.Where.SearchCondition.Conditions.Add(newCond);
+										}
+
+										newQuery.Select.Columns.Clear();
+										newQuery.ParentSelect = countSelect.ParentSelect;
+										countSelect = newQuery;
+
+										//((JoinBuilder.GroupJoinSubQueryContext)sequence).Join.IsWeak = true;
+									}
+								}
+							}
+						}
+					}
+
+					var ctx = new CountContext(buildInfo.Parent, sequence, returnType) { SelectQuery = countSelect };
 
 					ctx.Sql        = ctx.SelectQuery;
 					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
