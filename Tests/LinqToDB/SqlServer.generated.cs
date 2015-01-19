@@ -137,7 +137,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Categories_BackReference
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, IsBackReference=true)]
 		public List<Product> Products { get; set; }
 
 		#endregion
@@ -184,13 +184,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, IsBackReference=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
@@ -217,13 +217,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo")]
 		public CustomerDemographic FK_CustomerCustomerDemo { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo_Customers")]
 		public Customer Customer { get; set; }
 
 		#endregion
@@ -240,7 +240,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, IsBackReference=true)]
 		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; }
 
 		#endregion
@@ -273,25 +273,25 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Employees_Employees")]
 		public Employee FK_Employees_Employee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, IsBackReference=true)]
 		public List<Employee> FK_Employees_Employees_BackReferences { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, IsBackReference=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
@@ -308,13 +308,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Employees")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Territories")]
 		public Territory Territory { get; set; }
 
 		#endregion
@@ -375,25 +375,25 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, KeyName="FK_Orders_Customers")]
 		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Orders_Employees")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, KeyName="FK_Orders_Shippers")]
 		public Shipper Shipper { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
 		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
@@ -413,13 +413,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, KeyName="FK_Order_Details_Orders")]
 		public Order OrderDetailsOrder { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, KeyName="FK_Order_Details_Products")]
 		public Product OrderDetailsProduct { get; set; }
 
 		#endregion
@@ -496,19 +496,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, KeyName="FK_Products_Categories")]
 		public Category Category { get; set; }
 
 		/// <summary>
 		/// FK_Products_Suppliers
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, KeyName="FK_Products_Suppliers")]
 		public Supplier Supplier { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true)]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true, IsBackReference=true)]
 		public List<OrderDetail> OrderDetails { get; set; }
 
 		#endregion
@@ -563,7 +563,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region_BackReference
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, IsBackReference=true)]
 		public List<Territory> Territories { get; set; }
 
 		#endregion
@@ -601,7 +601,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
+		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, IsBackReference=true)]
 		public List<Order> Orders { get; set; }
 
 		#endregion
@@ -646,7 +646,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Suppliers_BackReference
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, IsBackReference=true)]
 		public List<Product> Products { get; set; }
 
 		#endregion
@@ -664,13 +664,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, KeyName="FK_Territories_Region")]
 		public Region Region { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, IsBackReference=true)]
 		public List<EmployeeTerritory> EmployeeTerritories { get; set; }
 
 		#endregion
@@ -1094,7 +1094,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1122,7 +1122,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, IsBackReference=true)]
 		public IndexTable2 Patient2 { get; set; }
 
 		#endregion
@@ -1139,7 +1139,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, KeyName="FK_Patient2_IndexTable")]
 		public IndexTable Patient2IndexTable { get; set; }
 
 		#endregion
@@ -1207,7 +1207,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1227,13 +1227,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public Doctor Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public Patient Patient { get; set; }
 
 		#endregion
@@ -1263,106 +1263,6 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id, DataType.Int32));
-		}
-
-		#endregion
-
-		#region Person_SelectByKey
-
-		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
-				new DataParameter("@id", @id, DataType.Int32));
-		}
-
-		#endregion
-
-		#region Person_SelectAll
-
-		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
-		}
-
-		#endregion
-
-		#region Person_SelectByName
-
-		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region Person_SelectListByName
-
-		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region Person_Insert
-
-		public partial class Person_InsertResult
-		{
-			public int? PersonID { get; set; }
-		}
-
-		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
-		{
-			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char));
-		}
-
-		#endregion
-
 		#region Person_Insert_OutputParameter
 
 		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
@@ -1381,6 +1281,21 @@ namespace DataModel
 
 		#endregion
 
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int?   intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
+		#endregion
+
 		#region Person_Update
 
 		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
@@ -1391,6 +1306,22 @@ namespace DataModel
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
 				new DataParameter("@Gender",     @Gender,     DataType.Char));
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
 		}
 
 		#endregion
@@ -1420,6 +1351,16 @@ namespace DataModel
 		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
 		{
 			return dataConnection.QueryProc<Patient_SelectAllResult>("[TestData]..[Patient_SelectAll]");
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
+				new DataParameter("@id", @id, DataType.Int32));
 		}
 
 		#endregion
@@ -1524,6 +1465,65 @@ namespace DataModel
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[TestData]..[DuplicateColumnNames]");
+		}
+
+		#endregion
+
+		#region Person_SelectByKey
+
+		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
+				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		#endregion
+
+		#region Person_SelectAll
+
+		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
+		}
+
+		#endregion
+
+		#region Person_SelectByName
+
+		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+		}
+
+		#endregion
+
+		#region Person_SelectListByName
+
+		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+		}
+
+		#endregion
+
+		#region Person_Insert
+
+		public partial class Person_InsertResult
+		{
+			public int? PersonID { get; set; }
+		}
+
+		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		{
+			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
+				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     DataType.Char));
 		}
 
 		#endregion

@@ -138,7 +138,7 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="FK_DOCTOR_PERSON")]
 		public PERSON PERSON { get; set; }
 
 		#endregion
@@ -189,10 +189,10 @@ namespace FirebirdDataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_5819
+		/// INTEG_6335
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false)]
-		public PERSON INTEG5819 { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=false, KeyName="INTEG_6335")]
+		public PERSON INTEG6335 { get; set; }
 
 		#endregion
 	}
@@ -211,14 +211,14 @@ namespace FirebirdDataContext
 		/// <summary>
 		/// FK_DOCTOR_PERSON_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true)]
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
 		public IEnumerable<DOCTOR> DOCTORs { get; set; }
 
 		/// <summary>
-		/// INTEG_5819_BackReference
+		/// INTEG_6335_BackReference
 		/// </summary>
-		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true)]
-		public IEnumerable<PATIENT> INTEG5819 { get; set; }
+		[Association(ThisKey="PERSONID", OtherKey="PERSONID", CanBeNull=true, IsBackReference=true)]
+		public IEnumerable<PATIENT> INTEG6335 { get; set; }
 
 		#endregion
 	}

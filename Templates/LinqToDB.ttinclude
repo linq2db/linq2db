@@ -289,6 +289,16 @@ void GenerateTypesFromMetadata()
 					aa.Parameters.Add("OtherKey=\""  + string.Join(", ", (from c in key.OtherColumns select c.MemberName).ToArray()) + "\"");
 					aa.Parameters.Add("CanBeNull=" + (key.CanBeNull ? "true" : "false"));
 
+					if (key.BackReference != null)
+					{
+						if (!string.IsNullOrEmpty(key.KeyName))
+							aa.Parameters.Add("KeyName=\"" + key.KeyName + "\"");
+					}
+					else
+					{
+						aa.Parameters.Add("IsBackReference=true");
+					}
+
 					key.Attributes.Add(aa);
 
 					SetPropertyValue(key, "IsNotifying", true);

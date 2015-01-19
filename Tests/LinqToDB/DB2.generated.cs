@@ -95,7 +95,7 @@ namespace DB2DataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -135,7 +135,7 @@ namespace DB2DataContext
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE_BackReference
 		/// </summary>
-		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
+		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true, IsBackReference=true)]
 		public IEnumerable<SLAVETABLE> SLAVETABLEs { get; set; }
 
 		#endregion
@@ -169,7 +169,7 @@ namespace DB2DataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public IEnumerable<Doctor> Doctors { get; set; }
 
 		#endregion
@@ -198,7 +198,7 @@ namespace DB2DataContext
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE
 		/// </summary>
-		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false)]
+		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false, KeyName="FK_SLAVETABLE_MASTERTABLE")]
 		public MASTERTABLE MASTERTABLE { get; set; }
 
 		#endregion
