@@ -984,21 +984,21 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void JoinSubquery(string context)
+		public void JoinSubQuery(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Parent
 					where p.ParentID > 0
 					join c in Child on p.ParentID equals c.ParentID into t
-					//select new { p.ParentID, count = t.Count() }
-					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Count() }
+					select new { p.ParentID, count = t.Count() }
+					//select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Count() }
 					,
 					from p in db.Parent
 					where p.ParentID > 0
 					join c in db.Child on p.ParentID equals c.ParentID into t
-					//select new { p.ParentID, count = t.Count() }
-					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Count() }
+					select new { p.ParentID, count = t.Count() }
+					//select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Count() }
 					);
 		}
 	}

@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			var context  = new SubQueryContext(outerContext);
-			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext, methodCall) : new SubQueryContext(innerContext);
+			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
 			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
 			var sql  = context.SelectQuery;
@@ -66,50 +66,6 @@ namespace LinqToDB.Linq.Builder
 			var outerKeyContext = new ExpressionContext(buildInfo.Parent, context,      outerKeyLambda);
 			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext, innerKeyLambda);
 
-			builder.ReplaceParent(outerKeyContext, outerParent);
-			builder.ReplaceParent(innerKeyContext, innerParent);
-
-			if (isGroup)
-			{
-				var inner = (GroupJoinSubQueryContext)innerContext;
-
-				inner.Join              = join.JoinedTable;
-				inner.GetSubSelectQuery = () =>
-					GetSubSelectQuery(builder, methodCall, buildInfo, sql, join,
-						innerKeyLambda, outerKeySelector, innerKeySelector, outerKeyContext, innerKeyContext);
-
-				return new GroupJoinContext(
-					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
-			}
-
-			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
-#if DEBUG
-			{
-				MethodCall = methodCall
-			}
-#endif
-				;
-		}
-
-		SelectQuery GetSubSelectQuery(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			SelectQuery sql,
-			SelectQuery.FromClause.Join join,
-			LambdaExpression innerKeyLambda,
-			Expression outerKeySelector,
-			Expression innerKeySelector,
-			IBuildContext outerKeyContext, IBuildContext innerKeyContext)
-		{
-			var subQueryContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-
-			subQueryContext = new SubQueryContext(subQueryContext);
-
-			var subQueryParent     = subQueryContext.Parent;
-			var subQueryKeyContext = new ExpressionContext(buildInfo.Parent, subQueryContext, innerKeyLambda);
-
-			// Process SubQuery.
-			//
-			var subQuerySql = ((SubQueryContext) subQueryContext).SelectQuery;
-
 			// Make join and where for the counter.
 			//
 			if (outerKeySelector.NodeType == ExpressionType.New)
@@ -122,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = new1.Arguments[i];
 					var arg2 = new2.Arguments[i];
 
-					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2, subQueryKeyContext, subQuerySql);
+					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2);
 				}
 			}
 			else if (outerKeySelector.NodeType == ExpressionType.MemberInit)
@@ -138,12 +94,91 @@ namespace LinqToDB.Linq.Builder
 					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
 					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
 
-					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2, subQueryKeyContext, subQuerySql);
+					BuildJoin(builder, join, outerKeyContext, arg1, innerKeyContext, arg2);
 				}
 			}
 			else
 			{
-				BuildJoin(builder, join, outerKeyContext, outerKeySelector, innerKeyContext, innerKeySelector, subQueryKeyContext, subQuerySql);
+				BuildJoin(builder, join, outerKeyContext, outerKeySelector, innerKeyContext, innerKeySelector);
+			}
+
+			builder.ReplaceParent(outerKeyContext, outerParent);
+			builder.ReplaceParent(innerKeyContext, innerParent);
+
+			if (isGroup)
+			{
+				var inner = (GroupJoinSubQueryContext)innerContext;
+
+				inner.Join              = join.JoinedTable;
+				inner.GetSubQueryContext = () =>
+					GetSubQueryContext(builder, methodCall, buildInfo, sql,
+						innerKeyLambda, outerKeySelector, innerKeySelector, outerKeyContext);
+
+				return new GroupJoinContext(
+					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
+			}
+
+			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
+#if DEBUG
+			{
+				MethodCall = methodCall
+			}
+#endif
+				;
+		}
+
+		IBuildContext GetSubQueryContext(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+			SelectQuery sql,
+			LambdaExpression innerKeyLambda,
+			Expression outerKeySelector,
+			Expression innerKeySelector,
+			IBuildContext outerKeyContext)
+		{
+			var subQueryContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+
+			subQueryContext = new SubQueryContext(subQueryContext);
+
+			var subQueryParent     = subQueryContext.Parent;
+			var subQueryKeyContext = new ExpressionContext(buildInfo.Parent, subQueryContext, innerKeyLambda);
+
+			// Process SubQuery.
+			//
+			var subQuerySql = ((SubQueryContext)subQueryContext).SelectQuery;
+
+			// Make join and where for the counter.
+			//
+			if (outerKeySelector.NodeType == ExpressionType.New)
+			{
+				var new1 = (NewExpression)outerKeySelector;
+				var new2 = (NewExpression)innerKeySelector;
+
+				for (var i = 0; i < new1.Arguments.Count; i++)
+				{
+					var arg1 = new1.Arguments[i];
+					var arg2 = new2.Arguments[i];
+
+					BuildSubQueryJoin(builder, outerKeyContext, arg1, arg2, subQueryKeyContext, subQuerySql);
+				}
+			}
+			else if (outerKeySelector.NodeType == ExpressionType.MemberInit)
+			{
+				var mi1 = (MemberInitExpression)outerKeySelector;
+				var mi2 = (MemberInitExpression)innerKeySelector;
+
+				for (var i = 0; i < mi1.Bindings.Count; i++)
+				{
+					if (mi1.Bindings[i].Member != mi2.Bindings[i].Member)
+						throw new LinqException("List of member inits does not match for entity type '{0}'.".Args(outerKeySelector.Type));
+
+					var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
+					var arg2 = ((MemberAssignment)mi2.Bindings[i]).Expression;
+
+					BuildSubQueryJoin(builder, outerKeyContext, arg1, arg2, subQueryKeyContext, subQuerySql);
+				}
+			}
+			else
+			{
+				BuildSubQueryJoin(builder, outerKeyContext, outerKeySelector, innerKeySelector, subQueryKeyContext, subQuerySql);
 			}
 
 			builder.ReplaceParent(subQueryKeyContext, subQueryParent);
@@ -151,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 			subQuerySql.ParentSelect = sql;
 			subQuerySql.Select.Columns.Clear();
 
-			return subQuerySql;
+			return subQueryContext;
 		}
 
 		protected override SequenceConvertInfo Convert(
@@ -161,11 +196,10 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		static void BuildJoin(
-			ExpressionBuilder           builder,
+			ExpressionBuilder builder,
 			SelectQuery.FromClause.Join join,
-			IBuildContext outerKeyContext, Expression  outerKeySelector,
-			IBuildContext innerKeyContext, Expression  innerKeySelector,
-			IBuildContext countKeyContext, SelectQuery countSelect)
+			IBuildContext outerKeyContext, Expression outerKeySelector,
+			IBuildContext innerKeyContext, Expression innerKeySelector)
 		{
 			var predicate = builder.ConvertObjectComparison(
 				ExpressionType.Equal,
@@ -183,23 +217,30 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			join.JoinedTable.Condition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+		}
 
-			predicate = builder.ConvertObjectComparison(
+		static void BuildSubQueryJoin(
+			ExpressionBuilder           builder,
+			IBuildContext outerKeyContext, Expression  outerKeySelector,
+			Expression    innerKeySelector,
+			IBuildContext subQueryKeyContext, SelectQuery subQuerySelect)
+		{
+			var predicate = builder.ConvertObjectComparison(
 				ExpressionType.Equal,
 				outerKeyContext, outerKeySelector,
-				countKeyContext, innerKeySelector);
+				subQueryKeyContext, innerKeySelector);
 
 			if (predicate == null)
 			{
 				predicate = new SelectQuery.Predicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SelectQuery.Predicate.Operator.Equal,
-					builder.ConvertToSql(countKeyContext, innerKeySelector));
+					builder.ConvertToSql(subQueryKeyContext, innerKeySelector));
 
 				predicate = builder.Convert(outerKeyContext, predicate);
 			}
 
-			countSelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+			subQuerySelect.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 		}
 
 		class InnerKeyContext : ExpressionContext
@@ -421,24 +462,30 @@ namespace LinqToDB.Linq.Builder
 
 		internal class GroupJoinSubQueryContext : SubQueryContext
 		{
-			readonly MethodCallExpression _methodCall;
-
 			public SelectQuery.JoinedTable Join;
 			public SelectQuery             CounterSelect;
 			public GroupJoinContext        GroupJoin;
+			public Func<IBuildContext>     GetSubQueryContext;
 
-			public GroupJoinSubQueryContext(IBuildContext subQuery, MethodCallExpression methodCall)
+			public GroupJoinSubQueryContext(IBuildContext subQuery)
 				: base(subQuery)
 			{
-				_methodCall = methodCall;
 			}
-
-			public Func<SelectQuery> GetSubSelectQuery;
 
 			public override IBuildContext GetContext(Expression expression, int level, BuildInfo buildInfo)
 			{
 				if (expression == null)
+				{
+					if (buildInfo.CreateSubQuery)
+					{
+						Join.IsWeak = true;
+						var queryBuild = GetSubQueryContext();
+						//queryBuild.Parent = Context.Parent;
+						return queryBuild;
+					}
+
 					return this;
+				}
 
 				return base.GetContext(expression, level, buildInfo);
 			}
@@ -451,7 +498,7 @@ namespace LinqToDB.Linq.Builder
 				if (expression != null && ReferenceEquals(expression, _counterExpression))
 				{
 					if (CounterSelect == null)
-						CounterSelect = GetSubSelectQuery();
+						CounterSelect = GetSubQueryContext().SelectQuery;
 
 					return _counterInfo ?? (_counterInfo = new[]
 					{
@@ -481,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 				_counterExpression = expr;
 
-				return CounterSelect ?? (CounterSelect = GetSubSelectQuery());
+				return CounterSelect ?? (CounterSelect = GetSubQueryContext().SelectQuery);
 			}
 		}
 	}
