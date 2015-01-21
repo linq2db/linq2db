@@ -490,45 +490,12 @@ namespace LinqToDB.Linq.Builder
 				return base.GetContext(expression, level, buildInfo);
 			}
 
-			Expression _counterExpression;
-			SqlInfo[]  _counterInfo;
-
-			public override SqlInfo[] ConvertToIndex(Expression expression, int level, ConvertFlags flags)
-			{
-				if (expression != null && ReferenceEquals(expression, _counterExpression))
-				{
-					if (CounterSelect == null)
-						CounterSelect = GetSubQueryContext().SelectQuery;
-
-					return _counterInfo ?? (_counterInfo = new[]
-					{
-						new SqlInfo
-						{
-							Query = CounterSelect.ParentSelect,
-							Index = CounterSelect.ParentSelect.Select.Add(CounterSelect),
-							Sql   = CounterSelect
-						}
-					});
-				}
-
-				return base.ConvertToIndex(expression, level, flags);
-			}
-
 			public override IsExpressionResult IsExpression(Expression expression, int level, RequestFor testFlag)
 			{
 				if (testFlag == RequestFor.GroupJoin && expression == null)
 					return IsExpressionResult.True;
 
 				return base.IsExpression(expression, level, testFlag);
-			}
-
-			public SelectQuery GetCounter(Expression expr)
-			{
-				Join.IsWeak = true;
-
-				_counterExpression = expr;
-
-				return CounterSelect ?? (CounterSelect = GetSubQueryContext().SelectQuery);
 			}
 		}
 	}

@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.AcceptsTakeAsParameter    = false;
 			SqlProviderFlags.IsSkipSupported           = false;
 			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsCountSubQuerySupported  = false;
+			//SqlProviderFlags.IsCountSubQuerySupported  = false;
 			SqlProviderFlags.CanCombineParameters      = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy      = true;
 

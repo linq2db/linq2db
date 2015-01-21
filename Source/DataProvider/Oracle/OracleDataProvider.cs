@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsCountSubQuerySupported    = false;
+			//SqlProviderFlags.IsCountSubQuerySupported    = false;
 			SqlProviderFlags.IsIdentityParameterRequired = true;
 
 			SqlProviderFlags.MaxInListValuesCount = 1000;
