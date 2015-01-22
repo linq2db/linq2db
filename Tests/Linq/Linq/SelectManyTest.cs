@@ -628,40 +628,29 @@ namespace Tests.Linq
 						.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }));
 		}
 
-		void Foo(Expression<Func<object[],object>> func)
+		[Test, DataContextSource]
+		public void Test157(string context)
 		{
-			/*
-				ParameterExpression ps;
-				Expression.Lambda<Func<object[],object>>(
-					Expression.Add(
-						Expression.Convert(
-							Expression.ArrayIndex(
-								ps = Expression.Parameter(typeof(object[]), "p"),
-								Expression.Constant(0, typeof(int))),
-							typeof(string)),
-						Expression.Convert(
-							Expression.Convert(
-								Expression.ArrayIndex(
-									ps,
-									Expression.Constant(1, typeof(int))),
-								typeof(int)),
-							typeof(object)),
-						(MethodInfo)methodof(string.Concat)),
-					new ParameterExpression[] { ps });
-			*/
-		}
+			using (var db = GetDataContext(context))
+			{
+				var q2 =
+					from p in db.Parent
+					join c in db.GrandChild on p.ParentID equals c.ParentID
+					where p.ParentID == 1
+					select p;
 
-		Dictionary<string,string> _dic = new Dictionary<string,string>();
+				q2 = q2.Distinct();
 
-		void Bar()
-		{
-			Foo(p => (string)p[0] + (int)p[1]);
-		}
+				var q3 =
+					from p in q2
+					from g in p.GrandChildren
+					let r = g.Child
+					where
+						p.ParentID == g.ParentID
+					select r;
 
-		//[Test]
-		public void Test___()
-		{
-			Bar();
+				q3.ToList();
+			}
 		}
 	}
 }

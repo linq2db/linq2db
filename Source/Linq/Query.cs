@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq
 {
@@ -1156,6 +1155,8 @@ namespace LinqToDB.Linq
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
+					// IT : #157 MapperExpression.Compile()
+					//
 					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}
 

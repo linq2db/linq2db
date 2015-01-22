@@ -146,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 								if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
 									return new TransformInfo(BuildMultipleQuery(context, expr));
 
-								return new TransformInfo(GetSubQuery(context, ce).BuildExpression(null, 0));
+								return new TransformInfo(GetSubQueryExpression(context, ce));
 							}
 
 							if (IsServerSideOnly(expr) || PreferServerSide(expr))
@@ -176,6 +176,41 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return newExpr;
+		}
+
+		class SubQueryExpressionInfo
+		{
+			public MethodCallExpression Method;
+			public Expression           Expression;
+		}
+
+		readonly Dictionary<IBuildContext,List<SubQueryExpressionInfo>> _builContextCache = new Dictionary<IBuildContext,List<SubQueryExpressionInfo>>();
+
+		// IT : #157 3rd candidate to cache
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr)
+		{
+			if (context is ExpressionContext)
+			{
+				var ctx = (ExpressionContext)context;
+				context = ctx.Sequence;
+			}
+
+			List<SubQueryExpressionInfo> sbi;
+
+			if (!_builContextCache.TryGetValue(context, out sbi))
+				_builContextCache[context] = sbi = new List<SubQueryExpressionInfo>();
+
+			foreach (var item in sbi)
+			{
+				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>()))
+					return item.Expression;
+			}
+
+			var ex = GetSubQuery(context, expr).BuildExpression(null, 0);
+
+			sbi.Add(new SubQueryExpressionInfo { Method = expr, Expression = ex });
+
+			return ex;
 		}
 
 		static bool EnforceServerSide(IBuildContext context)

@@ -5,6 +5,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.DataProvider;
 
 namespace Tests.Linq
 {
@@ -446,6 +447,46 @@ namespace Tests.Linq
 				AreEqual(
 					from p1 in    Parent select p1.ParentTest,
 					from p1 in db.Parent select p1.ParentTest);
+		}
+
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2012)]
+		public void MultipleUse(string context)
+		{
+			// IT : #157 current working test
+			using (var db = new TestDataConnection(context))
+			{
+				var q = db.Child
+					.Select(g => new
+					{
+						g.ChildID,
+						a =
+						(
+							from c in db.Child
+							where c.ChildID == g.ChildID
+							select new { c, c.Parent }
+						).FirstOrDefault()
+					})
+					.Where(s => s.a != null)
+					.Select(s => new
+					{
+						s.ChildID,
+						s.a.c,
+						s.a.Parent
+					})
+					.Select(s => new
+					{
+						p1 = s.c.ParentID,
+						c1 = s.c.ChildID,
+						p2 = s.Parent.ParentID,
+						v1 = s.Parent.Value1
+					});
+
+				var list = q.ToList();
+
+				var idx = db.LastQuery.IndexOf("OUTER APPLY");
+
+				Assert.That(db.LastQuery.IndexOf("OUTER APPLY", idx + 1), Is.EqualTo(-1));
+			}
 		}
 	}
 }
