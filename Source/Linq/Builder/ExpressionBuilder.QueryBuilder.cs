@@ -58,12 +58,33 @@ namespace LinqToDB.Linq.Builder
 									true);
 							}
 
-							var ctx = GetContext(context, expr);
+							var ctx = GetContext(context, ma);
 
 							if (ctx != null)
-								return new TransformInfo(ctx.BuildExpression(expr, 0));
+								return new TransformInfo(ctx.BuildExpression(ma, 0));
+
+							// IT : MemberAccess
 
 							var ex = ma.Expression;
+
+							while (ex is MemberExpression)
+								ex = ((MemberExpression)ex).Expression;
+
+							if (ex is MethodCallExpression)
+							{
+								var ce = (MethodCallExpression)ex;
+
+								if (IsSubQuery(context, ce))
+								{
+									if (!IsMultipleQuery(ce))
+									{
+										var info = GetSubQueryContext(context, ce);
+										//return new TransformInfo(info.Context.BuildExpression(ma, 0));
+									}
+								}
+							}
+
+							ex = ma.Expression;
 
 							if (ex != null && ex.NodeType == ExpressionType.Constant)
 							{
@@ -143,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (IsSubQuery(context, ce))
 							{
-								if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
+								if (IsMultipleQuery(ce))
 									return new TransformInfo(BuildMultipleQuery(context, expr));
 
 								return new TransformInfo(GetSubQueryExpression(context, ce));
@@ -178,39 +199,47 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
-		class SubQueryExpressionInfo
+		static bool IsMultipleQuery(MethodCallExpression ce)
+		{
+			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
+		}
+
+		class SubQueryContextInfo
 		{
 			public MethodCallExpression Method;
+			public IBuildContext        Context;
 			public Expression           Expression;
 		}
 
-		readonly Dictionary<IBuildContext,List<SubQueryExpressionInfo>> _builContextCache = new Dictionary<IBuildContext,List<SubQueryExpressionInfo>>();
+		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new Dictionary<IBuildContext,List<SubQueryContextInfo>>();
 
-		// IT : #157 3rd candidate to cache
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr)
+		// IT : #157 cache
+		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (context is ExpressionContext)
-			{
-				var ctx = (ExpressionContext)context;
-				context = ctx.Sequence;
-			}
+			List<SubQueryContextInfo> sbi;
 
-			List<SubQueryExpressionInfo> sbi;
-
-			if (!_builContextCache.TryGetValue(context, out sbi))
-				_builContextCache[context] = sbi = new List<SubQueryExpressionInfo>();
+			if (!_buildContextCache.TryGetValue(context, out sbi))
+				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
 
 			foreach (var item in sbi)
 			{
 				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>()))
-					return item.Expression;
+					return item;
 			}
 
-			var ex = GetSubQuery(context, expr).BuildExpression(null, 0);
+			var ctx = GetSubQuery(context, expr);
 
-			sbi.Add(new SubQueryExpressionInfo { Method = expr, Expression = ex });
+			var info = new SubQueryContextInfo { Method = expr, Context = ctx };
 
-			return ex;
+			sbi.Add(info);
+
+			return info;
+		}
+
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr)
+		{
+			var info = GetSubQueryContext(context, expr);
+			return info.Expression ?? (info.Expression = info.Context.BuildExpression(null, 0));
 		}
 
 		static bool EnforceServerSide(IBuildContext context)
