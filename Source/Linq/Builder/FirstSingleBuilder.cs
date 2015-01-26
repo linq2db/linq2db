@@ -105,6 +105,33 @@ namespace LinqToDB.Linq.Builder
 				return new object[0].First();
 			}
 
+			bool _isJoinCreated = false;
+
+			void CreateJoin()
+			{
+				if (!_isJoinCreated)
+				{
+					_isJoinCreated = true;
+
+					var join = SelectQuery.OuterApply(SelectQuery);
+
+					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				}
+			}
+
+			int _checkNullIndex = -1;
+
+			int GetCheckNullIndex()
+			{
+				if (_checkNullIndex < 0)
+				{
+					_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
+					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
+				}
+
+				return _checkNullIndex;
+			}
+
 			public override Expression BuildExpression(Expression expression, int level)
 			{
 				if (expression == null)
@@ -113,14 +140,9 @@ namespace LinqToDB.Linq.Builder
 						Parent.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{
-						var join = SelectQuery.OuterApply(SelectQuery);
-
-						Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						CreateJoin();
 
 						var expr = Sequence.BuildExpression(expression, level);
-						var idx  = SelectQuery.Select.Add(new SqlValue(1));
-
-						idx = ConvertToParentIndex(idx, this);
 
 						Expression defaultValue;
 
@@ -137,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Call(
 								ExpressionBuilder.DataReaderParam,
 								ReflectionHelper.DataReader.IsDBNull,
-								Expression.Constant(idx)),
+								Expression.Constant(GetCheckNullIndex())),
 							defaultValue,
 							expr);
 
@@ -148,6 +170,47 @@ namespace LinqToDB.Linq.Builder
 						return Builder.BuildMultipleQuery(Parent, _methodCall);
 
 					return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
+				}
+				else if (level == 0)
+				{
+					// IT : First.BuildExpression
+
+					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
+						Parent.SelectQuery.GroupBy.IsEmpty &&
+						Parent.SelectQuery.From.Tables.Count > 0)
+					{
+						CreateJoin();
+
+						var expr = Sequence.BuildExpression(expression, level + 1);
+
+						Expression defaultValue;
+
+						if (_methodCall.Method.Name.EndsWith("OrDefault"))
+							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
+						else
+							defaultValue = Expression.Convert(
+								Expression.Call(
+									null,
+									MemberHelper.MethodOf(() => SequenceException())),
+								expr.Type);
+
+						expr = Expression.Condition(
+							Expression.Call(
+								ExpressionBuilder.DataReaderParam,
+								ReflectionHelper.DataReader.IsDBNull,
+								Expression.Constant(GetCheckNullIndex())),
+							defaultValue,
+							expr);
+
+						return expr;
+					}
+
+					return null;
+
+					//if (Sequence.IsExpression(expression, level, RequestFor.Object).Result)
+					//	return Builder.BuildMultipleQuery(Parent, _methodCall);
+
+					//return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 				}
 
 				throw new NotImplementedException();

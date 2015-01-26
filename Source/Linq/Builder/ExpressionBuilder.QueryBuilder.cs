@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 							if (ctx != null)
 								return new TransformInfo(ctx.BuildExpression(ma, 0));
 
-							// IT : MemberAccess
+							// IT : #157 MemberAccess
 
 							var ex = ma.Expression;
 
@@ -79,7 +79,11 @@ namespace LinqToDB.Linq.Builder
 									if (!IsMultipleQuery(ce))
 									{
 										var info = GetSubQueryContext(context, ce);
-										//return new TransformInfo(info.Context.BuildExpression(ma, 0));
+										var par  = Expression.Parameter(ex.Type);
+										var bex  = info.Context.BuildExpression(ma.Transform(e => e == ex ? par : e), 0);
+
+										if (bex != null)
+											return new TransformInfo(bex);
 									}
 								}
 							}
