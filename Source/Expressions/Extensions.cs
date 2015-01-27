@@ -1131,7 +1131,7 @@ namespace LinqToDB.Expressions
 						};
 
 						var e  = (MemberInitExpression)expr;
-						var ne = Transform(e.NewExpression, func);
+						var ne = Transform (e.NewExpression, func);
 						var bb = Transform2(e.Bindings,      modify);
 
 						return ne != e.NewExpression || bb != e.Bindings ?

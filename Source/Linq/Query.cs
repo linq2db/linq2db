@@ -1155,7 +1155,7 @@ namespace LinqToDB.Linq
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
-					// IT : #157 MapperExpression.Compile()
+					// IT : # MapperExpression.Compile()
 					//
 					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}

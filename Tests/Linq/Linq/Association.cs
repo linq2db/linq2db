@@ -452,7 +452,6 @@ namespace Tests.Linq
 		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2012)]
 		public void MultipleUse(string context)
 		{
-			// IT : #157 current working test
 			using (var db = new TestDataConnection(context))
 			{
 				var q = db.Child

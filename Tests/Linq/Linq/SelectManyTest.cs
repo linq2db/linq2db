@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using LinqToDB;
 
@@ -628,28 +626,241 @@ namespace Tests.Linq
 						.SelectMany(ch => ch.p.GrandChildren, (ch, t) => new { t, ch }));
 		}
 
-		[Test, DataContextSource]
-		public void Test157(string context)
+		[Test, NorthwindDataContext]
+		public void Test157_1(string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = new NorthwindDB())
 			{
-				var q2 =
-					from p in db.Parent
-					join c in db.GrandChild on p.ParentID equals c.ParentID
-					where p.ParentID == 1
-					select p;
+				var q = db.Employee
+					.SelectMany(
+						query => db.Employee.Where(join => (query.ReportsTo == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = bind
+						})
+					.SelectMany(
+						query => db.Order.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							Order             = bind
+						})
+					.SelectMany(
+						query => db.OrderDetail.Where(join => (query.Order.OrderID == join.OrderID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							Order = new Northwind.Order
+							{
+								OrderID      = root.Order.OrderID,
+								EmployeeID   = root.Order.EmployeeID,
+								OrderDate    = root.Order.OrderDate,
+								RequiredDate = root.Order.RequiredDate,
+								ShippedDate  = root.Order.ShippedDate,
+								ShipVia      = root.Order.ShipVia,
+								Freight      = root.Order.Freight,
+								Shipper      = root.Order.Shipper,
+								Employee     = root.Order.Employee,
+								Customer     = root.Order.Customer,
+								OrderDetail  = bind
+							}
+						})
+					.SelectMany(
+						query => db.EmployeeTerritory.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = bind
+						})
+					.SelectMany(
+						query => db.Territory.Where(join => (query.EmployeeTerritory.TerritoryID == join.TerritoryID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = new Northwind.EmployeeTerritory
+							{
+								EmployeeID = root.EmployeeTerritory.EmployeeID,
+								Employee   = root.EmployeeTerritory.Employee,
+								Territory  = bind
+							}
+						})
+					.SelectMany(
+						query => db.Region.Where(join => (query.EmployeeTerritory.Territory.RegionID == join.RegionID)).DefaultIfEmpty(),
+						(root, bind) => new Northwind.Employee
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = new Northwind.EmployeeTerritory
+							{
+								EmployeeID = root.EmployeeTerritory.EmployeeID,
+								Employee   = root.EmployeeTerritory.Employee,
+								Territory  = new Northwind.Territory
+								{
+									EmployeeTerritory = root.EmployeeTerritory.Territory.EmployeeTerritory,
+									RegionID          = root.EmployeeTerritory.Territory.RegionID,
+									Region            = bind
+								}
+							}
+						})
+					.Where(e => e.EmployeeID == 5)
+					;
 
-				q2 = q2.Distinct();
+				q.ToList();
+			}
+		}
 
-				var q3 =
-					from p in q2
-					from g in p.GrandChildren
-					let r = g.Child
-					where
-						p.ParentID == g.ParentID
-					select r;
+		[Test, NorthwindDataContext]
+		public void Test157_2(string context)
+		{
+			using (var db = new NorthwindDB())
+			{
+				var q = db.Employee
+					.SelectMany(
+						query => db.Employee.Where(join => (query.ReportsTo == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = bind
+						})
+					.SelectMany(
+						query => db.Order.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							Order             = bind
+						})
+					.SelectMany(
+						query => db.OrderDetail.Where(join => (query.Order.OrderID == join.OrderID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							EmployeeTerritory = root.EmployeeTerritory,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							Order = new
+							{
+								OrderID      = root.Order.OrderID,
+								EmployeeID   = root.Order.EmployeeID,
+								OrderDate    = root.Order.OrderDate,
+								RequiredDate = root.Order.RequiredDate,
+								ShippedDate  = root.Order.ShippedDate,
+								ShipVia      = root.Order.ShipVia,
+								Freight      = root.Order.Freight,
+								Shipper      = root.Order.Shipper,
+								Employee     = root.Order.Employee,
+								Customer     = root.Order.Customer,
+								OrderDetail  = bind
+							}
+						})
+					.SelectMany(
+						query => db.EmployeeTerritory.Where(join => (query.EmployeeID == join.EmployeeID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = bind
+						})
+					.SelectMany(
+						query => db.Territory.Where(join => (query.EmployeeTerritory.TerritoryID == join.TerritoryID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = new
+							{
+								EmployeeID = root.EmployeeTerritory.EmployeeID,
+								Employee   = root.EmployeeTerritory.Employee,
+								Territory  = bind
+							}
+						})
+					.SelectMany(
+						query => db.Region.Where(join => (query.EmployeeTerritory.Territory.RegionID == join.RegionID)).DefaultIfEmpty(),
+						(root, bind) => new
+						{
+							Employee2         = root.Employee2,
+							Order             = root.Order,
+							EmployeeID        = root.EmployeeID,
+							BirthDate         = root.BirthDate,
+							HireDate          = root.HireDate,
+							ReportsTo         = root.ReportsTo,
+							ReportsToEmployee = root.ReportsToEmployee,
+							EmployeeTerritory = new
+							{
+								EmployeeID = root.EmployeeTerritory.EmployeeID,
+								Employee   = root.EmployeeTerritory.Employee,
+								Territory  = new
+								{
+									EmployeeTerritory = root.EmployeeTerritory.Territory.EmployeeTerritory,
+									RegionID          = root.EmployeeTerritory.Territory.RegionID,
+									Region            = bind
+								}
+							}
+						})
+					.Where(e => e.EmployeeID == 5)
+					;
 
-				q3.ToList();
+				q.ToList();
 			}
 		}
 	}

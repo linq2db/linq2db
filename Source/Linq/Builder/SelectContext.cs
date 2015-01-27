@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -70,6 +71,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
+		ParameterExpression _rootExpression;
+
 		public virtual Expression BuildExpression(Expression expression, int level)
 		{
 			{
@@ -85,7 +88,19 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (expression == null)
-				return Builder.BuildExpression(this, Body);
+			{
+				if (_rootExpression == null)
+				{
+					var expr = Builder.BuildExpression(this, Body);
+
+					if (Builder.IsBlockDisable)
+						return expr;
+
+					_rootExpression = Builder.BuildVariable(expr);
+				}
+
+				return _rootExpression;
+			}
 
 			var levelExpression = expression.GetLevelExpression(level);
 

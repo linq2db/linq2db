@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				if (expression == null)
+				if (expression == null || level == 0)
 				{
 					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent.SelectQuery.GroupBy.IsEmpty &&
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						CreateJoin();
 
-						var expr = Sequence.BuildExpression(expression, level);
+						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1);
 
 						Expression defaultValue;
 
@@ -166,51 +166,15 @@ namespace LinqToDB.Linq.Builder
 						return expr;
 					}
 
-					if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
-						return Builder.BuildMultipleQuery(Parent, _methodCall);
-
-					return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
-				}
-				else if (level == 0)
-				{
-					// IT : First.BuildExpression
-
-					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent.SelectQuery.GroupBy.IsEmpty &&
-						Parent.SelectQuery.From.Tables.Count > 0)
+					if (expression == null)
 					{
-						CreateJoin();
+						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
+							return Builder.BuildMultipleQuery(Parent, _methodCall);
 
-						var expr = Sequence.BuildExpression(expression, level + 1);
-
-						Expression defaultValue;
-
-						if (_methodCall.Method.Name.EndsWith("OrDefault"))
-							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
-						else
-							defaultValue = Expression.Convert(
-								Expression.Call(
-									null,
-									MemberHelper.MethodOf(() => SequenceException())),
-								expr.Type);
-
-						expr = Expression.Condition(
-							Expression.Call(
-								ExpressionBuilder.DataReaderParam,
-								ReflectionHelper.DataReader.IsDBNull,
-								Expression.Constant(GetCheckNullIndex())),
-							defaultValue,
-							expr);
-
-						return expr;
+						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 					}
 
 					return null;
-
-					//if (Sequence.IsExpression(expression, level, RequestFor.Object).Result)
-					//	return Builder.BuildMultipleQuery(Parent, _methodCall);
-
-					//return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
 				}
 
 				throw new NotImplementedException();

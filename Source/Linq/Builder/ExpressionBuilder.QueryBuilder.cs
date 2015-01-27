@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -62,8 +63,6 @@ namespace LinqToDB.Linq.Builder
 
 							if (ctx != null)
 								return new TransformInfo(ctx.BuildExpression(ma, 0));
-
-							// IT : #157 MemberAccess
 
 							var ex = ma.Expression;
 
@@ -217,7 +216,6 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new Dictionary<IBuildContext,List<SubQueryContextInfo>>();
 
-		// IT : #157 cache
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
 			List<SubQueryContextInfo> sbi;
@@ -358,6 +356,21 @@ namespace LinqToDB.Linq.Builder
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 
 			return expression;
+		}
+
+		public ParameterExpression BuildVariable(Expression expr, string name = null)
+		{
+			if (name == null)
+				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
+
+			var variable = Expression.Variable(
+				expr.Type,
+				name.IndexOf('<') >= 0 ? null : name);
+
+			BlockVariables.  Add(variable);
+			BlockExpressions.Add(Expression.Assign(variable, expr));
+
+			return variable;
 		}
 
 		public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
