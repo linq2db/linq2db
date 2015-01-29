@@ -1297,7 +1297,8 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
+							// IT : #148 Exception
+							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject == null ? tableContext.ParentAssociation.ObjectType : parentObject.Type), tableContext.Association.ThisKey[i]);
 							Expression otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 
 							if (otherProp.Type != thisProp.Type)

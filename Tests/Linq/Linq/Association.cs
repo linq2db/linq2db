@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -485,6 +486,54 @@ namespace Tests.Linq
 				var idx = db.LastQuery.IndexOf("OUTER APPLY");
 
 				Assert.That(db.LastQuery.IndexOf("OUTER APPLY", idx + 1), Is.EqualTo(-1));
+			}
+		}
+
+
+		[Table]
+		public class Note
+		{
+			[PrimaryKey, Identity, Column("Id")]
+			public int Id { get; set; }
+
+			[Association(ThisKey = "Id", OtherKey = "NoteID")]
+			public List<Message> Messages;
+		}
+
+		[Table]
+		public class Message
+		{
+			[PrimaryKey, Identity, Column("Id")]
+			public int Id { get; set; }
+
+			[Column("fNoteID")]
+			public int NoteID { get; set; }
+		}
+
+		// IT : #148 test
+		[Test, DataContextSource]
+		public void Issue148Test(string context)
+		{
+			try
+			{
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+				using (var db = GetDataContext(context))
+				{
+					var q =
+						from n in db.Parent
+						select new
+						{
+							n.ParentID,
+							n.Children,
+						};
+
+					q.ToList();
+				}
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			}
 		}
 	}
