@@ -771,14 +771,28 @@ namespace LinqToDB.Data
 
 		#region Merge
 
-		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public static int Merge<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate)
+			where T : class 
 		{
-			return dataConnection.DataProvider.Merge(dataConnection, delete, source);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate));
+		}
+
+		public static int Merge<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source)
+			where T : class 
+		{
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source);
+		}
+
+		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source)
+			where T : class 
+		{
+			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source);
 		}
 
 		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source)
+			where T : class 
 		{
-			return Merge(dataConnection, false, source);
+			return dataConnection.DataProvider.Merge(dataConnection, null, false, source);
 		}
 
 		#endregion

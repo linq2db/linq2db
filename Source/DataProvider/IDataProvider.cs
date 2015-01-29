@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 
 		BulkCopyRowsCopied BulkCopy<T>           (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
-		int                Merge<T>              (DataConnection dataConnection, bool delete,             IEnumerable<T> source);
+		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+			where T : class;
 	}
 }

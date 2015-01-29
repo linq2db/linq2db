@@ -351,9 +351,10 @@ namespace LinqToDB.DataProvider
 
 		#region Merge
 
-		public virtual int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+			where T : class
 		{
-			return new BasicMerge().Merge(dataConnection, delete, source);
+			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source);
 		}
 
 		#endregion
