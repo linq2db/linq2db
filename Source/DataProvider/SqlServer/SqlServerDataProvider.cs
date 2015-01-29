@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -286,9 +287,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Merge
 
-		public override int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
 		{
-			return new SqlServerMerge().Merge(dataConnection, delete, source);
+			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source);
 		}
 
 		#endregion

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
-
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider
@@ -25,15 +26,17 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
-		public int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+			where T : class
 		{
-			if (!BuildCommand(dataConnection, delete, source))
+			if (!BuildCommand(dataConnection, predicate, delete, source))
 				return 0;
 
 			return Execute(dataConnection);
 		}
 
-		protected virtual bool BuildCommand<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		protected virtual bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
@@ -143,10 +146,30 @@ namespace LinqToDB.DataProvider
 
 			if (delete)
 			{
+				var predicate = "";
+
+				if (deletePredicate != null)
+				{
+					var q   = dataConnection.GetTable<T>().Where(deletePredicate);
+					var sql = q.ToString();
+					var idx = sql.IndexOf("WHERE");
+					var end = idx;
+
+					while (char.IsWhiteSpace(sql, --end));
+
+					var start = end;
+
+					while (!char.IsWhiteSpace(sql, --start));
+
+					var alias = sql.Substring(start + 1, end - start);
+
+					predicate = "AND " + sql.Substring(idx + "WHERE".Length).Replace(alias, "Target");
+				}
+
 				StringBuilder
 					.AppendLine()
 					.AppendLine("-- delete rows that are in the target but not in the sourse")
-					.AppendLine("WHEN NOT MATCHED BY Source THEN")
+					.AppendLine("WHEN NOT MATCHED BY Source {0}THEN".Args(predicate))
 					.AppendLine("\tDELETE")
 					;
 			}

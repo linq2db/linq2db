@@ -429,12 +429,12 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#region Merge
 
-		public override int Merge<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
 		{
 			if (delete)
 				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
 
-			return new OracleMerge().Merge(dataConnection, delete, source);
+			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source);
 		}
 
 		#endregion

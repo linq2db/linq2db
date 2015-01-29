@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -12,9 +13,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			ByTargetText = "BY Target ";
 		}
 
-		protected override bool BuildCommand<T>(DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
 		{
-			if (!base.BuildCommand(dataConnection, delete, source))
+			if (!base.BuildCommand(dataConnection, deletePredicate, delete, source))
 				return false;
 
 			StringBuilder.AppendLine(";");
