@@ -172,18 +172,14 @@ namespace LinqToDB.DataProvider
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;
-                //length cannot be null(DBNull) or 0
-			    row[SchemaTableColumn.ColumnSize]              = columnDescriptor.Length.HasValue && columnDescriptor.Length.Value > 0
-			                                                        ? columnDescriptor.Length.Value
-			                                                        : 0x7FFFFFFF;
-			    if (columnDescriptor.Precision.HasValue)
-			    {
-			        row[SchemaTableColumn.NumericPrecision]    = (short)columnDescriptor.Precision.Value;
-			    }
-			    if (columnDescriptor.Scale.HasValue)
-			    {
-			        row[SchemaTableColumn.NumericScale]        = (short)columnDescriptor.Scale.Value;
-			    }
+				//length cannot be null(DBNull) or 0
+				row[SchemaTableColumn.ColumnSize]              =
+					columnDescriptor.Length.HasValue && columnDescriptor.Length.Value > 0 ?
+						columnDescriptor.Length.Value : 0x7FFFFFFF;
+				if (columnDescriptor.Precision.HasValue)
+					row[SchemaTableColumn.NumericPrecision] = (short)columnDescriptor.Precision.Value;
+				if (columnDescriptor.Scale.HasValue)
+					row[SchemaTableColumn.NumericScale]     = (short)columnDescriptor.Scale.Value;
 
 				table.Rows.Add(row);
 			}
