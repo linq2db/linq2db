@@ -489,27 +489,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-		[Table]
-		public class Note
-		{
-			[PrimaryKey, Identity, Column("Id")]
-			public int Id { get; set; }
-
-			[Association(ThisKey = "Id", OtherKey = "NoteID")]
-			public List<Message> Messages;
-		}
-
-		[Table]
-		public class Message
-		{
-			[PrimaryKey, Identity, Column("Id")]
-			public int Id { get; set; }
-
-			[Column("fNoteID")]
-			public int NoteID { get; set; }
-		}
-
 		// IT : #148 test
 		[Test, DataContextSource]
 		public void Issue148Test(string context)
@@ -525,10 +504,15 @@ namespace Tests.Linq
 						select new
 						{
 							n.ParentID,
-							n.Children,
+							Children = n.Children.ToList(),
+							//Children = n.Children//.Select(t => t).ToList(),
+							//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
 						};
 
-					q.ToList();
+					var list = q.ToList();
+
+					Assert.That(list.Count, Is.GreaterThan(0));
+					Assert.That(list[0].Children,    Is.Not.Null);
 				}
 			}
 			finally

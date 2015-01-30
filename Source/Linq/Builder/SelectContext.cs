@@ -587,7 +587,37 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsExpression
 
+		Expression _lastAssociationExpression;
+		int        _lastAssociationLevel = -1;
+
 		public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+		{
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					if (expression == _lastAssociationExpression && level == _lastAssociationLevel)
+						return IsExpressionResult.False;
+
+					_lastAssociationExpression = expression;
+					_lastAssociationLevel      = level;
+
+					break;
+			}
+
+			var res = IsExpressionInternal(expression, level, requestFlag);
+
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					_lastAssociationExpression = null;
+					_lastAssociationLevel      = -1;
+					break;
+			}
+
+			return res;
+		}
+
+		public IsExpressionResult IsExpressionInternal(Expression expression, int level, RequestFor requestFlag)
 		{
 			switch (requestFlag)
 			{

@@ -62,7 +62,25 @@ namespace LinqToDB.Linq.Builder
 							var ctx = GetContext(context, ma);
 
 							if (ctx != null)
+							{
+								// IT : #148 Fix.
+								if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+								{
+									var res = ctx.IsExpression(ma, 0, RequestFor.Association);
+
+									if (res.Result)
+									{
+										var table = (TableBuilder.AssociatedTableContext)res.Context;
+										if (table.IsList)
+										{
+											var mexpr = GetMultipleQueryExpression(context, ma, new HashSet<ParameterExpression>());
+											return new TransformInfo(BuildExpression(context, mexpr));
+										}
+									}
+								}
+
 								return new TransformInfo(ctx.BuildExpression(ma, 0));
+							}
 
 							var ex = ma.Expression;
 
@@ -450,12 +468,10 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
-		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
+		Expression GetMultipleQueryExpression(IBuildContext context, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
-			var parameters = new HashSet<ParameterExpression>();
 
 			expression.Visit(e =>
 			{
@@ -466,7 +482,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Convert associations.
 			//
-			expression = expression.Transform(e =>
+			return expression.Transform(e =>
 			{
 				switch (e.NodeType)
 				{
@@ -486,9 +502,12 @@ namespace LinqToDB.Linq.Builder
 
 									if (table.IsList)
 									{
+										// IT : #148 IsList implementation.
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
 										var tbl    = Activator.CreateInstance(ttype);
-										var method = _whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);
+										var method = e == expression ?
+											MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType) :
+											_whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);
 
 										var me = (MemberExpression)e;
 										var op = Expression.Parameter(table.ObjectType, "t");
@@ -509,7 +528,16 @@ namespace LinqToDB.Linq.Builder
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
 
-										return Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+										var expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+
+										if (e == expression)
+										{
+											expr = Expression.Call(
+												MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList()).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType),
+												expr);
+										}
+
+										return expr;
 									}
 								}
 							}
@@ -520,6 +548,13 @@ namespace LinqToDB.Linq.Builder
 
 				return e;
 			});
+		}
+
+		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
+		{
+			var parameters = new HashSet<ParameterExpression>();
+
+			expression = GetMultipleQueryExpression(context, expression, parameters);
 
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();
