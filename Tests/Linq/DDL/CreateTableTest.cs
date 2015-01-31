@@ -155,7 +155,6 @@ namespace Tests.DDL
 			public string cc { get; set; }
 		}
 
-		// IT : #160 test.
 		[Test, DataContextSource]
 		public void TestIssue160(string context)
 		{

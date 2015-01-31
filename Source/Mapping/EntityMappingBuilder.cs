@@ -179,7 +179,6 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				() =>
 				{
-					// IT : #160 fix.
 					var a = new TableAttribute { Configuration = Configuration, IsColumnAttributeRequired = false };
 					setColumn(a);
 					return a;
