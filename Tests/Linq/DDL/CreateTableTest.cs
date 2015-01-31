@@ -149,6 +149,48 @@ namespace Tests.DDL
 			}
 		}
 
+		public class aa
+		{
+			public int    bb { get; set; }
+			public string cc { get; set; }
+		}
 
+		// IT : #160 test.
+		[Test, DataContextSource]
+		public void TestIssue160(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				conn.MappingSchema.GetFluentMappingBuilder()
+					.Entity<aa>()
+					.HasTableName("aa")
+					.Property(t => t.bb).IsPrimaryKey()
+					.Property(t => t.cc)
+					;
+
+				try
+				{
+					conn.DropTable<aa>();
+				}
+				catch
+				{
+				}
+
+				conn.CreateTable<aa>();
+
+				conn.Insert(new aa
+				{
+					bb = 99,
+					cc = "hallo"
+				});
+
+				var qq = conn.GetTable<aa>().ToList().First();
+
+				Assert.That(qq.bb, Is.EqualTo(99));
+				Assert.That(qq.cc, Is.EqualTo("hallo"));
+
+				conn.DropTable<aa>();
+			}
+		}
 	}
 }
