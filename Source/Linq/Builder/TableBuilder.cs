@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 using LinqToDB.Common;
 
@@ -1297,7 +1296,6 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							// IT : #148 Exception
 							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
 							Expression otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 

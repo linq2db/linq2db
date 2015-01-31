@@ -63,7 +63,6 @@ namespace LinqToDB.Linq.Builder
 
 							if (ctx != null)
 							{
-								// IT : #148 Fix.
 								if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
 								{
 									var res = ctx.IsExpression(ma, 0, RequestFor.Association);
@@ -502,7 +501,6 @@ namespace LinqToDB.Linq.Builder
 
 									if (table.IsList)
 									{
-										// IT : #148 IsList implementation.
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
 										var tbl    = Activator.CreateInstance(ttype);
 										var method = e == expression ?

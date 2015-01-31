@@ -489,7 +489,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IT : #148 test
 		[Test, DataContextSource]
 		public void Issue148Test(string context)
 		{
