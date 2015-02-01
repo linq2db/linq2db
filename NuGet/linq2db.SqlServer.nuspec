@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SqlServer</id>
-		<version>1.0.6.4</version>
+		<version>1.0.7</version>
 		<title>LINQ to SqlServer</title>
 		<authors>Igor Tkachev</authors>
 		<owners />

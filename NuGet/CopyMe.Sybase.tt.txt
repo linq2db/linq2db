@@ -38,7 +38,7 @@
 		7. See more at https://github.com/linq2db/t4models/blob/master/Templates/!ReadMe.LinqToDB.md.
 	*/
 
-	NamespaceName            = "DataModels";       // Namespace of the generated classes.
+	NamespaceName = "DataModels";
 
 	LoadSybaseMetadata("MyServer", "5000", "MyDatabase", "sa", "TestPassword");
 //	LoadSybaseMetadata(string connectionString);
