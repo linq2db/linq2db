@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
 		Templates\!ReadMe.LinqToDB.md = Templates\!ReadMe.LinqToDB.md
@@ -38,6 +40,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\CopyMe.Oracle.x64.tt.txt = NuGet\CopyMe.Oracle.x64.tt.txt
 		NuGet\CopyMe.Oracle.x86.tt.txt = NuGet\CopyMe.Oracle.x86.tt.txt
 		NuGet\CopyMe.PostgreSQL.tt.txt = NuGet\CopyMe.PostgreSQL.tt.txt
+		NuGet\CopyMe.SapHana.tt.txt = NuGet\CopyMe.SapHana.tt.txt
 		NuGet\CopyMe.SqlCe.tt.txt = NuGet\CopyMe.SqlCe.tt.txt
 		NuGet\CopyMe.SQLite.tt.txt = NuGet\CopyMe.SQLite.tt.txt
 		NuGet\CopyMe.SqlServer.tt.txt = NuGet\CopyMe.SqlServer.tt.txt
@@ -52,6 +55,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{2AA0D9F0
 		NuGet\linq2db.Oracle.x64.nuspec = NuGet\linq2db.Oracle.x64.nuspec
 		NuGet\linq2db.Oracle.x86.nuspec = NuGet\linq2db.Oracle.x86.nuspec
 		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec

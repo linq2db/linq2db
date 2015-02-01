@@ -21,6 +21,7 @@ del *.nupkg
 ..\Redist\NuGet Pack linq2db.PostgreSQL.nuspec
 ..\Redist\NuGet Pack linq2db.SqlServer.nuspec
 ..\Redist\NuGet Pack linq2db.Sybase.nuspec
+..\Redist\NuGet Pack linq2db.SapHana.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.x86.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.x64.nuspec
 ..\Redist\NuGet Pack linq2db.Oracle.Managed.nuspec

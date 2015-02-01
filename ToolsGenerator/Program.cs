@@ -43,6 +43,7 @@ namespace ToolsGenerator
 			CreateProviderFile (nugetDir, "SqlServer");
 			CreateProviderFile (nugetDir, "SqlServer.SqlTypes",       "Microsoft.SqlServer.Types.dll");
 			CreateProviderFile (nugetDir, "Sybase",                   "Sybase.AdoNet2.AseClient.dll");
+			CreateProviderFile (nugetDir, "SapHana",                  "Sap.Data.Hana.v4.5.dll");
 			CreateProviderFile (nugetDir, "DB2",                      "IBM.Data.DB2.dll");
 			CreateProviderFile (nugetDir, "Informix",                 "IBM.Data.Informix.dll");
 			CreateProviderFile (nugetDir, "PostgreSQL",               "Npgsql.dll", "Mono.Security.dll");
