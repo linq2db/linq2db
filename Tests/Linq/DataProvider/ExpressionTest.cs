@@ -21,7 +21,7 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
 			{
-				conn.SetCommand("SELECT 1");
+				conn.InitCommand("SELECT 1");
 
 				var rd = conn.Command.ExecuteReader();
 

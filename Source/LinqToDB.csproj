@@ -144,7 +144,10 @@
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyRowsCopied.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
+    <Compile Include="Data\CommandInfo.cs" />
+    <Compile Include="Data\DataConnection.Async.cs" />
     <Compile Include="Data\DataConnectionTransaction.cs" />
+    <Compile Include="Data\DataReaderAsync.cs" />
     <Compile Include="Data\TraceInfo.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />

@@ -163,7 +163,7 @@ namespace LinqToDB.Data
 
 			if (pq.Commands.Length == 1)
 			{
-				SetCommand(pq.Commands[0]);
+				InitCommand(pq.Commands[0]);
 
 				if (pq.Parameters != null)
 					foreach (var p in pq.Parameters)
@@ -175,7 +175,7 @@ namespace LinqToDB.Data
 			{
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
-					SetCommand(pq.Commands[i]);
+					InitCommand(pq.Commands[i]);
 
 					if (i == 0 && pq.Parameters != null)
 						foreach (var p in pq.Parameters)
@@ -205,7 +205,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
+			InitCommand(pq.Commands[0]);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -246,7 +246,7 @@ namespace LinqToDB.Data
 
 			ExecuteNonQuery();
 
-			SetCommand(pq.Commands[1]);
+			InitCommand(pq.Commands[1]);
 
 			return ExecuteScalar();
 		}
@@ -255,7 +255,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
+			InitCommand(pq.Commands[0]);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)

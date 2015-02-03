@@ -17,16 +17,16 @@ DROP VIEW PersonView;                         COMMIT;
 
 DROP TRIGGER CREATE_PersonID;                 COMMIT;
 DROP TRIGGER CREATE_DataTypeTest;             COMMIT;
-
-DROP GENERATOR DataTypeID;                    COMMIT;
-DROP GENERATOR PersonID;                      COMMIT;
-DROP GENERATOR TimestampGen;                  COMMIT;
+DROP TRIGGER CREATE_BinaryDataID;             COMMIT;
 
 DROP TABLE Dual;                              COMMIT;
 DROP TABLE DataTypeTest;                      COMMIT;
 DROP TABLE Doctor;                            COMMIT;
 DROP TABLE Patient;                           COMMIT;
 DROP TABLE Person;                            COMMIT;
+
+DROP GENERATOR DataTypeID;                    COMMIT;
+DROP GENERATOR PersonID;                      COMMIT;
 
 DROP EXTERNAL FUNCTION rtrim;                 COMMIT;
 DROP EXTERNAL FUNCTION ltrim;                 COMMIT;
@@ -67,9 +67,6 @@ CREATE TABLE Person
 COMMIT;
 
 CREATE GENERATOR PersonID;
-COMMIT;
-
-CREATE GENERATOR TimestampGen;
 COMMIT;
 
 CREATE TRIGGER CREATE_PersonID FOR Person

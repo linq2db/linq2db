@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -491,7 +492,7 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		public void SetCommand(string sql)
+		internal void InitCommand(string sql)
 		{
 			DataProvider.InitCommand(this);
 			Command.CommandText = LastQuery = sql;
@@ -638,8 +639,13 @@ namespace LinqToDB.Data
 
 		internal IDataReader ExecuteReader()
 		{
+			return ExecuteReader(CommandBehavior.Default);
+		}
+
+		internal IDataReader ExecuteReader(CommandBehavior commandBehavior)
+		{
 			if (TraceSwitch.Level == TraceLevel.Off)
-				return Command.ExecuteReader();
+				return Command.ExecuteReader(commandBehavior);
 
 			if (TraceSwitch.TraceInfo)
 			{
@@ -655,7 +661,7 @@ namespace LinqToDB.Data
 			try
 			{
 				var now = DateTime.Now;
-				var ret = Command.ExecuteReader();
+				var ret = Command.ExecuteReader(commandBehavior);
 
 				if (TraceSwitch.TraceInfo)
 				{
