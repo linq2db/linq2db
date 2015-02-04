@@ -249,10 +249,10 @@ namespace LinqToDB.Mapping
 					e is MemberExpression     ? ((MemberExpression)    e).Member :
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
 
-                if (e is MemberExpression && memberInfo.ReflectedType != typeof(T))
-                    memberInfo = typeof(T).GetProperty(memberInfo.Name);
+				if (e is MemberExpression && memberInfo.ReflectedType != typeof(T))
+					memberInfo = typeof(T).GetProperty(memberInfo.Name);
 
-                if (memberInfo == null)
+				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
 
 				var attrs = GetAttributes(memberInfo, configGetter);

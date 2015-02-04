@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DDL
@@ -149,47 +150,46 @@ namespace Tests.DDL
 			}
 		}
 
-	    public enum jjj
-	    {
-	        aa,
-            bb,
-	    }
-        public class base_aa
-        {
-            public jjj dd { get; set; }
-        }
-        public class aa : base_aa
-        {
+		public enum jjj
+		{
+			aa,
+			bb,
+		}
+		public class base_aa
+		{
+			public jjj dd { get; set; }
+		}
+		public class aa : base_aa
+		{
 			public int    bb { get; set; }
 			public string cc { get; set; }
-        }
-        
-	    public class qq
-        {
-            public int bb { get; set; }
-            public string cc { get; set; }
-        }
+		}
+		
+		public class qq
+		{
+			public int bb { get; set; }
+			public string cc { get; set; }
+		}
 
-        [Test, DataContextSource]
+		[Test, DataContextSource]
 		public void TestIssue160(string context)
-        {
-            using (var conn = GetDataContext(context))
+		{
+			using (var conn = GetDataContext(context))
 			{
 				conn.MappingSchema.GetFluentMappingBuilder()
-                    
-                    .Entity<aa>()
-					.HasTableName("aa")
-					.Property(t => t.bb).IsPrimaryKey()
-					.Property(t => t.cc)
-                    .Property(t => t.dd).IsNotColumn()
-                    
-                    .Entity<qq>()
-                    .HasTableName("aa")
-                    .Property(t => t.bb).IsPrimaryKey()
-                    .Property(t => t.cc)
-                    ;
+					.Entity<aa>()
+						.HasTableName("aa")
+						.Property(t => t.bb).IsPrimaryKey()
+						.Property(t => t.cc)
+						.Property(t => t.dd).IsNotColumn()
+					
+					.Entity<qq>()
+						.HasTableName("aa")
+						.Property(t => t.bb).IsPrimaryKey()
+						.Property(t => t.cc)
+					;
 
-                try
+				try
 				{
 					conn.DropTable<qq>();
 				}
@@ -203,7 +203,7 @@ namespace Tests.DDL
 				{
 					bb = 99,
 					cc = "hallo",
-                    dd = jjj.aa
+					dd = jjj.aa
 				});
 
 				var qq = conn.GetTable<aa>().ToList().First();
