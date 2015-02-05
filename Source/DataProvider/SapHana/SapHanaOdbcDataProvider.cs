@@ -4,7 +4,10 @@ using System.Data.Odbc;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Extensions;
+    using System.Linq;
+    using Data;
+
+    using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -57,7 +60,19 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaOdbcSchemaProvider();
 		}
 
-		public override ISqlBuilder CreateSqlBuilder()
+	    public override void PrepareCommandInfo(CommandInfo commandInfo)
+	    {
+	        if (commandInfo.CommandType == CommandType.StoredProcedure)
+	        {
+	            commandInfo.CommandText = String.Format("{{ CALL {0} ({1}) }}",
+	                commandInfo.CommandText,
+	                String.Join(",", commandInfo.Parameters.Select(x => "?")));
+	            commandInfo.CommandType = CommandType.Text;
+	        }
+            base.PrepareCommandInfo(commandInfo);
+	    }
+
+	    public override ISqlBuilder CreateSqlBuilder()
 		{
 			return new SapHanaOdbcSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);            
 		}

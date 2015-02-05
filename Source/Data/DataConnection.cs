@@ -492,13 +492,34 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		internal void InitCommand(string sql)
+		internal void InitCommand()
 		{
 			DataProvider.InitCommand(this);
-			Command.CommandText = LastQuery = sql;
 		}
 
-		private int? _commandTimeout;
+	    internal void SetCommand(CommandInfo commandInfo)
+	    {
+            DataProvider.PrepareCommandInfo(commandInfo);
+
+            Command.CommandText = LastQuery = commandInfo.CommandText;
+            Command.CommandType = commandInfo.CommandType;
+
+            if (commandInfo.Parameters != null && commandInfo.Parameters.Length > 0)
+                CommandInfo.SetParameters(this, commandInfo.Parameters);	        
+	    }
+
+	    internal void SetCommand(PreparedQuery preparedQuery, int commandIndex)
+	    {
+	        var sql = preparedQuery.Commands[commandIndex];
+            Command.CommandText = LastQuery = sql;
+            Command.CommandType = CommandType.Text;
+
+	        if (preparedQuery.Parameters == null || commandIndex > 0) return;
+	        foreach (var p in preparedQuery.Parameters)
+	            Command.Parameters.Add(p);
+	    }
+
+	    private int? _commandTimeout;
 		public  int   CommandTimeout
 		{
 			get { return _commandTimeout ?? 0; }

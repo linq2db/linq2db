@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 {
 	using DataProvider;
 	using Linq;
+
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
@@ -34,7 +35,7 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		class PreparedQuery
+	    internal class PreparedQuery
 		{
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
@@ -60,7 +61,7 @@ namespace LinqToDB.Data
 			var sql    = query.SelectQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
-			if (!object.ReferenceEquals(sql, newSql))
+			if (!ReferenceEquals(sql, newSql))
 			{
 				sql = newSql;
 				sql.IsParameterDependent = true;
@@ -117,7 +118,7 @@ namespace LinqToDB.Data
 
 					if (sqlp.IsQueryParameter)
 					{
-						var parm = parameters.Length > i && object.ReferenceEquals(parameters[i], sqlp) ? parameters[i] : parameters.First(p => object.ReferenceEquals(p, sqlp));
+						var parm = parameters.Length > i && ReferenceEquals(parameters[i], sqlp) ? parameters[i] : parameters.First(p => ReferenceEquals(p, sqlp));
 						AddParameter(parms, parm.Name, parm);
 					}
 				}
@@ -163,53 +164,42 @@ namespace LinqToDB.Data
 
 			if (pq.Commands.Length == 1)
 			{
-				InitCommand(pq.Commands[0]);
-
-				if (pq.Parameters != null)
-					foreach (var p in pq.Parameters)
-						Command.Parameters.Add(p);
+				InitCommand();
+			    SetCommand(pq, 0);
 
 				return ExecuteNonQuery();
 			}
-			else
-			{
-				for (var i = 0; i < pq.Commands.Length; i++)
-				{
-					InitCommand(pq.Commands[i]);
+		    for (var i = 0; i < pq.Commands.Length; i++)
+		    {
+		        InitCommand();
+		        SetCommand(pq, i);
 
-					if (i == 0 && pq.Parameters != null)
-						foreach (var p in pq.Parameters)
-							Command.Parameters.Add(p);
+		        if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
+		        {
+		            try
+		            {
+		                ExecuteNonQuery();
+		            }
+// ReSharper disable once EmptyGeneralCatchClause
+		            catch (Exception)
+		            {
+		            }
+		        }
+		        else
+		        {
+		            ExecuteNonQuery();
+		        }
+		    }
 
-					if (i < pq.Commands.Length - 1 && pq.Commands[i].StartsWith("DROP"))
-					{
-						try
-						{
-							ExecuteNonQuery();
-						}
-						catch (Exception)
-						{
-						}
-					}
-					else
-					{
-						ExecuteNonQuery();
-					}
-				}
-
-				return -1;
-			}
+		    return -1;
 		}
 
 		object IDataContext.ExecuteScalar(object query)
 		{
 			var pq = (PreparedQuery)query;
 
-			InitCommand(pq.Commands[0]);
-
-			if (pq.Parameters != null)
-				foreach (var p in pq.Parameters)
-					Command.Parameters.Add(p);
+			InitCommand();
+		    SetCommand(pq, 0);
 
 			IDbDataParameter idparam = null;
 
@@ -246,20 +236,16 @@ namespace LinqToDB.Data
 
 			ExecuteNonQuery();
 
-			InitCommand(pq.Commands[1]);
+            InitCommand();
+            SetCommand(pq, 1);
 
 			return ExecuteScalar();
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
 		{
-			var pq = (PreparedQuery)query;
-
-			InitCommand(pq.Commands[0]);
-
-			if (pq.Parameters != null)
-				foreach (var p in pq.Parameters)
-					Command.Parameters.Add(p);
+            InitCommand();
+            SetCommand((PreparedQuery)query, 0);
 
 			return ExecuteReader();
 		}

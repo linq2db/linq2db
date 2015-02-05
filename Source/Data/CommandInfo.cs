@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using Common;
+
+    using Common;
 	using Expressions;
 	using Extensions;
 
@@ -64,11 +65,8 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			DataConnection.InitCommand();
+		    DataConnection.SetCommand(this);
 
 			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
 				while (rd.Read())
@@ -106,11 +104,8 @@ namespace LinqToDB.Data
 
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			await DataConnection.InitCommandAsync(cancellationToken);
+            DataConnection.SetCommand(this);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
 				while (await rd.ReadAsync(cancellationToken))
@@ -129,11 +124,8 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			DataConnection.InitCommand();
+		    DataConnection.SetCommand(this);
 
 			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
 			{
@@ -198,11 +190,8 @@ namespace LinqToDB.Data
 
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			await DataConnection.InitCommandAsync(cancellationToken);
+            DataConnection.SetCommand(this);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
 			{
@@ -262,11 +251,8 @@ namespace LinqToDB.Data
 
 		public int Execute()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+            DataConnection.InitCommand();
+            DataConnection.SetCommand(this);
 
 			return DataConnection.ExecuteNonQuery();
 		}
@@ -290,11 +276,8 @@ namespace LinqToDB.Data
 
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			await DataConnection.InitCommandAsync(cancellationToken);
+            DataConnection.SetCommand(this);
 
 			return await DataConnection.ExecuteNonQueryAsync(cancellationToken);
 		}
@@ -311,11 +294,8 @@ namespace LinqToDB.Data
 
 		public T Execute<T>()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+            DataConnection.InitCommand();
+            DataConnection.SetCommand(this);
 
 			using (var rd = DataConnection.ExecuteReader(CommandBehavior))
 			{
@@ -349,12 +329,8 @@ namespace LinqToDB.Data
 
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			await DataConnection.InitCommandAsync(cancellationToken);
+            DataConnection.SetCommand(this);
 
 			using (var rd = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken))
 			{
@@ -386,11 +362,8 @@ namespace LinqToDB.Data
 
 		public DataReader ExecuteReader()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+            DataConnection.InitCommand();
+            DataConnection.SetCommand(this);
 
 			return new DataReader { CommandInfo = this, Reader = DataConnection.ExecuteReader(CommandBehavior) };
 		}
@@ -454,11 +427,8 @@ namespace LinqToDB.Data
 
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
-
-			if (Parameters != null && Parameters.Length > 0)
-				SetParameters(DataConnection, Parameters);
+			await DataConnection.InitCommandAsync(cancellationToken);
+            DataConnection.SetCommand(this);
 
 			return new DataReaderAsync { CommandInfo = this, Reader = await DataConnection.ExecuteReaderAsync(CommandBehavior, cancellationToken) };
 		}
@@ -515,7 +485,7 @@ namespace LinqToDB.Data
 
 		#region SetParameters
 
-		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
+		internal static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			if (parameters == null)
 				return;
@@ -539,14 +509,14 @@ namespace LinqToDB.Data
 
 		struct ParamKey : IEquatable<ParamKey>
 		{
-			public ParamKey(Type type, int configID)
+			public ParamKey(Type type, int configId)
 			{
 				_type     = type;
-				_configID = configID;
+				_configId = configId;
 
 				unchecked
 				{
-					_hashCode = -1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode();
+					_hashCode = -1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configId.GetHashCode();
 				}
 			}
 
@@ -557,7 +527,7 @@ namespace LinqToDB.Data
 
 			readonly int    _hashCode;
 			readonly Type   _type;
-			readonly int    _configID;
+			readonly int    _configId;
 
 			public override int GetHashCode()
 			{
@@ -568,7 +538,7 @@ namespace LinqToDB.Data
 			{
 				return
 					_type     == other._type &&
-					_configID == other._configID
+					_configId == other._configId
 					;
 			}
 		}
@@ -585,11 +555,13 @@ namespace LinqToDB.Data
 			if (parameters == null)
 				return null;
 
-			if (parameters is DataParameter[])
-				return (DataParameter[])parameters;
+		    var dataParameters = parameters as DataParameter[];
+		    if (dataParameters != null)
+				return dataParameters;
 
-			if (parameters is DataParameter)
-				return new[] { (DataParameter)parameters };
+		    var parameter = parameters as DataParameter;
+		    if (parameter != null)
+				return new[] { parameter };
 
 			Func<object,DataParameter[]> func;
 			var type = parameters.GetType();
@@ -697,15 +669,15 @@ namespace LinqToDB.Data
 
 		struct QueryKey : IEquatable<QueryKey>
 		{
-			public QueryKey(Type type, int configID, string sql)
+			public QueryKey(Type type, int configId, string sql)
 			{
 				_type     = type;
-				_configID = configID;
+				_configId = configId;
 				_sql      = sql;
 
 				unchecked
 				{
-					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configID.GetHashCode()) + _sql.GetHashCode();
+					_hashCode = -1521134295 * (-1521134295 * (-1521134295 * 639348056 + _type.GetHashCode()) + _configId.GetHashCode()) + _sql.GetHashCode();
 				}
 			}
 
@@ -716,7 +688,7 @@ namespace LinqToDB.Data
 
 			readonly int    _hashCode;
 			readonly Type   _type;
-			readonly int    _configID;
+			readonly int    _configId;
 			readonly string _sql;
 
 			public override int GetHashCode()
@@ -729,7 +701,7 @@ namespace LinqToDB.Data
 				return
 					_type     == other._type &&
 					_sql      == other._sql  &&
-					_configID == other._configID
+					_configId == other._configId
 					;
 			}
 		}
