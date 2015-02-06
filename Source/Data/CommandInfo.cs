@@ -75,6 +75,10 @@ namespace LinqToDB.Data
 					yield return objectReader(rd);
 		}
 
+		#endregion
+
+		#region Query with object reader async
+
 		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
@@ -166,6 +170,10 @@ namespace LinqToDB.Data
 				}
 			}
 		}
+
+		#endregion
+
+		#region Query async
 
 		public Task<List<T>> QueryToListAsync<T>()
 		{
@@ -271,6 +279,10 @@ namespace LinqToDB.Data
 			return DataConnection.ExecuteNonQuery();
 		}
 
+		#endregion
+
+		#region Execute async
+
 		public Task<int> ExecuteProcAsync()
 		{
 			CommandType = CommandType.StoredProcedure;
@@ -341,6 +353,10 @@ namespace LinqToDB.Data
 
 			return default(T);
 		}
+
+		#endregion
+
+		#region Execute scalar async
 
 		public Task<T> ExecuteAsync<T>()
 		{
@@ -445,7 +461,7 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		#region ExecuteReaderAsync
+		#region ExecuteReader async
 
 		public Task<DataReaderAsync> ExecuteReaderAsync()
 		{
