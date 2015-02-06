@@ -8,6 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.Update
 {
+	using System.Linq.Expressions;
+
 	using Model;
 
 	[TestFixture]
@@ -21,6 +23,17 @@ namespace Tests.Update
 			using (var db = new TestDataConnection(context))
 			{
 				db.Merge(db.Types2);
+			}
+		}
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
+			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithEmptySource(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Merge(new Person[] {});
 			}
 		}
 
@@ -54,6 +67,19 @@ namespace Tests.Update
 			using (var db = new TestDataConnection(context))
 			{
 				db.Merge(db.Types2, t => t.ID > 5);
+			}
+		}
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithDeletePredicate3(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var patient = db.Patient.First();
+				Expression<Func<Person, bool>> predicate = t => t.Patient == patient;
+				db.Merge(db.Person.Where(predicate), predicate);
 			}
 		}
 	}
