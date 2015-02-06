@@ -25,6 +25,17 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
+			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithEmptySource(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Merge(new Person[] {});
+			}
+		}
+
+		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDelete(string context)
