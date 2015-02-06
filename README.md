@@ -391,6 +391,19 @@ using (var db = new DbNorthwind())
 }
 ```
 
+Also, you can use .NET built-in TransactionScope class:
+
+```c#
+using (var transaction = new TransactionScope()) // don't forget isolation level is serializable by default
+{
+  using (var db = new DbNorthwind())
+  {
+    ...
+  }
+  transaction.Complete();
+}
+```
+
 MiniProfiler
 ------
 
