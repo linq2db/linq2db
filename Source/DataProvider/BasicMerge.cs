@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
+	using Linq;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
 
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
-		public int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
 			where T : class
 		{
 			if (!BuildCommand(dataConnection, predicate, delete, source))
@@ -87,7 +88,6 @@ namespace LinqToDB.DataProvider
 			if (updateColumns.Count > 0)
 			{
 				StringBuilder
-					.AppendLine()
 					.AppendLine("-- update matched rows")
 					.AppendLine("WHEN MATCHED THEN")
 					.AppendLine("\tUPDATE")
@@ -115,9 +115,8 @@ namespace LinqToDB.DataProvider
 
 			StringBuilder
 				.AppendLine()
-				.AppendLine()
 				.AppendLine("-- insert new rows")
-				.Append("WHEN NOT MATCHED ").Append(ByTargetText).Append("THEN")
+				.Append("WHEN NOT MATCHED ").Append(ByTargetText).AppendLine("THEN")
 				.AppendLine("\tINSERT")
 				.AppendLine("\t(")
 				;
@@ -150,24 +149,101 @@ namespace LinqToDB.DataProvider
 
 				if (deletePredicate != null)
 				{
-					var q   = dataConnection.GetTable<T>().Where(deletePredicate);
-					var sql = q.ToString();
-					var idx = sql.IndexOf("WHERE");
-					var end = idx;
+					// IT : #167 fix.
+					var inlineParameters = dataConnection.InlineParameters;
 
-					while (char.IsWhiteSpace(sql, --end));
+					try
+					{
+						dataConnection.InlineParameters = true;
 
-					var start = end;
+						var q   = dataConnection.GetTable<T>().Where(deletePredicate);
+						var ctx = q.GetContext();
+						var sql = ctx.SelectQuery;
 
-					while (!char.IsWhiteSpace(sql, --start));
+						var tableSet  = new HashSet<SqlTable>();
+						var tables    = new List<SqlTable>();
 
-					var alias = sql.Substring(start + 1, end - start);
+						var fromTable = (SqlTable)sql.From.Tables[0].Source;
 
-					predicate = "AND " + sql.Substring(idx + "WHERE".Length).Replace(alias, "Target");
+						new QueryVisitor().Visit(sql.From, e =>
+						{
+							if (e.ElementType == QueryElementType.TableSource)
+							{
+								var et = (SelectQuery.TableSource)e;
+
+								tableSet.Add((SqlTable)et.Source);
+								tables.  Add((SqlTable)et.Source);
+							}
+						});
+
+						var whereClause = new QueryVisitor().Convert(sql.Where, e =>
+						{
+							if (e.ElementType == QueryElementType.SqlQuery)
+							{
+								
+							}
+
+							if (e.ElementType == QueryElementType.SqlField)
+							{
+								var fld = (SqlField)e;
+								var tbl = (SqlTable)fld.Table;
+
+								if (tbl != fromTable && tableSet.Contains(tbl))
+								{
+									var tempCopy   = sql.Clone();
+									var tempTables = new List<SelectQuery.TableSource>();
+
+									new QueryVisitor().Visit(tempCopy.From, ee =>
+									{
+										if (ee.ElementType == QueryElementType.TableSource)
+											tempTables.Add((SelectQuery.TableSource)ee);
+									});
+
+									var tt = tempTables[tables.IndexOf(tbl)];
+
+									tempCopy.Select.Columns.Clear();
+									tempCopy.Select.Add(((SqlTable)tt.Source).Fields[fld.Name]);
+
+									tempCopy.Where.SearchCondition.Conditions.Clear();
+
+									var keys = tempCopy.From.Tables[0].Source.GetKeys(true);
+
+									foreach (SqlField key in keys)
+										tempCopy.Where.Field(key).Equal.Field(fromTable.Fields[key.Name]);
+
+									tempCopy.ParentSelect = sql;
+
+									return tempCopy;
+								}
+							}
+
+							return e;
+						}).SearchCondition.Conditions.ToList();
+
+						sql.Where.SearchCondition.Conditions.Clear();
+						sql.Where.SearchCondition.Conditions.AddRange(whereClause);
+
+						sql.From.Tables[0].Alias = "Target";
+
+						ctx.SetParameters();
+
+						var pq = (DataConnection.PreparedQuery)((IDataContext)dataConnection).SetQuery(new QueryContext
+						{
+							SelectQuery   = sql,
+							SqlParameters = sql.Parameters.ToArray(),
+						});
+
+						var cmd = pq.Commands[0];
+
+						predicate = "AND " + cmd.Substring(cmd.IndexOf("WHERE") + "WHERE".Length);
+					}
+					finally
+					{
+						dataConnection.InlineParameters = inlineParameters;
+					}
 				}
 
 				StringBuilder
-					.AppendLine()
 					.AppendLine("-- delete rows that are in the target but not in the sourse")
 					.AppendLine("WHEN NOT MATCHED BY Source {0}THEN".Args(predicate))
 					.AppendLine("\tDELETE")
@@ -175,6 +251,17 @@ namespace LinqToDB.DataProvider
 			}
 
 			return true;
+		}
+
+		class QueryContext : IQueryContext
+		{
+			public SelectQuery    SelectQuery { get; set; }
+			public object         Context     { get; set; }
+			public SqlParameter[] SqlParameters;
+			public SqlParameter[] GetParameters()
+			{
+				return SqlParameters;
+			}
 		}
 
 		protected virtual bool BuildUsing<T>(DataConnection dataConnection, IEnumerable<T> source)
@@ -224,25 +311,29 @@ namespace LinqToDB.DataProvider
 				StringBuilder.AppendLine("),");
 			}
 
-			var idx = StringBuilder.Length;
-			while (StringBuilder[--idx] != ',') {}
-			StringBuilder.Remove(idx, 1);
+			// IT : #166 fix.
+			if (hasData)
+			{
+				var idx = StringBuilder.Length;
+				while (StringBuilder[--idx] != ',') {}
+				StringBuilder.Remove(idx, 1);
 
-			StringBuilder
-				.AppendLine(")")
-				.AppendLine("AS Source")
-				.AppendLine("(")
-				;
+				StringBuilder
+					.AppendLine(")")
+					.AppendLine("AS Source")
+					.AppendLine("(")
+					;
 
-			foreach (var column in Columns)
-				StringBuilder.AppendFormat("\t{0},", column.Name).AppendLine();
+				foreach (var column in Columns)
+					StringBuilder.AppendFormat("\t{0},", column.Name).AppendLine();
 
-			StringBuilder.Length -= 1 + Environment.NewLine.Length;
+				StringBuilder.Length -= 1 + Environment.NewLine.Length;
 
-			StringBuilder
-				.AppendLine()
-				.AppendLine(")")
-				;
+				StringBuilder
+					.AppendLine()
+					.AppendLine(")")
+					;
+			}
 
 			return hasData;
 		}
@@ -302,12 +393,16 @@ namespace LinqToDB.DataProvider
 				hasData = true;
 			}
 
-			StringBuilder.AppendLine();
+			// IT : #166 fix.
+			if (hasData)
+			{
+				StringBuilder.AppendLine();
 
-			StringBuilder
-				.AppendLine(")")
-				.AppendLine("Source")
-				;
+				StringBuilder
+					.AppendLine(")")
+					.AppendLine("Source")
+					;
+			}
 
 			return hasData;
 		}

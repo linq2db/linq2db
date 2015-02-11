@@ -56,6 +56,7 @@ namespace LinqToDB.Linq.Builder
 			new DropBuilder                (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
+			new ContextParser              (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

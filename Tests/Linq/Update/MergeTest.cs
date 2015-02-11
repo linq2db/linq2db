@@ -78,8 +78,33 @@ namespace Tests.Update
 			using (var db = new TestDataConnection(context))
 			{
 				var patient = db.Patient.First();
-				Expression<Func<Person, bool>> predicate = t => t.Patient == patient;
-				db.Merge(db.Person.Where(predicate), predicate);
+				db.Merge(db.Person, t => t.Patient == patient);
+			}
+		}
+
+		// IT : #167 test.
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithDeletePredicate4(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var patient = db.Patient.First().PersonID;
+				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+				patient++;
+				db.Merge(db.Person, t => t.Patient.PersonID == patient);
+			}
+		}
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeWithDeletePredicate5(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
 			}
 		}
 	}

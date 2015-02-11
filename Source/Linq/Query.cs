@@ -103,6 +103,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
+		public          bool              DoNotChache;
 		public          Query<T>          Next;
 		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
 		public          ISqlOptimizer     SqlOptimizer;
@@ -164,8 +165,11 @@ namespace LinqToDB.Linq
 							throw;
 						}
 
-						query.Next = _first;
-						_first = query;
+						if (!query.DoNotChache)
+						{
+							query.Next = _first;
+							_first = query;
+						}
 					}
 				}
 			}
@@ -386,7 +390,7 @@ namespace LinqToDB.Linq
 
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
-		void SetParameters(Expression expr, object[] parameters, int idx)
+		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
 			foreach (var p in Queries[idx].Parameters)
 			{

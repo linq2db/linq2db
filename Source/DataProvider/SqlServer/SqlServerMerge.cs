@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
+using LinqToDB.Common;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -11,6 +15,36 @@ namespace LinqToDB.DataProvider.SqlServer
 		public SqlServerMerge()
 		{
 			ByTargetText = "BY Target ";
+		}
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source)
+		{
+			var table       = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var hasIdentity = table.Columns.Any(c => c.IsIdentity);
+
+			string tableName = null;
+
+			if (hasIdentity)
+			{
+				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
+
+				tableName = sqlBuilder.BuildTableName(new StringBuilder(),
+					(string)sqlBuilder.Convert(table.DatabaseName, ConvertType.NameToDatabase),
+					(string)sqlBuilder.Convert(table.SchemaName,   ConvertType.NameToOwner),
+					(string)sqlBuilder.Convert(table.TableName,    ConvertType.NameToQueryTable)).ToString();
+
+				dataConnection.Execute("SET IDENTITY_INSERT {0} ON".Args(tableName));
+			}
+
+			try
+			{
+				return base.Merge(dataConnection, predicate, delete, source);
+			}
+			finally
+			{
+				if (hasIdentity)
+					dataConnection.Execute("SET IDENTITY_INSERT {0} OFF".Args(tableName));
+			}
 		}
 
 		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)

@@ -1316,7 +1316,16 @@ namespace LinqToDB.SqlQuery
 						var q = (SelectQuery)element;
 						IQueryElement parent = null;
 
-						var doConvert = q.ParentSelect != null && !_visitedElements.TryGetValue(q.ParentSelect, out parent);
+						var doConvert = false;
+
+						if (q.ParentSelect != null)
+						{
+							if (!_visitedElements.TryGetValue(q.ParentSelect, out parent))
+							{
+								doConvert = true;
+								parent    = q.ParentSelect;
+							}
+						}
 
 						if (!doConvert)
 						{

@@ -34,7 +34,7 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		class PreparedQuery
+		internal class PreparedQuery
 		{
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
@@ -45,7 +45,7 @@ namespace LinqToDB.Data
 
 		#region SetQuery
 
-		PreparedQuery GetCommand(IQueryContext query)
+		internal PreparedQuery GetCommand(IQueryContext query)
 		{
 			if (query.Context != null)
 			{

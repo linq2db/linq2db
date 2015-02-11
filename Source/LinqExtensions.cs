@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB
 {
@@ -891,6 +892,17 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		internal static ContextParser.Context GetContext<T>(this IQueryable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			return source.Provider.Execute<ContextParser.Context>(
+				Expression.Call(
+					null,
+					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					new[] { source.Expression }));
+		}
 
 		#region Stub helpers
 
