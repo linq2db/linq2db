@@ -16,6 +16,7 @@ namespace Tests.Update
 	public class MergeTest : TestBase
 	{
 		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
 			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void Merge(string context)
 		{

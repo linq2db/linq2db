@@ -9,7 +9,7 @@ namespace LinqToDB.Data
 {
 	public partial class DataConnection
 	{
-		internal async Task InitCommandAsync(CommandType commandType, string sql, CancellationToken cancellationToken)
+		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, CancellationToken cancellationToken)
 		{
 			if (_connection == null)
 				_connection = DataProvider.CreateConnection(ConnectionString);
@@ -20,7 +20,7 @@ namespace LinqToDB.Data
 				_closeConnection = true;
 			}
 
-			InitCommand(commandType, sql);
+			InitCommand(commandType, sql, parameters);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

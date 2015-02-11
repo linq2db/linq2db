@@ -77,45 +77,45 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Int32         :
 				case DataType.UInt16        :
 					StringBuilder.Append("Integer");
-                    return;
+					return;
 				case DataType.Double:
 					StringBuilder.Append("Double");
-                    return;
+					return;
 #if !MONO
 				case DataType.DateTime2     :
 #endif
 				case DataType.DateTime      :
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");
-                    return;                
+					return;
 				case DataType.SmallDateTime : 
 					StringBuilder.Append("SecondDate");
-                    return;
+					return;
 				case DataType.Boolean       : 
 					StringBuilder.Append("TinyInt");
-                    return;
+					return;
 				case DataType.Image:
 					StringBuilder.Append("Blob");
-                    return;
+					return;
 				case DataType.Xml:
 					StringBuilder.Append("Clob");
 					return;
 				case DataType.Guid:
 					StringBuilder.Append("Char (36)");
-			        return;
-                case DataType.NVarChar:
-                case DataType.VarChar:
-                case DataType.VarBinary:
-                    if (type.Length == int.MaxValue || type.Length < 0)
-                    {
-                        StringBuilder
-                            .Append(type.DataType)
-                            .Append("(Max)");
-                        return;
-                    }
-			        break;
+					return;
+				case DataType.NVarChar:
+				case DataType.VarChar:
+				case DataType.VarBinary:
+					if (type.Length == int.MaxValue || type.Length < 0)
+					{
+						StringBuilder
+							.Append(type.DataType)
+							.Append("(Max)");
+						return;
+					}
+					break;
 			}
-            base.BuildDataType(type, createDbType); 
+			base.BuildDataType(type, createDbType); 
 		}
 
 		protected override void BuildFromClause()

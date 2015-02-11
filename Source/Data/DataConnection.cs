@@ -492,9 +492,9 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters)
 		{
-			DataProvider.InitCommand(this, commandType, sql);
+			DataProvider.InitCommand(this, commandType, sql, parameters);
 			LastQuery = Command.CommandText;
 		}
 

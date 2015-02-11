@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider
 		IDbConnection      CreateConnection      (string connectionString);
 		ISqlBuilder        CreateSqlBuilder      ();
 		ISqlOptimizer      GetSqlOptimizer       ();
-		void               InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText);
+		void               InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters);
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
