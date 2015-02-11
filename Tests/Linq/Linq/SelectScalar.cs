@@ -222,7 +222,7 @@ namespace Tests.Linq
 					db.Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault());
 		}
 
-		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Sybase, ProviderName.SapHana)]
 		public void SubQueryTest(string context)
 		{
 			using (var db = GetDataContext(context))

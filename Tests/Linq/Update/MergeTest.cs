@@ -16,7 +16,6 @@ namespace Tests.Update
 	public class MergeTest : TestBase
 	{
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.Informix, ProviderName.MySql, ProviderName.PostgreSQL, ProviderName.SQLite,
 			ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void Merge(string context)
 		{
@@ -49,7 +48,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+            ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate1(string context)
 		{
@@ -60,7 +59,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
-			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+            ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate2(string context)
 		{

@@ -40,7 +40,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SapHana)]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
 		public void Func3(string context)
 		{
 			using (var db = GetDataContext(context))

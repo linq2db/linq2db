@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaMappingSchema : MappingSchema
 	{
-		public SapHanaMappingSchema() : base(ProviderName.SapHana)
+		public SapHanaMappingSchema() : this(ProviderName.SapHana)
 		{
 		}
 
