@@ -82,7 +82,6 @@ namespace Tests.Update
 			}
 		}
 
-		// IT : #167 test.
 		[Test, DataContextSource(false,
 			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]

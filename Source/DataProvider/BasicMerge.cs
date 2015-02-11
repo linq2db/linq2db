@@ -149,7 +149,6 @@ namespace LinqToDB.DataProvider
 
 				if (deletePredicate != null)
 				{
-					// IT : #167 fix.
 					var inlineParameters = dataConnection.InlineParameters;
 
 					try
@@ -311,7 +310,6 @@ namespace LinqToDB.DataProvider
 				StringBuilder.AppendLine("),");
 			}
 
-			// IT : #166 fix.
 			if (hasData)
 			{
 				var idx = StringBuilder.Length;
@@ -393,7 +391,6 @@ namespace LinqToDB.DataProvider
 				hasData = true;
 			}
 
-			// IT : #166 fix.
 			if (hasData)
 			{
 				StringBuilder.AppendLine();
