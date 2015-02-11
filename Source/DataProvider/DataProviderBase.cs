@@ -83,12 +83,14 @@ namespace LinqToDB.DataProvider
 		public    abstract ISqlBuilder   CreateSqlBuilder();
 		public    abstract ISqlOptimizer GetSqlOptimizer ();
 
-		public virtual void InitCommand(DataConnection dataConnection)
+		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText)
 		{
-			dataConnection.Command.CommandType = CommandType.Text;
+			dataConnection.Command.CommandType = commandType;
 
 			if (dataConnection.Command.Parameters.Count != 0)
 				dataConnection.Command.Parameters.Clear();
+
+			dataConnection.Command.CommandText = commandText;
 		}
 
 		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)

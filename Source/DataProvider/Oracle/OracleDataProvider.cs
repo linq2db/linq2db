@@ -306,7 +306,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Action<DataConnection> _setBindByName;
 
-		public override void InitCommand(DataConnection dataConnection)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText)
 		{
 			dataConnection.DisposeCommand();
 
@@ -314,6 +314,8 @@ namespace LinqToDB.DataProvider.Oracle
 				EnsureConnection();
 
 			_setBindByName(dataConnection);
+
+			base.InitCommand(dataConnection, commandType, commandText);
 		}
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;

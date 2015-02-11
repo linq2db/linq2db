@@ -492,10 +492,10 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		internal void InitCommand(string sql)
+		internal void InitCommand(CommandType commandType, string sql)
 		{
-			DataProvider.InitCommand(this);
-			Command.CommandText = LastQuery = sql;
+			DataProvider.InitCommand(this, commandType, sql);
+			LastQuery = Command.CommandText;
 		}
 
 		private int? _commandTimeout;

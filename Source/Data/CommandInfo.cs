@@ -64,8 +64,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
+			DataConnection.InitCommand(CommandType, CommandText);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -110,8 +109,7 @@ namespace LinqToDB.Data
 
 		public async Task QueryForEachAsync<T>(Func<IDataReader,T> objectReader, Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
+			await DataConnection.InitCommandAsync(CommandType, CommandText, cancellationToken);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -133,8 +131,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
+			DataConnection.InitCommand(CommandType, CommandText);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -206,8 +203,7 @@ namespace LinqToDB.Data
 
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
+			await DataConnection.InitCommandAsync(CommandType, CommandText, cancellationToken);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -270,8 +266,7 @@ namespace LinqToDB.Data
 
 		public int Execute()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
+			DataConnection.InitCommand(CommandType, CommandText);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -302,8 +297,7 @@ namespace LinqToDB.Data
 
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
+			await DataConnection.InitCommandAsync(CommandType, CommandText, cancellationToken);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -323,8 +317,7 @@ namespace LinqToDB.Data
 
 		public T Execute<T>()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
+			DataConnection.InitCommand(CommandType, CommandText);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -365,9 +358,7 @@ namespace LinqToDB.Data
 
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-
-			DataConnection.Command.CommandType = CommandType;
+			await DataConnection.InitCommandAsync(CommandType, CommandText, cancellationToken);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -402,8 +393,7 @@ namespace LinqToDB.Data
 
 		public DataReader ExecuteReader()
 		{
-			DataConnection.InitCommand(CommandText);
-			DataConnection.Command.CommandType = CommandType;
+			DataConnection.InitCommand(CommandType, CommandText);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -470,8 +460,7 @@ namespace LinqToDB.Data
 
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 		{
-			await DataConnection.InitCommandAsync(CommandText, cancellationToken);
-			DataConnection.Command.CommandType = CommandType;
+			await DataConnection.InitCommandAsync(CommandType, CommandText, cancellationToken);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
