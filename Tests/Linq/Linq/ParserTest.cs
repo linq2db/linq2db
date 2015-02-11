@@ -19,7 +19,7 @@ namespace Tests.Linq
 	{
 		static ParserTest()
 		{
-			ExpressionBuilder.AddBuilder(new ContextParser());
+			ExpressionBuilder.AddBuilder(new MyContextParser());
 		}
 
 		#region IsExpressionTable
@@ -31,7 +31,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -48,7 +48,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -65,7 +65,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (p1 => p1)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -87,7 +87,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -105,7 +105,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -123,7 +123,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -142,7 +142,7 @@ namespace Tests.Linq
 					.Select    (p1 => p1.ParentID + 1)
 					.Where     (p3 => p3 == 1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -160,7 +160,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1)
 					.Select    (p2 => p2.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -178,7 +178,7 @@ namespace Tests.Linq
 				var ctx = db.Child
 					.Select    (p => p.Parent)
 					.Select    (p => p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -197,7 +197,7 @@ namespace Tests.Linq
 					.Select    (p => p)
 					.Select    (p => p)
 					.Select    (p => p.Parent)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -216,7 +216,7 @@ namespace Tests.Linq
 					.Select    (p  => p)
 					.Select    (p3 => new { p1 = new { p2 = new { p = p3 } } })
 					.Select    (p  => p.p1.p2.p.Parent)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -235,7 +235,7 @@ namespace Tests.Linq
 					.Select    (p  => p)
 					.Select    (p3 => new { p1 = new { p2 = new { p = p3.Parent } } })
 					.Select    (p  => p.p1.p2.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -255,7 +255,7 @@ namespace Tests.Linq
 					.Select    (p => p)
 					.Select    (p => new { p = new { p } })
 					.Select    (p => p.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -274,7 +274,7 @@ namespace Tests.Linq
 					.Select    (p => p)
 					.Select    (p => new { p = new Child { ChildID = p.ChildID } })
 					.Select    (p => p.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -296,7 +296,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p1.ParentID })
 					.Select    (p2 => p2.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -313,7 +313,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
 					.Select    (p2 => p2.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -330,7 +330,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
 					.Select    (p2 => p2.p1)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -348,7 +348,7 @@ namespace Tests.Linq
 					.Select    (p1 => new { p = p1.ParentID + 1 })
 					.Where     (p3 => p3.p == 1)
 					.Select    (p2 => p2.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -366,7 +366,7 @@ namespace Tests.Linq
 					.Select    (p1 => new { p = p1.ParentID + 1 })
 					.Where     (p3 => p3.p == 1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -383,7 +383,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
 					.Select    (p2 => p2.p1.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -400,7 +400,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p => new { p })
 					.Select    (p => p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -418,7 +418,7 @@ namespace Tests.Linq
 					.Select    (p => new { p, p.Parent })
 					.Select    (p => new { p.Parent, p.p.ChildID })
 					.Select    (p => p.Parent)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsTrue (ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -436,7 +436,7 @@ namespace Tests.Linq
 					.Select    (p => new { p, p.Parent })
 					.Select    (p => new { p.Parent.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -454,7 +454,7 @@ namespace Tests.Linq
 					.Select    (p => new { p, p.Child })
 					.Select    (p => new { p.Child.Parent.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -471,7 +471,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p => p.Children.Max(c => (int?)c.ChildID) ?? p.Value1)
 					.Select    (p => p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Association).Result);
 				Assert.IsFalse(ctx.IsExpression(null, 0, RequestFor.Object).     Result);
@@ -491,7 +491,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent1
 					.Select    (t => t)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0, 1 }, ctx.ConvertToIndex(null, 0, ConvertFlags.All).Select(_ => _.Index).ToArray());
 				Assert.AreEqual(new[] { 0    }, ctx.ConvertToIndex(null, 0, ConvertFlags.Key).Select(_ => _.Index).ToArray());
@@ -505,7 +505,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (t => t)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0, 1 }, ctx.ConvertToIndex(null, 0, ConvertFlags.All).Select(_ => _.Index).ToArray());
 				Assert.AreEqual(new[] { 0, 1 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Key).Select(_ => _.Index).ToArray());
@@ -519,7 +519,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (t => t.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -532,7 +532,7 @@ namespace Tests.Linq
 			{
 				var ctx = db.Parent
 					.Select    (t => t.Value1)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -547,7 +547,7 @@ namespace Tests.Linq
 					.Select    (t => new { t = new { t } })
 					.Select    (t => t.t.t.ParentID)
 					.Select    (t => t)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -565,7 +565,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -579,7 +579,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => p1.ParentID + 1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -594,7 +594,7 @@ namespace Tests.Linq
 					.Select    (p1 => p1.ParentID + 1)
 					.Where     (p3 => p3 == 1)
 					.Select    (p2 => p2)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -608,7 +608,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p = new { p = p1.ParentID } })
 					.Select    (p2 => p2.p.p)
-					.GetContext();
+					.GetMyContext();
 
 				Assert.AreEqual(new[] { 0 }, ctx.ConvertToIndex(null, 0, ConvertFlags.Field).Select(_ => _.Index).ToArray());
 			}
@@ -635,7 +635,7 @@ namespace Tests.Linq
 						from gc3 in g.DefaultIfEmpty()
 				select gc3;
 
-				var ctx = result.GetContext();
+				var ctx = result.GetMyContext();
 				var idx = ctx.ConvertToIndex(null, 0, ConvertFlags.Key);
 
 				Assert.AreEqual(new[] { 0, 1, 2 }, idx.Select(_ => _.Index).ToArray());
@@ -653,7 +653,7 @@ namespace Tests.Linq
 						from gc3 in g.DefaultIfEmpty()
 					select gc3;
 
-				var ctx = result.GetContext();
+				var ctx = result.GetMyContext();
 				var idx = ctx.ConvertToIndex(null, 0, ConvertFlags.Key);
 
 				Assert.AreEqual(new[] { 0, 1, 2 }, idx.Select(_ => _.Index).ToArray());
@@ -676,7 +676,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p1.ParentID })
 					.Select    (p2 => p2.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
@@ -694,7 +694,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p = p1.ParentID + 1 })
 					.Select    (p2 => p2.p)
-					.GetContext();
+					.GetMyContext();
 
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
@@ -712,7 +712,7 @@ namespace Tests.Linq
 					.Select    (p1 => new { p = p1.ParentID + 1 })
 					.Where     (p3 => p3.p == 1)
 					.Select    (p2 => p2.p)
-					.GetContext();
+					.GetMyContext();
 
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
@@ -729,7 +729,7 @@ namespace Tests.Linq
 				var ctx = db.Parent
 					.Select    (p1 => new { p1 })
 					.Select    (p2 => p2.p1.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
@@ -748,7 +748,7 @@ namespace Tests.Linq
 					.Select    (p => new { p, p.Parent })
 					.Select    (p => new { p.Parent.ParentID, p.p.ChildID })
 					.Select    (p => p.ParentID)
-					.GetContext();
+					.GetMyContext();
 
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.Field);
 
@@ -775,7 +775,7 @@ namespace Tests.Linq
 					where t > 2
 					select t;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 				ctx.BuildExpression(null, 0);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
@@ -795,7 +795,7 @@ namespace Tests.Linq
 					where t.ID > 2
 					select t;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 				ctx.BuildExpression(null, 0);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
@@ -817,7 +817,7 @@ namespace Tests.Linq
 					join j in db.Child on p.ParentID equals j.ParentID
 					select p;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 				ctx.BuildExpression(null, 0);
 
 				Assert.AreEqual(2, ctx.SelectQuery.Select.Columns.Count);
@@ -840,7 +840,7 @@ namespace Tests.Linq
 					where p.ID.ID == 1
 					select p;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 				ctx.BuildExpression(null, 0);
 
 				Assert.AreEqual(1, ctx.SelectQuery.Select.Columns.Count);
@@ -859,7 +859,7 @@ namespace Tests.Linq
 					select new { p, c, g } into x
 					select x.c.ParentID;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 				var sql = ctx.ConvertToSql(null, 0, ConvertFlags.All);
 
 				Assert.AreEqual(1, sql.Length);
@@ -876,7 +876,7 @@ namespace Tests.Linq
 					join p in db.Parent4 on g.Child.ParentID equals p.ParentID
 					select g;
 
-				var ctx = q.GetContext();
+				var ctx = q.GetMyContext();
 
 				ctx.BuildExpression(null, 0);
 
@@ -897,14 +897,14 @@ namespace Tests.Linq
 		#endregion
 	}
 
-	class ContextParser : ISequenceBuilder
+	class MyContextParser : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var call = buildInfo.Expression as MethodCallExpression;
-			return call != null && call.Method.Name == "GetContext";
+			return call != null && call.Method.Name == "GetMyContext";
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -938,30 +938,15 @@ namespace Tests.Linq
 
 	static class Extensions
 	{
-		public static ContextParser.Context GetContext<T>(this IQueryable<T> source)
+		public static MyContextParser.Context GetMyContext<T>(this IQueryable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			return source.Provider.Execute<ContextParser.Context>(
+			return source.Provider.Execute<MyContextParser.Context>(
 				Expression.Call(
 					null,
 					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
 					new[] { source.Expression }));
-		}
-
-		static public Expression Unwrap(this Expression ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Quote          :
-				case ExpressionType.Convert        :
-				case ExpressionType.ConvertChecked : return ((UnaryExpression)ex).Operand.Unwrap();
-			}
-
-			return ex;
 		}
 	}
 }

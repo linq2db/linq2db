@@ -4,6 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.MySql
 {
 	using Mapping;
+	using SqlQuery;
 
 	public class MySqlMappingSchema : MappingSchema
 	{
@@ -15,6 +16,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

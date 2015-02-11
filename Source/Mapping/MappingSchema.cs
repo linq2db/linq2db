@@ -803,7 +803,7 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
-		public DataType GetDataType(Type type)
+		public SqlDataType GetDataType(Type type)
 		{
 			foreach (var info in _schemas)
 			{
@@ -812,7 +812,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			return DataType.Undefined;
+			return SqlDataType.Undefined;
 		}
 
 		public void SetDataType(Type type, DataType dataType)
@@ -820,9 +820,14 @@ namespace LinqToDB.Mapping
 			_schemas[0].SetDataType(type, dataType);
 		}
 
-		public DataType GetUnderlyingDataType(Type type, ref bool canBeNull, out int? length)
+		public void SetDataType(Type type, SqlDataType dataType)
 		{
-			length = null;
+			_schemas[0].SetDataType(type, dataType);
+		}
+
+		public SqlDataType GetUnderlyingDataType(Type type, ref bool canBeNull)
+		{
+			int? length = null;
 
 			var underlyingType = type.ToNullableUnderlying();
 
@@ -874,10 +879,16 @@ namespace LinqToDB.Mapping
 						}
 					}
 
-					var dt = valueType == null ? DataType.Undefined : GetDataType(valueType);
+					if (valueType == null)
+						return SqlDataType.Undefined;
 
-					if (dt == DataType.NVarChar && minLen == length)
-						dt = DataType.NChar;
+					var dt = GetDataType(valueType);
+
+					if (dt.DataType == DataType.NVarChar && minLen == length)
+						return new SqlDataType(DataType.NChar, valueType, length.Value);
+
+					if (length.HasValue && dt.IsCharDataType)
+						return new SqlDataType(dt.DataType, valueType, length.Value);
 
 					return dt;
 				}
@@ -886,7 +897,7 @@ namespace LinqToDB.Mapping
 			if (underlyingType != type)
 				return GetDataType(underlyingType);
 
-			return DataType.Undefined;
+			return SqlDataType.Undefined;
 		}
 
 

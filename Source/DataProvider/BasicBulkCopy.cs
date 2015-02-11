@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.DataProvider
 {
@@ -140,7 +139,7 @@ namespace LinqToDB.DataProvider
 
 		#endregion
 
-		#region MultopleRows Support
+		#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)

@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Data;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -25,7 +22,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected OracleDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsCountSubQuerySupported    = false;
+			//SqlProviderFlags.IsCountSubQuerySupported    = false;
 			SqlProviderFlags.IsIdentityParameterRequired = true;
 
 			SqlProviderFlags.MaxInListValuesCount = 1000;
@@ -309,7 +306,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Action<DataConnection> _setBindByName;
 
-		public override void InitCommand(DataConnection dataConnection)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
 		{
 			dataConnection.DisposeCommand();
 
@@ -317,6 +314,8 @@ namespace LinqToDB.DataProvider.Oracle
 				EnsureConnection();
 
 			_setBindByName(dataConnection);
+
+			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
@@ -430,5 +429,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		{
+			if (delete)
+				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
+
+			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source);
+		}
+
+		#endregion
 	}
 }

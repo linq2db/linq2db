@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Data;
 using System.Data.Odbc;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
+	using Data;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -55,6 +58,17 @@ namespace LinqToDB.DataProvider.SapHana
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new SapHanaOdbcSchemaProvider();
+		}
+
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
+		{
+			if (commandType == CommandType.StoredProcedure)
+			{
+				commandText = "{{ CALL {0} ({1}) }}".Args(commandText, string.Join(",", parameters.Select(x => "?")));
+				commandType = CommandType.Text;
+			}
+
+			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder()

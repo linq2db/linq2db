@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq
 {
@@ -104,6 +103,7 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
+		public          bool              DoNotChache;
 		public          Query<T>          Next;
 		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
 		public          ISqlOptimizer     SqlOptimizer;
@@ -165,8 +165,11 @@ namespace LinqToDB.Linq
 							throw;
 						}
 
-						query.Next = _first;
-						_first = query;
+						if (!query.DoNotChache)
+						{
+							query.Next = _first;
+							_first = query;
+						}
 					}
 				}
 			}
@@ -387,7 +390,7 @@ namespace LinqToDB.Linq
 
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
-		void SetParameters(Expression expr, object[] parameters, int idx)
+		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
 			foreach (var p in Queries[idx].Parameters)
 			{
@@ -1156,6 +1159,8 @@ namespace LinqToDB.Linq
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
+					// IT : # MapperExpression.Compile()
+					//
 					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}
 

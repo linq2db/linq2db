@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
 using LinqToDB.Common;
 
@@ -263,7 +262,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			ParameterExpression _variable;
-			static int _varIndex;
 
 			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
 			{
@@ -328,10 +326,7 @@ namespace LinqToDB.Linq.Builder
 				if (!buildBlock)
 					return expr;
 
-				Builder.BlockVariables.  Add(_variable = Expression.Variable(expr.Type, expr.Type.Name + Interlocked.Increment(ref _varIndex)));
-				Builder.BlockExpressions.Add(Expression.Assign(_variable, expr));
-
-				return _variable;
+				return _variable = Builder.BuildVariable(expr);
 			}
 
 			protected virtual Expression ProcessExpression(Expression expression)

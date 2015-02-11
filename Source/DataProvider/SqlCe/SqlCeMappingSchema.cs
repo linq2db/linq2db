@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Mapping;
+	using SqlQuery;
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
@@ -37,6 +38,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			AddScalarType(typeof(SqlSingle),   SqlSingle.  Null, true, DataType.Single);
 			AddScalarType(typeof(SqlString),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),      SqlXml.     Null, true, DataType.Xml);
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 	}
 }

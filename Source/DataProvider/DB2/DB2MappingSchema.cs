@@ -4,6 +4,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
+	using SqlQuery;
 
 	public class DB2MappingSchema : MappingSchema
 	{
@@ -14,6 +15,8 @@ namespace LinqToDB.DataProvider.DB2
 		protected DB2MappingSchema(string configuration) : base(configuration)
 		{
 			SetValueToSqlConverter(typeof(Guid), (sb,dt,v) => ConvertGuidToSql(sb, (Guid)v));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
 		internal static readonly DB2MappingSchema Instance = new DB2MappingSchema();

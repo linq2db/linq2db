@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -70,6 +71,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
+		ParameterExpression _rootExpression;
+
 		public virtual Expression BuildExpression(Expression expression, int level)
 		{
 			{
@@ -85,7 +88,19 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (expression == null)
-				return Builder.BuildExpression(this, Body);
+			{
+				if (_rootExpression == null)
+				{
+					var expr = Builder.BuildExpression(this, Body);
+
+					if (Builder.IsBlockDisable)
+						return expr;
+
+					_rootExpression = Builder.BuildVariable(expr);
+				}
+
+				return _rootExpression;
+			}
 
 			var levelExpression = expression.GetLevelExpression(level);
 
@@ -572,7 +587,37 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsExpression
 
+		Expression _lastAssociationExpression;
+		int        _lastAssociationLevel = -1;
+
 		public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+		{
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					if (expression == _lastAssociationExpression && level == _lastAssociationLevel)
+						return IsExpressionResult.False;
+
+					_lastAssociationExpression = expression;
+					_lastAssociationLevel      = level;
+
+					break;
+			}
+
+			var res = IsExpressionInternal(expression, level, requestFlag);
+
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					_lastAssociationExpression = null;
+					_lastAssociationLevel      = -1;
+					break;
+			}
+
+			return res;
+		}
+
+		public IsExpressionResult IsExpressionInternal(Expression expression, int level, RequestFor requestFlag)
 		{
 			switch (requestFlag)
 			{

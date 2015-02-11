@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+
 namespace Tests.Linq
 {
 	using Model;
@@ -979,6 +981,46 @@ namespace Tests.Linq
 					from p1 in db.Parent
 					from p2 in db.Parent.Where(p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2);
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+		public void JoinSubQueryCount(string context)
+		{
+			var n = 1;
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					where p.ParentID > 0
+					join c in Child on p.ParentID equals c.ParentID into t
+					//select new { p.ParentID, count = t.Count() }
+					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + n).Count() }
+					,
+					from p in db.Parent
+					where p.ParentID > 0
+					join c in db.Child on p.ParentID equals c.ParentID into t
+					//select new { p.ParentID, count = t.Count() }
+					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + n).Count() }
+					);
+		}
+
+		[Test, DataContextSource(ProviderName.SqlCe)]
+		public void JoinSubQuerySum(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					where p.ParentID > 0
+					join c in Child on p.ParentID equals c.ParentID into t
+					//select new { p.ParentID, count = t.Count() }
+					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Sum(c => c.ChildID) }
+					,
+					from p in db.Parent
+					where p.ParentID > 0
+					join c in db.Child on p.ParentID equals c.ParentID into t
+					//select new { p.ParentID, count = t.Count() }
+					select new { p.ParentID, count = t.Where(c => c.ChildID != p.ParentID * 10 + 1).Sum(c => c.ChildID) }
+					);
 		}
 	}
 }

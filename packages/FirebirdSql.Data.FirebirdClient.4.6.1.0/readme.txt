@@ -16,9 +16,9 @@ You can subscribe to the developement list at:
 	http://lists.sourceforge.net/lists/listinfo/firebird-net-provider
 
 
-You can access to the lastest developement sources through SVN, see:
+You can access to the lastest developement sources through Git, see:
 
-	https://sourceforge.net/p/firebird/NETProvider/
+	https://sourceforge.net/p/firebird/NETProvider/ci/master/tree/
 
 
 Reporting Bugs

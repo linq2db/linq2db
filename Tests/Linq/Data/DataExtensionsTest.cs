@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Data
 {
@@ -106,13 +107,27 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Execute<string>(
+				var res = conn.Execute<string>(
 					"SELECT @p",
 					new
 					{
 						p  = new DataParameter { DataType = DataType.VarChar, Value = "123" },
 						p1 = 1
-					}), Is.EqualTo("123"));
+					});
+
+				Assert.That(res, Is.EqualTo("123"));
+			}
+		}
+
+		[Test, DataContextSource(false)]
+		public void TestObject51(string context)
+		{
+			using (var conn = new TestDataConnection(context))
+			{
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString().Replace("-- Access", "");
+				var res = conn.Execute<string>(sql);
+
+				Assert.That(res, Is.EqualTo("John"));
 			}
 		}
 

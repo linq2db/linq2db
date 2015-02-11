@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DDL
@@ -14,6 +15,7 @@ namespace Tests.DDL
 		{
 			public int       ID;
 			public string    Field1;
+			public string    Field2;
 			public DateTime? CreatedOn;
 		}
 
@@ -148,6 +150,69 @@ namespace Tests.DDL
 			}
 		}
 
+		public enum jjj
+		{
+			aa,
+			bb,
+		}
+		public class base_aa
+		{
+			public jjj dd { get; set; }
+		}
+		public class aa : base_aa
+		{
+			public int    bb { get; set; }
+			public string cc { get; set; }
+		}
+		
+		public class qq
+		{
+			public int bb { get; set; }
+			public string cc { get; set; }
+		}
 
+		[Test, DataContextSource]
+		public void TestIssue160(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				conn.MappingSchema.GetFluentMappingBuilder()
+					.Entity<aa>()
+						.HasTableName("aa")
+						.Property(t => t.bb).IsPrimaryKey()
+						.Property(t => t.cc)
+						.Property(t => t.dd).IsNotColumn()
+					
+					.Entity<qq>()
+						.HasTableName("aa")
+						.Property(t => t.bb).IsPrimaryKey()
+						.Property(t => t.cc)
+					;
+
+				try
+				{
+					conn.DropTable<qq>();
+				}
+				catch
+				{
+				}
+
+				conn.CreateTable<qq>();
+
+				conn.Insert(new aa
+				{
+					bb = 99,
+					cc = "hallo",
+					dd = jjj.aa
+				});
+
+				var qq = conn.GetTable<aa>().ToList().First();
+
+				Assert.That(qq.bb, Is.EqualTo(99));
+				Assert.That(qq.cc, Is.EqualTo("hallo"));
+
+				conn.DropTable<qq>();
+			}
+		}
 	}
 }

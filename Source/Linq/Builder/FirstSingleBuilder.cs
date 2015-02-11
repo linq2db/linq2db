@@ -105,22 +105,44 @@ namespace LinqToDB.Linq.Builder
 				return new object[0].First();
 			}
 
+			bool _isJoinCreated = false;
+
+			void CreateJoin()
+			{
+				if (!_isJoinCreated)
+				{
+					_isJoinCreated = true;
+
+					var join = SelectQuery.OuterApply(SelectQuery);
+
+					Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				}
+			}
+
+			int _checkNullIndex = -1;
+
+			int GetCheckNullIndex()
+			{
+				if (_checkNullIndex < 0)
+				{
+					_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
+					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
+				}
+
+				return _checkNullIndex;
+			}
+
 			public override Expression BuildExpression(Expression expression, int level)
 			{
-				if (expression == null)
+				if (expression == null || level == 0)
 				{
 					if (Builder.DataContextInfo.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent.SelectQuery.GroupBy.IsEmpty &&
 						Parent.SelectQuery.From.Tables.Count > 0)
 					{
-						var join = SelectQuery.OuterApply(SelectQuery);
+						CreateJoin();
 
-						Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-
-						var expr = Sequence.BuildExpression(expression, level);
-						var idx  = SelectQuery.Select.Add(new SqlValue(1));
-
-						idx = ConvertToParentIndex(idx, this);
+						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1);
 
 						Expression defaultValue;
 
@@ -137,17 +159,22 @@ namespace LinqToDB.Linq.Builder
 							Expression.Call(
 								ExpressionBuilder.DataReaderParam,
 								ReflectionHelper.DataReader.IsDBNull,
-								Expression.Constant(idx)),
+								Expression.Constant(GetCheckNullIndex())),
 							defaultValue,
 							expr);
 
 						return expr;
 					}
 
-					if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
-						return Builder.BuildMultipleQuery(Parent, _methodCall);
+					if (expression == null)
+					{
+						if (Sequence.IsExpression(null, level, RequestFor.Object).Result)
+							return Builder.BuildMultipleQuery(Parent, _methodCall);
 
-					return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
+						return Builder.BuildSql(_methodCall.Type, Parent.SelectQuery.Select.Add(SelectQuery));
+					}
+
+					return null;
 				}
 
 				throw new NotImplementedException();

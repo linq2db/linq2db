@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider
 			_columns      = columns;
 			_enumerator   = collection.GetEnumerator();
 			_columnTypes  = _columns
-				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType) : c.DataType)
+				.Select(c => c.DataType == DataType.Undefined ? dataProvider.MappingSchema.GetDataType(c.MemberType).DataType : c.DataType)
 				.ToArray();
 		}
 
@@ -167,18 +167,19 @@ namespace LinqToDB.DataProvider
 			{
 				var columnDescriptor = _columns[i];
 				var row = table.NewRow();
-
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
 				row[SchemaTableColumn.DataType]                = _dataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;
+				//length cannot be null(DBNull) or 0
 				row[SchemaTableColumn.ColumnSize]              =
-					columnDescriptor.Length.HasValue ?
-						columnDescriptor.Length == 0 ? 0x7FFFFFFF : columnDescriptor.Length :
-						null;
-				row[SchemaTableColumn.NumericPrecision]        = columnDescriptor.Precision.HasValue ? (short?)columnDescriptor.Precision.Value : null;
-				row[SchemaTableColumn.NumericScale]            = columnDescriptor.Scale.    HasValue ? (short?)columnDescriptor.Scale.    Value : null;
+					columnDescriptor.Length.HasValue && columnDescriptor.Length.Value > 0 ?
+						columnDescriptor.Length.Value : 0x7FFFFFFF;
+				if (columnDescriptor.Precision.HasValue)
+					row[SchemaTableColumn.NumericPrecision] = (short)columnDescriptor.Precision.Value;
+				if (columnDescriptor.Scale.HasValue)
+					row[SchemaTableColumn.NumericScale]     = (short)columnDescriptor.Scale.Value;
 
 				table.Rows.Add(row);
 			}

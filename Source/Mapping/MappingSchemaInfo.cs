@@ -9,6 +9,7 @@ namespace LinqToDB.Mapping
 	using Expressions;
 	using Extensions;
 	using Metadata;
+	using SqlQuery;
 
 	class MappingSchemaInfo
 	{
@@ -176,26 +177,31 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
-		volatile ConcurrentDictionary<Type,DataType> _dataTypes;
+		volatile ConcurrentDictionary<Type,SqlDataType> _dataTypes;
 
-		public Option<DataType> GetDataType(Type type)
+		public Option<SqlDataType> GetDataType(Type type)
 		{
 			if (_dataTypes != null)
 			{
-				DataType dataType;
+				SqlDataType dataType;
 				if (_dataTypes.TryGetValue(type, out dataType))
-					return Option<DataType>.Some(dataType);
+					return Option<SqlDataType>.Some(dataType);
 			}
 
-			return Option<DataType>.None;
+			return Option<SqlDataType>.None;
 		}
 
 		public void SetDataType(Type type, DataType dataType)
 		{
+			SetDataType(type, new SqlDataType(dataType, type, null, null, null));
+		}
+
+		public void SetDataType(Type type, SqlDataType dataType)
+		{
 			if (_dataTypes == null)
 				lock (this)
 					if (_dataTypes == null)
-						_dataTypes = new ConcurrentDictionary<Type,DataType>();
+						_dataTypes = new ConcurrentDictionary<Type,SqlDataType>();
 
 			_dataTypes[type] = dataType;
 		}

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -161,10 +160,10 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
 		{
 			dataConnection.DisposeCommand();
-			base.InitCommand(dataConnection);
+			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
 		static Action<IDbDataParameter> _setBlob;
@@ -239,6 +238,18 @@ namespace LinqToDB.DataProvider.DB2
 				dataConnection,
 				options,
 				source);
+		}
+
+		#endregion
+
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		{
+			if (delete)
+				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
+
+			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source);
 		}
 
 		#endregion

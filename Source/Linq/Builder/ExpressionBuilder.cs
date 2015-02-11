@@ -56,6 +56,7 @@ namespace LinqToDB.Linq.Builder
 			new DropBuilder                (),
 			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
+			new ContextParser              (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -80,6 +81,7 @@ namespace LinqToDB.Linq.Builder
 		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
 		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
 		         public bool                       IsBlockDisable;
+		         public int                        VarIndex;
 
 #else
 		         public bool                       IsBlockDisable = true;
@@ -110,12 +112,10 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				DataReaderLocal = Expression.Parameter(dataContext.DataContext.DataReaderType, "ldr");
-
-				BlockVariables.  Add(DataReaderLocal);
-				BlockExpressions.Add(Expression.Assign(DataReaderLocal, Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType)));
+				DataReaderLocal = BuildVariable(Expression.Convert(DataReaderParam, dataContext.DataContext.DataReaderType), "ldr");
 			}
 		}
+
 
 		#endregion
 

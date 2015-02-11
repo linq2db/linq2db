@@ -356,7 +356,6 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 
 			StringBuilder.AppendLine();
-			StringBuilder.AppendLine();
 		}
 
 		#endregion

@@ -179,7 +179,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				() =>
 				{
-					var a = new TableAttribute { Configuration = Configuration };
+					var a = new TableAttribute { Configuration = Configuration, IsColumnAttributeRequired = false };
 					setColumn(a);
 					return a;
 				},
@@ -248,6 +248,9 @@ namespace LinqToDB.Mapping
 				var memberInfo =
 					e is MemberExpression     ? ((MemberExpression)    e).Member :
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
+
+				if (e is MemberExpression && memberInfo.ReflectedType != typeof(T))
+					memberInfo = typeof(T).GetProperty(memberInfo.Name);
 
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));

@@ -3502,6 +3502,11 @@ namespace LinqToDB.SqlQuery
 
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
+			ICloneableElement parentClone;
+
+			if (clone.ParentSelect != null)
+				ParentSelect = objectTree.TryGetValue(clone.ParentSelect, out parentClone) ? (SelectQuery)parentClone : clone.ParentSelect;
+
 			_queryType = clone._queryType;
 
 			if (IsInsert) _insert = (InsertClause)clone._insert.Clone(objectTree, doClone);

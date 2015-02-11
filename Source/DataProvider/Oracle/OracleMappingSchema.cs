@@ -7,6 +7,8 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using Expressions;
 	using Mapping;
+	using SqlQuery;
+
 
 	public class OracleMappingSchema : MappingSchema
 	{
@@ -18,7 +20,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			ColumnComparisonOption = StringComparison.OrdinalIgnoreCase;
 
-			SetDataType(typeof(Guid), DataType.Guid);
+			SetDataType(typeof(Guid),   DataType.Guid);
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 

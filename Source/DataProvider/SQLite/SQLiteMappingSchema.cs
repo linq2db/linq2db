@@ -5,6 +5,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Mapping;
+	using SqlQuery;
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
@@ -18,6 +19,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb, (Guid)    v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)

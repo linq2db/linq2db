@@ -6,8 +6,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Reflection;
-
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -96,20 +94,21 @@ namespace LinqToDB.SqlQuery
 
 				if (field.DataType == DataType.Undefined)
 				{
-					field.DataType = mappingSchema.GetDataType(field.SystemType);
+					var dataType = mappingSchema.GetDataType(field.SystemType);
 
-					if (field.DataType == DataType.Undefined)
+					if (dataType.DataType == DataType.Undefined)
 					{
-						int? length;
 						var  canBeNull = field.Nullable;
 
-						field.DataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull, out length);
-
-						if (field.Length == null)
-							field.Length = length;
+						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull);
 
 						field.Nullable = canBeNull;
 					}
+
+					field.DataType = dataType.DataType;
+
+					if (field.Length == null)
+						field.Length = dataType.Length;
 				}
 			}
 

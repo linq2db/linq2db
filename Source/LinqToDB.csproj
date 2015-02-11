@@ -58,6 +58,7 @@
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
     <Compile Include="DataProvider\Access\AccessBulkCopy.cs" />
+    <Compile Include="DataProvider\BasicMerge.cs" />
     <Compile Include="DataProvider\BasicBulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2BulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSchemaProvider.cs" />
@@ -73,15 +74,18 @@
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2Merge.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlOptimizer.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdBulkCopy.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMerge.cs" />
     <Compile Include="DataProvider\IDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataProvider\Informix\InformixMerge.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlOptimizer.cs" />
     <Compile Include="DataProvider\Informix\InformixTools.cs" />
     <Compile Include="DataProvider\Informix\InformixFactory.cs" />
@@ -94,6 +98,7 @@
     <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMerge.cs" />
     <Compile Include="DataProvider\Oracle\OracleBulkCopy.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlOptimizer.cs" />
     <Compile Include="DataProvider\Oracle\OracleTools.cs" />
@@ -124,7 +129,7 @@
     <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaSqlOptimizer.cs" />
     <Compile Include="DataProvider\SapHana\SapHanaTools.cs" />
-    <Compile Include="DataProvider\SapHana\ViewWithParametersTableSchema.cs" />	
+    <Compile Include="DataProvider\SapHana\ViewWithParametersTableSchema.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeBulkCopy.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteBulkCopy.cs" />
@@ -132,16 +137,21 @@
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerBulkCopy.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerMerge.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
     <Compile Include="DataProvider\Sybase\SybaseBulkCopy.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyRowsCopied.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
+    <Compile Include="Data\CommandInfo.cs" />
+    <Compile Include="Data\DataConnection.Async.cs" />
     <Compile Include="Data\DataConnectionTransaction.cs" />
+    <Compile Include="Data\DataReaderAsync.cs" />
     <Compile Include="Data\TraceInfo.cs" />
     <Compile Include="Expressions\GetItemExpression.cs" />
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />

@@ -89,10 +89,49 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
+					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
 				default                      : base.BuildDataType(type); break;
 			}
 		}
+
+//		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+//		{
+//			switch (type.DataType)
+//			{
+//				case DataType.DateTimeOffset :
+//				case DataType.DateTime2      :
+//				case DataType.Time           :
+//				case DataType.Date           : StringBuilder.Append("DateTime"); return;
+//				case DataType.Xml            : StringBuilder.Append("NText");    return;
+//				case DataType.NVarChar       :
+//
+//					if (type.Length == int.MaxValue || type.Length < 0)
+//					{
+//						StringBuilder
+//							.Append(type.DataType)
+//							.Append("(4000)");
+//						return;
+//					}
+//
+//					break;
+//
+//				case DataType.VarChar        :
+//				case DataType.VarBinary      :
+//
+//					if (type.Length == int.MaxValue || type.Length < 0)
+//					{
+//						StringBuilder
+//							.Append(type.DataType)
+//							.Append("(8000)");
+//						return;
+//					}
+//
+//					break;
+//			}
+//
+//			base.BuildDataType(type, createDbType);
+//		}
 
 		protected override void BuildFromClause()
 		{
