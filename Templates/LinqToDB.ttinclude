@@ -431,7 +431,7 @@ void GenerateTypesFromMetadata()
 				spName += inputParameters.Count == 0 ? ");" : ",";
 
 				var hasOut = outputParameters.Any(pr => pr.IsOut);
-				var prefix = hasOut ? "var ret = " : "return ";
+				var prefix = hasOut ? "var __ret__ = " : "return ";
 
 				if (p.ResultTable == null)
 					p.Body.Add(prefix + "dataConnection.ExecuteProc(" + spName);
@@ -517,7 +517,7 @@ void GenerateTypesFromMetadata()
 					}
 
 					p.Body.Add("");
-					p.Body.Add("return ret;");
+					p.Body.Add("return __ret__;");
 				}
 			}
 
