@@ -56,6 +56,54 @@ namespace Tests.Linq
 			}
 		}
 
+		// IT : #169 test.
+		[Test, DataContextSource(ProviderName.Firebird)]
+		public void ContainsConstant4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s = "123[456";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains("[") select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ContainsConstant5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q = from p in db.Person where p.ID == 1 && "123[456".Contains("[") select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Informix)]
+		public void ContainsConstant41(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var s  = "123[456";
+				var ps = "[";
+
+				var q = from p in db.Person where p.ID == 1 && s.Contains(ps) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
+		[Test, DataContextSource]
+		public void ContainsConstant51(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var ps = "[";
+
+				var q = from p in db.Person where p.ID == 1 && "123[456".Contains(ps) select p;
+				Assert.AreEqual(1, q.ToList().First().ID);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void ContainsParameter1(string context)
 		{
