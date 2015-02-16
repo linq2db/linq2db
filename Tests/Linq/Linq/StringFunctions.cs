@@ -56,7 +56,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IT : #169 test.
 		[Test, DataContextSource(ProviderName.Firebird)]
 		public void ContainsConstant4(string context)
 		{
