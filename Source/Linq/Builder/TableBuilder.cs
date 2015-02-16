@@ -290,6 +290,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.New(objectType),
 					members
 						.Where (m => !m.Column.MemberAccessor.IsComplex)
+                        .Where (m => !m.Column.Transparent)
 						.Select(m => (MemberBinding)Expression.Bind(
 							m.Column.Storage == null ?
 								m.Column.MemberAccessor.MemberInfo :
@@ -971,9 +972,9 @@ namespace LinqToDB.Linq.Builder
 						{
 							foreach (var field in SqlTable.Fields.Values)
 							{
-								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
+                                if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType) && !field.ColumnDescriptor.Transparent)
 								{
-									if (field.ColumnDescriptor.MemberAccessor.IsComplex)
+                                    if (field.ColumnDescriptor.MemberAccessor.IsComplex)
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
@@ -1001,7 +1002,7 @@ namespace LinqToDB.Linq.Builder
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
-											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+                                            if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member) && !field.ColumnDescriptor.Transparent)
 												return field;
 							}
 

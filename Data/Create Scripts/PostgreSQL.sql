@@ -1,4 +1,4 @@
-DROP TABLE "Doctor"
+﻿DROP TABLE "Doctor"
 GO
 
 DROP TABLE "Patient"
@@ -400,4 +400,42 @@ CREATE TABLE TestSameName
 (
 	ID serial NOT NULL PRIMARY KEY
 )
+GO
+
+DROP TABLE "TestEntity1"
+GO
+
+DROP TABLE "TestEntity2"
+GO
+
+CREATE TABLE "TestEntity2"
+( 	
+	"Id"   INTEGER PRIMARY KEY,
+	"Name" character varying(2000) NOT NULL
+)
+
+
+CREATE TABLE "TestEntity1"
+( 	
+	"Id"   INTEGER PRIMARY KEY,	
+	"TestEntity2_id" bigint NOT NULL
+)
+GO
+
+INSERT INTO "TestEntity2" ("Id", "Name") VALUES (1, "Test1")
+GO
+INSERT INTO "TestEntity2" ("Id", "Name") VALUES (2, "Test2")
+GO
+INSERT INTO "TestEntity2" ("Id", "Name") VALUES (3, "Test3")
+GO
+INSERT INTO "TestEntity2" ("Id", "Name") VALUES (4, "Test4")
+GO
+INSERT INTO "TestEntity2" ("Id", "Name") VALUES (5, "TEST5")
+GO
+
+INSERT INTO "TestEntity1" ("Id", "TestEntity2_id") VALUES (1, 1)
+GO
+INSERT INTO "TestEntity1" ("Id", "TestEntity2_id") VALUES (2, 2)
+GO
+INSERT INTO "TestEntity1" ("Id", "TestEntity2_id") VALUES (3, 5)
 GO

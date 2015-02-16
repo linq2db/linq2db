@@ -84,7 +84,6 @@ namespace LinqToDB.Mapping
 				{
 					Associations.Add(new AssociationDescriptor(
 						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(), aa.Storage, aa.CanBeNull));
-					continue;
 				}
 
 				var ca = _mappingSchema.GetAttribute<ColumnAttribute>(member.MemberInfo, attr => attr.Configuration);

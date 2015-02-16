@@ -33,6 +33,7 @@ namespace LinqToDB.Mapping
 
 			MemberName      = columnAttribute.MemberName ?? MemberInfo.Name;
 			ColumnName      = columnAttribute.Name       ?? MemberInfo.Name;
+		    Transparent     = columnAttribute.Transparent;
 			Storage         = columnAttribute.Storage;
 			PrimaryKeyOrder = columnAttribute.PrimaryKeyOrder;
 			IsDiscriminator = columnAttribute.IsDiscriminator;
@@ -110,6 +111,7 @@ namespace LinqToDB.Mapping
 		public int?           Length          { get; private set; }
 		public int?           Precision       { get; private set; }
 		public int?           Scale           { get; private set; }
+	    public bool           Transparent     { get; private set; }
 
 		Func<object,object> _getter;
 

@@ -88,6 +88,20 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+        public void SelectingWithoutIdMemberInfo(string context)
+        {
+            using (var db = GetDataContext(context))
+            {
+                var b = (
+                    from entity1 in db.TestEntity1
+                    where entity1.Id == 3
+                    select entity1.TestEntity2).First();
+
+                Assert.AreEqual("TEST5", b.Name);
+            }
+        }
+
+        [Test, DataContextSource]
 		public void NewWithExpr(string context)
 		{
 			using (var db = GetDataContext(context))

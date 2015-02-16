@@ -141,6 +141,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestEntity1.cs" />
+    <Compile Include="TestEntity2.cs" />
     <Compile Include="TestDataConnection.cs" />
     <Compile Include="PostgreSQLSpecific.cs" />
     <Compile Include="Extensions.cs" />
