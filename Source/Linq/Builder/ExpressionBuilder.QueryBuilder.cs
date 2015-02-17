@@ -16,7 +16,8 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		readonly HashSet<Expression> _skippedExpressions = new HashSet<Expression>();
+		readonly HashSet<Expression>                    _skippedExpressions   = new HashSet<Expression>();
+		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new Dictionary<Expression,UnaryExpression>();
 
 		public Expression BuildExpression(IBuildContext context, Expression expression)
 		{
@@ -30,6 +31,29 @@ namespace LinqToDB.Linq.Builder
 
 				switch (expr.NodeType)
 				{
+					// IT : #170 fix.
+					case ExpressionType.Convert       :
+					case ExpressionType.ConvertChecked:
+						{
+							if (expr.Type == typeof(object))
+								break;
+
+							var cex = (UnaryExpression)expr;
+
+							_convertedExpressions.Add(cex.Operand, cex);
+
+							var nex = BuildExpression(context, cex.Operand);
+
+							if (nex.Type != cex.Type)
+								nex = cex.Update(nex);
+
+							var ret = new TransformInfo(nex, true);
+
+							_convertedExpressions.Remove(cex.Operand);
+
+							return ret;
+						}
+
 					case ExpressionType.MemberAccess:
 						{
 							if (IsServerSideOnly(expr) || PreferServerSide(expr))
@@ -277,9 +301,19 @@ namespace LinqToDB.Linq.Builder
 
 			idx = context.ConvertToParentIndex(idx, context);
 
-			var field = BuildSql(expression.Type, idx);
+			var field = BuildSql(expression, idx);
 
 			return field;
+		}
+
+		// IT : #170 fix.
+		public Expression BuildSql(Expression expression, int idx)
+		{
+			UnaryExpression cex;
+
+			var type = _convertedExpressions.TryGetValue(expression, out cex) ? cex.Type : expression.Type;
+
+			return BuildSql(type, idx);
 		}
 
 		public Expression BuildSql(Type type, int idx)
