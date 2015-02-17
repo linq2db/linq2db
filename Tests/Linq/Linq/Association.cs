@@ -530,7 +530,6 @@ namespace Tests.Linq
 			public Parent170 Parent;
 		}
 
-		// IT : #170 test.
 		[Test, DataContextSource]
 		public void Issue170Test(string context)
 		{

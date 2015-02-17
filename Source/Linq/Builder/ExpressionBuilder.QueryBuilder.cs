@@ -31,7 +31,6 @@ namespace LinqToDB.Linq.Builder
 
 				switch (expr.NodeType)
 				{
-					// IT : #170 fix.
 					case ExpressionType.Convert       :
 					case ExpressionType.ConvertChecked:
 						{
@@ -306,7 +305,6 @@ namespace LinqToDB.Linq.Builder
 			return field;
 		}
 
-		// IT : #170 fix.
 		public Expression BuildSql(Expression expression, int idx)
 		{
 			UnaryExpression cex;
