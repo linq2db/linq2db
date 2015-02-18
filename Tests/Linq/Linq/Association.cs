@@ -519,5 +519,27 @@ namespace Tests.Linq
 				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			}
 		}
+
+		[Table("Parent")]
+		class Parent170
+		{
+			[Column] public int ParentID;
+			[Column] public int Value1;
+
+			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
+			public Parent170 Parent;
+		}
+
+		// IT : #170 test.
+		[Test, DataContextSource]
+		public void Issue170Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
+
+				Assert.That(value, Is.Null);
+			}
+		}
 	}
 }

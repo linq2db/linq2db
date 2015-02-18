@@ -494,7 +494,8 @@ namespace LinqToDB.Linq.Builder
 				var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
 				var idx  = ConvertToParentIndex(info.Index, null);
 
-				return Builder.BuildSql(expression.Type, idx);
+				// IT : #170 fix.
+				return Builder.BuildSql(expression, idx);
 			}
 
 			#endregion
