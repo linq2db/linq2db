@@ -124,8 +124,8 @@ namespace Tests.Update
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
 				{
-					charDataType  = ' ',
-					ncharDataType = "     "
+					charDataType  = '\x0',
+					ncharDataType = "\x0"
 				}));
 
 				try
@@ -153,8 +153,8 @@ namespace Tests.Update
 						new AllType
 						{
 							ID            = 10,
-							charDataType  = ' ',
-							ncharDataType = "     "
+							charDataType  = '\x0',
+							ncharDataType = "\x0"
 						}
 					});
 				}

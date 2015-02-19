@@ -141,6 +141,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
     <Compile Include="DataProvider\Sybase\SybaseBulkCopy.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
+    <Compile Include="DataProvider\DataTools.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
     <Compile Include="Data\BulkCopyRowsCopied.cs" />
     <Compile Include="Data\BulkCopyType.cs" />

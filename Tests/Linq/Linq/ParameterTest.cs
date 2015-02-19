@@ -41,16 +41,50 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void AsSqlParameter(string context)
+		public void CharAsSqlParameter1(string context)
 		{
 			using (var  db = GetDataContext(context))
 			{
-				var id = 1;
-				var q1 = db.Parent.Where(p => p.ParentID == id);
-				var q2 = db.Parent.Where(p => p.ParentID == Sql.ToSql(id));
+				var s1 = "0 \x0 ' 0";
+				var s2 = db.Select(() => Sql.ToSql(s1));
 
-				Assert.That(q1.ToString(), Contains.Substring("id").Or.ContainsSubstring("?"));
-				Assert.That(q2.ToString(), Is.Not.ContainsSubstring("id").And.Not.ContainsSubstring("?"));
+				Assert.That(s2, Is.EqualTo(s1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void CharAsSqlParameter2(string context)
+		{
+			using (var  db = GetDataContext(context))
+			{
+				var s1 = "\x0 \x0 ' \x0";
+				var s2 = db.Select(() => Sql.ToSql(s1));
+
+				Assert.That(s2, Is.EqualTo(s1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void CharAsSqlParameter3(string context)
+		{
+			using (var  db = GetDataContext(context))
+			{
+				var s1 = "\x0";
+				var s2 = db.Select(() => Sql.ToSql(s1));
+
+				Assert.That(s2, Is.EqualTo(s1));
+			}
+		}
+
+		[Test, DataContextSource]
+		public void CharAsSqlParameter4(string context)
+		{
+			using (var  db = GetDataContext(context))
+			{
+				var s1 = '\x0';
+				var s2 = db.Select(() => Sql.ToSql(s1));
+
+				Assert.That(s2, Is.EqualTo(s1));
 			}
 		}
 	}

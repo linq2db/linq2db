@@ -778,7 +778,7 @@ namespace LinqToDB.Data
 			get { return _mappingSchema; }
 		}
 
-		public  bool           InlineParameters { get; set; }
+		public bool InlineParameters { get; set; }
 
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -20,34 +21,22 @@ namespace LinqToDB.DataProvider.Sybase
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
+		static readonly char[] _escapes = { '\x0', '\'' };
+
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			foreach (var ch in value)
-			{
-				if (ch > 127)
-				{
-					stringBuilder.Append("N");
-					break;
-				}
-			}
+			var start = "'";
 
-			stringBuilder
-				.Append('\'')
-				.Append(value.Replace("'", "''"))
-				.Append('\'');
+			if (value.Any(ch => ch > 127))
+				start = "N'";
+
+			DataTools.ConvertStringToSql(stringBuilder, start, "char", value);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			if (value > 127)
-				stringBuilder.Append("N");
-
-			stringBuilder.Append('\'');
-
-			if (value == '\'') stringBuilder.Append("''");
-			else               stringBuilder.Append(value);
-
-			stringBuilder.Append('\'');
+			var start = value > 127 ? "N'" : "'";
+			DataTools.ConvertCharToSql(stringBuilder, start, "char", value);
 		}
 	}
 }
