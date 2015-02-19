@@ -309,7 +309,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			UnaryExpression cex;
 
-			// IT : #171 fix.
 			var type = expression.Type;
 
 			if (_convertedExpressions.TryGetValue(expression, out cex))

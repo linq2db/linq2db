@@ -374,7 +374,6 @@ namespace Tests.Linq
 			[Column] public Gender Gender;
 		}
 
-		// IT : #171 test.
 		[Test, DataContextSource]
 		public void Issue171Test(string context)
 		{
