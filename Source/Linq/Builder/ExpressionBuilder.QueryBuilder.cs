@@ -309,7 +309,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			UnaryExpression cex;
 
-			var type = _convertedExpressions.TryGetValue(expression, out cex) ? cex.Type : expression.Type;
+			// IT : #171 fix.
+			var type = expression.Type;
+
+			if (_convertedExpressions.TryGetValue(expression, out cex))
+			{
+				if (cex.Type.IsNullable() && !type.IsNullable() && type.IsSameOrParentOf(cex.Type.ToNullableUnderlying()))
+					type = cex.Type;
+			}
 
 			return BuildSql(type, idx);
 		}

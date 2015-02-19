@@ -352,7 +352,6 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
 
-
 		public class     Entity    { public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
 		public class     Document : Entity, IDocument { }
@@ -367,6 +366,23 @@ namespace Tests.Linq
 				var str = idsQuery.ToString(); // Exception
 				Assert.IsNotNull(str);
 			}
+		}
+
+		[Table("Person")]
+		class Table171
+		{
+			[Column] public Gender Gender;
+		}
+
+		// IT : #171 test.
+		[Test, DataContextSource]
+		public void Issue171Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			db.GetTable<Table171>()
+				.Where (t => t.Gender == Gender.Male)
+				.Select(t => new { value = (int)t.Gender })
+				.ToList();
 		}
 	}
 }
