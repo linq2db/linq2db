@@ -40,7 +40,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IT : # tests.
 		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, ProviderName.PostgreSQL, ProviderName.Informix, ProviderName.DB2)]
 		public void CharAsSqlParameter1(string context)
 		{
