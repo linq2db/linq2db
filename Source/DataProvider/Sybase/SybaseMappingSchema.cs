@@ -21,7 +21,14 @@ namespace LinqToDB.DataProvider.Sybase
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
 
-		static readonly char[] _escapes = { '\x0', '\'' };
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("char(")
+				.Append(value)
+				.Append(')')
+				;
+		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
@@ -30,13 +37,13 @@ namespace LinqToDB.DataProvider.Sybase
 			if (value.Any(ch => ch > 127))
 				start = "N'";
 
-			DataTools.ConvertStringToSql(stringBuilder, start, "char", value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
 			var start = value > 127 ? "N'" : "'";
-			DataTools.ConvertCharToSql(stringBuilder, start, "char", value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 	}
 }

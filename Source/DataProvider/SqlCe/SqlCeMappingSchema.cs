@@ -45,6 +45,15 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
 		}
 
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("nchar(")
+				.Append(value)
+				.Append(')')
+				;
+		}
+
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
 			string start;
@@ -61,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, start, "nchar", value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -80,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-			DataTools.ConvertCharToSql(stringBuilder, start, "nchar", value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 	}
 }

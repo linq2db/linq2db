@@ -19,6 +19,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertGuidToSql    (sb, (Guid)    v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 		}
@@ -58,6 +60,25 @@ namespace LinqToDB.DataProvider.SQLite
 					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
 					.Append('\'');
 			}
+		}
+
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("char(")
+				.Append(value)
+				.Append(')')
+				;
+		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		{
+			DataTools.ConvertStringToSql(stringBuilder, "+", "'", AppendConversion, value);
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+		{
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
 	}
 }

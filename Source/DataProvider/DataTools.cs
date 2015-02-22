@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider
 	{
 		static readonly char[] _escapes = { '\x0', '\'' };
 
-		public static void ConvertStringToSql(StringBuilder stringBuilder, string startString, string func, string value)
+		public static void ConvertStringToSql(StringBuilder stringBuilder, string plusOperator, string startString, Action<StringBuilder,int> appendConversion, string value)
 		{
 			if (value.Length > 0 && value.IndexOfAny(_escapes) >= 0)
 			{
@@ -23,15 +23,15 @@ namespace LinqToDB.DataProvider
 							if (isInString)
 							{
 								isInString = false;
-								stringBuilder.Append("' + ");
+
+								stringBuilder
+									.Append("' ")
+									.Append(plusOperator)
+									.Append(' ')
+									;
 							}
 
-							stringBuilder
-								.Append(func)
-								.Append('(')
-								.Append((int)c)
-								.Append(')')
-								;
+							appendConversion(stringBuilder, c);
 
 							break;
 
@@ -41,7 +41,11 @@ namespace LinqToDB.DataProvider
 								isInString = true;
 
 								if (i != 0)
-									stringBuilder.Append(" + ");
+									stringBuilder
+										.Append(" ")
+										.Append(plusOperator)
+										.Append(' ')
+										;
 
 								stringBuilder.Append(startString);
 							}
@@ -56,7 +60,11 @@ namespace LinqToDB.DataProvider
 								isInString = true;
 
 								if (i != 0)
-									stringBuilder.Append(" + ");
+									stringBuilder
+										.Append(" ")
+										.Append(plusOperator)
+										.Append(' ')
+										;
 
 								stringBuilder.Append(startString);
 							}
@@ -80,18 +88,14 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		public static void ConvertCharToSql(StringBuilder stringBuilder, string startString, string func, char value)
+		public static void ConvertCharToSql(StringBuilder stringBuilder, string startString, Action<StringBuilder,int> appendConversion, char value)
 		{
 			switch (value)
 			{
 				case '\x0' :
-					stringBuilder
-						.Append(func)
-						.Append('(')
-						.Append((int)value)
-						.Append(')')
-						;
+					appendConversion(stringBuilder,value);
 					break;
+
 				case '\''  :
 					stringBuilder
 						.Append(startString)

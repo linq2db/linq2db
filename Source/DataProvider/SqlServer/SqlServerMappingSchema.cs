@@ -98,7 +98,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.TryGetConvertExpression(@from, to);
 		}
 
-		static readonly char[] _escapes = { '\x0', '\'' };
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("char(")
+				.Append(value)
+				.Append(')')
+				;
+		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
 		{
@@ -116,7 +123,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, start, "char", value);
+			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -135,7 +142,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertCharToSql(stringBuilder, start, "char", value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
