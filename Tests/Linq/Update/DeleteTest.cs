@@ -344,5 +344,29 @@ namespace Tests.Update
 				}
 			}
 		}
+
+		[Test, DataContextSource(false, ProviderName.Informix)]
+		public void MultipleDelete(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Delete(c => c.ParentID >= 1000);
+
+				try
+				{
+					var list = new[] { new Parent { ParentID = 1000 }, new Parent { ParentID = 1001 } };
+
+					db.BulkCopy(list);
+
+					var ret = db.Parent.Delete(p => list.Contains(p) );
+
+					Assert.That(ret, Is.EqualTo(2));
+				}
+				finally
+				{
+					db.Parent.Delete(c => c.ParentID >= 1000);
+				}
+			}
+		}
 	}
 }
