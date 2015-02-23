@@ -1263,6 +1263,65 @@ namespace DataModel
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region Person_SelectByKey
+
+		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
+				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		#endregion
+
+		#region Person_SelectAll
+
+		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
+		}
+
+		#endregion
+
+		#region Person_SelectByName
+
+		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+		}
+
+		#endregion
+
+		#region Person_SelectListByName
+
+		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
+				new DataParameter("@firstName", @firstName, DataType.NVarChar),
+				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
+		}
+
+		#endregion
+
+		#region Person_Insert
+
+		public partial class Person_InsertResult
+		{
+			public int? PersonID { get; set; }
+		}
+
+		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
+		{
+			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
+				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
+				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
+				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
+				new DataParameter("@Gender",     @Gender,     DataType.Char));
+		}
+
+		#endregion
+
 		#region Person_Insert_OutputParameter
 
 		public static int Person_Insert_OutputParameter(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender, ref int? @PersonID)
@@ -1281,21 +1340,6 @@ namespace DataModel
 
 		#endregion
 
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
-		}
-
-		#endregion
-
 		#region Person_Update
 
 		public static int Person_Update(this DataConnection dataConnection, int? @PersonID, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
@@ -1306,22 +1350,6 @@ namespace DataModel
 				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
 				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
 				new DataParameter("@Gender",     @Gender,     DataType.Char));
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
 		}
 
 		#endregion
@@ -1351,16 +1379,6 @@ namespace DataModel
 		public static IEnumerable<Patient_SelectAllResult> Patient_SelectAll(this DataConnection dataConnection)
 		{
 			return dataConnection.QueryProc<Patient_SelectAllResult>("[TestData]..[Patient_SelectAll]");
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id, DataType.Int32));
 		}
 
 		#endregion
@@ -1425,6 +1443,47 @@ namespace DataModel
 
 		#endregion
 
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int?   intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
+				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		#endregion
+
 		#region SelectImplicitColumn
 
 		public partial class SelectImplicitColumnResult
@@ -1468,62 +1527,16 @@ namespace DataModel
 		}
 
 		#endregion
+	}
 
-		#region Person_SelectByKey
+	public static partial class SqlFunctions
+	{
+		#region Scalar_ReturnParameter
 
-		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
+		[Sql.Function(Name=".Scalar_ReturnParameter", ServerSideOnly=true)]
+		public static int? Scalar_ReturnParameter()
 		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByKey]",
-				new DataParameter("@id", @id, DataType.Int32));
-		}
-
-		#endregion
-
-		#region Person_SelectAll
-
-		public static IEnumerable<Person> Person_SelectAll(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectAll]");
-		}
-
-		#endregion
-
-		#region Person_SelectByName
-
-		public static IEnumerable<Person> Person_SelectByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region Person_SelectListByName
-
-		public static IEnumerable<Person> Person_SelectListByName(this DataConnection dataConnection, string @firstName, string @lastName)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  DataType.NVarChar));
-		}
-
-		#endregion
-
-		#region Person_Insert
-
-		public partial class Person_InsertResult
-		{
-			public int? PersonID { get; set; }
-		}
-
-		public static IEnumerable<Person_InsertResult> Person_Insert(this DataConnection dataConnection, string @FirstName, string @LastName, string @MiddleName, char? @Gender)
-		{
-			return dataConnection.QueryProc<Person_InsertResult>("[TestData]..[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     DataType.Char));
+			throw new InvalidOperationException();
 		}
 
 		#endregion
