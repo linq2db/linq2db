@@ -205,10 +205,10 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}
 
-							if (IsSubQuery(context, ce))
+							if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 							{
 								if (IsMultipleQuery(ce))
-									return new TransformInfo(BuildMultipleQuery(context, expr));
+									return new TransformInfo(BuildMultipleQuery(context, ce));
 
 								return new TransformInfo(GetSubQueryExpression(context, ce));
 							}
@@ -586,6 +586,8 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
+		HashSet<Expression> _buildMultipleQueryExpressions;
+
 		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
 		{
 			var parameters = new HashSet<ParameterExpression>();
@@ -605,7 +607,14 @@ namespace LinqToDB.Linq.Builder
 					root.NodeType == ExpressionType.Parameter &&
 					!parameters.Contains((ParameterExpression)root))
 				{
+					if (_buildMultipleQueryExpressions == null)
+						_buildMultipleQueryExpressions = new HashSet<Expression>();
+
+					_buildMultipleQueryExpressions.Add(e);
+
 					var ex = Expression.Convert(BuildExpression(context, e), typeof(object));
+
+					_buildMultipleQueryExpressions.Remove(e);
 
 					parms.Add(ex);
 

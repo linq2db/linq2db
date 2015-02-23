@@ -1687,5 +1687,18 @@ namespace Tests.Linq
 					});
 			}
 		}
+
+		[Test, DataContextSource]
+		public void FirstGroupBy(string context)
+		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(
+					(from t in    Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID),
+					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID));
+			}
+		}
 	}
 }
