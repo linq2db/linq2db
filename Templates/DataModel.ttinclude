@@ -321,8 +321,9 @@ void LoadMetadata(DataConnection dataConnection)
 
 string ConvertToCompilable(string name)
 {
-	var query = from c in name.ToCharArray()
-		        select (char.IsLetterOrDigit(c) || c == '@' ? c : '_');
+	var query =
+		from c in name
+		select char.IsLetterOrDigit(c) || c == '@' ? c : '_';
 
 	return new string(query.ToArray());
 }
