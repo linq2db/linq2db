@@ -321,7 +321,10 @@ void LoadMetadata(DataConnection dataConnection)
 
 string ConvertToCompilable(string name)
 {
-	return name.Replace('.', '_').Replace(' ', '_');
+	var query = from c in name.ToCharArray()
+		        select (char.IsLetterOrDigit(c) || c == '@' ? c : '_');
+
+	return new string(query.ToArray());
 }
 
 Table GetTable(string name)
