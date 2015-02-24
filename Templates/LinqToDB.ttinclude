@@ -18,6 +18,9 @@ bool IsCompactColumns       = true;
 bool IsCompactColumnAliases = true;
 bool GenerateDataTypes      = false;
 bool GenerateDbTypes        = false;
+bool GenerateSchemaAsType   = false;
+
+Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
 void GenerateTypesFromMetadata()
 {
@@ -29,17 +32,59 @@ void GenerateTypesFromMetadata()
 	if (NamespaceName == null)
 		NamespaceName = "DataModel";
 
-	var props           = new MemberGroup { IsCompact = true };
-	var aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
-	var tableExtensions = new MemberGroup {  };
+	// IT : # impl.
+
+	string schemaName;
+
+	var schemas =
+	(
+		from t in Tables.Values
+		where GenerateSchemaAsType && t.Schema != null && !t.TableSchema.IsDefaultSchema
+		group t by t.Schema into gr
+		let typeName = SchemaNameMapping.TryGetValue(gr.Key, out schemaName) ? schemaName : gr.Key
+		select new
+		{
+			Name            = gr.Key,
+			TypeName        = typeName,
+			Props           = new MemberGroup { IsCompact = true },
+			Aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" },
+			TableExtensions = new MemberGroup { Region = "Table Extensions" },
+			Type            = new Class(typeName) { IsStatic = true },
+			Tables          = gr.ToList(),
+			DataContext     = new Class("DataContext"),
+		}
+	).ToDictionary(t => t.Name);
+
+	var defProps           = new MemberGroup { IsCompact = true };
+	var defAliases         = new MemberGroup { IsCompact = true, Region = "Alias members" };
+	var defTableExtensions = new MemberGroup { };
 
 	if (GenerateConstructors)
 	{
+		var body = new List<string>();
+
+		if (schemas.Count > 0)
+		{
+			var schemaGroup = new MemberGroup { IsCompact = true, Region = "Schemas" };
+
+			foreach (var schema in schemas.Values)
+			{
+				schemaGroup.Members.Add(new Property(schema.TypeName + ".DataContext", schema.TypeName));
+				body.Add(schema.TypeName + " = new " + schema.TypeName + ".DataContext(this);");
+			}
+
+			body.Add("");
+
+			DataContextObject.Members.Add(schemaGroup);
+		}
+
+		body.Add("InitDataContext();");
+
 		if (DefaultConfiguration == null)
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], new[] { "InitDataContext();" }));
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], body));
 		else
-			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], new[] { "InitDataContext();" }) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
-		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }, new[] { "InitDataContext();" }) { AfterSignature = { ": base(configuration)" } });
+			DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new string[0], body) { AfterSignature = { ": base(\"" + DefaultConfiguration + "\")" } });
+		DataContextObject.Members.Add(new Method(null, DataContextObject.Name, new[] { "string configuration" }, body) { AfterSignature = { ": base(configuration)" } });
 
 		DataContextObject.Members.Add(new MemberGroup
 		{
@@ -49,19 +94,52 @@ void GenerateTypesFromMetadata()
 	}
 
 	if (Tables.Count > 0)
-		DataContextObject.Members.Insert(0, props);
+		DataContextObject.Members.Insert(0, defProps);
+
+	foreach (var schema in schemas.Values)
+	{
+		schema.Type.Members.Add(schema.DataContext);
+		schema.DataContext.Members.Insert(0, schema.Props);
+
+		schema.DataContext.Members.Add(new Field ("IDataContext", "_dataContext") { AccessModifier = AccessModifier.Private, IsReadonly = true });
+		schema.DataContext.Members.Add(new Method(null, schema.DataContext.Name, new[] { "IDataContext dataContext" }, new[] { "_dataContext = dataContext;" }));
+
+		foreach (var t in schema.Tables)
+		{
+			t.TypePrefix = schema.TypeName + ".";
+		}
+	}
 
 	foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl=> tbl.TypeName))
 	{
+		Action<Class> addType = tp => Model.Types.Add(tp);
+		var props             = defProps;
+		var aliases           = defAliases;
+		var tableExtensions   = defTableExtensions;
+
+		var schema = t.Schema != null && schemas.ContainsKey(t.Schema) ? schemas[t.Schema] : null;
+
+		if (schema != null)
+		{
+			var si = schemas[t.Schema];
+
+			addType         = tp => si.Type.Members.Add(tp);
+			props           = si.Props;
+			aliases         = si.Aliases;
+			tableExtensions = si.TableExtensions;
+		}
+
 		MemberBase dcProp = t.IsProviderSpecific ?
 			GenerateProviderSpecificTable(t) :
 			new Property(
 				string.Format("ITable<{0}>", t.TypeName),
 				t.DataContextPropertyName,
-				new[] { string.Format("this.GetTable<{0}>()", t.TypeName) },
+				new[] { string.Format((schema == null ? "this" : "_dataContext") + ".GetTable<{0}>()", t.TypeName) },
 				null);
 
 		if (dcProp == null) continue;
+
+		t.DataContextProperty = dcProp;
 
 		props.Members.Add(dcProp);
 
@@ -279,9 +357,9 @@ void GenerateTypesFromMetadata()
 					key.Comment.Add("/ </summary>");
 
 					if (key.AssociationType == AssociationType.OneToMany)
-						key.Type = string.Format(OneToManyAssociationType, key.OtherTable.TypeName);
+						key.Type = string.Format(OneToManyAssociationType, key.OtherTable.TypePrefix + key.OtherTable.TypeName);
 					else
-						key.Type = key.OtherTable.TypeName;
+						key.Type = key.OtherTable.TypePrefix + key.OtherTable.TypeName;
 
 					var aa = new Attribute("Association");
 
@@ -331,7 +409,7 @@ void GenerateTypesFromMetadata()
 				});
 		}
 
-		Model.Types.Add(t);
+		addType(t);
 
 		if (!string.IsNullOrWhiteSpace(t.AliasTypeName))
 		{
@@ -350,8 +428,12 @@ void GenerateTypesFromMetadata()
 		}
 	}
 
-	if (aliases.Members.Count > 0)
-		DataContextObject.Members.Add(aliases);
+	if (defAliases.Members.Count > 0)
+		DataContextObject.Members.Add(defAliases);
+
+	foreach (var schema in schemas.Values)
+		if (schema.Aliases.Members.Count > 0)
+			schema.Type.Members.Add(defAliases);
 
 	if (Procedures.Count > 0)
 	{
@@ -561,11 +643,21 @@ void GenerateTypesFromMetadata()
 			DataContextObject.Members.Add(tabfs);
 	}
 
-	if (tableExtensions.Members.Count > 0)
+	if (defTableExtensions.Members.Count > 0)
 	{
 		Model.Usings.Add("System.Linq");
+		Model.Types.Add(new Class("TableExtensions", defTableExtensions) { IsStatic = true });
+	}
 
-		Model.Types.Add(new Class("TableExtensions", tableExtensions) { IsStatic = true });
+	foreach (var schema in schemas.Values)
+	{
+		Model.Types.Add(schema.Type);
+
+		if (schema.TableExtensions.Members.Count > 0)
+		{
+			Model.Usings.Add("System.Linq");
+			schema.Type.Members.Add(schema.TableExtensions);
+		}
 	}
 
 	Tables.    Clear();

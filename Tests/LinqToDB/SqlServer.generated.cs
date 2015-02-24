@@ -918,14 +918,24 @@ namespace DataModel
 		public ITable<TestTable2>      TestTable2       { get { return this.GetTable<TestTable2>(); } }
 		public ITable<TestTable3>      TestTable3       { get { return this.GetTable<TestTable3>(); } }
 
+		#region Schemas
+
+		public MySchema.DataContext MySchema { get; set; }
+
+		#endregion
+
 		public TestDataDB()
 		{
+			MySchema = new MySchema.DataContext(this);
+
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			MySchema = new MySchema.DataContext(this);
+
 			InitDataContext();
 		}
 
@@ -1252,6 +1262,16 @@ namespace DataModel
 		[Column(DbType="nvarchar(50)",  DataType=DataType.NVarChar,  Length=50),   NotNull              ] public string    Name        { get; set; } // nvarchar(50)
 		[Column(DbType="nvarchar(250)", DataType=DataType.NVarChar,  Length=250),     Nullable          ] public string    Description { get; set; } // nvarchar(250)
 		[Column(DbType="datetime2(7)",  DataType=DataType.DateTime2, Precision=7),    Nullable          ] public DateTime? CreatedOn   { get; set; } // datetime2(7)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Table2_TestTable2_BackReference
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
+		public MySchema.Table2 Table2 { get; set; }
+
+		#endregion
 	}
 
 	[Table(Database="TestData", Name="TestTable3")]
@@ -1259,10 +1279,61 @@ namespace DataModel
 	{
 		[Column(DbType="int",          DataType=DataType.Int32),               PrimaryKey, NotNull] public int    ID   { get; set; } // int
 		[Column(DbType="nvarchar(50)", DataType=DataType.NVarChar, Length=50),             NotNull] public string Name { get; set; } // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_TestTable3_Table1
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_TestTable3_Table1")]
+		public MySchema.Table1 Table1 { get; set; }
+
+		#endregion
 	}
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region Scalar_DataReader
+
+		public partial class Scalar_DataReaderResult
+		{
+			public int?   intField    { get; set; }
+			public string stringField { get; set; }
+		}
+
+		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
+		{
+			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
+		}
+
+		#endregion
+
+		#region Scalar_OutputParameter
+
+		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
+		{
+			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
+				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
+				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+
+			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
+			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region Scalar_ReturnParameterWithObject
+
+		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
+		{
+			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
+				new DataParameter("@id", @id, DataType.Int32));
+		}
+
+		#endregion
+
 		#region Person_SelectByKey
 
 		public static IEnumerable<Person> Person_SelectByKey(this DataConnection dataConnection, int? @id)
@@ -1443,47 +1514,6 @@ namespace DataModel
 
 		#endregion
 
-		#region Scalar_DataReader
-
-		public partial class Scalar_DataReaderResult
-		{
-			public int?   intField    { get; set; }
-			public string stringField { get; set; }
-		}
-
-		public static IEnumerable<Scalar_DataReaderResult> Scalar_DataReader(this DataConnection dataConnection)
-		{
-			return dataConnection.QueryProc<Scalar_DataReaderResult>("[TestData]..[Scalar_DataReader]");
-		}
-
-		#endregion
-
-		#region Scalar_OutputParameter
-
-		public static int Scalar_OutputParameter(this DataConnection dataConnection, ref int? @outputInt, ref string @outputString)
-		{
-			var ret = dataConnection.ExecuteProc("[TestData]..[Scalar_OutputParameter]",
-				new DataParameter("@outputInt",    @outputInt,    DataType.Int32)   { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@outputString", @outputString, DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
-
-			@outputInt    = Converter.ChangeTypeTo<int?>  (((IDbDataParameter)dataConnection.Command.Parameters["@outputInt"]).   Value);
-			@outputString = Converter.ChangeTypeTo<string>(((IDbDataParameter)dataConnection.Command.Parameters["@outputString"]).Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region Scalar_ReturnParameterWithObject
-
-		public static IEnumerable<Person> Scalar_ReturnParameterWithObject(this DataConnection dataConnection, int? @id)
-		{
-			return dataConnection.QueryProc<Person>("[TestData]..[Scalar_ReturnParameterWithObject]",
-				new DataParameter("@id", @id, DataType.Int32));
-		}
-
-		#endregion
-
 		#region SelectImplicitColumn
 
 		public partial class SelectImplicitColumnResult
@@ -1641,5 +1671,83 @@ namespace DataModel
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
+	}
+
+	public static partial class MySchema
+	{
+		public partial class DataContext
+		{
+			public ITable<Table1> Table1 { get { return _dataContext.GetTable<Table1>(); } }
+			public ITable<Table2> Table2 { get { return _dataContext.GetTable<Table2>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Database="TestData", Schema="TestSchema", Name="Table1")]
+		public partial class Table1
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+
+			#region Associations
+
+			/// <summary>
+			/// FK_TestTable3_Table1_BackReference
+			/// </summary>
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
+			public TestTable3 TestTable3 { get; set; }
+
+			/// <summary>
+			/// FK_Table2_Table1_BackReference
+			/// </summary>
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
+			public MySchema.Table2 Table2 { get; set; }
+
+			#endregion
+		}
+
+		[Table(Database="TestData", Schema="TestSchema", Name="Table2")]
+		public partial class Table2
+		{
+			[Column(DbType="int",       DataType=DataType.Int32),            PrimaryKey,  NotNull] public int    ID   { get; set; } // int
+			[Column(DbType="nchar(10)", DataType=DataType.NChar, Length=10),    Nullable         ] public string Name { get; set; } // nchar(10)
+
+			#region Associations
+
+			/// <summary>
+			/// FK_Table2_TestTable2
+			/// </summary>
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_TestTable2")]
+			public TestTable2 TestTable2 { get; set; }
+
+			/// <summary>
+			/// FK_Table2_Table1
+			/// </summary>
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_Table1")]
+			public MySchema.Table1 Table1 { get; set; }
+
+			#endregion
+		}
+
+		#region Table Extensions
+
+		public static Table1 Find(this ITable<Table1> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static Table2 Find(this ITable<Table2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		#endregion
 	}
 }

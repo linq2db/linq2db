@@ -23,6 +23,10 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
+	GenerateSchemaAsType = true;
+
+	SchemaNameMapping.Add("TestSchema", "MySchema");
+
 	LoadSqlServerMetadata(@"Server=DBHost\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword");
 
 	Tables["Order Details"].Columns["OrderID"].MemberName = "ID";
