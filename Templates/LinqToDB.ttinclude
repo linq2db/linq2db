@@ -20,6 +20,9 @@ bool GenerateDataTypes      = false;
 bool GenerateDbTypes        = false;
 bool GenerateSchemaAsType   = false;
 
+string SchemaNameSuffix          = "Schema";
+string SchemaDataContextTypeName = "DataContext";
+
 Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
 void GenerateTypesFromMetadata()
@@ -45,13 +48,14 @@ void GenerateTypesFromMetadata()
 		select new
 		{
 			Name            = gr.Key,
-			TypeName        = typeName,
+			TypeName        = typeName + SchemaNameSuffix,
+			PropertyName    = typeName,
 			Props           = new MemberGroup { IsCompact = true },
 			Aliases         = new MemberGroup { IsCompact = true, Region = "Alias members" },
 			TableExtensions = new MemberGroup { Region = "Table Extensions" },
-			Type            = new Class(typeName) { IsStatic = true },
+			Type            = new Class(typeName + SchemaNameSuffix) { IsStatic = true },
 			Tables          = gr.ToList(),
-			DataContext     = new Class("DataContext"),
+			DataContext     = new Class(SchemaDataContextTypeName),
 		}
 	).ToDictionary(t => t.Name);
 
@@ -69,8 +73,8 @@ void GenerateTypesFromMetadata()
 
 			foreach (var schema in schemas.Values)
 			{
-				schemaGroup.Members.Add(new Property(schema.TypeName + ".DataContext", schema.TypeName));
-				body.Add(schema.TypeName + " = new " + schema.TypeName + ".DataContext(this);");
+				schemaGroup.Members.Add(new Property(schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
+				body.Add(schema.PropertyName + " = new " + schema.TypeName + "." + SchemaDataContextTypeName + "(this);");
 			}
 
 			body.Add("");
