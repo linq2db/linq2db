@@ -505,7 +505,7 @@ namespace LinqToDB.Linq.Builder
 		static readonly MethodInfo _whereMethodInfo =
 			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
 
-		Expression GetMultipleQueryExpression(IBuildContext context, Expression expression, HashSet<ParameterExpression> parameters)
+		static Expression GetMultipleQueryExpression(IBuildContext context, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");

@@ -3,6 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Mapping
 {
 	public class EntityMappingBuilder<T>
@@ -249,8 +251,8 @@ namespace LinqToDB.Mapping
 					e is MemberExpression     ? ((MemberExpression)    e).Member :
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
 
-				if (e is MemberExpression && memberInfo.ReflectedType != typeof(T))
-					memberInfo = typeof(T).GetProperty(memberInfo.Name);
+				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
+					memberInfo = typeof(T).GetPropertyEx(memberInfo.Name);
 
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));

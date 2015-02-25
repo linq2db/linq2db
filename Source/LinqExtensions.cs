@@ -4,12 +4,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB
 {
 	using Expressions;
 	using Linq;
+	using Linq.Builder;
 
 	public static class LinqExtensions
 	{
@@ -884,23 +884,25 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException("source");
 			if (predicate == null) throw new ArgumentNullException("predicate");
 
-			return source.Provider.CreateQuery<TSource>( 
+			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_setMethodInfo7.MakeGenericMethod(typeof(TSource)), 
+					_setMethodInfo7.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
 
 		#endregion
 
-		internal static ContextParser.Context GetContext<T>(this IQueryable<T> source)
+		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+
+		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
 			return source.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_setMethodInfo8.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression }));
 		}
 
