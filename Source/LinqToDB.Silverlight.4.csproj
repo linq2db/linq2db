@@ -120,6 +120,7 @@
     <Compile Include="LinqToDBException.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
     <Compile Include="Linq\Builder\CastBuilder.cs" />

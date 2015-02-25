@@ -78,6 +78,8 @@ namespace LinqToDB.Data
 
 		#region Query with object reader async
 
+#if !NOASYNC
+
 		public Task<List<T>> QueryToListAsync<T>(Func<IDataReader,T> objectReader)
 		{
 			return QueryToListAsync(objectReader, CancellationToken.None);
@@ -118,6 +120,8 @@ namespace LinqToDB.Data
 				while (await rd.ReadAsync(cancellationToken))
 					action(objectReader(rd));
 		}
+
+#endif
 
 		#endregion
 
@@ -171,6 +175,8 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query async
+
+#if !NOASYNC
 
 		public Task<List<T>> QueryToListAsync<T>()
 		{
@@ -240,6 +246,8 @@ namespace LinqToDB.Data
 			}
 		}
 
+#endif
+
 		#endregion
 
 		#region Query with template
@@ -278,6 +286,8 @@ namespace LinqToDB.Data
 
 		#region Execute async
 
+#if !NOASYNC
+
 		public Task<int> ExecuteProcAsync()
 		{
 			CommandType = CommandType.StoredProcedure;
@@ -304,6 +314,8 @@ namespace LinqToDB.Data
 
 			return await DataConnection.ExecuteNonQueryAsync(cancellationToken);
 		}
+
+#endif
 
 		#endregion
 
@@ -351,6 +363,8 @@ namespace LinqToDB.Data
 
 		#region Execute scalar async
 
+#if !NOASYNC
+
 		public Task<T> ExecuteAsync<T>()
 		{
 			return ExecuteAsync<T>(CancellationToken.None);
@@ -380,6 +394,8 @@ namespace LinqToDB.Data
 
 			return default(T);
 		}
+
+#endif
 
 		#endregion
 
@@ -453,6 +469,8 @@ namespace LinqToDB.Data
 
 		#region ExecuteReader async
 
+#if !NOASYNC
+
 		public Task<DataReaderAsync> ExecuteReaderAsync()
 		{
 			return ExecuteReaderAsync(CancellationToken.None);
@@ -515,6 +533,8 @@ namespace LinqToDB.Data
 
 			return default(T);
 		}
+
+#endif
 
 		#endregion
 

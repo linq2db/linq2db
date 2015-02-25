@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+#if !NOASYNC
+
 	public class DataReaderAsync : IDisposable
 	{
 		public   CommandInfo       CommandInfo       { get; set; }
@@ -163,4 +165,6 @@ namespace LinqToDB.Data
 
 		#endregion
 	}
+
+#endif
 }

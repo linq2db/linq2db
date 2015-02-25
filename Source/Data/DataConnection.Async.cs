@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+#if !NOASYNC
+
 	public partial class DataConnection
 	{
 		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[] parameters, CancellationToken cancellationToken)
@@ -126,4 +128,6 @@ namespace LinqToDB.Data
 			}
 		}
 	}
+
+#endif
 }
