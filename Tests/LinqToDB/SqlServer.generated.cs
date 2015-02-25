@@ -217,13 +217,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_CustomerCustomerDemo
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo")]
+		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
 		public CustomerDemographic FK_CustomerCustomerDemo { get; set; }
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo_Customers")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
 		public Customer Customer { get; set; }
 
 		#endregion
@@ -273,7 +273,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Employees_Employees")]
+		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Employees_Employees", BackReferenceName="FK_Employees_Employees_BackReferences")]
 		public Employee FK_Employees_Employee { get; set; }
 
 		/// <summary>
@@ -308,13 +308,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Employees")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Territories")]
+		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
 		public Territory Territory { get; set; }
 
 		#endregion
@@ -375,19 +375,19 @@ namespace DataModel
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, KeyName="FK_Orders_Customers")]
+		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
 		public Customer Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Orders_Employees")]
+		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
 		public Employee Employee { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Shippers
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, KeyName="FK_Orders_Shippers")]
+		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
 		public Shipper Shipper { get; set; }
 
 		/// <summary>
@@ -413,13 +413,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Order_Details_Orders
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, KeyName="FK_Order_Details_Orders")]
+		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
 		public Order OrderDetailsOrder { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, KeyName="FK_Order_Details_Products")]
+		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false, KeyName="FK_Order_Details_Products", BackReferenceName="OrderDetails")]
 		public Product OrderDetailsProduct { get; set; }
 
 		#endregion
@@ -496,13 +496,13 @@ namespace DataModel
 		/// <summary>
 		/// FK_Products_Categories
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, KeyName="FK_Products_Categories")]
+		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true, KeyName="FK_Products_Categories", BackReferenceName="Products")]
 		public Category Category { get; set; }
 
 		/// <summary>
 		/// FK_Products_Suppliers
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, KeyName="FK_Products_Suppliers")]
+		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true, KeyName="FK_Products_Suppliers", BackReferenceName="Products")]
 		public Supplier Supplier { get; set; }
 
 		/// <summary>
@@ -664,7 +664,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Territories_Region
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, KeyName="FK_Territories_Region")]
+		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
 		public Region Region { get; set; }
 
 		/// <summary>
@@ -920,13 +920,13 @@ namespace DataModel
 
 		#region Schemas
 
-		public MySchema.DataContext MySchema { get; set; }
+		public MySchemaSchema.DataContext MySchema { get; set; }
 
 		#endregion
 
 		public TestDataDB()
 		{
-			MySchema = new MySchema.DataContext(this);
+			MySchema = new MySchemaSchema.DataContext(this);
 
 			InitDataContext();
 		}
@@ -934,7 +934,7 @@ namespace DataModel
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			MySchema = new MySchema.DataContext(this);
+			MySchema = new MySchemaSchema.DataContext(this);
 
 			InitDataContext();
 		}
@@ -1104,7 +1104,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person", BackReferenceName="Doctor")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1149,7 +1149,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, KeyName="FK_Patient2_IndexTable")]
+		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient2")]
 		public IndexTable Patient2IndexTable { get; set; }
 
 		#endregion
@@ -1217,7 +1217,7 @@ namespace DataModel
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person")]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person", BackReferenceName="Patient")]
 		public Person Person { get; set; }
 
 		#endregion
@@ -1269,7 +1269,7 @@ namespace DataModel
 		/// FK_Table2_TestTable2_BackReference
 		/// </summary>
 		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
-		public MySchema.Table2 Table2 { get; set; }
+		public MySchemaSchema.Table2 Table2 { get; set; }
 
 		#endregion
 	}
@@ -1285,8 +1285,8 @@ namespace DataModel
 		/// <summary>
 		/// FK_TestTable3_Table1
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_TestTable3_Table1")]
-		public MySchema.Table1 Table1 { get; set; }
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_TestTable3_Table1", BackReferenceName="TestTable3")]
+		public MySchemaSchema.Table1 Table1 { get; set; }
 
 		#endregion
 	}
@@ -1673,7 +1673,7 @@ namespace DataModel
 		}
 	}
 
-	public static partial class MySchema
+	public static partial class MySchemaSchema
 	{
 		public partial class DataContext
 		{
@@ -1706,7 +1706,7 @@ namespace DataModel
 			/// FK_Table2_Table1_BackReference
 			/// </summary>
 			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true, IsBackReference=true)]
-			public MySchema.Table2 Table2 { get; set; }
+			public MySchemaSchema.Table2 Table2 { get; set; }
 
 			#endregion
 		}
@@ -1722,14 +1722,14 @@ namespace DataModel
 			/// <summary>
 			/// FK_Table2_TestTable2
 			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_TestTable2")]
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_TestTable2", BackReferenceName="Table2")]
 			public TestTable2 TestTable2 { get; set; }
 
 			/// <summary>
 			/// FK_Table2_Table1
 			/// </summary>
-			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_Table1")]
-			public MySchema.Table1 Table1 { get; set; }
+			[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false, KeyName="FK_Table2_Table1", BackReferenceName="Table2")]
+			public MySchemaSchema.Table1 Table1 { get; set; }
 
 			#endregion
 		}

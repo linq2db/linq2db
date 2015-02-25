@@ -35,8 +35,6 @@ void GenerateTypesFromMetadata()
 	if (NamespaceName == null)
 		NamespaceName = "DataModel";
 
-	// IT : # impl.
-
 	string schemaName;
 
 	var schemas =
@@ -375,6 +373,8 @@ void GenerateTypesFromMetadata()
 					{
 						if (!string.IsNullOrEmpty(key.KeyName))
 							aa.Parameters.Add("KeyName=\"" + key.KeyName + "\"");
+						if (GenerateBackReferences && !string.IsNullOrEmpty(key.BackReference.KeyName))
+							aa.Parameters.Add("BackReferenceName=\"" + key.BackReference.MemberName + "\"");
 					}
 					else
 					{
