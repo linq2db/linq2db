@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.t4models</id>
-		<version>1.0.7</version>
+		<version>1.0.7.1</version>
 		<title>LINQ to DB T4 Models</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -14,7 +14,7 @@
 		<summary />
 		<tags>
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
-			Oracle ODP PostgreSQL DB2 Informix
+			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
 	</metadata>
 	<files>
