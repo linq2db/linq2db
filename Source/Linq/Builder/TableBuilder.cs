@@ -691,8 +691,7 @@ namespace LinqToDB.Linq.Builder
 				public Expression GetExpression(Expression parent, AssociatedTableContext association)
 				{
 					var expression = association.Builder.DataContextInfo.DataContext.GetTable<T>();
-
-					var loadWith = association.GetLoadWith();
+					var loadWith   = association.GetLoadWith();
 
 					if (loadWith != null)
 					{
@@ -720,54 +719,64 @@ namespace LinqToDB.Linq.Builder
 					Expression expr  = null;
 					var        param = Expression.Parameter(typeof(T), "c");
 
-					foreach (var cond in (association).ParentAssociationJoin.Condition.Conditions)
+					if (association.Association.JoinCondition != null)
 					{
-						SelectQuery.Predicate.ExprExpr p;
-
-						if (cond.Predicate is SelectQuery.SearchCondition)
+						var l = association.Association.GetJoinCondition();
+						expr = l.Body.Transform(e =>
+							e == l.Parameters[0] ? parent :
+							e == l.Parameters[1] ? param  : e);
+					}
+					else
+					{
+						foreach (var cond in association.ParentAssociationJoin.Condition.Conditions)
 						{
-							p = ((SelectQuery.SearchCondition)cond.Predicate).Conditions
-								.Select(c => c.Predicate)
-								.OfType<SelectQuery.Predicate.ExprExpr>()
-								.First();
-						}
-						else
-						{
-							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
-						}
+							SelectQuery.Predicate.ExprExpr p;
 
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
+							if (cond.Predicate is SelectQuery.SearchCondition)
+							{
+								p = ((SelectQuery.SearchCondition)cond.Predicate).Conditions
+									.Select(c => c.Predicate)
+									.OfType<SelectQuery.Predicate.ExprExpr>()
+									.First();
+							}
+							else
+							{
+								p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
+							}
 
-						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
+							var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
 
-						if (e1.Type != e2.Type)
-						{
-							if (e1.Type.CanConvertTo(e2.Type))
-								e1  = Expression.Convert(e1,  e2.Type);
-							else if (e2.Type.CanConvertTo(e1.Type))
-								e2 = Expression.Convert(e2, e1. Type);
-						}
+							Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
-//						while (e1.Type != e2.Type)
-//						{
-//							if (e1.Type.IsNullable())
+							if (e1.Type != e2.Type)
+							{
+								if (e1.Type.CanConvertTo(e2.Type))
+									e1  = Expression.Convert(e1,  e2.Type);
+								else if (e2.Type.CanConvertTo(e1.Type))
+									e2 = Expression.Convert(e2, e1. Type);
+							}
+
+//							while (e1.Type != e2.Type)
 //							{
-//								e1 = Expression.PropertyOrField(e1, "Value");
-//								continue;
+//								if (e1.Type.IsNullable())
+//								{
+//									e1 = Expression.PropertyOrField(e1, "Value");
+//									continue;
+//								}
+//	
+//								if (e2.Type.IsNullable())
+//								{
+//									e2 = Expression.PropertyOrField(e2, "Value");
+//									continue;
+//								}
+//	
+//								e2 = Expression.Convert(e2, e1.Type);
 //							}
-//
-//							if (e2.Type.IsNullable())
-//							{
-//								e2 = Expression.PropertyOrField(e2, "Value");
-//								continue;
-//							}
-//
-//							e2 = Expression.Convert(e2, e1.Type);
-//						}
 
-						var ex = Expression.Equal(e1, e2);
+							var ex = Expression.Equal(e1, e2);
 							
-						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
+						}
 					}
 
 					var predicate = Expression.Lambda<Func<T,bool>>(expr, param);

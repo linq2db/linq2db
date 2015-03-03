@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
@@ -65,6 +66,22 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID", OtherKey = "ID")]
 		public LinqDataTypes Types;
+
+		[Association(JoinCondition = "GetParentChildJoinCondition")]
+		public List<Child> ExprChildren;
+
+		static Expression<Func<Parent,Child,bool>> GetParentChildJoinCondition()
+		{
+			return (p,ch) => p.ParentID == ch.ParentID && p.Value1 != null;
+		}
+
+		[Association(JoinCondition = "GetParentTypeJoinCondition")]
+		public LinqDataTypes ExprTypes;
+
+		static Expression<Func<Parent,LinqDataTypes,bool>> GetParentTypeJoinCondition()
+		{
+			return (p,t) => p.ParentID == t.ID && p.Value1 != null;
+		}
 	}
 
 	public class Child

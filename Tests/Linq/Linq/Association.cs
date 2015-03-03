@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.DataProvider;
 
 namespace Tests.Linq
 {
@@ -538,6 +536,28 @@ namespace Tests.Linq
 				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
 
 				Assert.That(value, Is.Null);
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+		public void ConditionExpression1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in    Parent select p.Children.Count(c => p.Value1 != null),
+					from p in db.Parent select p.ExprChildren.Count());
+			}
+		}
+
+		[Test, DataContextSource(ProviderName.Access, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+		public void ConditionExpression2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from p in    Parent where p.Value1 != null select p.Types,
+					from p in db.Parent                        select p.ExprTypes);
 			}
 		}
 	}

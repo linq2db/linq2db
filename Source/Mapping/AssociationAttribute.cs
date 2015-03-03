@@ -18,6 +18,7 @@ namespace LinqToDB.Mapping
 		public string KeyName           { get; set; }
 		public string BackReferenceName { get; set; }
 		public bool   IsBackReference   { get; set; }
+		public string JoinCondition     { get; set; }
 
 		public string[] GetThisKeys () { return AssociationDescriptor.ParseKeys(ThisKey);  }
 		public string[] GetOtherKeys() { return AssociationDescriptor.ParseKeys(OtherKey); }
