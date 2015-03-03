@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.tables t
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 				WHERE
 					t.object_id IS NULL OR t.is_ms_shipped <> 1"
 				: @"
@@ -52,11 +52,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.tables t
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						x.minor_id = 0 AND 
 						x.name = 'MS_Description'
 				WHERE
@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						ORDINAL_POSITION = x.minor_id AND
 						x.name = 'MS_Description'")
 				.Select(c =>
