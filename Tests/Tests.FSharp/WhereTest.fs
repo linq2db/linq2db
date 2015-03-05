@@ -21,16 +21,16 @@ type Person =
       LastName : string
       [<Nullable>]
       MiddleName : string 
-      Gender : Gender 
-      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
-      Patient : Patient }
+      Gender : Gender }
+//      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
+//      Patient : Patient }
 
-and Patient =
-    { [<PrimaryKey>]
-      PersonID : PersonID
-      Diagnosis : string
-      [<Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)>]
-      Person : Person }
+//and Patient =
+//    { [<PrimaryKey>]
+//      PersonID : PersonID
+//      Diagnosis : string
+//      [<Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)>]
+//      Person : Person }
 
 let private TestOnePerson id firstName persons = //(int id, string firstName, IQueryable<Person> persons)
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
