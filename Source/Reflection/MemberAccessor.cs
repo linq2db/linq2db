@@ -191,7 +191,11 @@ namespace LinqToDB.Reflection
 			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			HasGetter = true;
-			HasSetter = !(memberInfo is PropertyInfo) || ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
+
+			if (memberInfo is PropertyInfo)
+				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
+			else
+				HasSetter = !((FieldInfo)memberInfo).IsInitOnly;
 
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
