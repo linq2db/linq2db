@@ -2,7 +2,6 @@
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -11,10 +10,10 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
-using CompiledQuery = LinqToDB.CompiledQuery;
 #if MANAGED_ORACLE
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -487,11 +486,38 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public class AllTypes
+		#region DateTime Tests
+
+		[Table(Schema="TESTUSER", Name="ALLTYPES")]
+		public partial class ALLTYPE
 		{
-			[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
-			[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
-			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        NUMERICDATATYPE        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          BITDATATYPE            { get; set; } // NUMBER (1,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER (5,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        DECIMALDATATYPE        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        SMALLMONEYDATATYPE     { get; set; } // NUMBER (10,4)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           INTDATATYPE            { get; set; } // NUMBER (10,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          TINYINTDATATYPE        { get; set; } // NUMBER (3,0)
+			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
+			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
+			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
+			[Column(/*DataType=DataType.DateTime,       Length=7*/),                            Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
+			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
+			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
+			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
+			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string          TEXTDATATYPE           { get; set; } // CLOB
+			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string          NCHARDATATYPE          { get; set; } // NCHAR(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string          NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string          NTEXTDATATYPE          { get; set; } // NCLOB
+			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
+			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
+			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]          GUIDDATATYPE           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object          URIDATATYPE            { get; set; } // URITYPE
+			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
@@ -515,6 +541,87 @@ namespace Tests.DataProvider
 				db.GetTable<Entity>().Insert(() => new Entity { Id = id + 1, Duration = TimeSpan.FromHours(1) });
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void DateTimeTest1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				db.BeginTransaction();
+
+				db.MultipleRowsCopy(new[]
+				{
+					new ALLTYPE
+					{
+						ID                = 1000,
+						DATETIMEDATATYPE  = DateTime.Now,
+						DATETIME2DATATYPE = DateTime.Now
+					}
+				});
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void DateTimeTest2(string context)
+		{
+			// Set custom DateTime to SQL converter.
+			//
+			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder,dataType,val) =>
+				{
+					var value  = (DateTime)val;
+					var format =
+						dataType.DataType == DataType.DateTime ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+					stringBuilder.AppendFormat(format, value);
+				});
+
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				db.BeginTransaction();
+
+				db.MultipleRowsCopy(new[]
+				{
+					new ALLTYPE
+					{
+						ID                = 1000,
+						DATETIMEDATATYPE  = DateTime.Now,
+						DATETIME2DATATYPE = DateTime.Now
+					}
+				});
+			}
+
+			// Reset converter to default.
+			//
+			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder,dataType,val) =>
+				{
+					var value  = (DateTime)val;
+					var format =
+						dataType.DataType == DataType.DateTime ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+					if (value.Millisecond == 0)
+					{
+						format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+							"TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+					}
+
+					stringBuilder.AppendFormat(format, value);
+				});
+		}
+
+		#endregion
 
 		#region Sequence
 
