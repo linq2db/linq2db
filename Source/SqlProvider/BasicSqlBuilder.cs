@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.SqlProvider
 {
@@ -992,9 +993,9 @@ namespace LinqToDB.SqlProvider
 
 				if (item is SqlValue)
 				{
-					var value = ((SqlValue)item).Value;
-
-					if (value is Sql.GroupBy)
+//					var value = ((SqlValue)item).Value;
+//
+//					if (value is Sql.GroupBy || value is int)
 						return;
 				}
 			}
