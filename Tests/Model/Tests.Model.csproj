@@ -141,6 +141,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FullName.cs" />
+    <Compile Include="ComplexPerson.cs" />
+    <Compile Include="IPerson.cs" />
     <Compile Include="TestDataConnection.cs" />
     <Compile Include="PostgreSQLSpecific.cs" />
     <Compile Include="Extensions.cs" />
