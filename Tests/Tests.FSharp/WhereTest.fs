@@ -1,38 +1,12 @@
 ﻿module Tests.FSharp.WhereTest
 
+open Tests.FSharp.Models
+
 open LinqToDB
 open LinqToDB.Mapping
 open NUnit.Framework
 
-type Gender = 
-    | [<MapValue("M")>] Male = 0
-    | [<MapValue("F")>] Female = 1
-    | [<MapValue("U")>] Unknown = 2 
-    | [<MapValue("O")>] Other = 3
-type PersonID = int
-
-type Person = 
-    { [<SequenceName(ProviderName.Firebird, "PersonID")>]
-      [<Column("PersonID"); Identity; PrimaryKey>]
-      ID : int 
-      [<NotNull>] 
-      FirstName : string
-      [<NotNull>]
-      LastName : string
-      [<Nullable>]
-      MiddleName : string 
-      Gender : Gender }
-//      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
-//      Patient : Patient }
-
-//and Patient =
-//    { [<PrimaryKey>]
-//      PersonID : PersonID
-//      Diagnosis : string
-//      [<Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)>]
-//      Person : Person }
-
-let private TestOnePerson id firstName persons = //(int id, string firstName, IQueryable<Person> persons)
+let private TestOnePerson id firstName persons = 
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
     Assert.AreEqual(1, list |> List.length )
 
@@ -53,4 +27,39 @@ let LoadSingle (db : IDataContext) =
         where (p.ID = TestMethod())
         select p
     })
-    //TestOneJohn(from p in db.Person where p.ID == TestMethod() select p);
+
+let LoadSingleComplexPerson (db : IDataContext) = 
+    let persons = db.GetTable<ComplexPerson>()
+    let john = query {
+        for p in persons do
+        where (p.ID = TestMethod())
+        exactlyOne
+    }
+    Assert.AreEqual(
+        { ComplexPerson.ID=1
+          Name = {FirstName="John"; MiddleName=null; LastName="Pupkin"}
+          Gender="M" }
+        , john)
+
+let LoadSingleDeeplyComplexPerson (db : IDataContext) = 
+    let persons = db.GetTable<DeeplyComplexPerson>()
+    let john = query {
+        for p in persons do
+        where (p.ID = TestMethod())
+        exactlyOne
+    }
+    Assert.AreEqual(
+        { DeeplyComplexPerson.ID=1
+          Name = {FirstName="John"; MiddleName=null; LastName={Value="Pupkin"}}
+          Gender="M" }
+        , john)
+
+let LoadColumnOfDeeplyComplexPerson (db : IDataContext) = 
+    let persons = db.GetTable<DeeplyComplexPerson>()
+    let lastName = query {
+        for p in persons do
+        where (p.ID = TestMethod())
+        select p.Name.LastName.Value
+        exactlyOne
+    }
+    Assert.AreEqual("Pupkin", lastName)

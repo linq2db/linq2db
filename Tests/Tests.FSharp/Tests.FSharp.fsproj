@@ -49,7 +49,10 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="Models.fs" />
     <Compile Include="WhereTest.fs" />
+    <Compile Include="SelectTest.fs" />
+    <Compile Include="InsertTest.fs" />
     <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
