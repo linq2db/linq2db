@@ -9,10 +9,11 @@ using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
-    using Extensions;
+    using LinqToDB.Extensions;
     using SqlQuery;
     using LinqToDB.Expressions;
     using Mapping;
+    using LinqToDB.Reflection;
 
 	class TableBuilder : ISequenceBuilder
 	{
@@ -261,141 +262,215 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			ParameterExpression _variable;
+		    private class TypeBuilder
+		    {
+		        public TypeBuilder(
+                    Type type,
+                    IEnumerable<ColumnData> columns,
+                    int level)
+		        {
+                    Level = level;
+                    Type = type;
+                    var memberBuilders = (
+                        from c in columns
+                        group c by c.Column.MemberAccessor.MemberInfos.ElementAt(level) into g
+                        select new MemberBuilder(Type, g.Key, g.ToList(), level)
+                    );
 
-            bool IsFSharpCompilationMappingAttribute(CustomAttributeData attributeData)
-            {
-                string compilationMappingAttributeName = "Microsoft.FSharp.Core.CompilationMappingAttribute";
-                return attributeData.AttributeType.FullName == compilationMappingAttributeName;
-            }
+                    Members = memberBuilders;
+		        }
+
+                public Type Type { get; private set; }
+                public IEnumerable<MemberBuilder> Members { get; private set; }
+                public int Level { get; private set; }
+
+		        public Expression BuildConstructorExpression(ExpressionBuilder builder)
+		        {
+                    var ed = builder.MappingSchema.GetEntityDescriptor(Type);
+
+                    TypeInfo objectTypeInfo = Type.GetTypeInfo();
+
+                    if (!ed.IsFSharpRecord)
+                    {
+
+                        ParameterExpression obj = Expression.Parameter(Type, "obj");
+                        
+                        Expression ctor = Expression.New(Type);
+
+                        var exprs = new List<Expression> { Expression.Assign(obj, Expression.New(Type)) };
+
+                        exprs.AddRange(Members.Select(m => m.BuildSetExpression(builder, obj)).Where(e => e != null));
+
+                        exprs.Add(obj);
+
+                        Expression ctorAndSet = Expression.Block(
+                            Type,
+                            new[] {obj},
+                            exprs
+                        );
+
+                        return ctorAndSet;
+                    }
+                    else
+                    {
+
+                        var sortedMembers = Members.OrderBy(m =>
+                        {
+                            var compMappingAttr = m.Member.CustomAttributes.Single(a => a.IsFSharpCompilationMappingAttribute());
+                            // get order parameter from mapping attribute
+                            return (int)compMappingAttr.ConstructorArguments[1].Value;
+                        });
+
+                        var parameters = sortedMembers.Select(m =>
+                        {
+                            return Expression.Parameter(m.Member.GetMemberType());
+                        }).ToArray();
+
+                        var parameterValues = sortedMembers.Select(m => m.BuildInitExpression(builder)).ToArray();
+
+                        var ctorInfo = Type.GetConstructorsEx().Single();
+
+                        var ctor = Expression.Invoke(Expression.Lambda(Expression.New(ctorInfo, parameters), parameters), parameterValues);
+
+                        return ctor;
+                    }
+		        }
+		    }
+
+		    private class ColumnData
+		    {
+                public ColumnData(
+                    ColumnDescriptor column,
+                    int index)
+                {
+                    Column = column;
+                    Index = index;
+                }
+                public ColumnDescriptor Column { get; private set; }
+                public int Index { get; private set; }
+		    }
+
+		    private class MemberBuilder
+		    {
+                public MemberBuilder(
+                    Type containingType,
+                    MemberInfo member,
+                    IEnumerable<ColumnData> columns,
+                    int level)
+                {
+                    IsComplex = ((columns.Count() != 1) ||
+                        (columns.Single().Column.MemberAccessor.MemberInfos.Count() != (level + 1)));
+
+                    ContainingType = containingType;
+                    Member = member;
+                    Level = level;
+                    Columns = columns;
+                }
+
+                private Type ContainingType { get; set; }
+                public MemberInfo Member { get; private set; }
+                private bool IsComplex { get; set; }
+                private int Level { get; set; }
+                private IEnumerable<ColumnData> Columns { get; set; }
+
+                public ColumnDescriptor SingleColumn
+		        {
+		            get { return Columns.Single().Column; }
+		        }
+
+                private Expression BuildReadExpression(ExpressionBuilder builder)
+		        {
+                    var column = Columns.Single();
+                    return new ConvertFromDataReaderExpression(
+                        column.Column.MemberType,
+                        column.Index,
+                        builder.DataReaderLocal,
+                        builder.DataContextInfo.DataContext);
+		        }
+
+		        private Expression BuildCtorExpression(ExpressionBuilder builder)
+                {
+                    var subColumns = Columns.Where(cd => cd.Column.MemberAccessor.MemberInfos.Count() > Level);
+                    var typeBuilder = new TypeBuilder(Member.GetMemberType(), subColumns, Level + 1);
+                    return typeBuilder.BuildConstructorExpression(builder);
+                }
+
+                public Expression BuildInitExpression(ExpressionBuilder builder)
+                {
+                    if (!IsComplex)
+                    {
+                        return BuildReadExpression(builder);
+                    }
+                    else
+                    {
+                        return BuildCtorExpression(builder);
+                    }
+                }
+
+                public Expression BuildSetExpression(ExpressionBuilder builder, ParameterExpression variable)
+                {
+                    Expression assignmentTarget;
+                    Expression getValue;
+
+                    if (!IsComplex)
+                    {
+                        var column = SingleColumn;
+                        if (!(
+                            column.Storage != null || 
+                            !(Member is PropertyInfo) ||
+                            ((PropertyInfo) Member).GetSetMethodEx(true) != null))
+                        {
+                            return null;
+                        }
+
+                        getValue = BuildReadExpression(builder);
+
+                        assignmentTarget = Expression.MakeMemberAccess(variable, column.Storage == null ?
+                            Member : Expression.PropertyOrField(Expression.Constant(null, ContainingType), column.Storage).Member);
+                    }
+                    else
+                    {
+                        getValue = BuildCtorExpression(builder);
+                        assignmentTarget = Expression.MakeMemberAccess(variable, Member);
+                    }
+                    return Expression.Assign(assignmentTarget, getValue);
+		        }
+		    }
+
+			ParameterExpression _variable;
 
 			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
 			{
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var ed = Builder.MappingSchema.GetEntityDescriptor(objectType);
+                var ed = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
-                TypeInfo objectTypeInfo = objectType.GetTypeInfo();
-			    var attrs = objectTypeInfo.CustomAttributes;
+                var columns = (
+                    from idx in index.Select((n, i) => new { n, i })
+                    where idx.n >= 0
+                    select new ColumnData(ed.Columns[idx.i], idx.n)
+                );
 
-                bool isFSharpRecord = false;
+                var typeBuilder = new TypeBuilder(objectType, columns, 0);
+                Expression expr = typeBuilder.BuildConstructorExpression(Builder);
 
-                foreach (var attr in attrs)
+                var loadWith = GetLoadWith();
+
+                if (loadWith != null)
                 {
-                    if (IsFSharpCompilationMappingAttribute(attr))
+                    var obj = Expression.Variable(expr.Type);
+                    var exprs = new List<Expression> { Expression.Assign(obj, expr) };
+                     
+                    if (loadWith != null)
                     {
-                        var sourceConstructArg = attr.ConstructorArguments[0];
-
-                        isFSharpRecord = (int)sourceConstructArg.Value == 2;
-                    }
-                }
-
-				var members =
-				(
-					from idx in index.Select((n,i) => new { n, i })
-					where idx.n >= 0
-					let   cd = ed.Columns[idx.i]
-					where
-						isFSharpRecord || 
-                        cd.Storage != null ||
-						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
-						((PropertyInfo)cd.MemberAccessor.MemberInfo).GetSetMethodEx(true) != null
-					select new
-					{
-						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
-					}
-				).ToList();
-
-			    Expression expr;
-
-                if (!isFSharpRecord) 
-                {
-                    expr = Expression.MemberInit( 
-					    Expression.New(objectType),
-					    members
-						    .Where (m => !m.Column.MemberAccessor.IsComplex)
-						    .Select(m => (MemberBinding)Expression.Bind(
-							    m.Column.Storage == null ?
-								    m.Column.MemberAccessor.MemberInfo :
-								    Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
-							    m.Expr)));
-                }
-                else
-                {
-
-                    var orderedColumns = members.OrderBy(c =>
-                        {
-                            var mi = c.Column.MemberInfo;
-                            var compMappingAttr = mi.CustomAttributes.Single(a => IsFSharpCompilationMappingAttribute(a));
-                            return (int)compMappingAttr.ConstructorArguments[1].Value;
-                        });
-
-                    foreach (var prop in orderedColumns)
-                    {
-                        System.Diagnostics.Debug.WriteLine(prop.Column.ColumnName);
+                        SetLoadWithBindings(objectType, obj, exprs);
                     }
 
-                    var parameters = orderedColumns.Select(c =>
-                    {
-                        return Expression.Parameter(c.Column.MemberType);
-                    }).ToArray();
-                    var parameterValues = orderedColumns.Select(c =>
-                    {
-                        return c.Expr;
-                    }).ToArray();
+                    exprs.Add(obj);
 
-                    var ctorInfo = objectType.GetConstructorsEx().Single();
-
-                    //expr = Expression.Invoke(Expression.New(ctorInfo, parameters), parameterValues);
-                    expr = Expression.Invoke(Expression.Lambda(Expression.New(ctorInfo, parameters), parameters), parameterValues);
-
-//                    var lamdaParameterExpressions = new[]
-//                    {
-//                    Expression.Parameter(typeof(TArg1), ),
-//                    };
-//
-//                    // Get a set of Expressions representing the parameters which will be passed to the constructor:
-//                    var constructorParameterExpressions = lamdaParameterExpressions
-//                        .Take(constructorArgumentTypes.Length)
-//                        .ToArray();
-//
-//                    // Get an Expression representing the constructor call, passing in the constructor parameters:
-//                    var constructorCallExpression = Expression.New(constructor, constructorParameterExpressions);
-                    //var ctorInfo = objectType.GetConstructors().Single();
-                    ////var newArgs = ctorInfo
-                    ////    .GetParameters()
-                    ////    .Select(p => p.)
-
-                    //expr = Expression.New(ctorInfo, newArgs);
-                    //expr = null;
+                    expr = Expression.Block(new[] { obj }, exprs);
                 }
-
-				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
-				var loadWith   = GetLoadWith();
-
-				if (hasComplex || loadWith != null)
-				{
-					var obj   = Expression.Variable(expr.Type);
-					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
-
-					if (hasComplex)
-					{
-						exprs.AddRange(
-							members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-								m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
-					}
-
-					if (loadWith != null)
-					{
-						SetLoadWithBindings(objectType, obj, exprs);
-					}
-
-					exprs.Add(obj);
-
-					expr = Expression.Block(new[] { obj }, exprs);
-				}
 
 				expr = ProcessExpression(expr);
 

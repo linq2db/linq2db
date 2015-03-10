@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 	using Expressions;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Metadata;
 	using SqlProvider;
 	using SqlQuery;
