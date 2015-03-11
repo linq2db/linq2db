@@ -67,6 +67,12 @@ namespace LinqToDB.Mapping
 		public string MemberName { get; set; }
 
 		/// <summary>
+        /// Sets transparent flag to use column without addition id property
+        /// Use it at the same time with AssociationAttribute
+        /// </summary>
+	    public bool Transparent { get; set; }
+
+		/// <summary>
 		/// Gets or sets the type of the database column.
 		/// </summary>
 		public DataType DataType { get; set; }

@@ -9,6 +9,8 @@ namespace Tests.Model
 		ITable<Person>                 Person                 { get; }
 		ITable<Patient>                Patient                { get; }
 		ITable<Doctor>                 Doctor                 { get; }
+        ITable<TestEntity1>			   TestEntity1			  { get; }
+        ITable<TestEntity2>			   TestEntity2			  { get; }
 		ITable<Parent>                 Parent                 { get; }
 		ITable<Parent1>                Parent1                { get; }
 		ITable<IParent>                Parent2                { get; }
