@@ -41,6 +41,30 @@ namespace LinqToDB.Data
 			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
+		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (providerName     == null) throw new ArgumentNullException("providerName");
+			if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+			var dataProvider =
+			(
+				from key in _dataProviders.Keys
+				where string.Compare(key, providerName, StringComparison.InvariantCultureIgnoreCase) == 0
+				select _dataProviders[key]
+			).FirstOrDefault();
+
+			if (dataProvider == null)
+			{
+				throw new LinqToDBException("DataProvider with name '{0}' are not compatible.".Args(providerName));
+			}
+
+			InitConfig();
+
+			DataProvider     = dataProvider;
+			ConnectionString = connectionString;
+			_mappingSchema   = DataProvider.MappingSchema;
+		}
+
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
@@ -230,7 +254,7 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
 			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
-		    LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
+			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
 			var section = LinqToDBSection.Instance;
 
@@ -808,7 +832,7 @@ namespace LinqToDB.Data
 			var connection =
 				_connection == null       ? null :
 				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-				                            DataProvider.CreateConnection(ConnectionString);
+											DataProvider.CreateConnection(ConnectionString);
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
