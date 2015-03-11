@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlQuery;
 	using SqlProvider;
 
-	class SQLiteSqlBuilder : BasicSqlBuilder
+	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
 		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
