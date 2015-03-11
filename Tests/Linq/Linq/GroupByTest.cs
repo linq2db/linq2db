@@ -1700,5 +1700,89 @@ namespace Tests.Linq
 					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID));
 			}
 		}
+
+		public class ChildEntity
+		{
+			public int ParentID;
+			public int ChildID;
+			public int RandValue;
+		}
+
+		//////[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		public void GroupByCustomEntity1(string context)
+		{
+			var rand = new Random().Next(5);
+			//var rand = new Random();
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from e in
+						from c in Child
+						select new ChildEntity
+						{
+							RandValue = rand//.Next(5)
+							,
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					},
+					from e in
+						from c in db.Child
+						select new ChildEntity
+						{
+							RandValue = rand,
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					});
+			}
+		}
+
+		static int GetID(int id)
+		{
+			return id;
+		}
+
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		public void GroupByCustomEntity2(string context)
+		{
+			var rand = new Random().Next(5);
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from e in
+						from c in Child
+						select new ChildEntity
+						{
+							RandValue = GetID(rand),
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					},
+					from e in
+						from c in db.Child
+						select new ChildEntity
+						{
+							RandValue = GetID(rand),
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					});
+			}
+		}
 	}
 }
