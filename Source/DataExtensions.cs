@@ -19,7 +19,7 @@ namespace LinqToDB
 		static public ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
-			return new Table<T>(dataContext);
+			return new TableOld<T>(dataContext);
 		}
 
 		static public ITable<T> GetTable<T>(
@@ -55,7 +55,7 @@ namespace LinqToDB
 			else
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo); 
 
-			return new Table<T>(dataContext, expr);
+			return new TableOld<T>(dataContext, expr);
 		}
 
 		#endregion
@@ -185,12 +185,12 @@ namespace LinqToDB
 		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Insert(dataContextInfo, obj);
+			return QueryOld<T>.Insert(dataContextInfo, obj);
 		}
 
 		public static int Insert<T>(this IDataContext dataContext, T obj)
 		{
-			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj);
+			return QueryOld<T>.Insert(DataContextInfo.Create(dataContext), obj);
 		}
 
 		#endregion
@@ -200,12 +200,12 @@ namespace LinqToDB
 		public static int InsertOrReplace<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.InsertOrReplace(dataContextInfo, obj);
+			return QueryOld<T>.InsertOrReplace(dataContextInfo, obj);
 		}
 
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj)
 		{
-			return Query<T>.InsertOrReplace(DataContextInfo.Create(dataContext), obj);
+			return QueryOld<T>.InsertOrReplace(DataContextInfo.Create(dataContext), obj);
 		}
 
 		#endregion
@@ -215,12 +215,12 @@ namespace LinqToDB
 		public static object InsertWithIdentity<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.InsertWithIdentity(dataContextInfo, obj);
+			return QueryOld<T>.InsertWithIdentity(dataContextInfo, obj);
 		}
 
 		public static object InsertWithIdentity<T>(this IDataContext dataContext, T obj)
 		{
-			return Query<T>.InsertWithIdentity(DataContextInfo.Create(dataContext), obj);
+			return QueryOld<T>.InsertWithIdentity(DataContextInfo.Create(dataContext), obj);
 		}
 
 		#endregion
@@ -230,12 +230,12 @@ namespace LinqToDB
 		public static int Update<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Update(dataContextInfo, obj);
+			return QueryOld<T>.Update(dataContextInfo, obj);
 		}
 
 		public static int Update<T>(this IDataContext dataContext, T obj)
 		{
-			return Query<T>.Update(DataContextInfo.Create(dataContext), obj);
+			return QueryOld<T>.Update(DataContextInfo.Create(dataContext), obj);
 		}
 
 		#endregion
@@ -245,13 +245,13 @@ namespace LinqToDB
 		public static int Delete<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Delete(dataContextInfo, obj);
+			return QueryOld<T>.Delete(dataContextInfo, obj);
 		}
 
 		public static int Delete<T>([NotNull] this IDataContext dataContext, T obj)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.Delete(DataContextInfo.Create(dataContext), obj);
+			return QueryOld<T>.Delete(DataContextInfo.Create(dataContext), obj);
 		}
 		#endregion
 
@@ -268,7 +268,7 @@ namespace LinqToDB
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.CreateTable(dataContextInfo,
+			return QueryOld<T>.CreateTable(dataContextInfo,
 				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
 		}
 
@@ -281,7 +281,7 @@ namespace LinqToDB
 			DefaulNullable defaulNullable  = DefaulNullable.None)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			return Query<T>.CreateTable(DataContextInfo.Create(dataContext),
+			return QueryOld<T>.CreateTable(DataContextInfo.Create(dataContext),
 				tableName, databaseName, ownerName, statementHeader, statementFooter, defaulNullable);
 		}
 
@@ -291,13 +291,13 @@ namespace LinqToDB
 			string ownerName    = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
+			QueryOld<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
 		}
 
 		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
+			QueryOld<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
 		}
 
 		#endregion

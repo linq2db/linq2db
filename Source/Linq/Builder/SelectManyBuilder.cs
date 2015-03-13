@@ -161,7 +161,7 @@ namespace LinqToDB.Linq.Builder
 				return Collection.BuildExpression(expression, level);
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				if (Collection == null)
 					base.BuildQuery(query, queryParameter);

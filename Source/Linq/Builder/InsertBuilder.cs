@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 
 			readonly bool _insertWithIdentity;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				if (_insertWithIdentity) query.SetScalarQuery<object>();
 				else                     query.SetNonQueryQuery();

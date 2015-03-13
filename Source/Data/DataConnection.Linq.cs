@@ -25,7 +25,7 @@ namespace LinqToDB.Data
 		public ITable<T> GetTable<T>(bool dispose)
 			where T : class
 		{
-			return new Table<T>(new DataContextInfo(this, dispose));
+			return new TableOld<T>(new DataContextInfo(this, dispose));
 		}
 
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)

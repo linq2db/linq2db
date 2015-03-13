@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 				return 0;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(FieldIndex);
 				var mapper = Builder.BuildMapper<object>(expr);

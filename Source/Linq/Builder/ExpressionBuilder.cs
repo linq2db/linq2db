@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Init
 
-		readonly Query                             _query;
+		readonly QueryOld                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
 		readonly Dictionary<Expression,Expression> _expressionAccessors;
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 		readonly HashSet<Expression> _visitedExpressions;
 
 		public ExpressionBuilder(
-			Query                 query,
+			QueryOld                 query,
 			IDataContextInfo      dataContext,
 			Expression            expression,
 			ParameterExpression[] compiledParameters)
@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		internal Query<T> Build<T>()
+		internal QueryOld<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
 			
@@ -156,11 +156,11 @@ namespace LinqToDB.Linq.Builder
 
 			_query.Init(sequence, CurrentSqlParameters);
 
-			var param = Expression.Parameter(typeof(Query<T>), "info");
+			var param = Expression.Parameter(typeof(QueryOld<T>), "info");
 
-			sequence.BuildQuery((Query<T>)_query, param);
+			sequence.BuildQuery((QueryOld<T>)_query, param);
 
-			return (Query<T>)_query;
+			return (QueryOld<T>)_query;
 		}
 
 		[JetBrains.Annotations.NotNull]
@@ -1240,7 +1240,7 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null)),
+						MemberHelper.MethodOf<QueryOld>(a => a.GetIQueryable(0, null)),
 						new[] { Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)) });
 
 				var qex = _query.GetIQueryable(n, expression);

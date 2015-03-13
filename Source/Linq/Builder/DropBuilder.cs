@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				query.SetNonQueryQuery();
 			}

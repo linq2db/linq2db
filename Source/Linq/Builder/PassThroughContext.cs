@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual SelectQuery       SelectQuery { get { return Context.SelectQuery; } set { Context.SelectQuery = value; } }
 		public virtual IBuildContext     Parent      { get { return Context.Parent;      } set { Context.Parent      = value; } }
 
-		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		public virtual void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 		{
 			Context.BuildQuery(query, queryParameter);
 		}

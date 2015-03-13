@@ -154,9 +154,13 @@
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
+    <Compile Include="Linq\Builder\ExpressionBuilder1.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
+    <Compile Include="Linq\ExpressionQuery.cs" />
+    <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\Query.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
@@ -176,7 +180,7 @@
     <Compile Include="Linq\DefaultDataContextInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Linq\ExpressionQuery.cs" />
+    <Compile Include="Linq\ExpressionQueryOld.cs" />
     <Compile Include="ITableT.cs" />
     <Compile Include="DataProvider\Access\AccessDataProvider.cs" />
     <Compile Include="DataProvider\Access\AccessFactory.cs" />
@@ -265,7 +269,7 @@
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\QueryableAccessor.cs" />
     <Compile Include="Linq\ITable.cs" />
-    <Compile Include="Linq\ExpressionQueryImpl.cs" />
+    <Compile Include="Linq\ExpressionQueryOldImpl.cs" />
     <Compile Include="Mapping\IdentityAttribute.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -362,7 +366,7 @@
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="Linq\MemberInfoComparer.cs" />
     <Compile Include="ExpressionMethodAttribute.cs" />
-    <Compile Include="Linq\Query.cs" />
+    <Compile Include="Linq\QueryOld.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
