@@ -276,10 +276,17 @@ namespace LinqToDB.Data
 		{
 			DataConnection.InitCommand(CommandType, CommandText, Parameters);
 
-			if (Parameters != null && Parameters.Length > 0)
+			var hasParameters = Parameters != null && Parameters.Length > 0;
+
+			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			return DataConnection.ExecuteNonQuery();
+			var commandResult = DataConnection.ExecuteNonQuery();
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters);
+
+			return commandResult;
 		}
 
 		#endregion
@@ -559,6 +566,29 @@ namespace LinqToDB.Data
 
 				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
 				dataConnection.Command.Parameters.Add(p);
+			}
+		}
+
+		static void RebindParameters(DataConnection dataConnection, DataParameter[] parameters)
+		{
+			var dbParameters = dataConnection.Command.Parameters;
+
+			IDbDataParameter dbParameter = null;
+			DataParameter dataParameter = null;
+
+			for (int i = 0; i < parameters.Length; i++)
+			{
+				dataParameter = parameters[i];
+				if (dataParameter.Direction.HasValue &&
+				   (dataParameter.Direction == ParameterDirection.Output ||
+					dataParameter.Direction == ParameterDirection.InputOutput))
+				{
+					dbParameter = dbParameters[i] as IDbDataParameter;
+					if (!Object.Equals(dataParameter.Value, dbParameter.Value))
+					{
+						dataParameter.Value = dbParameter.Value;
+					}
+				}
 			}
 		}
 
