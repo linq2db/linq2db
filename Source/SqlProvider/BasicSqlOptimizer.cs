@@ -783,6 +783,12 @@ namespace LinqToDB.SqlProvider
 					{
 						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
+                        if (expr.Expr1 is SqlField && expr.Expr2 is SqlParameter)
+                        {
+                            if (((SqlParameter)expr.Expr2).DataType == DataType.Undefined)
+                                ((SqlParameter)expr.Expr2).DataType = ((SqlField)expr.Expr1).DataType;
+                        }
+
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
