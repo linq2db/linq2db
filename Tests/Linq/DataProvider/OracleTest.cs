@@ -563,32 +563,32 @@ namespace Tests.DataProvider
 			}
 		}
 
-	    [Test, IncludeDataContextSource(CurrentProvider)]
-        public void SelectDateTime(string context)
-        {			
-            // Set custom DateTime to SQL converter.
-            //
-            OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
-                typeof(DateTime),
-                (stringBuilder, dataType, val) =>
-                {
-                    var value = (DateTime)val;
-                    Assert.That(dataType.DataType, Is.Not.EqualTo(DataType.Undefined));
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SelectDateTime(string context)
+		{			
+			// Set custom DateTime to SQL converter.
+			//
+			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder, dataType, val) =>
+				{
+					var value = (DateTime)val;
+					Assert.That(dataType.DataType, Is.Not.EqualTo(DataType.Undefined));
 
-                    var format =
-                        dataType.DataType == DataType.DateTime2 ?
-                            "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
-                            "TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+					var format =
+						dataType.DataType == DataType.DateTime2 ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
-                    stringBuilder.AppendFormat(format, value);
-                });
+					stringBuilder.AppendFormat(format, value);
+				});
 
-	        using (var db = new DataConnection(context))
-            {
-                var res = (db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == DateTime.Now)).ToList();
-                Console.WriteLine(res.Count);
-	        }
-	    }
+			using (var db = new DataConnection(context))
+			{
+				var res = (db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == DateTime.Now)).ToList();
+				Console.WriteLine(res.Count);
+			}
+		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void DateTimeTest2(string context)
