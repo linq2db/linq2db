@@ -63,6 +63,11 @@ namespace LinqToDB.DataProvider
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					StringBuilder.Append(name);
+					if (value is DataParameter)
+					{
+						value = ((DataParameter)value).Value;
+					}
+
 					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
 						column.DataType));
 				}
