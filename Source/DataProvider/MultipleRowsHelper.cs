@@ -19,8 +19,9 @@ namespace LinqToDB.DataProvider
 			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder();
 			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
 			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			Columns        = Descriptor.Columns.Where(c =>
-				!c.SkipOnInsert || enforceKeepIdentity && options.KeepIdentity == true && c.IsIdentity).ToArray();
+			Columns        = Descriptor.Columns
+				.Where(c => !c.SkipOnInsert || enforceKeepIdentity && options.KeepIdentity == true && c.IsIdentity)
+				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
 			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, Descriptor);
@@ -63,6 +64,7 @@ namespace LinqToDB.DataProvider
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					StringBuilder.Append(name);
+
 					if (value is DataParameter)
 					{
 						value = ((DataParameter)value).Value;
