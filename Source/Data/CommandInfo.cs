@@ -573,18 +573,16 @@ namespace LinqToDB.Data
 		{
 			var dbParameters = dataConnection.Command.Parameters;
 
-			IDbDataParameter dbParameter = null;
-			DataParameter dataParameter = null;
-
-			for (int i = 0; i < parameters.Length; i++)
+			for (var i = 0; i < parameters.Length; i++)
 			{
-				dataParameter = parameters[i];
+				var dataParameter = parameters[i];
+
 				if (dataParameter.Direction.HasValue &&
-				   (dataParameter.Direction == ParameterDirection.Output ||
-					dataParameter.Direction == ParameterDirection.InputOutput))
+					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput))
 				{
-					dbParameter = dbParameters[i] as IDbDataParameter;
-					if (!Object.Equals(dataParameter.Value, dbParameter.Value))
+					var dbParameter = (IDbDataParameter)dbParameters[i];
+
+					if (!object.Equals(dataParameter.Value, dbParameter.Value))
 					{
 						dataParameter.Value = dbParameter.Value;
 					}
