@@ -173,6 +173,25 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test, DataContextSource(ProviderName.Access, ProviderName.Informix)]
+		public void ContainsNull(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				string firstName = null;
+				int?   id        = null;
+
+				var q =
+				(
+					from p in db.Person
+					where
+						(int?)p.ID == id &&
+						(string.IsNullOrEmpty(firstName) || p.FirstName.Contains(firstName))
+					select p
+				).ToList();
+			}
+		}
+
 		[Test, DataContextSource]
 		public void StartsWith1(string context)
 		{

@@ -783,6 +783,17 @@ namespace LinqToDB.SqlProvider
 					{
 						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
+						if (expr.Expr1 is SqlField && expr.Expr2 is SqlParameter)
+						{
+							if (((SqlParameter)expr.Expr2).DataType == DataType.Undefined)
+								((SqlParameter)expr.Expr2).DataType = ((SqlField)expr.Expr1).DataType;
+						}
+						else if (expr.Expr2 is SqlField && expr.Expr1 is SqlParameter)
+						{
+							if (((SqlParameter)expr.Expr1).DataType == DataType.Undefined)
+								((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
+						}
+
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
@@ -926,7 +937,7 @@ namespace LinqToDB.SqlProvider
 					var v3 = func.Parameters[4] as SqlValue;
 
 					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is int &&
-					    c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
+						c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
 					{
 						var ee1 = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 						var ee2 = c2.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
@@ -1000,13 +1011,13 @@ namespace LinqToDB.SqlProvider
 						var bv2 = (bool)v2.Value;
 
 						if (bv == bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal ||
-						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+							bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
 						{
 							return c1;
 						}
 
 						if (bv == bv2 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual ||
-						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
+							bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
 						{
 							var ee = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 
