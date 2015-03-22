@@ -39,11 +39,10 @@ namespace LinqToDB.Reflection
 					};
 				}).ToArray();
 
-				var lastInfo = infos.Last();
+				var lastInfo = infos[infos.Length - 1];
 
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
-			    MemberInfos = infos.Select(i => i.member);
 
 				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClassEx() || info.type.IsNullable());
 
@@ -189,10 +188,6 @@ namespace LinqToDB.Reflection
 		void SetSimple(MemberInfo memberInfo)
 		{
 			MemberInfo = memberInfo;
-            var memberInfos = new List<MemberInfo>();
-		    memberInfos.Add(memberInfo);
-		    MemberInfos = memberInfos;
-
 			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
 			HasGetter = true;
@@ -246,16 +241,8 @@ namespace LinqToDB.Reflection
 
 		#region Public Properties
 
-        /// <summary>
-        /// Returns last member info.
-        /// </summary>
-        public MemberInfo MemberInfo { get; private set; }
-        /// <summary>
-        /// Returns full chain of MemberInfos.
-        /// </summary>
-        public IEnumerable<MemberInfo>  MemberInfos { get; private set; }
-
-        public TypeAccessor          TypeAccessor     { get; private set; }
+		public MemberInfo            MemberInfo       { get; private set; }
+		public TypeAccessor          TypeAccessor     { get; private set; }
 		public bool                  HasGetter        { get; private set; }
 		public bool                  HasSetter        { get; private set; }
 		public Type                  Type             { get; private set; }

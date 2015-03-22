@@ -409,7 +409,7 @@
       <Project>{D527524F-EC92-465E-9CAE-86278121675A}</Project>
       <Name>Tests.Model</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Tests.FSharp\Tests.FSharp.fsproj">
+    <ProjectReference Include="..\FSharp\Tests.FSharp.fsproj">
       <Project>{56109866-4005-4852-9f9a-19a7a8d3b369}</Project>
       <Name>Tests.FSharp</Name>
     </ProjectReference>

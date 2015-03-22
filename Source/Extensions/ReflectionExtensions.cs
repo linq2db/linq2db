@@ -1133,13 +1133,5 @@ namespace LinqToDB.Extensions
 		}
 
 		#endregion
-
-        #region CustomAttributeData extensions
-        public static bool IsFSharpCompilationMappingAttribute(this CustomAttributeData attributeData)
-	    {
-            string compilationMappingAttributeName = "Microsoft.FSharp.Core.CompilationMappingAttribute";
-            return attributeData.AttributeType.FullName == compilationMappingAttributeName;
-        }
-        #endregion
-    }
+	}
 }

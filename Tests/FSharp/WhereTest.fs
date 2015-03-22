@@ -19,7 +19,7 @@ let TestOneJohn = TestOnePerson 1 "John"
 
 let TestMethod() = 
     1
-     
+
 let LoadSingle (db : IDataContext) = 
     let persons = db.GetTable<Person>()
     TestOneJohn(query {
