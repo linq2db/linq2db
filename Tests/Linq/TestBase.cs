@@ -188,7 +188,7 @@ namespace Tests
 			TestOnePerson(1, "John", persons);
 		}
 
-		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
+		protected void TestPerson(int id, string firstName, IQueryable<IPerson> persons)
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
@@ -196,7 +196,7 @@ namespace Tests
 			Assert.AreEqual(firstName, person.FirstName);
 		}
 
-		protected void TestJohn(IQueryable<Person> persons)
+		protected void TestJohn(IQueryable<IPerson> persons)
 		{
 			TestPerson(1, "John", persons);
 		}

@@ -4,7 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
-	using System.Threading;
+    using System.Threading;
+    using System.Reflection;
+    using System.Linq.Expressions;
 
 	using Common;
 	using Extensions;
@@ -33,7 +35,8 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
-		public Dictionary<string,string>   Aliases                   { get; private set; }
+        public Dictionary<string, string> Aliases { get; private set; }
+        public bool IsFSharpRecord { get; private set; }
 
 		readonly ManualResetEvent _mre = new ManualResetEvent(false);
 
@@ -129,6 +132,13 @@ namespace LinqToDB.Mapping
 			}
 
 			var typeColumnAttrs = _mappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+
+            var allAttrs = TypeAccessor.Type.GetTypeInfo().CustomAttributes;
+
+            IsFSharpRecord = allAttrs.Any(a =>
+            {
+                return (a.IsFSharpCompilationMappingAttribute() && (int) a.ConstructorArguments[0].Value == 2);
+            });
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
