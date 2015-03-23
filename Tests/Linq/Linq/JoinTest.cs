@@ -7,8 +7,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.DataProvider;
-
 namespace Tests.Linq
 {
 	using Model;
