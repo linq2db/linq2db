@@ -56,7 +56,7 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert1(db);
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource, Ignore("It breaks following tests.")]
 		public void Insert2(string context)
 		{
 			using (var db = GetDataContext(context))
