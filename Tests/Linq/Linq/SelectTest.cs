@@ -31,12 +31,12 @@ namespace Tests.Linq
 				TestJohn(from p in db.Person select p);
 		}
 
-        [Test, DataContextSource]
-        public void Complex(string context)
-        {
-            using (var db = GetDataContext(context))
-                TestJohn(from p in db.ComplexPerson select p);
-        }
+		[Test, DataContextSource]
+		public void Complex(string context)
+		{
+			using (var db = GetDataContext(context))
+				TestJohn(from p in db.ComplexPerson select p);
+		}
 
 		[Test, DataContextSource]
 		public void SimpleDouble(string context)
@@ -598,21 +598,21 @@ namespace Tests.Linq
 			}
 		}
 
-        [Test, Ignore("Not currently supported")]
-        public void SelectComplexField()
-        {
-            using (var db = new TestDataConnection())
-            {
-                var q =
-                    from p in db.GetTable<ComplexPerson>()
-                    select p.Name.LastName;
+		[Test, Ignore("Not currently supported")]
+		public void SelectComplexField()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var q =
+					from p in db.GetTable<ComplexPerson>()
+					select p.Name.LastName;
 
-                var sql = q.ToString();
+				var sql = q.ToString();
 
-                Assert.That(sql.IndexOf("First"), Is.LessThan(0));
-                Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
-            }
-        }
+				Assert.That(sql.IndexOf("First"),    Is.LessThan(0));
+				Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+			}
+		}
 
 	}
 }
