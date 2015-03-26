@@ -173,7 +173,6 @@ namespace LinqToDB.Common
 					cases.ToArray());
 
 				return expr;
-#endif
 			}
 
 			return null;
