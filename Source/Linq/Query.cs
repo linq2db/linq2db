@@ -38,18 +38,12 @@ namespace LinqToDB.Linq
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
 			SqlProviderFlags = dataContext.SqlProviderFlags;
-			GetIEnumerable   = MakeEnumerable;
 		}
 
-		public Func<QueryContext,IDataContext,Expression,object[],object>         GetElement;
-		public Func<QueryContext,IDataContext,Expression,object[],IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,T>              GetElement;
+		public Func<IDataContext,Expression,IEnumerable<T>> GetIEnumerable;
 
-		IEnumerable<T> MakeEnumerable(QueryContext qc, IDataContext dc, Expression expr, object[] ps)
-		{
-			yield return ConvertTo<T>.From(GetElement(qc, dc, expr, ps));
-		}
-
-		public Query<T> Next;
+		Query<T> _next;
 
 		#region GetQuery
 
@@ -58,7 +52,7 @@ namespace LinqToDB.Linq
 
 		const int CacheSize = 100;
 
-		public static Query<T> GetQuery(IDataContext dataContext, Expression expr)
+		public static Query<T> GetQuery(IDataContext dataContext, Expression expr, bool isEnumerable)
 		{
 			var query = FindQuery(dataContext, expr);
 
@@ -84,7 +78,10 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							new ExpressionBuilder1(query, null).Build();
+							var builder = new ExpressionBuilder1(query.MappingSchema);
+
+							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable<T>(query.Expression);
+							else              query.GetElement     = builder.BuildElement   <T>(query.Expression);
 						}
 						catch (Exception)
 						{
@@ -111,7 +108,7 @@ namespace LinqToDB.Linq
 			Query<T> prev = null;
 			var      n    = 0;
 
-			for (var query = _first; query != null; query = query.Next)
+			for (var query = _first; query != null; query = query._next)
 			{
 				if (query.Compare(dataContext.ContextID, dataContext.MappingSchema, expr))
 				{
@@ -119,9 +116,9 @@ namespace LinqToDB.Linq
 					{
 						lock (_sync)
 						{
-							prev.Next  = query.Next;
-							query.Next = _first;
-							_first     = query;
+							prev._next  = query._next;
+							query._next = _first;
+							_first      = query;
 						}
 					}
 
@@ -130,7 +127,7 @@ namespace LinqToDB.Linq
 
 				if (n++ >= CacheSize)
 				{
-					query.Next = null;
+					query._next = null;
 					return null;
 				}
 

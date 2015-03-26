@@ -15,7 +15,7 @@ namespace LinqToDB.Linq
 		{
 			_dataContext = dataContext;
 
-			Expression   = expression ?? Expression.Constant(this);
+			Expression = expression ?? Expression.Constant(this);
 		}
 
 		readonly IDataContext _dataContext;
@@ -24,20 +24,16 @@ namespace LinqToDB.Linq
 		public Type           ElementType { get { return typeof(T); } }
 		public IQueryProvider Provider    { get { return this;      } }
 
-		public string SqlText
-		{
-			get;
-			private set;
-		}
+		public string SqlText { get; private set; }
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, _dataContext, Expression, Parameters).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(null, _dataContext, Expression, Parameters).GetEnumerator();
+			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
 		}
 
 		public IQueryable CreateQuery(Expression expression)
@@ -67,7 +63,7 @@ namespace LinqToDB.Linq
 
 		public object Execute(Expression expression)
 		{
-			return GetQuery(expression, false).GetElement(null, _dataContext, expression, Parameters);
+			return GetQuery(expression, false).GetElement(_dataContext, expression);
 		}
 
 		public TResult Execute<TResult>(Expression expression)
@@ -77,23 +73,22 @@ namespace LinqToDB.Linq
 				throw new InvalidOperationException();
 #endif
 
-			return (TResult)GetQuery(expression, false).GetElement(null, _dataContext, expression, Parameters);
+			return (TResult)(object)GetQuery(expression, false).GetElement(_dataContext, expression);
 		}
 
-		internal Query<T> Info;
-		internal object[] Parameters;
+		Query<T> _info;
 
 		#region Execute
 
-		Query<T> GetQuery(Expression expression, bool cache)
+		Query<T> GetQuery(Expression expression, bool isEnumerable)
 		{
-			if (cache && Info != null)
-				return Info;
+			if (isEnumerable && _info != null)
+				return _info;
 
-			var info = Query<T>.GetQuery(_dataContext, expression);
+			var info = Query<T>.GetQuery(_dataContext, expression, isEnumerable);
 
-			if (cache)
-				Info = info;
+			if (isEnumerable)
+				_info = info;
 
 			return info;
 		}

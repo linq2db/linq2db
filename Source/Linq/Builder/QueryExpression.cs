@@ -15,8 +15,8 @@ namespace LinqToDB.Linq.Builder
 
 		Type _type;
 
-		public override Type           Type      { get { return _type;                    } }
-		public override bool           CanReduce { get { return true;                     } }
+		public override Type           Type      { get { return _type; } }
+		public override bool           CanReduce { get { return true;  } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
 
 		public override Expression Reduce()
@@ -33,6 +33,16 @@ namespace LinqToDB.Linq.Builder
 			clauseBuilder.Query = this;
 
 			return this;
+		}
+
+		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>()
+		{
+			return null;
+		}
+
+		public Func<IDataContext,Expression,T> BuildElement<T>()
+		{
+			return null;
 		}
 	}
 }

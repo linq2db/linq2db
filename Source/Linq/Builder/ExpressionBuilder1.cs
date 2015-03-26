@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -8,18 +12,23 @@ namespace LinqToDB.Linq.Builder
 
 	class ExpressionBuilder1
 	{
-		public ExpressionBuilder1(Query query, ParameterExpression[] compiledParameters)
+		public ExpressionBuilder1(MappingSchema mappingSchema)
 		{
-			Query              = query;
-			CompiledParameters = compiledParameters;
+			MappingSchema = mappingSchema;
 		}
 
-		public readonly Query                 Query;
-		public readonly ParameterExpression[] CompiledParameters;
+		public readonly MappingSchema MappingSchema;
 
-		public void Build()
+		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
 		{
-			var expr = Query.Expression.Transform(e => TramsformQuery(e));
+			var expr = (QueryExpression)expression.Transform(e => TramsformQuery(e));
+			return expr.BuildEnumerable<T>();
+		}
+
+		public Func<IDataContext,Expression,T> BuildElement<T>(Expression expression)
+		{
+			var expr = (QueryExpression)expression.Transform(e => TramsformQuery(e));
+			return expr.BuildElement<T>();
 		}
 
 		Expression TramsformQuery(Expression expression)
@@ -44,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
 								return new QueryExpression(new TableBuilder1(expression));
 
-						var attr = Query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
+						var attr = MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
 							return new QueryExpression(new TableFunctionBuilder(expression));

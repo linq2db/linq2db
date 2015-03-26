@@ -985,13 +985,6 @@ namespace LinqToDB.Mapping
 			return ed;
 		}
 
-		//public EntityDescriptor GetEntityDescriptor(Type type)
-		//{
-		//    if (_entityDescriptors == null)
-		//        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-		//    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
-		//}
-
 		#endregion
 	}
 }
