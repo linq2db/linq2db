@@ -78,7 +78,7 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							var builder = new ExpressionBuilder1(query.MappingSchema);
+							var builder = new QueryBuilder(query);
 
 							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable<T>(query.Expression);
 							else              query.GetElement     = builder.BuildElement   <T>(query.Expression);

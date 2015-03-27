@@ -26,16 +26,6 @@ namespace LinqToDB.Linq
 
 		public string SqlText { get; private set; }
 
-		public IEnumerator<T> GetEnumerator()
-		{
-			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
-		}
-
 		public IQueryable CreateQuery(Expression expression)
 		{
 			if (expression == null)
@@ -45,7 +35,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryOldImpl<>).MakeGenericType(elementType), new object[] { _dataContext, expression });
+				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { _dataContext, expression });
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -59,6 +49,16 @@ namespace LinqToDB.Linq
 				throw new ArgumentNullException("expression");
 
 			return new ExpressionQueryImpl<TElement>(_dataContext, expression);
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
 		}
 
 		public object Execute(Expression expression)
@@ -78,12 +78,11 @@ namespace LinqToDB.Linq
 
 		Query<T> _info;
 
-		#region Execute
-
 		Query<T> GetQuery(Expression expression, bool isEnumerable)
 		{
 			if (isEnumerable && _info != null)
-				return _info;
+				throw new InvalidOperationException();
+				//return _info;
 
 			var info = Query<T>.GetQuery(_dataContext, expression, isEnumerable);
 
@@ -92,8 +91,5 @@ namespace LinqToDB.Linq
 
 			return info;
 		}
-
-		#endregion
-
 	}
 }

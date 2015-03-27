@@ -17,6 +17,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectTest : TestBase
 	{
+		// IT : # test.
 		[Test, DataContextSource]
 		public void SimpleDirect(string context)
 		{

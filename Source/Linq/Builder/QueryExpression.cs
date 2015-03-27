@@ -6,16 +6,20 @@ namespace LinqToDB.Linq.Builder
 {
 	class QueryExpression : Expression
 	{
-		public QueryExpression(ClauseBuilderBase clauseBuilder)
+		public QueryExpression(Query query, ExpressionBuilderBase expressionBuilder)
 		{
-			AddClause(clauseBuilder);
+			Query = query;
+
+			AddClause(expressionBuilder);
 		}
 
-		readonly List<ClauseBuilderBase> _builders = new List<ClauseBuilderBase>();
+		public readonly Query Query;
 
-		Type _type;
+		ExpressionBuilderBase _last;
 
-		public override Type           Type      { get { return _type; } }
+		readonly List<ExpressionBuilderBase> _builders = new List<ExpressionBuilderBase>();
+
+		public override Type           Type      { get { return _last.Type; } }
 		public override bool           CanReduce { get { return true;  } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
 
@@ -24,19 +28,25 @@ namespace LinqToDB.Linq.Builder
 			return _builders[_builders.Count - 1].Expression;
 		}
 
-		public QueryExpression AddClause(ClauseBuilderBase clauseBuilder)
+		public QueryExpression AddClause(ExpressionBuilderBase expressionBuilder)
 		{
-			_builders.Add(clauseBuilder);
+			if (_last != null)
+			{
+				_last.Next = expressionBuilder;
+				expressionBuilder.Prev = _last;
+			}
 
-			_type = clauseBuilder.Type;
+			_last = expressionBuilder;
 
-			clauseBuilder.Query = this;
+			_builders.Add(_last);
 
-			return this;
+			return _last.Query = this;
 		}
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>()
 		{
+			var sqlQuery = _last.GetSqlBuilder();
+
 			return null;
 		}
 

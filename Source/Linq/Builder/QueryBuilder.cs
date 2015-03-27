@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Extensions;
 
-	class ExpressionBuilder1
+	class QueryBuilder
 	{
-		public ExpressionBuilder1(MappingSchema mappingSchema)
+		public QueryBuilder(Query query)
 		{
-			MappingSchema = mappingSchema;
+			_query = query;
 		}
 
-		public readonly MappingSchema MappingSchema;
+		readonly Query _query;
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
 		{
@@ -40,7 +37,15 @@ namespace LinqToDB.Linq.Builder
 						var c = (ConstantExpression)expression;
 
 						if (c.Value is ITable)
-							return new QueryExpression(new TableBuilder1(expression));
+							return new QueryExpression(_query, new TableBuilder1(expression));
+
+						break;
+					}
+
+				case ExpressionType.MemberAccess:
+					{
+						if (typeof(ITable).IsSameOrParentOf(expression.Type))
+							return new QueryExpression(_query, new TableBuilder1(expression));
 
 						break;
 					}
@@ -51,18 +56,19 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression(new TableBuilder1(expression));
+								return new QueryExpression(_query, new TableBuilder1(expression));
 
-						var attr = MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
+						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-							return new QueryExpression(new TableFunctionBuilder(expression));
+							return new QueryExpression(_query, new TableFunctionBuilder(expression));
 
 						if (call.IsQueryable())
 						{
 							if (call.Object == null && call.Arguments.Count > 0 && call.Arguments[0] != null)
 							{
 								var qe = call.Arguments[0].Transform(e => TramsformQuery(e)) as QueryExpression;
+
 								if (qe != null)
 								{
 									switch (call.Method.Name)
