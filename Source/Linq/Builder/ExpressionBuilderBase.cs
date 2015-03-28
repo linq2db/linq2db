@@ -3,21 +3,19 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	abstract class ExpressionBuilderBase
+	abstract class ExpressionBuilderBase : IExpressionBuilder
 	{
 		protected ExpressionBuilderBase(Expression expression)
 		{
 			Expression = expression;
 		}
 
-		public Type            Type { get { return Expression.Type; } }
-		public Expression      Expression;
+		public Expression Expression { get; private set; }
 
-		public ExpressionBuilderBase Prev;
-		public ExpressionBuilderBase Next;
-		public QueryExpression       Query;
+		public IExpressionBuilder Prev { get; set; }
+		public IExpressionBuilder Next { get; set; }
 
-		internal  abstract SqlBuilderBase GetSqlBuilder();
-		public    abstract Expression     BuildQuery   ();
+		public abstract SqlBuilderBase GetSqlBuilder();
+		public abstract Expression     BuildQuery   ();
 	}
 }

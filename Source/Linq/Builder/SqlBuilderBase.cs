@@ -7,8 +7,7 @@ namespace LinqToDB.Linq.Builder
 
 	abstract class SqlBuilderBase
 	{
-		public SelectQuery SelectQuery;
-
-		public abstract Expression BuildExpression();
+		public abstract SelectQuery GetSelectQuery ();
+		public abstract Expression  BuildExpression();
 	}
 }

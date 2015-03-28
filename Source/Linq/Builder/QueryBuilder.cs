@@ -18,16 +18,18 @@ namespace LinqToDB.Linq.Builder
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
 		{
-			return BuildQuery<IEnumerable<T>>(expression.Transform(e => TramsformQuery(e)));
+			return BuildQuery<IEnumerable<T>>(expression);
 		}
 
 		public Func<IDataContext,Expression,T> BuildElement<T>(Expression expression)
 		{
-			return BuildQuery<T>(expression.Transform(e => TramsformQuery(e)));
+			return BuildQuery<T>(expression);
 		}
 
 		Func<IDataContext,Expression,T> BuildQuery<T>(Expression expr)
 		{
+			expr = expr.Transform(e => TramsformQuery(e));
+
 			if (expr.Type != typeof(T))
 				expr = Expression.Convert(expr, typeof(T));
 
@@ -46,15 +48,15 @@ namespace LinqToDB.Linq.Builder
 						var c = (ConstantExpression)expression;
 
 						if (c.Value is ITable)
-							return new QueryExpression(_query, new TableBuilder1(expression));
+							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
 
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
-						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return new QueryExpression(_query, new TableBuilder1(expression));
+						if (typeof (ITable).IsSameOrParentOf(expression.Type))
+							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
 
 						break;
 					}
@@ -64,13 +66,15 @@ namespace LinqToDB.Linq.Builder
 						var call = (MethodCallExpression)expression;
 
 						if (call.Method.Name == "GetTable")
-							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression(_query, new TableBuilder1(expression));
+							if (typeof (ITable).IsSameOrParentOf(expression.Type))
+								return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
 
 						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-							return new QueryExpression(_query, new TableFunctionBuilder(expression));
+						{
+							return new QueryExpression(new TableFunctionBuilder(_query, expression), expression.Type);
+						}
 
 						if (call.IsQueryable())
 						{
@@ -82,8 +86,8 @@ namespace LinqToDB.Linq.Builder
 								{
 									switch (call.Method.Name)
 									{
-										case "Select": return qe.AddClause(new SelectBuilder1(call));
-										case "Where" : return qe.AddClause(new WhereBuilder1 (call));
+										case "Select": return qe.AddBuilder(new SelectBuilder1(call), expression.Type);
+										case "Where" : return qe.AddBuilder(new WhereBuilder1 (call), expression.Type);
 									}
 								}
 							}

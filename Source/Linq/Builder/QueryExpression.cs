@@ -6,21 +6,18 @@ namespace LinqToDB.Linq.Builder
 {
 	class QueryExpression : Expression
 	{
-		public QueryExpression(Query query, ExpressionBuilderBase expressionBuilder)
+		public QueryExpression(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
-			Query = query;
-
-			AddClause(expressionBuilder);
+			AddBuilder(expressionBuilder, newExpressionType);
 		}
 
-		public readonly Query Query;
+		Type               _type;
+		IExpressionBuilder _last;
 
-		ExpressionBuilderBase _last;
+		readonly List<IExpressionBuilder> _builders = new List<IExpressionBuilder>();
 
-		readonly List<ExpressionBuilderBase> _builders = new List<ExpressionBuilderBase>();
-
-		public override Type           Type      { get { return _last.Type; } }
-		public override bool           CanReduce { get { return true;       } }
+		public override Type           Type      { get { return _type; } }
+		public override bool           CanReduce { get { return true;  } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
 
 		public override Expression Reduce()
@@ -28,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			return _last.BuildQuery();
 		}
 
-		public QueryExpression AddClause(ExpressionBuilderBase expressionBuilder)
+		public QueryExpression AddBuilder(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
 			if (_last != null)
 			{
@@ -36,11 +33,12 @@ namespace LinqToDB.Linq.Builder
 				expressionBuilder.Prev = _last;
 			}
 
+			_type = newExpressionType;
 			_last = expressionBuilder;
 
 			_builders.Add(_last);
 
-			return _last.Query = this;
+			return this;
 		}
 	}
 }

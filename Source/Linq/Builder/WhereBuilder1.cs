@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		internal override SqlBuilderBase GetSqlBuilder()
+		public override SqlBuilderBase GetSqlBuilder()
 		{
 			var sql = Prev.GetSqlBuilder();
 			return sql;

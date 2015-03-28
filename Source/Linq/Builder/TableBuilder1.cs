@@ -9,17 +9,19 @@ namespace LinqToDB.Linq.Builder
 
 	class TableBuilder1 : ExpressionBuilderBase
 	{
-		public TableBuilder1(Expression expression)
+		public TableBuilder1(Query query, Expression expression)
 			: base(expression)
 		{
-			_originalType = Expression.Type.GetGenericArgumentsEx()[0];
+			_query        = query;
+			_originalType = expression.Type.GetGenericArgumentsEx()[0];
 		}
 
-		readonly Type _originalType;
+		readonly Query _query;
+		readonly Type  _originalType;
 
-		internal override SqlBuilderBase GetSqlBuilder()
+		public override SqlBuilderBase GetSqlBuilder()
 		{
-			return new TableSqlBuilder(Query, _originalType);
+			return new TableSqlBuilder(_query, _originalType);
 		}
 
 		public override Expression BuildQuery()
@@ -33,26 +35,26 @@ namespace LinqToDB.Linq.Builder
 		// IT : # table builder.
 		class TableSqlBuilder : SqlBuilderBase
 		{
-			public TableSqlBuilder(QueryExpression query, Type originalType)
+			public TableSqlBuilder(Query query, Type originalType)
 			{
 				_originalType     = originalType;
 				_objectType       = GetObjectType(query);
-				_sqlTable         = new SqlTable(query.Query.MappingSchema, _objectType);
-				_entityDescriptor = query.Query.MappingSchema.GetEntityDescriptor(_objectType);
-
-				CreateSelectQuery();
+				_sqlTable         = new SqlTable(query.MappingSchema, _objectType);
+				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_objectType);
+				_selectQuery      = CreateSelectQuery();
 			}
 
 			readonly Type             _originalType;
 			readonly Type             _objectType;
 			readonly SqlTable         _sqlTable;
 			readonly EntityDescriptor _entityDescriptor;
+			readonly SelectQuery      _selectQuery;
 
-			Type GetObjectType(QueryExpression query)
+			Type GetObjectType(Query query)
 			{
 				for (var type = _originalType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
 				{
-					var mapping = query.Query.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
+					var mapping = query.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
 
 					if (mapping.Count > 0)
 						return type;
@@ -61,11 +63,11 @@ namespace LinqToDB.Linq.Builder
 				return _originalType;
 			}
 
-			void CreateSelectQuery()
+			SelectQuery CreateSelectQuery()
 			{
-				SelectQuery = new SelectQuery();
+				var selectQuery = new SelectQuery();
 
-				SelectQuery .From.Table(_sqlTable);
+				selectQuery.From.Table(_sqlTable);
 
 //				// Original table is a parent.
 //				//
@@ -76,6 +78,13 @@ namespace LinqToDB.Linq.Builder
 //					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
 //						SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
 //				}
+
+				return selectQuery;
+			}
+
+			public override SelectQuery GetSelectQuery()
+			{
+				return _selectQuery;
 			}
 
 			public override Expression BuildExpression()

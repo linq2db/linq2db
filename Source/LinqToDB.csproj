@@ -154,6 +154,7 @@
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
+    <Compile Include="Linq\Builder\IExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\QueryBuilder.cs" />
     <Compile Include="Linq\Builder\ExpressionBuilderBase.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
