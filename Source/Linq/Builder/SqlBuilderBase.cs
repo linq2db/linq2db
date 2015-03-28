@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -7,5 +8,7 @@ namespace LinqToDB.Linq.Builder
 	abstract class SqlBuilderBase
 	{
 		public SelectQuery SelectQuery;
+
+		public abstract Expression BuildExpression();
 	}
 }

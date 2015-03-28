@@ -3,8 +3,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
 	abstract class ExpressionBuilderBase
 	{
 		protected ExpressionBuilderBase(Expression expression)
@@ -17,15 +15,9 @@ namespace LinqToDB.Linq.Builder
 
 		public ExpressionBuilderBase Prev;
 		public ExpressionBuilderBase Next;
+		public QueryExpression       Query;
 
-		private QueryExpression _query;
-		public  QueryExpression  Query
-		{
-			get { return _query; }
-			set { _query = value; Init(); }
-		}
-
-		protected abstract void           Init    ();
-		public    abstract SqlBuilderBase GetSqlBuilder();
+		internal  abstract SqlBuilderBase GetSqlBuilder();
+		public    abstract Expression     BuildQuery   ();
 	}
 }

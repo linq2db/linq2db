@@ -10,14 +10,14 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public override SqlBuilderBase GetSqlBuilder()
+		internal override SqlBuilderBase GetSqlBuilder()
 		{
-			var sql = Prev.GetSqlBuilder();
-			return sql;
+			throw new NotImplementedException();
 		}
 
-		protected override void Init()
+		public override Expression BuildQuery()
 		{
+			throw new NotImplementedException();
 		}
 	}
 }

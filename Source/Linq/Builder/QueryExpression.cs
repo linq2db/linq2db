@@ -20,12 +20,12 @@ namespace LinqToDB.Linq.Builder
 		readonly List<ExpressionBuilderBase> _builders = new List<ExpressionBuilderBase>();
 
 		public override Type           Type      { get { return _last.Type; } }
-		public override bool           CanReduce { get { return true;  } }
+		public override bool           CanReduce { get { return true;       } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
 
 		public override Expression Reduce()
 		{
-			return _builders[_builders.Count - 1].Expression;
+			return _last.BuildQuery();
 		}
 
 		public QueryExpression AddClause(ExpressionBuilderBase expressionBuilder)
@@ -41,18 +41,6 @@ namespace LinqToDB.Linq.Builder
 			_builders.Add(_last);
 
 			return _last.Query = this;
-		}
-
-		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>()
-		{
-			var sqlQuery = _last.GetSqlBuilder();
-
-			return null;
-		}
-
-		public Func<IDataContext,Expression,T> BuildElement<T>()
-		{
-			return null;
 		}
 	}
 }

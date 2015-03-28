@@ -18,14 +18,23 @@ namespace LinqToDB.Linq.Builder
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
 		{
-			var expr = (QueryExpression)expression.Transform(e => TramsformQuery(e));
-			return expr.BuildEnumerable<T>();
+			return BuildQuery<IEnumerable<T>>(expression.Transform(e => TramsformQuery(e)));
 		}
 
 		public Func<IDataContext,Expression,T> BuildElement<T>(Expression expression)
 		{
-			var expr = (QueryExpression)expression.Transform(e => TramsformQuery(e));
-			return expr.BuildElement<T>();
+			return BuildQuery<T>(expression.Transform(e => TramsformQuery(e)));
+		}
+
+		Func<IDataContext,Expression,T> BuildQuery<T>(Expression expr)
+		{
+			if (expr.Type != typeof(T))
+				expr = Expression.Convert(expr, typeof(T));
+
+			var l = Expression.Lambda<Func<IDataContext,Expression,T>>(
+				expr, _query.DataContextParameter, _query.ExpressionParameter);
+
+			return l.Compile();
 		}
 
 		Expression TramsformQuery(Expression expression)

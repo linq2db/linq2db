@@ -18,6 +18,9 @@ namespace LinqToDB.Linq
 		public MappingSchema    MappingSchema;
 		public SqlProviderFlags SqlProviderFlags;
 
+		public ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
+		public ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
+
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 
 		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
