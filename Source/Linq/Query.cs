@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace LinqToDB.Linq
 {
@@ -13,13 +15,27 @@ namespace LinqToDB.Linq
 
 	abstract class Query
 	{
-		public string           ContextID;
-		public Expression       Expression;
-		public MappingSchema    MappingSchema;
-		public SqlProviderFlags SqlProviderFlags;
+		protected Query(IDataContext dataContext, Expression expression)
+		{
+			ContextID        = dataContext.ContextID;
+			Expression       = expression;
+			MappingSchema    = dataContext.MappingSchema;
+			SqlProviderFlags = dataContext.SqlProviderFlags;
 
-		public ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
-		public ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
+			_variables = new BuildVariables(Configuration.AvoidSpecificDataProviderAPI ?
+				DataReaderParameter :
+				BuildVariable(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader"),
+				dataContext);
+		}
+
+		public readonly string           ContextID;
+		public readonly Expression       Expression;
+		public readonly MappingSchema    MappingSchema;
+		public readonly SqlProviderFlags SqlProviderFlags;
+
+		public static readonly ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
+		public static readonly ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
+		public static readonly ParameterExpression DataReaderParameter  = Expression.Parameter(typeof(IDataReader),  "dataReader");
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 
@@ -31,16 +47,55 @@ namespace LinqToDB.Linq
 				MappingSchema    == mappingSchema    &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
+
+		BuildVariables _variables;
+
+		public IDataContext               DataContext              { get { return _variables.DataContext; } }
+		public ParameterExpression        DataReaderLocalParameter { get { return _variables.DataReaderLocalParameter; } }
+		public List<ParameterExpression>  BlockVariables           { get { return _variables.BlockVariables;           } }
+		public List<Expression>           BlockExpressions         { get { return _variables.BlockExpressions;         } }
+
+		protected void Clean()
+		{
+			_variables = null;
+		}
+
+		public ParameterExpression BuildVariable(Expression expr, string name = null)
+		{
+			if (name == null)
+				name = expr.Type.Name + Interlocked.Increment(ref _variables.VarIndex);
+
+			var variable = Expression.Variable(
+				expr.Type,
+				name.IndexOf('<') >= 0 ? null : name);
+
+			BlockVariables.  Add(variable);
+			BlockExpressions.Add(Expression.Assign(variable, expr));
+
+			return variable;
+		}
+
+		class BuildVariables
+		{
+			public BuildVariables(ParameterExpression dataReaderLocalParameter, IDataContext dataContext)
+			{
+				DataReaderLocalParameter = dataReaderLocalParameter;
+				DataContext              = dataContext;
+			}
+
+			public readonly ParameterExpression       DataReaderLocalParameter;
+			public readonly IDataContext              DataContext;
+			public readonly List<ParameterExpression> BlockVariables   = new List<ParameterExpression>();
+			public readonly List<Expression>          BlockExpressions = new List<Expression>();
+			public          int                       VarIndex;
+		}
 	}
 
 	class Query<T> : Query
 	{
 		Query(IDataContext dataContext, Expression expression)
+			: base(dataContext, expression)
 		{
-			ContextID        = dataContext.ContextID;
-			Expression       = expression;
-			MappingSchema    = dataContext.MappingSchema;
-			SqlProviderFlags = dataContext.SqlProviderFlags;
 		}
 
 		public Func<IDataContext,Expression,T>              GetElement;
@@ -85,6 +140,8 @@ namespace LinqToDB.Linq
 
 							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable<T>(query.Expression);
 							else              query.GetElement     = builder.BuildElement   <T>(query.Expression);
+
+							query.Clean();
 						}
 						catch (Exception)
 						{

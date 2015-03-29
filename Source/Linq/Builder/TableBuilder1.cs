@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -32,23 +35,68 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		class FieldSqlBuilder
+		{
+			public FieldSqlBuilder(SelectQuery selectQuery, SqlField sqlField)
+			{
+				_selectQuery = selectQuery;
+
+				SqlField     = sqlField;
+			}
+
+			public readonly SqlField SqlField;
+
+			readonly SelectQuery _selectQuery;
+			readonly List<int>   _indexes = new List<int>();
+
+			int GetFieldIndex()
+			{
+				if (_indexes.Count == 0)
+					_indexes.Add(_selectQuery.Select.Add(SqlField));
+
+				var level = 0;
+
+				for (var query = _selectQuery; query.ParentSelect != null; query = query.ParentSelect)
+				{
+					if (_indexes.Count <= level)
+						_indexes.Add(query.ParentSelect.Select.Add(query.Select.Columns[_indexes[level]]));
+					level++;
+				}
+
+				return _indexes[level];
+			}
+
+			public Expression GetReadExpression(Query query)
+			{
+				return new ConvertFromDataReaderExpression(
+					SqlField.ColumnDescriptor.MemberType,
+					GetFieldIndex(),
+					query.DataReaderLocalParameter,
+					query.DataContext);
+			}
+		}
+
 		// IT : # table builder.
 		class TableSqlBuilder : SqlBuilderBase
 		{
 			public TableSqlBuilder(Query query, Type originalType)
 			{
+				_query            = query;
 				_originalType     = originalType;
 				_objectType       = GetObjectType(query);
 				_sqlTable         = new SqlTable(query.MappingSchema, _objectType);
 				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_objectType);
 				_selectQuery      = CreateSelectQuery();
+				_fieldBuilders    = _sqlTable.Fields.Values.Select(f => new FieldSqlBuilder(_selectQuery, f)).ToList();
 			}
 
-			readonly Type             _originalType;
-			readonly Type             _objectType;
-			readonly SqlTable         _sqlTable;
-			readonly EntityDescriptor _entityDescriptor;
-			readonly SelectQuery      _selectQuery;
+			readonly Query                 _query;
+			readonly Type                  _originalType;
+			readonly Type                  _objectType;
+			readonly SqlTable              _sqlTable;
+			readonly EntityDescriptor      _entityDescriptor;
+			readonly SelectQuery           _selectQuery;
+			readonly List<FieldSqlBuilder> _fieldBuilders;
 
 			Type GetObjectType(Query query)
 			{
@@ -89,6 +137,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression()
 			{
+				var fieldInfo = _fieldBuilders
+					.Select(f => new { field = f, expr = f.GetReadExpression(_query) })
+					.ToList();
+
 				throw new NotImplementedException();
 			}
 		}

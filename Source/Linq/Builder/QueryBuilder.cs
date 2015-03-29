@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.Convert(expr, typeof(T));
 
 			var l = Expression.Lambda<Func<IDataContext,Expression,T>>(
-				expr, _query.DataContextParameter, _query.ExpressionParameter);
+				expr, Query.DataContextParameter, Query.ExpressionParameter);
 
 			return l.Compile();
 		}
@@ -46,18 +46,15 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Constant :
 					{
 						var c = (ConstantExpression)expression;
-
 						if (c.Value is ITable)
 							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
-
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
-						if (typeof (ITable).IsSameOrParentOf(expression.Type))
+						if (typeof(ITable).IsSameOrParentOf(expression.Type))
 							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
-
 						break;
 					}
 
@@ -66,15 +63,13 @@ namespace LinqToDB.Linq.Builder
 						var call = (MethodCallExpression)expression;
 
 						if (call.Method.Name == "GetTable")
-							if (typeof (ITable).IsSameOrParentOf(expression.Type))
+							if (typeof(ITable).IsSameOrParentOf(expression.Type))
 								return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
 
 						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-						{
 							return new QueryExpression(new TableFunctionBuilder(_query, expression), expression.Type);
-						}
 
 						if (call.IsQueryable())
 						{
