@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -26,6 +26,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			return new TableSqlBuilder(_query, _originalType);
 		}
+
+
 
 		public override Expression BuildQuery()
 		{
@@ -141,7 +143,17 @@ namespace LinqToDB.Linq.Builder
 					.Select(f => new { field = f, expr = f.GetReadExpression(_query) })
 					.ToList();
 
-				throw new NotImplementedException();
+				Expression expr = Expression.MemberInit(
+					Expression.New(_objectType),
+					fieldInfo
+						//.Where (m => !m.field.SqlField.ColumnDescriptor.MemberAccessor.IsComplex)
+						.Select(m => (MemberBinding)Expression.Bind(
+							m.field.SqlField.ColumnDescriptor.Storage == null ?
+								m.field.SqlField.ColumnDescriptor.MemberAccessor.MemberInfo :
+								Expression.PropertyOrField(Expression.Constant(null, _objectType), m.field.SqlField.ColumnDescriptor.Storage).Member,
+							m.expr)));
+
+				return expr;
 			}
 		}
 	}

@@ -22,10 +22,7 @@ namespace LinqToDB.Linq
 			MappingSchema    = dataContext.MappingSchema;
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 
-			_variables = new BuildVariables(Configuration.AvoidSpecificDataProviderAPI ?
-				DataReaderParameter :
-				BuildVariable(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader"),
-				dataContext);
+			_variables = new BuildVariables(dataContext, this);
 		}
 
 		public readonly string           ContextID;
@@ -62,32 +59,41 @@ namespace LinqToDB.Linq
 
 		public ParameterExpression BuildVariable(Expression expr, string name = null)
 		{
-			if (name == null)
-				name = expr.Type.Name + Interlocked.Increment(ref _variables.VarIndex);
-
-			var variable = Expression.Variable(
-				expr.Type,
-				name.IndexOf('<') >= 0 ? null : name);
-
-			BlockVariables.  Add(variable);
-			BlockExpressions.Add(Expression.Assign(variable, expr));
-
-			return variable;
+			return _variables.BuildVariable(expr, name);
 		}
 
 		class BuildVariables
 		{
-			public BuildVariables(ParameterExpression dataReaderLocalParameter, IDataContext dataContext)
+			public BuildVariables(IDataContext dataContext, Query query)
 			{
-				DataReaderLocalParameter = dataReaderLocalParameter;
-				DataContext              = dataContext;
+				DataContext = dataContext;
+
+				DataReaderLocalParameter = Configuration.AvoidSpecificDataProviderAPI ?
+					DataReaderParameter :
+					BuildVariable(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader");
 			}
 
 			public readonly ParameterExpression       DataReaderLocalParameter;
 			public readonly IDataContext              DataContext;
 			public readonly List<ParameterExpression> BlockVariables   = new List<ParameterExpression>();
 			public readonly List<Expression>          BlockExpressions = new List<Expression>();
-			public          int                       VarIndex;
+
+			int _varIndex;
+
+			public ParameterExpression BuildVariable(Expression expr, string name)
+			{
+				if (name == null)
+					name = expr.Type.Name + Interlocked.Increment(ref _varIndex);
+
+				var variable = Expression.Variable(
+					expr.Type,
+					name.IndexOf('<') >= 0 ? null : name);
+
+				BlockVariables.  Add(variable);
+				BlockExpressions.Add(Expression.Assign(variable, expr));
+
+				return variable;
+			}
 		}
 	}
 
