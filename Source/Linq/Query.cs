@@ -6,14 +6,15 @@ using System.Threading;
 
 namespace LinqToDB.Linq
 {
+	using Builder;
 	using Common;
 	using Data;
 	using LinqToDB.Expressions;
-	using Builder;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
-	abstract class Query
+	public abstract class Query
 	{
 		protected Query(IDataContext dataContext, Expression expression)
 		{
@@ -52,11 +53,6 @@ namespace LinqToDB.Linq
 		public List<ParameterExpression>  BlockVariables           { get { return _variables.BlockVariables;           } }
 		public List<Expression>           BlockExpressions         { get { return _variables.BlockExpressions;         } }
 
-		protected void Clean()
-		{
-			_variables = null;
-		}
-
 		public ParameterExpression BuildVariable(Expression expr, string name = null)
 		{
 			return _variables.BuildVariable(expr, name);
@@ -94,6 +90,29 @@ namespace LinqToDB.Linq
 
 				return variable;
 			}
+
+			public Expression BuildBlock(Expression expression)
+			{
+				if (BlockExpressions.Count == 0)
+					return expression;
+
+				BlockExpressions.Add(expression);
+
+				expression = Expression.Block(BlockVariables, BlockExpressions);
+
+				while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
+				while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
+
+				return expression;
+			}
+		}
+
+		public Expression FinalizeQuery(SelectQuery selectQuery, Expression expression)
+		{
+			expression = _variables.BuildBlock(expression);
+			_variables = null;
+
+			return expression;
 		}
 	}
 
@@ -146,8 +165,6 @@ namespace LinqToDB.Linq
 
 							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable<T>(query.Expression);
 							else              query.GetElement     = builder.BuildElement   <T>(query.Expression);
-
-							query.Clean();
 						}
 						catch (Exception)
 						{

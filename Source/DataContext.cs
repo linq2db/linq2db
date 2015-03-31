@@ -123,7 +123,33 @@ namespace LinqToDB
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		#region GetQueryContext
+
+		class QueryContext : IQueryContext
+		{
+			readonly DataContext   _dataContext;
+			readonly IQueryContext _queryContext;
+
+			public QueryContext(Query query, DataContext dataContext)
+			{
+				_dataContext  = dataContext;
+				_queryContext = ((IDataContext)dataContext.GetDataConnection()).GetQueryContext(query);
+			}
+
+			public void        Dispose        () { _dataContext.ReleaseQuery();            }
+			public int         ExecuteNonQuery() { return _queryContext.ExecuteNonQuery(); }
+			public object      ExecuteScalar  () { return _queryContext.ExecuteScalar  (); }
+			public IDataReader ExecuteReader  () { return _queryContext.ExecuteReader  (); }
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query)
+		{
+			return new QueryContext(query, this);
+		}
+
+		#endregion
+
+		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
 			var ctx = GetDataConnection() as IDataContext;
 			return ctx.SetQuery(queryContext);

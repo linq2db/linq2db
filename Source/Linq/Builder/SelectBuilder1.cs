@@ -31,10 +31,10 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public override Expression BuildQuery()
+		public override Expression BuildQuery<T>()
 		{
 			if (_skip)
-				return Prev.BuildQuery();
+				return Prev.BuildQuery<T>();
 
 			throw new NotImplementedException();
 		}

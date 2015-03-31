@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -27,14 +28,34 @@ namespace LinqToDB.Linq.Builder
 			return new TableSqlBuilder(_query, _originalType);
 		}
 
-
-
-		public override Expression BuildQuery()
+		static IEnumerable<T> ExecuteQuery<T>(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
 		{
-			var sqlBuilder = GetSqlBuilder();
-			var expression = sqlBuilder.BuildExpression();
+			using (var ctx = dataContext.GetQueryContext(query))
+			using (var dr  = ctx.ExecuteReader())
+			{
+				while (dr.Read())
+				{
+					yield return mapper(dr);
+				}
+			}
+		}
 
-			return expression;
+		public override Expression BuildQuery<T>()
+		{
+			var sqlBuilder  = GetSqlBuilder();
+			var expression  = sqlBuilder.BuildExpression();
+			var selectQuery = sqlBuilder.GetSelectQuery();
+
+			expression = _query.FinalizeQuery(selectQuery, expression);
+
+			var expr = Expression.Call(
+				MemberHelper.MethodOf(() => ExecuteQuery<T>(null, null, null, null)),
+				Expression.Constant(_query),
+				Query.DataContextParameter,
+				Query.ExpressionParameter,
+				Expression.Lambda<Func<IDataReader,T>>(expression, Query.DataReaderParameter));
+
+			return expr;
 		}
 
 		class FieldSqlBuilder

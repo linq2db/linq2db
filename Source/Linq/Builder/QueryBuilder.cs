@@ -18,28 +18,29 @@ namespace LinqToDB.Linq.Builder
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
 		{
-			return BuildQuery<IEnumerable<T>>(expression);
+			return BuildQuery<IEnumerable<T>,T>(expression);
 		}
 
 		public Func<IDataContext,Expression,T> BuildElement<T>(Expression expression)
 		{
-			return BuildQuery<T>(expression);
+			return BuildQuery<T,T>(expression);
 		}
 
-		Func<IDataContext,Expression,T> BuildQuery<T>(Expression expr)
+		Func<IDataContext,Expression,TResult> BuildQuery<TResult,TItem>(Expression expr)
 		{
-			expr = expr.Transform(e => TramsformQuery(e));
+			expr = expr.Transform(e => TramsformQuery<TItem>(e));
+			expr = expr.Transform(e => e is QueryExpression<TItem> ? e.Reduce() : e);
 
-			if (expr.Type != typeof(T))
-				expr = Expression.Convert(expr, typeof(T));
+			if (expr.Type != typeof(TResult))
+				expr = Expression.Convert(expr, typeof(TResult));
 
-			var l = Expression.Lambda<Func<IDataContext,Expression,T>>(
+			var l = Expression.Lambda<Func<IDataContext,Expression,TResult>>(
 				expr, Query.DataContextParameter, Query.ExpressionParameter);
 
 			return l.Compile();
 		}
 
-		Expression TramsformQuery(Expression expression)
+		Expression TramsformQuery<T>(Expression expression)
 		{
 			switch (expression.NodeType)
 			{
@@ -47,14 +48,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
 						break;
 					}
 
@@ -64,18 +65,18 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression(new TableBuilder1(_query, expression), expression.Type);
+								return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
 
 						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-							return new QueryExpression(new TableFunctionBuilder(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableFunctionBuilder(_query, expression), expression.Type);
 
 						if (call.IsQueryable())
 						{
 							if (call.Object == null && call.Arguments.Count > 0 && call.Arguments[0] != null)
 							{
-								var qe = call.Arguments[0].Transform(e => TramsformQuery(e)) as QueryExpression;
+								var qe = call.Arguments[0].Transform(e => TramsformQuery<T>(e)) as QueryExpression<T>;
 
 								if (qe != null)
 								{

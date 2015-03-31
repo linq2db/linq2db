@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Data;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-
-	public interface IQueryContext
+	public interface IQueryContext : IDisposable
 	{
-		SelectQuery    SelectQuery { get; }
-		object         Context     { get; set; }
-		SqlParameter[] GetParameters();
+		int         ExecuteNonQuery();
+		object      ExecuteScalar  ();
+		IDataReader ExecuteReader  ();
 	}
 }

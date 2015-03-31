@@ -9,6 +9,6 @@ namespace LinqToDB.Linq.Builder
 		IExpressionBuilder Next { get; set; }
 
 		SqlBuilderBase GetSqlBuilder();
-		Expression     BuildQuery   ();
+		Expression     BuildQuery<T>();
 	}
 }

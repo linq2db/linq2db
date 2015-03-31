@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class QueryExpression : Expression
+	class QueryExpression<T> : Expression
 	{
 		public QueryExpression(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
@@ -22,10 +22,15 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression Reduce()
 		{
-			return _last.BuildQuery();
+			var expr = _last.BuildQuery<T>();
+
+//			if (expr.Type != Type)
+//				expr = Convert(expr, Type);
+
+			return expr;
 		}
 
-		public QueryExpression AddBuilder(IExpressionBuilder expressionBuilder, Type newExpressionType)
+		public QueryExpression<T> AddBuilder(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
 			if (_last != null)
 			{

@@ -16,9 +16,9 @@ namespace LinqToDB.Linq.Builder
 			return sql;
 		}
 
-		public override Expression BuildQuery()
+		public override Expression BuildQuery<T>()
 		{
-			return Prev.BuildQuery();
+			return Prev.BuildQuery<T>();
 		}
 	}
 }

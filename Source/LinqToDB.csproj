@@ -169,6 +169,7 @@
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Linq\IQueryContext.cs" />
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
@@ -367,7 +368,7 @@
     <Compile Include="IDataContext.cs" />
     <Compile Include="Linq\IDataContextInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
-    <Compile Include="Linq\IQueryContext.cs" />
+    <Compile Include="Linq\IQueryContextOld.cs" />
     <Compile Include="Linq\ISelectInsertable.cs" />
     <Compile Include="Linq\IUpdatable.cs" />
     <Compile Include="Linq\IValueInsertable.cs" />

@@ -104,7 +104,7 @@ namespace LinqToDB.Linq
 		#region Properties & Fields
 
 		public          bool              DoNotChache;
-		public          QueryOld<T>          Next;
+		public          QueryOld<T>       Next;
 		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
 		public          ISqlOptimizer     SqlOptimizer;
 
@@ -472,7 +472,7 @@ namespace LinqToDB.Linq
 			Expression    expr,
 			object[]      ps);
 
-		public class QueryInfo : IQueryContext
+		public class QueryInfo : IQueryContextOld
 		{
 			public QueryInfo()
 			{

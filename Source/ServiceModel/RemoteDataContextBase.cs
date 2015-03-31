@@ -277,13 +277,37 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
+		#region GetQueryContext
+
+//		class QueryContext : IQueryContext
+//		{
+//			readonly DataConnection _dataConnection;
+//
+//			public QueryContext(DataConnection dataConnection)
+//			{
+//				_dataConnection = dataConnection;
+//			}
+//
+//			public void        Dispose        () {}
+//			public int         ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
+//			public object      ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
+//			public IDataReader ExecuteReader  () { return _dataConnection.ExecuteReader  (); }
+//		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
 		class QueryContext
 		{
-			public IQueryContext Query;
+			public IQueryContextOld Query;
 			public ILinqService  Client;
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
 			return new QueryContext { Query = queryContext };
 		}

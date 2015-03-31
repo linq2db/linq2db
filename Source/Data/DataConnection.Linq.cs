@@ -45,7 +45,7 @@ namespace LinqToDB.Data
 
 		#region SetQuery
 
-		internal PreparedQuery GetCommand(IQueryContext query)
+		internal PreparedQuery GetCommand(IQueryContextOld query)
 		{
 			if (query.Context != null)
 			{
@@ -98,7 +98,7 @@ namespace LinqToDB.Data
 			return selectQuery;
 		}
 
-		void GetParameters(IQueryContext query, PreparedQuery pq)
+		void GetParameters(IQueryContextOld query, PreparedQuery pq)
 		{
 			var parameters = query.GetParameters();
 
@@ -151,6 +151,32 @@ namespace LinqToDB.Data
 			DataProvider.SetParameter(p, name, dataType, parm.Value);
 
 			parms.Add(p);
+		}
+
+		#endregion
+
+		#region GetQueryContext
+
+		class QueryContext : IQueryContext
+		{
+			public QueryContext(Query query, DataConnection dataConnection)
+			{
+				_query          = query;
+				_dataConnection = dataConnection;
+			}
+
+			readonly Query          _query;
+			readonly DataConnection _dataConnection;
+
+			public void        Dispose        () {}
+			public int         ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
+			public object      ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
+			public IDataReader ExecuteReader  () { return _dataConnection.ExecuteReader  (); }
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query)
+		{
+			return new QueryContext(query, this);
 		}
 
 		#endregion
@@ -319,7 +345,7 @@ namespace LinqToDB.Data
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
 			var query = GetCommand(queryContext);
 

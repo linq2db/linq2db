@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
-		class QueryContext : IQueryContext
+		class QueryContext : IQueryContextOld
 		{
 			public SelectQuery    SelectQuery { get; set; }
 			public object         Context     { get; set; }
