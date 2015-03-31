@@ -18,6 +18,7 @@ type Person =
       FirstName : string
       [<NotNull>]
       LastName : string
+      [<Column>]
       MiddleName : string option
       Gender : Gender }
 
