@@ -62,5 +62,19 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert2(db);
 		}
+
+        [Test, DataContextSource]
+        public void InsertNoneOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.InsertTest.InsertNoneOption(db);
+        }
+
+        [Test, DataContextSource]
+        public void InsertSomeOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.InsertTest.InsertSomeOption(db);
+        }
 	}
 }

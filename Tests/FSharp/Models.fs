@@ -18,11 +18,8 @@ type Person =
       FirstName : string
       [<NotNull>]
       LastName : string
-      [<Nullable>]
-      MiddleName : string 
+      MiddleName : string option
       Gender : Gender }
-//      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
-//      Patient : Patient }
 
 type Child = 
     { [<PrimaryKey>] ParentID : int

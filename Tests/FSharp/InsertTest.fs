@@ -48,5 +48,55 @@ let Insert2 (db : IDataContext) =
     Assert.AreEqual(p.Name.LastName, inserted.Name.LastName)
     Assert.AreEqual(p.Gender, inserted.Gender)
 
+let InsertNoneOption (db : IDataContext) = 
+    
+    let p = 
+        { Person.FirstName = "fn"
+          MiddleName = None
+          LastName = "ln"
+          Gender = Gender.Male
+          ID = 0 }
+
+    let id = query { 
+        for p in db.GetTable<Person>() do
+        maxBy p.ID }
+
+    db.Insert(p) |> ignore
+
+    let inserted = query { 
+        for p in db.GetTable<Person>() do
+        where (p.ID > id)
+        exactlyOne }
+        
+    Assert.AreEqual(p.FirstName, inserted.FirstName)
+    Assert.AreEqual(p.MiddleName, inserted.MiddleName)
+    Assert.AreEqual(p.LastName, inserted.LastName)
+    Assert.AreEqual(p.Gender, inserted.Gender)
+
+let InsertSomeOption (db : IDataContext) = 
+    
+    let p = 
+        { Person.FirstName = "fn"
+          MiddleName = Some("md")
+          LastName = "ln"
+          Gender = Gender.Male
+          ID = 0 }
+
+    let id = query { 
+        for p in db.GetTable<Person>() do
+        maxBy p.ID }
+
+    db.Insert(p) |> ignore
+
+    let inserted = query { 
+        for p in db.GetTable<Person>() do
+        where (p.ID > id)
+        exactlyOne }
+        
+    Assert.AreEqual(p.FirstName, inserted.FirstName)
+    Assert.AreEqual(p.MiddleName, inserted.MiddleName)
+    Assert.AreEqual(p.LastName, inserted.LastName)
+    Assert.AreEqual(p.Gender, inserted.Gender)
+
 //    finally
         //db.GetTable<Person>().Delete(fun t -> t.ID > id) |> ignore

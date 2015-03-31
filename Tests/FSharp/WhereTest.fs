@@ -6,16 +6,20 @@ open LinqToDB
 open LinqToDB.Mapping
 open NUnit.Framework
 
-let private TestOnePerson id firstName persons = 
+let private TestOnePerson id firstName middleName lastName gender persons = 
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
     Assert.AreEqual(1, list |> List.length )
 
     let person = list |> List.head
 
-    Assert.AreEqual(id, person.ID)
-    Assert.AreEqual(firstName, person.FirstName)
+    Assert.AreEqual(person, {
+        Person.ID = id
+        FirstName = firstName
+        MiddleName = middleName
+        LastName = lastName
+        Gender = gender })
 
-let TestOneJohn = TestOnePerson 1 "John"
+let TestOneJohn = TestOnePerson 1 "John" None "Pupkin" Gender.Male
 
 let TestMethod() = 
     1
@@ -27,6 +31,8 @@ let LoadSingle (db : IDataContext) =
         where (p.ID = TestMethod())
         select p
     })
+
+
 
 let LoadSingleComplexPerson (db : IDataContext) = 
     let persons = db.GetTable<ComplexPerson>()
