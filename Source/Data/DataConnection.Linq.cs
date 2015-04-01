@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
@@ -168,10 +171,25 @@ namespace LinqToDB.Data
 			readonly Query          _query;
 			readonly DataConnection _dataConnection;
 
-			public void        Dispose        () {}
-			public int         ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
-			public object      ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
-			public IDataReader ExecuteReader  () { return _dataConnection.ExecuteReader  (); }
+			public void   Dispose() {}
+
+			public int    ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
+			public object ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
+
+			public IDataReader ExecuteReader  (string commandText, DataParameter[] parameters)
+			{
+				_dataConnection.InitCommand(CommandType.Text, commandText, parameters);
+
+				if (parameters != null && parameters.Length > 0)
+					CommandInfo.SetParameters(_dataConnection, parameters);
+
+				return _dataConnection.ExecuteReader();
+			}
+
+			public Task<DataReaderAsync> ExecuteReaderAsync(string commandText, DataParameter[] parameters, CancellationToken cancellationToken)
+			{
+				return _dataConnection.SetCommand(commandText, parameters).ExecuteReaderAsync(cancellationToken);
+			}
 		}
 
 		IQueryContext IDataContext.GetQueryContext(Query query)

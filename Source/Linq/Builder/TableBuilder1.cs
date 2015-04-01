@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -31,16 +33,20 @@ namespace LinqToDB.Linq.Builder
 		static IEnumerable<T> ExecuteQuery<T>(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
 		{
 			using (var ctx = dataContext.GetQueryContext(query))
-			using (var dr  = ctx.ExecuteReader())
-			{
+			using (var dr = ctx.ExecuteReader(query.GetCommandText(expression), query.GetParameters(expression)))
 				while (dr.Read())
-				{
 					yield return mapper(dr);
-				}
-			}
 		}
 
-		public override Expression BuildQuery<T>()
+		static async Task ExecuteQueryAsync<T>(
+			Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
+		{
+			using (var ctx = dataContext.GetQueryContext(query))
+			using (var dr = await ctx.ExecuteReaderAsync(query.GetCommandText(expression), query.GetParameters(expression), cancellationToken))
+				await dr.QueryForEachAsync(mapper, action, cancellationToken);
+		}
+
+		Expression<Func<IDataReader,T>> BuildMapper<T>()
 		{
 			var sqlBuilder  = GetSqlBuilder();
 			var expression  = sqlBuilder.BuildExpression();
@@ -48,14 +54,27 @@ namespace LinqToDB.Linq.Builder
 
 			expression = _query.FinalizeQuery(selectQuery, expression);
 
+			return Expression.Lambda<Func<IDataReader,T>>(expression, Query.DataReaderParameter);
+		}
+
+		public override Expression BuildQuery<T>()
+		{
 			var expr = Expression.Call(
 				MemberHelper.MethodOf(() => ExecuteQuery<T>(null, null, null, null)),
 				Expression.Constant(_query),
 				Query.DataContextParameter,
 				Query.ExpressionParameter,
-				Expression.Lambda<Func<IDataReader,T>>(expression, Query.DataReaderParameter));
+				BuildMapper<T>());
 
 			return expr;
+		}
+
+		public override void BuildQuery<T>(Query<T> query)
+		{
+			var l = BuildMapper<T>().Compile();
+
+			query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (query, ctx, expr, l);
+			query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(query, ctx, expr, l, action, token);
 		}
 
 		class FieldSqlBuilder

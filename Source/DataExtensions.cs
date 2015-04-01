@@ -19,7 +19,7 @@ namespace LinqToDB
 		static public ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
-			return new TableOld<T>(dataContext);
+			return new Table<T>(dataContext);
 		}
 
 		static public ITable<T> GetTable<T>(

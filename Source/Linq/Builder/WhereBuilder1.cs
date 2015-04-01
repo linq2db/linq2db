@@ -20,5 +20,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			return Prev.BuildQuery<T>();
 		}
+
+		public override void BuildQuery<T>(Query<T> query)
+		{
+			Prev.BuildQuery(query);
+		}
 	}
 }

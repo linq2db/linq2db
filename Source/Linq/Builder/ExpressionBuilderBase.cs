@@ -17,5 +17,6 @@ namespace LinqToDB.Linq.Builder
 
 		public abstract SqlBuilderBase GetSqlBuilder();
 		public abstract Expression     BuildQuery<T>();
+		public abstract void           BuildQuery<T>(Query<T> query);
 	}
 }

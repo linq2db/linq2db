@@ -38,5 +38,13 @@ namespace LinqToDB.Linq.Builder
 
 			throw new NotImplementedException();
 		}
+
+		public override void BuildQuery<T>(Query<T> query)
+		{
+			if (_skip)
+				Prev.BuildQuery(query);
+			else
+				throw new NotImplementedException();
+		}
 	}
 }

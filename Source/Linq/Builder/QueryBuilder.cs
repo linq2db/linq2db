@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 		Func<IDataContext,Expression,TResult> BuildQuery<TResult,TItem>(Expression expr)
 		{
 			expr = expr.Transform(e => TramsformQuery<TItem>(e));
-			expr = expr.Transform(e => e is QueryExpression<TItem> ? e.Reduce() : e);
+			//expr = expr.Transform(e => e is QueryExpression<TItem> ? e.Reduce() : e);
 
 			if (expr.Type != typeof(TResult))
 				expr = Expression.Convert(expr, typeof(TResult));

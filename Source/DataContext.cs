@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB
 {
@@ -125,26 +128,9 @@ namespace LinqToDB
 
 		#region GetQueryContext
 
-		class QueryContext : IQueryContext
-		{
-			readonly DataContext   _dataContext;
-			readonly IQueryContext _queryContext;
-
-			public QueryContext(Query query, DataContext dataContext)
-			{
-				_dataContext  = dataContext;
-				_queryContext = ((IDataContext)dataContext.GetDataConnection()).GetQueryContext(query);
-			}
-
-			public void        Dispose        () { _dataContext.ReleaseQuery();            }
-			public int         ExecuteNonQuery() { return _queryContext.ExecuteNonQuery(); }
-			public object      ExecuteScalar  () { return _queryContext.ExecuteScalar  (); }
-			public IDataReader ExecuteReader  () { return _queryContext.ExecuteReader  (); }
-		}
-
 		IQueryContext IDataContext.GetQueryContext(Query query)
 		{
-			return new QueryContext(query, this);
+			return ((IDataContext)GetDataConnection()).GetQueryContext(query);
 		}
 
 		#endregion

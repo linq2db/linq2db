@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -64,6 +66,11 @@ namespace LinqToDB.Linq
 		public object Execute(Expression expression)
 		{
 			return GetQuery(expression, false).GetElement(_dataContext, expression);
+		}
+
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		{
+			return GetQuery(Expression, true).GetForEachAsync(_dataContext, Expression, action, cancellationToken);
 		}
 
 		public TResult Execute<TResult>(Expression expression)

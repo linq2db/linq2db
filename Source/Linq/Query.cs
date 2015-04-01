@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -21,7 +22,9 @@ namespace LinqToDB.Linq
 			ContextID        = dataContext.ContextID;
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
+			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
 			SqlProviderFlags = dataContext.SqlProviderFlags;
+			SqlOptimizer     = dataContext.GetSqlOptimizer();
 
 			_variables = new BuildVariables(dataContext, this);
 		}
@@ -29,7 +32,11 @@ namespace LinqToDB.Linq
 		public readonly string           ContextID;
 		public readonly Expression       Expression;
 		public readonly MappingSchema    MappingSchema;
+		public readonly string           ConfigurationID;
 		public readonly SqlProviderFlags SqlProviderFlags;
+		public readonly ISqlOptimizer    SqlOptimizer;
+
+		public SelectQuery SelectQuery;
 
 		public static readonly ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
 		public static readonly ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
@@ -40,11 +47,13 @@ namespace LinqToDB.Linq
 		public bool Compare(string contextID, MappingSchema mappingSchema, Expression expr)
 		{
 			return
-				ContextID.Length == contextID.Length &&
-				ContextID        == contextID        &&
-				MappingSchema    == mappingSchema    &&
+				ContextID.Length == contextID.Length              &&
+				ContextID        == contextID                     &&
+				ConfigurationID  == mappingSchema.ConfigurationID &&
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
+
+		#region Build Variables
 
 		BuildVariables _variables;
 
@@ -52,11 +61,6 @@ namespace LinqToDB.Linq
 		public ParameterExpression        DataReaderLocalParameter { get { return _variables.DataReaderLocalParameter; } }
 		public List<ParameterExpression>  BlockVariables           { get { return _variables.BlockVariables;           } }
 		public List<Expression>           BlockExpressions         { get { return _variables.BlockExpressions;         } }
-
-		public ParameterExpression BuildVariable(Expression expr, string name = null)
-		{
-			return _variables.BuildVariable(expr, name);
-		}
 
 		class BuildVariables
 		{
@@ -66,7 +70,7 @@ namespace LinqToDB.Linq
 
 				DataReaderLocalParameter = Configuration.AvoidSpecificDataProviderAPI ?
 					DataReaderParameter :
-					BuildVariable(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader");
+					BuildVariableExpression(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader");
 			}
 
 			public readonly ParameterExpression       DataReaderLocalParameter;
@@ -76,7 +80,7 @@ namespace LinqToDB.Linq
 
 			int _varIndex;
 
-			public ParameterExpression BuildVariable(Expression expr, string name)
+			public ParameterExpression BuildVariableExpression(Expression expr, string name)
 			{
 				if (name == null)
 					name = expr.Type.Name + Interlocked.Increment(ref _varIndex);
@@ -107,12 +111,33 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		#endregion
+
+		public ParameterExpression BuildVariableExpression(Expression expr, string name = null)
+		{
+			return _variables.BuildVariableExpression(expr, name);
+		}
+
 		public Expression FinalizeQuery(SelectQuery selectQuery, Expression expression)
 		{
-			expression = _variables.BuildBlock(expression);
-			_variables = null;
+			expression  = _variables.BuildBlock(expression);
+			SelectQuery = SqlOptimizer.Finalize(selectQuery);
+
+			// Clean building context.
+			//
+			_variables  = null;
 
 			return expression;
+		}
+
+		public string GetCommandText(Expression expression)
+		{
+			throw new NotImplementedException();
+		}
+
+		public DataParameter[] GetParameters(Expression expression)
+		{
+			throw new NotImplementedException();
 		}
 	}
 
@@ -123,8 +148,9 @@ namespace LinqToDB.Linq
 		{
 		}
 
-		public Func<IDataContext,Expression,T>              GetElement;
-		public Func<IDataContext,Expression,IEnumerable<T>> GetIEnumerable;
+		public Func<IDataContext,Expression,T>                                GetElement;
+		public Func<IDataContext,Expression,IEnumerable<T>>                   GetIEnumerable;
+		public Func<IDataContext,Expression,Action<T>,CancellationToken,Task> GetForEachAsync;
 
 		Query<T> _next;
 

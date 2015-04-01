@@ -24,8 +24,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var expr = _last.BuildQuery<T>();
 
-//			if (expr.Type != Type)
-//				expr = Convert(expr, Type);
+			_type = expr.Type;
 
 			return expr;
 		}

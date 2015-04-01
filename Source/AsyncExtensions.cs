@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Linq;
 
 namespace LinqToDB
 {
@@ -12,45 +13,9 @@ namespace LinqToDB
 	{
 		#region Helpers
 
-		static Task GetActionTask(Action action)
-		{
-			var task = new Task(action);
-
-			task.Start();
-
-			return task;
-		}
-
 		static Task GetActionTask(Action action, CancellationToken token)
 		{
 			var task = new Task(action, token);
-
-			task.Start();
-
-			return task;
-		}
-
-		static Task GetActionTask(Action action, TaskCreationOptions options)
-		{
-			var task = new Task(action, options);
-
-			task.Start();
-
-			return task;
-		}
-
-		static Task GetTask(Action action, CancellationToken token, TaskCreationOptions options)
-		{
-			var task = new Task(action, token, options);
-
-			task.Start();
-
-			return task;
-		}
-
-		static Task<T> GetTask<T>(Func<T> func)
-		{
-			var task = new Task<T>(func);
 
 			task.Start();
 
@@ -66,40 +31,21 @@ namespace LinqToDB
 			return task;
 		}
 
-		static Task<T> GetTask<T>(Func<T> func, TaskCreationOptions options)
-		{
-			var task = new Task<T>(func, options);
-
-			task.Start();
-
-			return task;
-		}
-
-		static Task<T> GetTask<T>(Func<T> func, CancellationToken token, TaskCreationOptions options)
-		{
-			var task = new Task<T>(func, token, options);
-
-			task.Start();
-
-			return task;
-		}
-
 		#endregion
 
 		#region ForEachAsync
 
 		public static Task ForEachAsync<TSource>(this IQueryable<TSource> source, Action<TSource> action)
 		{
-			return GetActionTask(() =>
-			{
-				foreach (var item in source)
-					action(item);
-			});
+			return ForEachAsync(source, action, CancellationToken.None);
 		}
 
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token)
 		{
+			if (source is ExpressionQuery<TSource>)
+				return ((ExpressionQuery<TSource>)source).GetForEachAsync(action, token);
+
 			return GetActionTask(() =>
 			{
 				foreach (var item in source)
@@ -112,61 +58,27 @@ namespace LinqToDB
 			token);
 		}
 
-		public static Task ForEachAsync<TSource>(
-			this IQueryable<TSource> source, Action<TSource> action, TaskCreationOptions options)
-		{
-			return GetActionTask(() =>
-			{
-				foreach (var item in source)
-					action(item);
-			},
-			options);
-		}
-
-		public static Task ForEachAsync<TSource>(
-			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token, TaskCreationOptions options)
-		{
-			return GetTask(() =>
-			{
-				foreach (var item in source)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(item);
-				}
-			},
-			token,
-			options);
-		}
-
 		#endregion
 
 		#region ToListAsync
 
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source)
 		{
-			return GetTask(source.ToList);
+			return ToListAsync(source, CancellationToken.None);
 		}
 
-		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
+		public static async Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var list = new List<TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token);
+				return list;
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToList(),
 				token);
-		}
-
-		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, TaskCreationOptions options)
-		{
-			return GetTask(source.ToList, options);
-		}
-
-		public static Task<List<TSource>> ToListAsync<TSource>(
-			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToList(),
-				token,
-				options);
 		}
 
 		#endregion
@@ -175,28 +87,21 @@ namespace LinqToDB
 
 		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source)
 		{
-			return GetTask(source.ToArray);
+			return ToArrayAsync(source, CancellationToken.None);
 		}
 
-		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
+		public static async Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var list = new List<TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token);
+				return list.ToArray();
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
 				token);
-		}
-
-		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, TaskCreationOptions options)
-		{
-			return GetTask(source.ToArray, options);
-		}
-
-		public static Task<TSource[]> ToArrayAsync<TSource>(
-			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
-				token,
-				options);
 		}
 
 		#endregion
@@ -207,37 +112,24 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector)
 		{
-			return GetTask(() => source.ToDictionary(keySelector));
+			return ToDictionaryAsync(source, keySelector, CancellationToken.None);
 		}
 
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
+		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TSource>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
 				token);
-		}
-
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			TaskCreationOptions      options)
-		{
-			return GetTask(() => source.ToDictionary(keySelector), options);
-		}
-
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			CancellationToken        token,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
-				token,
-				options);
 		}
 
 		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
@@ -245,40 +137,25 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer)
 		{
-			return GetTask(() => source.ToDictionary(keySelector, comparer));
+			return ToDictionaryAsync(source, keySelector, comparer, CancellationToken.None);
 		}
 
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
+		public static async Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TSource>(comparer);
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
 				token);
-		}
-
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			IEqualityComparer<TKey>  comparer,
-			TaskCreationOptions      options)
-		{
-			return GetTask(() => source.ToDictionary(keySelector, comparer), options);
-		}
-
-		public static Task<Dictionary<TKey,TSource>> ToDictionaryAsync<TSource,TKey>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
-				token,
-				options);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -286,43 +163,25 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector));
+			return ToDictionaryAsync(source, keySelector, elementSelector, CancellationToken.None);
 		}
 
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
+		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TElement>();
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
 				token);
-		}
-
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			Func<TSource,TElement>   elementSelector,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector),
-				options);
-		}
-
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			Func<TSource,TElement>   elementSelector,
-			CancellationToken        token,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
-				token,
-				options);
 		}
 
 		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
@@ -331,46 +190,26 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer)
 		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector, comparer));
+			return ToDictionaryAsync(source, keySelector, elementSelector, comparer, CancellationToken.None);
 		}
 
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
+		public static async Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			return GetTask(
+			if (source is ExpressionQuery<TSource>)
+			{
+				var dic = new Dictionary<TKey,TElement>(comparer);
+				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
+				return dic;
+			}
+
+			return await GetTask(
 				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
 				token);
-		}
-
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			Func<TSource,TElement>   elementSelector,
-			IEqualityComparer<TKey>  comparer,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.ToDictionary(keySelector, elementSelector, comparer),
-				options);
-		}
-
-		public static Task<Dictionary<TKey,TElement>> ToDictionaryAsync<TSource,TKey,TElement>(
-			this IQueryable<TSource> source,
-			Func<TSource,TKey>       keySelector,
-			Func<TSource,TElement>   elementSelector,
-			IEqualityComparer<TKey>  comparer,
-			CancellationToken        token,
-			TaskCreationOptions      options)
-		{
-			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
-				token,
-				options);
 		}
 
 		#endregion
@@ -380,7 +219,7 @@ namespace LinqToDB
 		public static Task<TSource> FirstAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.First);
+			return GetTask(source.First, CancellationToken.None);
 		}
 
 		public static Task<TSource> FirstAsync<TSource>(
@@ -394,7 +233,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.First(predicate));
+			return GetTask(() => source.First(predicate), CancellationToken.None);
 		}
 
 		public static Task<TSource> FirstAsync<TSource>(
@@ -412,7 +251,7 @@ namespace LinqToDB
 		public static Task<TSource> FirstOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.FirstOrDefault);
+			return GetTask(source.FirstOrDefault, CancellationToken.None);
 		}
 
 		public static Task<TSource> FirstOrDefaultAsync<TSource>(
@@ -426,7 +265,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.FirstOrDefault(predicate));
+			return GetTask(() => source.FirstOrDefault(predicate), CancellationToken.None);
 		}
 
 		public static Task<TSource> FirstOrDefaultAsync<TSource>(
@@ -444,7 +283,7 @@ namespace LinqToDB
 		public static Task<TSource> SingleAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.Single);
+			return GetTask(source.Single, CancellationToken.None);
 		}
 
 		public static Task<TSource> SingleAsync<TSource>(
@@ -458,7 +297,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.Single(predicate));
+			return GetTask(() => source.Single(predicate), CancellationToken.None);
 		}
 
 		public static Task<TSource> SingleAsync<TSource>(
@@ -476,7 +315,7 @@ namespace LinqToDB
 		public static Task<TSource> SingleOrDefaultAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.SingleOrDefault);
+			return GetTask(source.SingleOrDefault, CancellationToken.None);
 		}
 
 		public static Task<TSource> SingleOrDefaultAsync<TSource>(
@@ -490,7 +329,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.SingleOrDefault(predicate));
+			return GetTask(() => source.SingleOrDefault(predicate), CancellationToken.None);
 		}
 
 		public static Task<TSource> SingleOrDefaultAsync<TSource>(
@@ -509,7 +348,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			TSource                  item)
 		{
-			return GetTask(() => source.Contains(item));
+			return GetTask(() => source.Contains(item), CancellationToken.None);
 		}
 
 		public static Task<bool> ContainsAsync<TSource>(
@@ -527,7 +366,7 @@ namespace LinqToDB
 		public static Task<bool> AnyAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.Any);
+			return GetTask(source.Any, CancellationToken.None);
 		}
 
 		public static Task<bool> AnyAsync<TSource>(
@@ -541,7 +380,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.Any(predicate));
+			return GetTask(() => source.Any(predicate), CancellationToken.None);
 		}
 
 		public static Task<bool> AnyAsync<TSource>(
@@ -560,7 +399,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.All(predicate));
+			return GetTask(() => source.All(predicate), CancellationToken.None);
 		}
 
 		public static Task<bool> AllAsync<TSource>(
@@ -578,7 +417,7 @@ namespace LinqToDB
 		public static Task<int> CountAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.Count);
+			return GetTask(source.Count, CancellationToken.None);
 		}
 		public static Task<int> CountAsync<TSource>(
 			this IQueryable<TSource> source,
@@ -590,7 +429,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.Count(predicate));
+			return GetTask(() => source.Count(predicate), CancellationToken.None);
 		}
 
 		public static Task<int> CountAsync<TSource>(
@@ -608,7 +447,7 @@ namespace LinqToDB
 		public static Task<long> LongCountAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.LongCount);
+			return GetTask(source.LongCount, CancellationToken.None);
 		}
 
 		public static Task<long> LongCountAsync<TSource>(
@@ -622,7 +461,7 @@ namespace LinqToDB
 			this IQueryable<TSource>       source,
 			Expression<Func<TSource,bool>> predicate)
 		{
-			return GetTask(() => source.LongCount(predicate));
+			return GetTask(() => source.LongCount(predicate), CancellationToken.None);
 		}
 
 		public static Task<long> LongCountAsync<TSource>(
@@ -640,7 +479,7 @@ namespace LinqToDB
 		public static Task<TSource> MinAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.Min);
+			return GetTask(source.Min, CancellationToken.None);
 		}
 
 		public static Task<TSource> MinAsync<TSource>(
@@ -654,7 +493,7 @@ namespace LinqToDB
 			this IQueryable<TSource>          source,
 			Expression<Func<TSource,TResult>> selector)
 		{
-			return GetTask(() => source.Min(selector));
+			return GetTask(() => source.Min(selector), CancellationToken.None);
 		}
 
 		public static Task<TResult> MinAsync<TSource, TResult>(
@@ -672,7 +511,7 @@ namespace LinqToDB
 		public static Task<TSource> MaxAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			return GetTask(source.Max);
+			return GetTask(source.Max, CancellationToken.None);
 		}
 
 		public static Task<TSource> MaxAsync<TSource>(
@@ -686,7 +525,7 @@ namespace LinqToDB
 			this IQueryable<TSource>          source,
 			Expression<Func<TSource,TResult>> selector)
 		{
-			return GetTask(() => source.Max(selector));
+			return GetTask(() => source.Max(selector), CancellationToken.None);
 		}
 
 		public static Task<TResult> MaxAsync<TSource,TResult>(
@@ -703,7 +542,7 @@ namespace LinqToDB
 
 		public static Task<int> SumAsync(this IQueryable<int> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<int> SumAsync(this IQueryable<int> source, CancellationToken cancellationToken)
@@ -713,7 +552,7 @@ namespace LinqToDB
 
 		public static Task<int?> SumAsync(this IQueryable<int?> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<int?> SumAsync(this IQueryable<int?> source, CancellationToken cancellationToken)
@@ -723,7 +562,7 @@ namespace LinqToDB
 
 		public static Task<long> SumAsync(this IQueryable<long> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<long> SumAsync(this IQueryable<long> source, CancellationToken cancellationToken)
@@ -733,7 +572,7 @@ namespace LinqToDB
 
 		public static Task<long?> SumAsync(this IQueryable<long?> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<long?> SumAsync(this IQueryable<long?> source, CancellationToken cancellationToken)
@@ -743,7 +582,7 @@ namespace LinqToDB
 
 		public static Task<float> SumAsync(this IQueryable<float> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<float> SumAsync(this IQueryable<float> source, CancellationToken cancellationToken)
@@ -753,7 +592,7 @@ namespace LinqToDB
 
 		public static Task<float?> SumAsync(this IQueryable<float?> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<float?> SumAsync(this IQueryable<float?> source, CancellationToken cancellationToken)
@@ -763,7 +602,7 @@ namespace LinqToDB
 
 		public static Task<double> SumAsync(this IQueryable<double> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<double> SumAsync(this IQueryable<double> source, CancellationToken cancellationToken)
@@ -773,7 +612,7 @@ namespace LinqToDB
 
 		public static Task<double?> SumAsync(this IQueryable<double?> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<double?> SumAsync(this IQueryable<double?> source, CancellationToken cancellationToken)
@@ -783,7 +622,7 @@ namespace LinqToDB
 
 		public static Task<decimal> SumAsync(this IQueryable<decimal> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<decimal> SumAsync(this IQueryable<decimal> source, CancellationToken cancellationToken)
@@ -793,7 +632,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> SumAsync(this IQueryable<decimal?> source)
 		{
-			return GetTask(source.Sum);
+			return GetTask(source.Sum, CancellationToken.None);
 		}
 
 		public static Task<decimal?> SumAsync(this IQueryable<decimal?> source, CancellationToken cancellationToken)
@@ -804,7 +643,7 @@ namespace LinqToDB
 		public static Task<int> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<int> SumAsync<TSource>(
@@ -816,7 +655,7 @@ namespace LinqToDB
 		public static Task<int?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<int?> SumAsync<TSource>(
@@ -828,7 +667,7 @@ namespace LinqToDB
 		public static Task<long> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<long> SumAsync<TSource>(
@@ -840,7 +679,7 @@ namespace LinqToDB
 		public static Task<long?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource, long?>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<long?> SumAsync<TSource>(
@@ -852,7 +691,7 @@ namespace LinqToDB
 		public static Task<float> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<float> SumAsync<TSource>(
@@ -864,7 +703,7 @@ namespace LinqToDB
 		public static Task<float?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource, float?>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<float?> SumAsync<TSource>(
@@ -876,7 +715,7 @@ namespace LinqToDB
 		public static Task<double> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<double> SumAsync<TSource>(
@@ -888,7 +727,7 @@ namespace LinqToDB
 		public static Task<double?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<double?> SumAsync<TSource>(
@@ -900,7 +739,7 @@ namespace LinqToDB
 		public static Task<decimal> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<decimal> SumAsync<TSource>(
@@ -912,7 +751,7 @@ namespace LinqToDB
 		public static Task<decimal?> SumAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector)
 		{
-			return GetTask(() => source.Sum(selector));
+			return GetTask(() => source.Sum(selector), CancellationToken.None);
 		}
 
 		public static Task<decimal?> SumAsync<TSource>(
@@ -927,7 +766,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(this IQueryable<int> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync(this IQueryable<int> source, CancellationToken cancellationToken)
@@ -937,7 +776,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(this IQueryable<int?> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync(this IQueryable<int?> source, CancellationToken cancellationToken)
@@ -947,7 +786,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(this IQueryable<long> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync(this IQueryable<long> source, CancellationToken cancellationToken)
@@ -957,7 +796,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(this IQueryable<long?> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync(this IQueryable<long?> source, CancellationToken cancellationToken)
@@ -967,7 +806,7 @@ namespace LinqToDB
 
 		public static Task<float> AverageAsync(this IQueryable<float> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<float> AverageAsync(this IQueryable<float> source, CancellationToken cancellationToken)
@@ -977,7 +816,7 @@ namespace LinqToDB
 
 		public static Task<float?> AverageAsync(this IQueryable<float?> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<float?> AverageAsync(this IQueryable<float?> source, CancellationToken cancellationToken)
@@ -987,7 +826,7 @@ namespace LinqToDB
 
 		public static Task<double> AverageAsync(this IQueryable<double> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync(this IQueryable<double> source, CancellationToken cancellationToken)
@@ -997,7 +836,7 @@ namespace LinqToDB
 
 		public static Task<double?> AverageAsync(this IQueryable<double?> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync(this IQueryable<double?> source, CancellationToken cancellationToken)
@@ -1007,7 +846,7 @@ namespace LinqToDB
 
 		public static Task<decimal> AverageAsync(this IQueryable<decimal> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<decimal> AverageAsync(this IQueryable<decimal> source, CancellationToken cancellationToken)
@@ -1017,7 +856,7 @@ namespace LinqToDB
 
 		public static Task<decimal?> AverageAsync(this IQueryable<decimal?> source)
 		{
-			return GetTask(source.Average);
+			return GetTask(source.Average, CancellationToken.None);
 		}
 
 		public static Task<decimal?> AverageAsync(this IQueryable<decimal?> source, CancellationToken cancellationToken)
@@ -1028,7 +867,7 @@ namespace LinqToDB
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync<TSource>(
@@ -1040,7 +879,7 @@ namespace LinqToDB
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,int?>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync<TSource>(
@@ -1052,7 +891,7 @@ namespace LinqToDB
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync<TSource>(
@@ -1064,7 +903,7 @@ namespace LinqToDB
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,long?>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync<TSource>(
@@ -1076,7 +915,7 @@ namespace LinqToDB
 		public static Task<float> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<float> AverageAsync<TSource>(
@@ -1088,7 +927,7 @@ namespace LinqToDB
 		public static Task<float?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,float?>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<float?> AverageAsync<TSource>(
@@ -1100,7 +939,7 @@ namespace LinqToDB
 		public static Task<double> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double> AverageAsync<TSource>(
@@ -1112,7 +951,7 @@ namespace LinqToDB
 		public static Task<double?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,double?>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<double?> AverageAsync<TSource>(
@@ -1124,7 +963,7 @@ namespace LinqToDB
 		public static Task<decimal> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<decimal> AverageAsync<TSource>(
@@ -1136,7 +975,7 @@ namespace LinqToDB
 		public static Task<decimal?> AverageAsync<TSource>(
 			this IQueryable<TSource> source, Expression<Func<TSource,decimal?>> selector)
 		{
-			return GetTask(() => source.Average(selector));
+			return GetTask(() => source.Average(selector), CancellationToken.None);
 		}
 
 		public static Task<decimal?> AverageAsync<TSource>(
