@@ -19,10 +19,10 @@ let private TestOnePerson id firstName middleName lastName gender persons =
         LastName = lastName
         Gender = gender })
 
-let TestOneJohn = TestOnePerson 1 "John" None "Pupkin" Gender.Male
+let TestOneJohn = TestOnePerson 1L "John" None "Pupkin" Gender.Male
 
 let TestMethod() = 
-    1
+    1L
 
 let LoadSingle (db : IDataContext) = 
     let persons = db.GetTable<Person>()
@@ -42,7 +42,7 @@ let LoadSingleComplexPerson (db : IDataContext) =
         exactlyOne
     }
     Assert.AreEqual(
-        { ComplexPerson.ID=1
+        { ComplexPerson.ID = 1L
           Name = {FirstName="John"; MiddleName=null; LastName="Pupkin"}
           Gender="M" }
         , john)
@@ -55,7 +55,7 @@ let LoadSingleDeeplyComplexPerson (db : IDataContext) =
         exactlyOne
     }
     Assert.AreEqual(
-        { DeeplyComplexPerson.ID=1
+        { DeeplyComplexPerson.ID = 1L
           Name = {FirstName="John"; MiddleName=null; LastName={Value="Pupkin"}}
           Gender="M" }
         , john)

@@ -13,7 +13,7 @@ type PersonID = int
 type Person = 
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID"); Identity; PrimaryKey>]
-      ID : int 
+      ID : int64
       [<NotNull>] 
       FirstName : string
       [<NotNull>]
@@ -39,7 +39,7 @@ type ComplexPerson =
     { [<Identity>]
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID", IsPrimaryKey=true)>]
-      ID : int
+      ID : int64
       Name : FullName
       Gender : string }
 
@@ -51,7 +51,7 @@ type DeeplyComplexPerson =
     { [<Identity>]
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID", IsPrimaryKey=true)>]
-      ID : int
+      ID : int64
       Name : NestedFullName
       Gender : string }
 

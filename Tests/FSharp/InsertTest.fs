@@ -31,17 +31,13 @@ let Insert2 (db : IDataContext) =
     let p = 
         { ComplexPerson.Name = { FirstName = "fn"; MiddleName = ""; LastName = "ln" }
           Gender = "M"
-          ID = 0 }
+          ID = 0L }
 
-    let id = query { 
-        for p in db.GetTable<Person>() do
-        maxBy p.ID }
-  //  try
-    db.Insert(p) |> ignore
+    let id = db.InsertWithIdentity(p) :?> int64
 
     let inserted = query { 
         for p in db.GetTable<ComplexPerson>() do
-        where (p.ID > id)
+        where (p.ID = id)
         exactlyOne }
         
     Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName)
@@ -55,23 +51,20 @@ let InsertNoneOption (db : IDataContext) =
           MiddleName = None
           LastName = "ln"
           Gender = Gender.Male
-          ID = 0 }
+          ID = 0L }
 
-    let id = query { 
-        for p in db.GetTable<Person>() do
-        maxBy p.ID }
+    let id = db.InsertWithIdentity(p) :?> int64
 
-    db.Insert(p) |> ignore
+    let p = { p with ID = id }
 
     let inserted = query { 
         for p in db.GetTable<Person>() do
-        where (p.ID > id)
+        where (p.ID = id)
         exactlyOne }
         
-    Assert.AreEqual(p.FirstName, inserted.FirstName)
-    Assert.AreEqual(p.MiddleName, inserted.MiddleName)
-    Assert.AreEqual(p.LastName, inserted.LastName)
-    Assert.AreEqual(p.Gender, inserted.Gender)
+    Assert.AreEqual(p, inserted);
+
+    Assert.AreEqual(None, inserted.MiddleName)
 
 let InsertSomeOption (db : IDataContext) = 
     
@@ -80,7 +73,7 @@ let InsertSomeOption (db : IDataContext) =
           MiddleName = Some("md")
           LastName = "ln"
           Gender = Gender.Male
-          ID = 0 }
+          ID = 0L }
 
     let id = query { 
         for p in db.GetTable<Person>() do

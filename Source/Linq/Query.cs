@@ -392,64 +392,93 @@ namespace LinqToDB.Linq
 
 		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
-			foreach (var p in Queries[idx].Parameters)
-			{
-				var value = p.Accessor(expr, parameters);
+		    foreach (var p in Queries[idx].Parameters)
+		    {
+		        var value = p.Accessor(expr, parameters);
 
-				if (value is IEnumerable)
-				{
-					var type  = value.GetType();
-					var etype = type.GetItemType();
+                if (value != null)
+                {
 
-					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
-						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
-					{
-						var values = new List<object>();
+                    var type = value.GetType();
+                    Type etype;
 
-						foreach (var v in (IEnumerable)value)
-						{
-							value = v;
+                    if (type.Name == "FSharpOption`1")
+                    {
+                        var methods = type.GetMethods();
+                        
+                        bool isSome =
+                            (bool) methods.Single(m => m.Name == "get_IsSome").Invoke(null, new object[] {value});
+                        if (isSome)
+                        {
+                            value = methods.Single(m => m.Name == "get_Value").Invoke(value, new object[] {});
+                        }
+                        else
+                        {
+                            value = DBNull.Value;
+                        }
 
-							if (v != null)
-							{
-								var valueType = v.GetType();
+                        etype = type.GetGenericArguments()[0];
+                    }
+                    else
+                    {
+                        etype = type.GetItemType();
+                    }
 
-								if (valueType.ToNullableUnderlying().IsEnumEx())
-								{
-									if (_enumConverters == null)
-										_enumConverters = new ConcurrentDictionary<Type,Func<object,object>>();
+                    if (value is IEnumerable)
+                    {
 
-									Func<object,object> converter;
+                        if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+                            (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+                             etype.GetGenericArgumentsEx()[0].IsEnumEx()))
+                        {
+                            var values = new List<object>();
 
-									if (!_enumConverters.TryGetValue(valueType, out converter))
-									{
-										var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
-										var convExpr  = MappingSchema.GetConvertExpression(valueType, toType);
-										var convParam = Expression.Parameter(typeof(object));
+                            foreach (var v in (IEnumerable)value)
+                            {
+                                value = v;
 
-										var lex = Expression.Lambda<Func<object,object>>(
-											Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
-											convParam);
+                                if (v != null)
+                                {
+                                    var valueType = v.GetType();
 
-										converter = lex.Compile();
-									}
+                                    if (valueType.ToNullableUnderlying().IsEnumEx())
+                                    {
+                                        if (_enumConverters == null)
+                                            _enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
 
-									value = converter(v);
-								}
-							}
+                                        Func<object, object> converter;
 
-							values.Add(value);
-						}
+                                        if (!_enumConverters.TryGetValue(valueType, out converter))
+                                        {
+                                            var toType = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType);
+                                            var convExpr = MappingSchema.GetConvertExpression(valueType, toType);
+                                            var convParam = Expression.Parameter(typeof(object));
 
-						value = values;
-					}
-				}
+                                            var lex = Expression.Lambda<Func<object, object>>(
+                                                Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)),
+                                                    typeof(object)),
+                                                convParam);
 
-				p.SqlParameter.Value = value;
-			}
-		}
+                                            converter = lex.Compile();
+                                        }
 
-		#endregion
+                                        value = converter(v);
+                                    }
+                                }
+
+                                values.Add(value);
+                            }
+
+                            value = values;
+                        }
+                    }
+                }
+
+                p.SqlParameter.Value = value;
+            }
+        }
+
+        #endregion
 
 		#region GetSqlText
 
