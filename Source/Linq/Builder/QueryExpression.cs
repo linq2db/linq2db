@@ -29,6 +29,11 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		public void BuildQuery(Query<T> query)
+		{
+			_last.BuildQuery(query);
+		}
+
 		public QueryExpression<T> AddBuilder(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
 			if (_last != null)

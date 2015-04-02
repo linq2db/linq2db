@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -123,6 +124,11 @@ namespace LinqToDB.Linq
 			expression  = _variables.BuildBlock(expression);
 			SelectQuery = SqlOptimizer.Finalize(selectQuery);
 
+			if (!SelectQuery.IsParameterDependent)
+			{
+				
+			}
+
 			// Clean building context.
 			//
 			_variables  = null;
@@ -130,14 +136,23 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
-		public string GetCommandText(Expression expression)
+		public class CommandInfo
 		{
-			throw new NotImplementedException();
+			public string          CommandText;
+			public DataParameter[] Parameters;
 		}
 
-		public DataParameter[] GetParameters(Expression expression)
+		public CommandInfo GetCommandInfo(IDataContext dataContext, Expression expression)
 		{
-			throw new NotImplementedException();
+			var sqlProvider   = dataContext.CreateSqlProvider();
+			var stringBuilder = new StringBuilder();
+
+			sqlProvider.BuildSql(0, SelectQuery, stringBuilder);
+
+			return new CommandInfo
+			{
+				CommandText = stringBuilder.ToString(),
+			};
 		}
 	}
 
@@ -189,8 +204,8 @@ namespace LinqToDB.Linq
 						{
 							var builder = new QueryBuilder(query);
 
-							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable<T>(query.Expression);
-							else              query.GetElement     = builder.BuildElement   <T>(query.Expression);
+							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable(query);
+							else              query.GetElement     = builder.BuildElement   (query);
 						}
 						catch (Exception)
 						{

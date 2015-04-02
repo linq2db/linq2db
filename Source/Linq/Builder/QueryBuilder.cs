@@ -16,21 +16,33 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Query _query;
 
-		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Expression expression)
+		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Query<T> query)
 		{
-			return BuildQuery<IEnumerable<T>,T>(expression);
+			var expr = query.Expression.Transform(e => TramsformQuery<T>(e));
+
+			if (expr is QueryExpression<T>)
+			{
+				((QueryExpression<T>)expr).BuildQuery(query);
+				return query.GetIEnumerable;
+			}
+
+			return BuildQuery<IEnumerable<T>>(expr);
 		}
 
-		public Func<IDataContext,Expression,T> BuildElement<T>(Expression expression)
+		public Func<IDataContext,Expression,T> BuildElement<T>(Query<T> query)
 		{
-			return BuildQuery<T,T>(expression);
+			var expr = query.Expression.Transform(e => TramsformQuery<T>(e));
+
+			if (expr is QueryExpression<T>)
+			{
+				((QueryExpression<T>)expr).BuildQuery(query);
+				return query.GetElement;
+			}
+			return BuildQuery<T>(expr);
 		}
 
-		Func<IDataContext,Expression,TResult> BuildQuery<TResult,TItem>(Expression expr)
+		Func<IDataContext,Expression,TResult> BuildQuery<TResult>(Expression expr)
 		{
-			expr = expr.Transform(e => TramsformQuery<TItem>(e));
-			//expr = expr.Transform(e => e is QueryExpression<TItem> ? e.Reduce() : e);
-
 			if (expr.Type != typeof(TResult))
 				expr = Expression.Convert(expr, typeof(TResult));
 
