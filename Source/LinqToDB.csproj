@@ -353,7 +353,7 @@
     <Compile Include="Linq\Builder\SqlInfo.cs" />
     <Compile Include="Linq\Builder\SubQueryContext.cs" />
     <Compile Include="Linq\Builder\TableAttributeBuilder.cs" />
-    <Compile Include="Linq\Builder\TableBuilder.cs" />
+    <Compile Include="Linq\Builder\TableBuilderOld.cs" />
     <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
     <Compile Include="Linq\Builder\UpdateBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder.cs" />

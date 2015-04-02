@@ -15,9 +15,9 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 
-	class TableBuilder : ISequenceBuilder
+	class TableBuilderOld : ISequenceBuilder
 	{
-		#region TableBuilder
+		#region TableBuilderOld
 
 		int ISequenceBuilder.BuildCounter { get; set; }
 

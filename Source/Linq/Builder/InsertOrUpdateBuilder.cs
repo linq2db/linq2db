@@ -36,8 +36,8 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.Update.Items,
 				sequence);
 
-			sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
-			sequence.SelectQuery.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;
+			sequence.SelectQuery.Insert.Into  = ((TableBuilderOld.TableContext)sequence).SqlTable;
+			sequence.SelectQuery.Update.Table = ((TableBuilderOld.TableContext)sequence).SqlTable;
 			sequence.SelectQuery.From.Tables.Clear();
 			sequence.SelectQuery.From.Table(sequence.SelectQuery.Update.Table);
 

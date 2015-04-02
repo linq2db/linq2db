@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = (TableBuilderOld.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			sequence.SelectQuery.QueryType          = QueryType.CreateTable;
 			sequence.SelectQuery.CreateTable.Table  = sequence.SqlTable;

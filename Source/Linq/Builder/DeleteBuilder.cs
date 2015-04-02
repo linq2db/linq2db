@@ -30,18 +30,18 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result && res.Context is TableBuilderOld.AssociatedTableContext)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					var atc = (TableBuilderOld.AssociatedTableContext)res.Context;
 					sequence.SelectQuery.Delete.Table = atc.SqlTable;
 				}
 				else
 				{
 					res = ctx.IsExpression(null, 0, RequestFor.Table);
 
-					if (res.Result && res.Context is TableBuilder.TableContext)
+					if (res.Result && res.Context is TableBuilderOld.TableContext)
 					{
-						var tc = (TableBuilder.TableContext)res.Context;
+						var tc = (TableBuilderOld.TableContext)res.Context;
 
 						if (sequence.SelectQuery.From.Tables.Count == 0 || sequence.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
 							sequence.SelectQuery.Delete.Table = tc.SqlTable;

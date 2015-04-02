@@ -1852,7 +1852,7 @@ namespace LinqToDB.Linq.Builder
 
 			var ctx = GetContext(context, arg);
 
-			if (ctx is TableBuilder.TableContext &&
+			if (ctx is TableBuilderOld.TableContext &&
 			    ctx.SelectQuery != context.SelectQuery &&
 			    ctx.IsExpression(arg, 0, RequestFor.Object).Result)
 			{
@@ -2011,7 +2011,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		internal ISqlPredicate MakeIsPredicate(TableBuilderOld.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SelectQuery.Predicate.Expr(new SqlValue(true)));
@@ -2100,7 +2100,7 @@ namespace LinqToDB.Linq.Builder
 		ISqlPredicate MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext)null, Expression.Constant(null), new SelectQuery()), typeOperand);
+			var table       = new TableBuilderOld.TableContext(this, new BuildInfo((IBuildContext)null, Expression.Constant(null), new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SelectQuery.Predicate.Expr(new SqlValue(true)));

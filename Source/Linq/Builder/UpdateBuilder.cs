@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 							foreach (var item in sql.Update.Items)
 								sql.Select.Columns.Add(new SelectQuery.Column(sql, item.Expression));
 
-							sql.Update.Table = ((TableBuilder.TableContext)into).SqlTable;
+							sql.Update.Table = ((TableBuilderOld.TableContext)into).SqlTable;
 						}
 
 						break;
@@ -109,18 +109,18 @@ namespace LinqToDB.Linq.Builder
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
-				if (res.Result && res.Context is TableBuilder.AssociatedTableContext)
+				if (res.Result && res.Context is TableBuilderOld.AssociatedTableContext)
 				{
-					var atc = (TableBuilder.AssociatedTableContext)res.Context;
+					var atc = (TableBuilderOld.AssociatedTableContext)res.Context;
 					sequence.SelectQuery.Update.Table = atc.SqlTable;
 				}
 				else
 				{
 					res = ctx.IsExpression(null, 0, RequestFor.Table);
 
-					if (res.Result && res.Context is TableBuilder.TableContext)
+					if (res.Result && res.Context is TableBuilderOld.TableContext)
 					{
-						var tc = (TableBuilder.TableContext)res.Context;
+						var tc = (TableBuilderOld.TableContext)res.Context;
 
 						if (sequence.SelectQuery.From.Tables.Count == 0 || sequence.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
 							sequence.SelectQuery.Update.Table = tc.SqlTable;

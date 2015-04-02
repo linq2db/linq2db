@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (res.Result)
 									{
-										var table = (TableBuilder.AssociatedTableContext)res.Context;
+										var table = (TableBuilderOld.AssociatedTableContext)res.Context;
 										if (table.IsList)
 										{
 											var mexpr = GetMultipleQueryExpression(context, ma, new HashSet<ParameterExpression>());
@@ -338,7 +338,7 @@ namespace LinqToDB.Linq.Builder
 						var me = (MemberExpression)expr;
 
 						var om = (
-							from c in Contexts.OfType<TableBuilder.TableContext>()
+							from c in Contexts.OfType<TableBuilderOld.TableContext>()
 							where c.ObjectType == me.Member.DeclaringType
 							select c.EntityDescriptor
 						).FirstOrDefault();
@@ -535,7 +535,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (res.Result)
 								{
-									var table = (TableBuilder.AssociatedTableContext)res.Context;
+									var table = (TableBuilderOld.AssociatedTableContext)res.Context;
 
 									if (table.IsList)
 									{
