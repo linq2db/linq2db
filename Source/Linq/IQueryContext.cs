@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,10 +10,9 @@ namespace LinqToDB.Linq
 
 	public interface IQueryContext : IDisposable
 	{
-		int         ExecuteNonQuery();
-		object      ExecuteScalar  ();
-
-		IDataReader           ExecuteReader     (string commandText, DataParameter[] parameters);
-		Task<DataReaderAsync> ExecuteReaderAsync(string commandText, DataParameter[] parameters, CancellationToken cancellationToken);
+		int                   ExecuteNonQuery   ();
+		object                ExecuteScalar     ();
+		IDataReader           ExecuteReader     ();
+		Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken);
 	}
 }

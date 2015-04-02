@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -162,39 +161,57 @@ namespace LinqToDB.Data
 
 		class QueryContext : IQueryContext
 		{
-			public QueryContext(Query query, DataConnection dataConnection)
+			public QueryContext(Query query, DataConnection dataConnection, Expression expression)
 			{
 				_query          = query;
 				_dataConnection = dataConnection;
+				_expression     = expression;
 			}
 
 			readonly Query          _query;
 			readonly DataConnection _dataConnection;
+			readonly Expression     _expression;
 
-			public void   Dispose() {}
+			public void Dispose() {}
 
-			public int    ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
-			public object ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
-
-			public IDataReader ExecuteReader  (string commandText, DataParameter[] parameters)
+			void SetCommand()
 			{
-				_dataConnection.InitCommand(CommandType.Text, commandText, parameters);
+				var commandInfo = _query.GetCommandInfo(_dataConnection, _expression);
 
-				if (parameters != null && parameters.Length > 0)
-					CommandInfo.SetParameters(_dataConnection, parameters);
+				_dataConnection.InitCommand(CommandType.Text, commandInfo.CommandText, commandInfo.Parameters);
 
+				if (commandInfo.Parameters != null && commandInfo.Parameters.Length > 0)
+					CommandInfo.SetParameters(_dataConnection, commandInfo.Parameters);
+			}
+
+			public int ExecuteNonQuery()
+			{
+				SetCommand();
+				return _dataConnection.ExecuteNonQuery();
+			}
+
+			public object ExecuteScalar()
+			{
+				SetCommand();
+				return _dataConnection.ExecuteScalar  ();
+			}
+
+			public IDataReader ExecuteReader()
+			{
+				SetCommand();
 				return _dataConnection.ExecuteReader();
 			}
 
-			public Task<DataReaderAsync> ExecuteReaderAsync(string commandText, DataParameter[] parameters, CancellationToken cancellationToken)
+			public Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
-				return _dataConnection.SetCommand(commandText, parameters).ExecuteReaderAsync(cancellationToken);
+				var commandInfo = _query.GetCommandInfo(_dataConnection, _expression);
+				return _dataConnection.SetCommand(commandInfo.CommandText, commandInfo.Parameters).ExecuteReaderAsync(cancellationToken);
 			}
 		}
 
-		IQueryContext IDataContext.GetQueryContext(Query query)
+		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
 		{
-			return new QueryContext(query, this);
+			return new QueryContext(query, this, expression);
 		}
 
 		#endregion

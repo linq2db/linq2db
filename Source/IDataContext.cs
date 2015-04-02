@@ -21,7 +21,7 @@ namespace LinqToDB
 		Expression          GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?               IsDBNullAllowed    (IDataReader reader, int idx);
 
-		IQueryContext       GetQueryContext(Query query);
+		IQueryContext       GetQueryContext(Query query, Expression expression);
 
 		object              SetQuery           (IQueryContextOld queryContext);
 		int                 ExecuteNonQuery    (object query);

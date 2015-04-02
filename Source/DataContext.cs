@@ -128,9 +128,32 @@ namespace LinqToDB
 
 		#region GetQueryContext
 
-		IQueryContext IDataContext.GetQueryContext(Query query)
+		class QueryContext : IQueryContext
 		{
-			return ((IDataContext)GetDataConnection()).GetQueryContext(query);
+			public QueryContext(DataContext dataContext, Query query, Expression expression)
+			{
+				_dataContext  = dataContext;
+				_queryContext = ((IDataContext)dataContext.GetDataConnection()).GetQueryContext(query, expression);
+			}
+
+			readonly DataContext   _dataContext;
+			readonly IQueryContext _queryContext;
+
+			public void Dispose() { _dataContext.ReleaseQuery(); }
+
+			public int         ExecuteNonQuery() { return _queryContext.ExecuteNonQuery(); }
+			public object      ExecuteScalar  () { return _queryContext.ExecuteScalar();   }
+			public IDataReader ExecuteReader  () { return _queryContext.ExecuteReader();   }
+
+			public Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
+			{
+				return _queryContext.ExecuteReaderAsync(cancellationToken);
+			}
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		{
+			return new QueryContext(this, query, expression);
 		}
 
 		#endregion

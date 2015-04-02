@@ -142,6 +142,7 @@ namespace LinqToDB.Linq
 			public DataParameter[] Parameters;
 		}
 
+		// IT : # GetCommandInfo
 		public CommandInfo GetCommandInfo(IDataContext dataContext, Expression expression)
 		{
 			var sqlProvider   = dataContext.CreateSqlProvider();

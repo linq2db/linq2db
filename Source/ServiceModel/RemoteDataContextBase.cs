@@ -6,6 +6,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Data;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.ServiceModel
 {
@@ -279,29 +283,96 @@ namespace LinqToDB.ServiceModel
 
 		#region GetQueryContext
 
-//		class QueryContext : IQueryContext
-//		{
-//			readonly DataConnection _dataConnection;
-//
-//			public QueryContext(DataConnection dataConnection)
-//			{
-//				_dataConnection = dataConnection;
-//			}
-//
-//			public void        Dispose        () {}
-//			public int         ExecuteNonQuery() { return _dataConnection.ExecuteNonQuery(); }
-//			public object      ExecuteScalar  () { return _dataConnection.ExecuteScalar  (); }
-//			public IDataReader ExecuteReader  () { return _dataConnection.ExecuteReader  (); }
-//		}
-
-		IQueryContext IDataContext.GetQueryContext(Query query)
+		class QueryContext : IQueryContext
 		{
-			throw new NotImplementedException();
+			public QueryContext(RemoteDataContextBase dataContext, Query query, Expression expression)
+			{
+				_dataContext = dataContext;
+				_query       = query;
+				_expression  = expression;
+			}
+
+			readonly RemoteDataContextBase _dataContext;
+			readonly Query                 _query;
+			readonly Expression            _expression;
+
+			ILinqService _client;
+
+			public void Dispose()
+			{
+				if (_client != null)
+					((IDisposable)_client).Dispose();
+			}
+
+			public int ExecuteNonQuery()
+			{
+				var q    = _query.SelectQuery.ProcessParameters();
+				var data = LinqServiceSerializer.Serialize(
+					q,
+					new SqlParameter[0]//q.IsParameterDependent ? q.Parameters.ToArray() : _query.GetCommandInfo(_dataContext, _expression).Parameters
+					);
+
+				if (_dataContext._batchCounter > 0)
+				{
+					_dataContext._queryBatch.Add(data);
+					return -1;
+				}
+
+				_client = _dataContext.GetClient();
+
+				return _client.ExecuteNonQuery(_dataContext.Configuration, data);
+			}
+
+			public object ExecuteScalar()
+			{
+				if (_dataContext._batchCounter > 0)
+					throw new LinqException("Incompatible batch operation.");
+
+				_client = _dataContext.GetClient();
+
+				var q = _query.SelectQuery.ProcessParameters();
+
+				return _client.ExecuteScalar(
+					_dataContext.Configuration,
+					LinqServiceSerializer.Serialize(
+						q,
+						new SqlParameter[0]//q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()
+						));
+			}
+
+			public IDataReader ExecuteReader()
+			{
+				if (_dataContext._batchCounter > 0)
+					throw new LinqException("Incompatible batch operation.");
+
+				_client = _dataContext.GetClient();
+
+				var q      = _query.SelectQuery.ProcessParameters();
+				var ret    = _client.ExecuteReader(
+					_dataContext.Configuration,
+					LinqServiceSerializer.Serialize(
+						q,
+						new SqlParameter[0]//q.IsParameterDependent ? q.Parameters.ToArray() : _c.Query.GetParameters()
+						));
+				var result = LinqServiceSerializer.DeserializeResult(ret);
+
+				return new ServiceModelDataReader(_dataContext.MappingSchema, result);
+			}
+
+			public Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		{
+			return new QueryContext(this, query, expression);
 		}
 
 		#endregion
 
-		class QueryContext
+		class QueryContextOld
 		{
 			public IQueryContextOld Query;
 			public ILinqService  Client;
@@ -309,12 +380,12 @@ namespace LinqToDB.ServiceModel
 
 		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
-			return new QueryContext { Query = queryContext };
+			return new QueryContextOld { Query = queryContext };
 		}
 
 		int IDataContext.ExecuteNonQuery(object query)
 		{
-			var ctx  = (QueryContext)query;
+			var ctx  = (QueryContextOld)query;
 			var q    = ctx.Query.SelectQuery.ProcessParameters();
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
 
@@ -334,7 +405,7 @@ namespace LinqToDB.ServiceModel
 			if (_batchCounter > 0)
 				throw new LinqException("Incompatible batch operation.");
 
-			var ctx = (QueryContext)query;
+			var ctx = (QueryContextOld)query;
 
 			ctx.Client = GetClient();
 
@@ -350,7 +421,7 @@ namespace LinqToDB.ServiceModel
 			if (_batchCounter > 0)
 				throw new LinqException("Incompatible batch operation.");
 
-			var ctx = (QueryContext)query;
+			var ctx = (QueryContextOld)query;
 
 			ctx.Client = GetClient();
 
@@ -365,7 +436,7 @@ namespace LinqToDB.ServiceModel
 
 		public void ReleaseQuery(object query)
 		{
-			var ctx = (QueryContext)query;
+			var ctx = (QueryContextOld)query;
 
 			if (ctx.Client != null)
 				((IDisposable)ctx.Client).Dispose();
@@ -373,7 +444,7 @@ namespace LinqToDB.ServiceModel
 
 		string IDataContext.GetSqlText(object query)
 		{
-			var ctx        = (QueryContext)query;
+			var ctx        = (QueryContextOld)query;
 			var sqlBuilder = ((IDataContext)this).CreateSqlProvider();
 			var sb         = new StringBuilder();
 

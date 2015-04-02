@@ -32,10 +32,8 @@ namespace LinqToDB.Linq.Builder
 
 		static IEnumerable<T> ExecuteQuery<T>(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
 		{
-			var commandInfo = query.GetCommandInfo(dataContext, expression);
-
-			using (var ctx = dataContext.GetQueryContext(query))
-			using (var dr = ctx.ExecuteReader(commandInfo.CommandText, commandInfo.Parameters))
+			using (var ctx = dataContext.GetQueryContext(query, expression))
+			using (var dr = ctx.ExecuteReader())
 				while (dr.Read())
 					yield return mapper(dr);
 		}
@@ -43,10 +41,8 @@ namespace LinqToDB.Linq.Builder
 		static async Task ExecuteQueryAsync<T>(
 			Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
 		{
-			var commandInfo = query.GetCommandInfo(dataContext, expression);
-
-			using (var ctx = dataContext.GetQueryContext(query))
-			using (var dr = await ctx.ExecuteReaderAsync(commandInfo.CommandText, commandInfo.Parameters, cancellationToken))
+			using (var ctx = dataContext.GetQueryContext(query, expression))
+			using (var dr = await ctx.ExecuteReaderAsync(cancellationToken))
 				await dr.QueryForEachAsync(mapper, action, cancellationToken);
 		}
 
