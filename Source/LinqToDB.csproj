@@ -162,7 +162,7 @@
     <Compile Include="Linq\Builder\QueryExpression.cs" />
     <Compile Include="Linq\Builder\SelectBuilder1.cs" />
     <Compile Include="Linq\Builder\SqlBuilderBase.cs" />
-    <Compile Include="Linq\Builder\TableBuilder1.cs" />
+    <Compile Include="Linq\Builder\TableBuilder.cs" />
     <Compile Include="Linq\Builder\TableFunctionBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder1.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />

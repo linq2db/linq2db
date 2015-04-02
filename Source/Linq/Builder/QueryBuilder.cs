@@ -60,14 +60,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
 						break;
 					}
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression<T>(new TableBuilder1(_query, expression), expression.Type);
+								return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
 
 						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 

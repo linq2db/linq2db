@@ -13,9 +13,9 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
-	class TableBuilder1 : ExpressionBuilderBase
+	class TableBuilder : ExpressionBuilderBase
 	{
-		public TableBuilder1(Query query, Expression expression)
+		public TableBuilder(Query query, Expression expression)
 			: base(expression)
 		{
 			_query        = query;
