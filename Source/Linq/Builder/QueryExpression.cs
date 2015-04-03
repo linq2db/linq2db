@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -8,13 +7,12 @@ namespace LinqToDB.Linq.Builder
 	{
 		public QueryExpression(IExpressionBuilder expressionBuilder, Type newExpressionType)
 		{
-			AddBuilder(expressionBuilder, newExpressionType);
+			AddBuilder(_first = expressionBuilder, newExpressionType);
 		}
 
 		Type               _type;
+		IExpressionBuilder _first;
 		IExpressionBuilder _last;
-
-		readonly List<IExpressionBuilder> _builders = new List<IExpressionBuilder>();
 
 		public override Type           Type      { get { return _type; } }
 		public override bool           CanReduce { get { return true;  } }
@@ -44,8 +42,6 @@ namespace LinqToDB.Linq.Builder
 
 			_type = newExpressionType;
 			_last = expressionBuilder;
-
-			_builders.Add(_last);
 
 			return this;
 		}

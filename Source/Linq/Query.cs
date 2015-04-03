@@ -27,7 +27,7 @@ namespace LinqToDB.Linq
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			SqlOptimizer     = dataContext.GetSqlOptimizer();
 
-			_variables = new BuildVariables(dataContext, this);
+			_variables = new BuildVariables(dataContext);
 		}
 
 		public readonly string           ContextID;
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq
 
 		class BuildVariables
 		{
-			public BuildVariables(IDataContext dataContext, Query query)
+			public BuildVariables(IDataContext dataContext)
 			{
 				DataContext = dataContext;
 
@@ -203,10 +203,8 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							var builder = new QueryBuilder(query);
-
-							if (isEnumerable) query.GetIEnumerable = builder.BuildEnumerable(query);
-							else              query.GetElement     = builder.BuildElement   (query);
+							if (isEnumerable) query.GetIEnumerable = QueryBuilder.BuildEnumerable(query);
+							else              query.GetElement     = QueryBuilder.BuildElement   (query);
 						}
 						catch (Exception)
 						{

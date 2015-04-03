@@ -30,6 +30,8 @@ namespace LinqToDB.Linq.Builder
 			return new TableSqlBuilder(_query, _originalType);
 		}
 
+		#region BuildQuery
+
 		static IEnumerable<T> ExecuteQuery<T>(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
 		{
 			using (var ctx = dataContext.GetQueryContext(query, expression))
@@ -77,6 +79,10 @@ namespace LinqToDB.Linq.Builder
 			query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(query, ctx, expr, l, action, token);
 		}
 
+		#endregion
+
+		#region FieldSqlBuilder
+
 		class FieldSqlBuilder
 		{
 			public FieldSqlBuilder(SelectQuery selectQuery, SqlField sqlField)
@@ -117,6 +123,10 @@ namespace LinqToDB.Linq.Builder
 					query.DataContext);
 			}
 		}
+
+		#endregion
+
+		#region TableSqlBuilder
 
 		// IT : # table builder.
 		class TableSqlBuilder : SqlBuilderBase
@@ -177,7 +187,21 @@ namespace LinqToDB.Linq.Builder
 				return _selectQuery;
 			}
 
+			#region BuildExpression
+
+			ParameterExpression _variable;
+
 			public override Expression BuildExpression()
+			{
+				if (_variable != null)
+					return _variable;
+
+				var expr = BuildExpressionInternal();
+
+				return _variable = _query.BuildVariableExpression(expr);
+			}
+
+			Expression BuildExpressionInternal()
 			{
 				var fieldInfo = _fieldBuilders
 					.Select(f => new { field = f, expr = f.GetReadExpression(_query) })
@@ -195,6 +219,10 @@ namespace LinqToDB.Linq.Builder
 
 				return expr;
 			}
+
+			#endregion
 		}
+
+		#endregion
 	}
 }

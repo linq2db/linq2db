@@ -7,18 +7,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 
-	class QueryBuilder
+	static class QueryBuilder
 	{
-		public QueryBuilder(Query query)
+		public static Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Query<T> query)
 		{
-			_query = query;
-		}
-
-		readonly Query _query;
-
-		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable<T>(Query<T> query)
-		{
-			var expr = query.Expression.Transform(e => TramsformQuery<T>(e));
+			var expr = query.Expression.Transform(e => TramsformQuery<T>(query, e));
 
 			if (expr is QueryExpression<T>)
 			{
@@ -29,19 +22,20 @@ namespace LinqToDB.Linq.Builder
 			return BuildQuery<IEnumerable<T>>(expr);
 		}
 
-		public Func<IDataContext,Expression,T> BuildElement<T>(Query<T> query)
+		public static Func<IDataContext,Expression,T> BuildElement<T>(Query<T> query)
 		{
-			var expr = query.Expression.Transform(e => TramsformQuery<T>(e));
+			var expr = query.Expression.Transform(e => TramsformQuery<T>(query, e));
 
 			if (expr is QueryExpression<T>)
 			{
 				((QueryExpression<T>)expr).BuildQuery(query);
 				return query.GetElement;
 			}
+
 			return BuildQuery<T>(expr);
 		}
 
-		Func<IDataContext,Expression,TResult> BuildQuery<TResult>(Expression expr)
+		static Func<IDataContext,Expression,TResult> BuildQuery<TResult>(Expression expr)
 		{
 			if (expr.Type != typeof(TResult))
 				expr = Expression.Convert(expr, typeof(TResult));
@@ -52,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 			return l.Compile();
 		}
 
-		Expression TramsformQuery<T>(Expression expression)
+		static Expression TramsformQuery<T>(Query query, Expression expression)
 		{
 			switch (expression.NodeType)
 			{
@@ -60,14 +54,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
 						break;
 					}
 
@@ -77,18 +71,18 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression<T>(new TableBuilder(_query, expression), expression.Type);
+								return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
 
-						var attr = _query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
+						var attr = query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-							return new QueryExpression<T>(new TableFunctionBuilder(_query, expression), expression.Type);
+							return new QueryExpression<T>(new TableFunctionBuilder(query, expression), expression.Type);
 
 						if (call.IsQueryable())
 						{
 							if (call.Object == null && call.Arguments.Count > 0 && call.Arguments[0] != null)
 							{
-								var qe = call.Arguments[0].Transform(e => TramsformQuery<T>(e)) as QueryExpression<T>;
+								var qe = call.Arguments[0].Transform(e => TramsformQuery<T>(query, e)) as QueryExpression<T>;
 
 								if (qe != null)
 								{
