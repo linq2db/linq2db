@@ -14,6 +14,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IExpressionBuilder Prev { get; set; }
 		public IExpressionBuilder Next { get; set; }
+		public Type               Type { get { return Expression.Type; } }
 
 		public abstract SqlBuilderBase GetSqlBuilder();
 		public abstract Expression     BuildQuery<T>();

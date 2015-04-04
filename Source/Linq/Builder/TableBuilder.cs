@@ -27,7 +27,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlBuilderBase GetSqlBuilder()
 		{
-			return new TableSqlBuilder(_query, _originalType);
+			var builder = new TableSqlBuilder(_query, _originalType);
+
+			return builder;
 		}
 
 		#region BuildQuery
@@ -135,16 +137,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				_query            = query;
 				_originalType     = originalType;
-				_objectType       = GetObjectType(query);
-				_sqlTable         = new SqlTable(query.MappingSchema, _objectType);
-				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_objectType);
+				_baseObjectType   = GetObjectType(query);
+				_sqlTable         = new SqlTable(query.MappingSchema, _baseObjectType);
+				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_baseObjectType);
 				_selectQuery      = CreateSelectQuery();
 				_fieldBuilders    = _sqlTable.Fields.Values.Select(f => new FieldSqlBuilder(_selectQuery, f)).ToList();
 			}
 
 			readonly Query                 _query;
 			readonly Type                  _originalType;
-			readonly Type                  _objectType;
+			readonly Type                  _baseObjectType;
 			readonly SqlTable              _sqlTable;
 			readonly EntityDescriptor      _entityDescriptor;
 			readonly SelectQuery           _selectQuery;
@@ -198,7 +200,10 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = BuildExpressionInternal();
 
-				return _variable = _query.BuildVariableExpression(expr);
+				if (_variable == null)
+					_variable = _query.BuildVariableExpression(expr);
+
+				return _variable;
 			}
 
 			Expression BuildExpressionInternal()
@@ -208,13 +213,13 @@ namespace LinqToDB.Linq.Builder
 					.ToList();
 
 				Expression expr = Expression.MemberInit(
-					Expression.New(_objectType),
+					Expression.New(_baseObjectType),
 					fieldInfo
 						//.Where (m => !m.field.SqlField.ColumnDescriptor.MemberAccessor.IsComplex)
 						.Select(m => (MemberBinding)Expression.Bind(
 							m.field.SqlField.ColumnDescriptor.Storage == null ?
 								m.field.SqlField.ColumnDescriptor.MemberAccessor.MemberInfo :
-								Expression.PropertyOrField(Expression.Constant(null, _objectType), m.field.SqlField.ColumnDescriptor.Storage).Member,
+								Expression.PropertyOrField(Expression.Constant(null, _baseObjectType), m.field.SqlField.ColumnDescriptor.Storage).Member,
 							m.expr)));
 
 				return expr;

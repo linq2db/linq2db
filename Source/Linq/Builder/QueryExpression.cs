@@ -5,9 +5,9 @@ namespace LinqToDB.Linq.Builder
 {
 	class QueryExpression<T> : Expression
 	{
-		public QueryExpression(IExpressionBuilder expressionBuilder, Type newExpressionType)
+		public QueryExpression(IExpressionBuilder expressionBuilder)
 		{
-			AddBuilder(_first = expressionBuilder, newExpressionType);
+			AddBuilder(_first = expressionBuilder);
 		}
 
 		Type               _type;
@@ -32,16 +32,19 @@ namespace LinqToDB.Linq.Builder
 			_last.BuildQuery(query);
 		}
 
-		public QueryExpression<T> AddBuilder(IExpressionBuilder expressionBuilder, Type newExpressionType)
+		public QueryExpression<T> AddBuilder(IExpressionBuilder expressionBuilder)
 		{
-			if (_last != null)
+			for (var builder = expressionBuilder; builder != null; builder = builder.Next)
 			{
-				_last.Next = expressionBuilder;
-				expressionBuilder.Prev = _last;
-			}
+				if (_last != null)
+				{
+					_last.Next = expressionBuilder;
+					expressionBuilder.Prev = _last;
+				}
 
-			_type = newExpressionType;
-			_last = expressionBuilder;
+				_type = expressionBuilder.Type;
+				_last = expressionBuilder;
+			}
 
 			return this;
 		}

@@ -54,14 +54,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(query, expression));
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
+							return new QueryExpression<T>(new TableBuilder(query, expression));
 						break;
 					}
 
@@ -71,12 +71,12 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return new QueryExpression<T>(new TableBuilder(query, expression), expression.Type);
+								return new QueryExpression<T>(new TableBuilder(query, expression));
 
 						var attr = query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
 						if (attr != null)
-							return new QueryExpression<T>(new TableFunctionBuilder(query, expression), expression.Type);
+							return new QueryExpression<T>(new TableFunctionBuilder(query, expression));
 
 						if (call.IsQueryable())
 						{
@@ -88,8 +88,8 @@ namespace LinqToDB.Linq.Builder
 								{
 									switch (call.Method.Name)
 									{
-										case "Select": return qe.AddBuilder(new SelectBuilder1(call), expression.Type);
-										case "Where" : return qe.AddBuilder(new WhereBuilder1 (call), expression.Type);
+										case "Select": return qe.AddBuilder(new SelectBuilder1(call));
+										case "Where" : return qe.AddBuilder(new WhereBuilder1 (call));
 									}
 								}
 							}

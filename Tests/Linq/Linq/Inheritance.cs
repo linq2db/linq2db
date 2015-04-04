@@ -77,6 +77,7 @@ namespace Tests.Linq
 #pragma warning restore 183
 		}
 
+		// IT : # inheritance test.
 		[Test, DataContextSource]
 		public void Test8(string context)
 		{
