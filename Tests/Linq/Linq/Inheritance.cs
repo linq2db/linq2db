@@ -77,7 +77,6 @@ namespace Tests.Linq
 #pragma warning restore 183
 		}
 
-		// IT : # inheritance test.
 		[Test, DataContextSource]
 		public void Test8(string context)
 		{
@@ -87,9 +86,15 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>());
 		}
 
+		// IT : # inheritance test.
 		[Test, DataContextSource]
 		public void Test81(string context)
 		{
+			using (var db = GetDataContext(context))
+			{
+				var list = db.GetTable<ParentInheritanceBase>().ToList();
+			}
+
 			using (var db = GetDataContext(context))
 				db.GetTable<ParentInheritanceNull>().ToList();
 

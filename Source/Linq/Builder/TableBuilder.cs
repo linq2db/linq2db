@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 			readonly SelectQuery _selectQuery;
 			readonly List<int>   _indexes = new List<int>();
 
-			int GetFieldIndex()
+			public int GetFieldIndex()
 			{
 				if (_indexes.Count == 0)
 					_indexes.Add(_selectQuery.Select.Add(SqlField));
@@ -114,6 +114,15 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return _indexes[level];
+			}
+
+			public Expression GetReadExpression(Query query, Type type)
+			{
+				return new ConvertFromDataReaderExpression(
+					type,
+					GetFieldIndex(),
+					query.DataReaderLocalParameter,
+					query.DataContext);
 			}
 
 			public Expression GetReadExpression(Query query)
@@ -193,22 +202,86 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpressionInternal()
 			{
+				return _entityDescriptor.InheritanceMapping.Count != 0 ?
+					BuildInheritanceExpression() :
+					BuildEntityExpression(_entityDescriptor);
+			}
+
+			static object DefaultInheritanceMappingException(object value, Type type)
+			{
+				throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
+			}
+
+			Expression BuildInheritanceExpression()
+			{
+				Expression expr;
+
+				var defaultMapping = _entityDescriptor.InheritanceMapping.SingleOrDefault(m => m.IsDefault);
+
+				if (defaultMapping != null)
+				{
+					expr = Expression.Convert(BuildEntityExpression(defaultMapping.EntityDescriptor), _type);
+				}
+				else
+				{
+					var readDiscriminator = _fieldBuilders
+						.First(f => f.SqlField.Name == _entityDescriptor.InheritanceMapping[0].DiscriminatorName).GetReadExpression(_query);
+
+					expr = Expression.Convert(
+						Expression.Call(null,
+							MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null, null)),
+							Expression.Convert(readDiscriminator, typeof(object)),
+							Expression.Constant(_type)),
+						_type);
+				}
+
+				foreach (var mapping in _entityDescriptor.InheritanceMapping.Where(m => m != defaultMapping))
+				{
+					var discriminatorField = _fieldBuilders.First(f => f.SqlField.Name == mapping.DiscriminatorName);
+
+					Expression testExpr;
+
+					if (mapping.Code == null)
+					{
+						testExpr = Expression.Call(
+							_query.DataReaderLocalParameter,
+							ReflectionHelper.DataReader.IsDBNull,
+							Expression.Constant(discriminatorField.GetFieldIndex()));
+					}
+					else
+					{
+						var codeType = mapping.Code.GetType();
+
+						testExpr = Expression.Equal(
+							Expression.Constant(mapping.Code),
+							discriminatorField.GetReadExpression(_query, codeType));
+					}
+
+					expr = Expression.Condition(
+						testExpr,
+						Expression.Convert(BuildEntityExpression(mapping.EntityDescriptor), _type),
+						expr);
+				}
+
+				return expr;
+			}
+
+			Expression BuildEntityExpression(EntityDescriptor descriptor)
+			{
+				var names = descriptor.Columns.Select(c => c.MemberAccessor.Name).ToList();
+
 				var fieldInfo = _fieldBuilders
-					.Select(f => new { field = f, expr = f.GetReadExpression(_query) })
+					.Where (f => names.Contains(f.SqlField.ColumnDescriptor.MemberAccessor.Name))
 					.ToList();
 
-				var names = _entityDescriptor.Columns.Select(c => c.MemberAccessor.Name).ToList();
-
 				Expression expr = Expression.MemberInit(
-					Expression.New(_type),
+					Expression.New(descriptor.ObjectType),
 					fieldInfo
-						.Where (m => names.Contains(m.field.SqlField.ColumnDescriptor.MemberAccessor.Name))
-						//.Where (m => !m.field.SqlField.ColumnDescriptor.MemberAccessor.IsComplex)
-						.Select(m => (MemberBinding)Expression.Bind(
+						.Select(f => (MemberBinding)Expression.Bind(
 							Expression.PropertyOrField(
-								Expression.Constant(null, _type),
-								m.field.SqlField.ColumnDescriptor.Storage ?? m.field.SqlField.ColumnDescriptor.MemberAccessor.Name).Member,
-							m.expr)));
+								Expression.Constant(null, descriptor.ObjectType),
+								f.SqlField.ColumnDescriptor.Storage ?? f.SqlField.ColumnDescriptor.MemberAccessor.Name).Member,
+							f.GetReadExpression(_query))));
 
 				return expr;
 			}
