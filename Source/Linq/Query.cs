@@ -24,7 +24,6 @@ namespace LinqToDB.Linq
 			Expression       = expression;
 			MappingSchema    = dataContext.MappingSchema;
 			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
-			SqlProviderFlags = dataContext.SqlProviderFlags;
 			SqlOptimizer     = dataContext.GetSqlOptimizer();
 
 			_variables = new BuildVariables(dataContext);
@@ -34,7 +33,6 @@ namespace LinqToDB.Linq
 		public readonly Expression       Expression;
 		public readonly MappingSchema    MappingSchema;
 		public readonly string           ConfigurationID;
-		public readonly SqlProviderFlags SqlProviderFlags;
 		public readonly ISqlOptimizer    SqlOptimizer;
 
 		public SelectQuery SelectQuery;

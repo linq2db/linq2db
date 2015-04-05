@@ -133,37 +133,22 @@ namespace LinqToDB.Linq.Builder
 		// IT : # table builder.
 		class TableSqlBuilder : SqlBuilderBase
 		{
-			public TableSqlBuilder(Query query, Type originalType)
+			public TableSqlBuilder(Query query, Type type)
 			{
 				_query            = query;
-				_originalType     = originalType;
-				_baseObjectType   = GetObjectType(query);
-				_sqlTable         = new SqlTable(query.MappingSchema, _baseObjectType);
-				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_baseObjectType);
+				_type             = type;
+				_entityDescriptor = query.MappingSchema.GetEntityDescriptor(_type);
+				_sqlTable         = new SqlTable(query.MappingSchema, (_entityDescriptor.BaseDescriptor ?? _entityDescriptor).ObjectType);
 				_selectQuery      = CreateSelectQuery();
 				_fieldBuilders    = _sqlTable.Fields.Values.Select(f => new FieldSqlBuilder(_selectQuery, f)).ToList();
 			}
 
 			readonly Query                 _query;
-			readonly Type                  _originalType;
-			readonly Type                  _baseObjectType;
+			readonly Type                  _type;
 			readonly SqlTable              _sqlTable;
 			readonly EntityDescriptor      _entityDescriptor;
 			readonly SelectQuery           _selectQuery;
 			readonly List<FieldSqlBuilder> _fieldBuilders;
-
-			Type GetObjectType(Query query)
-			{
-				for (var type = _originalType.BaseTypeEx(); type != null && type != typeof(object); type = type.BaseTypeEx())
-				{
-					var mapping = query.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
-
-					if (mapping.Count > 0)
-						return type;
-				}
-
-				return _originalType;
-			}
 
 			SelectQuery CreateSelectQuery()
 			{
@@ -171,15 +156,18 @@ namespace LinqToDB.Linq.Builder
 
 				selectQuery.From.Table(_sqlTable);
 
-//				// Original table is a parent.
-//				//
-//				if (ObjectType != OriginalType)
-//				{
-//					var predicate = Builder.MakeIsPredicate(this, OriginalType);
-//
-//					if (predicate.GetType() != typeof(SelectQuery.Predicate.Expr))
-//						SelectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
-//				}
+				// Build Inheritance Condition.
+				//
+				if (_entityDescriptor.BaseDescriptor != null)
+				{
+					var predicate = SqlBuilder.BuildInheritanceCondition(
+						_query,
+						_selectQuery,
+						_entityDescriptor,
+						name => _sqlTable.Fields.Values.FirstOrDefault(f => f.Name == name));
+
+					selectQuery.Where.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, predicate));
+				}
 
 				return selectQuery;
 			}
@@ -200,10 +188,7 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = BuildExpressionInternal();
 
-				if (_variable == null)
-					_variable = _query.BuildVariableExpression(expr);
-
-				return _variable;
+				return _variable ?? (_variable = _query.BuildVariableExpression(expr));
 			}
 
 			Expression BuildExpressionInternal()
@@ -212,14 +197,17 @@ namespace LinqToDB.Linq.Builder
 					.Select(f => new { field = f, expr = f.GetReadExpression(_query) })
 					.ToList();
 
+				var names = _entityDescriptor.Columns.Select(c => c.MemberAccessor.Name).ToList();
+
 				Expression expr = Expression.MemberInit(
-					Expression.New(_baseObjectType),
+					Expression.New(_type),
 					fieldInfo
+						.Where (m => names.Contains(m.field.SqlField.ColumnDescriptor.MemberAccessor.Name))
 						//.Where (m => !m.field.SqlField.ColumnDescriptor.MemberAccessor.IsComplex)
 						.Select(m => (MemberBinding)Expression.Bind(
-							m.field.SqlField.ColumnDescriptor.Storage == null ?
-								m.field.SqlField.ColumnDescriptor.MemberAccessor.MemberInfo :
-								Expression.PropertyOrField(Expression.Constant(null, _baseObjectType), m.field.SqlField.ColumnDescriptor.Storage).Member,
+							Expression.PropertyOrField(
+								Expression.Constant(null, _type),
+								m.field.SqlField.ColumnDescriptor.Storage ?? m.field.SqlField.ColumnDescriptor.MemberAccessor.Name).Member,
 							m.expr)));
 
 				return expr;

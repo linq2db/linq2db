@@ -161,6 +161,7 @@
     <Compile Include="Linq\Builder\ProjectionBase.cs" />
     <Compile Include="Linq\Builder\QueryExpression.cs" />
     <Compile Include="Linq\Builder\SelectBuilder1.cs" />
+    <Compile Include="Linq\Builder\SqlBuilder.cs" />
     <Compile Include="Linq\Builder\SqlBuilderBase.cs" />
     <Compile Include="Linq\Builder\TableBuilder.cs" />
     <Compile Include="Linq\Builder\TableFunctionBuilder.cs" />
