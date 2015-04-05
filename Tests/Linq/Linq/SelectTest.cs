@@ -606,7 +606,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.GetTable<ComplexPerson>()
-					select p.Name.LastName;
+					select p.Name.Name.LastName;
 
 				var sql = q.ToString();
 
