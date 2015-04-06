@@ -13,7 +13,7 @@ type PersonID = int
 type Person = 
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID"); Identity; PrimaryKey>]
-      ID : int64
+      ID : int64 Option
       [<NotNull>] 
       FirstName : string
       [<NotNull>]

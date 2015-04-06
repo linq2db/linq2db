@@ -19,7 +19,7 @@ let private TestOnePerson id firstName middleName lastName gender persons =
         LastName = lastName
         Gender = gender })
 
-let TestOneJohn = TestOnePerson 1L "John" None "Pupkin" Gender.Male
+let TestOneJohn = TestOnePerson (Some 1L) "John" None "Pupkin" Gender.Male
 
 let TestMethod() = 
     1L
@@ -28,11 +28,9 @@ let LoadSingle (db : IDataContext) =
     let persons = db.GetTable<Person>()
     TestOneJohn(query {
         for p in persons do
-        where (p.ID = TestMethod())
+        where (p.ID = Some(TestMethod()))
         select p
     })
-
-
 
 let LoadSingleComplexPerson (db : IDataContext) = 
     let persons = db.GetTable<ComplexPerson>()
@@ -77,9 +75,9 @@ let LoadByOption (db : IDataContext) =
           MiddleName = md
           LastName = "ln"
           Gender = Gender.Male
-          ID = 0L }
+          ID = None }
 
-    let created = {created with ID = db.InsertWithIdentity(created) :?> int64 }
+    let created = {created with ID = db.InsertWithIdentity(created) :?> int64 |> Some }
 
     let loaded = query {
         for p in db.GetTable<Person>() do
@@ -88,11 +86,3 @@ let LoadByOption (db : IDataContext) =
     }
 
     Assert.AreEqual(loaded, created)
-//    let persons = db.GetTable<Person>()
-//    let  = query {
-//        for p in persons do
-//        where (p.ID = TestMethod())
-//        select p.Name.LastName.Value
-//        exactlyOne
-//    }
-//    Assert.AreEqual("Pupkin", lastName)
