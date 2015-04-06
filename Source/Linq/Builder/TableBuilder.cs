@@ -413,9 +413,82 @@ namespace LinqToDB.Linq.Builder
 				return BuildComplexMembers(typeAccessor, expr, columnInfo);
 			}
 
-			private Expression BuildRecordConstructor(TypeAccessor typeAccessor, List<ColumnInfo> columnInfo)
+			Expression BuildRecordConstructor(TypeAccessor typeAccessor, List<ColumnInfo> columnInfo)
 			{
-				throw new NotImplementedException();
+				var members =
+				(
+					from member       in typeAccessor.Members
+					from dynamic attr in _query.MappingSchema.GetAttributes<Attribute>(member.MemberInfo).Where(IsRecordAttribute).Take(1)
+					select new
+					{
+						member,
+						attr.SequenceNumber,
+					}
+				).ToList();
+
+				var complexMembers =
+					from c in columnInfo
+					where c.IsComplex
+					let name = c.Name.Substring(0, c.Name.IndexOf('.'))
+					group c by name into gr
+					select new
+					{
+						name    = gr.Key,
+						columns = gr.ToList()
+					};
+
+				var exprs =
+				(
+					from m in members
+					join c in
+						from c in columnInfo
+						where !c.IsComplex
+						select c
+					on m.member.Name equals c.Name
+					select new
+					{
+						m.SequenceNumber,
+						Expression = c.ReadExpression,
+					}
+				)
+				.Union
+				(
+					from m in members
+					join c in complexMembers
+					on m.member.Name equals c.name
+					select new
+					{
+						m.SequenceNumber,
+						Expression = BuildEntityExpression(
+							TypeAccessor.GetAccessor(m.member.Type),
+							(
+								from ci in c.columns
+								let name = ci.Name.Substring(c.name.Length + 1)
+								select new ColumnInfo
+								{
+									IsComplex      = name.IndexOf('.') >= 0,
+									Name           = name,
+									Storage        = ci.Storage,
+									ReadExpression = ci.ReadExpression,
+								}
+							).ToList()),
+					}
+				);
+
+				var ctor  = typeAccessor.Type.GetConstructorsEx().Single();
+				var parms =
+				(
+					from p in ctor.GetParameters().Select((p,i) => new { p, i })
+					join e in exprs on p.i equals e.SequenceNumber into j
+					from e in j.DefaultIfEmpty()
+					select e != null ?
+						e.Expression :
+						Expression.Constant(p.p.DefaultValue ?? _query.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+				).ToList();
+
+				var expr = Expression.New(ctor, parms);
+
+				return expr;
 			}
 
 			#endregion
