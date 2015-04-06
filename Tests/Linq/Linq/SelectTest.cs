@@ -17,7 +17,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectTest : TestBase
 	{
-		// IT : # test.
 		[Test, DataContextSource]
 		public void SimpleDirect(string context)
 		{
@@ -46,6 +45,7 @@ namespace Tests.Linq
 				TestJohn(db.Person.Select(p => p).Select(p => p));
 		}
 
+		// IT : # test.
 		[Test, DataContextSource]
 		public void New(string context)
 		{

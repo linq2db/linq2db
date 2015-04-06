@@ -35,7 +35,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IT : # async test.
 		[Test, DataContextSource]
 		public async void TestForEach(string context)
 		{

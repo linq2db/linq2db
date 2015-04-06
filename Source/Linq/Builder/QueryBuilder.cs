@@ -88,8 +88,8 @@ namespace LinqToDB.Linq.Builder
 								{
 									switch (call.Method.Name)
 									{
-										case "Select": return qe.AddBuilder(new SelectBuilder1(call));
-										case "Where" : return qe.AddBuilder(new WhereBuilder1 (call));
+										case "Select": return SelectBuilder1.Translate(qe, call);
+										case "Where" : return WhereBuilder1. Translate(qe, call));
 									}
 								}
 							}

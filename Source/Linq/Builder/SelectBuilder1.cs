@@ -3,10 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	internal class SelectBuilder1 : ExpressionBuilderBase
+	class SelectBuilder1 : ExpressionBuilderBase
 	{
-		public SelectBuilder1(MethodCallExpression expression)
-			: base(expression)
+		public static QueryExpression<T> Translate<T>(QueryExpression<T> qe, MethodCallExpression expression)
 		{
 			if (expression.Arguments.Count == 2)
 			{
@@ -17,34 +16,30 @@ namespace LinqToDB.Linq.Builder
 
 				var l = (LambdaExpression)expr;
 
-				_skip = l.Parameters.Count == 1 && l.Body == l.Parameters[0];
+				if (l.Parameters.Count == 1 && l.Body == l.Parameters[0])
+					return qe;
 			}
+
+			return qe.AddBuilder(new SelectBuilder1(expression));
 		}
 
-		readonly bool _skip;
+		SelectBuilder1(Expression expression) : base(expression)
+		{
+		}
 
 		public override SqlBuilderBase GetSqlBuilder()
 		{
-			if (_skip)
-				return Prev.GetSqlBuilder();
-
 			throw new NotImplementedException();
 		}
 
 		public override Expression BuildQuery<T>()
 		{
-			if (_skip)
-				return Prev.BuildQuery<T>();
-
 			throw new NotImplementedException();
 		}
 
 		public override void BuildQuery<T>(Query<T> query)
 		{
-			if (_skip)
-				Prev.BuildQuery(query);
-			else
-				throw new NotImplementedException();
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -5,8 +5,12 @@ namespace LinqToDB.Linq.Builder
 {
 	class WhereBuilder1 : ExpressionBuilderBase
 	{
-		public WhereBuilder1(Expression expression)
-			: base(expression)
+		public static QueryExpression<T> Translate<T>(QueryExpression<T> qe, MethodCallExpression expression)
+		{
+			return qe.AddBuilder(new WhereBuilder1(expression));
+		}
+
+		WhereBuilder1(Expression expression) : base(expression)
 		{
 		}
 

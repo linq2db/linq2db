@@ -86,23 +86,16 @@ namespace Tests.Linq
 					db.ParentInheritance.OfType<ParentInheritance1>());
 		}
 
-		// IT : # inheritance test.
 		[Test, DataContextSource]
 		public void Test81(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var list = db.GetTable<ParentInheritanceBase>().ToList();
-			}
-
-			using (var db = GetDataContext(context))
-				db.GetTable<ParentInheritanceNull>().ToList();
-
-			using (var db = GetDataContext(context))
-				db.GetTable<ParentInheritance1>().ToList();
-
-			using (var db = GetDataContext(context))
+				db.GetTable<ParentInheritanceBase> ().ToList();
+				db.GetTable<ParentInheritanceNull> ().ToList();
+				db.GetTable<ParentInheritance1>    ().ToList();
 				db.GetTable<ParentInheritanceValue>().ToList();
+			}
 		}
 
 		[Test, DataContextSource]

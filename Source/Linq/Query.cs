@@ -20,11 +20,11 @@ namespace LinqToDB.Linq
 	{
 		protected Query(IDataContext dataContext, Expression expression)
 		{
-			ContextID        = dataContext.ContextID;
-			Expression       = expression;
-			MappingSchema    = dataContext.MappingSchema;
-			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
-			SqlOptimizer     = dataContext.GetSqlOptimizer();
+			ContextID       = dataContext.ContextID;
+			Expression      = expression;
+			MappingSchema   = dataContext.MappingSchema;
+			ConfigurationID = dataContext.MappingSchema.ConfigurationID;
+			SqlOptimizer    = dataContext.GetSqlOptimizer();
 
 			_variables = new BuildVariables(dataContext);
 		}
@@ -140,7 +140,6 @@ namespace LinqToDB.Linq
 			public DataParameter[] Parameters;
 		}
 
-		// IT : # GetCommandInfo
 		public CommandInfo GetCommandInfo(IDataContext dataContext, Expression expression)
 		{
 			var sqlProvider   = dataContext.CreateSqlProvider();

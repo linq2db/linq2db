@@ -29,7 +29,6 @@ namespace LinqToDB.Linq.Builder
 		public override SqlBuilderBase GetSqlBuilder()
 		{
 			var builder = new TableSqlBuilder(_query, _originalType);
-
 			return builder;
 		}
 
@@ -141,7 +140,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region TableSqlBuilder
 
-		// IT : # table builder.
 		class TableSqlBuilder : SqlBuilderBase
 		{
 			public TableSqlBuilder(Query query, Type type)

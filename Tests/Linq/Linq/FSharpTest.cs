@@ -63,7 +63,6 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert2(db);
 		}
 
-		// IT : # F# test.
 		[Test, DataContextSource]
 		public void LoadPersonTable(string context)
 		{
