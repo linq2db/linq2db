@@ -28,6 +28,13 @@ namespace Tests.Linq
 				FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
 		}
 
+        [Test, DataContextSource]
+        public void LoadByOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.WhereTest.LoadByOption(db);
+        }
+
 		[Test, DataContextSource]
 		public void LoadColumnOfDeeplyComplexPerson(string context)
 		{

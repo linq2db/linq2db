@@ -69,3 +69,30 @@ let LoadColumnOfDeeplyComplexPerson (db : IDataContext) =
         exactlyOne
     }
     Assert.AreEqual("Pupkin", lastName)
+
+let LoadByOption (db : IDataContext) = 
+    let md = Some (System.Guid.NewGuid().ToString())
+    let created = 
+        { Person.FirstName = "fn"
+          MiddleName = md
+          LastName = "ln"
+          Gender = Gender.Male
+          ID = 0L }
+
+    let created = {created with ID = db.InsertWithIdentity(created) :?> int64 }
+
+    let loaded = query {
+        for p in db.GetTable<Person>() do
+        where(p.MiddleName = md)
+        exactlyOne
+    }
+
+    Assert.AreEqual(loaded, created)
+//    let persons = db.GetTable<Person>()
+//    let  = query {
+//        for p in persons do
+//        where (p.ID = TestMethod())
+//        select p.Name.LastName.Value
+//        exactlyOne
+//    }
+//    Assert.AreEqual("Pupkin", lastName)
