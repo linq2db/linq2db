@@ -253,6 +253,12 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
+			if (c.IsDiscriminator)
+			{
+				ca.Parameters.Add("IsDiscriminator=true");
+				canBeReplaced = false;
+			}
+
 			c.Attributes.Add(ca);
 
 			// PK.
