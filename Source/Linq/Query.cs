@@ -25,21 +25,15 @@ namespace LinqToDB.Linq
 			MappingSchema   = dataContext.MappingSchema;
 			ConfigurationID = dataContext.MappingSchema.ConfigurationID;
 			SqlOptimizer    = dataContext.GetSqlOptimizer();
-
-			_variables = new BuildVariables(dataContext);
 		}
 
-		public readonly string           ContextID;
-		public readonly Expression       Expression;
-		public readonly MappingSchema    MappingSchema;
-		public readonly string           ConfigurationID;
-		public readonly ISqlOptimizer    SqlOptimizer;
+		public readonly string        ContextID;
+		public readonly Expression    Expression;
+		public readonly MappingSchema MappingSchema;
+		public readonly string        ConfigurationID;
+		public readonly ISqlOptimizer SqlOptimizer;
 
 		public SelectQuery SelectQuery;
-
-		public static readonly ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
-		public static readonly ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
-		public static readonly ParameterExpression DataReaderParameter  = Expression.Parameter(typeof(IDataReader),  "dataReader");
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 
@@ -52,86 +46,14 @@ namespace LinqToDB.Linq
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
-		#region Build Variables
-
-		BuildVariables _variables;
-
-		public IDataContext               DataContext              { get { return _variables.DataContext; } }
-		public ParameterExpression        DataReaderLocalParameter { get { return _variables.DataReaderLocalParameter; } }
-		public List<ParameterExpression>  BlockVariables           { get { return _variables.BlockVariables;           } }
-		public List<Expression>           BlockExpressions         { get { return _variables.BlockExpressions;         } }
-
-		class BuildVariables
+		public void FinalizeQuery(SelectQuery selectQuery)
 		{
-			public BuildVariables(IDataContext dataContext)
-			{
-				DataContext = dataContext;
-
-				DataReaderLocalParameter = Configuration.AvoidSpecificDataProviderAPI ?
-					DataReaderParameter :
-					BuildVariableExpression(Expression.Convert(DataReaderParameter, dataContext.DataReaderType), "localDataReader");
-			}
-
-			public readonly ParameterExpression       DataReaderLocalParameter;
-			public readonly IDataContext              DataContext;
-			public readonly List<ParameterExpression> BlockVariables   = new List<ParameterExpression>();
-			public readonly List<Expression>          BlockExpressions = new List<Expression>();
-
-			int _varIndex;
-
-			public ParameterExpression BuildVariableExpression(Expression expr, string name)
-			{
-				if (name == null)
-					name = expr.Type.Name + Interlocked.Increment(ref _varIndex);
-
-				var variable = Expression.Variable(
-					expr.Type,
-					name.IndexOf('<') >= 0 ? null : name);
-
-				BlockVariables.  Add(variable);
-				BlockExpressions.Add(Expression.Assign(variable, expr));
-
-				return variable;
-			}
-
-			public Expression BuildBlock(Expression expression)
-			{
-				if (BlockExpressions.Count == 0)
-					return expression;
-
-				BlockExpressions.Add(expression);
-
-				expression = Expression.Block(BlockVariables, BlockExpressions);
-
-				while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
-				while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
-
-				return expression;
-			}
-		}
-
-		#endregion
-
-		public ParameterExpression BuildVariableExpression(Expression expr, string name = null)
-		{
-			return _variables.BuildVariableExpression(expr, name);
-		}
-
-		public Expression FinalizeQuery(SelectQuery selectQuery, Expression expression)
-		{
-			expression  = _variables.BuildBlock(expression);
 			SelectQuery = SqlOptimizer.Finalize(selectQuery);
 
 			if (!SelectQuery.IsParameterDependent)
 			{
 				
 			}
-
-			// Clean building context.
-			//
-			_variables  = null;
-
-			return expression;
 		}
 
 		public class CommandInfo
@@ -200,8 +122,8 @@ namespace LinqToDB.Linq
 
 						try
 						{
-							if (isEnumerable) query.GetIEnumerable = QueryBuilder.BuildEnumerable(query);
-							else              query.GetElement     = QueryBuilder.BuildElement   (query);
+							if (isEnumerable) query.GetIEnumerable = new QueryBuilder<T>(dataContext, query).BuildEnumerable();
+							else              query.GetElement     = new QueryBuilder<T>(dataContext, query).BuildElement   ();
 						}
 						catch (Exception)
 						{

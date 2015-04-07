@@ -3,50 +3,57 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class QueryExpression<T> : Expression
+	abstract class QueryExpression : Expression
 	{
-		public QueryExpression(IExpressionBuilder expressionBuilder)
+		protected QueryExpression(IExpressionBuilder expressionBuilder)
 		{
-			AddBuilder(_first = expressionBuilder);
+			AddBuilder(First = expressionBuilder);
 		}
 
-		Type               _type;
-		IExpressionBuilder _first;
-		IExpressionBuilder _last;
+		protected Type               QueryType;
+		protected IExpressionBuilder First;
+		protected IExpressionBuilder Last;
 
-		public override Type           Type      { get { return _type; } }
+		public override Type           Type      { get { return QueryType;  } }
 		public override bool           CanReduce { get { return true;  } }
 		public override ExpressionType NodeType  { get { return ExpressionType.Extension; } }
 
+		public QueryExpression AddBuilder(IExpressionBuilder expressionBuilder)
+		{
+			for (var builder = expressionBuilder; builder != null; builder = builder.Next)
+			{
+				if (Last != null)
+				{
+					Last.Next = expressionBuilder;
+					expressionBuilder.Prev = Last;
+				}
+
+				QueryType = expressionBuilder.Type;
+				Last      = expressionBuilder;
+			}
+
+			return this;
+		}
+	}
+
+	class QueryExpression<T> : QueryExpression
+	{
+		public QueryExpression(IExpressionBuilder expressionBuilder) : base(expressionBuilder)
+		{
+		}
+
 		public override Expression Reduce()
 		{
-			var expr = _last.BuildQuery<T>();
+			var expr = Last.BuildQuery<T>();
 
-			_type = expr.Type;
+			QueryType = expr.Type;
 
 			return expr;
 		}
 
 		public void BuildQuery(Query<T> query)
 		{
-			_last.BuildQuery(query);
-		}
-
-		public QueryExpression<T> AddBuilder(IExpressionBuilder expressionBuilder)
-		{
-			for (var builder = expressionBuilder; builder != null; builder = builder.Next)
-			{
-				if (_last != null)
-				{
-					_last.Next = expressionBuilder;
-					expressionBuilder.Prev = _last;
-				}
-
-				_type = expressionBuilder.Type;
-				_last = expressionBuilder;
-			}
-
-			return this;
+			Last.BuildQuery(query);
 		}
 	}
 }
