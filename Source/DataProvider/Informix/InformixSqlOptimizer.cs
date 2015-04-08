@@ -18,13 +18,13 @@ namespace LinqToDB.DataProvider.Informix
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(sqlQuery, int.MaxValue);
 
-			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+			new QueryVisitor().Visit(((SelectQuery)sqlQuery).Select, SetQueryParameter);
 
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{

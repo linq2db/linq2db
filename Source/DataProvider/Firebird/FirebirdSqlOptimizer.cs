@@ -44,9 +44,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(sqlQuery, int.MaxValue);
+
+			var selectQuery = (SelectQuery)sqlQuery;
 
 			new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
 
@@ -62,7 +64,7 @@ namespace LinqToDB.DataProvider.Firebird
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = (SelectQuery)base.Finalize(selectQuery);
 
 			switch (selectQuery.QueryType)
 			{

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
@@ -46,9 +45,9 @@ namespace LinqToDB.Linq
 				Expression.EqualsTo(expr, _queryableAccessorDic);
 		}
 
-		public void FinalizeQuery(SelectQuery selectQuery)
+		public void FinalizeQuery(SqlQuery sqlQuery)
 		{
-			SqlQuery = SqlOptimizer.Finalize(selectQuery);
+			SqlQuery = SqlOptimizer.Finalize(sqlQuery);
 
 			if (!SqlQuery.IsParameterDependent)
 			{

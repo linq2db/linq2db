@@ -8,10 +8,10 @@ namespace LinqToDB.SqlQuery
 
 	class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, SelectQuery selectQuery)
+		public SelectQueryOptimizer(SqlProviderFlags flags, SqlQuery sqlQuery)
 		{
 			_flags       = flags;
-			_selectQuery = selectQuery;
+			_selectQuery = (SelectQuery)sqlQuery;
 		}
 
 		readonly SqlProviderFlags _flags;

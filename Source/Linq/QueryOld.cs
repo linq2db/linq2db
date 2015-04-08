@@ -219,7 +219,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in Queries)
 			{
-				sql.SelectQuery = SqlOptimizer.Finalize(sql.SelectQuery);
+				sql.SelectQuery = (SelectQuery)SqlOptimizer.Finalize(sql.SelectQuery);
 				sql.Parameters  = sql.Parameters
 					.Select (p => new { p, idx = sql.SelectQuery.Parameters.IndexOf(p.SqlParameter) })
 					.OrderBy(p => p.idx)

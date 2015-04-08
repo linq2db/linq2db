@@ -3,6 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
+
 	abstract class ExpressionBuilderBase : IExpressionBuilder
 	{
 		protected ExpressionBuilderBase(Expression expression)
@@ -16,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 		public IExpressionBuilder Next { get; set; }
 		public Type               Type { get { return Expression.Type; } }
 
-		public abstract SqlBuilderBase GetSqlBuilder();
-		public abstract Expression     BuildQueryExpression<T>();
-		public abstract void           BuildQuery<T>(QueryBuilder<T> query);
+		public abstract Expression     BuildQueryExpression<T>(QueryBuilder<T> builder);
+		public abstract void           BuildQuery<T>          (QueryBuilder<T> builder);
+		public abstract SqlQuery       BuildSql<T>            (QueryBuilder<T> builder, SqlQuery sqlQuery);
 	}
 }

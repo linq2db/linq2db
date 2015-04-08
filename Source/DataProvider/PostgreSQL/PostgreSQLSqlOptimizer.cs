@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(sqlQuery, int.MaxValue);
 
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{

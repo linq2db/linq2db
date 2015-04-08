@@ -22,24 +22,24 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
-		public virtual SelectQuery Finalize(SelectQuery selectQuery)
+		public virtual SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+			new SelectQueryOptimizer(SqlProviderFlags, sqlQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
 				SqlProviderFlags.IsGroupByExpressionSupported);
 
-			if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery);
-			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
+			if (!SqlProviderFlags.IsCountSubQuerySupported)  sqlQuery = MoveCountSubQuery (sqlQuery);
+			if (!SqlProviderFlags.IsSubQueryColumnSupported) sqlQuery = MoveSubQueryColumn(sqlQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
+				new SelectQueryOptimizer(SqlProviderFlags, sqlQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
-			return selectQuery;
+			return sqlQuery;
 		}
 
-		SelectQuery MoveCountSubQuery(SelectQuery selectQuery)
+		SqlQuery MoveCountSubQuery(SqlQuery selectQuery)
 		{
 			new QueryVisitor().Visit(selectQuery, MoveCountSubQuery);
 			return selectQuery;
@@ -201,7 +201,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery)
+		SqlQuery MoveSubQueryColumn(SqlQuery selectQuery)
 		{
 			var dic = new Dictionary<IQueryElement,IQueryElement>();
 
@@ -1306,7 +1306,7 @@ namespace LinqToDB.SqlProvider
 			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
 		}
 
-		protected void CheckAliases(SelectQuery selectQuery, int maxLen)
+		protected void CheckAliases(SqlQuery selectQuery, int maxLen)
 		{
 			new QueryVisitor().Visit(selectQuery, e =>
 			{

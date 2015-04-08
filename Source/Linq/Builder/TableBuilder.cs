@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -16,71 +14,42 @@ namespace LinqToDB.Linq.Builder
 
 	class TableBuilder : ExpressionBuilderBase
 	{
-		public TableBuilder(QueryBuilder builder, Expression expression)
+		public TableBuilder(Expression expression)
 			: base(expression)
 		{
-			_builder      = builder;
 			_originalType = expression.Type.GetGenericArgumentsEx()[0];
 		}
 
-		readonly QueryBuilder _builder;
-		readonly Type         _originalType;
-
-		public override SqlBuilderBase GetSqlBuilder()
-		{
-			var builder = new TableSqlBuilder(_builder, _originalType);
-			return builder;
-		}
+		readonly Type _originalType;
 
 		#region BuildQuery
 
-		static IEnumerable<T> ExecuteQuery<T>(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
+		Expression<Func<IDataReader,T>> BuildMapper<T>(QueryBuilder<T> builder)
 		{
-			using (var ctx = dataContext.GetQueryContext(query, expression))
-			using (var dr = ctx.ExecuteReader())
-				while (dr.Read())
-					yield return mapper(dr);
-		}
+			var expression  = _tableSqlBuilder.BuildExpression();
+			var selectQuery = _tableSqlBuilder.SelectQuery;
 
-		static async Task ExecuteQueryAsync<T>(
-			Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
-		{
-			using (var ctx = dataContext.GetQueryContext(query, expression))
-			using (var dr = await ctx.ExecuteReaderAsync(cancellationToken))
-				await dr.QueryForEachAsync(mapper, action, cancellationToken);
-		}
-
-		Expression<Func<IDataReader,T>> BuildMapper<T>()
-		{
-			var sqlBuilder  = GetSqlBuilder();
-			var expression  = sqlBuilder.BuildExpression();
-			var selectQuery = sqlBuilder.GetSelectQuery();
-
-			expression = _builder.FinalizeQuery(selectQuery, expression);
+			expression = builder.FinalizeQuery(selectQuery, expression);
 
 			return Expression.Lambda<Func<IDataReader,T>>(expression, QueryBuilder.DataReaderParameter);
 		}
 
-		public override Expression BuildQueryExpression<T>()
+		public override Expression BuildQueryExpression<T>(QueryBuilder<T> builder)
 		{
-			var expr = Expression.Call(
-				MemberHelper.MethodOf(() => ExecuteQuery<T>(null, null, null, null)),
-				Expression.Constant(_builder.Query),
-				QueryBuilder.DataContextParameter,
-				QueryBuilder.ExpressionParameter,
-				BuildMapper<T>());
-
-			return expr;
+			return builder.BuildQueryExpression(BuildMapper<T>(builder));
 		}
 
-		public override void BuildQuery<T>(QueryBuilder<T> query)
+		public override void BuildQuery<T>(QueryBuilder<T> builder)
 		{
-			var e = BuildMapper<T>();
-			var l = e.Compile();
-			var q = query.Query;
+			builder.BuildQuery(BuildMapper<T>(builder));
+		}
 
-			query.Query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (q, ctx, expr, l);
-			query.Query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(q, ctx, expr, l, action, token);
+		TableSqlBuilder _tableSqlBuilder;
+
+		public override SqlQuery BuildSql<T>(QueryBuilder<T> builder, SqlQuery sqlQuery)
+		{
+			_tableSqlBuilder = new TableSqlBuilder(builder, _originalType);
+			return _tableSqlBuilder.SelectQuery;
 		}
 
 		#endregion
@@ -141,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TableSqlBuilder
 
-		class TableSqlBuilder : SqlBuilderBase
+		class TableSqlBuilder
 		{
 			public TableSqlBuilder(QueryBuilder builder, Type type)
 			{
@@ -149,16 +118,17 @@ namespace LinqToDB.Linq.Builder
 				_type             = type;
 				_entityDescriptor = builder.MappingSchema.GetEntityDescriptor(_type);
 				_sqlTable         = new SqlTable(builder.MappingSchema, (_entityDescriptor.BaseDescriptor ?? _entityDescriptor).ObjectType);
-				_selectQuery      = CreateSelectQuery();
-				_fieldBuilders    = _sqlTable.Fields.Values.Select(f => new FieldSqlBuilder(_selectQuery, f)).ToList();
+				SelectQuery       = CreateSelectQuery();
+				_fieldBuilders    = _sqlTable.Fields.Values.Select(f => new FieldSqlBuilder(SelectQuery, f)).ToList();
 			}
 
 			readonly QueryBuilder          _builder;
 			readonly Type                  _type;
 			readonly SqlTable              _sqlTable;
 			readonly EntityDescriptor      _entityDescriptor;
-			readonly SelectQuery           _selectQuery;
 			readonly List<FieldSqlBuilder> _fieldBuilders;
+
+			public readonly SelectQuery SelectQuery;
 
 			SelectQuery CreateSelectQuery()
 			{
@@ -172,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = SqlBuilder.BuildInheritanceCondition(
 						_builder.Query,
-						_selectQuery,
+						SelectQuery,
 						_entityDescriptor,
 						name => _sqlTable.Fields.Values.FirstOrDefault(f => f.Name == name));
 
@@ -182,16 +152,11 @@ namespace LinqToDB.Linq.Builder
 				return selectQuery;
 			}
 
-			public override SelectQuery GetSelectQuery()
-			{
-				return _selectQuery;
-			}
-
 			#region BuildExpression
 
 			ParameterExpression _variable;
 
-			public override Expression BuildExpression()
+			public Expression BuildExpression()
 			{
 				if (_variable != null)
 					return _variable;

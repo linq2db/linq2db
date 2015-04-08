@@ -13,14 +13,14 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{
 				case QueryType.Delete :
-					selectQuery = GetAlternativeDelete(base.Finalize(selectQuery));
+					selectQuery = GetAlternativeDelete((SelectQuery)base.Finalize(selectQuery));
 					selectQuery.From.Tables[0].Alias = "$";
 					break;
 

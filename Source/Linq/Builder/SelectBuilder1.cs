@@ -3,6 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
+
 	class SelectBuilder1 : ExpressionBuilderBase
 	{
 		public static QueryExpression Translate(QueryExpression qe, MethodCallExpression expression)
@@ -27,17 +29,17 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public override SqlBuilderBase GetSqlBuilder()
+		public override Expression BuildQueryExpression<T>(QueryBuilder<T> builder)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override Expression BuildQueryExpression<T>()
+		public override void BuildQuery<T>(QueryBuilder<T> builder)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override void BuildQuery<T>(QueryBuilder<T> query)
+		public override SqlQuery BuildSql<T>(QueryBuilder<T> builder, SqlQuery sqlQuery)
 		{
 			throw new NotImplementedException();
 		}

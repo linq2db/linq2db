@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -79,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Finalize
 
-		public Expression FinalizeQuery(SelectQuery selectQuery, Expression expression)
+		public Expression FinalizeQuery(SqlQuery selectQuery, Expression expression)
 		{
 			expression = BuildBlock(expression);
 
@@ -102,14 +103,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return CreateQueryExpression(new TableBuilder(this, expression));
+							return CreateQueryExpression(new TableBuilder(expression));
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return CreateQueryExpression(new TableBuilder(this, expression));
+							return CreateQueryExpression(new TableBuilder(expression));
 						break;
 					}
 
@@ -119,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return CreateQueryExpression(new TableBuilder(this, expression));
+								return CreateQueryExpression(new TableBuilder(expression));
 
 						var attr = Query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
@@ -207,8 +208,65 @@ namespace LinqToDB.Linq.Builder
 
 		void BuildQuery(QueryExpression<T> expression)
 		{
-			var first = expression.First;
-			expression.BuildQuery();
+			SqlQuery sql = null;
+
+			for (var builder = expression.First; builder != null; builder = builder.Next)
+				sql = builder.BuildSql(this, sql);
+
+			expression.Last.BuildQuery(this);
 		}
+
+		public Expression BuildQueryExpression(QueryExpression<T> expression)
+		{
+			SqlQuery sql = null;
+
+			for (var builder = expression.First; builder != null; builder = builder.Next)
+				sql = builder.BuildSql(this, sql);
+
+			return expression.Last.BuildQueryExpression(this);
+		}
+
+		#region BuildQuery
+
+		static IEnumerable<T> ExecuteQuery(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
+		{
+			using (var ctx = dataContext.GetQueryContext(query, expression))
+			using (var dr = ctx.ExecuteReader())
+				while (dr.Read())
+					yield return mapper(dr);
+		}
+
+		static async Task ExecuteQueryAsync(
+			Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
+		{
+			using (var ctx = dataContext.GetQueryContext(query, expression))
+			using (var dr = await ctx.ExecuteReaderAsync(cancellationToken))
+				await dr.QueryForEachAsync(mapper, action, cancellationToken);
+		}
+
+		public void BuildQuery(Expression<Func<IDataReader,T>> mapper)
+		{
+			var l = mapper.Compile();
+			var q = Query;
+
+			Query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (q, ctx, expr, l);
+			Query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(q, ctx, expr, l, action, token);
+		}
+
+		public Expression BuildQueryExpression(Expression<Func<IDataReader,T>> mapper)
+		{
+			var q = Query;
+
+			var expr = Expression.Call(
+				MemberHelper.MethodOf(() => ExecuteQuery(null, null, null, null)),
+				Expression.Constant(q),
+				DataContextParameter,
+				ExpressionParameter,
+				mapper);
+
+			return expr;
+		}
+
+		#endregion
 	}
 }

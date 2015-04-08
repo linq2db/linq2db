@@ -12,17 +12,17 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, 30);
+			CheckAliases(sqlQuery, 30);
 
-			new QueryVisitor().Visit(selectQuery.Select, element =>
+			new QueryVisitor().Visit(((SelectQuery)sqlQuery).Select, element =>
 			{
 				if (element.ElementType == QueryElementType.SqlParameter)
 					((SqlParameter)element).IsQueryParameter = false;
 			});
 
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{

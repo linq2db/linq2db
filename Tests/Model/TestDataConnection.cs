@@ -57,7 +57,7 @@ namespace Tests.Model
 
 			//provider.SqlQuery = sql;
 
-			query = optimizer.Finalize(query);
+			query = (SelectQuery)optimizer.Finalize(query);
 
 			var cc = provider.CommandCount(query);
 			var sb = new StringBuilder();

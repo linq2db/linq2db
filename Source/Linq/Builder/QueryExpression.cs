@@ -11,9 +11,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public readonly IExpressionBuilder First;
+		public          IExpressionBuilder Last;
 
-		protected Type               QueryType;
-		protected IExpressionBuilder Last;
+		protected Type QueryType;
 
 		public override Type           Type      { get { return QueryType;  } }
 		public override bool           CanReduce { get { return true;  } }
@@ -49,16 +49,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression Reduce()
 		{
-			var expr = Last.BuildQueryExpression<T>();
+			var expr = _queryBuilder.BuildQueryExpression(this);
 
 			QueryType = expr.Type;
 
 			return expr;
-		}
-
-		public void BuildQuery()
-		{
-			Last.BuildQuery(_queryBuilder);
 		}
 	}
 }
