@@ -259,7 +259,7 @@ namespace LinqToDB.SqlQuery
 					Visit1(((SelectQuery.Union)element).SelectQuery);
 					break;
 
-				case QueryElementType.SqlQuery:
+				case QueryElementType.SelectQuery:
 					{
 						if (_all)
 						{
@@ -572,7 +572,7 @@ namespace LinqToDB.SqlQuery
 					Visit2(((SelectQuery.Union)element).SelectQuery);
 					break;
 
-				case QueryElementType.SqlQuery:
+				case QueryElementType.SelectQuery:
 					{
 						if (_all)
 						{
@@ -837,7 +837,7 @@ namespace LinqToDB.SqlQuery
 							Find(sc.Columns,   find);
 					}
 
-				case QueryElementType.SqlQuery:
+				case QueryElementType.SelectQuery:
 					{
 						var q = (SelectQuery)element;
 						return
@@ -1311,7 +1311,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
-				case QueryElementType.SqlQuery:
+				case QueryElementType.SelectQuery:
 					{
 						var q = (SelectQuery)element;
 						IQueryElement parent = null;

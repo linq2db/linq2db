@@ -804,7 +804,7 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.SqlQuery :
+					case QueryElementType.SelectQuery :
 						{
 							var elem = (SelectQuery)e;
 
@@ -1334,7 +1334,7 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
-					case QueryElementType.SqlQuery :
+					case QueryElementType.SelectQuery :
 						{
 							var sid                = ReadInt();
 							var queryType          = (QueryType)ReadInt();

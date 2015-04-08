@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Informix
 									}
 
 									if (IsTimeDataType(func.Parameters[0]))
-										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
+										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", PrecedenceLevel.Primary, func.Parameters[1]);
 
 									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
 
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.Informix
 									break;
 							}
 
-							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
+							return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, par1, par0);
 						}
 
 					case "Quarter"  : return Inc(Div(Dec(new SqlFunction(func.SystemType, "Month", func.Parameters)), 3));

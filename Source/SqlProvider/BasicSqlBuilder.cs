@@ -51,9 +51,9 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb)
+		public void BuildSql(int commandNumber, SqlQuery sqlQuery, StringBuilder sb)
 		{
-			BuildSql(commandNumber, selectQuery, sb, 0, false);
+			BuildSql(commandNumber, (SelectQuery)sqlQuery, sb, 0, false);
 		}
 
 		protected virtual void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
@@ -545,7 +545,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(expr.Column, false, false);
 
 				StringBuilder.Append(" = ");
-				BuildExpression(Precedence.Comparison, expr.Expression);
+				BuildExpression(PrecedenceLevel.Comparison, expr.Expression);
 
 				if (i + 1 < exprs.Count)
 					StringBuilder.Append(" AND");
@@ -851,7 +851,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
-				case QueryElementType.SqlQuery    :
+				case QueryElementType.SelectQuery    :
 					StringBuilder.Append("(").AppendLine();
 					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
 					AppendIndent().Append(")");
@@ -921,7 +921,7 @@ namespace LinqToDB.SqlProvider
 			if (buildOn)
 			{
 				if (join.Condition.Conditions.Count != 0)
-					BuildSearchCondition(Precedence.Unknown, join.Condition);
+					BuildSearchCondition(PrecedenceLevel.Unknown, join.Condition);
 				else
 					StringBuilder.Append("1=1");
 			}
@@ -1153,7 +1153,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildWhereSearchCondition(SelectQuery.SearchCondition condition)
 		{
-			BuildSearchCondition(Precedence.Unknown, condition);
+			BuildSearchCondition(PrecedenceLevel.Unknown, condition);
 		}
 
 		protected virtual void BuildSearchCondition(SelectQuery.SearchCondition condition)
@@ -1185,7 +1185,7 @@ namespace LinqToDB.SqlProvider
 
 				var precedence = GetPrecedence(cond.Predicate);
 
-				BuildPredicate(cond.IsNot ? Precedence.LogicalNegation : parentPrecedence, precedence, cond.Predicate);
+				BuildPredicate(cond.IsNot ? PrecedenceLevel.LogicalNegation : parentPrecedence, precedence, cond.Predicate);
 
 				isOr = cond.IsOr;
 			}
@@ -1313,7 +1313,7 @@ namespace LinqToDB.SqlProvider
 						if (p.IsNot)
 							StringBuilder.Append("NOT ");
 
-						BuildExpression(p.IsNot ? Precedence.LogicalNegation : GetPrecedence(p), p.Expr1);
+						BuildExpression(p.IsNot ? PrecedenceLevel.LogicalNegation : GetPrecedence(p), p.Expr1);
 					}
 
 					break;
@@ -1731,7 +1731,7 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
-				case QueryElementType.SqlQuery:
+				case QueryElementType.SelectQuery:
 					{
 						var hasParentheses = checkParentheses && StringBuilder[StringBuilder.Length - 1] == '(';
 
@@ -2356,8 +2356,8 @@ namespace LinqToDB.SqlProvider
 				precedence == 0 ||
 				precedence < parentPrecedence ||
 				(precedence == parentPrecedence && 
-					(parentPrecedence == Precedence.Subtraction ||
-					 parentPrecedence == Precedence.LogicalNegation));
+					(parentPrecedence == PrecedenceLevel.Subtraction ||
+					 parentPrecedence == PrecedenceLevel.LogicalNegation));
 		}
 
 		protected string[] GetTempAliases(int n, string defaultAlias)
@@ -2425,7 +2425,7 @@ namespace LinqToDB.SqlProvider
 								var value = tbl.TableArguments[i - 2];
 
 								sb.Length = 0;
-								WithStringBuilder(sb, () => BuildExpression(Precedence.Primary, value));
+								WithStringBuilder(sb, () => BuildExpression(PrecedenceLevel.Primary, value));
 								values[i] = sb.ToString();
 							}
 
@@ -2476,7 +2476,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive));
+			return SqlOptimizer.ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, PrecedenceLevel.Additive));
 		}
 
 		protected ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)

@@ -31,13 +31,13 @@ namespace LinqToDB.Linq.Builder
 		public readonly IDataContext  DataContext;
 		public readonly MappingSchema MappingSchema;
 
+		#endregion
+
+		#region Parameters & Variables
+
 		public static readonly ParameterExpression DataContextParameter = Expression.Parameter(typeof(IDataContext), "dataContext");
 		public static readonly ParameterExpression ExpressionParameter  = Expression.Parameter(typeof(Expression),   "expression");
 		public static readonly ParameterExpression DataReaderParameter  = Expression.Parameter(typeof(IDataReader),  "dataReader");
-
-		#endregion
-
-		#region Build Variables
 
 		public readonly ParameterExpression       DataReaderLocalParameter;
 		public readonly List<ParameterExpression> BlockVariables   = new List<ParameterExpression>();
@@ -151,6 +151,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
 	}
 
 	class QueryBuilder<T> : QueryBuilder
@@ -164,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression CreateQueryExpression(IExpressionBuilder expressionBuilder)
 		{
-			return new QueryExpression<T>(expressionBuilder);
+			return new QueryExpression<T>(this, expressionBuilder);
 		}
 
 		public Func<IDataContext,Expression,IEnumerable<T>> BuildEnumerable()
@@ -173,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr is QueryExpression<T>)
 			{
-				((QueryExpression<T>)expr).BuildQuery(Query);
+				BuildQuery((QueryExpression<T>)expr);
 				return Query.GetIEnumerable;
 			}
 
@@ -186,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr is QueryExpression<T>)
 			{
-				((QueryExpression<T>)expr).BuildQuery(Query);
+				BuildQuery((QueryExpression<T>)expr);
 				return Query.GetElement;
 			}
 
@@ -202,6 +203,12 @@ namespace LinqToDB.Linq.Builder
 				expr, DataContextParameter, ExpressionParameter);
 
 			return l.Compile();
+		}
+
+		void BuildQuery(QueryExpression<T> expression)
+		{
+			var first = expression.First;
+			expression.BuildQuery();
 		}
 	}
 }

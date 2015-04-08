@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.Oracle
 				var attr = GetSequenceNameAttribute(table, false);
 
 				if (attr != null)
-					return new SqlExpression(attr.SequenceName + ".nextval", Precedence.Primary);
+					return new SqlExpression(attr.SequenceName + ".nextval", PrecedenceLevel.Primary);
 			}
 
 			return base.GetIdentityExpression(table);
@@ -117,12 +117,12 @@ namespace LinqToDB.DataProvider.Oracle
 				else if (NeedTake)
 				{
 					AppendIndent().AppendFormat("{0}.{1} <= ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.TakeValue);
+					BuildExpression(PrecedenceLevel.Comparison, SelectQuery.Select.TakeValue);
 				}
 				else
 				{
 					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.SkipValue);
+					BuildExpression(PrecedenceLevel.Comparison, SelectQuery.Select.SkipValue);
 				}
 
 				StringBuilder.AppendLine();
@@ -135,20 +135,20 @@ namespace LinqToDB.DataProvider.Oracle
 			if (NeedTake && !NeedSkip && SelectQuery.OrderBy.IsEmpty && SelectQuery.Having.IsEmpty)
 			{
 				BuildPredicate(
-					Precedence.LogicalConjunction,
+					PrecedenceLevel.LogicalConjunction,
 					new SelectQuery.Predicate.ExprExpr(
-						new SqlExpression(null, "ROWNUM", Precedence.Primary),
+						new SqlExpression(null, "ROWNUM", PrecedenceLevel.Primary),
 						SelectQuery.Predicate.Operator.LessOrEqual,
 						SelectQuery.Select.TakeValue));
 
 				if (base.BuildWhere())
 				{
 					StringBuilder.Append(" AND ");
-					BuildSearchCondition(Precedence.LogicalConjunction, condition);
+					BuildSearchCondition(PrecedenceLevel.LogicalConjunction, condition);
 				}
 			}
 			else
-				BuildSearchCondition(Precedence.Unknown, condition);
+				BuildSearchCondition(PrecedenceLevel.Unknown, condition);
 		}
 
 		protected override void BuildFunction(SqlFunction func)

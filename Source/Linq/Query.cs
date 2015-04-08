@@ -33,7 +33,7 @@ namespace LinqToDB.Linq
 		public readonly string        ConfigurationID;
 		public readonly ISqlOptimizer SqlOptimizer;
 
-		public SelectQuery SelectQuery;
+		public SqlQuery SqlQuery;
 
 		readonly Dictionary<Expression,QueryableAccessor> _queryableAccessorDic  = new Dictionary<Expression,QueryableAccessor>();
 
@@ -48,9 +48,9 @@ namespace LinqToDB.Linq
 
 		public void FinalizeQuery(SelectQuery selectQuery)
 		{
-			SelectQuery = SqlOptimizer.Finalize(selectQuery);
+			SqlQuery = SqlOptimizer.Finalize(selectQuery);
 
-			if (!SelectQuery.IsParameterDependent)
+			if (!SqlQuery.IsParameterDependent)
 			{
 				
 			}
@@ -67,7 +67,7 @@ namespace LinqToDB.Linq
 			var sqlProvider   = dataContext.CreateSqlProvider();
 			var stringBuilder = new StringBuilder();
 
-			sqlProvider.BuildSql(0, SelectQuery, stringBuilder);
+			sqlProvider.BuildSql(0, SqlQuery, stringBuilder);
 
 			return new CommandInfo
 			{

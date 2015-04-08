@@ -13,7 +13,7 @@ namespace LinqToDB.SqlQuery
 	using Reflection;
 
 	[DebuggerDisplay("SQL = {SqlText}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : SqlQuery, ISqlTableSource
 	{
 		#region Init
 
@@ -81,7 +81,7 @@ namespace LinqToDB.SqlQuery
 			_createTable         = createTable;
 			IsParameterDependent = parameterDependent;
 
-			_parameters.AddRange(parameters);
+			Parameters.AddRange(parameters);
 
 			foreach (var col in select.Columns)
 				col.Parent = this;
@@ -94,20 +94,13 @@ namespace LinqToDB.SqlQuery
 			_orderBy.SetSqlQuery(this);
 		}
 
-		readonly List<SqlParameter> _parameters = new List<SqlParameter>();
-		public   List<SqlParameter>  Parameters
-		{
-			get { return _parameters; }
-		}
-
 		private List<object> _properties;
 		public  List<object>  Properties
 		{
 			get { return _properties ?? (_properties = new List<object>()); }
 		}
 
-		public bool        IsParameterDependent { get; set; }
-		public SelectQuery ParentSelect         { get; set; }
+		public SelectQuery ParentSelect { get; set; }
 
 		public bool IsSimple
 		{
@@ -219,7 +212,7 @@ namespace LinqToDB.SqlQuery
 
 			public int Precedence
 			{
-				get { return SqlQuery.Precedence.Primary; }
+				get { return LinqToDB.SqlQuery.PrecedenceLevel.Primary; }
 			}
 
 			public Type SystemType
@@ -775,7 +768,7 @@ namespace LinqToDB.SqlQuery
 			public class ExprExpr : Expr
 			{
 				public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2)
-					: base(exp1, SqlQuery.Precedence.Comparison)
+					: base(exp1, PrecedenceLevel.Comparison)
 				{
 					Operator = op;
 					Expr2    = exp2;
@@ -844,7 +837,7 @@ namespace LinqToDB.SqlQuery
 			public class Like : NotExpr
 			{
 				public Like(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression escape)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 					Expr2  = exp2;
 					Escape = escape;
@@ -903,7 +896,7 @@ namespace LinqToDB.SqlQuery
 			public class Between : NotExpr
 			{
 				public Between(ISqlExpression exp1, bool isNot, ISqlExpression exp2, ISqlExpression exp3)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 					Expr2 = exp2;
 					Expr3 = exp3;
@@ -959,7 +952,7 @@ namespace LinqToDB.SqlQuery
 			public class IsNull : NotExpr
 			{
 				public IsNull(ISqlExpression exp1, bool isNot)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 				}
 
@@ -996,7 +989,7 @@ namespace LinqToDB.SqlQuery
 			public class InSubQuery : NotExpr
 			{
 				public InSubQuery(ISqlExpression exp1, bool isNot, SelectQuery subQuery)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 					SubQuery = subQuery;
 				}
@@ -1045,14 +1038,14 @@ namespace LinqToDB.SqlQuery
 			public class InList : NotExpr
 			{
 				public InList(ISqlExpression exp1, bool isNot, params ISqlExpression[] values)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 					if (values != null && values.Length > 0)
 						_values.AddRange(values);
 				}
 
 				public InList(ISqlExpression exp1, bool isNot, IEnumerable<ISqlExpression> values)
-					: base(exp1, isNot, SqlQuery.Precedence.Comparison)
+					: base(exp1, isNot, PrecedenceLevel.Comparison)
 				{
 					if (values != null)
 						_values.AddRange(values);
@@ -1251,9 +1244,9 @@ namespace LinqToDB.SqlQuery
 				get
 				{
 					return
-						IsNot ? SqlQuery.Precedence.LogicalNegation :
-						IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
-						        SqlQuery.Precedence.LogicalConjunction;
+						IsNot ? PrecedenceLevel.LogicalNegation :
+						IsOr  ? PrecedenceLevel.LogicalDisjunction :
+						        PrecedenceLevel.LogicalConjunction;
 				}
 			}
 
@@ -1380,13 +1373,13 @@ namespace LinqToDB.SqlQuery
 			{
 				get
 				{
-					if (_conditions.Count == 0) return SqlQuery.Precedence.Unknown;
+					if (_conditions.Count == 0) return PrecedenceLevel.Unknown;
 					if (_conditions.Count == 1) return _conditions[0].Precedence;
 
 					return _conditions.Select(_ =>
-						_.IsNot ? SqlQuery.Precedence.LogicalNegation :
-						_.IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
-						          SqlQuery.Precedence.LogicalConjunction).Min();
+						_.IsNot ? PrecedenceLevel.LogicalNegation :
+						_.IsOr  ? PrecedenceLevel.LogicalDisjunction :
+						          PrecedenceLevel.LogicalConjunction).Min();
 				}
 			}
 
@@ -1952,7 +1945,7 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
-					case QueryElementType.SqlQuery :
+					case QueryElementType.SelectQuery :
 						{
 							if (col.Expression == SelectQuery)
 								throw new InvalidOperationException("Wrong query usage.");
@@ -2754,7 +2747,7 @@ namespace LinqToDB.SqlQuery
 
 			internal IEnumerable<ISqlTableSource> GetFromQueries()
 			{
-				return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SqlQuery));
+				return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SelectQuery));
 			}
 
 			static TableSource FindTableSource(TableSource source, SqlTable table)
@@ -3255,244 +3248,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ProcessParameters
-
-		public SelectQuery ProcessParameters()
-		{
-			if (IsParameterDependent)
-			{
-				var query = new QueryVisitor().Convert(this, e =>
-				{
-					switch (e.ElementType)
-					{
-						case QueryElementType.SqlParameter :
-							{
-								var p = (SqlParameter)e;
-
-								if (p.Value == null)
-									return new SqlValue(null);
-							}
-
-							break;
-
-						case QueryElementType.ExprExprPredicate :
-							{
-								var ee = (Predicate.ExprExpr)e;
-								
-								if (ee.Operator == Predicate.Operator.Equal || ee.Operator == Predicate.Operator.NotEqual)
-								{
-									object value1;
-									object value2;
-
-									if (ee.Expr1 is SqlValue)
-										value1 = ((SqlValue)ee.Expr1).Value;
-									else if (ee.Expr1 is SqlParameter)
-										value1 = ((SqlParameter)ee.Expr1).Value;
-									else
-										break;
-
-									if (ee.Expr2 is SqlValue)
-										value2 = ((SqlValue)ee.Expr2).Value;
-									else if (ee.Expr2 is SqlParameter)
-										value2 = ((SqlParameter)ee.Expr2).Value;
-									else
-										break;
-
-									var value = Equals(value1, value2);
-
-									if (ee.Operator == Predicate.Operator.NotEqual)
-										value = !value;
-
-									return new Predicate.Expr(new SqlValue(value), SqlQuery.Precedence.Comparison);
-								}
-							}
-
-							break;
-
-						case QueryElementType.InListPredicate :
-							return ConvertInListPredicate((Predicate.InList)e);
-					}
-
-					return null;
-				});
-
-				if (query != this)
-				{
-					query.Parameters.Clear();
-
-					new QueryVisitor().VisitAll(query, expr =>
-					{
-						switch (expr.ElementType)
-						{
-							case QueryElementType.SqlParameter :
-								{
-									var p = (SqlParameter)expr;
-									if (p.IsQueryParameter)
-										query.Parameters.Add(p);
-
-									break;
-								}
-						}
-					});
-				}
-
-				return query;
-			}
-
-			return this;
-		}
-
-		static Predicate ConvertInListPredicate(Predicate.InList p)
-		{
-			if (p.Values == null || p.Values.Count == 0)
-				return new Predicate.Expr(new SqlValue(p.IsNot));
-
-			if (p.Values.Count == 1 && p.Values[0] is SqlParameter)
-			{
-				var pr = (SqlParameter)p.Values[0];
-
-				if (pr.Value == null)
-					return new Predicate.Expr(new SqlValue(p.IsNot));
-
-				if (pr.Value is IEnumerable)
-				{
-					var items = (IEnumerable)pr.Value;
-
-					if (p.Expr1 is ISqlTableSource)
-					{
-						var table = (ISqlTableSource)p.Expr1;
-						var keys  = table.GetKeys(true);
-
-						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
-
-						if (keys.Count == 1)
-						{
-							var values = new List<ISqlExpression>();
-							var field  = GetUnderlayingField(keys[0]);
-							var cd     = field.ColumnDescriptor;
-
-							foreach (var item in items)
-							{
-								var value = cd.MemberAccessor.GetValue(item);
-								values.Add(cd.MappingSchema.GetSqlValue(cd.MemberType, value));
-							}
-
-							if (values.Count == 0)
-								return new Predicate.Expr(new SqlValue(p.IsNot));
-
-							return new Predicate.InList(keys[0], p.IsNot, values);
-						}
-
-						{
-							var sc = new SearchCondition();
-
-							foreach (var item in items)
-							{
-								var itemCond = new SearchCondition();
-
-								foreach (var key in keys)
-								{
-									var field = GetUnderlayingField(key);
-									var cd    = field.ColumnDescriptor;
-									var value = cd.MemberAccessor.GetValue(item);
-									var cond  = value == null ?
-										new Condition(false, new Predicate.IsNull  (field, false)) :
-										new Condition(false, new Predicate.ExprExpr(field, Predicate.Operator.Equal, cd.MappingSchema.GetSqlValue(value)));
-
-									itemCond.Conditions.Add(cond);
-								}
-
-								sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
-							}
-
-							if (sc.Conditions.Count == 0)
-								return new Predicate.Expr(new SqlValue(p.IsNot));
-
-							if (p.IsNot)
-								return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-							return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-						}
-					}
-
-					if (p.Expr1 is SqlExpression)
-					{
-						var expr = (SqlExpression)p.Expr1;
-
-						if (expr.Expr.Length > 1 && expr.Expr[0] == '\x1')
-						{
-							var type  = items.GetListItemType();
-							var ta    = TypeAccessor.GetAccessor(type);
-							var names = expr.Expr.Substring(1).Split(',');
-
-							if (expr.Parameters.Length == 1)
-							{
-								var values = new List<ISqlExpression>();
-
-								foreach (var item in items)
-								{
-									var ma    = ta[names[0]];
-									var value = ma.GetValue(item);
-									values.Add(new SqlValue(value));
-								}
-
-								if (values.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								return new Predicate.InList(expr.Parameters[0], p.IsNot, values);
-							}
-
-							{
-								var sc = new SearchCondition();
-
-								foreach (var item in items)
-								{
-									var itemCond = new SearchCondition();
-
-									for (var i = 0; i < expr.Parameters.Length; i++)
-									{
-										var sql   = expr.Parameters[i];
-										var value = ta[names[i]].GetValue(item);
-										var cond  = value == null ?
-											new Condition(false, new Predicate.IsNull  (sql, false)) :
-											new Condition(false, new Predicate.ExprExpr(sql, Predicate.Operator.Equal, new SqlValue(value)));
-
-										itemCond.Conditions.Add(cond);
-									}
-
-									sc.Conditions.Add(new Condition(false, new Predicate.Expr(itemCond), true));
-								}
-
-								if (sc.Conditions.Count == 0)
-									return new Predicate.Expr(new SqlValue(p.IsNot));
-
-								if (p.IsNot)
-									return new Predicate.NotExpr(sc, true, SqlQuery.Precedence.LogicalNegation);
-
-								return new Predicate.Expr(sc, SqlQuery.Precedence.LogicalDisjunction);
-							}
-						}
-					}
-				}
-			}
-
-			return null;
-		}
-
-		static SqlField GetUnderlayingField(ISqlExpression expr)
-		{
-			switch (expr.ElementType)
-			{
-				case QueryElementType.SqlField: return (SqlField)expr;
-				case QueryElementType.Column  : return GetUnderlayingField(((Column)expr).Expression);
-			}
-
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
 		#region Clone
 
 		SelectQuery(SelectQuery clone, Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -3520,7 +3275,7 @@ namespace LinqToDB.SqlQuery
 			_having  = new WhereClause  (this, clone._having,  objectTree, doClone);
 			_orderBy = new OrderByClause(this, clone._orderBy, objectTree, doClone);
 
-			_parameters.AddRange(clone._parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
+			Parameters.AddRange(clone.Parameters.Select(p => (SqlParameter)p.Clone(objectTree, doClone)));
 			IsParameterDependent = clone.IsParameterDependent;
 
 			new QueryVisitor().Visit(this, expr =>
@@ -3660,7 +3415,7 @@ namespace LinqToDB.SqlQuery
 
 						break;
 
-					case QueryElementType.SqlQuery:
+					case QueryElementType.SelectQuery:
 						{
 							var sql = (SelectQuery)expr;
 
@@ -3768,7 +3523,7 @@ namespace LinqToDB.SqlQuery
 
 		public int Precedence
 		{
-			get { return SqlQuery.Precedence.Unknown; }
+			get { return PrecedenceLevel.Unknown; }
 		}
 
 		public Type SystemType
@@ -3882,7 +3637,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType { get { return QueryElementType.SqlQuery; } }
+		public override QueryElementType ElementType { get { return QueryElementType.SelectQuery; } }
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{

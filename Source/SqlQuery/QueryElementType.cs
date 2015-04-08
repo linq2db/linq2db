@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 		InListPredicate,
 		FuncLikePredicate,
 
-		SqlQuery,
+		SelectQuery,
 			Column,
 			SearchCondition,
 				Condition,

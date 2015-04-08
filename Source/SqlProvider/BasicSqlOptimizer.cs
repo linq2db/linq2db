@@ -47,7 +47,7 @@ namespace LinqToDB.SqlProvider
 
 		void MoveCountSubQuery(IQueryElement element)
 		{
-			if (element.ElementType != QueryElementType.SqlQuery)
+			if (element.ElementType != QueryElementType.SelectQuery)
 				return;
 
 			var query = (SelectQuery)element;
@@ -58,7 +58,7 @@ namespace LinqToDB.SqlProvider
 
 				// The column is a subquery.
 				//
-				if (col.Expression.ElementType == QueryElementType.SqlQuery)
+				if (col.Expression.ElementType == QueryElementType.SelectQuery)
 				{
 					var subQuery = (SelectQuery)col.Expression;
 					var isCount  = false;
@@ -207,7 +207,7 @@ namespace LinqToDB.SqlProvider
 
 			new QueryVisitor().Visit(selectQuery, element =>
 			{
-				if (element.ElementType != QueryElementType.SqlQuery)
+				if (element.ElementType != QueryElementType.SelectQuery)
 					return;
 
 				var query = (SelectQuery)element;
@@ -216,7 +216,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var col = query.Select.Columns[i];
 
-					if (col.Expression.ElementType == QueryElementType.SqlQuery)
+					if (col.Expression.ElementType == QueryElementType.SelectQuery)
 					{
 						var subQuery    = (SelectQuery)col.Expression;
 						var allTables   = new HashSet<ISqlTableSource>();
@@ -796,7 +796,7 @@ namespace LinqToDB.SqlProvider
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
-							return new SelectQuery.Predicate.Expr(new SqlValue(value), Precedence.Comparison);
+							return new SelectQuery.Predicate.Expr(new SqlValue(value), PrecedenceLevel.Comparison);
 						}
 
 						switch (expr.Operator)
@@ -1048,7 +1048,7 @@ namespace LinqToDB.SqlProvider
 						if (Equals(value.Value, v2.Value) && !sc.CanBeNull())
 							return ConvertPredicate(
 								selectQuery,
-								new SelectQuery.Predicate.NotExpr(sc, true, Precedence.LogicalNegation));
+								new SelectQuery.Predicate.NotExpr(sc, true, PrecedenceLevel.LogicalNegation));
 					}
 				}
 			}
@@ -1323,7 +1323,7 @@ namespace LinqToDB.SqlProvider
 
 		public ISqlExpression Add(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, Precedence.Additive));
+			return ConvertExpression(new SqlBinaryExpression(type, expr1, "+", expr2, PrecedenceLevel.Additive));
 		}
 
 		public ISqlExpression Add<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -1343,7 +1343,7 @@ namespace LinqToDB.SqlProvider
 
 		public ISqlExpression Sub(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return ConvertExpression(new SqlBinaryExpression(type, expr1, "-", expr2, Precedence.Subtraction));
+			return ConvertExpression(new SqlBinaryExpression(type, expr1, "-", expr2, PrecedenceLevel.Subtraction));
 		}
 
 		public ISqlExpression Sub<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -1363,7 +1363,7 @@ namespace LinqToDB.SqlProvider
 
 		public ISqlExpression Mul(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return ConvertExpression(new SqlBinaryExpression(type, expr1, "*", expr2, Precedence.Multiplicative));
+			return ConvertExpression(new SqlBinaryExpression(type, expr1, "*", expr2, PrecedenceLevel.Multiplicative));
 		}
 
 		public ISqlExpression Mul<T>(ISqlExpression expr1, ISqlExpression expr2)
@@ -1378,7 +1378,7 @@ namespace LinqToDB.SqlProvider
 
 		public ISqlExpression Div(ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
-			return ConvertExpression(new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative));
+			return ConvertExpression(new SqlBinaryExpression(type, expr1, "/", expr2, PrecedenceLevel.Multiplicative));
 		}
 
 		public ISqlExpression Div<T>(ISqlExpression expr1, ISqlExpression expr2)

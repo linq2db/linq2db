@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		public Type               Type { get { return Expression.Type; } }
 
 		public abstract SqlBuilderBase GetSqlBuilder();
-		public abstract Expression     BuildQuery<T>();
-		public abstract void           BuildQuery<T>(Query<T> query);
+		public abstract Expression     BuildQueryExpression<T>();
+		public abstract void           BuildQuery<T>(QueryBuilder<T> query);
 	}
 }

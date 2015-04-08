@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery
 							break;
 						}
 
-					case QueryElementType.SqlQuery :
+					case QueryElementType.SelectQuery :
 						{
 							if (e != selectQuery)
 							{
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 
 					switch (e.ElementType)
 					{
-						case QueryElementType.SqlQuery :
+						case QueryElementType.SelectQuery :
 							return e == data.Query;
 
 						case QueryElementType.SqlFunction :
@@ -817,7 +817,7 @@ namespace LinqToDB.SqlQuery
 			if (isApplySupported && !joinTable.CanConvertApply)
 				return;
 
-			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
+			if (joinSource.Source.ElementType == QueryElementType.SelectQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(c => IsAggregationFunction(c.Expression));
@@ -883,7 +883,7 @@ namespace LinqToDB.SqlQuery
 			}
 			else
 			{
-				if (where1.SearchCondition.Precedence < Precedence.LogicalConjunction)
+				if (where1.SearchCondition.Precedence < PrecedenceLevel.LogicalConjunction)
 				{
 					var sc1 = new SelectQuery.SearchCondition();
 
@@ -893,7 +893,7 @@ namespace LinqToDB.SqlQuery
 					where1.SearchCondition.Conditions.Add(new SelectQuery.Condition(false, sc1));
 				}
 
-				if (where2.SearchCondition.Precedence < Precedence.LogicalConjunction)
+				if (where2.SearchCondition.Precedence < PrecedenceLevel.LogicalConjunction)
 				{
 					var sc2 = new SelectQuery.SearchCondition();
 
@@ -944,7 +944,7 @@ namespace LinqToDB.SqlQuery
 				{
 					new QueryVisitor().Visit(query.Select.Columns[0].Expression, e =>
 					{
-						if (e.ElementType == QueryElementType.SqlQuery)
+						if (e.ElementType == QueryElementType.SelectQuery)
 						{
 							var q = (SelectQuery)e;
 

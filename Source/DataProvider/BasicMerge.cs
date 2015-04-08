@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider
 
 						var whereClause = new QueryVisitor().Convert(sql.Where, e =>
 						{
-							if (e.ElementType == QueryElementType.SqlQuery)
+							if (e.ElementType == QueryElementType.SelectQuery)
 							{
 								
 							}

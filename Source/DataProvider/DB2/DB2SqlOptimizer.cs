@@ -126,11 +126,11 @@ namespace LinqToDB.DataProvider.DB2
 					case "DateDiff"      :
 						switch ((Sql.DateParts)((SqlValue)func.Parameters[0]).Value)
 						{
-							case Sql.DateParts.Day         : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 86400",                                               Precedence.Multiplicative, func.Parameters[2], func.Parameters[1]);
-							case Sql.DateParts.Hour        : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 3600",                                                Precedence.Multiplicative, func.Parameters[2], func.Parameters[1]);
-							case Sql.DateParts.Minute      : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 60",                                                  Precedence.Multiplicative, func.Parameters[2], func.Parameters[1]);
-							case Sql.DateParts.Second      : return new SqlExpression(typeof(int), "(Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))",                                                         Precedence.Additive,       func.Parameters[2], func.Parameters[1]);
-							case Sql.DateParts.Millisecond : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) * 1000 + (MICROSECOND({0}) - MICROSECOND({1})) / 1000", Precedence.Additive,       func.Parameters[2], func.Parameters[1]);
+							case Sql.DateParts.Day         : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 86400",                                               PrecedenceLevel.Multiplicative, func.Parameters[2], func.Parameters[1]);
+							case Sql.DateParts.Hour        : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 3600",                                                PrecedenceLevel.Multiplicative, func.Parameters[2], func.Parameters[1]);
+							case Sql.DateParts.Minute      : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) / 60",                                                  PrecedenceLevel.Multiplicative, func.Parameters[2], func.Parameters[1]);
+							case Sql.DateParts.Second      : return new SqlExpression(typeof(int), "(Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))",                                                         PrecedenceLevel.Additive,       func.Parameters[2], func.Parameters[1]);
+							case Sql.DateParts.Millisecond : return new SqlExpression(typeof(int), "((Days({0}) - Days({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) * 1000 + (MICROSECOND({0}) - MICROSECOND({1})) / 1000", PrecedenceLevel.Additive,       func.Parameters[2], func.Parameters[1]);
 						}
 
 						break;

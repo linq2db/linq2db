@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SapHana
 						if (ex != null)
 							return ex;
 					}
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+					return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
 			else if (expr is SqlBinaryExpression)

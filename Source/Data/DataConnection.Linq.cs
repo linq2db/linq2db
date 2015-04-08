@@ -59,7 +59,7 @@ namespace LinqToDB.Data
 				 };
 			}
 
-			var sql    = query.SelectQuery.ProcessParameters();
+			var sql    = (SelectQuery)query.SelectQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
 			if (!object.ReferenceEquals(sql, newSql))

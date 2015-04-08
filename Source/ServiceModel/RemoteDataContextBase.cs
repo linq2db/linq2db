@@ -306,7 +306,7 @@ namespace LinqToDB.ServiceModel
 
 			public int ExecuteNonQuery()
 			{
-				var q    = _query.SelectQuery.ProcessParameters();
+				var q    = (SelectQuery)_query.SqlQuery.ProcessParameters();
 				var data = LinqServiceSerializer.Serialize(
 					q,
 					new SqlParameter[0]//q.IsParameterDependent ? q.Parameters.ToArray() : _query.GetCommandInfo(_dataContext, _expression).Parameters
@@ -330,7 +330,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q = _query.SelectQuery.ProcessParameters();
+				var q = (SelectQuery)_query.SqlQuery.ProcessParameters();
 
 				return _client.ExecuteScalar(
 					_dataContext.Configuration,
@@ -347,7 +347,7 @@ namespace LinqToDB.ServiceModel
 
 				_client = _dataContext.GetClient();
 
-				var q      = _query.SelectQuery.ProcessParameters();
+				var q      = (SelectQuery)_query.SqlQuery.ProcessParameters();
 				var ret    = _client.ExecuteReader(
 					_dataContext.Configuration,
 					LinqServiceSerializer.Serialize(
@@ -386,7 +386,7 @@ namespace LinqToDB.ServiceModel
 		int IDataContext.ExecuteNonQuery(object query)
 		{
 			var ctx  = (QueryContextOld)query;
-			var q    = ctx.Query.SelectQuery.ProcessParameters();
+			var q    = (SelectQuery)ctx.Query.SelectQuery.ProcessParameters();
 			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
 
 			if (_batchCounter > 0)
@@ -409,7 +409,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q = ctx.Query.SelectQuery.ProcessParameters();
+			var q = (SelectQuery)ctx.Query.SelectQuery.ProcessParameters();
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
@@ -425,7 +425,7 @@ namespace LinqToDB.ServiceModel
 
 			ctx.Client = GetClient();
 
-			var q      = ctx.Query.SelectQuery.ProcessParameters();
+			var q      = (SelectQuery)ctx.Query.SelectQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
 				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));

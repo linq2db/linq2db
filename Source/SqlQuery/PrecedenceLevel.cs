@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class Precedence
+	public class PrecedenceLevel
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
 		public const int Unary              =  90; // + - ! ++x --x (T)x
@@ -15,5 +15,10 @@ namespace LinqToDB.SqlQuery
 		public const int LogicalConjunction =  20; // AND
 		public const int LogicalDisjunction =  10; // OR
 		public const int Unknown            =   0;
+	}
+
+	[Obsolete]
+	public class Precedence : PrecedenceLevel
+	{
 	}
 }

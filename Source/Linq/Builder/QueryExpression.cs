@@ -10,8 +10,9 @@ namespace LinqToDB.Linq.Builder
 			AddBuilder(First = expressionBuilder);
 		}
 
+		public readonly IExpressionBuilder First;
+
 		protected Type               QueryType;
-		protected IExpressionBuilder First;
 		protected IExpressionBuilder Last;
 
 		public override Type           Type      { get { return QueryType;  } }
@@ -38,22 +39,26 @@ namespace LinqToDB.Linq.Builder
 
 	class QueryExpression<T> : QueryExpression
 	{
-		public QueryExpression(IExpressionBuilder expressionBuilder) : base(expressionBuilder)
+		public QueryExpression(QueryBuilder<T> queryBuilder, IExpressionBuilder expressionBuilder)
+			: base(expressionBuilder)
 		{
+			_queryBuilder = queryBuilder;
 		}
+
+		readonly QueryBuilder<T> _queryBuilder;
 
 		public override Expression Reduce()
 		{
-			var expr = Last.BuildQuery<T>();
+			var expr = Last.BuildQueryExpression<T>();
 
 			QueryType = expr.Type;
 
 			return expr;
 		}
 
-		public void BuildQuery(Query<T> query)
+		public void BuildQuery()
 		{
-			Last.BuildQuery(query);
+			Last.BuildQuery(_queryBuilder);
 		}
 	}
 }

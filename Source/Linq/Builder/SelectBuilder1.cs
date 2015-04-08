@@ -32,12 +32,12 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public override Expression BuildQuery<T>()
+		public override Expression BuildQueryExpression<T>()
 		{
 			throw new NotImplementedException();
 		}
 
-		public override void BuildQuery<T>(Query<T> query)
+		public override void BuildQuery<T>(QueryBuilder<T> query)
 		{
 			throw new NotImplementedException();
 		}

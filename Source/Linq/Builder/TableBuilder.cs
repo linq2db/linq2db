@@ -61,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Lambda<Func<IDataReader,T>>(expression, QueryBuilder.DataReaderParameter);
 		}
 
-		public override Expression BuildQuery<T>()
+		public override Expression BuildQueryExpression<T>()
 		{
 			var expr = Expression.Call(
 				MemberHelper.MethodOf(() => ExecuteQuery<T>(null, null, null, null)),
@@ -73,13 +73,14 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public override void BuildQuery<T>(Query<T> query)
+		public override void BuildQuery<T>(QueryBuilder<T> query)
 		{
 			var e = BuildMapper<T>();
 			var l = e.Compile();
+			var q = query.Query;
 
-			query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (query, ctx, expr, l);
-			query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(query, ctx, expr, l, action, token);
+			query.Query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (q, ctx, expr, l);
+			query.Query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(q, ctx, expr, l, action, token);
 		}
 
 		#endregion

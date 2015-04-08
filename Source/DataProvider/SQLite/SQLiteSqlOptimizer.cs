@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.SQLite
 								return new SqlFunction(func.SystemType, "DateTime", func.Parameters[1]);
 							}
 
-							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, func.Parameters[1], func.Parameters[0]);
+							return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, func.Parameters[1], func.Parameters[0]);
 						}
 				}
 			}
@@ -89,15 +89,15 @@ namespace LinqToDB.DataProvider.SQLite
 					return Inc(new SqlExpression(e.SystemType, e.Expr.Replace("Cast(StrFTime('%w'", "Cast(strFTime('%w'"), e.Parameters));
 
 				if (e.Expr.StartsWith("Cast(StrFTime('%f'"))
-					return new SqlExpression(e.SystemType, "Cast(strFTime('%f', {0}) * 1000 as int) % 1000", Precedence.Multiplicative, e.Parameters);
+					return new SqlExpression(e.SystemType, "Cast(strFTime('%f', {0}) * 1000 as int) % 1000", PrecedenceLevel.Multiplicative, e.Parameters);
 
 				if (e.Expr.StartsWith("DateTime"))
 				{
 					if (e.Expr.EndsWith("Quarter')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Month')", Precedence.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Month')", PrecedenceLevel.Primary, Mul(e.Parameters[0], 3), e.Parameters[1]);
 
 					if (e.Expr.EndsWith("Week')"))
-						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Day')",   Precedence.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
+						return new SqlExpression(e.SystemType, "DateTime({1}, '{0} Day')",   PrecedenceLevel.Primary, Mul(e.Parameters[0], 7), e.Parameters[1]);
 				}
 			}
 

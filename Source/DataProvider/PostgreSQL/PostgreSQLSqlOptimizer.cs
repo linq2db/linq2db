@@ -54,13 +54,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								return ex;
 						}
 
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+						return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 
 					case "CharIndex" :
 						return func.Parameters.Length == 2?
-							new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0], func.Parameters[1]):
+							new SqlExpression(func.SystemType, "Position({0} in {1})", PrecedenceLevel.Primary, func.Parameters[0], func.Parameters[1]):
 							Add<int>(
-								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary, func.Parameters[0],
+								new SqlExpression(func.SystemType, "Position({0} in {1})", PrecedenceLevel.Primary, func.Parameters[0],
 									ConvertExpression(new SqlFunction(typeof(string), "Substring",
 										func.Parameters[1],
 										func.Parameters[2],
