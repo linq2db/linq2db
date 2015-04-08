@@ -36,12 +36,12 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression BuildQueryExpression<T>(QueryBuilder<T> builder)
 		{
-			return builder.BuildQueryExpression(BuildMapper<T>(builder));
+			return builder.BuildQueryExpression(BuildMapper(builder));
 		}
 
 		public override void BuildQuery<T>(QueryBuilder<T> builder)
 		{
-			builder.BuildQuery(BuildMapper<T>(builder));
+			builder.BuildQuery(BuildMapper(builder));
 		}
 
 		TableSqlBuilder _tableSqlBuilder;

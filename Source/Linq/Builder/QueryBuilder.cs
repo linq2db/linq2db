@@ -28,9 +28,10 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public readonly Query         Query;
-		public readonly QueryBuilder  Parent;
 		public readonly IDataContext  DataContext;
 		public readonly MappingSchema MappingSchema;
+
+		public readonly Dictionary<ParameterExpression,IExpressionBuilder> Builders = new Dictionary<ParameterExpression,IExpressionBuilder>();
 
 		#endregion
 
@@ -137,8 +138,9 @@ namespace LinqToDB.Linq.Builder
 								{
 									switch (call.Method.Name)
 									{
-										case "Select": return SelectBuilder1.Translate(qe, call);
-										case "Where" : return WhereBuilder1. Translate(qe, call);
+										case "Select" : return SelectBuilder1.Translate(qe, call);
+										case "Where"  :
+										case "Having" : return WhereBuilder1. Translate(qe, call);
 									}
 								}
 							}
