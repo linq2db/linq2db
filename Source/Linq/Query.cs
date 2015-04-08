@@ -11,6 +11,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Data;
 	using Common;
+	using Common.FSharp;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -402,22 +403,20 @@ namespace LinqToDB.Linq
                     var type = value.GetType();
                     Type etype;
 
-                    if (type.Name == "FSharpOption`1")
+                    //add support for unions here
+                    //make this recursive so that you can have a option<union<seq>>
+                   if (Option.IsOption(type))
                     {
-                        var methods = type.GetMethods();
-                        
-                        bool isSome =
-                            (bool) methods.Single(m => m.Name == "get_IsSome").Invoke(null, new object[] {value});
-                        if (isSome)
+                        if (Option.IsSome(value))
                         {
-                            value = methods.Single(m => m.Name == "get_Value").Invoke(value, new object[] {});
+                            value = Option.GetValue(value);
                         }
                         else
                         {
                             value = DBNull.Value;
                         }
 
-                        etype = type.GetGenericArguments()[0];
+                        etype = Option.GetUnderlyingType(type);
                     }
                     else
                     {

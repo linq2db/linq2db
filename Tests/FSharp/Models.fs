@@ -1,7 +1,8 @@
-﻿namespace Tests.FSharp.Models
-
+﻿module Tests.FSharp.Models
 open LinqToDB
 open LinqToDB.Mapping
+
+type DateTime = System.DateTime
 
 type Gender = 
     | [<MapValue("M")>] Male = 0
@@ -25,7 +26,6 @@ type Person =
 type Child = 
     { [<PrimaryKey>] ParentID : int
       [<PrimaryKey>] ChildID : int }
-
 
 type FullName = { FirstName : string; MiddleName: string; LastName: string}
 type LastName = { Value: string }

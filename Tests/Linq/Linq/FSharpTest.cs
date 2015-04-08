@@ -83,5 +83,11 @@ namespace Tests.Linq
             using (var db = GetDataContext(context))
                 FSharp.InsertTest.InsertSomeOption(db);
         }
+
+        [Test]
+        public void MapSomeType()
+        {
+            FSharp.MappingTest.MapSomeType();
+        }
 	}
 }

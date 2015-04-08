@@ -181,6 +181,10 @@ namespace LinqToDB.Mapping
 
 		public Option<SqlDataType> GetDataType(Type type)
 		{
+		    if (Common.FSharp.Option.IsOption(type))
+		    {
+		        type = Common.FSharp.Option.GetUnderlyingType(type);
+		    }
 			if (_dataTypes != null)
 			{
 				SqlDataType dataType;
