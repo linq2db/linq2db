@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -29,6 +28,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public readonly Query         Query;
+		public readonly QueryBuilder  Parent;
 		public readonly IDataContext  DataContext;
 		public readonly MappingSchema MappingSchema;
 
@@ -228,38 +228,16 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildQuery
 
-		static IEnumerable<T> ExecuteQuery(Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
-		{
-			using (var ctx = dataContext.GetQueryContext(query, expression))
-			using (var dr = ctx.ExecuteReader())
-				while (dr.Read())
-					yield return mapper(dr);
-		}
-
-		static async Task ExecuteQueryAsync(
-			Query query, IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
-		{
-			using (var ctx = dataContext.GetQueryContext(query, expression))
-			using (var dr = await ctx.ExecuteReaderAsync(cancellationToken))
-				await dr.QueryForEachAsync(mapper, action, cancellationToken);
-		}
-
 		public void BuildQuery(Expression<Func<IDataReader,T>> mapper)
 		{
-			var l = mapper.Compile();
-			var q = Query;
-
-			Query.GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (q, ctx, expr, l);
-			Query.GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(q, ctx, expr, l, action, token);
+			Query.BuildQuery(mapper);
 		}
 
 		public Expression BuildQueryExpression(Expression<Func<IDataReader,T>> mapper)
 		{
-			var q = Query;
-
 			var expr = Expression.Call(
-				MemberHelper.MethodOf(() => ExecuteQuery(null, null, null, null)),
-				Expression.Constant(q),
+				Expression.Constant(Query),
+				MemberHelper.MethodOf(() => Query.ExecuteQuery(null, null, null)),
 				DataContextParameter,
 				ExpressionParameter,
 				mapper);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
@@ -176,6 +177,34 @@ namespace LinqToDB.Linq
 			}
 
 			return null;
+		}
+
+		#endregion
+
+		#region Execute
+
+		internal IEnumerable<T> ExecuteQuery(IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper)
+		{
+			using (var ctx = dataContext.GetQueryContext(this, expression))
+			using (var dr = ctx.ExecuteReader())
+				while (dr.Read())
+					yield return mapper(dr);
+		}
+
+		internal async Task ExecuteQueryAsync(
+			IDataContext dataContext, Expression expression, Func<IDataReader,T> mapper, Action<T> action, CancellationToken cancellationToken)
+		{
+			using (var ctx = dataContext.GetQueryContext(this, expression))
+			using (var dr = await ctx.ExecuteReaderAsync(cancellationToken))
+				await dr.QueryForEachAsync(mapper, action, cancellationToken);
+		}
+
+		public void BuildQuery(Expression<Func<IDataReader,T>> mapper)
+		{
+			var l = mapper.Compile();
+
+			GetIEnumerable  = (ctx, expr)                => ExecuteQuery     (ctx, expr, l);
+			GetForEachAsync = (ctx, expr, action, token) => ExecuteQueryAsync(ctx, expr, l, action, token);
 		}
 
 		#endregion
