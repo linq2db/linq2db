@@ -3565,7 +3565,7 @@ namespace LinqToDB.SqlQuery
 
 			var alias = desiredAlias;
 
-			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 30)
+			if (string.IsNullOrEmpty(desiredAlias) || desiredAlias.Length > 25)
 			{
 				desiredAlias = defaultAlias;
 				alias        = defaultAlias + "1";

@@ -10,7 +10,6 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -811,6 +810,37 @@ namespace Tests.DataProvider
 
 					db.Types2.Delete(_ => _.ID > 1000);
 				}
+			}
+		}
+
+		#endregion
+
+		#region CreateTest
+
+		[Table]
+		class TempTestTable
+		{
+			// column name length = 30 char (maximum for Oracle)
+			[Column(Name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAABC")]
+			public long Id { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void LongAliasTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try { db.DropTable<TempTestTable>(); } catch {}
+
+				var table = db.CreateTable<TempTestTable>();
+
+				var query =
+				(
+					from t in table.Distinct()
+					select new { t.Id }
+				).ToList();
+
+				db.DropTable<TempTestTable>();
 			}
 		}
 
