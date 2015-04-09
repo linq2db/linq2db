@@ -814,5 +814,36 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		#region CreateTest
+
+		[Table]
+		class TempTestTable
+		{
+			// column name length = 30 char (maximum for Oracle)
+			[Column(Name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAABC")]
+			public long Id { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void LongAliasTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try { db.DropTable<TempTestTable>(); } catch {}
+
+				var table = db.CreateTable<TempTestTable>();
+
+				var query =
+				(
+					from t in table.Distinct()
+					select new { t.Id }
+				).ToList();
+
+				db.DropTable<TempTestTable>();
+			}
+		}
+
+		#endregion
 	}
 }
