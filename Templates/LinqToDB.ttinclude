@@ -199,6 +199,7 @@ void GenerateTypesFromMetadata()
 		var nameMaxLen     = t.Columns.Values.Max  (c => c.MemberName == c.ColumnName ? 0 : c.ColumnName.Length);
 		var dbTypeMaxLen   = t.Columns.Values.Max  (c => c.ColumnType.Length);
 		var dataTypeMaxLen = t.Columns.Values.Max  (c => c.DataType.Length);
+		var dataTypePrefix = t.Columns.Values.Any  (c => c.MemberName == "DataType") ? "LinqToDB." : "";
 
 		foreach (var c in t.Columns.Values)
 		{
@@ -232,7 +233,7 @@ void GenerateTypesFromMetadata()
 			{
 				var space = new string(' ', dataTypeMaxLen - c.DataType.Length);
 
-				ca.Parameters.Add("DataType=" + c.DataType + space);
+				ca.Parameters.Add("DataType=" + dataTypePrefix + c.DataType + space);
 
 				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
 				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
