@@ -98,6 +98,7 @@
     <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleXmlTable.cs" />
     <Compile Include="DataProvider\Oracle\OracleMerge.cs" />
     <Compile Include="DataProvider\Oracle\OracleBulkCopy.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlOptimizer.cs" />

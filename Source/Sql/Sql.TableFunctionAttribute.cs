@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
@@ -78,7 +79,7 @@ namespace LinqToDB
 				return args;
 			}
 
-			public virtual void SetTable(SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public virtual void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				table.SqlTableType   = SqlTableType.Function;
 				table.Name           = Name ?? member.Name;
