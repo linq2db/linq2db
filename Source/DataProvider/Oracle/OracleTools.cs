@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
 
-	public static class OracleTools
+	public static partial class OracleTools
 	{
 		public static string AssemblyName = "Oracle.DataAccess";
 

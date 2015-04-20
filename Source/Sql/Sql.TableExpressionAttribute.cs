@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
@@ -47,7 +48,7 @@ namespace LinqToDB
 				set { base.Name = value; }
 			}
 
-			public override void SetTable(SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				table.SqlTableType   = SqlTableType.Expression;
 				table.Name           = Expression ?? member.Name;

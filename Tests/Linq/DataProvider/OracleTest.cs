@@ -845,5 +845,255 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		#region XmlTable
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest1(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.OracleXmlTable(new[]
+					{
+						new { field1 = 1, field2 = "11" },
+						new { field1 = 2, field2 = "22" },
+					})
+					.Select(t => new { t.field1, t.field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest2(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var list =
+				(
+					from t1 in conn.Parent
+					join t2 in conn.OracleXmlTable(new[]
+					{
+						new { field1 = 1, field2 = "11" },
+						new { field1 = 2, field2 = "22" },
+					})
+					on t1.ParentID equals t2.field1
+					select new { t2.field1, t2.field2 }
+				).ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest3(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var list = conn.OracleXmlTable(data)
+					.Select(t => new { t.field1, t.field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		class XmlData
+		{
+			public int    Field1;
+			[Column(Length = 2)]
+			public string Field2;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest4(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.OracleXmlTable<XmlData>("<t><r><c0>1</c0><c1>11</c1></r><r><c0>2</c0><c1>22</c1></r></t>")
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+			}
+		}
+
+		static string _data;
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest5(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				_data = "<t><r><c0>1</c0><c1>11</c1></r><r><c0>2</c0><c1>22</c1></r></t>";
+
+				var list = conn.OracleXmlTable<XmlData>(_data)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+
+				_data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				list =
+				(
+					from t1 in conn.Parent
+					join t2 in conn.OracleXmlTable<XmlData>(_data)
+					on t1.ParentID equals t2.Field1
+					select new { t2.Field1, t2.Field2 }
+				).ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest6(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+
+				var list = conn.OracleXmlTable<XmlData>(xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest7(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+
+				var list = conn.OracleXmlTable<XmlData>(() => xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+
+				xmlData = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				list = conn.OracleXmlTable<XmlData>(() => xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest8(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				var list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(1));
+
+				data = "<t><r><c0>2</c0><c1>22</c1></r></t>";
+
+				list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(2));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest9(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				var list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(() => data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(1));
+
+				data = "<t><r><c0>2</c0><c1>22</c1></r></t>";
+
+				list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(() => data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(2));
+			}
+		}
+
+		#endregion
 	}
 }

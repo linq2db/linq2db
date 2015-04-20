@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Mapping;
 	using SqlQuery;
 
 	public class FreeTextTableExpressionAttribute : Sql.TableExpressionAttribute
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return value;
 		}
 
-		public override void SetTable(SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+		public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
 		{
 			var aargs  = sqlArgs.ToArray();
 			var arr    = ConvertArgs(member, aargs).ToList();
