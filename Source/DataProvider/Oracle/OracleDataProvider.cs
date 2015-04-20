@@ -363,6 +363,11 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 			}
 
+			if (dataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			{
+				dataType = DataType.NText;
+			}
+
 			base.SetParameter(parameter, name, dataType, value);
 		}
 
