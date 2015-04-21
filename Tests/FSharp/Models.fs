@@ -1,7 +1,8 @@
-﻿namespace Tests.FSharp.Models
-
+﻿module Tests.FSharp.Models
 open LinqToDB
 open LinqToDB.Mapping
+
+type DateTime = System.DateTime
 
 type Gender = 
     | [<MapValue("M")>] Male = 0
@@ -13,21 +14,18 @@ type PersonID = int
 type Person = 
     { [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID"); Identity; PrimaryKey>]
-      ID : int 
+      ID : int64 Option
       [<NotNull>] 
       FirstName : string
       [<NotNull>]
       LastName : string
-      [<Nullable>]
-      MiddleName : string 
+      [<Column>]
+      MiddleName : string option
       Gender : Gender }
-//      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
-//      Patient : Patient }
 
 type Child = 
     { [<PrimaryKey>] ParentID : int
       [<PrimaryKey>] ChildID : int }
-
 
 type FullName = { FirstName : string; MiddleName: string; LastName: string}
 type LastName = { Value: string }
@@ -41,7 +39,7 @@ type ComplexPerson =
     { [<Identity>]
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID", IsPrimaryKey=true)>]
-      ID : int
+      ID : int64
       Name : FullName
       Gender : string }
 
@@ -53,7 +51,7 @@ type DeeplyComplexPerson =
     { [<Identity>]
       [<SequenceName(ProviderName.Firebird, "PersonID")>]
       [<Column("PersonID", IsPrimaryKey=true)>]
-      ID : int
+      ID : int64
       Name : NestedFullName
       Gender : string }
 

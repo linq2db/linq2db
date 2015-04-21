@@ -28,6 +28,13 @@ namespace Tests.Linq
 				FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
 		}
 
+        [Test, DataContextSource]
+        public void LoadByOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.WhereTest.LoadByOption(db);
+        }
+
 		[Test, DataContextSource]
 		public void LoadColumnOfDeeplyComplexPerson(string context)
 		{
@@ -62,5 +69,25 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert2(db);
 		}
+
+        [Test, DataContextSource]
+        public void InsertNoneOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.InsertTest.InsertNoneOption(db);
+        }
+
+        [Test, DataContextSource]
+        public void InsertSomeOption(string context)
+        {
+            using (var db = GetDataContext(context))
+                FSharp.InsertTest.InsertSomeOption(db);
+        }
+
+        [Test]
+        public void MapSomeType()
+        {
+            FSharp.MappingTest.MapSomeType();
+        }
 	}
 }

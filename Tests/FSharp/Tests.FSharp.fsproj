@@ -53,6 +53,7 @@
     <Compile Include="WhereTest.fs" />
     <Compile Include="SelectTest.fs" />
     <Compile Include="InsertTest.fs" />
+    <Compile Include="MappingTest.fs" />
     <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
