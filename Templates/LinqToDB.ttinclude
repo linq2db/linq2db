@@ -12,13 +12,16 @@ Action AfterGenerateLinqToDBModel  = () => {};
 
 Func<Table,MemberBase> GenerateProviderSpecificTable = t => null;
 
-bool GenerateObsoleteAttributeForAliases = false;
-bool GenerateFindExtensions = true;
-bool IsCompactColumns       = true;
-bool IsCompactColumnAliases = true;
-bool GenerateDataTypes      = false;
-bool GenerateDbTypes        = false;
-bool GenerateSchemaAsType   = false;
+bool  GenerateObsoleteAttributeForAliases = false;
+bool  GenerateFindExtensions    = true;
+bool  IsCompactColumns          = true;
+bool  IsCompactColumnAliases    = true;
+bool  GenerateDataTypes         = false;
+bool? GenerateLengthProperty    = null;
+bool? GeneratePrecisionProperty = null;
+bool? GenerateScaleProperty     = null;
+bool  GenerateDbTypes           = false;
+bool  GenerateSchemaAsType      = false;
 
 string SchemaNameSuffix          = "Schema";
 string SchemaDataContextTypeName = "DataContext";
@@ -232,16 +235,28 @@ void GenerateTypesFromMetadata()
 			if (GenerateDataTypes)
 			{
 				var space = new string(' ', dataTypeMaxLen - c.DataType.Length);
-
 				ca.Parameters.Add("DataType=" + dataTypePrefix + c.DataType + space);
-
-				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
-				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
-				if (c.Scale     != null) ca.Parameters.Add("Scale="     + c.Scale);
-
 				canBeReplaced = false;
 			}
 
+			if(GenerateDataTypes && !GenerateLengthProperty.HasValue || GenerateLengthProperty == true)
+			{
+				if (c.Length    != null) ca.Parameters.Add("Length="    + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length.ToString()));
+				canBeReplaced = false;
+			}
+
+			if(GenerateDataTypes && !GeneratePrecisionProperty.HasValue || GeneratePrecisionProperty == true)
+			{
+				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
+				canBeReplaced = false;
+			}
+
+			if(GenerateDataTypes && !GenerateScaleProperty.HasValue || GenerateScaleProperty == true)
+			{
+				if (c.Scale     != null) ca.Parameters.Add("Scale=" + c.Scale);
+				canBeReplaced = false;
+			}
+			
 			if (c.SkipOnInsert && !c.IsIdentity)
 			{
 				ca.Parameters.Add("SkipOnInsert=true");
