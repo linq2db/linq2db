@@ -28,6 +28,7 @@ PluralizeDataContextPropertyNames   = true;    // If true, pluralizes DataContex
 SingularizeDataContextPropertyNames = false;   // If true, singularizes DataContex pProperty names.
 
 GenerateDataTypes                   = false;   // If true, generates the DataType/Length/Precision/Scale properties of the Column attribute (unless overriden by the properties below).
+GenerateDataTypeProperty            = null;    // If true, generates the DataType property of the Column attribute. If false, excludes generation on the DataType property even if GenerateDataTypes == true.
 GenerateLengthProperty              = null;    // If true, generates the Length property of the Column attribute. If false, excludes generation on the Length property even if GenerateDataTypes == true.
 GeneratePrecisionProperty           = null;    // If true, generates the Precision property of the Column attribute. If false, excludes generation on the Precision property even if GenerateDataTypes == true.
 GenerateScaleProperty               = null;    // If true, generates the Scale property of the Column attribute. If false, excludes generation on the Scale property even if GenerateDataTypes == true.

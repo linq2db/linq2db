@@ -9,6 +9,7 @@
 
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
+//	GenerateDataTypeProperty = false;
 
 //	GetSchemaOptions.IncludedSchemas = new[] { "TestUser", "SYS" };
 
