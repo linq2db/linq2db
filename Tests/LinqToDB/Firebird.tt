@@ -2,7 +2,7 @@
 <#@ output extension=".generated.cs"                              #>
 <#@ include file="..\..\Templates\LinqToDB.Firebird.ttinclude"    #>
 <#@ include file="..\..\Templates\PluralizationService.ttinclude" #>
-<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.4.5.2.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ assembly name="$(SolutionDir)packages\FirebirdSql.Data.FirebirdClient.4.6.2.0\lib\net40-client\FirebirdSql.Data.FirebirdClient.dll" #>
 <#@ assembly name="I:\linq2db\Source\bin\Debug.4.5\linq2db.dll" #>
 <#
 	NamespaceName = "FirebirdDataContext";

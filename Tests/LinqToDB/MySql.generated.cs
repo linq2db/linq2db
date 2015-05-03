@@ -31,15 +31,21 @@ namespace MySqlDataContext
 		public ITable<person>       people         { get { return this.GetTable<person>(); } }
 		public ITable<testidentity> testidentities { get { return this.GetTable<testidentity>(); } }
 		public ITable<testsamename> testsamenames  { get { return this.GetTable<testsamename>(); } }
+		public ITable<testtable2>   testtable2     { get { return this.GetTable<testtable2>(); } }
+		public ITable<testtable3>   testtable3     { get { return this.GetTable<testtable3>(); } }
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table("alltypes")]
@@ -128,7 +134,7 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_Person", BackReferenceName="DoctorPerson")]
 		public person DoctorPerson { get; set; }
 
 		#endregion
@@ -175,7 +181,7 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Patient_Person", BackReferenceName="PatientPerson")]
 		public person PatientPerson { get; set; }
 
 		#endregion
@@ -195,13 +201,13 @@ namespace MySqlDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public doctor DoctorPerson { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public patient PatientPerson { get; set; }
 
 		#endregion
@@ -219,7 +225,23 @@ namespace MySqlDataContext
 		[PrimaryKey, NotNull] public int ID { get; set; } // int(11)
 	}
 
-	public static partial class tableExtensions
+	[Table("testtable2")]
+	public partial class testtable2
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // int(11)
+		[Column,     NotNull    ] public string    Name        { get; set; } // char(50)
+		[Column,        Nullable] public string    Description { get; set; } // char(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // datetime
+	}
+
+	[Table("testtable3")]
+	public partial class testtable3
+	{
+		[PrimaryKey, NotNull] public int    ID   { get; set; } // int(11)
+		[Column,     NotNull] public string Name { get; set; } // char(50)
+	}
+
+	public static partial class TableExtensions
 	{
 		public static alltype Find(this ITable<alltype> table, int ID)
 		{
@@ -264,6 +286,18 @@ namespace MySqlDataContext
 		}
 
 		public static testsamename Find(this ITable<testsamename> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static testtable2 Find(this ITable<testtable2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static testtable3 Find(this ITable<testtable3> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

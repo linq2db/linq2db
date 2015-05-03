@@ -32,12 +32,16 @@ namespace SQLiteDataContext
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table("AllTypes")]
@@ -57,10 +61,10 @@ namespace SQLiteDataContext
 		[Column,     Nullable] public DateTime? datetimeDataType         { get; set; } // datetime
 		[Column,     Nullable] public char?     charDataType             { get; set; } // char(1)
 		[Column,     Nullable] public string    varcharDataType          { get; set; } // varchar(20)
-		[Column,     Nullable] public string    textDataType             { get; set; } // text(2147483647)
+		[Column,     Nullable] public string    textDataType             { get; set; } // text(max)
 		[Column,     Nullable] public string    ncharDataType            { get; set; } // char(20)
 		[Column,     Nullable] public string    nvarcharDataType         { get; set; } // nvarchar(20)
-		[Column,     Nullable] public string    ntextDataType            { get; set; } // ntext(2147483647)
+		[Column,     Nullable] public string    ntextDataType            { get; set; } // ntext(max)
 		[Column,     Nullable] public byte[]    binaryDataType           { get; set; } // binary
 		[Column,     Nullable] public byte[]    varbinaryDataType        { get; set; } // varbinary
 		[Column,     Nullable] public byte[]    imageDataType            { get; set; } // image
@@ -86,7 +90,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="FK_Doctor_0_0", BackReferenceName="Doctor00")]
 		public Person FK_00 { get; set; }
 
 		#endregion
@@ -149,7 +153,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public Doctor Doctor00 { get; set; }
 
 		#endregion

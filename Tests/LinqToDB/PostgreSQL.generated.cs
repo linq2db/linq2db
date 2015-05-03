@@ -6,6 +6,7 @@
 //---------------------------------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -36,15 +37,21 @@ namespace PostreSQLDataContext
 		public ITable<testsamename>       testsamenames        { get { return this.GetTable<testsamename>(); } }
 		public ITable<TestSchemaIdentity> TestSchemaIdentities { get { return this.GetTable<TestSchemaIdentity>(); } }
 		public ITable<testserialidentity> testserialidentities { get { return this.GetTable<testserialidentity>(); } }
+		public ITable<TestTable2>         TestTable2           { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>         TestTable3           { get { return this.GetTable<TestTable3>(); } }
 
 		public TestDataDB()
 		{
+			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
+			InitDataContext();
 		}
+
+		partial void InitDataContext();
 	}
 
 	[Table(Schema="public", Name="testsamename")]
@@ -107,7 +114,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="Doctor_PersonID_fkey", BackReferenceName="DoctorPersonIDfkeys")]
 		public Person PersonIDfkey { get; set; }
 
 		#endregion
@@ -160,7 +167,7 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Patient_PersonID_fkey
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false, KeyName="Patient_PersonID_fkey", BackReferenceName="PatientPersonIDfkeys")]
 		public Person PersonIDfkey { get; set; }
 
 		#endregion
@@ -180,13 +187,13 @@ namespace PostreSQLDataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public IEnumerable<Doctor> DoctorPersonIDfkeys { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true, IsBackReference=true)]
 		public IEnumerable<Patient> PatientPersonIDfkeys { get; set; }
 
 		#endregion
@@ -235,5 +242,96 @@ namespace PostreSQLDataContext
 	public partial class testserialidentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
+	[Table(Schema="public", Name="TestTable2")]
+	public partial class TestTable2
+	{
+		[PrimaryKey, Identity   ] public int       ID          { get; set; } // integer
+		[Column,     NotNull    ] public string    Name        { get; set; } // character varying(50)
+		[Column,        Nullable] public string    Description { get; set; } // character varying(250)
+		[Column,        Nullable] public DateTime? CreatedOn   { get; set; } // timestamp (6) without time zone
+	}
+
+	[Table(Schema="public", Name="TestTable3")]
+	public partial class TestTable3
+	{
+		[PrimaryKey, NotNull] public int    ID   { get; set; } // integer
+		[Column,     NotNull] public string Name { get; set; } // character varying(50)
+	}
+
+	public static partial class TableExtensions
+	{
+		public static _testsamename Find(this ITable<_testsamename> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static alltype Find(this ITable<alltype> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static Person Find(this ITable<Person> table, int PersonID)
+		{
+			return table.FirstOrDefault(t =>
+				t.PersonID == PersonID);
+		}
+
+		public static SequenceTest1 Find(this ITable<SequenceTest1> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static SequenceTest2 Find(this ITable<SequenceTest2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static SequenceTest3 Find(this ITable<SequenceTest3> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestIdentity Find(this ITable<TestIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static testsamename Find(this ITable<testsamename> table, int id)
+		{
+			return table.FirstOrDefault(t =>
+				t.id == id);
+		}
+
+		public static TestSchemaIdentity Find(this ITable<TestSchemaIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static testserialidentity Find(this ITable<testserialidentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable2 Find(this ITable<TestTable2> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TestTable3 Find(this ITable<TestTable3> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
 	}
 }
