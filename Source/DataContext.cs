@@ -89,12 +89,15 @@ namespace LinqToDB
 
 		internal void ReleaseQuery()
 		{
-			LastQuery = _dataConnection.LastQuery;
-
-			if (_dataConnection != null && LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+			if (_dataConnection != null)
 			{
-				_dataConnection.Dispose();
-				_dataConnection = null;
+				LastQuery = _dataConnection.LastQuery;
+
+				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				{
+					_dataConnection.Dispose();
+					_dataConnection = null;
+				}
 			}
 		}
 
