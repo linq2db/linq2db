@@ -152,9 +152,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\packages\Npgsql.2.2.4.3\lib\net45\Mono.Security.dll</HintPath>
     </Reference>
-    <Reference Include="MySql.Data, Version=6.9.5.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\MySql.Data.6.9.5\lib\net45\MySql.Data.dll</HintPath>
+    <Reference Include="MySql.Data, Version=6.9.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MySql.Data.6.9.6\lib\net45\MySql.Data.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Npgsql, Version=2.2.4.3, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

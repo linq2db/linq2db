@@ -1,3 +1,14 @@
+6.9.6
+- Fix for Incorrect query result with Entity Framework 6 (MySql bug #74918, Oracle bug #20129927).
+- Fix for GetTimeZoneOffset to use date and time to calculate timediff (MySQL Bug #74905, Oracle Bug #20065691).
+- Fix for MySqlSimpleMembershipProvider keeps database connections open on some operations (MySQL Bug #74662, Oracle Bug #20109419)
+- Fix for Any Call to RoleExists() returns true whether or not the role exists (MySql bug #75397, Oracle bug #20325391).
+- Fix for all dateTimes set as UTC Kind (MySQL Bug #74134, Oracle Bug #20200662).
+- Fix for Invalid SQL query when eager loading two nested collections (MySQL Bug #70941, Oracle bug #18049862).
+- Fix for chinese characters used in the connection string when connecting to MySql Server (MySQL Bug #70041, Oracle Bug #18141356).
+
+
+
 6.9.5
 - Disabled installation on-demand in Installer (Oracle Bug #19670596).
 - Fix for Generated SQL requests column that doesn't exist in LINQ to Entities (MySql bug #72004, Oracle bug #19681348).
