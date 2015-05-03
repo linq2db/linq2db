@@ -17,11 +17,11 @@ using LinqToDB.Mapping;
 namespace OracleDataContext
 {
 	/// <summary>
-	/// Database       : testdata
+	/// Database       : TestData
 	/// Data Source    : dbhost
 	/// Server Version : 11.2.0.1.0
 	/// </summary>
-	public partial class testdataDB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<ALLTYPE>               ALLTYPES              { get { return this.GetTable<ALLTYPE>(); } }
 		public ITable<BINARYDATA>            BINARYDATAs           { get { return this.GetTable<BINARYDATA>(); } }
@@ -42,12 +42,12 @@ namespace OracleDataContext
 		public ITable<TESTTABLE2>            TESTTABLE2            { get { return this.GetTable<TESTTABLE2>(); } }
 		public ITable<TESTTABLE3>            TESTTABLE3            { get { return this.GetTable<TESTTABLE3>(); } }
 
-		public testdataDB()
+		public TestDataDB()
 		{
 			InitDataContext();
 		}
 
-		public testdataDB(string configuration)
+		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
@@ -305,7 +305,7 @@ namespace OracleDataContext
 		[Column(DbType="VARCHAR2(50)", DataType=DataType.VarChar, Length=50),                      NotNull] public string  NAME { get; set; } // VARCHAR2(50)
 	}
 
-	public static partial class testdataDBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region PERSON_UPDATE
 
