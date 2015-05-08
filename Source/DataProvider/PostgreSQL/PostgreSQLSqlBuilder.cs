@@ -61,9 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Byte          : StringBuilder.Append("SmallInt");      break;
 				case DataType.Money         : StringBuilder.Append("Decimal(19,4)"); break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");     break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");       break;

@@ -1,0 +1,11 @@
+﻿<Properties StartupItem="Source\LinqToDB.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <DisabledProjects>
+    <String>Source\LinqToDB.Mono.csproj</String>
+  </DisabledProjects>
+</Properties>
