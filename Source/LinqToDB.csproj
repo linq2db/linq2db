@@ -11,6 +11,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,6 +37,24 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release.4.5\</OutputPath>
+    <DefineConstants>TRACE;FW4;MONO</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug.4.5\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -185,7 +204,6 @@
     <Compile Include="DataProvider\Access\AccessSchemaProvider.cs" />
     <Compile Include="DataProvider\AssemblyResolver.cs" />
     <Compile Include="DataProvider\BulkCopyReader.cs" />
-    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdDataProvider.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
@@ -436,6 +454,7 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
+    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

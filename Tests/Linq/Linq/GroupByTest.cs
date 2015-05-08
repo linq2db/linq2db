@@ -804,16 +804,16 @@ namespace Tests.Linq
 				AreEqual(
 					from ch in Child
 						join max in
-							from ch in Child
-							group ch by ch.ParentID into g
+							from ch1 in Child
+							group ch1 by ch1.ParentID into g
 							select g.Max(c => c.ChildID)
 						on ch.ChildID equals max
 					select ch
 					,
 					from ch in db.Child
 						join max in
-							from ch in db.Child
-							group ch by ch.ParentID into g
+							from ch1 in db.Child
+							group ch1 by ch1.ParentID into g
 							select g.Max(c => c.ChildID)
 						on ch.ChildID equals max
 					select ch);

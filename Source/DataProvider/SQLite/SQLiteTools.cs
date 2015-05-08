@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -9,12 +10,34 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
+		public static string AssemblyName   = "System.Data.SQLite";
+		public static string ConnectionName = "SQLiteConnection";
+		public static string DataReaderName = "SQLiteDataReader";
+
 		static readonly SQLiteDataProvider _SQLiteDataProvider = new SQLiteDataProvider();
 
 		public static bool AlwaysCheckDbNull = true;
 
 		static SQLiteTools()
 		{
+			try
+			{
+				var path = typeof(SQLiteTools).Assembly.CodeBase.Replace("file:///", "");
+
+				path = Path.GetDirectoryName(path);
+
+				if (!File.Exists(Path.Combine(path, "System.Data.SQLite.dll")) &&
+					(Type.GetType("Mono.Runtime") != null || File.Exists(Path.Combine(path, "Mono.Data.Sqlite.dll"))))
+				{
+					AssemblyName   = "Mono.Data.Sqlite";
+					ConnectionName = "SqliteConnection";
+					DataReaderName = "SqliteDataReader";
+				}
+			}
+			catch (Exception)
+			{
+			}
+
 			DataConnection.AddDataProvider(_SQLiteDataProvider);
 		}
 
@@ -26,11 +49,13 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void ResolveSQLite(string path)
 		{
 			new AssemblyResolver(path, "System.Data.SQLite");
+			new AssemblyResolver(path, "Mono.Data.Sqlite");
 		}
 
 		public static void ResolveSQLite(Assembly assembly)
 		{
 			new AssemblyResolver(assembly, "System.Data.SQLite");
+			new AssemblyResolver(assembly, "Mono.Data.Sqlite");
 		}
 
 		#region CreateDataConnection

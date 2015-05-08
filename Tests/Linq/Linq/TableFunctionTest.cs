@@ -180,7 +180,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>(c => c.Description, "sweetest candy bread and dry meat")
+					join t in db.FreeTextTable<Northwind.Category,int>(c1 => c1.Description, "sweetest candy bread and dry meat")
 					on c.CategoryID equals t.Key
 					select c;
 

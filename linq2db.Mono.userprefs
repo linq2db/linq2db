@@ -1,8 +1,30 @@
 ﻿<Properties StartupItem="Source\LinqToDB.csproj">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" ActiveRuntime="Mono 4.0.1 (Visual)" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Tests\Linq\Create\CreateData.cs">
+    <Files>
+      <File FileName="Tests\Linq\DataContextTestCase.cs" Line="1" Column="1" />
+      <File FileName="Tests\Linq\TestBase.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SQLite\SQLiteDataProvider.cs" Line="1" Column="1" />
+      <File FileName="Tests\Linq\Create\CreateData.cs" Line="142" Column="1" />
+      <File FileName="Tests\Linq\Linq\TableFunctionTest.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SqlServer\SqlServerSqlBuilder.cs" Line="1" Column="1" />
+      <File FileName="Tests\Model\NorthwindDB.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SQLite\SQLiteTools.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\AssemblyResolver.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SQLite\SQLiteFactory.cs" Line="1" Column="1" />
+      <File FileName="Tests\Linq\DataProvider\SQLiteTest.cs" Line="1" Column="1" />
+      <File FileName="Tests\Linq\App.config" Line="1" Column="1" />
+      <File FileName="Source\Data\DataConnectionExtensions.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SqlServer\SqlServerDataProvider.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\BasicBulkCopy.cs" Line="1" Column="1" />
+      <File FileName="Source\DataProvider\SqlServer\SqlServerBulkCopy.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="I:\linq2db\Tests\Linq\Create\CreateData.cs" line="80" column="2" />
+      <Breakpoint file="I:\linq2db\Source\Data\DataConnectionExtensions.cs" line="205" column="3" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <DisabledProjects>
