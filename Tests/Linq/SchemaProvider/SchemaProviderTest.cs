@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.SchemaProvider
@@ -98,6 +99,32 @@ namespace Tests.SchemaProvider
 				Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
 
 				Assert.That(table.Columns.Single(c => c.ColumnName == "intUnsignedDataType").MemberType, Is.EqualTo("uint?"));
+			}
+		}
+
+		class PKTest
+		{
+			[PrimaryKey(1)] public int ID1;
+			[PrimaryKey(2)] public int ID2;
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]
+		public void PostgreSQLTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				try { conn.DropTable<PKTest>(); } catch {}
+
+				conn.CreateTable<PKTest>();
+
+				var sp       = conn.DataProvider.GetSchemaProvider();
+				var dbSchema = sp.GetSchema(conn);
+				var table    = dbSchema.Tables.Single(t => t.TableName == "PKTest");
+
+				Assert.That(table.Columns[0].PrimaryKeyOrder, Is.EqualTo(1));
+				Assert.That(table.Columns[1].PrimaryKeyOrder, Is.EqualTo(2));
+
+				conn.DropTable<PKTest>();
 			}
 		}
 	}
