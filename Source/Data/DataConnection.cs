@@ -825,6 +825,7 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection;
 			_mappingSchema      = mappingSchema;
+			_closeConnection    = true;
 		}
 
 		public object Clone()
@@ -832,7 +833,7 @@ namespace LinqToDB.Data
 			var connection =
 				_connection == null       ? null :
 				_connection is ICloneable ? (IDbConnection)((ICloneable)_connection).Clone() :
-											DataProvider.CreateConnection(ConnectionString);
+				                            DataProvider.CreateConnection(ConnectionString);
 
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}

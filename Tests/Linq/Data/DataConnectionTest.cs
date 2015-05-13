@@ -76,5 +76,18 @@ namespace Tests.Data
 				Assert.That(gender, Is.EqualTo(Gender.Male));
 			}
 		}
+
+		[Test, DataContextSource(false)]
+		public void CloneTest(string context)
+		{
+			using (var con = new DataConnection(context))
+			{
+				var dbName = con.Connection.Database;
+
+				for (var i = 0; i < 150; i++)
+					using (var clone = (DataConnection)con.Clone())
+						dbName = clone.Connection.Database;
+			}
+		}
 	}
 }
