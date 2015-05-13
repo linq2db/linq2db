@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				name += physicalName;
 
-				arr.Add(new SqlExpression(name, Precedence.Primary));
+				arr.Add(new SqlExpression(name, PrecedenceLevel.Primary));
 			}
 
 			{
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (field is string)
 				{
-					arr[0] = new SqlExpression(field.ToString(), Precedence.Primary);
+					arr[0] = new SqlExpression(field.ToString(), PrecedenceLevel.Primary);
 				}
 				else if (field is LambdaExpression)
 				{
@@ -67,7 +67,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] != '[')
 							name = "[" + name + "]";
 
-						arr[0] = new SqlExpression(name, Precedence.Primary);
+						arr[0] = new SqlExpression(name, PrecedenceLevel.Primary);
 					}
 				}
 			}

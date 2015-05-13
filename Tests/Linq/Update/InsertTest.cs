@@ -935,7 +935,7 @@ namespace Tests.Update
 		[Test, DataContextSource]
 		public void Insert11(string context)
 		{
-			var p = new ComplexPerson { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = Gender.Male };
+			var p = new ComplexPerson { Name = new FullName { Name = new FirsLastName { FirstName = "fn", LastName = "ln" } }, Gender = Gender.Male };
 
 			using (var db = GetDataContext(context))
 			{
@@ -943,13 +943,13 @@ namespace Tests.Update
 
 				try
 				{
-                    db.Insert(p);
+					db.Insert(p);
 
-                    var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
+					var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
 
-                    Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
-                    Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
-                    Assert.AreEqual(p.Gender, inserted.Gender);
+					Assert.AreEqual(p.Name.Name.FirstName, inserted.Name.Name.FirstName);
+					Assert.AreEqual(p.Name.Name.LastName,  inserted.Name.Name.LastName);
+					Assert.AreEqual(p.Gender, inserted.Gender);
 
 				}
 				finally
@@ -969,9 +969,9 @@ namespace Tests.Update
 				try
 				{
 					db
-                        .Into(db.GetTable<ComplexPerson>())
-							.Value(_ => _.Name.FirstName, "FirstName")
-							.Value(_ => _.Name.LastName,  () => "LastName")
+						.Into(db.GetTable<ComplexPerson>())
+							.Value(_ => _.Name.Name.FirstName, "FirstName")
+							.Value(_ => _.Name.Name.LastName,  () => "LastName")
 							.Value(_ => _.Gender,         Gender.Female)
 						.Insert();
 				}
@@ -992,13 +992,16 @@ namespace Tests.Update
 				try
 				{
 					db
-                        .GetTable<ComplexPerson>()
-                        .Insert(() => new ComplexPerson
+						.GetTable<ComplexPerson>()
+						.Insert(() => new ComplexPerson
 						{
 							Name = new FullName
 							{
-								FirstName = "FirstName",
-								LastName  = "LastName"
+								Name = new FirsLastName
+								{
+									FirstName = "FirstName",
+									LastName  = "LastName"
+								}
 							},
 							Gender = Gender.Male,
 						});

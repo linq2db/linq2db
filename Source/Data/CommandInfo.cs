@@ -547,7 +547,7 @@ namespace LinqToDB.Data
 
 		#region SetParameters
 
-		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
+		internal static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			if (parameters == null)
 				return;

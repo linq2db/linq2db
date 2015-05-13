@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 		public override SelectQuery   SelectQuery { get; set; }
 		public override IBuildContext Parent      { get; set; }
 
-		public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 		{
 			if (Expression.NodeType == ExpressionType.Lambda)
 			{

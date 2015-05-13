@@ -15,17 +15,17 @@ namespace LinqToDB.Data
 			return new CommandInfo(dataConnection, commandText);
 		}
 
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, params DataParameter[] parameters)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, params DataParameter[] parameters)
 		{
 			return new CommandInfo(dataConnection, commandText, parameters);
 		}
 
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, DataParameter parameter)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, DataParameter parameter)
 		{
 			return new CommandInfo(dataConnection, commandText, parameter);
 		}
 
-		public static CommandInfo SetCommand(DataConnection dataConnection, string commandText, object parameters)
+		public static CommandInfo SetCommand(this DataConnection dataConnection, string commandText, object parameters)
 		{
 			return new CommandInfo(dataConnection, commandText, parameters);
 		}

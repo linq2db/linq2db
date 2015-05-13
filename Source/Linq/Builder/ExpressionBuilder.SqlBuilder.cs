@@ -211,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Select.Take(Convert(
 						context,
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, PrecedenceLevel.Additive)));
 			}
 
 			if (!DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
@@ -675,17 +675,17 @@ namespace LinqToDB.Linq.Builder
 						switch (expression.NodeType)
 						{
 							case ExpressionType.Add             :
-							case ExpressionType.AddChecked      : return Convert(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive));
-							case ExpressionType.And             : return Convert(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise));
-							case ExpressionType.Divide          : return Convert(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative));
-							case ExpressionType.ExclusiveOr     : return Convert(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise));
-							case ExpressionType.Modulo          : return Convert(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative));
+							case ExpressionType.AddChecked      : return Convert(context, new SqlBinaryExpression(t, l, "+", r, PrecedenceLevel.Additive));
+							case ExpressionType.And             : return Convert(context, new SqlBinaryExpression(t, l, "&", r, PrecedenceLevel.Bitwise));
+							case ExpressionType.Divide          : return Convert(context, new SqlBinaryExpression(t, l, "/", r, PrecedenceLevel.Multiplicative));
+							case ExpressionType.ExclusiveOr     : return Convert(context, new SqlBinaryExpression(t, l, "^", r, PrecedenceLevel.Bitwise));
+							case ExpressionType.Modulo          : return Convert(context, new SqlBinaryExpression(t, l, "%", r, PrecedenceLevel.Multiplicative));
 							case ExpressionType.Multiply:
-							case ExpressionType.MultiplyChecked : return Convert(context, new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative));
-							case ExpressionType.Or              : return Convert(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise));
+							case ExpressionType.MultiplyChecked : return Convert(context, new SqlBinaryExpression(t, l, "*", r, PrecedenceLevel.Multiplicative));
+							case ExpressionType.Or              : return Convert(context, new SqlBinaryExpression(t, l, "|", r, PrecedenceLevel.Bitwise));
 							case ExpressionType.Power           : return Convert(context, new SqlFunction(t, "Power", l, r));
 							case ExpressionType.Subtract        :
-							case ExpressionType.SubtractChecked : return Convert(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction));
+							case ExpressionType.SubtractChecked : return Convert(context, new SqlBinaryExpression(t, l, "-", r, PrecedenceLevel.Subtraction));
 							case ExpressionType.Coalesce        :
 								{
 									if (r is SqlFunction)
@@ -723,7 +723,7 @@ namespace LinqToDB.Linq.Builder
 							case ExpressionType.UnaryPlus     : return o;
 							case ExpressionType.Negate        :
 							case ExpressionType.NegateChecked :
-								return Convert(context, new SqlBinaryExpression(t, new SqlValue(-1), "*", o, Precedence.Multiplicative));
+								return Convert(context, new SqlBinaryExpression(t, new SqlValue(-1), "*", o, PrecedenceLevel.Multiplicative));
 						}
 
 						break;
@@ -1436,12 +1436,12 @@ namespace LinqToDB.Linq.Builder
 					// | (SqlValue(null), SqlQuery(Select([]) as q))  =>
 
 					var q =
-						l.ElementType == QueryElementType.SqlQuery &&
+						l.ElementType == QueryElementType.SelectQuery &&
 						r.ElementType == QueryElementType.SqlValue &&
 						((SqlValue)r).Value == null &&
 						((SelectQuery)l).Select.Columns.Count == 0 ?
 							(SelectQuery)l :
-						r.ElementType == QueryElementType.SqlQuery &&
+						r.ElementType == QueryElementType.SelectQuery &&
 						l.ElementType == QueryElementType.SqlValue &&
 						((SqlValue)l).Value == null &&
 						((SelectQuery)r).Select.Columns.Count == 0 ?
@@ -1852,7 +1852,7 @@ namespace LinqToDB.Linq.Builder
 
 			var ctx = GetContext(context, arg);
 
-			if (ctx is TableBuilder.TableContext &&
+			if (ctx is TableBuilderOld.TableContext &&
 			    ctx.SelectQuery != context.SelectQuery &&
 			    ctx.IsExpression(arg, 0, RequestFor.Object).Result)
 			{
@@ -2011,7 +2011,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		internal ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		internal ISqlPredicate MakeIsPredicate(TableBuilderOld.TableContext table, Type typeOperand)
 		{
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SelectQuery.Predicate.Expr(new SqlValue(true)));
@@ -2100,7 +2100,7 @@ namespace LinqToDB.Linq.Builder
 		ISqlPredicate MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext)null, Expression.Constant(null), new SelectQuery()), typeOperand);
+			var table       = new TableBuilderOld.TableContext(this, new BuildInfo((IBuildContext)null, Expression.Constant(null), new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return Convert(table, new SelectQuery.Predicate.Expr(new SqlValue(true)));

@@ -8,6 +8,7 @@ namespace LinqToDB.Mapping
 		public bool             IsDefault;
 		public Type             Type;
 		public ColumnDescriptor Discriminator;
+		public EntityDescriptor EntityDescriptor;
 
 		public string DiscriminatorName
 		{

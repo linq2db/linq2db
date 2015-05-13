@@ -12,16 +12,16 @@ namespace LinqToDB.Expressions
 	class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(
-			Type type, int idx, Expression dataReaderParam, IDataContext dataContext)
+			Type type, int idx, Expression dataReaderParameter, IDataContext dataContext)
 		{
 			_type            = type;
 			_idx             = idx;
-			_dataReaderParam = dataReaderParam;
+			_dataReaderParameter = dataReaderParameter;
 			_dataContext     = dataContext;
 		}
 
 		readonly int          _idx;
-		readonly Expression   _dataReaderParam;
+		readonly Expression   _dataReaderParameter;
 		readonly IDataContext _dataContext;
 		readonly Type         _type;
 
@@ -34,14 +34,14 @@ namespace LinqToDB.Expressions
 		public override Expression Reduce()
 		{
 			var columnReader = new ColumnReader(_dataContext, _dataContext.MappingSchema, _type, _idx);
-			return Convert(Call(Constant(columnReader), _columnReaderGetValueInfo, _dataReaderParam), _type);
+			return Convert(Call(Constant(columnReader), _columnReaderGetValueInfo, _dataReaderParameter), _type);
 		}
 
 		static readonly MethodInfo _isDBNullInfo = MemberHelper.MethodOf<IDataReader>(rd => rd.IsDBNull(0));
 
 		public Expression Reduce(IDataReader dataReader)
 		{
-			return GetColumnReader(_dataContext, _dataContext.MappingSchema, dataReader, _type, _idx, _dataReaderParam);
+			return GetColumnReader(_dataContext, _dataContext.MappingSchema, dataReader, _type, _idx, _dataReaderParameter);
 		}
 
 		static Expression GetColumnReader(
@@ -126,34 +126,6 @@ namespace LinqToDB.Expressions
 				}
 
 				return func(dataReader);
-
-				/*
-				var value = dataReader.GetValue(_columnIndex);
-
-				if (value is DBNull || value == null)
-					return _defaultValue;
-
-				var fromType = value.GetType();
-
-				if (fromType == _columnType)
-					return value;
-
-				Func<object,object> func;
-
-				if (!_columnConverters.TryGetValue(fromType, out func))
-				{
-					var conv = _mappingSchema.GetConvertExpression(fromType, _columnType, false);
-					var pex  = Expression.Parameter(typeof(object));
-					var ex   = ReplaceParameter(conv, Expression.Convert(pex, fromType));
-					var lex  = Expression.Lambda<Func<object, object>>(
-						ex.Type == typeof(object) ? ex : Expression.Convert(ex, typeof(object)),
-						pex);
-
-					_columnConverters[fromType] = func = lex.Compile();
-				}
-
-				return func(value);
-				*/
 			}
 
 			readonly ConcurrentDictionary<Type,Func<IDataReader,object>> _columnConverters = new ConcurrentDictionary<Type,Func<IDataReader,object>>();

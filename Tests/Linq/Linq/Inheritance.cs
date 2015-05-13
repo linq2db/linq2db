@@ -87,6 +87,18 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void Test81(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.GetTable<ParentInheritanceBase> ().ToList();
+				db.GetTable<ParentInheritanceNull> ().ToList();
+				db.GetTable<ParentInheritance1>    ().ToList();
+				db.GetTable<ParentInheritanceValue>().ToList();
+			}
+		}
+
+		[Test, DataContextSource]
 		public void Test9(string context)
 		{
 			using (var db = GetDataContext(context))

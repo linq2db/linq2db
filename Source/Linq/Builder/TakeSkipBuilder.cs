@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Select.Take(builder.Convert(
 						sequence,
-						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue, PrecedenceLevel.Additive)));
 			}
 
 			if (!builder.DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))
@@ -118,12 +118,12 @@ namespace LinqToDB.Linq.Builder
 					!builder.DataContextInfo.SqlProviderFlags.IsTakeSupported)
 					sql.Select.Take(builder.Convert(
 						sequence,
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", sql.Select.SkipValue, PrecedenceLevel.Additive)));
 
 				if (prevSkipValue != null)
 					sql.Select.Skip(builder.Convert(
 						sequence,
-						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue, Precedence.Additive)));
+						new SqlBinaryExpression(typeof(int), prevSkipValue, "+", sql.Select.SkipValue, PrecedenceLevel.Additive)));
 			}
 
 			if (!builder.DataContextInfo.SqlProviderFlags.GetAcceptsTakeAsParameterFlag(sql))

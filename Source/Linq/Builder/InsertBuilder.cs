@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 							sequence.SelectQuery.Insert.Items,
 							sequence);
 
-						sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
+						sequence.SelectQuery.Insert.Into  = ((TableBuilderOld.TableContext)sequence).SqlTable;
 						sequence.SelectQuery.From.Tables.Clear();
 
 						break;
@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 						foreach (var item in sequence.SelectQuery.Insert.Items)
 							sequence.SelectQuery.Select.Columns.Add(new SelectQuery.Column(sequence.SelectQuery, item.Expression));
 
-						sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)into).SqlTable;
+						sequence.SelectQuery.Insert.Into = ((TableBuilderOld.TableContext)into).SqlTable;
 
 						break;
 					}
@@ -78,9 +78,6 @@ namespace LinqToDB.Linq.Builder
 			var insert = sequence.SelectQuery.Insert;
 
 			var q = insert.Into.Fields.Values
-#if SL4
-				.Cast<ISqlExpression>()
-#endif
 				.Except(insert.Items.Select(e => e.Column))
 				.OfType<SqlField>()
 				.Where(f => f.IsIdentity);
@@ -126,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 			readonly bool _insertWithIdentity;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				if (_insertWithIdentity) query.SetScalarQuery<object>();
 				else                     query.SetNonQueryQuery();
@@ -185,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 					if (sequence.SelectQuery.Select.IsDistinct)
 						sequence = new SubQueryContext(sequence);
 
-					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)sequence).SqlTable;
+					sequence.SelectQuery.Insert.Into = ((TableBuilderOld.TableContext)sequence).SqlTable;
 					sequence.SelectQuery.From.Tables.Clear();
 				}
 				// static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target)
@@ -198,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 						sequence = new SubQueryContext(sequence);
 
 					var tbl = builder.BuildSequence(new BuildInfo((IBuildContext)null, into, new SelectQuery()));
-					sequence.SelectQuery.Insert.Into = ((TableBuilder.TableContext)tbl).SqlTable;
+					sequence.SelectQuery.Insert.Into = ((TableBuilderOld.TableContext)tbl).SqlTable;
 				}
 
 				sequence.SelectQuery.Select.Columns.Clear();

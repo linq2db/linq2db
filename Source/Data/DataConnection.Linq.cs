@@ -5,6 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
@@ -25,7 +27,7 @@ namespace LinqToDB.Data
 		public ITable<T> GetTable<T>(bool dispose)
 			where T : class
 		{
-			return new Table<T>(new DataContextInfo(this, dispose));
+			return new TableOld<T>(new DataContextInfo(this, dispose));
 		}
 
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
@@ -45,7 +47,7 @@ namespace LinqToDB.Data
 
 		#region SetQuery
 
-		internal PreparedQuery GetCommand(IQueryContext query)
+		internal PreparedQuery GetCommand(IQueryContextOld query)
 		{
 			if (query.Context != null)
 			{
@@ -57,7 +59,7 @@ namespace LinqToDB.Data
 				 };
 			}
 
-			var sql    = query.SelectQuery.ProcessParameters();
+			var sql    = (SelectQuery)query.SelectQuery.ProcessParameters();
 			var newSql = ProcessQuery(sql);
 
 			if (!object.ReferenceEquals(sql, newSql))
@@ -98,7 +100,7 @@ namespace LinqToDB.Data
 			return selectQuery;
 		}
 
-		void GetParameters(IQueryContext query, PreparedQuery pq)
+		void GetParameters(IQueryContextOld query, PreparedQuery pq)
 		{
 			var parameters = query.GetParameters();
 
@@ -151,6 +153,65 @@ namespace LinqToDB.Data
 			DataProvider.SetParameter(p, name, dataType, parm.Value);
 
 			parms.Add(p);
+		}
+
+		#endregion
+
+		#region GetQueryContext
+
+		class QueryContext : IQueryContext
+		{
+			public QueryContext(Query query, DataConnection dataConnection, Expression expression)
+			{
+				_query          = query;
+				_dataConnection = dataConnection;
+				_expression     = expression;
+			}
+
+			readonly Query          _query;
+			readonly DataConnection _dataConnection;
+			readonly Expression     _expression;
+
+			public void Dispose() {}
+
+			void SetCommand()
+			{
+				var commandInfo = _query.GetCommandInfo(_dataConnection, _expression);
+
+				_dataConnection.InitCommand(CommandType.Text, commandInfo.CommandText, commandInfo.Parameters);
+
+				if (commandInfo.Parameters != null && commandInfo.Parameters.Length > 0)
+					CommandInfo.SetParameters(_dataConnection, commandInfo.Parameters);
+			}
+
+			public int ExecuteNonQuery()
+			{
+				SetCommand();
+				return _dataConnection.ExecuteNonQuery();
+			}
+
+			public object ExecuteScalar()
+			{
+				SetCommand();
+				return _dataConnection.ExecuteScalar  ();
+			}
+
+			public IDataReader ExecuteReader()
+			{
+				SetCommand();
+				return _dataConnection.ExecuteReader();
+			}
+
+			public Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
+			{
+				var commandInfo = _query.GetCommandInfo(_dataConnection, _expression);
+				return _dataConnection.SetCommand(commandInfo.CommandText, commandInfo.Parameters).ExecuteReaderAsync(cancellationToken);
+			}
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		{
+			return new QueryContext(query, this, expression);
 		}
 
 		#endregion
@@ -319,7 +380,7 @@ namespace LinqToDB.Data
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
 			var query = GetCommand(queryContext);
 

@@ -6,7 +6,7 @@ namespace LinqToDB.SqlProvider
 
 	public interface ISqlOptimizer
 	{
-		SelectQuery    Finalize         (SelectQuery selectQuery);
+		SqlQuery       Finalize         (SqlQuery sqlQuery);
 		ISqlExpression ConvertExpression(ISqlExpression expression);
 		ISqlPredicate  ConvertPredicate (SelectQuery selectQuery, ISqlPredicate  predicate);
 	}

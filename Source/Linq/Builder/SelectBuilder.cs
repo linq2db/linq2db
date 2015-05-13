@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 			static readonly ParameterExpression _counterParam = Expression.Parameter(typeof(int), "counter");
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				var expr = BuildExpression(null, 0);
 

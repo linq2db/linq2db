@@ -17,25 +17,25 @@ namespace LinqToDB
 			public ExpressionAttribute(string expression)
 				: base(expression)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = SqlQuery.PrecedenceLevel.Primary;
 			}
 
 			public ExpressionAttribute(string expression, params int[] argIndices)
 				: base(expression, argIndices)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = SqlQuery.PrecedenceLevel.Primary;
 			}
 
 			public ExpressionAttribute(string sqlProvider, string expression)
 				: base(sqlProvider, expression)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = SqlQuery.PrecedenceLevel.Primary;
 			}
 
 			public ExpressionAttribute(string sqlProvider, string expression, params int[] argIndices)
 				: base(sqlProvider, expression, argIndices)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = SqlQuery.PrecedenceLevel.Primary;
 			}
 
 			protected new string Name

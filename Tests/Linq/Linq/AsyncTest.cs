@@ -35,10 +35,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(false)]
+		[Test, DataContextSource]
 		public async void TestForEach(string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			using (var db = GetDataContext(context))
 			{
 				var list = new List<Parent>();
 

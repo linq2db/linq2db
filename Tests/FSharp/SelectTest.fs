@@ -1,5 +1,7 @@
 ﻿module Tests.FSharp.SelectTest
 
+open System.Linq
+
 open Tests.FSharp.Models
 
 open LinqToDB
@@ -27,3 +29,11 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     let sql = q.ToString()
     Assert.That(sql.IndexOf("First"), Is.LessThan(0))
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0))
+
+let LoadDeeplyComplexPersonTable (db : IDataContext) = 
+    let persons = db.GetTable<DeeplyComplexPerson>()
+    let list = query {
+        for p in persons do
+        select p
+    }
+    Assert.AreNotEqual(0, list.ToList().Count)

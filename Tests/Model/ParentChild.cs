@@ -394,7 +394,7 @@ namespace Tests.Model
 		}
 	}
 
-	public class ParentInheritanceValue : ParentInheritanceBase
+	public class ParentInheritanceValue : ParentInheritanceBase, IEquatable<ParentInheritanceValue>
 	{
 		[Column(IsDiscriminator = true)]
 		public int Value1;

@@ -5,53 +5,66 @@ using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
-    [Table("Person", IsColumnAttributeRequired = false)]
-    [Column("FirstName", "Name.FirstName")]
-    [Column("MiddleName", "Name.MiddleName")]
-    [Column("LastName", "Name.LastName")]
-    public class ComplexPerson : IPerson
-    {
+	public class FirsLastName
+	{
+		public string FirstName { get; set; }
+		public string LastName;
+	}
 
-        [Identity]
-        [SequenceName(ProviderName.Firebird, "PersonID")]
-        [Column("PersonID", IsPrimaryKey = true)]
-        public int ID { get; set; }
-        public Gender Gender { get; set; }
-        public FullName Name { get; set; }
+	public class FullName
+	{
+		public FirsLastName Name;
+		[Nullable]
+		public string MiddleName;
+	}
 
-        [NotColumn]
-        int IPerson.ID
-        {
-            get { return ID; }
-            set { ID = value; }
-        }
+	[Table("Person", IsColumnAttributeRequired = false)]
+	[Column("FirstName",  "Name.Name.FirstName")]
+	[Column("MiddleName", "Name.MiddleName")]
+	[Column("LastName",   "Name.Name.LastName")]
+	public class ComplexPerson : IPerson
+	{
 
-        [NotColumn]
-        Gender IPerson.Gender
-        {
-            get { return Gender; }
-            set { Gender = value; }
-        }
+		[Identity]
+		[SequenceName(ProviderName.Firebird, "PersonID")]
+		[Column("PersonID", IsPrimaryKey = true)]
+		public int      ID     { get; set; }
+		public Gender   Gender { get; set; }
+		public FullName Name = new FullName();
 
-        [NotColumn]
-        string IPerson.FirstName
-        {
-            get { return Name.FirstName; }
-            set { Name.FirstName = value; }
-        }
+		[NotColumn]
+		int IPerson.ID
+		{
+			get { return ID;  }
+			set { ID = value; }
+		}
 
-        [NotColumn]
-        string IPerson.MiddleName
-        {
-            get { return Name.MiddleName; }
-            set { Name.MiddleName = value; }
-        }
+		[NotColumn]
+		Gender IPerson.Gender
+		{
+			get { return Gender;  }
+			set { Gender = value; }
+		}
 
-        [NotColumn]
-        string IPerson.LastName
-        {
-            get { return Name.LastName; }
-            set { Name.LastName = value; }
-        }
-    }
+		[NotColumn]
+		string IPerson.FirstName
+		{
+			get { return Name.Name.FirstName;  }
+			set { Name.Name.FirstName = value; }
+		}
+
+		[NotColumn]
+		string IPerson.MiddleName
+		{
+			get { return Name.MiddleName;  }
+			set { Name.MiddleName = value; }
+		}
+
+		[NotColumn]
+		string IPerson.LastName
+		{
+			get { return Name.Name.LastName;  }
+			set { Name.Name.LastName = value; }
+		}
+	}
 }

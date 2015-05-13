@@ -341,7 +341,7 @@ namespace LinqToDB.SqlQuery
 
 		int ISqlExpression.Precedence
 		{
-			get { return Precedence.Unknown; }
+			get { return PrecedenceLevel.Unknown; }
 		}
 
 		Type ISqlExpression.SystemType

@@ -119,12 +119,14 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			if (selector    == null) throw new ArgumentNullException("selector");
 
-			var q = new Table<T>(dataContext, selector);
+//			var q = new Table<T>(dataContext, selector);
+			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			foreach (var item in q)
 				return item;
 
 			throw new InvalidOperationException();
+
 		}
 
 		#endregion

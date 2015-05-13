@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Firebird
 				return false;
 			}
 
-			if (element.ElementType == QueryElementType.SqlQuery)
+			if (element.ElementType == QueryElementType.SelectQuery)
 			{
 				new QueryVisitor().VisitParentFirst(element, SearchSelectClause);
 				return false;
@@ -44,9 +44,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return true;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(sqlQuery, int.MaxValue);
+
+			var selectQuery = (SelectQuery)sqlQuery;
 
 			new QueryVisitor().VisitParentFirst(selectQuery, SearchSelectClause);
 
@@ -62,7 +64,7 @@ namespace LinqToDB.DataProvider.Firebird
 					new QueryVisitor().Visit(key.Expression, SetNonQueryParameter);
 			}
 
-			selectQuery = base.Finalize(selectQuery);
+			selectQuery = (SelectQuery)base.Finalize(selectQuery);
 
 			switch (selectQuery.QueryType)
 			{
@@ -103,7 +105,7 @@ namespace LinqToDB.DataProvider.Firebird
 								return ex;
 						}
 
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+						return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 
 					case "DateAdd" :
 						switch ((Sql.DateParts)((SqlValue)func.Parameters[0]).Value)

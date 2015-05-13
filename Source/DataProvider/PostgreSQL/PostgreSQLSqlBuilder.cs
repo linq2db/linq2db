@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = BuildTableName(new StringBuilder(), database, owner, name);
 
-					return new SqlExpression("nextval('" + sb + "')", Precedence.Primary);
+					return new SqlExpression("nextval('" + sb + "')", PrecedenceLevel.Primary);
 				}
 			}
 

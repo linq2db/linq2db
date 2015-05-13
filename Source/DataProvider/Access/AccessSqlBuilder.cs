@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			switch (expr.Operation[0])
 			{
-				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
+				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, PrecedenceLevel.Additive - 1); break;
 				case '&':
 				case '|':
 				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);

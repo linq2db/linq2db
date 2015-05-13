@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public override ISqlExpression GetIdentityExpression(SqlTable table)
 		{
 			if (!table.SequenceAttributes.IsNullOrEmpty())
-				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", Precedence.Primary);
+				return new SqlExpression("GEN_ID(" + table.SequenceAttributes[0].SequenceName + ", 1)", PrecedenceLevel.Primary);
 
 			return base.GetIdentityExpression(table);
 		}

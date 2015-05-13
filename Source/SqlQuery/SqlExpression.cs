@@ -26,12 +26,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlExpression(Type systemType, string expr, params ISqlExpression[] parameters)
-			: this(systemType, expr, SqlQuery.Precedence.Unknown, parameters)
+			: this(systemType, expr, PrecedenceLevel.Unknown, parameters)
 		{
 		}
 
 		public SqlExpression(string expr, params ISqlExpression[] parameters)
-			: this(null, expr, SqlQuery.Precedence.Unknown, parameters)
+			: this(null, expr, PrecedenceLevel.Unknown, parameters)
 		{
 		}
 

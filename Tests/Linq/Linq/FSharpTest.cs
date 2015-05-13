@@ -62,5 +62,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert2(db);
 		}
+
+		[Test, DataContextSource]
+		public void LoadPersonTable(string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.SelectTest.LoadDeeplyComplexPersonTable(db);
+		}
 	}
 }

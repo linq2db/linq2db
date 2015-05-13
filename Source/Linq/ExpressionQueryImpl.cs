@@ -5,9 +5,9 @@ namespace LinqToDB.Linq
 {
 	class ExpressionQueryImpl<T> : ExpressionQuery<T>, IExpressionQuery
 	{
-		public ExpressionQueryImpl(IDataContextInfo dataContext, Expression expression)
+		public ExpressionQueryImpl(IDataContext dataContext, Expression expression)
+			: base(dataContext, expression)
 		{
-			Init(dataContext, expression);
 		}
 
 		public override string ToString()

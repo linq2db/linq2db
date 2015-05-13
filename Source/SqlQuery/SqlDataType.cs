@@ -463,7 +463,7 @@ namespace LinqToDB.SqlQuery
 
 		public int Precedence
 		{
-			get { return SqlQuery.Precedence.Primary; }
+			get { return PrecedenceLevel.Primary; }
 		}
 
 		public Type SystemType

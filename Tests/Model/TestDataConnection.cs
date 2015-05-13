@@ -23,7 +23,7 @@ namespace Tests.Model
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }
-        public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>(); } }
+		public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>();          } }
 		public ITable<Patient>                Patient                { get { return GetTable<Patient>();                } }
 		public ITable<Doctor>                 Doctor                 { get { return GetTable<Doctor>();                 } }
 		public ITable<Parent>                 Parent                 { get { return GetTable<Parent>();                 } }
@@ -57,7 +57,7 @@ namespace Tests.Model
 
 			//provider.SqlQuery = sql;
 
-			query = optimizer.Finalize(query);
+			query = (SelectQuery)optimizer.Finalize(query);
 
 			var cc = provider.CommandCount(query);
 			var sb = new StringBuilder();

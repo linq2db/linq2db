@@ -29,37 +29,11 @@ namespace Tests.Model
 		[Nullable]                                 public string MiddleName;
 		                                           public Gender Gender;
 
-        [NotColumn]
-        int IPerson.ID
-        {
-            get { return ID; }
-            set { ID = value; }
-        }
-        [NotColumn]
-        string IPerson.FirstName
-        {
-            get { return FirstName; }
-            set { FirstName = value; }
-        }
-        [NotColumn]
-        string IPerson.LastName
-        {
-            get { return LastName; }
-            set { LastName = value; }
-        }
-        [NotColumn]
-        string IPerson.MiddleName
-        {
-            get { return MiddleName; }
-            set { MiddleName = value; }
-        }
-        [NotColumn]
-        Gender IPerson.Gender
-        {
-            get { return Gender; }
-            set { Gender = value; }
-        }
-
+		[NotColumn] int    IPerson.ID         { get { return ID;         } set { ID         = value; } }
+		[NotColumn] string IPerson.FirstName  { get { return FirstName;  } set { FirstName  = value; } }
+		[NotColumn] string IPerson.LastName   { get { return LastName;   } set { LastName   = value; } }
+		[NotColumn] string IPerson.MiddleName { get { return MiddleName; } set { MiddleName = value; } }
+		[NotColumn] Gender IPerson.Gender     { get { return Gender;     } set { Gender     = value; } }
 
 		[NotColumn] public string Name { get { return FirstName + " " + LastName; }}
 
@@ -77,7 +51,7 @@ namespace Tests.Model
 			if (ReferenceEquals(this, other)) return true;
 			return
 				other.ID == ID &&
-				Equals(other.LastName,   LastName) &&
+				Equals(other.LastName,   LastName)   &&
 				Equals(other.MiddleName, MiddleName) &&
 				other.Gender == Gender &&
 				Equals(other.FirstName,  FirstName);

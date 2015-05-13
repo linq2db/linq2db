@@ -18,13 +18,13 @@ namespace LinqToDB.DataProvider.Informix
 				((SqlParameter)element).IsQueryParameter = false;
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, int.MaxValue);
+			CheckAliases(sqlQuery, int.MaxValue);
 
-			new QueryVisitor().Visit(selectQuery.Select, SetQueryParameter);
+			new QueryVisitor().Visit(((SelectQuery)sqlQuery).Select, SetQueryParameter);
 
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Informix
 									}
 
 									if (IsTimeDataType(func.Parameters[0]))
-										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
+										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", PrecedenceLevel.Primary, func.Parameters[1]);
 
 									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
 
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.Informix
 									break;
 							}
 
-							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
+							return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, par1, par0);
 						}
 
 					case "Quarter"  : return Inc(Div(Dec(new SqlFunction(func.SystemType, "Month", func.Parameters)), 3));

@@ -12,17 +12,17 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SelectQuery Finalize(SelectQuery selectQuery)
+		public override SqlQuery Finalize(SqlQuery sqlQuery)
 		{
-			CheckAliases(selectQuery, 30);
+			CheckAliases(sqlQuery, 30);
 
-			new QueryVisitor().Visit(selectQuery.Select, element =>
+			new QueryVisitor().Visit(((SelectQuery)sqlQuery).Select, element =>
 			{
 				if (element.ElementType == QueryElementType.SqlParameter)
 					((SqlParameter)element).IsQueryParameter = false;
 			});
 
-			selectQuery = base.Finalize(selectQuery);
+			var selectQuery = (SelectQuery)base.Finalize(sqlQuery);
 
 			switch (selectQuery.QueryType)
 			{
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 								return new SqlFunction(func.SystemType, "To_Timestamp", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 							}
 
-							return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+							return new SqlExpression(func.SystemType, "Cast({0} as {1})", PrecedenceLevel.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 						}
 
 					case "CharIndex"      :

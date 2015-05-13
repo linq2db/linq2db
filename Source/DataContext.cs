@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB
 {
@@ -126,7 +129,39 @@ namespace LinqToDB
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContext queryContext)
+		#region GetQueryContext
+
+		class QueryContext : IQueryContext
+		{
+			public QueryContext(DataContext dataContext, Query query, Expression expression)
+			{
+				_dataContext  = dataContext;
+				_queryContext = ((IDataContext)dataContext.GetDataConnection()).GetQueryContext(query, expression);
+			}
+
+			readonly DataContext   _dataContext;
+			readonly IQueryContext _queryContext;
+
+			public void Dispose() { _dataContext.ReleaseQuery(); }
+
+			public int         ExecuteNonQuery() { return _queryContext.ExecuteNonQuery(); }
+			public object      ExecuteScalar  () { return _queryContext.ExecuteScalar();   }
+			public IDataReader ExecuteReader  () { return _queryContext.ExecuteReader();   }
+
+			public Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
+			{
+				return _queryContext.ExecuteReaderAsync(cancellationToken);
+			}
+		}
+
+		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		{
+			return new QueryContext(this, query, expression);
+		}
+
+		#endregion
+
+		object IDataContext.SetQuery(IQueryContextOld queryContext)
 		{
 			var ctx = GetDataConnection() as IDataContext;
 			return ctx.SetQuery(queryContext);

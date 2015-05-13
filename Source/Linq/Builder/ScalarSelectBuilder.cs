@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			public SelectQuery       SelectQuery { get; set; }
 			public IBuildContext     Parent      { get; set; }
 
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(null, 0);
 				var mapper = Builder.BuildMapper<T>(expr);

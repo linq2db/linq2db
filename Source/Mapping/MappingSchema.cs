@@ -967,30 +967,51 @@ namespace LinqToDB.Mapping
 
 		#region EntityDescriptor
 
-		ConcurrentDictionary<Type,EntityDescriptor> _entityDescriptors;
+		Dictionary<Type,EntityDescriptor> _entityDescriptors;
+		Dictionary<Type,EntityDescriptor> _tempEntityDescriptors;
 
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			if (_entityDescriptors == null)
-				_entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
+				lock (typeof(Dictionary<Type,EntityDescriptor>))
+					if (_entityDescriptors == null)
+						_entityDescriptors = new Dictionary<Type, EntityDescriptor>();
 
 			EntityDescriptor ed;
 
 			if (!_entityDescriptors.TryGetValue(type, out ed))
 			{
-				_entityDescriptors[type] = ed = new EntityDescriptor(this, type);
-				ed.InitInheritanceMapping();
+				lock (_entityDescriptors)
+				{
+					if (!_entityDescriptors.TryGetValue(type, out ed))
+					{
+						_tempEntityDescriptors = new Dictionary<Type,EntityDescriptor>();
+						_tempEntityDescriptors[type] = ed = new EntityDescriptor(this, type);
+
+						ed.InitInheritanceMapping();
+
+						foreach (var descriptor in _tempEntityDescriptors)
+							_entityDescriptors.Add(descriptor.Key, descriptor.Value);
+					}
+				}
 			}
 
 			return ed;
 		}
 
-		//public EntityDescriptor GetEntityDescriptor(Type type)
-		//{
-		//    if (_entityDescriptors == null)
-		//        _entityDescriptors = new ConcurrentDictionary<Type, EntityDescriptor>();
-		//    return _entityDescriptors.GetOrAdd(type, t => new EntityDescriptor(this, t));
-		//}
+		internal EntityDescriptor GetEntityDescriptorInternal(Type type)
+		{
+			EntityDescriptor ed;
+
+			if (_tempEntityDescriptors.TryGetValue(type, out ed) ||
+				_entityDescriptors.    TryGetValue(type, out ed))
+				return ed;
+
+			_tempEntityDescriptors[type] = ed = new EntityDescriptor(this, type);
+			ed.InitInheritanceMapping();
+
+			return ed;
+		}
 
 		#endregion
 	}

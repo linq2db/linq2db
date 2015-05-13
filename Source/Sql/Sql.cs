@@ -628,17 +628,17 @@ namespace LinqToDB
 		class DatePartAttribute : Sql.ExpressionAttribute
 		{
 			public DatePartAttribute(string sqlProvider, string expression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, false, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.PrecedenceLevel.Primary, false, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, null, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.PrecedenceLevel.Primary, isExpression, null, datePartIndex, argIndices)
 			{
 			}
 
 			public DatePartAttribute(string sqlProvider, string expression, bool isExpression, string[] partMapping, int datePartIndex, params int[] argIndices)
-				: this(sqlProvider, expression, SqlQuery.Precedence.Primary, isExpression, partMapping, datePartIndex, argIndices)
+				: this(sqlProvider, expression, SqlQuery.PrecedenceLevel.Primary, isExpression, partMapping, datePartIndex, argIndices)
 			{
 			}
 
@@ -671,9 +671,9 @@ namespace LinqToDB
 		[CLSCompliant(false)]
 		[Sql.Function] // FIXME: LinqToDB.Sql.DatePartAttribute -> DatePart
 		[LinqToDB.Sql.DatePartAttribute(PN.Oracle,     "Add{0}",                              false, 0, 2, 1)]
-		[LinqToDB.Sql.DatePartAttribute(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "{{1}} + Interval '{{0}} {0}",         Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.DB2,        "{{1}} + {0}",                         PrecedenceLevel.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{{1}} + Interval({0}",                PrecedenceLevel.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
+		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "{{1}} + Interval '{{0}} {0}",         PrecedenceLevel.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",        true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.Access,     "DateAdd({0}, {{0}}, {{1}})",          true, new[] { "'yyyy'", "'q'", "'m'", "'y'", "'d'", "'ww'", "'w'", "'h'", "'n'", "'s'", null }, 0, 1, 2)]
@@ -867,7 +867,7 @@ namespace LinqToDB
 			return value == null || newBase == null ? null : (decimal?)Math.Log((double)value.Value, (double)newBase.Value);
 		}
 
-		[Sql.Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative)]
+		[Sql.Expression(PN.Access, "{0} ^ {1}", Precedence = PrecedenceLevel.Multiplicative)]
 		[Sql.Function]
 		public static Double?  Power(Double? x, Double? y)
 		{
