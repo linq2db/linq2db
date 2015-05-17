@@ -298,3 +298,11 @@ CREATE TABLE TestSameName
 	ID int NOT NULL PRIMARY KEY
 )
 GO
+
+CREATE OR REPLACE
+VIEW PersonView
+AS
+	SELECT `Person`.`PersonID` AS `ID`
+	FROM `Person`
+	WHERE (`Person`.`Gender` = 'M')
+GO

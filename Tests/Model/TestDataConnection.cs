@@ -18,12 +18,16 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
+#if MONO
+			: base(ProviderName.SqlServer2008)
+#else
 			: base(ProviderName.SQLite)
+#endif
 		{
 		}
 
 		public ITable<Person>                 Person                 { get { return GetTable<Person>();                 } }
-        public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>(); } }
+		public ITable<ComplexPerson>          ComplexPerson          { get { return GetTable<ComplexPerson>(); } }
 		public ITable<Patient>                Patient                { get { return GetTable<Patient>();                } }
 		public ITable<Doctor>                 Doctor                 { get { return GetTable<Doctor>();                 } }
 		public ITable<Parent>                 Parent                 { get { return GetTable<Parent>();                 } }
