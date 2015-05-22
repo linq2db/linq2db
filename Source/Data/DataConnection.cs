@@ -282,15 +282,39 @@ namespace LinqToDB.Data
 			_providerDetectors.Add(providerDetector);
 		}
 
+		internal static bool IsMachineConfig(ConnectionStringSettings css)
+		{
+			string source;
+
+			try
+			{
+				source = css.ElementInformation.Source;
+			}
+			catch (Exception)
+			{
+				source = "";
+			}
+
+			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
+		}
+
 		static void InitConnectionStrings()
 		{
+			// In partual trust ConfigurationManager.ConnectionStrings throws SecurityException when it's called first time.
+			//
+			try
+			{
+				var css = ConfigurationManager.ConnectionStrings;
+			}
+			catch
+			{
+			}
+
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null &&
-					css.ElementInformation.Source != null &&
-					!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+				if (DefaultConfiguration == null && !IsMachineConfig(css))
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -394,14 +418,9 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (dataProvider != null)
+				if (dataProvider != null && DefaultConfiguration == null && !IsMachineConfig(css))
 				{
-					if (DefaultConfiguration == null &&
-						css.ElementInformation.Source != null &&
-						!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
-					{
-						DefaultConfiguration = css.Name;
-					}
+					DefaultConfiguration = css.Name;
 				}
 
 				return dataProvider;

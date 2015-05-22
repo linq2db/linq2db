@@ -32,8 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
 		{
-			if (css.ElementInformation.Source == null ||
-			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+			if (DataConnection.IsMachineConfig(css))
 				return null;
 
 			switch (css.ProviderName)
