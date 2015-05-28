@@ -213,6 +213,14 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="xunit, Version=1.9.1.1600, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.1.9.1\lib\net20\xunit.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.extensions, Version=1.9.1.1600, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\xunit.extensions.1.9.1\lib\net20\xunit.extensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ChangeTypeTest.cs" />
@@ -258,6 +266,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="DataProvider\SqlServerTest.cs" />
     <Compile Include="Reflection\TypeAccessorTest.cs" />
+    <Compile Include="Security\TestHelpers\PartialTrustClassCommand.cs" />
+    <Compile Include="Security\TestHelpers\PartialTrustCommand.cs" />
+    <Compile Include="Security\TestHelpers\PartialTrustFactAttribute.cs" />
+    <Compile Include="Security\TestHelpers\PartialTrustFixtureAttribute.cs" />
+    <Compile Include="Security\TestHelpers\PartialTrustSandbox.cs" />
+    <Compile Include="Security\PartialTrustTests.cs" />
     <Compile Include="SqlServerTypes\Loader.cs" />
     <Compile Include="Update\BatchTest.cs" />
     <Compile Include="Linq\Common.cs" />
@@ -444,6 +458,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

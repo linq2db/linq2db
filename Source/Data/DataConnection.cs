@@ -300,16 +300,6 @@ namespace LinqToDB.Data
 
 		static void InitConnectionStrings()
 		{
-			// In partual trust ConfigurationManager.ConnectionStrings throws SecurityException when it's called first time.
-			//
-			try
-			{
-				var css = ConfigurationManager.ConnectionStrings;
-			}
-			catch
-			{
-			}
-
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
