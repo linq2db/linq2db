@@ -187,7 +187,8 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				return Expression.Equals(other.Expression);
+				return Expression.Equals(other.Expression)
+					&& ((Parent == null && other.Parent == null) || (Parent != null && Parent.Equals(other.Parent)));
 			}
 
 #if OVERRIDETOSTRING
