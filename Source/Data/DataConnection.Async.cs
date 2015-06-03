@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -22,7 +23,7 @@ namespace LinqToDB.Data
 				_closeConnection = true;
 			}
 
-			InitCommand(commandType, sql, parameters);
+			InitCommand(commandType, sql, parameters, null);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

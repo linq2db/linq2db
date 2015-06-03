@@ -524,8 +524,15 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
+			if (queryHints != null && queryHints.Count > 0)
+			{
+				var sqlProvider = DataProvider.CreateSqlBuilder();
+				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
+				queryHints.Clear();
+			}
+
 			DataProvider.InitCommand(this, commandType, sql, parameters);
 			LastQuery = Command.CommandText;
 		}
@@ -806,12 +813,25 @@ namespace LinqToDB.Data
 		#region MappingSchema
 
 		private MappingSchema _mappingSchema;
+
 		public  MappingSchema  MappingSchema
 		{
 			get { return _mappingSchema; }
 		}
 
 		public bool InlineParameters { get; set; }
+
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get { return _queryHints ?? (_queryHints = new List<string>()); }
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
+		}
 
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{

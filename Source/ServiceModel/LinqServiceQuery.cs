@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
 {
@@ -8,5 +9,6 @@ namespace LinqToDB.ServiceModel
 	{
 		public SelectQuery    Query      { get; set; }
 		public SqlParameter[] Parameters { get; set; }
+		public List<string>   QueryHints { get; set; }
 	}
 }

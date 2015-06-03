@@ -17,9 +17,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SelectQuery query, SqlParameter[] parameters)
+		public static string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(query, parameters);
+			return new QuerySerializer().Serialize(query, parameters, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(string str)
@@ -475,8 +475,16 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
-			public string Serialize(SelectQuery query, SqlParameter[] parameters)
+			public string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 			{
+				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
+
+				Builder.AppendLine(queryHintCount.ToString());
+
+				if (queryHintCount > 0)
+					foreach (var hint in queryHints)
+						Builder.AppendLine(hint);
+
 				var visitor = new QueryVisitor();
 
 				visitor.Visit(query, Visit);
@@ -1046,18 +1054,41 @@ namespace LinqToDB.ServiceModel
 			SqlParameter[] _parameters;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
-			readonly List<Action>             _actions = new List<Action>();
+			readonly List<Action>                _actions = new List<Action>();
 
 			public LinqServiceQuery Deserialize(string str)
 			{
 				Str = str;
+
+				List<string> queryHints = null;
+
+				var queryHintCount = ReadInt();
+
+				NextLine();
+
+				if (queryHintCount > 0)
+				{
+					queryHints = new List<string>();
+
+					for (var i = 0; i < queryHintCount; i++)
+					{
+						var pos = Pos;
+
+						while (Pos < Str.Length && Peek() != '\n' && Peek() != '\r')
+							Pos++;
+
+						queryHints.Add(Str.Substring(pos, Pos - pos));
+
+						NextLine();
+					}
+				}
 
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Query = _query, Parameters = _parameters };
+				return new LinqServiceQuery { Query = _query, Parameters = _parameters, QueryHints = queryHints };
 			}
 
 			bool Parse()

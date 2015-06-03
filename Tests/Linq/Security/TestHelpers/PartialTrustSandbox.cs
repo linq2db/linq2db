@@ -15,10 +15,10 @@ namespace Tests.Security.TestHelpers
 			var securityConfig = Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), "CONFIG", "web_mediumtrust.config");
 			var permissionXml  = File.ReadAllText(securityConfig).Replace("$AppDir$", Environment.CurrentDirectory);
 
-//#pragma warning disable 0618
+#pragma warning disable 0618
 			var grantSet = SecurityManager.LoadPolicyLevelFromString(permissionXml, PolicyLevelType.AppDomain).
 					GetNamedPermissionSet("ASP.Net");
-//#pragma warning restore 0618
+#pragma warning restore 0618
 
 			var info = new AppDomainSetup
 			{
