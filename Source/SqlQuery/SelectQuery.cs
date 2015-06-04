@@ -140,7 +140,7 @@ namespace LinqToDB.SqlQuery
 
 				Parent     = parent;
 				Expression = expression;
-				_alias      = alias;
+				_alias     = alias;
 
 #if DEBUG
 				_columnNumber = ++_columnCounter;
@@ -187,8 +187,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool Equals(Column other)
 			{
-				return Expression.Equals(other.Expression)
-					&& ((Parent == null && other.Parent == null) || (Parent != null && Parent.Equals(other.Parent)));
+				return Expression.Equals(other.Expression) && object.Equals(Parent, other.Parent);
 			}
 
 #if OVERRIDETOSTRING
