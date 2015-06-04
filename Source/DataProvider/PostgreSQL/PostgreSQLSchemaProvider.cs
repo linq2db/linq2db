@@ -78,11 +78,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
-						(select attname from pg_attribute where attrelid = pg_constraint.conrelid and attnum = pg_constraint.conkey[1])
-						                                                                             as ColumnName,
-						pg_constraint.conkey[1]                                                      as Ordinal
+						attname                                                                      as ColumnName,
+						attnum                                                                       as Ordinal
 					FROM
-						pg_constraint
+						pg_attribute
+							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
 							JOIN pg_class ON pg_class.oid = pg_constraint.conrelid
 								JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
 					WHERE

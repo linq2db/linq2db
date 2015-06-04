@@ -5,6 +5,8 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+#if !MONO
+
 namespace Tests.Linq
 {
 	using Model;
@@ -106,3 +108,5 @@ namespace Tests.Linq
 		}
 	}
 }
+
+#endif

@@ -20,11 +20,13 @@ namespace Tests
 
 			var n = 0;
 
+#if !MONO
 			if (includeLinqService)
 			{
 				n++;
 				argTypes[0] = typeof(LinqService);
 			}
+#endif
 
 			if (include != null)
 			{

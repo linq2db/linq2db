@@ -231,10 +231,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 #if !NETFX_CORE && !SILVERLIGHT
 
+#if !MONO
 		protected override string GetTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
 		}
+#endif
 
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{

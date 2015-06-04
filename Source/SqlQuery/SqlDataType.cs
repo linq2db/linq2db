@@ -192,15 +192,11 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.Single,               4,                     7,                     7,               7 + 2 + 4),
 
 			new TypeInfo(DataType.DateTime,             8,                    -1,                    -1,                      23),
-#if !MONO
 			new TypeInfo(DataType.DateTime2,            8,                    -1,                    -1,                      27),
-#endif				
 			new TypeInfo(DataType.SmallDateTime,        4,                    -1,                    -1,                      19),
 			new TypeInfo(DataType.Date,                 3,                    -1,                    -1,                      10),
 			new TypeInfo(DataType.Time,                 5,                    -1,                    -1,                      16),
-#if !MONO
 			new TypeInfo(DataType.DateTimeOffset,      10,                    -1,                    -1,                      34),
-#endif
 
 			new TypeInfo(DataType.Char,              8000,                    -1,                    -1,                    8000),
 			new TypeInfo(DataType.VarChar,           8000,                    -1,                    -1,                    8000),
@@ -258,9 +254,7 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(byte[]))         return ByteArray;
 					if (underlyingType == typeof(System.Data.Linq.Binary)) return LinqBinary;
 					if (underlyingType == typeof(char[]))         return CharArray;
-#if !MONO
 					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
-#endif
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
 					break;
 
@@ -327,10 +321,8 @@ namespace LinqToDB.SqlQuery
 				case DataType.Udt              : return DbUdt;
 				case DataType.Date             : return DbDate;
 				case DataType.Time             : return DbTime;
-#if !MONO
 				case DataType.DateTime2        : return DbDateTime2;
 				case DataType.DateTimeOffset   : return DbDateTimeOffset;
-#endif
 			}
 
 			throw new InvalidOperationException();
@@ -386,17 +378,11 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbSingle         = new SqlDataType(DataType.Single,         typeof(Single),                 0,               0,  0);
 
 		public static readonly SqlDataType DbDateTime       = new SqlDataType(DataType.DateTime,       typeof(DateTime),               0,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DbDateTime2      = new SqlDataType(DataType.DateTime2,      typeof(DateTime),               0,               0,  0);
-#else		
-		public static readonly SqlDataType DbDateTime2      = new SqlDataType(DataType.DateTime,       typeof(DateTime),               0,               0,  0);
-#endif		
 		public static readonly SqlDataType DbSmallDateTime  = new SqlDataType(DataType.SmallDateTime,  typeof(DateTime),               0,               0,  0);
 		public static readonly SqlDataType DbDate           = new SqlDataType(DataType.Date,           typeof(DateTime),               0,               0,  0);
 		public static readonly SqlDataType DbTime           = new SqlDataType(DataType.Time,           typeof(TimeSpan),               0,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DbDateTimeOffset = new SqlDataType(DataType.DateTimeOffset, typeof(DateTimeOffset),         0,               0,  0);
-#endif
 
 		public static readonly SqlDataType DbChar           = new SqlDataType(DataType.Char,           typeof(String),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DbVarChar        = new SqlDataType(DataType.VarChar,        typeof(String),      GetMaxLength,               0,  0);
@@ -436,9 +422,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType ByteArray        = DbVarBinary;
 		public static readonly SqlDataType LinqBinary       = DbVarBinary;
 		public static readonly SqlDataType CharArray        = new SqlDataType(DataType.NVarChar,       typeof(Char[]),      GetMaxLength,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DateTimeOffset   = DbDateTimeOffset;
-#endif
 		public static readonly SqlDataType TimeSpan         = DbTime;
 
 #if !SILVERLIGHT && !NETFX_CORE

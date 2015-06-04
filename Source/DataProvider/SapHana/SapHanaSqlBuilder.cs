@@ -81,9 +81,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Double:
 					StringBuilder.Append("Double");
 					return;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.DateTime      :
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");

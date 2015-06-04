@@ -77,9 +77,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (type.DataType)
 			{
-#if !MONO
 				case DataType.DateTime2 : StringBuilder.Append("DateTime"); break;
-#endif
 				default                 : base.BuildDataType(type); break;
 			}
 		}
