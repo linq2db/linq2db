@@ -2569,6 +2569,16 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
+		public string ApplyQueryHints(string sql, List<string> queryHints)
+		{
+			var sb = new StringBuilder(sql);
+
+			foreach (var hint in queryHints)
+				sb.AppendLine(hint);
+
+			return sb.ToString();
+		}
+
 		private        string _name;
 		public virtual string  Name
 		{

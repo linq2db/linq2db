@@ -43,6 +43,7 @@ namespace LinqToDB.Data
 			public IDbDataParameter[] Parameters;
 			public SelectQuery        SelectQuery;
 			public ISqlBuilder        SqlProvider;
+			public List<string>       QueryHints;
 		}
 
 		#region SetQuery
@@ -55,7 +56,8 @@ namespace LinqToDB.Data
 				{
 					Commands      = (string[])query.Context,
 					SqlParameters = query.SelectQuery.Parameters,
-					SelectQuery   = query.SelectQuery
+					SelectQuery   = query.SelectQuery,
+					QueryHints    = query.QueryHints,
 				 };
 			}
 
@@ -91,7 +93,8 @@ namespace LinqToDB.Data
 				Commands      = commands,
 				SqlParameters = sql.Parameters,
 				SelectQuery   = sql,
-				SqlProvider   = sqlProvider
+				SqlProvider   = sqlProvider,
+				QueryHints    = query.QueryHints,
 			};
 		}
 
@@ -178,7 +181,7 @@ namespace LinqToDB.Data
 			{
 				var commandInfo = _query.GetCommandInfo(_dataConnection, _expression);
 
-				_dataConnection.InitCommand(CommandType.Text, commandInfo.CommandText, commandInfo.Parameters);
+				_dataConnection.InitCommand(CommandType.Text, commandInfo.CommandText, commandInfo.Parameters, null);
 
 				if (commandInfo.Parameters != null && commandInfo.Parameters.Length > 0)
 					CommandInfo.SetParameters(_dataConnection, commandInfo.Parameters);
@@ -224,7 +227,7 @@ namespace LinqToDB.Data
 
 			if (pq.Commands.Length == 1)
 			{
-				InitCommand(CommandType.Text, pq.Commands[0], null);
+				InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 				if (pq.Parameters != null)
 					foreach (var p in pq.Parameters)
@@ -236,7 +239,7 @@ namespace LinqToDB.Data
 			{
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
-					InitCommand(CommandType.Text, pq.Commands[i], null);
+					InitCommand(CommandType.Text, pq.Commands[i], null, i == 0 ? pq.QueryHints : null);
 
 					if (i == 0 && pq.Parameters != null)
 						foreach (var p in pq.Parameters)
@@ -266,7 +269,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			InitCommand(CommandType.Text, pq.Commands[0], null);
+			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -307,7 +310,7 @@ namespace LinqToDB.Data
 
 			ExecuteNonQuery();
 
-			InitCommand(CommandType.Text, pq.Commands[1], null);
+			InitCommand(CommandType.Text, pq.Commands[1], null, null);
 
 			return ExecuteScalar();
 		}
@@ -316,7 +319,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			InitCommand(CommandType.Text, pq.Commands[0], null);
+			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -353,8 +356,29 @@ namespace LinqToDB.Data
 
 			sqlProvider.PrintParameters(sb, pq.Parameters);
 
+			var isFirst = true;
+
 			foreach (var command in pq.Commands)
+			{
 				sb.AppendLine(command);
+
+				if (isFirst && pq.QueryHints != null && pq.QueryHints.Count > 0)
+				{
+					isFirst = false;
+
+					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+						sb.Length--;
+
+					sb.AppendLine();
+
+					var sql = sb.ToString();
+
+					var sqlBuilder = DataProvider.CreateSqlBuilder();
+					sql = sqlBuilder.ApplyQueryHints(sql, pq.QueryHints);
+
+					sb = new StringBuilder(sql);
+				}
+			}
 
 			while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
 				sb.Length--;
@@ -367,6 +391,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region IDataContext Members
+
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
 

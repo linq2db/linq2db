@@ -5,7 +5,7 @@ using LinqToDB.Data;
 
 using Xunit;
 
-[assembly: System.Security.AllowPartiallyTrustedCallers]
+//[assembly: System.Security.AllowPartiallyTrustedCallers]
 
 namespace Tests.Security
 {

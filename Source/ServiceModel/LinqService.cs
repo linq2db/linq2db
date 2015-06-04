@@ -59,6 +59,7 @@ namespace LinqToDB.ServiceModel
 			public SelectQuery    SelectQuery { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] Parameters  { get; set; }
+			public List<string>   QueryHints  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -77,7 +78,13 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext
+					{
+						SelectQuery = query.Query,
+						Parameters  = query.Parameters,
+						QueryHints  = query.QueryHints
+					});
+
 					return db.ExecuteNonQuery(obj);
 				}
 			}
@@ -99,7 +106,13 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext
+					{
+						SelectQuery = query.Query,
+						Parameters  = query.Parameters,
+						QueryHints  = query.QueryHints
+					});
+
 					return db.ExecuteScalar(obj);
 				}
 			}
@@ -121,7 +134,12 @@ namespace LinqToDB.ServiceModel
 
 				using (IDataContext db = CreateDataContext(configuration))
 				{
-					var obj = db.SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
+					var obj = db.SetQuery(new QueryContext
+					{
+						SelectQuery = query.Query,
+						Parameters  = query.Parameters,
+						QueryHints  = query.QueryHints
+					});
 
 					using (var rd = db.ExecuteReader(obj))
 					{
@@ -238,7 +256,13 @@ namespace LinqToDB.ServiceModel
 
 					foreach (var query in queries)
 					{
-						var obj = ((IDataContext)db).SetQuery(new QueryContext { SelectQuery = query.Query, Parameters = query.Parameters });
+						var obj = ((IDataContext)db).SetQuery(new QueryContext
+						{
+							SelectQuery = query.Query,
+							Parameters  = query.Parameters,
+							QueryHints  = query.QueryHints
+						});
+
 						((IDataContext)db).ExecuteNonQuery(obj);
 					}
 

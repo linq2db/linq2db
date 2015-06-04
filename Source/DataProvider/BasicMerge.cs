@@ -257,6 +257,8 @@ namespace LinqToDB.DataProvider
 			public SelectQuery    SelectQuery { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] SqlParameters;
+			public List<string>   QueryHints  { get; set; }
+
 			public SqlParameter[] GetParameters()
 			{
 				return SqlParameters;

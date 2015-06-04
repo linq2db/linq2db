@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
@@ -16,6 +17,7 @@ namespace LinqToDB.SqlProvider
 		ISqlExpression   GetIdentityExpression(SqlTable table);
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IDbDataParameter[] parameters);
+		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
 
 		string           Name { get; }
 	}

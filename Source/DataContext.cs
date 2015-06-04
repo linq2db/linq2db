@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -76,18 +77,56 @@ namespace LinqToDB
 			set { _isMarsEnabled = value; }
 		}
 
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get
+			{
+				if (_dataConnection != null)
+					return _dataConnection.QueryHints;
+
+				return _queryHints ?? (_queryHints = new List<string>());
+			}
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get
+			{
+				if (_dataConnection != null)
+					return _dataConnection.NextQueryHints;
+
+				return _nextQueryHints ?? (_nextQueryHints = new List<string>());
+			}
+		}
+
 		internal int LockDbManagerCounter;
 
 		DataConnection _dataConnection;
 
 		internal DataConnection GetDataConnection()
 		{
-			return _dataConnection ??
-			(
+			if (_dataConnection == null)
+			{
 				_dataConnection = ConnectionString != null
 					? new DataConnection(DataProvider, ConnectionString)
-					: new DataConnection(ConfigurationString)
-			);
+					: new DataConnection(ConfigurationString);
+
+				if (_queryHints != null && _queryHints.Count > 0)
+				{
+					_dataConnection.QueryHints.AddRange(_queryHints);
+					_queryHints = null;
+				}
+
+				if (_nextQueryHints != null && _nextQueryHints.Count > 0)
+				{
+					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
+					_nextQueryHints = null;
+				}
+			}
+
+			return _dataConnection;
 		}
 
 		internal void ReleaseQuery()
@@ -98,6 +137,9 @@ namespace LinqToDB
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
+
 					_dataConnection.Dispose();
 					_dataConnection = null;
 				}
@@ -220,12 +262,16 @@ namespace LinqToDB
 				DataProvider        = DataProvider,
 				ContextID           = ContextID,
 				MappingSchema       = MappingSchema,
+				InlineParameters    = InlineParameters,
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 				dc._dataConnection = _dataConnection.Transaction != null ?
 					new DataConnection(DataProvider, _dataConnection.Transaction) :
 					new DataConnection(DataProvider, _dataConnection.Connection);
+
+			dc.QueryHints.    AddRange(QueryHints);
+			dc.NextQueryHints.AddRange(NextQueryHints);
 
 			return dc;
 		}
@@ -238,6 +284,9 @@ namespace LinqToDB
 			{
 				if (OnClosing != null)
 					OnClosing(this, EventArgs.Empty);
+
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
@@ -26,7 +28,38 @@ namespace LinqToDB.Linq
 		public Type           ElementType { get { return typeof(T); } }
 		public IQueryProvider Provider    { get { return this;      } }
 
-		public string SqlText { get; private set; }
+		#region SqlText
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		private string _sqlTextHolder;
+
+// ReSharper disable InconsistentNaming
+		[UsedImplicitly]
+		private string _sqlText { get { return SqlText; }}
+// ReSharper restore InconsistentNaming
+
+		public  string  SqlText
+		{
+			get
+			{
+				var hasQueryHints = _dataContext.QueryHints.Count > 0 || _dataContext.NextQueryHints.Count > 0;
+
+				if (_sqlTextHolder == null || hasQueryHints)
+				{
+//					var info    = GetQuery(Expression, true);
+//					var sqlText = info.GetSqlText(_dataContext, Expression, null/*Parameters*/, 0);
+//
+//					if (hasQueryHints)
+//						return sqlText;
+//
+//					_sqlTextHolder = sqlText;
+				}
+
+				return _sqlTextHolder;
+			}
+		}
+
+		#endregion
 
 		public IQueryable CreateQuery(Expression expression)
 		{

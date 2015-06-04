@@ -227,5 +227,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		public static class Sql
+		{
+			public const string OptionRecompile = "OPTION(RECOMPILE)";
+		}
 	}
 }

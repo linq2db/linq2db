@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -135,7 +135,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -274,7 +274,7 @@ namespace LinqToDB.Data
 
 		public int Execute()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			var hasParameters = Parameters != null && Parameters.Length > 0;
 
@@ -336,7 +336,7 @@ namespace LinqToDB.Data
 
 		public T Execute<T>()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -416,7 +416,7 @@ namespace LinqToDB.Data
 
 		public DataReader ExecuteReader()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
