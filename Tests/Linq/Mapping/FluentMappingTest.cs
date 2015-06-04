@@ -113,5 +113,21 @@ namespace Tests.Mapping
 			Assert.That(ed["ID"].IsPrimaryKey);
 			Assert.That(ed["ID"].IsIdentity);
 		}
+
+		[Test]
+		public void TableNameAndSchema()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.HasTableName ("Table")
+				.HasSchemaName("Schema");
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.TableName,  Is.EqualTo("Table"));
+			Assert.That(ed.SchemaName, Is.EqualTo("Schema"));
+		}
 	}
 }
