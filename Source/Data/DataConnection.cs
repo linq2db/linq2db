@@ -568,7 +568,7 @@ namespace LinqToDB.Data
 		{
 			if (_command != null)
 			{
-				_command.Dispose();
+				DataProvider.DisposeCommand(this);
 				_command = null;
 			}
 		}
