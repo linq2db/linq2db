@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -328,6 +329,20 @@ namespace LinqToDB.DataProvider.Oracle
 			_setBindByName(dataConnection);
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
+		}
+
+		public override void DisposeCommand(DataConnection dataConnection)
+		{
+			foreach (DbParameter param in dataConnection.Command.Parameters)
+			{
+//				if (param != null && param.Value != null && param.Value is IDisposable)
+//					((IDisposable)param.Value).Dispose();
+
+				if (param is IDisposable)
+					((IDisposable)param).Dispose();
+			}
+
+			base.DisposeCommand(dataConnection);
 		}
 
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;

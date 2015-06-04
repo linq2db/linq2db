@@ -93,6 +93,11 @@ namespace LinqToDB.DataProvider
 			dataConnection.Command.CommandText = commandText;
 		}
 
+		public virtual void DisposeCommand(DataConnection dataConnection)
+		{
+			dataConnection.Command.Dispose();
+		}
+
 		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -250,12 +255,8 @@ namespace LinqToDB.DataProvider
 			return type;
 		}
 
-		public abstract bool IsCompatibleConnection(IDbConnection connection);
-
-		public virtual ISchemaProvider GetSchemaProvider()
-		{
-			throw new NotImplementedException();
-		}
+		public abstract bool            IsCompatibleConnection(IDbConnection connection);
+		public abstract ISchemaProvider GetSchemaProvider     ();
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{

@@ -17,6 +17,29 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Common : TestBase
 	{
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2014)]
+		public void CheckNullTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					where p.ParentID == 6
+					select new
+					{
+						Root   = p,
+						ChildA = db.GrandChild.FirstOrDefault(a => a.ParentID == p.ParentID),
+						ChildB = db.Child.     FirstOrDefault(a => a.ParentID == p.ParentID),
+					};
+
+				var list = q.ToList();
+
+				Assert.That(list.Count,     Is.EqualTo(1));
+				Assert.That(list[0].ChildA, Is.Null);
+				Assert.That(list[0].ChildB, Is.Not.Null);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void AsQueryable(string context)
 		{

@@ -13,6 +13,9 @@ namespace Tests.Mapping
 		{
 			public int ID;
 			public int ID1 { get; set; }
+
+			[NotColumn]
+			public MyClass Parent;
 		}
 
 		[Test]
@@ -112,6 +115,37 @@ namespace Tests.Mapping
 
 			Assert.That(ed["ID"].IsPrimaryKey);
 			Assert.That(ed["ID"].IsIdentity);
+		}
+
+		[Test]
+		public void TableNameAndSchema()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.HasTableName ("Table")
+				.HasSchemaName("Schema");
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.TableName,  Is.EqualTo("Table"));
+			Assert.That(ed.SchemaName, Is.EqualTo("Schema"));
+		}
+
+		[Test]
+		public void Assosiation()
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass>()
+				.Property(e => e.Parent)
+					.HasAttribute(new AssociationAttribute { ThisKey = "ID", OtherKey = "ID1" });
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed.Associations, Is.Not.EqualTo(0));
 		}
 	}
 }
