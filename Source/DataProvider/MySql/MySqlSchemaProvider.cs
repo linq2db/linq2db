@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.MySql
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
 			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
-			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
+//			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
 
 			var ret =
 			(
@@ -122,23 +122,24 @@ namespace LinqToDB.DataProvider.MySql
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
-			).Concat(
-				from c in vcs.AsEnumerable()
-				let dataType = c.Field<string>("DATA_TYPE")
-				select new ColumnInfo
-				{
-					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
-					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
-					ColumnType   = c.Field<string>("COLUMN_TYPE"),
-					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
-				}
 			)
+//			.Concat(
+//				from c in vcs.AsEnumerable()
+//				let dataType = c.Field<string>("DATA_TYPE")
+//				select new ColumnInfo
+//				{
+//					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
+//					Name         = c.Field<string>("COLUMN_NAME"),
+//					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
+//					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
+//					DataType     = dataType,
+//					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+//					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+//					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
+//					ColumnType   = c.Field<string>("COLUMN_TYPE"),
+//					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
+//				}
+//			)
 			.Select(ci =>
 			{
 				switch (ci.DataType)

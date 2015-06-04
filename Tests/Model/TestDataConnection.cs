@@ -18,7 +18,11 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
+#if MONO
+			: base(ProviderName.SqlServer2008)
+#else
 			: base(ProviderName.SQLite)
+#endif
 		{
 		}
 
