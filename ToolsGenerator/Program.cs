@@ -41,7 +41,7 @@ namespace ToolsGenerator
 			CreateProviderFile2(nugetDir, "Oracle.x64",     "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile2(nugetDir, "Oracle.x86",     "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile (nugetDir, "SqlServer");
-			CreateProviderFile (nugetDir, "SqlServer.SqlTypes",       "Microsoft.SqlServer.Types.dll");
+			CreateProviderFile3(nugetDir, "SqlServer", "SqlServer.SqlTypes", "SqlServer.SqlTypes", "Microsoft.SqlServer.Types.dll");
 			CreateProviderFile (nugetDir, "Sybase",                   "Sybase.AdoNet2.AseClient.dll");
 			CreateProviderFile (nugetDir, "SapHana",                  "Sap.Data.Hana.v4.5.dll");
 			CreateProviderFile (nugetDir, "DB2",                      "IBM.Data.DB2.dll");
@@ -63,9 +63,9 @@ namespace ToolsGenerator
 					tf.WriteLine(tool, version);
 		}
 
-		static void CreateProviderFile2(string nugetDir, string provider, string baseProvider, params string[] tools)
+		static void CreateProviderFile3(string nugetDir, string nuspec, string provider, string baseProvider, params string[] tools)
 		{
-			var specFile = string.Format("linq2db.{0}.nuspec", provider);
+			var specFile = string.Format("linq2db.{0}.nuspec", nuspec);
 			var version  = GetVersion(Path.Combine(nugetDir, specFile));
 
 			CreateToolsFile(
@@ -80,7 +80,7 @@ namespace ToolsGenerator
 						else
 							return string.Format(
 								@"<#@ assembly name=""$(SolutionDir)packages\linq2db.{0}.{1}\tools\{2}"" #>",
-								provider,
+								nuspec,
 								version,
 								t);
 					})
@@ -90,6 +90,11 @@ namespace ToolsGenerator
 						@"<#@ include file=""LinqToDB.Tools.ttinclude"" #>",
 						string.Format(@"<#@ include file=""LinqToDB.{0}.ttinclude"" #>", baseProvider),
 					}).ToArray());
+		}
+
+		static void CreateProviderFile2(string nugetDir, string provider, string baseProvider, params string[] tools)
+		{
+			CreateProviderFile3(nugetDir, provider, provider, baseProvider, tools);
 		}
 
 		static void CreateProviderFile(string nugetDir, string provider, params string[] tools)
