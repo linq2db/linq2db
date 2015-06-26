@@ -11,8 +11,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryHintsTest : TestBase
 	{
-		// IT : # tests
-		//
 		[Test, DataContextSource(ProviderName.Access, ProviderName.MySql)]
 		public void Comment(string context)
 		{
