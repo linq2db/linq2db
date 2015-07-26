@@ -210,7 +210,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
-				case DataType.Variant   : StringBuilder.Append("Sql_Variant");           return;
+				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
 				case DataType.VarChar   :
 				case DataType.VarBinary :

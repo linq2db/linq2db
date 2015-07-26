@@ -4,7 +4,6 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Model
