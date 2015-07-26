@@ -37,8 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
 		{
-			if (css.ElementInformation.Source == null ||
-			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+			if (DataConnection.IsMachineConfig(css))
 				return null;
 
 			switch (css.ProviderName)
@@ -63,7 +62,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						try
 						{
-							using (var conn = new SqlConnection(css.ConnectionString))
+							var connectionString = css.ConnectionString;
+
+							using (var conn = new SqlConnection(connectionString))
 							{
 								conn.Open();
 
@@ -226,5 +227,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		public static class Sql
+		{
+			public const string OptionRecompile = "OPTION(RECOMPILE)";
+		}
 	}
 }

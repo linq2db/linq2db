@@ -58,7 +58,7 @@ namespace LinqToDB.Linq
 			if (!Members.TryGetValue(providerName, out dic))
 				Members.Add(providerName, dic = new Dictionary<MemberInfo,IExpressionInfo>());
 
-			var expr = dic[memberInfo] = expressionInfo;
+			dic[memberInfo] = expressionInfo;
 
 			_checkUserNamespace = false;
 		}

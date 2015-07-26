@@ -72,11 +72,17 @@ namespace LinqToDB.DataProvider.SqlServer
 							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
 
 					bc.WriteToServer(rd);
+				}
 
+				if (rc.RowsCopied != rd.Count)
+				{
 					rc.RowsCopied = rd.Count;
 
-					return rc;
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+						options.RowsCopiedCallback(rc);
 				}
+
+				return rc;
 			}
 
 			return MultipleRowsCopy(dataConnection, options, source);

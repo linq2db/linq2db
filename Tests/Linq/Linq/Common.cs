@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -16,6 +17,29 @@ namespace Tests.Linq
 	[TestFixture]
 	public class Common : TestBase
 	{
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2014)]
+		public void CheckNullTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent
+					where p.ParentID == 6
+					select new
+					{
+						Root   = p,
+						ChildA = db.GrandChild.FirstOrDefault(a => a.ParentID == p.ParentID),
+						ChildB = db.Child.     FirstOrDefault(a => a.ParentID == p.ParentID),
+					};
+
+				var list = q.ToList();
+
+				Assert.That(list.Count,     Is.EqualTo(1));
+				Assert.That(list[0].ChildA, Is.Null);
+				Assert.That(list[0].ChildB, Is.Not.Null);
+			}
+		}
+
 		[Test, DataContextSource]
 		public void AsQueryable(string context)
 		{
@@ -529,6 +553,31 @@ namespace Tests.Linq
 			}
 
 			Assert.That(_i, Is.EqualTo(2));
+		}
+
+		class User
+		{
+			public string FirstName;
+			public int?   Status;
+		}
+
+		// https://github.com/linq2db/linq2db/issues/191
+		[Test, DataContextSource]
+		public void Issue191Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				string firstName = null;
+				int?   status    = null;
+
+				var str = db.GetTable<User>()
+					.Where(user =>
+						user.Status == status &&
+						(string.IsNullOrEmpty(firstName) || user.FirstName.Contains(firstName)))
+					.ToString();
+
+				Debug.WriteLine(str);
+			}
 		}
 	}
 

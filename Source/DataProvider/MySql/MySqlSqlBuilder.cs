@@ -74,9 +74,7 @@ namespace LinqToDB.DataProvider.MySql
 					break;
 				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
 				case DataType.Double        :

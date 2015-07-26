@@ -5,14 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
-	using SqlQuery;
 	using LinqToDB.Expressions;
 	using Mapping;
+	using Reflection;
+	using SqlQuery;
 
 	class TableBuilder : ISequenceBuilder
 	{
@@ -189,7 +189,7 @@ namespace LinqToDB.Linq.Builder
 
 				var args = mc.Arguments.Select(a => builder.ConvertToSql(this, a));
 
-				attr.SetTable(SqlTable, mc.Method, mc.Arguments, args);
+				attr.SetTable(Builder.MappingSchema, SqlTable, mc.Method, mc.Arguments, args);
 
 				Init();
 			}
@@ -261,6 +261,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			static bool IsRecordAttribute(Attribute attr)
+			{
+				return attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute";
+			}
+
 			ParameterExpression _variable;
 
 			Expression BuildTableExpression(bool buildBlock, Type objectType, int[] index)
@@ -268,13 +273,29 @@ namespace LinqToDB.Linq.Builder
 				if (buildBlock && _variable != null)
 					return _variable;
 
-				var ed = Builder.MappingSchema.GetEntityDescriptor(objectType);
+				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
+				var attr = Builder.MappingSchema.GetAttributes<Attribute>(objectType).FirstOrDefault(IsRecordAttribute);
+
+				var expr = attr == null ?
+					BuildDefaultConstructor(entityDescriptor, objectType, index) :
+					BuildRecordConstructor (entityDescriptor, objectType, index);
+
+				expr = ProcessExpression(expr);
+
+				if (!buildBlock)
+					return expr;
+
+				return _variable = Builder.BuildVariable(expr);
+			}
+
+			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			{
 				var members =
 				(
 					from idx in index.Select((n,i) => new { n, i })
 					where idx.n >= 0
-					let   cd = ed.Columns[idx.i]
+					let   cd = entityDescriptor.Columns[idx.i]
 					where
 						cd.Storage != null ||
 						!(cd.MemberAccessor.MemberInfo is PropertyInfo) ||
@@ -321,12 +342,113 @@ namespace LinqToDB.Linq.Builder
 					expr = Expression.Block(new[] { obj }, exprs);
 				}
 
-				expr = ProcessExpression(expr);
+				return expr;
+			}
 
-				if (!buildBlock)
-					return expr;
+			class ColumnInfo
+			{
+				public bool       IsComplex;
+				public string     Name;
+				public Expression Expression;
+			}
 
-				return _variable = Builder.BuildVariable(expr);
+			IEnumerable<Expression> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
+			{
+				var members = isRecordType ?
+					typeAccessor.Members.Where(m =>
+						Builder.MappingSchema.GetAttributes<Attribute>(m.MemberInfo).Any(IsRecordAttribute)) :
+					typeAccessor.Members;
+
+				foreach (var member in members)
+				{
+					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
+
+					if (column != null)
+					{
+						yield return column.Expression;
+					}
+					else
+					{
+						var name = member.Name + '.';
+						var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
+
+						if (cols.Count == 0)
+						{
+							yield return null;
+						}
+						else
+						{
+							foreach (var col in cols)
+							{
+								col.Name      = col.Name.Substring(name.Length);
+								col.IsComplex = col.Name.Contains(".");
+							}
+
+							var typeAcc = TypeAccessor.GetAccessor(member.Type);
+							var isRec   = Builder.MappingSchema.GetAttributes<Attribute>(member.Type).Any(IsRecordAttribute);
+
+							var exprs = GetExpressions(typeAcc, isRec, cols).ToList();
+
+							if (isRec)
+							{
+								var ctor      = member.Type.GetConstructorsEx().Single();
+								var ctorParms = ctor.GetParameters();
+
+								var parms =
+								(
+									from p in ctorParms.Select((p,i) => new { p, i })
+									join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
+									from e in j.DefaultIfEmpty()
+									select
+										e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+								).ToList();
+
+								yield return Expression.New(ctor, parms);
+							}
+							else
+							{
+								var expr = Expression.MemberInit(
+									Expression.New(member.Type),
+									from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
+									where m.e != null
+									select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+
+								yield return expr;
+							}
+						}
+					}
+				}
+			}
+
+			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, int[] index)
+			{
+				var ctor = objectType.GetConstructorsEx().Single();
+
+				var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
+					(
+						from idx in index.Select((n,i) => new { n, i })
+						where idx.n >= 0
+						let   cd   = entityDescriptor.Columns[idx.i]
+						select new ColumnInfo
+						{
+							IsComplex  = cd.MemberAccessor.IsComplex,
+							Name       = cd.MemberName,
+							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						}
+					).ToList()).ToList();
+
+				var parms =
+				(
+					from p in ctor.GetParameters().Select((p,i) => new { p, i })
+					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
+					from e in j.DefaultIfEmpty()
+					select
+						e.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
+				).ToList();
+
+				var expr = Expression.New(ctor, parms);
+
+				return expr;
 			}
 
 			protected virtual Expression ProcessExpression(Expression expression)

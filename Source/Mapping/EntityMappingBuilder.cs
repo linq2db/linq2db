@@ -33,13 +33,11 @@ namespace LinqToDB.Mapping
 			return _builder.GetAttributes<TA>(typeof(T));
 		}
 
-#if NETFX_CORE
 		public TA[] GetAttributes<TA>(Type type)
 			where TA : Attribute
 		{
 			return _builder.GetAttributes<TA>(type);
 		}
-#endif
 
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : Attribute
@@ -57,7 +55,6 @@ namespace LinqToDB.Mapping
 				attrs.Where(a => Configuration ==    configGetter(a)). ToArray();
 		}
 
-#if NETFX_CORE
 		public TA[] GetAttributes<TA>(Type type, Func<TA,string> configGetter)
 			where TA : Attribute
 		{
@@ -67,7 +64,6 @@ namespace LinqToDB.Mapping
 				attrs.Where(a => string.IsNullOrEmpty(configGetter(a))).ToArray() :
 				attrs.Where(a => Configuration ==    configGetter(a)). ToArray();
 		}
-#endif
 
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo, Func<TA,string> configGetter)
 			where TA : Attribute
@@ -201,26 +197,23 @@ namespace LinqToDB.Mapping
 			Func<TA>        getNew,
 			Action<TA>      modifyExisting,
 			Func<TA,string> configGetter,
-			Func<TA,TA>     overrideAttribute = null)
+			Func<TA,TA>     overrideAttribute)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes(typeof(T), configGetter);
 
 			if (attrs.Length == 0)
 			{
-				if (overrideAttribute != null)
+				var attr = _builder.MappingSchema.GetAttribute(typeof(T), configGetter);
+
+				if (attr != null)
 				{
-					var attr = _builder.MappingSchema.GetAttribute(typeof(T), configGetter);
+					var na = overrideAttribute(attr);
 
-					if (attr != null)
-					{
-						var na = overrideAttribute(attr);
+					modifyExisting(na);
+					_builder.HasAttribute(typeof(T), na);
 
-						modifyExisting(na);
-						_builder.HasAttribute(typeof(T), na);
-
-						return this;
-					}
+					return this;
 				}
 
 				_builder.HasAttribute(typeof(T), getNew());

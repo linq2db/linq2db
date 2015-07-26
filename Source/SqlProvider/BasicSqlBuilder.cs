@@ -986,18 +986,23 @@ namespace LinqToDB.SqlProvider
 			if (SelectQuery.GroupBy.Items.Count == 0)
 				return;
 
-			if (SelectQuery.GroupBy.Items.Count == 1)
-			{
-				var item = SelectQuery.GroupBy.Items[0];
+			var items = SelectQuery.GroupBy.Items.Where(i => !(i is SqlValue || i is SqlParameter)).ToList();
 
-				if (item is SqlValue)
-				{
-					var value = ((SqlValue)item).Value;
+			if (items.Count == 0)
+				return;
 
-					if (value is Sql.GroupBy)
-						return;
-				}
-			}
+//			if (SelectQuery.GroupBy.Items.Count == 1)
+//			{
+//				var item = SelectQuery.GroupBy.Items[0];
+//
+//				if (item is SqlValue || item is SqlParameter)
+//				{
+//					var value = ((SqlValue)item).Value;
+//
+//					if (value is Sql.GroupBy || value is int)
+//						return;
+//				}
+//			}
 
 			AppendIndent();
 
@@ -1005,13 +1010,13 @@ namespace LinqToDB.SqlProvider
 
 			Indent++;
 
-			for (var i = 0; i < SelectQuery.GroupBy.Items.Count; i++)
+			for (var i = 0; i < items.Count; i++)
 			{
 				AppendIndent();
 
-				BuildExpression(SelectQuery.GroupBy.Items[i]);
+				BuildExpression(items[i]);
 
-				if (i + 1 < SelectQuery.GroupBy.Items.Count)
+				if (i + 1 < items.Count)
 					StringBuilder.Append(',');
 
 				StringBuilder.AppendLine();
@@ -1546,13 +1551,7 @@ namespace LinqToDB.SqlProvider
 						case QueryElementType.SqlParameter :
 							{
 								var p = (SqlParameter)predicate.Expr1;
-
-								sqlDataType = new SqlDataType(
-									p.DataType,
-									p.SystemType,
-									0,
-									0,
-									0);
+								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0);
 							}
 
 							break;
@@ -2562,6 +2561,16 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return sb;
+		}
+
+		public string ApplyQueryHints(string sql, List<string> queryHints)
+		{
+			var sb = new StringBuilder(sql);
+
+			foreach (var hint in queryHints)
+				sb.AppendLine(hint);
+
+			return sb.ToString();
 		}
 
 		private        string _name;

@@ -88,9 +88,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.SmallMoney    : 
 					StringBuilder.Append("Decimal(10,4)");   
 					break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.DateTime      :
 				case DataType.Time:
 					StringBuilder.Append("Timestamp");

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -47,9 +46,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length)); break;
 				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length)); break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.Time          :
 				case DataType.Date          :
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime"); break;

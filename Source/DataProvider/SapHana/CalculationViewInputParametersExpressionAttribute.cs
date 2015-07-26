@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -32,8 +33,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return value.ToString();
 		}
 
-		public override void SetTable(
-			SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+		public override void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
 		{
 			var method = member as MethodInfo;
 

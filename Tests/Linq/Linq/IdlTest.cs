@@ -581,7 +581,7 @@ namespace Tests.Linq
 			{
 				var gender = Gender.Other;
 				var q = from x in db.Patient
-						join y in db.Person.Where(x => x.Gender == gender) on x.PersonID equals y.ID
+						join y in db.Person.Where(x1 => x1.Gender == gender) on x.PersonID equals y.ID
 						select x;
 
 				var r = q.ToList();

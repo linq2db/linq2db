@@ -31,6 +31,13 @@ namespace Tests.Linq
 				TestJohn(from p in db.Person select p);
 		}
 
+        [Test, DataContextSource]
+        public void Complex(string context)
+        {
+            using (var db = GetDataContext(context))
+                TestJohn(from p in db.ComplexPerson select p);
+        }
+
 		[Test, DataContextSource]
 		public void SimpleDouble(string context)
 		{
@@ -558,12 +565,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
-		public void SelectEnumOnClient(string data)
+		public void SelectEnumOnClient(string context)
 		{
-			using (var context = GetDataContext(data))
+			using (var db = GetDataContext(context))
 			{
 				var arr = new List<Person> { new Person() };
-				var p = context.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault();
+				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault();
 
 				p.Arr.Single();
 			}
@@ -590,5 +597,22 @@ namespace Tests.Linq
 				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
 			}
 		}
+
+        [Test, Ignore("Not currently supported")]
+        public void SelectComplexField()
+        {
+            using (var db = new TestDataConnection())
+            {
+                var q =
+                    from p in db.GetTable<ComplexPerson>()
+                    select p.Name.LastName;
+
+                var sql = q.ToString();
+
+                Assert.That(sql.IndexOf("First"), Is.LessThan(0));
+                Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+            }
+        }
+
 	}
 }

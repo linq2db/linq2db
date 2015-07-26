@@ -87,7 +87,19 @@ namespace LinqToDB.ServiceModel
 			set { _mappingSchema = value; }
 		}
 
-		public  bool         InlineParameters { get; set; }
+		public  bool InlineParameters { get; set; }
+
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get { return _queryHints ?? (_queryHints = new List<string>()); }
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
+		}
 
 		private        Type _sqlProviderType;
 		public virtual Type  SqlProviderType
@@ -292,7 +304,7 @@ namespace LinqToDB.ServiceModel
 		{
 			var ctx  = (QueryContext)query;
 			var q    = ctx.Query.SelectQuery.ProcessParameters();
-			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
+			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints);
 
 			if (_batchCounter > 0)
 			{
@@ -318,7 +330,7 @@ namespace LinqToDB.ServiceModel
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
+				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
@@ -333,7 +345,7 @@ namespace LinqToDB.ServiceModel
 			var q      = ctx.Query.SelectQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
+				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
 			var result = LinqServiceSerializer.DeserializeResult(ret);
 
 			return new ServiceModelDataReader(MappingSchema, result);
@@ -397,6 +409,15 @@ namespace LinqToDB.ServiceModel
 			for (var i = 0; i < cc; i++)
 			{
 				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
+
+				if (i == 0 && ctx.Query.QueryHints != null && ctx.Query.QueryHints.Count > 0)
+				{
+					var sql = sb.ToString();
+
+					sql = sqlBuilder.ApplyQueryHints(sql, ctx.Query.QueryHints);
+
+					sb = new StringBuilder(sql);
+				}
 			}
 
 			return sb.ToString();

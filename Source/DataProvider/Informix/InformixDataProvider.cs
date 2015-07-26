@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Security;
 using System.Threading;
 
 namespace LinqToDB.DataProvider.Informix
@@ -129,8 +130,15 @@ namespace LinqToDB.DataProvider.Informix
 
 		static object GetNullValue(Type type)
 		{
-			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-			return getValue.Compile()();
+			try
+			{
+				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+				return getValue.Compile()();
+			}
+			catch (SecurityException)
+			{
+				return null;
+			}
 		}
 
 		public    override string ConnectionNamespace { get { return "IBM.Data.Informix"; } }

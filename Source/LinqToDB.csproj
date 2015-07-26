@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -13,6 +11,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,6 +38,24 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release.4.5\</OutputPath>
+    <DefineConstants>TRACE;FW4;MONO</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug.4.5\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
@@ -55,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
     <Compile Include="DataProvider\Access\AccessBulkCopy.cs" />
@@ -98,6 +116,7 @@
     <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleXmlTable.cs" />
     <Compile Include="DataProvider\Oracle\OracleMerge.cs" />
     <Compile Include="DataProvider\Oracle\OracleBulkCopy.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlOptimizer.cs" />
@@ -185,7 +204,6 @@
     <Compile Include="DataProvider\Access\AccessSchemaProvider.cs" />
     <Compile Include="DataProvider\AssemblyResolver.cs" />
     <Compile Include="DataProvider\BulkCopyReader.cs" />
-    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdDataProvider.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
@@ -436,6 +454,7 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
+    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

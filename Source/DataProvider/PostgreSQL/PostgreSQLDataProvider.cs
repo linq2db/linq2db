@@ -116,24 +116,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				var p = Expression.Parameter(_npgsqlTimeStampTZ, "p");
 
-				MappingSchema.SetConvertExpression(_npgsqlTimeStampTZ, typeof(DateTimeOffset),
-					Expression.Lambda(
-						Expression.New(
-							MemberHelper.ConstructorOf(() => new DateTimeOffset(0, 0, 0, 0, 0, 0, 0, new TimeSpan())),
-							Expression.PropertyOrField(p, "Year"),
-							Expression.PropertyOrField(p, "Month"),
-							Expression.PropertyOrField(p, "Day"),
-							Expression.PropertyOrField(p, "Hours"),
-							Expression.PropertyOrField(p, "Minutes"),
-							Expression.PropertyOrField(p, "Seconds"),
-							Expression.PropertyOrField(p, "Milliseconds"),
-							Expression.New(
-								MemberHelper.ConstructorOf(() => new TimeSpan(0, 0, 0)),
-								Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Hours"),
-								Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Minutes"),
-								Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Seconds"))),
-						p
-					));
+                MappingSchema.SetConvertExpression(_npgsqlTimeStampTZ, typeof(DateTimeOffset),
+                                 Expression.Lambda(
+                                     Expression.New(
+                                         MemberHelper.ConstructorOf(() => new DateTimeOffset(0L, new TimeSpan())),
+                                         Expression.PropertyOrField(p, "Ticks"),
+                                         Expression.New(
+                                             MemberHelper.ConstructorOf(() => new TimeSpan(0, 0, 0)),
+                                             Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Hours"),
+                                             Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Minutes"),
+                                             Expression.PropertyOrField(Expression.PropertyOrField(p, "TimeZone"), "Seconds"))),
+                                     p
+                                 ));
 			}
 		}
 

@@ -2,7 +2,6 @@
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -14,7 +13,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using CompiledQuery = LinqToDB.CompiledQuery;
 #if MANAGED_ORACLE
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
@@ -96,7 +94,7 @@ namespace Tests.DataProvider
 				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
 				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
-				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
+				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-4, 0, 0)));
 
 				TestType(conn, "charDataType",           '1');
 				TestType(conn, "varcharDataType",        "234");
@@ -487,11 +485,38 @@ namespace Tests.DataProvider
 			}
 		}
 
-		public class AllTypes
+		#region DateTime Tests
+
+		[Table(Schema="TESTUSER", Name="ALLTYPES")]
+		public partial class ALLTYPE
 		{
-			[PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
-			[Column,     Nullable] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
-			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        BIGINTDATATYPE         { get; set; } // NUMBER (20,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        NUMERICDATATYPE        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          BITDATATYPE            { get; set; } // NUMBER (1,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            SMALLINTDATATYPE       { get; set; } // NUMBER (5,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        DECIMALDATATYPE        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        SMALLMONEYDATATYPE     { get; set; } // NUMBER (10,4)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           INTDATATYPE            { get; set; } // NUMBER (10,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          TINYINTDATATYPE        { get; set; } // NUMBER (3,0)
+			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        MONEYDATATYPE          { get; set; } // NUMBER
+			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         FLOATDATATYPE          { get; set; } // BINARY_DOUBLE
+			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          REALDATATYPE           { get; set; } // BINARY_FLOAT
+			[Column(/*DataType=DataType.DateTime,       Length=7*/),                            Nullable         ] public DateTime?       DATETIMEDATATYPE       { get; set; } // DATE
+			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       DATETIME2DATATYPE      { get; set; } // TIMESTAMP(6)
+			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? DATETIMEOFFSETDATATYPE { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? LOCALZONEDATATYPE      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           CHARDATATYPE           { get; set; } // CHAR(1)
+			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string          VARCHARDATATYPE        { get; set; } // VARCHAR2(20)
+			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string          TEXTDATATYPE           { get; set; } // CLOB
+			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string          NCHARDATATYPE          { get; set; } // NCHAR(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string          NVARCHARDATATYPE       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string          NTEXTDATATYPE          { get; set; } // NCLOB
+			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]          BINARYDATATYPE         { get; set; } // BLOB
+			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]          BFILEDATATYPE          { get; set; } // BFILE
+			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]          GUIDDATATYPE           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object          URIDATATYPE            { get; set; } // URITYPE
+			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string          XMLDATATYPE            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
@@ -515,6 +540,118 @@ namespace Tests.DataProvider
 				db.GetTable<Entity>().Insert(() => new Entity { Id = id + 1, Duration = TimeSpan.FromHours(1) });
 			}
 		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void DateTimeTest1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				db.BeginTransaction();
+
+				db.MultipleRowsCopy(new[]
+				{
+					new ALLTYPE
+					{
+						ID                = 1000,
+						DATETIMEDATATYPE  = DateTime.Now,
+						DATETIME2DATATYPE = DateTime.Now
+					}
+				});
+			}
+		}
+
+		//[Test, IncludeDataContextSource(CurrentProvider)]
+		public void SelectDateTime(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var ms = new MappingSchema();
+
+				// Set custom DateTime to SQL converter.
+				//
+				ms.SetValueToSqlConverter(
+					typeof(DateTime),
+					(stringBuilder, dataType, val) =>
+					{
+						var value = (DateTime)val;
+						Assert.That(dataType.DataType, Is.Not.EqualTo(DataType.Undefined));
+
+						var format =
+							dataType.DataType == DataType.DateTime2 ?
+								"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+								"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+						stringBuilder.AppendFormat(format, value);
+					});
+
+				db.AddMappingSchema(ms);
+
+				var res = (db.GetTable<ALLTYPE>().Where(e => e.DATETIME2DATATYPE == DateTime.Now)).ToList();
+				Debug.WriteLine(res.Count);
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void DateTimeTest2(string context)
+		{
+			// Set custom DateTime to SQL converter.
+			//
+			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder,dataType,val) =>
+				{
+					var value  = (DateTime)val;
+					var format =
+						dataType.DataType == DataType.DateTime ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+					stringBuilder.AppendFormat(format, value);
+				});
+
+			using (var db = new DataConnection(context))
+			{
+				db.GetTable<ALLTYPE>().Delete(t => t.ID >= 1000);
+
+				db.BeginTransaction();
+
+				db.MultipleRowsCopy(new[]
+				{
+					new ALLTYPE
+					{
+						ID                = 1000,
+						DATETIMEDATATYPE  = DateTime.Now,
+						DATETIME2DATATYPE = DateTime.Now
+					}
+				});
+			}
+
+			// Reset converter to default.
+			//
+			OracleTools.GetDataProvider().MappingSchema.SetValueToSqlConverter(
+				typeof(DateTime),
+				(stringBuilder,dataType,val) =>
+				{
+					var value  = (DateTime)val;
+					var format =
+						dataType.DataType == DataType.DateTime ?
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
+							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
+
+					if (value.Millisecond == 0)
+					{
+						format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+							"TO_DATE('{0:yyyy-MM-dd}', 'YYYY-MM-DD')" :
+							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+					}
+
+					stringBuilder.AppendFormat(format, value);
+				});
+		}
+
+		#endregion
 
 		#region Sequence
 
@@ -673,6 +810,287 @@ namespace Tests.DataProvider
 
 					db.Types2.Delete(_ => _.ID > 1000);
 				}
+			}
+		}
+
+		#endregion
+
+		#region CreateTest
+
+		[Table]
+		class TempTestTable
+		{
+			// column name length = 30 char (maximum for Oracle)
+			[Column(Name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAABC")]
+			public long Id { get; set; }
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void LongAliasTest(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				try { db.DropTable<TempTestTable>(); } catch {}
+
+				var table = db.CreateTable<TempTestTable>();
+
+				var query =
+				(
+					from t in table.Distinct()
+					select new { t.Id }
+				).ToList();
+
+				db.DropTable<TempTestTable>();
+			}
+		}
+
+		#endregion
+
+		#region XmlTable
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest1(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.OracleXmlTable(new[]
+					{
+						new { field1 = 1, field2 = "11" },
+						new { field1 = 2, field2 = "22" },
+					})
+					.Select(t => new { t.field1, t.field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest2(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var list =
+				(
+					from t1 in conn.Parent
+					join t2 in conn.OracleXmlTable(new[]
+					{
+						new { field1 = 1, field2 = "11" },
+						new { field1 = 2, field2 = "22" },
+					})
+					on t1.ParentID equals t2.field1
+					select new { t2.field1, t2.field2 }
+				).ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest3(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var list = conn.OracleXmlTable(data)
+					.Select(t => new { t.field1, t.field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].field1, Is.EqualTo(1));
+				Assert.That(list[1].field1, Is.EqualTo(2));
+				Assert.That(list[0].field2, Is.EqualTo("11"));
+				Assert.That(list[1].field2, Is.EqualTo("22"));
+			}
+		}
+
+		class XmlData
+		{
+			public int    Field1;
+			[Column(Length = 2)]
+			public string Field2;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest4(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var list = conn.OracleXmlTable<XmlData>("<t><r><c0>1</c0><c1>11</c1></r><r><c0>2</c0><c1>22</c1></r></t>")
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+			}
+		}
+
+		static string _data;
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest5(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				_data = "<t><r><c0>1</c0><c1>11</c1></r><r><c0>2</c0><c1>22</c1></r></t>";
+
+				var list = conn.OracleXmlTable<XmlData>(_data)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+
+				_data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				list =
+				(
+					from t1 in conn.Parent
+					join t2 in conn.OracleXmlTable<XmlData>(_data)
+					on t1.ParentID equals t2.Field1
+					select new { t2.Field1, t2.Field2 }
+				).ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest6(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+
+				var list = conn.OracleXmlTable<XmlData>(xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest7(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = new[]
+				{
+					new { field1 = 1, field2 = "11" },
+					new { field1 = 2, field2 = "22" },
+				};
+
+				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+
+				var list = conn.OracleXmlTable<XmlData>(() => xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(2));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[1].Field1, Is.EqualTo(2));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+				Assert.That(list[1].Field2, Is.EqualTo("22"));
+
+				xmlData = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				list = conn.OracleXmlTable<XmlData>(() => xmlData)
+					.Select(t => new { t.Field1, t.Field2 })
+					.ToList();
+
+				Assert.That(list.Count, Is.EqualTo(1));
+				Assert.That(list[0].Field1, Is.EqualTo(1));
+				Assert.That(list[0].Field2, Is.EqualTo("11"));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest8(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				var list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(1));
+
+				data = "<t><r><c0>2</c0><c1>22</c1></r></t>";
+
+				list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(2));
+			}
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void XmlTableTest9(string context)
+		{
+			using (var conn = GetDataContext(context))
+			{
+				var data = "<t><r><c0>1</c0><c1>11</c1></r></t>";
+
+				var list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(() => data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(1));
+
+				data = "<t><r><c0>2</c0><c1>22</c1></r></t>";
+
+				list =
+				(
+					from p in conn.Parent
+					where conn.OracleXmlTable<XmlData>(() => data).Count(t => t.Field1 == p.ParentID) > 0
+					select p
+				).ToList();
+
+				Assert.That(list[0].ParentID, Is.EqualTo(2));
 			}
 		}
 

@@ -41,6 +41,30 @@ namespace LinqToDB.Data
 			_mappingSchema   = DataProvider.MappingSchema;
 		}
 
+		public DataConnection([JetBrains.Annotations.NotNull] string providerName, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (providerName     == null) throw new ArgumentNullException("providerName");
+			if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+			var dataProvider =
+			(
+				from key in _dataProviders.Keys
+				where string.Compare(key, providerName, StringComparison.InvariantCultureIgnoreCase) == 0
+				select _dataProviders[key]
+			).FirstOrDefault();
+
+			if (dataProvider == null)
+			{
+				throw new LinqToDBException("DataProvider with name '{0}' are not compatible.".Args(providerName));
+			}
+
+			InitConfig();
+
+			DataProvider     = dataProvider;
+			ConnectionString = connectionString;
+			_mappingSchema   = DataProvider.MappingSchema;
+		}
+
 		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
 		{
 			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
@@ -230,7 +254,7 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
 			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
-		    LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
+			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
 			var section = LinqToDBSection.Instance;
 
@@ -258,15 +282,29 @@ namespace LinqToDB.Data
 			_providerDetectors.Add(providerDetector);
 		}
 
+		internal static bool IsMachineConfig(ConnectionStringSettings css)
+		{
+			string source;
+
+			try
+			{
+				source = css.ElementInformation.Source;
+			}
+			catch (Exception)
+			{
+				source = "";
+			}
+
+			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
+		}
+
 		static void InitConnectionStrings()
 		{
 			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null &&
-					css.ElementInformation.Source != null &&
-					!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+				if (DefaultConfiguration == null && !IsMachineConfig(css))
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -370,14 +408,9 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (dataProvider != null)
+				if (dataProvider != null && DefaultConfiguration == null && !IsMachineConfig(css))
 				{
-					if (DefaultConfiguration == null &&
-						css.ElementInformation.Source != null &&
-						!css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
-					{
-						DefaultConfiguration = css.Name;
-					}
+					DefaultConfiguration = css.Name;
 				}
 
 				return dataProvider;
@@ -491,8 +524,15 @@ namespace LinqToDB.Data
 
 		public string LastQuery;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[] parameters, List<string> queryHints)
 		{
+			if (queryHints != null && queryHints.Count > 0)
+			{
+				var sqlProvider = DataProvider.CreateSqlBuilder();
+				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
+				queryHints.Clear();
+			}
+
 			DataProvider.InitCommand(this, commandType, sql, parameters);
 			LastQuery = Command.CommandText;
 		}
@@ -528,7 +568,7 @@ namespace LinqToDB.Data
 		{
 			if (_command != null)
 			{
-				_command.Dispose();
+				DataProvider.DisposeCommand(this);
 				_command = null;
 			}
 		}
@@ -773,12 +813,25 @@ namespace LinqToDB.Data
 		#region MappingSchema
 
 		private MappingSchema _mappingSchema;
+
 		public  MappingSchema  MappingSchema
 		{
 			get { return _mappingSchema; }
 		}
 
 		public bool InlineParameters { get; set; }
+
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get { return _queryHints ?? (_queryHints = new List<string>()); }
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
+		}
 
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
@@ -801,6 +854,7 @@ namespace LinqToDB.Data
 			ConnectionString    = connectionString;
 			_connection         = connection;
 			_mappingSchema      = mappingSchema;
+			_closeConnection    = true;
 		}
 
 		public object Clone()

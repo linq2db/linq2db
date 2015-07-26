@@ -93,7 +93,13 @@ namespace LinqToDB.DataProvider.DB2
 						dbc.WriteToServer(rd);
 					}
 
-					rc.RowsCopied = rd.Count;
+					if (rc.RowsCopied != rd.Count)
+					{
+						rc.RowsCopied = rd.Count;
+
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+							options.RowsCopiedCallback(rc);
+					}
 
 					return rc;
 				}

@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>(Func<IDataReader,T> objectReader)
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -135,7 +135,7 @@ namespace LinqToDB.Data
 
 		public IEnumerable<T> Query<T>()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -274,12 +274,19 @@ namespace LinqToDB.Data
 
 		public int Execute()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
-			if (Parameters != null && Parameters.Length > 0)
+			var hasParameters = Parameters != null && Parameters.Length > 0;
+
+			if (hasParameters)
 				SetParameters(DataConnection, Parameters);
 
-			return DataConnection.ExecuteNonQuery();
+			var commandResult = DataConnection.ExecuteNonQuery();
+
+			if (hasParameters)
+				RebindParameters(DataConnection, Parameters);
+
+			return commandResult;
 		}
 
 		#endregion
@@ -329,7 +336,7 @@ namespace LinqToDB.Data
 
 		public T Execute<T>()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -409,7 +416,7 @@ namespace LinqToDB.Data
 
 		public DataReader ExecuteReader()
 		{
-			DataConnection.InitCommand(CommandType, CommandText, Parameters);
+			DataConnection.InitCommand(CommandType, CommandText, Parameters, null);
 
 			if (Parameters != null && Parameters.Length > 0)
 				SetParameters(DataConnection, Parameters);
@@ -559,6 +566,27 @@ namespace LinqToDB.Data
 
 				dataConnection.DataProvider.SetParameter(p, parameter.Name, dataType, value);
 				dataConnection.Command.Parameters.Add(p);
+			}
+		}
+
+		static void RebindParameters(DataConnection dataConnection, DataParameter[] parameters)
+		{
+			var dbParameters = dataConnection.Command.Parameters;
+
+			for (var i = 0; i < parameters.Length; i++)
+			{
+				var dataParameter = parameters[i];
+
+				if (dataParameter.Direction.HasValue &&
+					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput))
+				{
+					var dbParameter = (IDbDataParameter)dbParameters[i];
+
+					if (!object.Equals(dataParameter.Value, dbParameter.Value))
+					{
+						dataParameter.Value = dbParameter.Value;
+					}
+				}
 			}
 		}
 
