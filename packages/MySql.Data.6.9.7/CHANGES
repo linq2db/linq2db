@@ -1,3 +1,10 @@
+6.9.7
+- Changed default SSL mode to Preferred in connection string. Now the server connections will be using SSL if server allows it by default but it's possible to override this configuration.
+- Changed handshake process to use bytes instead of encoded strings.
+- Fix for Fabric connections (Oracle Bug #20983968).
+- Fix for Fabric plugin: fabric server selection is broken when master is faulty (Oracle Bug #21203824).
+
+
 6.9.6
 - Fix for Incorrect query result with Entity Framework 6 (MySql bug #74918, Oracle bug #20129927).
 - Fix for GetTimeZoneOffset to use date and time to calculate timediff (MySQL Bug #74905, Oracle Bug #20065691).
