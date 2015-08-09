@@ -19,6 +19,7 @@ using Oracle.ManagedDataAccess.Types;
 #else
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
+// ReSharper disable All
 #endif
 
 namespace Tests.DataProvider
@@ -1095,5 +1096,76 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		// IT : # test.
+		[Test, IncludeDataContextSource(false, CurrentProvider)]
+		public void TestOrderByFirst1(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var q =
+					from x in db.Parent
+					where x.Value1 == 1
+					orderby x.ParentID descending
+					select x;
+
+				var row = q.First();
+
+				var start = 0;
+				var n     = 0;
+
+				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+					n++;
+
+				Assert.That(n, Is.EqualTo(2));
+			}
+		}
+
+		// IT : # test.
+		[Test, IncludeDataContextSource(false, CurrentProvider)]
+		public void TestOrderByFirst2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var q =
+					from x in db.Parent
+					where x.Value1 == 1
+					select x;
+
+				var row = q.First();
+
+				var start = 0;
+				var n     = 0;
+
+				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+					n++;
+
+				Assert.That(n, Is.EqualTo(1));
+			}
+		}
+
+		// IT : # test.
+		[Test, IncludeDataContextSource(false, CurrentProvider)]
+		public void TestOrderByFirst3(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var q =
+					from x in db.Parent
+					where x.Value1 == 1
+					orderby x.ParentID descending
+					select x;
+
+				var row = q.Skip(1).First();
+
+				var start = 0;
+				var n     = 0;
+
+				while ((start = db.LastQuery.IndexOf("FROM", start) + 1) > 0)
+					n++;
+
+				Assert.That(n, Is.EqualTo(3));
+			}
+		}
 	}
 }
