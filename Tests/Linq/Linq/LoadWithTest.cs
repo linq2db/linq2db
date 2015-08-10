@@ -222,5 +222,27 @@ namespace Tests.Linq
 
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
+
+		// IT : # test.
+		[Test, DataContextSource(ProviderName.Access)]
+		public void LoadWith10(string context)
+		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Parent.LoadWith(p => p.Children)
+					where p.ParentID < 2
+					select p;
+
+				for (var i = 0; i < 100; i++)
+				{
+					var list = q.ToList();
+				}
+			}
+
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+		}
 	}
 }

@@ -30,7 +30,6 @@ namespace LinqToDB.Linq
 		{
 			if (_contexts == null)
 			{
-				RootDataContext.DataContext.OnClosing += OnRootClosing;
 				_contexts = new List<DataContextContext>(1);
 			}
 
@@ -55,14 +54,15 @@ namespace LinqToDB.Linq
 			context.InUse = false;
 		}
 
-		void OnRootClosing(object sender, EventArgs e)
+		public void Close()
 		{
-			foreach (var context in _contexts)
+			if (_contexts != null)
+			{
+				foreach (var context in _contexts)
 				context.DataContextInfo.DataContext.Dispose();
 
-			RootDataContext.DataContext.OnClosing -= OnRootClosing;
-
-			_contexts = null;
+				_contexts = null;
+			}
 		}
 
 		public void AfterQuery()
