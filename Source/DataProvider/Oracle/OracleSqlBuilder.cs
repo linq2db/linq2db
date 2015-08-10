@@ -65,7 +65,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-		// IT : # fix.
 		protected override void BuildSql()
 		{
 			if (NeedSkip)

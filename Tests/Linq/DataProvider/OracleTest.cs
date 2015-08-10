@@ -1097,7 +1097,6 @@ namespace Tests.DataProvider
 
 		#endregion
 
-		// IT : # test.
 		[Test, IncludeDataContextSource(false, CurrentProvider)]
 		public void TestOrderByFirst1(string context)
 		{
@@ -1121,7 +1120,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// IT : # test.
 		[Test, IncludeDataContextSource(false, CurrentProvider)]
 		public void TestOrderByFirst2(string context)
 		{
@@ -1144,7 +1142,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// IT : # test.
 		[Test, IncludeDataContextSource(false, CurrentProvider)]
 		public void TestOrderByFirst3(string context)
 		{
