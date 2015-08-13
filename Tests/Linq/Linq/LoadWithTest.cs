@@ -223,7 +223,6 @@ namespace Tests.Linq
 			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 		}
 
-		// IT : # test.
 		[Test, DataContextSource(ProviderName.Access)]
 		public void LoadWith10(string context)
 		{
