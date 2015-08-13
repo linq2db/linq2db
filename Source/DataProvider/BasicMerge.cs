@@ -27,6 +27,8 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
+		protected virtual bool IsIdentitySupported { get { return false; } }
+
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
 			where T : class
 		{
@@ -83,7 +85,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine(")")
 				;
 
-			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey).ToList();
+			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
 
 			if (updateColumns.Count > 0)
 			{
@@ -113,6 +115,8 @@ namespace LinqToDB.DataProvider
 				StringBuilder.Length -= 1 + Environment.NewLine.Length;
 			}
 
+			var insertColumns = Columns.Where(c => IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnInsert).ToList();
+
 			StringBuilder
 				.AppendLine()
 				.AppendLine("-- insert new rows")
@@ -121,7 +125,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\t(")
 				;
 
-			foreach (var column in Columns)
+			foreach (var column in insertColumns)
 				StringBuilder.AppendFormat("\t\t{0},", column.Name).AppendLine();
 
 			StringBuilder.Length -= 1 + Environment.NewLine.Length;
@@ -133,7 +137,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\t(")
 				;
 
-			foreach (var column in Columns)
+			foreach (var column in insertColumns)
 				StringBuilder.AppendFormat("\t\tSource.{0},", column.Name).AppendLine();
 
 			StringBuilder.Length -= 1 + Environment.NewLine.Length;

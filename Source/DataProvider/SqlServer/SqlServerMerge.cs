@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Data;
+	using SqlProvider;
 
 	class SqlServerMerge : BasicMerge
 	{
@@ -16,6 +16,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			ByTargetText = "BY Target ";
 		}
+
+		protected override bool IsIdentitySupported { get { return true; } }
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source)
 		{
