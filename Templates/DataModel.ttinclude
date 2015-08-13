@@ -150,11 +150,9 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 	foreach (var key in keys)
 	{
-		//key.t.table.ForeignKeys.Add(key.KeyName, key.key);
 		key.t.table.ForeignKeys.Add(
 			key.k.OtherTable.IsDefaultSchema ? key.KeyName : key.k.OtherTable.SchemaName + "." + key.KeyName,
 			key.key);
-		
 
 		if (key.k.BackReference != null)
 			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
