@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.SQLite</id>
-		<version>1.0.7.1</version>
+		<version>1.0.7.2</version>
 		<title>LINQ to SQLite</title>
 		<authors>Igor Tkachev</authors>
 		<owners />

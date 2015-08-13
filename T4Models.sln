@@ -1,11 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{2E57C99E-2603-4D59-9094-A5BB06639C10}"
 	ProjectSection(SolutionItems) = preProject
-		Templates\!ReadMe.LinqToDB.md = Templates\!ReadMe.LinqToDB.md
 		Templates\DataAnnotations.ttinclude = Templates\DataAnnotations.ttinclude
 		Templates\DataModel.ttinclude = Templates\DataModel.ttinclude
 		Templates\EditableObject.ttinclude = Templates\EditableObject.ttinclude
@@ -25,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{
 		Templates\LinqToDB.ttinclude = Templates\LinqToDB.ttinclude
 		Templates\NotifyPropertyChanged.ttinclude = Templates\NotifyPropertyChanged.ttinclude
 		Templates\PluralizationService.ttinclude = Templates\PluralizationService.ttinclude
+		Templates\ReadMe.LinqToDB.md = Templates\ReadMe.LinqToDB.md
 		Templates\T4Model.ttinclude = Templates\T4Model.ttinclude
 		Templates\Validation.ttinclude = Templates\Validation.ttinclude
 	EndProjectSection
