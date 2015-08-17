@@ -49,6 +49,17 @@ namespace LinqToDB.DataProvider.SqlServer
 						goto case "SqlServer";
 					break;
 
+				case "SqlServer2000"         :
+				case "SqlServer.2000"        : return _sqlServerDataProvider2000;
+				case "SqlServer2005"         :
+				case "SqlServer.2005"        : return _sqlServerDataProvider2005;
+				case "SqlServer2008"         :
+				case "SqlServer.2008"        : return _sqlServerDataProvider2008;
+				case "SqlServer2012"         :
+				case "SqlServer.2012"        : return _sqlServerDataProvider2012;
+				case "SqlServer2014"         :
+				case "SqlServer.2014"        : return _sqlServerDataProvider2012;
+
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
 
@@ -68,13 +79,22 @@ namespace LinqToDB.DataProvider.SqlServer
 							{
 								conn.Open();
 
-								switch (conn.ServerVersion.Split('.')[0])
+								int version;
+
+								if (int.TryParse(conn.ServerVersion.Split('.')[0], out version))
 								{
-									case  "8" : return _sqlServerDataProvider2000;
-									case  "9" :	return _sqlServerDataProvider2005;
-									case "10" :	return _sqlServerDataProvider2008;
-									case "11" : return _sqlServerDataProvider2012;
-									case "12" : return _sqlServerDataProvider2012;
+									switch (version)
+									{
+										case  8 : return _sqlServerDataProvider2000;
+										case  9 : return _sqlServerDataProvider2005;
+										case 10 : return _sqlServerDataProvider2008;
+										case 11 : return _sqlServerDataProvider2012;
+										case 12 : return _sqlServerDataProvider2012;
+										default :
+											if (version > 12)
+												return _sqlServerDataProvider2012;
+											break;
+									}
 								}
 							}
 						}
