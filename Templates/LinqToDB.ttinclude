@@ -248,7 +248,7 @@ void GenerateTypesFromMetadata()
 				canBeReplaced = false;
 			}
 
-			if(GenerateDataTypes && !GeneratePrecisionProperty.HasValue || GeneratePrecisionProperty == true)
+			if (GenerateDataTypes && !GeneratePrecisionProperty.HasValue || GeneratePrecisionProperty == true)
 			{
 				if (c.Precision != null) ca.Parameters.Add("Precision=" + c.Precision);
 				canBeReplaced = false;
@@ -476,8 +476,9 @@ void GenerateTypesFromMetadata()
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
 		foreach (var p in Procedures.Values.Where(
-			proc => proc.IsLoaded ||
-				(proc.IsFunction && !proc.IsTableFunction)))
+			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
+			proc.IsTableFunction && proc.ResultException != null
+			))
 		{
 			Action<MemberGroup> addProcs = tp => procs.Members.Add(tp);
 			Action<MemberGroup> addFuncs = tp => funcs.Members.Add(tp);
@@ -498,6 +499,18 @@ void GenerateTypesFromMetadata()
 			}
 
 			var proc = new MemberGroup { Region = p.Name };
+
+			     if (!p.IsFunction)     addProcs(proc);
+			else if (p.IsTableFunction) addTabfs(proc);
+			else                        addFuncs(proc);
+
+			if (p.ResultException != null)
+			{
+				proc.Errors.Add(p.ResultException.Message);
+				continue;
+			}
+
+			proc.Members.Add(p);
 
 			if (p.IsTableFunction)
 			{
@@ -672,12 +685,6 @@ void GenerateTypesFromMetadata()
 				p.ResultTable.Members.Add(columns);
 				proc.Members.Add(p.ResultTable);
 			}
-
-			proc.Members.Add(p);
-
-			     if (!p.IsFunction)     addProcs(proc);
-			else if (p.IsTableFunction) addTabfs(proc);
-			else                        addFuncs(proc);
 		}
 
 		if (procs.Members.Count > 0)
