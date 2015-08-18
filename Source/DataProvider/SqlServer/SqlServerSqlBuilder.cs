@@ -184,10 +184,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append("IDENTITY");
 		}
 
+		// IT : # fix.
 		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
-			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+
+			if (!pkName.StartsWith("[PK_#"))
+				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
+
+			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
@@ -196,13 +201,22 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var table = SelectQuery.CreateTable.Table;
 
-			StringBuilder.Append("IF  EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
-			BuildPhysicalTable(table, null);
-			StringBuilder.AppendLine("') AND type in (N'U'))");
+			if (table.PhysicalName.StartsWith("#"))
+			{
+				AppendIndent().Append("DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine();
+			}
+			else
+			{
+				StringBuilder.Append("IF EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine("') AND type in (N'U'))");
 
-			AppendIndent().Append("BEGIN DROP TABLE ");
-			BuildPhysicalTable(table, null);
-			StringBuilder.AppendLine(" END");
+				AppendIndent().Append("BEGIN DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine(" END");
+			}
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)

@@ -944,5 +944,34 @@ namespace Tests.DataProvider
 				db.DropTable<AllTypes>();
 			}
 		}
+
+		[Table("#TempTable")]
+		class TempTable
+		{
+			[PrimaryKey] public int ID;
+		}
+
+		// IT : # test.
+		[Test, SqlServerDataContext]
+		public void CreateTempTable(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.CreateTable<TempTable>();
+				db.DropTable<TempTable>();
+				db.CreateTable<TempTable>();
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void CreateTempTable2(string context)
+		{
+			using (var db1 = new DataConnection(context))
+			using (var db2 = new DataConnection(context))
+			{
+				db1.CreateTable<TempTable>();
+				db2.CreateTable<TempTable>();
+			}
+		}
 	}
 }
