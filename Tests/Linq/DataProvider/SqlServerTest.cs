@@ -951,7 +951,6 @@ namespace Tests.DataProvider
 			[PrimaryKey] public int ID;
 		}
 
-		// IT : # test.
 		[Test, SqlServerDataContext]
 		public void CreateTempTable(string context)
 		{

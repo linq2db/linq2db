@@ -5,29 +5,10 @@ namespace LinqToDB.Linq
 {
 	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
 	{
-		public Table(IDataContextInfo dataContextInfo, Expression expression)
-		{
-			Init(dataContextInfo, expression);
-		}
-
 		public Table(IDataContextInfo dataContextInfo)
 		{
 			Init(dataContextInfo, null);
 		}
-
-#if !SILVERLIGHT
-
-		public Table()
-		{
-			Init(null, null);
-		}
-
-		public Table(Expression expression)
-		{
-			Init(null, expression);
-		}
-
-#endif
 
 		public Table(IDataContext dataContext)
 		{
@@ -39,13 +20,17 @@ namespace LinqToDB.Linq
 			Init(dataContext == null ? null : new DataContextInfo(dataContext), expression);
 		}
 
+		public string DatabaseName;
+		public string SchemaName;
+		public string TableName;
+
 		#region Overrides
 
 #if OVERRIDETOSTRING
 
 		public override string ToString()
 		{
-			return "Table(" + typeof (T).Name + ")";
+			return "Table(" + typeof(T).Name + ")";
 		}
 
 #endif

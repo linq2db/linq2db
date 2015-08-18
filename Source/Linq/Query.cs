@@ -1003,7 +1003,7 @@ namespace LinqToDB.Linq
 
 			if (tableName    != null) table = table.TableName   (tableName);
 			if (databaseName != null) table = table.DatabaseName(databaseName);
-			if (ownerName    != null) table = table.OwnerName   (ownerName);
+			if (ownerName    != null) table = table.SchemaName  (ownerName);
 
 			return table;
 		}

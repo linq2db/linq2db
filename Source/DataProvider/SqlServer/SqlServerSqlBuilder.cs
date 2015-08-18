@@ -184,7 +184,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			StringBuilder.Append("IDENTITY");
 		}
 
-		// IT : # fix.
 		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();

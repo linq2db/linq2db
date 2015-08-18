@@ -288,16 +288,25 @@ namespace LinqToDB
 		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
 			string tableName    = null,
 			string databaseName = null,
-			string ownerName    = null)
+			string schemaName    = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
+			Query<T>.DropTable(dataContextInfo, tableName, databaseName, schemaName);
 		}
 
-		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
+		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
+			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, schemaName);
+		}
+
+		public static void DropTable<T>([NotNull] this ITable<T> table, string tableName = null, string databaseName = null, string schemaName = null)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl = (Table<T>)table;
+
+			Query<T>.DropTable(tbl.DataContextInfo, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
 		}
 
 		#endregion

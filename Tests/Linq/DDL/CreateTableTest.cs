@@ -127,7 +127,7 @@ namespace Tests.DDL
 			{
 				try
 				{
-					db.DropTable<TestEnumTable>("#TestTable");
+					db.DropTable<TestEnumTable>();
 				}
 				catch (Exception)
 				{
@@ -212,6 +212,16 @@ namespace Tests.DDL
 				Assert.That(qq.cc, Is.EqualTo("hallo"));
 
 				conn.DropTable<qq>();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
+		public void CreateTable2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<TestEnumTable>("#TestTable");
+				table.DropTable();
 			}
 		}
 	}
