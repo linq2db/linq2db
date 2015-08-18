@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					var sqlBuilder = _dataProvider.CreateSqlBuilder();
 					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-					var tableName  = GetTableName(sqlBuilder, descriptor);
+					var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 					bc.DestinationTableName = tableName;
 

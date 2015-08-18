@@ -54,13 +54,17 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected internal static string GetTableName(ISqlBuilder sqlBuilder, EntityDescriptor descriptor)
+		protected internal static string GetTableName(ISqlBuilder sqlBuilder, BulkCopyOptions options, EntityDescriptor descriptor)
 		{
+			var databaseName = options.DatabaseName ?? descriptor.DatabaseName;
+			var schemaName   = options.SchemaName   ?? descriptor.SchemaName;
+			var tableName    = options.TableName    ?? descriptor.TableName;
+
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
-				descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
-				descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
-				descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
+				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToOwner).     ToString(),
+				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())
 			.ToString();
 		}
 

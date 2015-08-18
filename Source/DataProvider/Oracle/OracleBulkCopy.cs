@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, descriptor);
+			var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 			if (dataConnection.Transaction == null)
 			{

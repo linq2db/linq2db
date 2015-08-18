@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 				var sqlBuilder = _dataProvider.CreateSqlBuilder();
 				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof (T));
-				var tableName  = GetTableName(sqlBuilder, descriptor);
+				var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 				dbc.DestinationTableName = tableName;
 

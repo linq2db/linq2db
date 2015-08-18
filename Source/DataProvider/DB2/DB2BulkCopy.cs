@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 				var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var tableName  = GetTableName(sqlBuilder, descriptor);
+				var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 				if (_bulkCopyCreator == null)
 				{
