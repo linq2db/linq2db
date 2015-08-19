@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						sys.extended_properties x
 					ON
 						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						ORDINAL_POSITION = x.minor_id AND
+						COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
 						x.name = 'MS_Description'")
 				.Select(c =>
 				{
