@@ -94,7 +94,10 @@ namespace LinqToDB.DataProvider.Oracle
 						for (var i = 0; i < columns.Count; i++)
 							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
 
-						dbc.WriteToServer(rd);
+						TraceAction(
+							dataConnection,
+							"INSERT BULK " + tableName + Environment.NewLine,
+							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 
 					if (rc.RowsCopied != rd.Count)

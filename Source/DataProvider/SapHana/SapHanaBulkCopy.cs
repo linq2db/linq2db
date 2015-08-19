@@ -101,7 +101,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 				var rd = new BulkCopyReader(_dataProvider, columns, source);
 
-				dbc.WriteToServer(rd);
+				TraceAction(
+					dataConnection,
+					"INSERT BULK " + tableName + Environment.NewLine,
+					() => { dbc.WriteToServer(rd); return rd.Count; });
 
 				if (rc.RowsCopied != rd.Count)
 				{

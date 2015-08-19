@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -221,6 +222,18 @@ namespace Tests.DDL
 			using (var db = GetDataContext(context))
 			{
 				var table = db.CreateTable<TestEnumTable>("#TestTable");
+				table.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[]
+				{
+					new TestEnumTable
+					{
+						Field1  = FieldType1.Value1,
+						Field11 = FieldType1.Value1,
+						Field2  = FieldType2.Value1,
+						Field21 = FieldType2.Value1,
+						Field3  = FieldType3.Value1,
+					}
+				});
 				table.DropTable();
 			}
 		}

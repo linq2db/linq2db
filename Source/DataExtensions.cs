@@ -182,15 +182,17 @@ namespace LinqToDB
 
 		#region Insert
 
-		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Insert(dataContextInfo, obj);
+			return Query<T>.Insert(dataContextInfo, obj, tableName, databaseName, schemaName);
 		}
 
-		public static int Insert<T>(this IDataContext dataContext, T obj)
+		public static int Insert<T>(this IDataContext dataContext, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
-			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj);
+			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj, tableName, databaseName, schemaName);
 		}
 
 		#endregion

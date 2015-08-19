@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using JetBrains.Annotations;
+using LinqToDB.Linq;
 
 namespace LinqToDB.Data
 {
@@ -187,24 +189,89 @@ namespace LinqToDB.Data
 
 		#region BulkCopy
 
-		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
 			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
 		}
 
-		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection,
 				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source);
 		}
 
-		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, IEnumerable<T> source)
+		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this DataConnection dataConnection, IEnumerable<T> source)
 		{
+			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+
 			return dataConnection.DataProvider.BulkCopy(
 				dataConnection,
 				new BulkCopyOptions(),
+				source);
+		}
+
+		public static BulkCopyRowsCopied BulkCopy<T>([NotNull] this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			if (options.TableName    == null) options.TableName    = tbl.TableName;
+			if (options.DatabaseName == null) options.DatabaseName = tbl.DatabaseName;
+			if (options.SchemaName   == null) options.SchemaName   = tbl.SchemaName;
+
+			return dataConnection.DataProvider.BulkCopy(dataConnection, options, source);
+		}
+
+		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection,
+				new BulkCopyOptions
+				{
+					MaxBatchSize = maxBatchSize,
+					TableName    = tbl.TableName,
+					DatabaseName = tbl.DatabaseName,
+					SchemaName   = tbl.SchemaName,
+				},
+				source);
+		}
+
+		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection,
+				new BulkCopyOptions
+				{
+					TableName    = tbl.TableName,
+					DatabaseName = tbl.DatabaseName,
+					SchemaName   = tbl.SchemaName,
+				},
 				source);
 		}
 
