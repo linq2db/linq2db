@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 
-	class TableBuilderOld : ISequenceBuilder
+	class TableBuilder : ISequenceBuilder
 	{
 		#region TableBuilderOld
 
@@ -569,7 +569,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildQuery(typeof(T), this, null);
 				var mapper = Builder.BuildMapper<T>(expr);

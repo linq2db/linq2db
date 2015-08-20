@@ -295,9 +295,9 @@ namespace LinqToDB.ServiceModel
 
 		#region GetQueryContext
 
-		class QueryContext : IQueryContext
+		class QueryContext : IQueryContextNew
 		{
-			public QueryContext(RemoteDataContextBase dataContext, Query query, Expression expression)
+			public QueryContext(RemoteDataContextBase dataContext, QueryNew query, Expression expression)
 			{
 				_dataContext = dataContext;
 				_query       = query;
@@ -305,7 +305,7 @@ namespace LinqToDB.ServiceModel
 			}
 
 			readonly RemoteDataContextBase _dataContext;
-			readonly Query                 _query;
+			readonly QueryNew                 _query;
 			readonly Expression            _expression;
 
 			ILinqService _client;
@@ -380,7 +380,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		IQueryContextNew IDataContext.GetQueryContext(QueryNew query, Expression expression)
 		{
 			return new QueryContext(this, query, expression);
 		}
@@ -389,11 +389,11 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContextOld
 		{
-			public IQueryContextOld Query;
+			public IQueryContext Query;
 			public ILinqService  Client;
 		}
 
-		object IDataContext.SetQuery(IQueryContextOld queryContext)
+		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
 			return new QueryContextOld { Query = queryContext };
 		}

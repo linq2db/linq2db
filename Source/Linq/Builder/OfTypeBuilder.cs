@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = sequence as TableBuilderOld.TableContext;
+			var table    = sequence as TableBuilder.TableContext;
 
 			if (table != null && table.InheritanceMapping.Count > 0)
 			{
@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 
 			private readonly MethodCallExpression _methodCall;
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(null, 0);
 				var mapper = Builder.BuildMapper<T>(expr);

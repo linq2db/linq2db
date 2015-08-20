@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression IBuildContext.Expression { get { return Lambda; } }
 
-		public virtual void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			var expr   = BuildExpression(null, 0);
 			var mapper = Builder.BuildMapper<T>(expr);

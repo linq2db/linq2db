@@ -13,9 +13,9 @@ namespace LinqToDB.Linq
 {
 	using Extensions;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>
+	abstract class ExpressionQueryNew<T> : IExpressionQuery<T>
 	{
-		protected ExpressionQuery(IDataContext dataContext, Expression expression)
+		protected ExpressionQueryNew(IDataContext dataContext, Expression expression)
 		{
 			_dataContext = dataContext;
 
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { _dataContext, expression });
+				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImplNew<>).MakeGenericType(elementType), new object[] { _dataContext, expression });
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			return new ExpressionQueryImpl<TElement>(_dataContext, expression);
+			return new ExpressionQueryImplNew<TElement>(_dataContext, expression);
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -116,15 +116,15 @@ namespace LinqToDB.Linq
 			return (TResult)(object)GetQuery(expression, false).GetElement(_dataContext, expression);
 		}
 
-		Query<T> _info;
+		QueryNew<T> _info;
 
-		Query<T> GetQuery(Expression expression, bool isEnumerable)
+		QueryNew<T> GetQuery(Expression expression, bool isEnumerable)
 		{
 			if (isEnumerable && _info != null)
 				throw new InvalidOperationException();
 				//return _info;
 
-			var info = Query<T>.GetQuery(_dataContext, expression, isEnumerable);
+			var info = QueryNew<T>.GetQuery(_dataContext, expression, isEnumerable);
 
 			if (isEnumerable)
 				_info = info;

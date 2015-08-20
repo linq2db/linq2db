@@ -120,7 +120,7 @@ namespace LinqToDB
 			if (selector    == null) throw new ArgumentNullException("selector");
 
 //			var q = new Table<T>(dataContext, selector);
-			var q = new ExpressionQueryImpl<T>(dataContext, selector);
+			var q = new ExpressionQueryImplNew<T>(dataContext, selector);
 
 			foreach (var item in q)
 				return item;

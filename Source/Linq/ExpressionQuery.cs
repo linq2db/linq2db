@@ -12,7 +12,7 @@ namespace LinqToDB.Linq
 {
 	using Extensions;
 
-	abstract class ExpressionQueryOld<T> : IExpressionQuery<T>
+	abstract class ExpressionQuery<T> : IExpressionQuery<T>
 	{
 		#region Init
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq
 		[NotNull] public Expression       Expression      { get; set; }
 		[NotNull] public IDataContextInfo DataContextInfo { get; set; }
 
-		internal  QueryOld<T> Info;
+		internal  Query<T> Info;
 		internal  object[] Parameters;
 
 		#endregion
@@ -69,12 +69,12 @@ namespace LinqToDB.Linq
 			return GetQuery(expression, true).GetIEnumerable(null, dataContextInfo, expression, Parameters);
 		}
 
-		QueryOld<T> GetQuery(Expression expression, bool cache)
+		Query<T> GetQuery(Expression expression, bool cache)
 		{
 			if (cache && Info != null)
 				return Info;
 
-			var info = QueryOld<T>.GetQuery(DataContextInfo, expression);
+			var info = Query<T>.GetQuery(DataContextInfo, expression);
 
 			if (cache)
 				Info = info;
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq
 			if (expression == null)
 				throw new ArgumentNullException("expression");
 
-			return new ExpressionQueryOldImpl<TElement>(DataContextInfo, expression);
+			return new ExpressionQueryImpl<TElement>(DataContextInfo, expression);
 		}
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryOldImpl<>).MakeGenericType(elementType), new object[] { DataContextInfo, expression });
+				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { DataContextInfo, expression });
 			}
 			catch (TargetInvocationException ex)
 			{

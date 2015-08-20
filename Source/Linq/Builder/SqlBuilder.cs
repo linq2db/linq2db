@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	static class SqlBuilder
 	{
 		public static ISqlPredicate BuildInheritanceCondition(
-			Query                       query,
+			QueryNew                       query,
 			SelectQuery                 selectQuery,
 			EntityDescriptor            entityDescriptor,
 			Func<string,ISqlExpression> getSql)

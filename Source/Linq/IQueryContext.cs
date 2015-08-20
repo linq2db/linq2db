@@ -5,7 +5,7 @@ namespace LinqToDB.Linq
 {
 	using SqlQuery;
 
-	public interface IQueryContextOld
+	public interface IQueryContext
 	{
 		SelectQuery    SelectQuery { get; }
 		object         Context     { get; set; }

@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildQuery
 
-		public virtual void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			var expr   = BuildExpression(null, 0);
 			var mapper = Builder.BuildMapper<T>(expr);

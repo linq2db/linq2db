@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = (TableBuilderOld.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			sequence.SelectQuery.QueryType          = QueryType.CreateTable;
 			sequence.SelectQuery.CreateTable.Table  = sequence.SqlTable;
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				query.SetNonQueryQuery();
 			}

@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 			public ISqlOptimizer SqlOptimizer;
 			public Action        SetParameters;
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				query.DoNotChache = true;
 				query.SetNonQueryQuery();

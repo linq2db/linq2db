@@ -54,7 +54,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		class QueryContext : IQueryContextOld
+		class QueryContext : IQueryContext
 		{
 			public SelectQuery    SelectQuery { get; set; }
 			public object         Context     { get; set; }

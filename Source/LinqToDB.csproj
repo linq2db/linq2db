@@ -181,7 +181,7 @@
     <Compile Include="Linq\Builder\QueryExpression.cs" />
     <Compile Include="Linq\Builder\SelectBuilder1.cs" />
     <Compile Include="Linq\Builder\SqlBuilder.cs" />
-    <Compile Include="Linq\Builder\TableBuilder.cs" />
+    <Compile Include="Linq\Builder\TableBuilderNew.cs" />
     <Compile Include="Linq\Builder\TableFunctionBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder1.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
@@ -371,7 +371,7 @@
     <Compile Include="Linq\Builder\SqlInfo.cs" />
     <Compile Include="Linq\Builder\SubQueryContext.cs" />
     <Compile Include="Linq\Builder\TableAttributeBuilder.cs" />
-    <Compile Include="Linq\Builder\TableBuilderOld.cs" />
+    <Compile Include="Linq\Builder\TableBuilder.cs" />
     <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
     <Compile Include="Linq\Builder\UpdateBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder.cs" />

@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Init
 
-		protected QueryBuilder(IDataContext dataContext, Query query)
+		protected QueryBuilder(IDataContext dataContext, QueryNew query)
 		{
 			Query         = query;
 			DataContext   = dataContext;
@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 				BuildVariableExpression(Expression.Convert(DataReaderParameter, DataContext.DataReaderType), "localDataReader");
 		}
 
-		public readonly Query         Query;
+		public readonly QueryNew         Query;
 		public readonly IDataContext  DataContext;
 		public readonly MappingSchema MappingSchema;
 
@@ -104,14 +104,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						var c = (ConstantExpression)expression;
 						if (c.Value is ITable)
-							return CreateQueryExpression(new TableBuilder(expression));
+							return CreateQueryExpression(new TableBuilderNew(expression));
 						break;
 					}
 
 				case ExpressionType.MemberAccess:
 					{
 						if (typeof(ITable).IsSameOrParentOf(expression.Type))
-							return CreateQueryExpression(new TableBuilder(expression));
+							return CreateQueryExpression(new TableBuilderNew(expression));
 						break;
 					}
 
@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (call.Method.Name == "GetTable")
 							if (typeof(ITable).IsSameOrParentOf(expression.Type))
-								return CreateQueryExpression(new TableBuilder(expression));
+								return CreateQueryExpression(new TableBuilderNew(expression));
 
 						var attr = Query.MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(call.Method, a => a.Configuration);
 
@@ -159,12 +159,12 @@ namespace LinqToDB.Linq.Builder
 
 	class QueryBuilder<T> : QueryBuilder
 	{
-		public QueryBuilder(IDataContext dataContext, Query<T> query)
+		public QueryBuilder(IDataContext dataContext, QueryNew<T> query)
 			: base(dataContext, query)
 		{
 		}
 
-		public new Query<T> Query { get { return (Query<T>)base.Query; } }
+		public new QueryNew<T> Query { get { return (QueryNew<T>)base.Query; } }
 
 		protected override Expression CreateQueryExpression(IExpressionBuilder expressionBuilder)
 		{

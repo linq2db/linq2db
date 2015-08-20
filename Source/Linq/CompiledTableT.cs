@@ -22,17 +22,17 @@ namespace LinqToDB.Linq
 
 		string        _lastContextID;
 		MappingSchema _lastMappingSchema;
-		QueryOld<T>      _lastQuery;
+		Query<T>      _lastQuery;
 
-		readonly Dictionary<object,QueryOld<T>> _infos = new Dictionary<object, QueryOld<T>>();
+		readonly Dictionary<object,Query<T>> _infos = new Dictionary<object, Query<T>>();
 
-		QueryOld<T> GetInfo(IDataContext dataContext)
+		Query<T> GetInfo(IDataContext dataContext)
 		{
 			var dataContextInfo = DataContextInfo.Create(dataContext);
 
 			string        lastContextID;
 			MappingSchema lastMappingSchema;
-			QueryOld<T>      query;
+			Query<T>      query;
 
 			lock (_sync)
 			{
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq
 
 						if (query == null)
 						{
-							query = new ExpressionBuilder(new QueryOld<T>(), dataContextInfo, _expression, _lambda.Parameters.ToArray())
+							query = new ExpressionBuilder(new Query<T>(), dataContextInfo, _expression, _lambda.Parameters.ToArray())
 								.Build<T>();
 
 							_infos.Add(key, query);
@@ -81,7 +81,7 @@ namespace LinqToDB.Linq
 		public IQueryable<T> Create(object[] parameters)
 		{
 			var db = (IDataContext)parameters[0];
-			return new TableOld<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
+			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
 		}
 
 		public T Execute(object[] parameters)

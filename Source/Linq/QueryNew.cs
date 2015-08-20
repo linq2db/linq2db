@@ -16,9 +16,9 @@ namespace LinqToDB.Linq
 	using SqlProvider;
 	using SqlQuery;
 
-	public abstract class Query
+	public abstract class QueryNew
 	{
-		protected Query(IDataContext dataContext, Expression expression)
+		protected QueryNew(IDataContext dataContext, Expression expression)
 		{
 			ContextID       = dataContext.ContextID;
 			Expression      = expression;
@@ -76,9 +76,9 @@ namespace LinqToDB.Linq
 		}
 	}
 
-	class Query<T> : Query
+	class QueryNew<T> : QueryNew
 	{
-		Query(IDataContext dataContext, Expression expression)
+		QueryNew(IDataContext dataContext, Expression expression)
 			: base(dataContext, expression)
 		{
 		}
@@ -87,16 +87,16 @@ namespace LinqToDB.Linq
 		public Func<IDataContext,Expression,IEnumerable<T>>                   GetIEnumerable;
 		public Func<IDataContext,Expression,Action<T>,CancellationToken,Task> GetForEachAsync;
 
-		Query<T> _next;
+		QueryNew<T> _next;
 
 		#region GetQuery
 
-		static          Query<T> _first;
+		static          QueryNew<T> _first;
 		static readonly object   _sync = new object();
 
 		const int CacheSize = 100;
 
-		public static Query<T> GetQuery(IDataContext dataContext, Expression expr, bool isEnumerable)
+		public static QueryNew<T> GetQuery(IDataContext dataContext, Expression expr, bool isEnumerable)
 		{
 			var query = FindQuery(dataContext, expr);
 
@@ -118,7 +118,7 @@ namespace LinqToDB.Linq
 #endif
 						}
 
-						query = new Query<T>(dataContext, expr);
+						query = new QueryNew<T>(dataContext, expr);
 
 						try
 						{
@@ -145,9 +145,9 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		static Query<T> FindQuery(IDataContext dataContext, Expression expr)
+		static QueryNew<T> FindQuery(IDataContext dataContext, Expression expr)
 		{
-			Query<T> prev = null;
+			QueryNew<T> prev = null;
 			var      n    = 0;
 
 			for (var query = _first; query != null; query = query._next)

@@ -74,9 +74,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (collection is TableBuilderOld.TableContext)
+			if (collection is TableBuilder.TableContext)
 			{
-				var table = (TableBuilderOld.TableContext)collection;
+				var table = (TableBuilder.TableContext)collection;
 
 				var join = table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ?
 					(leftJoin ? SelectQuery.OuterApply(sql) : SelectQuery.CrossApply(sql)) :
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 				sql.Where.SearchCondition.Conditions.Clear();
 
-				var collectionParent = collection.Parent as TableBuilderOld.TableContext;
+				var collectionParent = collection.Parent as TableBuilder.TableContext;
 
 				// Association.
 				//
@@ -161,7 +161,7 @@ namespace LinqToDB.Linq.Builder
 				return Collection.BuildExpression(expression, level);
 			}
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				if (Collection == null)
 					base.BuildQuery(query, queryParameter);

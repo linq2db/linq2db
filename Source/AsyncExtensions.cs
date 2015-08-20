@@ -43,8 +43,8 @@ namespace LinqToDB
 		public static Task ForEachAsync<TSource>(
 			this IQueryable<TSource> source, Action<TSource> action, CancellationToken token)
 		{
-			if (source is ExpressionQuery<TSource>)
-				return ((ExpressionQuery<TSource>)source).GetForEachAsync(action, token);
+			if (source is ExpressionQueryNew<TSource>)
+				return ((ExpressionQueryNew<TSource>)source).GetForEachAsync(action, token);
 
 			return GetActionTask(() =>
 			{
@@ -69,10 +69,10 @@ namespace LinqToDB
 
 		public static async Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var list = new List<TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(list.Add, token);
 				return list;
 			}
 
@@ -92,10 +92,10 @@ namespace LinqToDB
 
 		public static async Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var list = new List<TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(list.Add, token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(list.Add, token);
 				return list.ToArray();
 			}
 
@@ -120,10 +120,10 @@ namespace LinqToDB
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var dic = new Dictionary<TKey,TSource>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
 
@@ -146,10 +146,10 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var dic = new Dictionary<TKey,TSource>(comparer);
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), item), token);
 				return dic;
 			}
 
@@ -172,10 +172,10 @@ namespace LinqToDB
 			Func<TSource,TElement>   elementSelector,
 			CancellationToken        token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var dic = new Dictionary<TKey,TElement>();
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
 				return dic;
 			}
 
@@ -200,10 +200,10 @@ namespace LinqToDB
 			IEqualityComparer<TKey>  comparer,
 			CancellationToken        token)
 		{
-			if (source is ExpressionQuery<TSource>)
+			if (source is ExpressionQueryNew<TSource>)
 			{
 				var dic = new Dictionary<TKey,TElement>(comparer);
-				await ((ExpressionQuery<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
+				await ((ExpressionQueryNew<TSource>)source).GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token);
 				return dic;
 			}
 

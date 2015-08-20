@@ -12,9 +12,9 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class TableBuilder : ExpressionBuilderBase
+	class TableBuilderNew : ExpressionBuilderBase
 	{
-		public TableBuilder(Expression expression)
+		public TableBuilderNew(Expression expression)
 			: base(expression)
 		{
 			_originalType = expression.Type.GetGenericArgumentsEx()[0];

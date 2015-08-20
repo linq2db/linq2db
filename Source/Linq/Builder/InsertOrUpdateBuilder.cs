@@ -36,8 +36,8 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.Update.Items,
 				sequence);
 
-			sequence.SelectQuery.Insert.Into  = ((TableBuilderOld.TableContext)sequence).SqlTable;
-			sequence.SelectQuery.Update.Table = ((TableBuilderOld.TableContext)sequence).SqlTable;
+			sequence.SelectQuery.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
+			sequence.SelectQuery.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;
 			sequence.SelectQuery.From.Tables.Clear();
 			sequence.SelectQuery.From.Table(sequence.SelectQuery.Update.Table);
 
@@ -98,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				if (Builder.DataContextInfo.SqlProviderFlags.IsInsertOrUpdateSupported)
 					query.SetNonQueryQuery();

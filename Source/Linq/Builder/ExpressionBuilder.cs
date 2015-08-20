@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 
 		static List<ISequenceBuilder> _sequenceBuilders = new List<ISequenceBuilder>
 		{
-			new TableBuilderOld               (),
+			new TableBuilder               (),
 			new SelectBuilder              (),
 			new SelectManyBuilder          (),
 			new WhereBuilder               (),
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Init
 
-		readonly QueryOld                             _query;
+		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
 		readonly Dictionary<Expression,Expression> _expressionAccessors;
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 		readonly HashSet<Expression> _visitedExpressions;
 
 		public ExpressionBuilder(
-			QueryOld                 query,
+			Query                 query,
 			IDataContextInfo      dataContext,
 			Expression            expression,
 			ParameterExpression[] compiledParameters)
@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		internal QueryOld<T> Build<T>()
+		internal Query<T> Build<T>()
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext)null, Expression, new SelectQuery()));
 			
@@ -156,11 +156,11 @@ namespace LinqToDB.Linq.Builder
 
 			_query.Init(sequence, CurrentSqlParameters);
 
-			var param = Expression.Parameter(typeof(QueryOld<T>), "info");
+			var param = Expression.Parameter(typeof(Query<T>), "info");
 
-			sequence.BuildQuery((QueryOld<T>)_query, param);
+			sequence.BuildQuery((Query<T>)_query, param);
 
-			return (QueryOld<T>)_query;
+			return (Query<T>)_query;
 		}
 
 		[JetBrains.Annotations.NotNull]
@@ -1240,7 +1240,7 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						MemberHelper.MethodOf<QueryOld>(a => a.GetIQueryable(0, null)),
+						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null)),
 						new[] { Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)) });
 
 				var qex = _query.GetIQueryable(n, expression);

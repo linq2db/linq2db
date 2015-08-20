@@ -3,38 +3,38 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	class TableOld<T> : ExpressionQueryOld<T>, ITable<T>, ITable
+	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
 	{
-		public TableOld(IDataContextInfo dataContextInfo, Expression expression)
+		public Table(IDataContextInfo dataContextInfo, Expression expression)
 		{
 			Init(dataContextInfo, expression);
 		}
 
-		public TableOld(IDataContextInfo dataContextInfo)
+		public Table(IDataContextInfo dataContextInfo)
 		{
 			Init(dataContextInfo, null);
 		}
 
 #if !SILVERLIGHT
 
-		public TableOld()
+		public Table()
 		{
 			Init(null, null);
 		}
 
-		public TableOld(Expression expression)
+		public Table(Expression expression)
 		{
 			Init(null, expression);
 		}
 
 #endif
 
-		public TableOld(IDataContext dataContext)
+		public Table(IDataContext dataContext)
 		{
 			Init(dataContext == null ? null : new DataContextInfo(dataContext), null);
 		}
 
-		public TableOld(IDataContext dataContext, Expression expression)
+		public Table(IDataContext dataContext, Expression expression)
 		{
 			Init(dataContext == null ? null : new DataContextInfo(dataContext), expression);
 		}
@@ -53,9 +53,9 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class Table<T> : ExpressionQuery<T>, ITable<T>, ITable
+	class TableNew<T> : ExpressionQueryNew<T>, ITable<T>, ITable
 	{
-		public Table(IDataContext dataContext)
+		public TableNew(IDataContext dataContext)
 			: base(dataContext, null)
 		{
 		}

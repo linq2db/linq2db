@@ -21,13 +21,13 @@ namespace LinqToDB.Data
 		public ITable<T> GetTable<T>()
 			where T : class
 		{
-			return new Table<T>(this);
+			return new TableNew<T>(this);
 		}
 
 		public ITable<T> GetTable<T>(bool dispose)
 			where T : class
 		{
-			return new TableOld<T>(new DataContextInfo(this, dispose));
+			return new Table<T>(new DataContextInfo(this, dispose));
 		}
 
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object[] parameters)
@@ -48,7 +48,7 @@ namespace LinqToDB.Data
 
 		#region SetQuery
 
-		internal PreparedQuery GetCommand(IQueryContextOld query)
+		internal PreparedQuery GetCommand(IQueryContext query)
 		{
 			if (query.Context != null)
 			{
@@ -103,7 +103,7 @@ namespace LinqToDB.Data
 			return selectQuery;
 		}
 
-		void GetParameters(IQueryContextOld query, PreparedQuery pq)
+		void GetParameters(IQueryContext query, PreparedQuery pq)
 		{
 			var parameters = query.GetParameters();
 
@@ -162,16 +162,16 @@ namespace LinqToDB.Data
 
 		#region GetQueryContext
 
-		class QueryContext : IQueryContext
+		class QueryContext : IQueryContextNew
 		{
-			public QueryContext(Query query, DataConnection dataConnection, Expression expression)
+			public QueryContext(QueryNew query, DataConnection dataConnection, Expression expression)
 			{
 				_query          = query;
 				_dataConnection = dataConnection;
 				_expression     = expression;
 			}
 
-			readonly Query          _query;
+			readonly QueryNew          _query;
 			readonly DataConnection _dataConnection;
 			readonly Expression     _expression;
 
@@ -212,7 +212,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		IQueryContextNew IDataContext.GetQueryContext(QueryNew query, Expression expression)
 		{
 			return new QueryContext(query, this, expression);
 		}
@@ -405,7 +405,7 @@ namespace LinqToDB.Data
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
 
-		object IDataContext.SetQuery(IQueryContextOld queryContext)
+		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
 			var query = GetCommand(queryContext);
 

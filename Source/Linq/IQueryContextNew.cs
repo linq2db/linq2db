@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 {
 	using Data;
 
-	public interface IQueryContext : IDisposable
+	public interface IQueryContextNew : IDisposable
 	{
 		int                   ExecuteNonQuery   ();
 		object                ExecuteScalar     ();

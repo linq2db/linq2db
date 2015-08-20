@@ -173,16 +173,16 @@ namespace LinqToDB
 
 		#region GetQueryContext
 
-		class QueryContext : IQueryContext
+		class QueryContext : IQueryContextNew
 		{
-			public QueryContext(DataContext dataContext, Query query, Expression expression)
+			public QueryContext(DataContext dataContext, QueryNew query, Expression expression)
 			{
 				_dataContext  = dataContext;
 				_queryContext = ((IDataContext)dataContext.GetDataConnection()).GetQueryContext(query, expression);
 			}
 
 			readonly DataContext   _dataContext;
-			readonly IQueryContext _queryContext;
+			readonly IQueryContextNew _queryContext;
 
 			public void Dispose() { _dataContext.ReleaseQuery(); }
 
@@ -196,14 +196,14 @@ namespace LinqToDB
 			}
 		}
 
-		IQueryContext IDataContext.GetQueryContext(Query query, Expression expression)
+		IQueryContextNew IDataContext.GetQueryContext(QueryNew query, Expression expression)
 		{
 			return new QueryContext(this, query, expression);
 		}
 
 		#endregion
 
-		object IDataContext.SetQuery(IQueryContextOld queryContext)
+		object IDataContext.SetQuery(IQueryContext queryContext)
 		{
 			var ctx = GetDataConnection() as IDataContext;
 			return ctx.SetQuery(queryContext);

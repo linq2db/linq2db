@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	class ExpressionQueryOldImpl<T> : ExpressionQueryOld<T>, IExpressionQuery
+	class ExpressionQueryImpl<T> : ExpressionQuery<T>, IExpressionQuery
 	{
-		public ExpressionQueryOldImpl(IDataContextInfo dataContext, Expression expression)
+		public ExpressionQueryImpl(IDataContextInfo dataContext, Expression expression)
 		{
 			Init(dataContext, expression);
 		}

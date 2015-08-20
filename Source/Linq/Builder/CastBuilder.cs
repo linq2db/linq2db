@@ -35,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 
 			private readonly MethodCallExpression _methodCall;
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(null, 0);
 				var mapper = Builder.BuildMapper<T>(expr);

@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		SelectQuery        SelectQuery { get; set; }
 		IBuildContext      Parent      { get; set; }
 
-		void               BuildQuery<T>       (QueryOld<T> query, ParameterExpression queryParameter);
+		void               BuildQuery<T>       (Query<T> query, ParameterExpression queryParameter);
 		Expression         BuildExpression     (Expression expression, int level);
 		SqlInfo[]          ConvertToSql        (Expression expression, int level, ConvertFlags flags);
 		SqlInfo[]          ConvertToIndex      (Expression expression, int level, ConvertFlags flags);

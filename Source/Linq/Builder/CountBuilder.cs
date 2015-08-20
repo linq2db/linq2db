@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 			public int            FieldIndex;
 			public ISqlExpression Sql;
 
-			public override void BuildQuery<T>(QueryOld<T> query, ParameterExpression queryParameter)
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = Builder.BuildSql(_returnType, FieldIndex);
 				var mapper = Builder.BuildMapper<object>(expr);

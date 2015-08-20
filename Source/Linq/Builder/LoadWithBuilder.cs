@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var table    = (TableBuilderOld.TableContext)sequence;
+			var table    = (TableBuilder.TableContext)sequence;
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
 			if (table.LoadWith == null)
