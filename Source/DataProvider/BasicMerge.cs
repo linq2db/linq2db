@@ -29,16 +29,19 @@ namespace LinqToDB.DataProvider
 
 		protected virtual bool IsIdentitySupported { get { return false; } }
 
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
-			if (!BuildCommand(dataConnection, predicate, delete, source))
+			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
 				return 0;
 
 			return Execute(dataConnection);
 		}
 
-		protected virtual bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		protected virtual bool BuildCommand<T>(
+			DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -54,9 +57,9 @@ namespace LinqToDB.DataProvider
 
 			StringBuilder.Append("MERGE INTO ");
 			sqlBuilder.BuildTableName(StringBuilder,
-				(string)sqlBuilder.Convert(table.DatabaseName, ConvertType.NameToDatabase),
-				(string)sqlBuilder.Convert(table.SchemaName,   ConvertType.NameToOwner),
-				(string)sqlBuilder.Convert(table.TableName,    ConvertType.NameToQueryTable));
+				(string)sqlBuilder.Convert(databaseName ?? table.DatabaseName, ConvertType.NameToDatabase),
+				(string)sqlBuilder.Convert(schemaName   ?? table.SchemaName,   ConvertType.NameToOwner),
+				(string)sqlBuilder.Convert(tableName    ?? table.TableName,    ConvertType.NameToQueryTable));
 
 			StringBuilder
 				.AppendLine(" Target")

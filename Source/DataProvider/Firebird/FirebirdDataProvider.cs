@@ -117,12 +117,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region Merge
 
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
 			if (delete)
 				throw new LinqToDBException("Firebird MERGE statement does not support DELETE by source.");
 
-			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source);
+			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
 		#endregion

@@ -23,3 +23,12 @@ New BulkCopy method overload:
 		var table = db.CreateTable<MyTable>("#TempTable");
 		table.BulkCopy(...);
 	}
+
+
+New Merge method overload:
+
+	using (var db = new DataConnection())
+	{
+		var table = db.CreateTable<MyTable>("#TempTable");
+		table.Merge(...);
+	}

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Data
 {
+	using Linq;
+
 	public static class DataConnectionExtensions
 	{
 		#region SetCommand
@@ -279,28 +281,104 @@ namespace LinqToDB.Data
 
 		#region Merge
 
-		public static int Merge<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate)
+		public static int Merge<T>(this DataConnection dataConnection, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate));
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate), tableName, databaseName, schemaName);
 		}
 
-		public static int Merge<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source)
+		public static int Merge<T>(this DataConnection dataConnection, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source);
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source, tableName, databaseName, schemaName);
 		}
 
-		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source)
+		public static int Merge<T>(this DataConnection dataConnection, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source);
+			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source, tableName, databaseName, schemaName);
 		}
 
-		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source)
+		public static int Merge<T>(this DataConnection dataConnection, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
 			where T : class 
 		{
-			return dataConnection.DataProvider.Merge(dataConnection, null, false, source);
+			return dataConnection.DataProvider.Merge(dataConnection, null, false, source, tableName, databaseName, schemaName);
+		}
+
+		public static int Merge<T>(this ITable<T> table, IQueryable<T> source, Expression<Func<T,bool>> predicate,
+			string tableName = null, string databaseName = null, string schemaName = null)
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source.Where(predicate),
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName);
+		}
+
+		public static int Merge<T>(this ITable<T> table, Expression<Func<T,bool>> predicate, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.Merge(dataConnection, predicate, true, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName);
+		}
+
+		public static int Merge<T>(this ITable<T> table, bool delete, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.Merge(dataConnection, null, delete, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName);
+		}
+
+		public static int Merge<T>(this ITable<T> table, IEnumerable<T> source,
+			string tableName = null, string databaseName = null, string schemaName = null)
+			where T : class 
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl            = (Table<T>)table;
+			var dataConnection = tbl.DataContextInfo.DataContext as DataConnection;
+
+			if (dataConnection == null)
+				throw new ArgumentException("DataContext must be of DataConnection type.");
+
+			return dataConnection.DataProvider.Merge(dataConnection, null, false, source,
+				tableName    ?? tbl.TableName,
+				databaseName ?? tbl.DatabaseName,
+				schemaName   ?? tbl.SchemaName);
 		}
 
 		#endregion
