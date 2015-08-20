@@ -19,20 +19,17 @@ namespace LinqToDB.Linq
 			CompiledParameters = compiledParameters;
 		}
 
-		public IDataContextInfo        RootDataContext;
-		public Expression              Expression;
-		public object[]                CompiledParameters;
-		public int                     Counter;
+		public IDataContextInfo RootDataContext;
+		public Expression       Expression;
+		public object[]         CompiledParameters;
+		public int              Counter;
 
 		List<DataContextContext> _contexts;
 
 		public DataContextContext GetDataContext()
 		{
 			if (_contexts == null)
-			{
-				RootDataContext.DataContext.OnClosing += OnRootClosing;
 				_contexts = new List<DataContextContext>(1);
-			}
 
 			foreach (var context in _contexts)
 			{
@@ -55,14 +52,15 @@ namespace LinqToDB.Linq
 			context.InUse = false;
 		}
 
-		void OnRootClosing(object sender, EventArgs e)
+		public void Close()
 		{
-			foreach (var context in _contexts)
-				context.DataContextInfo.DataContext.Dispose();
+			if (_contexts != null)
+			{
+				foreach (var context in _contexts)
+					context.DataContextInfo.DataContext.Dispose();
 
-			RootDataContext.DataContext.OnClosing -= OnRootClosing;
-
-			_contexts = null;
+				_contexts = null;
+			}
 		}
 
 		public void AfterQuery()

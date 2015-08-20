@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c.DataType, c.MemberType, c.Length, c.Precision, c.Scale)).ToArray();
 			ParameterName  = SqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
-			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, Descriptor);
+			TableName      = BasicBulkCopy.GetTableName(SqlBuilder, options, Descriptor);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
 

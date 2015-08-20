@@ -36,7 +36,7 @@ namespace Tests.Linq
 		public void OwnerName(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.GetTable<Parent>().OwnerName("dbo").ToList();
+				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
@@ -45,7 +45,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
 					.DatabaseName("TestData")
-					.OwnerName("dbo")
+					.SchemaName("dbo")
 					.TableName("Parent")
 					.ToList();
 		}

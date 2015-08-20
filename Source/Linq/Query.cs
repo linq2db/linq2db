@@ -558,7 +558,9 @@ namespace LinqToDB.Linq
 
 		#region Insert
 
-		public static int Insert(IDataContextInfo dataContextInfo, T obj)
+		public static int Insert(
+			IDataContextInfo dataContextInfo, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (Equals(default(T), obj))
 				return 0;
@@ -573,6 +575,10 @@ namespace LinqToDB.Linq
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
 						var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+
+						if (tableName    != null) sqlTable.PhysicalName = tableName;
+						if (databaseName != null) sqlTable.Database     = databaseName;
+						if (schemaName   != null) sqlTable.Owner        = schemaName;
 
 						sqlQuery.Insert.Into = sqlTable;
 
@@ -970,7 +976,7 @@ namespace LinqToDB.Linq
 		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
 			string         tableName       = null,
 			string         databaseName    = null,
-			string         ownerName       = null,
+			string         schemaName      = null,
 			string         statementHeader = null,
 			string         statementFooter = null,
 			DefaulNullable defaulNullable  = DefaulNullable.None)
@@ -980,7 +986,7 @@ namespace LinqToDB.Linq
 
 			if (tableName    != null) sqlTable.PhysicalName = tableName;
 			if (databaseName != null) sqlTable.Database     = databaseName;
-			if (ownerName    != null) sqlTable.Owner        = ownerName;
+			if (schemaName   != null) sqlTable.Owner        = schemaName;
 
 			sqlQuery.CreateTable.Table           = sqlTable;
 			sqlQuery.CreateTable.StatementHeader = statementHeader;
@@ -1003,7 +1009,7 @@ namespace LinqToDB.Linq
 
 			if (tableName    != null) table = table.TableName   (tableName);
 			if (databaseName != null) table = table.DatabaseName(databaseName);
-			if (ownerName    != null) table = table.OwnerName   (ownerName);
+			if (schemaName    != null) table = table.SchemaName  (schemaName);
 
 			return table;
 		}
@@ -1158,8 +1164,13 @@ namespace LinqToDB.Linq
 			object[]                 ps,
 			MapInfo                  mapInfo)
 		{
+			var closeQueryContext = false;
+
 			if (queryContext == null)
+			{
+				closeQueryContext = true;
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
+			}
 
 			var isFaulted = false;
 
@@ -1205,6 +1216,11 @@ namespace LinqToDB.Linq
 
 					mapInfo.Mapper = mapInfo.Expression.Compile();
 					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
+				}
+				finally
+				{
+					if (closeQueryContext)
+						queryContext.Close();
 				}
 
 				yield return result;

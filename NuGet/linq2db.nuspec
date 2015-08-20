@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db</id>
-		<version>1.0.7.1</version>
+		<version>1.0.7.2</version>
 		<title>LINQ to DB</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
@@ -17,6 +17,7 @@
 		</tags>
 	</metadata>
 	<files>
+		<file src="Readme.txt"                                                  target="" />
 		<file src="..\Source\bin\Release.4.0\linq2db.dll"                       target="lib\net40" />
 		<file src="..\Source\bin\Release.4.0\linq2db.pdb"                       target="lib\net40" />
 		<file src="..\Source\bin\Release.4.5\linq2db.dll"                       target="lib\net45" />

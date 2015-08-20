@@ -1551,13 +1551,7 @@ namespace LinqToDB.SqlProvider
 						case QueryElementType.SqlParameter :
 							{
 								var p = (SqlParameter)predicate.Expr1;
-
-								sqlDataType = new SqlDataType(
-									p.DataType,
-									p.SystemType,
-									0,
-									0,
-									0);
+								sqlDataType = new SqlDataType(p.DataType, p.SystemType, 0, 0, 0);
 							}
 
 							break;

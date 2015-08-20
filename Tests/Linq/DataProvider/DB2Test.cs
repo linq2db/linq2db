@@ -413,13 +413,14 @@ namespace Tests.DataProvider
 			using (var conn = new DataConnection(context))
 			{
 				//conn.BeginTransaction();
-				conn.BulkCopy(new BulkCopyOptions
-				{
-					MaxBatchSize       = 50000,
-					BulkCopyType       = bulkCopyType,
-					NotifyAfter        = 10000,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
-				},
+				conn.BulkCopy(
+					new BulkCopyOptions
+					{
+						MaxBatchSize       = 50000,
+						BulkCopyType       = bulkCopyType,
+						NotifyAfter        = 10000,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+					},
 					Enumerable.Range(0, 100000).Select(n =>
 						new ALLTYPE
 						{

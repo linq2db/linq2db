@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, descriptor);
+			var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 			if (dataConnection.Transaction == null)
 			{
@@ -94,10 +94,19 @@ namespace LinqToDB.DataProvider.Oracle
 						for (var i = 0; i < columns.Count; i++)
 							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, columns[i].ColumnName));
 
-						dbc.WriteToServer(rd);
+						TraceAction(
+							dataConnection,
+							"INSERT BULK " + tableName + Environment.NewLine,
+							() => { dbc.WriteToServer(rd); return rd.Count; });
 					}
 
-					rc.RowsCopied = rd.Count;
+					if (rc.RowsCopied != rd.Count)
+					{
+						rc.RowsCopied = rd.Count;
+
+						if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+							options.RowsCopiedCallback(rc);
+					}
 
 					return rc;
 				}

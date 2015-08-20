@@ -219,12 +219,13 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region Merge
 
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
 			if (delete)
 				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
 
-			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source);
+			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
 		#endregion

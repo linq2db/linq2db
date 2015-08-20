@@ -27,6 +27,10 @@ namespace LinqToDB
 				_tableNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.TableName = name;
+
 			return table;
 		}
 
@@ -42,6 +46,10 @@ namespace LinqToDB
 				_databaseNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.DatabaseName = name;
+
 			return table;
 		}
 
@@ -56,6 +64,29 @@ namespace LinqToDB
 				null,
 				_ownerNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
+
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.SchemaName = name;
+
+			return table;
+		}
+
+		static readonly MethodInfo _schemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
+
+		static public ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+			if (name  == null) throw new ArgumentNullException("name");
+
+			table.Expression = Expression.Call(
+				null,
+				_schemaNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Constant(name) });
+
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.SchemaName = name;
 
 			return table;
 		}
