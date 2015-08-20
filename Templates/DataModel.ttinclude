@@ -157,6 +157,8 @@ void LoadServerMetadata(DataConnection dataConnection)
 		if (key.k.BackReference != null)
 			key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
 
+		key.key.MemberName = key.key.MemberName.Replace(".", String.Empty);
+
 		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
 			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
 	}
