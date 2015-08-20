@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using Data;
+	using SqlQuery;
 
-	public interface IQueryContext : IDisposable
+	public interface IQueryContextOld
 	{
-		int                   ExecuteNonQuery   ();
-		object                ExecuteScalar     ();
-		IDataReader           ExecuteReader     ();
-		Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken);
+		SelectQuery    SelectQuery { get; }
+		object         Context     { get; set; }
+		List<string>   QueryHints  { get; }
+		SqlParameter[] GetParameters();
 	}
 }

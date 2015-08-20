@@ -5,30 +5,38 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
 	using Extensions;
 
-	abstract class ExpressionQuery<T> : IExpressionQuery<T>
+	abstract class ExpressionQueryOld<T> : IExpressionQuery<T>
 	{
-		protected ExpressionQuery(IDataContext dataContext, Expression expression)
-		{
-			_dataContext = dataContext;
+		#region Init
 
-			Expression = expression ?? Expression.Constant(this);
+		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
+		{
+#if SILVERLIGHT || NETFX_CORE
+			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
+
+			DataContextInfo = dataContextInfo;
+#else
+			DataContextInfo = dataContextInfo ?? new DefaultDataContextInfo();
+#endif
+			Expression      = expression      ?? Expression.Constant(this);
 		}
 
-		readonly IDataContext _dataContext;
+		[NotNull] public Expression       Expression      { get; set; }
+		[NotNull] public IDataContextInfo DataContextInfo { get; set; }
 
-		public Expression     Expression  { get; set; }
-		public Type           ElementType { get { return typeof(T); } }
-		public IQueryProvider Provider    { get { return this;      } }
+		internal  QueryOld<T> Info;
+		internal  object[] Parameters;
 
-		#region SqlText
+		#endregion
+
+		#region Public Members
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private string _sqlTextHolder;
@@ -42,17 +50,10 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var hasQueryHints = _dataContext.QueryHints.Count > 0 || _dataContext.NextQueryHints.Count > 0;
-
-				if (_sqlTextHolder == null || hasQueryHints)
+				if (_sqlTextHolder == null)
 				{
-//					var info    = GetQuery(Expression, true);
-//					var sqlText = info.GetSqlText(_dataContext, Expression, null/*Parameters*/, 0);
-//
-//					if (hasQueryHints)
-//						return sqlText;
-//
-//					_sqlTextHolder = sqlText;
+					var info = GetQuery(Expression, true);
+					_sqlTextHolder = info.GetSqlText(DataContextInfo.DataContext, Expression, Parameters, 0);
 				}
 
 				return _sqlTextHolder;
@@ -61,7 +62,58 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		public IQueryable CreateQuery(Expression expression)
+		#region Execute
+
+		IEnumerable<T> Execute(IDataContextInfo dataContextInfo, Expression expression)
+		{
+			return GetQuery(expression, true).GetIEnumerable(null, dataContextInfo, expression, Parameters);
+		}
+
+		QueryOld<T> GetQuery(Expression expression, bool cache)
+		{
+			if (cache && Info != null)
+				return Info;
+
+			var info = QueryOld<T>.GetQuery(DataContextInfo, expression);
+
+			if (cache)
+				Info = info;
+
+			return info;
+		}
+
+		#endregion
+
+		#region IQueryable Members
+
+		Type IQueryable.ElementType
+		{
+			get { return typeof(T); }
+		}
+
+		Expression IQueryable.Expression
+		{
+			get { return Expression; }
+		}
+
+		IQueryProvider IQueryable.Provider
+		{
+			get { return this; }
+		}
+
+		#endregion
+
+		#region IQueryProvider Members
+
+		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
+		{
+			if (expression == null)
+				throw new ArgumentNullException("expression");
+
+			return new ExpressionQueryOldImpl<TElement>(DataContextInfo, expression);
+		}
+
+		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
 			if (expression == null)
 				throw new ArgumentNullException("expression");
@@ -70,7 +122,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryImpl<>).MakeGenericType(elementType), new object[] { _dataContext, expression });
+				return (IQueryable)Activator.CreateInstance(typeof(ExpressionQueryOldImpl<>).MakeGenericType(elementType), new object[] { DataContextInfo, expression });
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -78,58 +130,30 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			if (expression == null)
-				throw new ArgumentNullException("expression");
-
-			return new ExpressionQueryImpl<TElement>(_dataContext, expression);
+			return (TResult)GetQuery(expression, false).GetElement(null, DataContextInfo, expression, Parameters);
 		}
 
-		public IEnumerator<T> GetEnumerator()
+		object IQueryProvider.Execute(Expression expression)
 		{
-			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
+			return GetQuery(expression, false).GetElement(null, DataContextInfo, expression, Parameters);
+		}
+
+		#endregion
+
+		#region IEnumerable Members
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return Execute(DataContextInfo, Expression).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return GetQuery(Expression, true).GetIEnumerable(_dataContext, Expression).GetEnumerator();
+			return Execute(DataContextInfo, Expression).GetEnumerator();
 		}
 
-		public object Execute(Expression expression)
-		{
-			return GetQuery(expression, false).GetElement(_dataContext, expression);
-		}
-
-		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
-		{
-			return GetQuery(Expression, true).GetForEachAsync(_dataContext, Expression, action, cancellationToken);
-		}
-
-		public TResult Execute<TResult>(Expression expression)
-		{
-#if DEBUG
-			if (typeof(TResult) != typeof(T))
-				throw new InvalidOperationException();
-#endif
-
-			return (TResult)(object)GetQuery(expression, false).GetElement(_dataContext, expression);
-		}
-
-		Query<T> _info;
-
-		Query<T> GetQuery(Expression expression, bool isEnumerable)
-		{
-			if (isEnumerable && _info != null)
-				throw new InvalidOperationException();
-				//return _info;
-
-			var info = Query<T>.GetQuery(_dataContext, expression, isEnumerable);
-
-			if (isEnumerable)
-				_info = info;
-
-			return info;
-		}
+		#endregion
 	}
 }
