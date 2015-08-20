@@ -7,6 +7,8 @@ static Action<GeneratedTextTransformation,string> WriteComment    = (tt,s) => tt
 
 Action BeforeGenerateModel = () => {};
 
+bool GenerateProcedureErrors = true;
+
 void GenerateModel()
 {
 	Model.SetTree();
@@ -367,6 +369,7 @@ public partial class MemberGroup : MemberBase
 	public bool               IsCompact;
 	public bool               IsPropertyGroup;
 	public List<IClassMember> Members = new List<IClassMember>();
+	public List<string>       Errors  = new List<string>();
 
 	public override int  CalcBodyLen() { return 0; }
 	
@@ -375,6 +378,24 @@ public partial class MemberGroup : MemberBase
 		if (!string.IsNullOrEmpty(Region))
 		{
 			BeginRegion(tt, Region);
+			tt.WriteLine("");
+		}
+
+		if (Errors.Count > 0 && tt.GenerateProcedureErrors)
+		{
+			tt.RemoveSpace();
+			WriteComment(tt, " Use 'GenerateProcedureErrors=false' to disable errors.");
+			foreach (var error in Errors)
+			{
+				tt.Error(error);
+
+				foreach (var e in error.Split('\n'))
+				{
+					tt.RemoveSpace();
+					tt.WriteLine("#error " + e.Trim('\r'));
+				}
+			}
+
 			tt.WriteLine("");
 		}
 
