@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
-			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
