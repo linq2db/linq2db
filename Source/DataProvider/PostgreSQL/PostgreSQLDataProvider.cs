@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlMacAddressType  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
 			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
-
+            
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
 			if (NpgsqlTimeType       != null) SetProviderField(NpgsqlTimeType,       NpgsqlTimeType,       "GetTime");
@@ -94,6 +94,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Boolean");
 			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Xml");
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
+            _setHstore    = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Hstore");
+
 
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
 			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
@@ -111,6 +113,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			MappingSchema.AddScalarType(NpgsqlCircleType);
 			MappingSchema.AddScalarType(_npgsqlDate);
 			MappingSchema.AddScalarType(NpgsqlPolygonType);
+            
 
 			if (_npgsqlTimeStampTZ != null) 
 			{
@@ -160,6 +163,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setBoolean;
 		static Action<IDbDataParameter> _setXml;
 		static Action<IDbDataParameter> _setText;
+        static Action<IDbDataParameter> _setHstore;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -190,6 +194,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Xml        : _setXml      (parameter);                   break;
 				case DataType.Text       :
 				case DataType.NText      : _setText     (parameter);                   break;
+                case DataType.Dictionary : _setHstore(parameter);                      break;
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}
