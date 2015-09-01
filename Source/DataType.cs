@@ -206,7 +206,7 @@ namespace LinqToDB
         /// Dictionary type for key-value pairs
         /// </summary>
         Dictionary
-
+		
 		/*
 		Structured	A special data type for specifying structured data contained in table-valued parameters.
 		*/
