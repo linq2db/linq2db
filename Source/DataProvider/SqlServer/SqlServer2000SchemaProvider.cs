@@ -59,5 +59,38 @@ namespace LinqToDB.DataProvider.SqlServer
 					INFORMATION_SCHEMA.ROUTINES")
 				.ToList();
 		}
+
+		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
+		{
+			return dataConnection.Query<ForeingKeyInfo>(@"
+				SELECT
+					rc.CONSTRAINT_NAME                                             as Name,
+					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,
+					fk.COLUMN_NAME                                                 as ThisColumn,
+					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
+					pk.COLUMN_NAME                                                 as OtherColumn,
+					pk.ORDINAL_POSITION                                            as Ordinal
+				FROM
+					INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+					JOIN
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE fk
+					ON
+						fk.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG AND
+						fk.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA  AND
+						fk.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
+					JOIN
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE pk
+					ON
+						pk.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG AND
+						pk.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA  AND
+						pk.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
+				WHERE
+					fk.ORDINAL_POSITION = pk.ORDINAL_POSITION
+				ORDER BY
+					ThisTableID,
+					Ordinal")
+				.ToList();
+		}
+
 	}
 }
