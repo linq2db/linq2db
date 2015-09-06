@@ -27,7 +27,7 @@ namespace LinqToDB.Common
 			}
 			catch (Exception ex)
 			{
-				throw new LinqToDBException(string.Format("Cannot convert value '{0}' to type '{1}'", value, conversionType.FullName), ex);
+				throw new LinqToDBConvertException(string.Format("Cannot convert value '{0}' to type '{1}'", value, conversionType.FullName), ex);
 			}
 		}
 
@@ -43,7 +43,7 @@ namespace LinqToDB.Common
 			if (ptype != from)
 				p = Expression.Convert(p, ptype);
 
-			return Expression.New(ctor, new[]  { p });
+			return Expression.New(ctor, new[] { p });
 		}
 
 		static Expression GetValue(Type from, Type to, Expression p)
@@ -191,10 +191,10 @@ namespace LinqToDB.Common
 
 		static object ThrowLinqToDBException(string text)
 		{
-			throw new LinqToDBException(text);
+			throw new LinqToDBConvertException(text);
 		}
 
-		static readonly MethodInfo _throwLinqToDBException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null));
+		static readonly MethodInfo _throwLinqToDBConvertException = MemberHelper.MethodOf(() => ThrowLinqToDBException(null));
 
 		static Expression GetToEnum(Type @from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
@@ -237,7 +237,7 @@ namespace LinqToDB.Common
 
 						return Expression.Convert(
 							Expression.Call(
-								_throwLinqToDBException,
+								_throwLinqToDBConvertException,
 								Expression.Constant(
 									"Mapping ambiguity. MapValue({0}) attribute is defined for both '{1}.{2}' and '{1}.{3}'."
 										.Args(ambiguityMapping.Key, to.FullName, enums[0].value, enums[1].value))),
@@ -267,7 +267,7 @@ namespace LinqToDB.Common
 
 					return Expression.Convert(
 						Expression.Call(
-							_throwLinqToDBException,
+							_throwLinqToDBConvertException,
 							Expression.Constant(
 								"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
 									.Args(to.FullName, field.OrigValue, from.FullName))),
@@ -332,7 +332,7 @@ namespace LinqToDB.Common
 
 						return Expression.Convert(
 							Expression.Call(
-								_throwLinqToDBException,
+								_throwLinqToDBConvertException,
 								Expression.Constant(
 									"Inconsistent mapping. '{0}.{1}' does not have MapValue(<{2}>) attribute."
 										.Args(from.FullName, field.Field.Name, to.FullName))),
@@ -390,7 +390,7 @@ namespace LinqToDB.Common
 						{
 							return Expression.Convert(
 								Expression.Call(
-									_throwLinqToDBException,
+									_throwLinqToDBConvertException,
 									Expression.Constant(
 										"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.".Args(
 											from.FullName, fromAttrs[0].Field.Name,
