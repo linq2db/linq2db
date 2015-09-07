@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
-		<id>linq2db.Oracle.managed</id>
-		<version>1.0.7.2</version>
+		<id>linq2db.Oracle.Managed</id>
+		<version>1.0.7.3</version>
 		<title>LINQ to Oracle (ODP.NET) Managed</title>
 		<authors>Igor Tkachev</authors>
 		<owners />

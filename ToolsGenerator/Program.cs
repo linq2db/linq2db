@@ -37,7 +37,7 @@ namespace ToolsGenerator
 			CreateProviderFile (nugetDir, "Firebird",                 "FirebirdSql.Data.FirebirdClient.dll");
 			CreateProviderFile (nugetDir, "MySql",                    "MySql.Data.dll");
 			CreateProviderFile (nugetDir, "SQLite",                   "System.Data.SQLite.dll");
-			CreateProviderFile2(nugetDir, "Oracle.Managed", "Oracle", "Oracle.DataAccess.dll");
+			CreateProviderFile2(nugetDir, "Oracle.Managed", "Oracle", "Oracle.ManagedDataAccess.dll");
 			CreateProviderFile2(nugetDir, "Oracle.x64",     "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile2(nugetDir, "Oracle.x86",     "Oracle", "Oracle.DataAccess.dll");
 			CreateProviderFile (nugetDir, "SqlServer");
