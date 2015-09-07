@@ -72,6 +72,7 @@
     <Compile Include="Common\ConvertInfo.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Common\Silverlight5Compatibility.cs" />
     <Compile Include="Common\Tools.cs" />

@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\Push.bat = NuGet\Push.bat
 		Readme.txt = Readme.txt
+		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{56109866-4005-4852-9F9A-19A7A8D3B369}"
