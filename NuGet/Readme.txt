@@ -32,3 +32,6 @@ New Merge method overload:
 		var table = db.CreateTable<MyTable>("#TempTable");
 		table.Merge(...);
 	}
+
+
+New LinqToDBConvertException class is thrown for invalid convertion.
