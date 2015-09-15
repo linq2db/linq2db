@@ -46,9 +46,9 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class TableNew<T> : ExpressionQueryNew<T>, ITable<T>, ITable
+	class TableQuery<T> : ExpressionQueryNew<T>, ITable<T>, ITable
 	{
-		public TableNew(IDataContext dataContext)
+		public TableQuery(IDataContext dataContext)
 			: base(dataContext, null)
 		{
 		}

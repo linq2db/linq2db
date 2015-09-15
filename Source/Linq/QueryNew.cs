@@ -125,7 +125,7 @@ namespace LinqToDB.Linq
 							if (isEnumerable) query.GetIEnumerable = new QueryBuilder<T>(dataContext, query).BuildEnumerable();
 							else              query.GetElement     = new QueryBuilder<T>(dataContext, query).BuildElement   ();
 						}
-						catch (Exception)
+						catch
 						{
 							if (!Configuration.Linq.GenerateExpressionTest)
 							{

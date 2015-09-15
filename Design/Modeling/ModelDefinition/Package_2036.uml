@@ -1,0 +1,135 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm4="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm5="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/dsltools/LogicalClassDesigner" xmlns:dm9="http://schemas.microsoft.com/VisualStudio/TeamArchitect/SequenceDesigner"
+  dslVersion="1.0.0.0"
+  Id="154c1ef9-4adc-4b2f-af19-313680ec255f"
+  name="Linq" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <packagedElements>
+    <packageHasNamedElement>
+      <class
+        Id="6ab79105-36fa-4c28-a2b5-6b7d7424e7ef"
+        name="ExpressionQuery&lt;T&gt;"
+        visibility="Private"
+        isAbstract="true"
+        isLeaf="false"
+        isActiveClass="false">
+        <suppliersInternal>
+          <interfaceRealization
+            Id="eea57a15-1d13-4f1b-b363-9411c369a257">
+            <interfaceMoniker
+              Id="d2807f09-540e-4a77-a0d4-0fe24f1f304e"
+              LastKnownName="IExpressionQuery&lt;T&gt;"
+              LastKnownLocation="Package_2036.uml" />
+          </interfaceRealization>
+        </suppliersInternal>
+      </class>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <class
+        Id="da5696d4-a960-4285-9ebd-55c57e9c9851"
+        name="TableQuery&lt;T&gt;"
+        visibility="Private"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false">
+        <suppliersInternal>
+          <interfaceRealization
+            Id="6dc93196-98af-467f-be5b-df86b2aa3f18">
+            <interfaceMoniker
+              Id="6b47141e-52db-4dad-b9dd-267752f5f23c"
+              LastKnownName="ITable&lt;T&gt;"
+              LastKnownLocation="Package_2036.uml" />
+          </interfaceRealization>
+        </suppliersInternal>
+        <generalsInternal>
+          <generalization
+            Id="3ae470ce-0dca-4ba2-8a89-757548751f6b"
+            isSubstitutable="false">
+            <classMoniker
+              Id="6ab79105-36fa-4c28-a2b5-6b7d7424e7ef"
+              LastKnownName="ExpressionQuery&lt;T&gt;"
+              LastKnownLocation="Package_2036.uml" />
+          </generalization>
+        </generalsInternal>
+      </class>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <class
+        Id="e97ad2cf-6593-4335-a228-f8c455be5f78"
+        name="ExpressionQueryImpl&lt;T&gt;"
+        visibility="Private"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false">
+        <generalsInternal>
+          <generalization
+            Id="cdd7691d-9b76-477d-8180-598ca287f8a3"
+            isSubstitutable="false">
+            <classMoniker
+              Id="6ab79105-36fa-4c28-a2b5-6b7d7424e7ef"
+              LastKnownName="ExpressionQuery&lt;T&gt;"
+              LastKnownLocation="Package_2036.uml" />
+          </generalization>
+        </generalsInternal>
+      </class>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <Interface
+        Id="6b47141e-52db-4dad-b9dd-267752f5f23c"
+        name="ITable&lt;T&gt;"
+        isAbstract="false"
+        isLeaf="false">
+        <generalsInternal>
+          <generalization
+            Id="bba097fc-3f51-4f3d-be22-730d19dc505d"
+            isSubstitutable="false">
+            <interfaceMoniker
+              Id="d2807f09-540e-4a77-a0d4-0fe24f1f304e"
+              LastKnownName="IExpressionQuery&lt;T&gt;"
+              LastKnownLocation="Package_2036.uml" />
+          </generalization>
+        </generalsInternal>
+      </Interface>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <Interface
+        Id="d2807f09-540e-4a77-a0d4-0fe24f1f304e"
+        name="IExpressionQuery&lt;T&gt;"
+        isAbstract="false"
+        isLeaf="false">
+        <generalsInternal>
+          <generalization
+            Id="348a1e32-d93f-4faf-afa4-1a81814391ea"
+            isSubstitutable="false">
+            <interfaceMoniker
+              Id="cf9e5da3-7f6d-40f3-9205-ed8de649c20f"
+              LastKnownName="IOrderedQueryable&lt;T&gt;"
+              LastKnownLocation="Package_2109.uml" />
+          </generalization>
+          <generalization
+            Id="7404a8c7-21bf-4b2d-a1a7-e41d1adcaa47"
+            isSubstitutable="false">
+            <interfaceMoniker
+              Id="dddc7f1e-ec47-48c8-9632-239dba0b619d"
+              LastKnownName="IQueryProvider"
+              LastKnownLocation="Package_2109.uml" />
+          </generalization>
+        </generalsInternal>
+      </Interface>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <Interface
+        Id="1923fd52-b508-431f-95bc-81d7f0b2277f"
+        name="ITable"
+        isAbstract="false"
+        isLeaf="false" />
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <class
+        Id="8ff30838-46ab-4a73-98db-f845c2d1e7d7"
+        name="Class1"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false" />
+    </packageHasNamedElement>
+  </packagedElements>
+</package>

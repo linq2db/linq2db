@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<logicalClassDesignerModel xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm4="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm5="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/dsltools/ModelStore" xmlns:dm9="http://schemas.microsoft.com/VisualStudio/TeamArchitect/SequenceDesigner" dslVersion="1.0.0.0" Id="e30e7c71-5047-4657-aaab-1d8904c2ee7c" name="QueryClassDiagram" linkedPackageId="fd6672f7-a516-4cd1-b9d8-073efb1a5ac9" xmlns="http://schemas.microsoft.com/dsltools/LogicalClassDesigner">
+  <packagedElements>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="737dc64f-e00d-464d-848b-aac5a248307d" name="Linq">
+        <elementDefinition Id="154c1ef9-4adc-4b2f-af19-313680ec255f" />
+        <packagedElements>
+          <packageHasNamedElement>
+            <class Id="14ded374-db19-4c9f-a2a9-6ec92b6e213d" name="ExpressionQuery&lt;T&gt;" visibility="Private" isAbstract="true" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="6ab79105-36fa-4c28-a2b5-6b7d7424e7ef" />
+              <suppliersInternal>
+                <interfaceRealization Id="c46fae82-8f5d-4e24-91b0-1ee270ebe175">
+                  <interfaceMoniker Id="3adf59c3-4cbd-49d9-8c19-4eb007fd5308" LastKnownName="IExpressionQuery&lt;T&gt;" />
+                  <elementDefinition Id="eea57a15-1d13-4f1b-b363-9411c369a257" />
+                </interfaceRealization>
+              </suppliersInternal>
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <class Id="9830a6cd-26fe-4ca4-a81b-e62e25d4248e" name="TableQuery&lt;T&gt;" visibility="Private" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="da5696d4-a960-4285-9ebd-55c57e9c9851" />
+              <suppliersInternal>
+                <interfaceRealization Id="811298d1-c83f-4aa7-adbb-3fcb1564bdcf">
+                  <interfaceMoniker Id="0ceb4853-61ed-45b0-b412-708fe94d1bdf" LastKnownName="ITable&lt;T&gt;" />
+                  <elementDefinition Id="6dc93196-98af-467f-be5b-df86b2aa3f18" />
+                </interfaceRealization>
+              </suppliersInternal>
+              <generalsInternal>
+                <generalization Id="36434512-b1b8-4a41-a9a4-b1839ccce281" isSubstitutable="false">
+                  <classMoniker Id="14ded374-db19-4c9f-a2a9-6ec92b6e213d" LastKnownName="ExpressionQuery&lt;T&gt;" />
+                  <elementDefinition Id="3ae470ce-0dca-4ba2-8a89-757548751f6b" />
+                </generalization>
+              </generalsInternal>
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <class Id="c5bc34b7-70d1-4783-b086-f0db8b59bffb" name="ExpressionQueryImpl&lt;T&gt;" visibility="Private" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="e97ad2cf-6593-4335-a228-f8c455be5f78" />
+              <generalsInternal>
+                <generalization Id="1fb1e860-e371-42e2-a04e-9ea12e0d8e38" isSubstitutable="false">
+                  <classMoniker Id="14ded374-db19-4c9f-a2a9-6ec92b6e213d" LastKnownName="ExpressionQuery&lt;T&gt;" />
+                  <elementDefinition Id="cdd7691d-9b76-477d-8180-598ca287f8a3" />
+                </generalization>
+              </generalsInternal>
+            </class>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <Interface Id="0ceb4853-61ed-45b0-b412-708fe94d1bdf" name="ITable&lt;T&gt;" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="6b47141e-52db-4dad-b9dd-267752f5f23c" />
+              <generalsInternal>
+                <generalization Id="0506ba0b-7669-452c-95f8-d6b079906b34" isSubstitutable="false">
+                  <interfaceMoniker Id="3adf59c3-4cbd-49d9-8c19-4eb007fd5308" LastKnownName="IExpressionQuery&lt;T&gt;" />
+                  <elementDefinition Id="bba097fc-3f51-4f3d-be22-730d19dc505d" />
+                </generalization>
+              </generalsInternal>
+            </Interface>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <Interface Id="3adf59c3-4cbd-49d9-8c19-4eb007fd5308" name="IExpressionQuery&lt;T&gt;" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="d2807f09-540e-4a77-a0d4-0fe24f1f304e" />
+              <generalsInternal>
+                <generalization Id="0985c24c-0c10-49bc-b35d-2bb943130d4a" isSubstitutable="false">
+                  <interfaceMoniker Id="db0652f7-024d-4ff6-8f49-8ee1307b043d" LastKnownName="IOrderedQueryable&lt;T&gt;" />
+                  <elementDefinition Id="348a1e32-d93f-4faf-afa4-1a81814391ea" />
+                </generalization>
+                <generalization Id="e7689c1e-c684-49a2-969b-561b040fa2c7" isSubstitutable="false">
+                  <interfaceMoniker Id="04f75c80-cbed-4cc3-9158-0777f33ca47d" LastKnownName="IQueryProvider" />
+                  <elementDefinition Id="7404a8c7-21bf-4b2d-a1a7-e41d1adcaa47" />
+                </generalization>
+              </generalsInternal>
+            </Interface>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="161ce74b-5d82-414a-9928-1e8d1d69a9d6" name="Data">
+        <elementDefinition Id="e3a124d8-1eb7-436e-8062-df00fcf0433d" />
+        <packagedElements>
+          <packageHasNamedElement>
+            <class Id="b0502683-c4de-4acf-b6d6-475ea8ca32c5" name="DataConnection" isAbstract="false" isLeaf="false" isActiveClass="false">
+              <elementDefinition Id="aafa1eb5-0647-4e55-9ffe-7713b71a52b3" />
+              <targetEnds>
+                <association Id="56f3c335-3f1b-4986-aafc-d80b80f6cf5b" isDerived="false" sourceEndRoleName="GetTable" targetEndRoleName="ITable&lt;T&gt;" isLeaf="false" isAbstract="false">
+                  <classMoniker Id="9830a6cd-26fe-4ca4-a81b-e62e25d4248e" LastKnownName="TableQuery&lt;T&gt;" />
+                  <relationshipOwnedElementsInternal>
+                    <associationHasOwnedEnds>
+                      <memberEnd Id="04472215-ac60-4eab-a723-b2dac1614585" name="GetTable" isLeaf="false" isStatic="false" isReadOnly="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="false" isNavigableOwned="false">
+                        <elementDefinition Id="fbe65e08-7b31-4c56-adf9-fd652c546646" />
+                      </memberEnd>
+                    </associationHasOwnedEnds>
+                    <associationHasOwnedEnds>
+                      <memberEnd Id="40b3e16a-d995-4c74-94e6-8f71475a8b66" name="ITable&lt;T&gt;" isLeaf="false" isStatic="false" isReadOnly="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="false" isNavigableOwned="false">
+                        <elementDefinition Id="5095a84f-01b6-46da-a7eb-ec5b654fd961" />
+                      </memberEnd>
+                    </associationHasOwnedEnds>
+                  </relationshipOwnedElementsInternal>
+                  <elementDefinition Id="d4c5c867-3107-4249-93c8-6a6b9751d7c3" />
+                </association>
+              </targetEnds>
+              <ownedOperationsInternal>
+                <operation Id="fb721f22-408c-4d13-8258-7d768282ce24" name="GetTable&lt;T&gt;" isLeaf="false" isStatic="false" isAbstract="false" concurrency="Sequential" isQuery="false">
+                  <appliedStereotypesInternal>
+                    <stereotypeInstance Id="7f5e5725-f3a9-46eb-9f8f-ac0a53bf7a1a" name="create" profile="StandardProfileL2">
+                      <elementDefinition Id="b61200c5-e275-4b11-9b0b-b6a211851f74" />
+                    </stereotypeInstance>
+                  </appliedStereotypesInternal>
+                  <elementDefinition Id="e0c3834c-f639-4063-a9bc-d3416077405f" />
+                  <ownedParameters>
+                    <operationHasOwnedParameters>
+                      <parameter Id="4a7173cb-698e-44cb-9a6c-9602cfb47f1d" direction="Return" isUnique="false">
+                        <elementDefinition Id="fbe275a5-5570-47c3-8100-25d01f22c7f4" />
+                        <type_NamedElement>
+                          <referencedTypeMoniker Id="a6ab26e2-3ce2-481a-975c-47d9e642d012" LastKnownName="ITable&lt;T&gt;" />
+                        </type_NamedElement>
+                      </parameter>
+                    </operationHasOwnedParameters>
+                  </ownedParameters>
+                </operation>
+              </ownedOperationsInternal>
+            </class>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <logicalClassDesignerModelHasPackages>
+      <package Id="4724ab06-8cf1-4246-86b1-eb1e5ab664d6" name="System.Linq">
+        <elementDefinition Id="774ddf19-c7f8-404b-af4b-bc8c0b3dddc0" />
+        <packagedElements>
+          <packageHasNamedElement>
+            <Interface Id="db0652f7-024d-4ff6-8f49-8ee1307b043d" name="IOrderedQueryable&lt;T&gt;" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="cf9e5da3-7f6d-40f3-9205-ed8de649c20f" />
+              <generalsInternal>
+                <generalization Id="650398fa-b138-42c8-8e3a-030499002a94" isSubstitutable="false">
+                  <interfaceMoniker Id="579e9280-182f-4754-b0f8-de9c2df6c410" LastKnownName="IQueryable&lt;T&gt;" />
+                  <elementDefinition Id="398d2be8-4e4a-42d2-b267-d78d99cb68b3" />
+                </generalization>
+              </generalsInternal>
+            </Interface>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <Interface Id="579e9280-182f-4754-b0f8-de9c2df6c410" name="IQueryable&lt;T&gt;" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="b138ef54-4f0d-419c-985d-dc257cb5aea0" />
+              <targetEnds>
+                <association Id="99221baf-e28b-4cba-ac5c-a3c739884911" isDerived="false" sourceEndRoleName="" targetEndRoleName="Provider" isLeaf="false" isAbstract="false">
+                  <interfaceMoniker Id="04f75c80-cbed-4cc3-9158-0777f33ca47d" LastKnownName="IQueryProvider" />
+                  <relationshipOwnedElementsInternal>
+                    <associationHasOwnedEnds>
+                      <memberEnd Id="6cd3679a-1603-4d72-a14b-3518b513edb5" isLeaf="false" isStatic="false" isReadOnly="false" isDerived="false" isDerivedUnion="false" aggregation="Composite" isComposite="false" isNavigableOwned="false">
+                        <elementDefinition Id="c63b1689-6598-4fe9-9475-5ffbb388ca17" />
+                      </memberEnd>
+                    </associationHasOwnedEnds>
+                    <associationHasOwnedEnds>
+                      <memberEnd Id="27a3d520-aa03-4b36-8bf1-65f0fc4c33d9" name="Provider" isLeaf="false" isStatic="false" isReadOnly="false" isDerived="false" isDerivedUnion="false" aggregation="None" isComposite="true">
+                        <elementDefinition Id="1c0fc1a8-dbc0-4921-b737-13a27b5225a6" />
+                      </memberEnd>
+                    </associationHasOwnedEnds>
+                  </relationshipOwnedElementsInternal>
+                  <elementDefinition Id="af9added-8858-4945-ae62-244a26e65e9b" />
+                </association>
+              </targetEnds>
+            </Interface>
+          </packageHasNamedElement>
+          <packageHasNamedElement>
+            <Interface Id="04f75c80-cbed-4cc3-9158-0777f33ca47d" name="IQueryProvider" isAbstract="false" isLeaf="false">
+              <elementDefinition Id="dddc7f1e-ec47-48c8-9632-239dba0b619d" />
+            </Interface>
+          </packageHasNamedElement>
+        </packagedElements>
+      </package>
+    </logicalClassDesignerModelHasPackages>
+    <packageHasNamedElement>
+      <referencedType Id="a6ab26e2-3ce2-481a-975c-47d9e642d012" name="ITable&lt;T&gt;" isAbstract="false" isLeaf="false" cachedFullName="Modeling::Linq::ITable&lt;T&gt;">
+        <elementDefinition Id="6b47141e-52db-4dad-b9dd-267752f5f23c" />
+      </referencedType>
+    </packageHasNamedElement>
+  </packagedElements>
+  <package Id="fd6672f7-a516-4cd1-b9d8-073efb1a5ac9" name="Modeling">
+    <elementDefinition Id="e3097497-b34d-473b-97c8-43c0829fac4d" />
+    <profileInstances>
+      <packageHasProfileInstances Id="4962ad5f-6b9d-4f3b-b33f-904bb35f8002">
+        <profileInstance Id="303f29bf-4121-48e3-9560-6683dc6d1864" name="StandardProfileL2">
+          <elementDefinition Id="e34d544e-0fea-4ed6-ac5e-1b74119ac791" />
+        </profileInstance>
+        <elementDefinition Id="0caec977-1f8c-4ba3-a7db-8cc9ad9cc73b" />
+      </packageHasProfileInstances>
+      <packageHasProfileInstances Id="24c61371-fae7-4518-bd94-9bdf0862ebf6">
+        <profileInstance Id="9b7d4b0a-bb76-4443-bf7c-42ce56ba7e0a" name="StandardProfileL3">
+          <elementDefinition Id="532ea607-fb19-44b8-8502-3351b05452be" />
+        </profileInstance>
+        <elementDefinition Id="29349502-908c-4fda-9054-c48619c59ed0" />
+      </packageHasProfileInstances>
+    </profileInstances>
+  </package>
+</logicalClassDesignerModel>

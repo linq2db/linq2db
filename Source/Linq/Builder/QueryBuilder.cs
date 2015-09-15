@@ -154,7 +154,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
 	}
 
 	class QueryBuilder<T> : QueryBuilder

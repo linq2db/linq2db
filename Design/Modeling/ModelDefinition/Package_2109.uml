@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:dm0="http://schemas.microsoft.com/VisualStudio/2008/DslTools/Core" xmlns:dm1="http://schemas.microsoft.com/dsltools/Kernel" xmlns:dm2="http://schemas.microsoft.com/dsltools/Component" xmlns:dm3="http://schemas.microsoft.com/dsltools/UseCase" xmlns:dm4="http://schemas.microsoft.com/dsltools/Activity" xmlns:dm5="http://schemas.microsoft.com/dsltools/Interaction" xmlns:dm6="http://schemas.microsoft.com/dsltools/UmlModelLibrary" xmlns:dm7="http://schemas.microsoft.com/dsltools/UmlDiagrams" xmlns:dm8="http://schemas.microsoft.com/dsltools/LogicalClassDesigner" xmlns:dm9="http://schemas.microsoft.com/VisualStudio/TeamArchitect/SequenceDesigner"
+  dslVersion="1.0.0.0"
+  Id="774ddf19-c7f8-404b-af4b-bc8c0b3dddc0"
+  name="System.Linq" xmlns="http://schemas.microsoft.com/dsltools/ModelStore">
+  <packagedElements>
+    <packageHasNamedElement>
+      <Interface
+        Id="dddc7f1e-ec47-48c8-9632-239dba0b619d"
+        name="IQueryProvider"
+        isAbstract="false"
+        isLeaf="false" />
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <class
+        Id="917d1d6b-9f9c-46d7-8657-2ee70850eeeb"
+        name="Class1"
+        isAbstract="false"
+        isLeaf="false"
+        isActiveClass="false" />
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <Interface
+        Id="cf9e5da3-7f6d-40f3-9205-ed8de649c20f"
+        name="IOrderedQueryable&lt;T&gt;"
+        isAbstract="false"
+        isLeaf="false">
+        <generalsInternal>
+          <generalization
+            Id="398d2be8-4e4a-42d2-b267-d78d99cb68b3"
+            isSubstitutable="false">
+            <interfaceMoniker
+              Id="b138ef54-4f0d-419c-985d-dc257cb5aea0"
+              LastKnownName="IQueryable&lt;T&gt;"
+              LastKnownLocation="Package_2109.uml" />
+          </generalization>
+        </generalsInternal>
+      </Interface>
+    </packageHasNamedElement>
+    <packageHasNamedElement>
+      <Interface
+        Id="b138ef54-4f0d-419c-985d-dc257cb5aea0"
+        name="IQueryable&lt;T&gt;"
+        isAbstract="false"
+        isLeaf="false">
+        <targetEnds>
+          <association
+            Id="af9added-8858-4945-ae62-244a26e65e9b"
+            isDerived="false"
+            sourceEndRoleName=""
+            targetEndRoleName="Provider"
+            isLeaf="false"
+            isAbstract="false">
+            <interfaceMoniker
+              Id="dddc7f1e-ec47-48c8-9632-239dba0b619d"
+              LastKnownName="IQueryProvider"
+              LastKnownLocation="Package_2109.uml" />
+            <relationshipOwnedElementsInternal>
+              <associationHasOwnedEnds>
+                <memberEnd
+                  Id="c63b1689-6598-4fe9-9475-5ffbb388ca17"
+                  isLeaf="false"
+                  isStatic="false"
+                  isReadOnly="false"
+                  isDerived="false"
+                  isDerivedUnion="false"
+                  aggregation="Composite"
+                  isComposite="false"
+                  isNavigableOwned="false" />
+              </associationHasOwnedEnds>
+              <associationHasOwnedEnds>
+                <memberEnd
+                  Id="1c0fc1a8-dbc0-4921-b737-13a27b5225a6"
+                  name="Provider"
+                  isLeaf="false"
+                  isStatic="false"
+                  isReadOnly="false"
+                  isDerived="false"
+                  isDerivedUnion="false"
+                  aggregation="None"
+                  isComposite="true" />
+              </associationHasOwnedEnds>
+            </relationshipOwnedElementsInternal>
+          </association>
+        </targetEnds>
+      </Interface>
+    </packageHasNamedElement>
+  </packagedElements>
+</package>

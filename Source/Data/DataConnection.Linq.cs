@@ -21,7 +21,7 @@ namespace LinqToDB.Data
 		public ITable<T> GetTable<T>()
 			where T : class
 		{
-			return new TableNew<T>(this);
+			return new TableQuery<T>(this);
 		}
 
 		public ITable<T> GetTable<T>(bool dispose)
