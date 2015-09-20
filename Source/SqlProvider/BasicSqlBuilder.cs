@@ -372,7 +372,11 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine("DEFAULT VALUES");
 		}
 
-		protected virtual void BuildInsertClause(string insertText, bool appendTableName)
+        protected virtual void BuildOutputSubclause()
+        {
+        }
+
+        protected virtual void BuildInsertClause(string insertText, bool appendTableName)
 		{
 			AppendIndent().Append(insertText);
 
@@ -381,8 +385,10 @@ namespace LinqToDB.SqlProvider
 
 			if (SelectQuery.Insert.Items.Count == 0)
 			{
-				StringBuilder.Append(' ');
-				BuildEmptyInsert();
+                BuildOutputSubclause();
+
+                StringBuilder.Append(' ');                
+                BuildEmptyInsert();
 			}
 			else
 			{
@@ -409,7 +415,9 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.AppendLine();
 				AppendIndent().AppendLine(")");
 
-				if (SelectQuery.QueryType == QueryType.InsertOrUpdate || SelectQuery.From.Tables.Count == 0)
+                BuildOutputSubclause();
+
+                if (SelectQuery.QueryType == QueryType.InsertOrUpdate || SelectQuery.From.Tables.Count == 0)
 				{
 					AppendIndent().AppendLine("VALUES");
 					AppendIndent().AppendLine("(");

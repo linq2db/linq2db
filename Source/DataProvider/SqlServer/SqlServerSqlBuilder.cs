@@ -30,14 +30,39 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildSql();
 		}
 
-		protected override void BuildGetIdentity()
-		{
-			StringBuilder
-				.AppendLine()
-				.AppendLine("SELECT SCOPE_IDENTITY()");
-		}
+        protected override void BuildOutputSubclause()
+        {
+            if (SelectQuery.Insert.WithIdentity)
+            {
+                var identityField = SelectQuery.Insert.Into.GetIdentityField();
+                if (identityField != null && identityField.DataType == DataType.Guid)
+                {
+                    BuildOutputIdentitySubclause(identityField);
+                }
+            }
+        }
 
-		protected override void BuildOrderByClause()
+        protected virtual void BuildOutputIdentitySubclause(SqlField identityField)
+        {
+            StringBuilder
+                .AppendLine()
+                .AppendFormat("OUTPUT INSERTED.[{0}]", identityField.Name)
+                .AppendLine();
+        }
+
+        protected override void BuildGetIdentity()
+        {
+            var identityField = SelectQuery.Insert.Into.GetIdentityField();
+
+            if (identityField == null || identityField.DataType != DataType.Guid)
+            {
+                StringBuilder
+                .AppendLine()
+                .AppendLine("SELECT SCOPE_IDENTITY()");
+            }
+        }
+
+        protected override void BuildOrderByClause()
 		{
 			if (!BuildAlternativeSql || !NeedSkip)
 				base.BuildOrderByClause();
