@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.IO;
@@ -41,9 +41,16 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			try
 			{
-				foreach (var typeName in new[] { "SqlHierarchyId", "SqlGeography", "SqlGeometry" })
+				foreach (var typeInfo in new[]
 				{
-					var type = Type.GetType("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types".Args(typeName));
+					new { Type = SqlServerTools.SqlHierarchyIdType, Name = "SqlHierarchyId" },
+					new { Type = SqlServerTools.SqlGeographyType,   Name = "SqlGeography"   },
+					new { Type = SqlServerTools.SqlGeometryType,    Name = "SqlGeometry"    },
+				})
+				{
+					var type = typeInfo.Type
+						?? Type.GetType("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types".Args(typeInfo.Name))
+						?? Type.GetType("Microsoft.SqlServer.Types.{0}, SqlServerSpatial110".Args(typeInfo.Name));
 
 					if (type == null)
 						continue;
@@ -56,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					AddScalarType(type, nullValue, true, DataType.Udt);
 
-					SqlServerDataProvider.SetUdtType(type, typeName.Substring(3).ToLower());
+					SqlServerDataProvider.SetUdtType(type, typeInfo.Name.Substring(3).ToLower());
 				}
 			}
 			catch
