@@ -576,6 +576,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Length);
 							Append(elem.Precision);
 							Append(elem.Scale);
+							Append(elem.CreateFormat);
 
 							break;
 						}
@@ -1124,6 +1125,7 @@ namespace LinqToDB.ServiceModel
 							var length           = ReadNullableInt();
 							var precision        = ReadNullableInt();
 							var scale            = ReadNullableInt();
+							var createFormat     = ReadString();
 
 							obj = new SqlField
 							{
@@ -1141,6 +1143,7 @@ namespace LinqToDB.ServiceModel
 								Length          = length,
 								Precision       = precision,
 								Scale           = scale,
+								CreateFormat    = createFormat,
 							};
 
 							break;

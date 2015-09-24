@@ -237,5 +237,23 @@ namespace Tests.DDL
 				table.DropTable();
 			}
 		}
+
+		class TestCreateFormat
+		{
+			[Column(CreateFormat="{0}{1}{2}{3}/* test */"), NotNull]
+			public int Field1;
+			[Column]
+			public int Field2;
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
+		public void CreateFormatTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<TestCreateFormat>("#TestTable");
+				table.DropTable();
+			}
+		}
 	}
 }
