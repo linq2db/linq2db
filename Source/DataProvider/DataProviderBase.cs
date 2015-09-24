@@ -141,6 +141,14 @@ namespace LinqToDB.DataProvider
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
 			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
 
+			if (fieldType == null)
+			{
+				throw new LinqToDBException("Can't create '{0}' type or '{1}' specific type for {2}.".Args(
+					typeName,
+					providerType,
+					((DbDataReader)reader).GetName(idx)));
+			}
+
 			Expression expr;
 
 			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
