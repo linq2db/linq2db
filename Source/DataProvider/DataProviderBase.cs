@@ -12,6 +12,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Expressions;
 	using Mapping;

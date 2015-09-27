@@ -48,9 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					new { Type = SqlServerTools.SqlGeometryType,    Name = "SqlGeometry"    },
 				})
 				{
-					var type = typeInfo.Type
-						?? Type.GetType("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types".Args(typeInfo.Name))
-						?? Type.GetType("Microsoft.SqlServer.Types.{0}, SqlServerSpatial110".Args(typeInfo.Name));
+					var type = typeInfo.Type ?? Type.GetType("Microsoft.SqlServer.Types.{0}, Microsoft.SqlServer.Types".Args(typeInfo.Name));
 
 					if (type == null)
 						continue;
