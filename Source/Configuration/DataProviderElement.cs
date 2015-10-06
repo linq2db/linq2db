@@ -5,7 +5,7 @@ namespace LinqToDB.Configuration
 {
 	using DataProvider;
 
-	class DataProviderElement : ElementBase
+	public class DataProviderElement : ElementBase
 	{
 		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 		static readonly ConfigurationProperty _propName     = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);
