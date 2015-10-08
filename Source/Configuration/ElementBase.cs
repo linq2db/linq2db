@@ -4,7 +4,7 @@ using System.Configuration;
 
 namespace LinqToDB.Configuration
 {
-	internal abstract class ElementBase : ConfigurationElement
+	public abstract class ElementBase : ConfigurationElement
 	{
 		private   readonly ConfigurationPropertyCollection _properties = new ConfigurationPropertyCollection();
 		protected override ConfigurationPropertyCollection  Properties

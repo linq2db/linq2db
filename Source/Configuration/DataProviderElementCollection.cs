@@ -4,7 +4,7 @@ using System.Configuration;
 namespace LinqToDB.Configuration
 {
 	[ConfigurationCollection(typeof(DataProviderElement))]
-	internal class DataProviderElementCollection : ElementCollectionBase<DataProviderElement>
+	public class DataProviderElementCollection : ElementCollectionBase<DataProviderElement>
 	{
 		protected override object GetElementKey(DataProviderElement element)
 		{
