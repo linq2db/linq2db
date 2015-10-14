@@ -7,7 +7,7 @@ namespace LinqToDB.Configuration
 	/// <summary>
 	/// Implementation of custom configuration section.
 	/// </summary>
-	internal class LinqToDBSection : ConfigurationSection
+	public class LinqToDBSection : ConfigurationSection
 	{
 		static readonly ConfigurationPropertyCollection _properties               = new ConfigurationPropertyCollection();
 		static readonly ConfigurationProperty           _propDataProviders        = new ConfigurationProperty("dataProviders",        typeof(DataProviderElementCollection), new DataProviderElementCollection(), ConfigurationPropertyOptions.None);

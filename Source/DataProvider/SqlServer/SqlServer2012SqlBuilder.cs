@@ -50,7 +50,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (func.Name)
 			{
-				case "CASE"     : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
+				case "CASE"     :
+
+					if (func.Parameters.Length <= 5)
+						func = ConvertCase(func.SystemType, func.Parameters, 0);
+
+					break;
+
 				case "Coalesce" :
 
 					if (func.Parameters.Length > 2)

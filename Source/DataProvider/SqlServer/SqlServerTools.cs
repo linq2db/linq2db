@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -149,8 +149,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
-			new AssemblyResolver(assembly, "Microsoft.SqlServer.Types");
+			SqlHierarchyIdType = assembly.GetType("SqlHierarchyId", true);
+			SqlGeographyType   = assembly.GetType("SqlGeography",   true);
+			SqlGeometryType    = assembly.GetType("SqlGeometry",    true);
+		}
+
+		internal static Type SqlHierarchyIdType;
+		internal static Type SqlGeographyType;
+		internal static Type SqlGeometryType;
+
+		public static void SetSqlTypes(Type sqlHierarchyIdType, Type sqlGeographyType, Type sqlGeometryType)
+		{
+			SqlHierarchyIdType = sqlHierarchyIdType;
+			SqlGeographyType   = sqlGeographyType;
+			SqlGeometryType    = sqlGeometryType;
 		}
 
 		#endregion

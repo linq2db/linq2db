@@ -408,7 +408,7 @@ namespace Tests.DataProvider
 			[Column,     Nullable] public string    XMLDATATYPE       { get; set; } // XML
 		}
 
-		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
+		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using (var conn = new DataConnection(context))
 			{
@@ -416,12 +416,12 @@ namespace Tests.DataProvider
 				conn.BulkCopy(
 					new BulkCopyOptions
 					{
-						MaxBatchSize       = 50000,
+						MaxBatchSize       = maxSize,
 						BulkCopyType       = bulkCopyType,
 						NotifyAfter        = 10000,
 						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 					},
-					Enumerable.Range(0, 100000).Select(n =>
+					Enumerable.Range(0, batchSize).Select(n =>
 						new ALLTYPE
 						{
 							ID                = 2000 + n,
@@ -455,7 +455,7 @@ namespace Tests.DataProvider
 		[Test, IncludeDataContextSource(CurrentProvider)]
 		public void BulkCopyMultipleRows(string context)
 		{
-			BulkCopyTest(context, BulkCopyType.MultipleRows);
+			BulkCopyTest(context, BulkCopyType.MultipleRows, 5000, 10001);
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
@@ -463,7 +463,7 @@ namespace Tests.DataProvider
 		{
 //			new IBM.Data.DB2.DB2BulkCopy("").NotifyAfter;
 
-			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
+			BulkCopyTest(context, BulkCopyType.ProviderSpecific, 50000, 100001);
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]

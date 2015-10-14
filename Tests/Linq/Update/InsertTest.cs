@@ -764,6 +764,39 @@ namespace Tests.Update
 			}
 		}
 
+		class GuidID
+		{
+			[Identity]
+			public Guid ID;
+			public int  Field1;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+			}
+		}
+
+		class GuidID2
+		{
+			[Identity]
+			public Guid ID;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
+			}
+		}
+
 		[Test, DataContextSource]
 		public void InsertOrUpdate1(string context)
 		{
@@ -943,13 +976,13 @@ namespace Tests.Update
 
 				try
 				{
-                    db.Insert(p);
+					db.Insert(p);
 
-                    var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
+					var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
 
-                    Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
-                    Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
-                    Assert.AreEqual(p.Gender, inserted.Gender);
+					Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
+					Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
+					Assert.AreEqual(p.Gender, inserted.Gender);
 
 				}
 				finally
@@ -969,7 +1002,7 @@ namespace Tests.Update
 				try
 				{
 					db
-                        .Into(db.GetTable<ComplexPerson>())
+						.Into(db.GetTable<ComplexPerson>())
 							.Value(_ => _.Name.FirstName, "FirstName")
 							.Value(_ => _.Name.LastName,  () => "LastName")
 							.Value(_ => _.Gender,         Gender.Female)
@@ -992,8 +1025,8 @@ namespace Tests.Update
 				try
 				{
 					db
-                        .GetTable<ComplexPerson>()
-                        .Insert(() => new ComplexPerson
+						.GetTable<ComplexPerson>()
+						.Insert(() => new ComplexPerson
 						{
 							Name = new FullName
 							{
