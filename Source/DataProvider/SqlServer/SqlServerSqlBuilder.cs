@@ -35,19 +35,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (SelectQuery.Insert.WithIdentity)
 			{
 				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+
 				if (identityField != null && identityField.DataType == DataType.Guid)
 				{
-					BuildOutputIdentitySubclause(identityField);
+					StringBuilder
+						.AppendFormat("OUTPUT [INSERTED].[{0}]", identityField.Name)
+						.AppendLine();
 				}
 			}
-		}
-
-		protected virtual void BuildOutputIdentitySubclause(SqlField identityField)
-		{
-			StringBuilder
-				.AppendLine()
-				.AppendFormat("OUTPUT INSERTED.[{0}]", identityField.Name)
-				.AppendLine();
 		}
 
 		protected override void BuildGetIdentity()
@@ -57,8 +52,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (identityField == null || identityField.DataType != DataType.Guid)
 			{
 				StringBuilder
-				.AppendLine()
-				.AppendLine("SELECT SCOPE_IDENTITY()");
+					.AppendLine()
+					.AppendLine("SELECT SCOPE_IDENTITY()");
 			}
 		}
 

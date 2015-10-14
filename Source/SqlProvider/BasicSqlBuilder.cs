@@ -385,9 +385,10 @@ namespace LinqToDB.SqlProvider
 
 			if (SelectQuery.Insert.Items.Count == 0)
 			{
+				StringBuilder.Append(' ');
+
 				BuildOutputSubclause();
 
-				StringBuilder.Append(' ');
 				BuildEmptyInsert();
 			}
 			else

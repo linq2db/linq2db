@@ -29,7 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\Push.bat = NuGet\Push.bat
-		Readme.txt = Readme.txt
 		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
 EndProject
