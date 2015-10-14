@@ -1072,34 +1072,10 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
 						{
-							if (me.Member == binding.Member)
+							if (me.Member.EqualsTo(binding.Member))
 								return ReferenceEquals(levelExpresion, expression) ?
 									binding.Expression.Unwrap() :
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
-						}
-
-						if (me.Member.DeclaringType != null && me.Member.DeclaringType.IsInterface && me.Member.DeclaringType.IsAssignableFrom(expr.Type))
-						{
-							var interfaceProperty = me.Member as PropertyInfo;
-							if (interfaceProperty != null)
-							{
-								var interfaceAccessors = interfaceProperty.GetAccessors();
-								var typemap = expr.Type.GetInterfaceMap(me.Member.DeclaringType);
-								var typeAccessors = typemap.InterfaceMethods
-									.Zip(typemap.TargetMethods, (interfaceMethod, typeMethod) => new {interfaceMethod, typeMethod})
-									.Where(x => interfaceAccessors.Contains(x.interfaceMethod))
-									.Select(x => x.typeMethod)
-									.ToArray();
-
-								foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
-								{
-									var typeProperty = binding.Member as PropertyInfo;
-									if (typeProperty != null && typeProperty.GetAccessors().Intersect(typeAccessors).Any())
-										return ReferenceEquals(levelExpresion, expression)
-											? binding.Expression.Unwrap()
-											: GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
-								}
-							}
 						}
 
 						throw new LinqException("Invalid expression {0}", expression);
