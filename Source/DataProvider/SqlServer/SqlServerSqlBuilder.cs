@@ -40,8 +40,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].[")
-                        .Append(identityField.Name)
-                        .Append("]")
+						.Append(identityField.Name)
+						.Append("]")
 						.AppendLine();
 				}
 			}
@@ -49,11 +49,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildGetIdentity()
 		{
-            // The better way of retrieving identity value is to use the OUTPUT clause
-            // (since MS SQL Server 2005).
-        }
+			// The better way of retrieving identity value is to use the OUTPUT clause
+			// (since MS SQL Server 2005).
+		}
 
-        protected override void BuildOrderByClause()
+		protected override void BuildOrderByClause()
 		{
 			if (!BuildAlternativeSql || !NeedSkip)
 				base.BuildOrderByClause();

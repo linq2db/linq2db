@@ -19,19 +19,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2000SqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
-        protected override void BuildOutputSubclause()
-        {
-            // OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
-        }
+		protected override void BuildOutputSubclause()
+		{
+			// OUTPUT clause is only supported by the MS SQL Server starts with 2005 version.
+		}
 
-        protected override void BuildGetIdentity()
-        {
-            StringBuilder
-                .AppendLine()
-                .AppendLine("SELECT SCOPE_IDENTITY()");
-        }
+		protected override void BuildGetIdentity()
+		{
+			StringBuilder
+				.AppendLine()
+				.AppendLine("SELECT SCOPE_IDENTITY()");
+		}
 
-        protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
