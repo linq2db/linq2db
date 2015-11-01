@@ -36,10 +36,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = SelectQuery.Insert.Into.GetIdentityField();
 
-				if (identityField != null && identityField.DataType == DataType.Guid)
+				if (identityField != null)
 				{
 					StringBuilder
-						.AppendFormat("OUTPUT [INSERTED].[{0}]", identityField.Name)
+						.Append("OUTPUT [INSERTED].[")
+                        .Append(identityField.Name)
+                        .Append("]")
 						.AppendLine();
 				}
 			}
@@ -47,17 +49,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildGetIdentity()
 		{
-			var identityField = SelectQuery.Insert.Into.GetIdentityField();
+            // The better way of retrieving identity value is to use the OUTPUT clause
+            // (since MS SQL Server 2005).
+        }
 
-			if (identityField == null || identityField.DataType != DataType.Guid)
-			{
-				StringBuilder
-					.AppendLine()
-					.AppendLine("SELECT SCOPE_IDENTITY()");
-			}
-		}
-
-		protected override void BuildOrderByClause()
+        protected override void BuildOrderByClause()
 		{
 			if (!BuildAlternativeSql || !NeedSkip)
 				base.BuildOrderByClause();
