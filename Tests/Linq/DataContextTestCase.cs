@@ -167,12 +167,12 @@ namespace Tests
 				if (c.isLinqService)
 				{
 					data = data
-						.SetName   (c.name + " Linq Service")
+						//.SetName   (c.name + " Linq Service")
 						.SetCategory("Linq Service");
 				}
 				else
 				{
-					data = data.SetName(c.name);
+					//data = data.SetName(c.name);
 				}
 				
 				yield return data;

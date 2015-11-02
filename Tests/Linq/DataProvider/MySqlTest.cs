@@ -319,7 +319,7 @@ namespace Tests.DataProvider
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider), Ignore]
+		[Test, IncludeDataContextSource(CurrentProvider), Ignore("It works too long.")]
 		public void BulkCopyProviderSpecific(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
