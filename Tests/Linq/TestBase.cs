@@ -415,7 +415,7 @@ namespace Tests
 			}
 		}
 
-		private          List<Child> _child;
+		protected List<Child> _child;
 		protected IEnumerable<Child>  Child
 		{
 			get
