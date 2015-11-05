@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].[")
-						.Append(identityField.Name)
+						.Append(identityField.PhysicalName)
 						.Append("]")
 						.AppendLine();
 				}
