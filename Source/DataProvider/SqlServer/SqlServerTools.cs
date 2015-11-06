@@ -264,5 +264,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
+
+		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

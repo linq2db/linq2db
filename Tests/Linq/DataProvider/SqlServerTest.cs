@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Data;
 using System.Data.Linq;
+using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -971,6 +976,41 @@ namespace Tests.DataProvider
 				db1.CreateTable<TempTable>();
 				db2.CreateTable<TempTable>();
 			}
+		}
+
+		class DecimalOverflow
+		{
+			public decimal Decimal1;
+			public decimal Decimal2;
+			public decimal Decimal3;
+		}
+
+		[Test, SqlServerDataContext]
+		public void OverflowTest(string context)
+		{
+			SqlServerTools.DataReaderGetDecimal = GetDecimal;
+
+			using (var db = new DataConnection(context))
+			{
+				var list = db.GetTable<DecimalOverflow>().ToList();
+			}
+		}
+
+		const int ClrPrecision = 29;
+
+		static decimal GetDecimal(IDataReader rd, int idx)
+		{
+			var value = ((SqlDataReader)rd).GetSqlDecimal(idx);
+
+			if (value.Precision > ClrPrecision)
+			{
+				var str = value.ToString();
+				var val = decimal.Parse(str);
+
+				return val;
+			}
+
+			return value.Value;
 		}
 	}
 }

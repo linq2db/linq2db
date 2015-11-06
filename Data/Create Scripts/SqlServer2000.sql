@@ -542,3 +542,28 @@ BEGIN
 	SELECT 123 as id, '456' as id
 END
 GO
+
+DROP TABLE [DecimalOverflow]
+GO
+
+CREATE TABLE [DecimalOverflow]
+(
+	Decimal1 decimal(38,20) NOT NULL PRIMARY KEY CLUSTERED,
+	Decimal2 decimal(31,2),
+	Decimal3 decimal(38,36),
+	Decimal4 decimal(29,0),
+	Decimal5 decimal(38,38)
+)
+GO
+
+INSERT INTO [DecimalOverflow]
+SELECT  123456789012345.12345678901234567890,  1234567890123456789.91,  12.345678901234512345678901234567890,  1234567890123456789,  .12345678901234512345678901234567890 UNION ALL
+SELECT -123456789012345.12345678901234567890, -1234567890123456789.91, -12.345678901234512345678901234567890, -1234567890123456789, -.12345678901234512345678901234567890 UNION ALL
+SELECT  12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT  12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
+
+GO
