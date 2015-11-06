@@ -115,5 +115,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		#endregion
+
+		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

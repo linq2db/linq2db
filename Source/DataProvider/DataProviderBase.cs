@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -150,24 +151,65 @@ namespace LinqToDB.DataProvider
 					((DbDataReader)reader).GetName(idx)));
 			}
 
+#if DEBUG1
+			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
+			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
+
+			foreach (var ex in ReaderExpressions)
+			{
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
+					.Args(
+						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
+						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
+						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
+						ex.Key.DataTypeName,
+						ex.Value));
+			}
+
+			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName");
+			Debug.WriteLine("--------------------- --------------------- --------------------- ---------------------");
+#endif
+
 			Expression expr;
 
-			if (ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
-			    ReaderExpressions.TryGetValue(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
+			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
+			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
 			return Expression.Convert(
 				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
+		}
+
+		bool FindExpression(ReaderInfo info, out Expression expr)
+		{
+#if DEBUG1
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"
+					.Args(
+						info.ToType            == null ? null : info.ToType.Name,
+						info.ProviderFieldType == null ? null : info.ProviderFieldType.Name,
+						info.FieldType         == null ? null : info.FieldType.Name,
+						info.DataTypeName));
+#endif
+
+			if (ReaderExpressions.TryGetValue(info, out expr))
+			{
+#if DEBUG1
+				Debug.WriteLine("ReaderExpression found: {0}".Args(expr));
+#endif
+				return true;
+			}
+			
+			return false;
 		}
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
