@@ -978,11 +978,12 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
-			public decimal Decimal1;
-			public decimal Decimal2;
-			public decimal Decimal3;
+			[Column] public decimal Decimal1;
+			[Column] public decimal Decimal2;
+			[Column] public decimal Decimal3;
 		}
 
 		[Test, SqlServerDataContext]
@@ -1011,6 +1012,29 @@ namespace Tests.DataProvider
 			}
 
 			return value.Value;
+		}
+
+		[Table("DecimalOverflow")]
+		class DecimalOverflow2
+		{
+			[Column] public SqlDecimal Decimal1;
+			[Column] public SqlDecimal Decimal2;
+			[Column] public SqlDecimal Decimal3;
+		}
+
+		[Test, SqlServerDataContext]
+		public void OverflowTest2(string context)
+		{
+			var func = SqlServerTools.DataReaderGetDecimal;
+
+			SqlServerTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
+
+			using (var db = new DataConnection(context))
+			{
+				var list = db.GetTable<DecimalOverflow2>().ToList();
+			}
+
+			SqlServerTools.DataReaderGetDecimal = func;
 		}
 	}
 }
