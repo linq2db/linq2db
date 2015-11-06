@@ -331,6 +331,7 @@
     <Compile Include="TestBase.cs" />
     <Compile Include="Linq\WhereTest.cs" />
     <Compile Include="UserTests\CompareNullableChars.cs" />
+    <Compile Include="UserTests\CreateDecimalTableColumn.cs" />
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTest.cs" />
     <Compile Include="UserTests\GenericsFilterTest.cs" />
     <Compile Include="UserTests\GroupBySubqueryTest.cs" />
