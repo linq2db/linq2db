@@ -3,7 +3,7 @@ using System.Configuration;
 
 namespace LinqToDB.Configuration
 {
-	internal abstract class ElementCollectionBase<T>: ConfigurationElementCollection
+	public abstract class ElementCollectionBase<T>: ConfigurationElementCollection
 		where T : ConfigurationElement, new()
 	{
 		protected override ConfigurationElement CreateNewElement()

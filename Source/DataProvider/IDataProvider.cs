@@ -22,6 +22,7 @@ namespace LinqToDB.DataProvider
 		ISqlBuilder        CreateSqlBuilder      ();
 		ISqlOptimizer      GetSqlOptimizer       ();
 		void               InitCommand           (DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters);
+		void               DisposeCommand        (DataConnection dataConnection);
 		object             GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (IDataReader reader, int idx);
@@ -32,7 +33,9 @@ namespace LinqToDB.DataProvider
 		ISchemaProvider    GetSchemaProvider     ();
 
 		BulkCopyRowsCopied BulkCopy<T>           (DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source);
-		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+		int                Merge<T>              (DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
+		                                          string tableName, string databaseName, string schemaName)
 			where T : class;
+
 	}
 }

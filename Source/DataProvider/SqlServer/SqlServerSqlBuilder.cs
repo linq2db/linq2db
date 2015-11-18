@@ -30,11 +30,27 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildSql();
 		}
 
+		protected override void BuildOutputSubclause()
+		{
+			if (SelectQuery.Insert.WithIdentity)
+			{
+				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+
+				if (identityField != null)
+				{
+					StringBuilder
+						.Append("OUTPUT [INSERTED].[")
+						.Append(identityField.PhysicalName)
+						.Append("]")
+						.AppendLine();
+				}
+			}
+		}
+
 		protected override void BuildGetIdentity()
 		{
-			StringBuilder
-				.AppendLine()
-				.AppendLine("SELECT SCOPE_IDENTITY()");
+			// The better way of retrieving identity value is to use the OUTPUT clause
+			// (since MS SQL Server 2005).
 		}
 
 		protected override void BuildOrderByClause()
@@ -97,6 +113,30 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (wrap) StringBuilder.Append("CASE WHEN ");
 			base.BuildColumnExpression(expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
+		}
+
+		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		{
+			if (predicate.Expr2 is SqlValue)
+			{
+				var value = ((SqlValue)predicate.Expr2).Value;
+
+				if (value != null)
+				{
+					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var ntext = text.Replace("[", "[[]");
+
+					if (text != ntext)
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+				}
+			}
+			else if (predicate.Expr2 is SqlParameter)
+			{
+				var p = ((SqlParameter)predicate.Expr2);
+				p.ReplaceLike = true;
+			}
+
+			base.BuildLikePredicate(predicate);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -163,7 +203,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildCreateTablePrimaryKey(string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent();
-			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
+
+			if (!pkName.StartsWith("[PK_#"))
+				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
+
+			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
@@ -172,13 +216,22 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var table = SelectQuery.CreateTable.Table;
 
-			StringBuilder.Append("IF  EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
-			BuildPhysicalTable(table, null);
-			StringBuilder.AppendLine("') AND type in (N'U'))");
+			if (table.PhysicalName.StartsWith("#"))
+			{
+				AppendIndent().Append("DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine();
+			}
+			else
+			{
+				StringBuilder.Append("IF EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine("') AND type in (N'U'))");
 
-			AppendIndent().Append("BEGIN DROP TABLE ");
-			BuildPhysicalTable(table, null);
-			StringBuilder.AppendLine(" END");
+				AppendIndent().Append("BEGIN DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine(" END");
+			}
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
@@ -186,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
-				case DataType.Variant   : StringBuilder.Append("Sql_Variant");           return;
+				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
 				case DataType.VarChar   :
 				case DataType.VarBinary :
@@ -207,10 +260,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 #if !NETFX_CORE && !SILVERLIGHT
 
+#if !MONO
 		protected override string GetTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).TypeName;
 		}
+#endif
 
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{

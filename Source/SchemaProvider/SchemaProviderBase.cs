@@ -272,7 +272,7 @@ namespace LinqToDB.SchemaProvider
 				ServerVersion = dbConnection.ServerVersion,
 				Tables        = tables,
 				Procedures    = procedures,
-			});
+			}, options);
 		}
 
 		protected virtual List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection)
@@ -539,7 +539,7 @@ namespace LinqToDB.SchemaProvider
 			return memberType;
 		}
 
-		protected virtual DatabaseSchema ProcessSchema(DatabaseSchema databaseSchema)
+		protected virtual DatabaseSchema ProcessSchema(DatabaseSchema databaseSchema, GetSchemaOptions schemaOptions)
 		{
 			foreach (var t in databaseSchema.Tables)
 			{
@@ -584,41 +584,56 @@ namespace LinqToDB.SchemaProvider
 
 				foreach (var key in t.ForeignKeys)
 				{
-					var name = key.MemberName;
+					string name = null;
 
-					if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+					if (schemaOptions.GetAssociationMemberName != null)
 					{
-						name = key.ThisColumns[0].MemberName;
-						name = name.Substring(0, name.Length - "id".Length);
+						name = schemaOptions.GetAssociationMemberName(key);
 
-						if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
-							t.Columns.    Select(_ => _.MemberName)).Concat(
-							new[] { t.TypeName }).All(_ => _ != name))
+						if (name != null)
+							key.MemberName = name;
+					}
+
+					if (name == null)
+					{
+						name = key.MemberName;
+
+						if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
 						{
-							name = key.MemberName;
+							name = key.ThisColumns[0].MemberName;
+							name = name.Substring(0, name.Length - "id".Length);
+
+							if (t.ForeignKeys.Select(_ => _.MemberName). Concat(
+								t.Columns.    Select(_ => _.MemberName)).Concat(
+								new[] { t.TypeName }).All(_ => _ != name))
+							{
+								name = key.MemberName;
+							}
 						}
-					}
 			
-					if (name == key.MemberName)
-					{
-						if (name.StartsWith("FK_"))
-							name = name.Substring(3);
+						if (name == key.MemberName)
+						{
+							if (name.StartsWith("FK_"))
+								name = name.Substring(3);
 
-						if (name.EndsWith("_BackReference"))
-							name = name.Substring(0, name.Length - "_BackReference".Length);
+							if (name.EndsWith("_BackReference"))
+								name = name.Substring(0, name.Length - "_BackReference".Length);
 
-						name = string.Join("", name
-							.Split('_')
-							.Where(_ => _.Length > 0 && _ != t.TableName)
-							.ToArray());
-					}
+							name = string.Join("", name
+								.Split('_')
+								.Where(_ =>
+									_.Length > 0 && _ != t.TableName &&
+									(t.SchemaName == null || t.IsDefaultSchema || _ != t.SchemaName))
+								.ToArray());
+						}
 
-					if (name.Length != 0 &&
-						t.ForeignKeys.Select(_ => _.MemberName).Concat(
-						t.Columns.    Select(_ => _.MemberName)).Concat(
-							new[] { t.TypeName }).All(_ => _ != name))
-					{
-						key.MemberName = name;
+						if (name.Length != 0 &&
+							t.ForeignKeys.Select(_ => _.MemberName).Concat(
+							t.Columns.    Select(_ => _.MemberName)).Concat(
+								new[] { t.TypeName }).All(_ => _ != name))
+						{
+							key.MemberName = name;
+						}
 					}
 				}
 			}

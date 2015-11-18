@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug.WindowsStore\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -111,6 +111,7 @@
     <Compile Include="Common\ConvertInfo.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Common\Silverlight5Compatibility.cs">
       <SubType>Code</SubType>
@@ -168,6 +169,7 @@
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
     <Compile Include="Linq\Builder\ContainsBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\ConvertFlags.cs" />
     <Compile Include="Linq\Builder\CountBuilder.cs" />
     <Compile Include="Linq\Builder\DefaultIfEmptyBuilder.cs" />

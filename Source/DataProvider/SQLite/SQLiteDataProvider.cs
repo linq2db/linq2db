@@ -32,9 +32,9 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return "System.Data.SQLite"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteDataReader"); } }
+		public    override string ConnectionNamespace { get { return SQLiteTools.AssemblyName; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.ConnectionName); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.DataReaderName); } }
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{

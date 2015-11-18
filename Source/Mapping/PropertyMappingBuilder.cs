@@ -89,6 +89,11 @@ namespace LinqToDB.Mapping
 			return SetColumn(a => a.DbType = dbType);
 		}
 
+		public PropertyMappingBuilder<T> HasCreateFormat(string format)
+		{
+			return SetColumn(a => a.CreateFormat = format);
+		}
+
 		public PropertyMappingBuilder<T> HasStorage(string storage)
 		{
 			return SetColumn(a => a.Storage = storage);

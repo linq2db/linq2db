@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
-			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
@@ -67,12 +67,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSql()
 		{
-			var buildRowNum = NeedSkip || NeedTake && (!SelectQuery.OrderBy.IsEmpty || !SelectQuery.Having.IsEmpty);
-			var aliases     = null as string[];
-
-			if (buildRowNum)
+			if (NeedSkip)
 			{
-				aliases = GetTempAliases(2, "t");
+				var aliases = GetTempAliases(2, "t");
 
 				if (_rowNumberAlias == null)
 					_rowNumberAlias = GetTempAliases(1, "rn")[0];
@@ -86,16 +83,13 @@ namespace LinqToDB.DataProvider.Oracle
 				AppendIndent().Append("FROM").    AppendLine();
 				AppendIndent().Append("(").       AppendLine();
 				Indent++;
-			}
 
-			base.BuildSql();
+				base.BuildSql();
 
-			if (buildRowNum)
-			{
 				Indent--;
 				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
 
-				if (NeedTake && NeedSkip)
+				if (NeedTake)
 				{
 					AppendIndent().AppendLine("WHERE");
 					AppendIndent().Append("\tROWNUM <= ");
@@ -109,24 +103,38 @@ namespace LinqToDB.DataProvider.Oracle
 
 				Indent++;
 
-				if (NeedTake && NeedSkip)
-				{
-					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(SelectQuery.Select.SkipValue);
-				}
-				else if (NeedTake)
-				{
-					AppendIndent().AppendFormat("{0}.{1} <= ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.TakeValue);
-				}
-				else
-				{
-					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.SkipValue);
-				}
+				AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
+				BuildExpression(SelectQuery.Select.SkipValue);
 
 				StringBuilder.AppendLine();
 				Indent--;
+			}
+			else if (NeedTake && (!SelectQuery.OrderBy.IsEmpty || !SelectQuery.Having.IsEmpty))
+			{
+				var aliases = GetTempAliases(1, "t");
+
+				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
+				AppendIndent().Append("FROM").    AppendLine();
+				AppendIndent().Append("(").       AppendLine();
+				Indent++;
+
+				base.BuildSql();
+
+				Indent--;
+				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
+				AppendIndent().Append("WHERE").AppendLine();
+
+				Indent++;
+
+				AppendIndent().Append("ROWNUM <= ");
+				BuildExpression(SelectQuery.Select.TakeValue);
+
+				StringBuilder.AppendLine();
+				Indent--;
+			}
+			else
+			{
+				base.BuildSql();
 			}
 		}
 

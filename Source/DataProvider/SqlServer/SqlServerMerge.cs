@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
 	using Data;
+	using SqlProvider;
 
 	class SqlServerMerge : BasicMerge
 	{
@@ -17,39 +17,43 @@ namespace LinqToDB.DataProvider.SqlServer
 			ByTargetText = "BY Target ";
 		}
 
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source)
+		protected override bool IsIdentitySupported { get { return true; } }
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> predicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
 			var table       = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
 			var hasIdentity = table.Columns.Any(c => c.IsIdentity);
 
-			string tableName = null;
+			string tblName = null;
 
 			if (hasIdentity)
 			{
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder();
 
-				tableName = sqlBuilder.BuildTableName(new StringBuilder(),
-					(string)sqlBuilder.Convert(table.DatabaseName, ConvertType.NameToDatabase),
-					(string)sqlBuilder.Convert(table.SchemaName,   ConvertType.NameToOwner),
-					(string)sqlBuilder.Convert(table.TableName,    ConvertType.NameToQueryTable)).ToString();
+				tblName = sqlBuilder.BuildTableName(new StringBuilder(),
+					(string)sqlBuilder.Convert(databaseName ?? table.DatabaseName, ConvertType.NameToDatabase),
+					(string)sqlBuilder.Convert(schemaName   ?? table.SchemaName,   ConvertType.NameToOwner),
+					(string)sqlBuilder.Convert(tableName    ?? table.TableName,    ConvertType.NameToQueryTable)).ToString();
 
-				dataConnection.Execute("SET IDENTITY_INSERT {0} ON".Args(tableName));
+				dataConnection.Execute("SET IDENTITY_INSERT {0} ON".Args(tblName));
 			}
 
 			try
 			{
-				return base.Merge(dataConnection, predicate, delete, source);
+				return base.Merge(dataConnection, predicate, delete, source, tableName, databaseName, schemaName);
 			}
 			finally
 			{
 				if (hasIdentity)
-					dataConnection.Execute("SET IDENTITY_INSERT {0} OFF".Args(tableName));
+					dataConnection.Execute("SET IDENTITY_INSERT {0} OFF".Args(tblName));
 			}
 		}
 
-		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		protected override bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
-			if (!base.BuildCommand(dataConnection, deletePredicate, delete, source))
+			if (!base.BuildCommand(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName))
 				return false;
 
 			StringBuilder.AppendLine(";");

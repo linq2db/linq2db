@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("TableName", "DatabaseName", "OwnerName");
+			return methodCall.IsQueryable("TableName", "DatabaseName", "SchemaName", "OwnerName");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -22,6 +22,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				case "TableName"    : table.SqlTable.PhysicalName = value; break;
 				case "DatabaseName" : table.SqlTable.Database     = value; break;
+				case "SchemaName"   :
 				case "OwnerName"    : table.SqlTable.Owner        = value; break;
 			}
 

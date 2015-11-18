@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -151,7 +151,7 @@ namespace LinqToDB
 		public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToList(),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
 				token);
 		}
 
@@ -164,7 +164,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToList(),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(),
 				token,
 				options);
 		}
@@ -181,7 +181,7 @@ namespace LinqToDB
 		public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
 				token);
 		}
 
@@ -194,7 +194,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source, CancellationToken token, TaskCreationOptions options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(),
 				token,
 				options);
 		}
@@ -216,7 +216,7 @@ namespace LinqToDB
 			CancellationToken        token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
 				token);
 		}
 
@@ -235,7 +235,7 @@ namespace LinqToDB
 			TaskCreationOptions      options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector),
 				token,
 				options);
 		}
@@ -255,7 +255,7 @@ namespace LinqToDB
 			CancellationToken        token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
 				token);
 		}
 
@@ -276,7 +276,7 @@ namespace LinqToDB
 			TaskCreationOptions      options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer),
 				token,
 				options);
 		}
@@ -297,7 +297,7 @@ namespace LinqToDB
 			CancellationToken        token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
 				token);
 		}
 
@@ -320,7 +320,7 @@ namespace LinqToDB
 			TaskCreationOptions      options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector),
 				token,
 				options);
 		}
@@ -343,7 +343,7 @@ namespace LinqToDB
 			CancellationToken        token)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
 				token);
 		}
 
@@ -368,7 +368,7 @@ namespace LinqToDB
 			TaskCreationOptions      options)
 		{
 			return GetTask(
-				() => source.TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
+				() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer),
 				token,
 				options);
 		}

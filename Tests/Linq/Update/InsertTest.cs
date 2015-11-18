@@ -764,6 +764,39 @@ namespace Tests.Update
 			}
 		}
 
+		class GuidID
+		{
+			[Identity]
+			public Guid ID;
+			public int  Field1;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+			}
+		}
+
+		class GuidID2
+		{
+			[Identity]
+			public Guid ID;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
+			}
+		}
+
 		[Test, DataContextSource]
 		public void InsertOrUpdate1(string context)
 		{
@@ -932,33 +965,10 @@ namespace Tests.Update
 			}
 		}
 
-		public class FullName
-		{
-			           public string FirstName     { get; set; }
-			           public string LastName;
-			[Nullable] public string MiddleName;
-		}
-
-		[Table("Person", IsColumnAttributeRequired=false)]
-		[Column("FirstName",  "Name.FirstName")]
-		[Column("LastName",   "Name.LastName")]
-		[Column("MiddleName", "Name.MiddleName")]
-		public class TestPerson1
-		{
-			[Identity]
-			[SequenceName(ProviderName.Firebird, "PersonID")]
-			[Column("PersonID", IsPrimaryKey=true)]
-			public int ID;
-
-			public string Gender;
-
-			public FullName Name;
-		}
-
 		[Test, DataContextSource]
 		public void Insert11(string context)
 		{
-			var p = new TestPerson1 { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = "M" };
+			var p = new ComplexPerson { Name = new FullName { FirstName = "fn", LastName = "ln" }, Gender = Gender.Male };
 
 			using (var db = GetDataContext(context))
 			{
@@ -967,6 +977,13 @@ namespace Tests.Update
 				try
 				{
 					db.Insert(p);
+
+					var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id);
+
+					Assert.AreEqual(p.Name.FirstName, inserted.Name.FirstName);
+					Assert.AreEqual(p.Name.LastName, inserted.Name.LastName);
+					Assert.AreEqual(p.Gender, inserted.Gender);
+
 				}
 				finally
 				{
@@ -985,10 +1002,10 @@ namespace Tests.Update
 				try
 				{
 					db
-						.Into(db.GetTable<TestPerson1>())
+						.Into(db.GetTable<ComplexPerson>())
 							.Value(_ => _.Name.FirstName, "FirstName")
 							.Value(_ => _.Name.LastName,  () => "LastName")
-							.Value(_ => _.Gender,         "F")
+							.Value(_ => _.Gender,         Gender.Female)
 						.Insert();
 				}
 				finally
@@ -1008,15 +1025,15 @@ namespace Tests.Update
 				try
 				{
 					db
-						.GetTable<TestPerson1>()
-						.Insert(() => new TestPerson1
+						.GetTable<ComplexPerson>()
+						.Insert(() => new ComplexPerson
 						{
 							Name = new FullName
 							{
 								FirstName = "FirstName",
 								LastName  = "LastName"
 							},
-							Gender = "M",
+							Gender = Gender.Male,
 						});
 				}
 				finally

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -74,24 +75,36 @@ namespace LinqToDB.DataProvider.Oracle
 			_oracleXmlType      = connectionType.Assembly.GetType(typesNamespace + "OracleXmlType",      false);
 			_oracleXmlStream    = connectionType.Assembly.GetType(typesNamespace + "OracleXmlStream",    false);
 
-			SetProviderField(_oracleBFile,           _oracleBFile,        "GetOracleBFile");
-			SetProviderField(_oracleBinary,          _oracleBinary,       "GetOracleBinary");
-			SetProviderField(_oracleBlob,            _oracleBlob,         "GetOracleBlob");
-			SetProviderField(_oracleClob,            _oracleClob,         "GetOracleClob");
-			SetProviderField(_oracleDate,            _oracleDate,         "GetOracleDate");
-			SetProviderField(_oracleDecimal,         _oracleDecimal,      "GetOracleDecimal");
-			SetProviderField(_oracleIntervalDS,      _oracleIntervalDS,   "GetOracleIntervalDS");
-			SetProviderField(_oracleIntervalYM,      _oracleIntervalYM,   "GetOracleIntervalYM");
-			SetProviderField(_oracleString,          _oracleString,       "GetOracleString");
-			SetProviderField(_oracleTimeStamp,       _oracleTimeStamp,    "GetOracleTimeStamp");
-			SetProviderField(_oracleTimeStampLTZ,    _oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
-			SetProviderField(_oracleTimeStampTZ,     _oracleTimeStampTZ,  "GetOracleTimeStampTZ");
+			SetProviderField(_oracleBFile,        _oracleBFile,        "GetOracleBFile");
+			SetProviderField(_oracleBinary,       _oracleBinary,       "GetOracleBinary");
+			SetProviderField(_oracleBlob,         _oracleBlob,         "GetOracleBlob");
+			SetProviderField(_oracleClob,         _oracleClob,         "GetOracleClob");
+			SetProviderField(_oracleDate,         _oracleDate,         "GetOracleDate");
+			SetProviderField(_oracleDecimal,      _oracleDecimal,      "GetOracleDecimal");
+			SetProviderField(_oracleIntervalDS,   _oracleIntervalDS,   "GetOracleIntervalDS");
+			SetProviderField(_oracleIntervalYM,   _oracleIntervalYM,   "GetOracleIntervalYM");
+			SetProviderField(_oracleString,       _oracleString,       "GetOracleString");
+			SetProviderField(_oracleTimeStamp,    _oracleTimeStamp,    "GetOracleTimeStamp");
+			SetProviderField(_oracleTimeStampLTZ, _oracleTimeStampLTZ, "GetOracleTimeStampLTZ");
+			SetProviderField(_oracleTimeStampTZ,  _oracleTimeStampTZ,  "GetOracleTimeStampTZ");
 
-			if (_oracleRef != null)
-				SetProviderField(_oracleRef, _oracleRef, "GetOracleRef");
+			try
+			{
+				if (_oracleRef != null)
+					SetProviderField(_oracleRef, _oracleRef, "GetOracleRef");
+			}
+			catch
+			{
+			}
 
-			if (_oracleXmlType != null)
-				SetProviderField(_oracleXmlType, _oracleXmlType, "GetOracleXmlType");
+			try
+			{
+				if (_oracleXmlType != null)
+					SetProviderField(_oracleXmlType, _oracleXmlType, "GetOracleXmlType");
+			}
+			catch
+			{
+			}
 
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int),    "i");
@@ -318,6 +331,20 @@ namespace LinqToDB.DataProvider.Oracle
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
+		public override void DisposeCommand(DataConnection dataConnection)
+		{
+			foreach (DbParameter param in dataConnection.Command.Parameters)
+			{
+//				if (param != null && param.Value != null && param.Value is IDisposable)
+//					((IDisposable)param.Value).Dispose();
+
+				if (param is IDisposable)
+					((IDisposable)param).Dispose();
+			}
+
+			base.DisposeCommand(dataConnection);
+		}
+
 		Func<DateTimeOffset,string,object> _createOracleTimeStampTZ;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
@@ -349,6 +376,11 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is TimeSpan)
 						dataType = DataType.Undefined;
 					break;
+			}
+
+			if (dataType == DataType.Undefined && value is string && ((string)value).Length >= 4000)
+			{
+				dataType = DataType.NText;
 			}
 
 			base.SetParameter(parameter, name, dataType, value);
@@ -431,12 +463,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#region Merge
 
-		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
 			if (delete)
 				throw new LinqToDBException("Oracle MERGE statement does not support DELETE by source.");
 
-			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source);
+			return new OracleMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
 		#endregion

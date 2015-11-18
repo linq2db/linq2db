@@ -623,7 +623,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: [Test, DataContextSource]
-		public void AssosiationUnion1(string context)
+		public void AssociationUnion1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -636,7 +636,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: [Test, DataContextSource]
-		public void AssosiationUnion2(string context)
+		public void AssociationUnion2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -647,7 +647,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: [Test, DataContextSource]
-		public void AssosiationConcat2(string context)
+		public void AssociationConcat2(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

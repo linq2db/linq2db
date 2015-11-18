@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.DataProvider;
 
 namespace Tests.Linq
 {
@@ -517,6 +515,54 @@ namespace Tests.Linq
 			finally
 			{
 				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+			}
+		}
+
+		[Table("Parent")]
+		class Parent170
+		{
+			[Column] public int ParentID;
+			[Column] public int Value1;
+
+			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
+			public Parent170 Parent;
+		}
+
+		[Test, DataContextSource]
+		public void Issue170Test(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<Parent170>().Where(x => x.Value1 == null).Select(x => (int?)x.Parent.Value1).First();
+
+				Assert.That(value, Is.Null);
+			}
+		}
+
+		[Table("Child")]
+		class StorageTestClass
+		{
+			[Column] public int ParentID;
+			[Column] public int ChildID;
+
+			Parent _parent;
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent")]
+			public Parent Parent
+			{
+				get { return _parent; }
+				set { throw new InvalidOperationException(); }
+			}
+		}
+
+		[Test, DataContextSource]
+		public void StorageText(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<StorageTestClass>().LoadWith(x => x.Parent).First();
+
+				Assert.That(value.Parent, Is.Not.Null);
 			}
 		}
 	}

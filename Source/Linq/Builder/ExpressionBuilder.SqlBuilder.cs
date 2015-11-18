@@ -1938,6 +1938,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						LikeStart        = start,
 						LikeEnd          = end,
+						ReplaceLike      = p.ReplaceLike,
 						IsQueryParameter = !DataContextInfo.DataContext.InlineParameters
 					},
 				};

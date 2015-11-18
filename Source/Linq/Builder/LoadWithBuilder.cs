@@ -27,12 +27,12 @@ namespace LinqToDB.Linq.Builder
 			if (table.LoadWith == null)
 				table.LoadWith = new List<MemberInfo[]>();
 
-			table.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).Reverse().ToArray());
+			table.LoadWith.Add(GetAssociations(builder, selector.Body.Unwrap()).Reverse().ToArray());
 
 			return sequence;
 		}
 
-		static IEnumerable<MemberInfo> GetAssosiations(ExpressionBuilder builder, Expression expression)
+		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression)
 		{
 			MemberInfo lastMember = null;
 
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (attr == null)
 								throw new LinqToDBException(
-									string.Format("Member '{0}' is not an assosiation.", expression));
+									string.Format("Member '{0}' is not an association.", expression));
 
 							yield return member;
 
@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 					default :
 						{
 							throw new LinqToDBException(
-								string.Format("Expression '{0}' is not an assosiation.", expression));
+								string.Format("Expression '{0}' is not an association.", expression));
 						}
 				}
 			}

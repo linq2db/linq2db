@@ -16,38 +16,47 @@ namespace LinqToDB.Data
 		public TimeSpan?      ExecutionTime   { get; set; }
 		public int?           RecordsAffected { get; set; }
 		public Exception      Exception       { get; set; }
+		public string         CommandText     { get; set; }
 
 		private string _sqlText;
 		public  string  SqlText
 		{
 			get
 			{
-				if (_sqlText != null)
-					return _sqlText;
+				if (CommandText != null)
+					return CommandText;
 
-				var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder();
-				var sb          = new StringBuilder();
+				if (Command != null)
+				{
+					if (_sqlText != null)
+						return _sqlText;
 
-				sb.Append("-- ").Append(DataConnection.ConfigurationString);
+					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder();
+					var sb          = new StringBuilder();
 
-				if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
-					sb.Append(' ').Append(DataConnection.DataProvider.Name);
+					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 
-				if (DataConnection.DataProvider.Name != sqlProvider.Name)
-					sb.Append(' ').Append(sqlProvider.Name);
+					if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
+						sb.Append(' ').Append(DataConnection.DataProvider.Name);
 
-				sb.AppendLine();
+					if (DataConnection.DataProvider.Name != sqlProvider.Name)
+						sb.Append(' ').Append(sqlProvider.Name);
 
-				sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
+					sb.AppendLine();
 
-				sb.AppendLine(Command.CommandText);
+					sqlProvider.PrintParameters(sb, Command.Parameters.Cast<IDbDataParameter>().ToArray());
 
-				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
-					sb.Length--;
+					sb.AppendLine(Command.CommandText);
 
-				sb.AppendLine();
+					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+						sb.Length--;
 
-				return _sqlText = sb.ToString();
+					sb.AppendLine();
+
+					return _sqlText = sb.ToString();
+				}
+
+				return "";
 			}
 		}
 	}

@@ -99,7 +99,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in new Tests.Model.Functions(db).WithTabLock<Parent>().OwnerName("dbo")
+					from p in new Tests.Model.Functions(db).WithTabLock<Parent>().SchemaName("dbo")
 					select p;
 
 				q.ToList();
@@ -112,7 +112,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in Model.Functions.WithTabLock1<Parent>(db).OwnerName("dbo")
+					from p in Model.Functions.WithTabLock1<Parent>(db).SchemaName("dbo")
 					select p;
 
 				q.ToList();
@@ -125,7 +125,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.WithTabLock<Parent>().OwnerName("dbo")
+					from p in db.WithTabLock<Parent>().SchemaName("dbo")
 					select p;
 
 				q.ToList();
@@ -138,7 +138,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.OwnerName("dbo").With("TABLOCK,UPDLOCK")
+					from p in db.Parent.SchemaName("dbo").With("TABLOCK,UPDLOCK")
 					select p;
 
 				q.ToList();
@@ -151,7 +151,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.OwnerName("dbo").WithTableExpression("{0} {1} with (UpdLock)")
+					from p in db.Parent.SchemaName("dbo").WithTableExpression("{0} {1} with (UpdLock)")
 					select p;
 
 				q.ToList();
@@ -180,7 +180,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from c in db.Category
-					join t in db.FreeTextTable<Northwind.Category,int>(c => c.Description, "sweetest candy bread and dry meat")
+					join t in db.FreeTextTable<Northwind.Category,int>(c1 => c1.Description, "sweetest candy bread and dry meat")
 					on c.CategoryID equals t.Key
 					select c;
 

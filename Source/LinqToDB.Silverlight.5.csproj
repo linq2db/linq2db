@@ -29,7 +29,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug.Silverlight.5\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -72,6 +72,7 @@
     <Compile Include="Common\ConvertInfo.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
     <Compile Include="Common\Silverlight5Compatibility.cs" />
     <Compile Include="Common\Tools.cs" />
@@ -126,6 +127,7 @@
     <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
     <Compile Include="Linq\Builder\ContainsBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\ConvertFlags.cs" />
     <Compile Include="Linq\Builder\CountBuilder.cs" />
     <Compile Include="Linq\Builder\DefaultIfEmptyBuilder.cs" />

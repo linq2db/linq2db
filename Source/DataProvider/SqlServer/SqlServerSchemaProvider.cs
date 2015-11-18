@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.tables t
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 				WHERE
 					t.object_id IS NULL OR t.is_ms_shipped <> 1"
 				: @"
@@ -52,11 +52,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.tables t
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						x.minor_id = 0 AND 
 						x.name = 'MS_Description'
 				WHERE
@@ -135,8 +135,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
-						ORDINAL_POSITION = x.minor_id AND
+						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
 						x.name = 'MS_Description'")
 				.Select(c =>
 				{
@@ -205,28 +206,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return dataConnection.Query<ForeingKeyInfo>(@"
 				SELECT
-					rc.CONSTRAINT_NAME                                             as Name,
-					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,
-					fk.COLUMN_NAME                                                 as ThisColumn,
-					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
-					pk.COLUMN_NAME                                                 as OtherColumn,
-					pk.ORDINAL_POSITION                                            as Ordinal
-				FROM
-					INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-					JOIN
-						INFORMATION_SCHEMA.KEY_COLUMN_USAGE fk
-					ON
-						fk.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG AND
-						fk.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA  AND
-						fk.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
-					JOIN
-						INFORMATION_SCHEMA.KEY_COLUMN_USAGE pk
-					ON
-						pk.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG AND
-						pk.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA  AND
-						pk.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
-				WHERE
-					fk.ORDINAL_POSITION = pk.ORDINAL_POSITION
+					fk.name                                                     as Name,
+					DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
+					pc.name                                                     as ThisColumn,
+					DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
+					fc.name                                                     as OtherColumn,
+					fkc.constraint_column_id                                    as Ordinal
+				FROM sys.foreign_keys fk
+					inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+					inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
+					inner join sys.objects             po  ON fk.parent_object_id = po.object_id
+					inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
+					inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
 				ORDER BY
 					ThisTableID,
 					Ordinal")

@@ -4,12 +4,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB
 {
 	using Expressions;
 	using Linq;
+	using Linq.Builder;
 
 	public static class LinqExtensions
 	{
@@ -27,6 +27,10 @@ namespace LinqToDB
 				_tableNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.TableName = name;
+
 			return table;
 		}
 
@@ -42,6 +46,10 @@ namespace LinqToDB
 				_databaseNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
 
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.DatabaseName = name;
+
 			return table;
 		}
 
@@ -56,6 +64,29 @@ namespace LinqToDB
 				null,
 				_ownerNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
 				new[] { table.Expression, Expression.Constant(name) });
+
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.SchemaName = name;
+
+			return table;
+		}
+
+		static readonly MethodInfo _schemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
+
+		static public ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+			if (name  == null) throw new ArgumentNullException("name");
+
+			table.Expression = Expression.Call(
+				null,
+				_schemaNameMethodInfo.MakeGenericMethod(new[] { typeof(T) }),
+				new[] { table.Expression, Expression.Constant(name) });
+
+			var tbl = table as Table<T>;
+			if (tbl != null)
+				tbl.SchemaName = name;
 
 			return table;
 		}
@@ -884,23 +915,25 @@ namespace LinqToDB
 			if (source    == null) throw new ArgumentNullException("source");
 			if (predicate == null) throw new ArgumentNullException("predicate");
 
-			return source.Provider.CreateQuery<TSource>( 
+			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					_setMethodInfo7.MakeGenericMethod(typeof(TSource)), 
+					_setMethodInfo7.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression, Expression.Quote(predicate) }));
 		}
 
 		#endregion
 
-		internal static ContextParser.Context GetContext<T>(this IQueryable<T> source)
+		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
+
+		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
 			return source.Provider.Execute<ContextParser.Context>(
 				Expression.Call(
 					null,
-					((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(new[] { typeof(T) }),
+					_setMethodInfo8.MakeGenericMethod(typeof(TSource)),
 					new[] { source.Expression }));
 		}
 

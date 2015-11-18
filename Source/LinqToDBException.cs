@@ -26,7 +26,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -38,7 +38,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
 		/// with the specified error message and InnerException property.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -53,7 +53,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class 
+		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
 		/// with the specified InnerException property.
 		/// </summary>
 		/// <param name="innerException">The InnerException, if any, that threw
@@ -75,7 +75,7 @@ namespace LinqToDB
 		/// destination.</param>
 		/// <remarks>This constructor is called during deserialization to
 		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected LinqToDBException(SerializationInfo info, StreamingContext context) 
+		protected LinqToDBException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 		}

@@ -28,7 +28,7 @@ namespace Tests.Model
 		public ITable<Northwind.Supplier>            Supplier            { get { return GetTable<Northwind.Supplier>();            } }
 		public ITable<Northwind.Territory>           Territory           { get { return GetTable<Northwind.Territory>();           } }
 		
-#if !MONO
+//#if !MONO
 		
 		public class FreeTextKey<T>
 		{
@@ -56,7 +56,7 @@ namespace Tests.Model
 				text);
 		}
 
-#endif
+//#endif
 
 		[Sql.TableExpression("{0} {1} WITH (UPDLOCK)")]
 		public ITable<T> WithUpdateLock<T>()

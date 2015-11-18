@@ -63,6 +63,17 @@ namespace Tests.Linq
 			[Column("DateTimeValue")] DateTime? IDate2.Date { get; set; }
 		}
 
+		[Table("LinqDataTypes")]
+		public class TestTable4 : IDate2
+		{
+			[Column("GuidValue")]            Guid?     GuidValue     { get; set; }
+			[Column("BoolValue")]     public bool?     Bit           { get; set; }
+			[Column("DateTimeValue")] public DateTime? DateTimeValue { get; set; }
+
+			[ColumnAlias("DateTimeValue")]
+			public DateTime? Date { get; set; }
+		}
+
 		static IQueryable<T> SelectNoDate<T>(IQueryable<T> items) where T : IDate
 		{
 			return items.Where(i => i.Date == null);
@@ -97,6 +108,15 @@ namespace Tests.Linq
 			using (var db = new TestDataConnection())
 			{
 				var result = SelectNoDate2(db.GetTable<TestTable3>()).ToList();
+			}
+		}
+
+		[Test]
+		public void ExplicitInterface4()
+		{
+			using (var db = new TestDataConnection())
+			{
+				var result = SelectNoDate2(db.GetTable<TestTable4>()).ToList();
 			}
 		}
 	}

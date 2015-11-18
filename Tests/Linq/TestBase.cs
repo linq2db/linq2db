@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,10 +25,14 @@ namespace Tests
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
 
+			var dataProvidersPath = typeof(TestBase).Assembly.CodeBase;
+
+			dataProvidersPath = Path.GetDirectoryName(dataProvidersPath.Substring("file:///".Length));
+
 			var providerListFile =
-				File.Exists(@"..\..\UserDataProviders.txt") ?
-					@"..\..\UserDataProviders.txt" :
-					@"..\..\DefaultDataProviders.txt";
+				File.Exists(Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt")) ?
+					Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt") :
+					Path.Combine(dataProvidersPath, @"..\..\DefaultDataProviders.txt");
 
 			UserProviders.AddRange(
 				File.ReadAllLines(providerListFile)
@@ -43,6 +48,15 @@ namespace Tests
 							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
 						}
 					}));
+
+			//var map = new ExeConfigurationFileMap();
+			//map.ExeConfigFilename = Path.Combine(
+			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
+			//	@"..\..\App.config");
+
+			//var config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
+
+			//DataConnection.SetConnectionStrings(config);
 
 			foreach (var provider in UserProviders)
 				if (provider.ConnectionString != null)
@@ -60,13 +74,19 @@ namespace Tests
 				}
 			};
 
-			OpenHost();
+			//OpenHost();
 		}
 
 		const int IP = 22654;
+		static bool _isHostOpen;
 
 		static void OpenHost()
 		{
+			if (_isHostOpen)
+				return;
+
+			_isHostOpen = true;
+
 			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
@@ -158,6 +178,8 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
+				OpenHost();
+
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
 
@@ -188,7 +210,7 @@ namespace Tests
 			TestOnePerson(1, "John", persons);
 		}
 
-		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
+		protected void TestPerson(int id, string firstName, IQueryable<IPerson> persons)
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
@@ -196,7 +218,7 @@ namespace Tests
 			Assert.AreEqual(firstName, person.FirstName);
 		}
 
-		protected void TestJohn(IQueryable<Person> persons)
+		protected void TestJohn(IQueryable<IPerson> persons)
 		{
 			TestPerson(1, "John", persons);
 		}
@@ -393,7 +415,7 @@ namespace Tests
 			}
 		}
 
-		private          List<Child> _child;
+		protected List<Child> _child;
 		protected IEnumerable<Child>  Child
 		{
 			get

@@ -152,14 +152,38 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
+			if (predicate.Expr2 is SqlValue)
+			{
+				var value = ((SqlValue)predicate.Expr2).Value;
+
+				if (value != null)
+				{
+					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var ntext = text.Replace("[", "[[]");
+
+					if (text != ntext)
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+				}
+			}
+			else if (predicate.Expr2 is SqlParameter)
+			{
+				var p = ((SqlParameter)predicate.Expr2);
+				p.ReplaceLike = true;
+			}
+
 			if (predicate.Escape != null)
 			{
 				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
 				{
-					var text = ((SqlValue)predicate.Expr2).Value.ToString();
-					var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+					var value = ((SqlValue)predicate.Expr2).Value;
 
-					predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+					if (value != null)
+					{
+						var text = ((SqlValue)predicate.Expr2).Value.ToString();
+						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+					}
 				}
 				else if (predicate.Expr2 is SqlParameter)
 				{

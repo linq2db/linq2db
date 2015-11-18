@@ -20,11 +20,13 @@ namespace Tests
 
 			var n = 0;
 
+#if !MONO
 			if (includeLinqService)
 			{
 				n++;
 				argTypes[0] = typeof(LinqService);
 			}
+#endif
 
 			if (include != null)
 			{
@@ -165,12 +167,12 @@ namespace Tests
 				if (c.isLinqService)
 				{
 					data = data
-						.SetName   (c.name + " Linq Service")
+						//.SetName   (c.name + " Linq Service")
 						.SetCategory("Linq Service");
 				}
 				else
 				{
-					data = data.SetName(c.name);
+					//data = data.SetName(c.name);
 				}
 				
 				yield return data;

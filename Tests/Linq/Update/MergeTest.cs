@@ -2,14 +2,14 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Update
 {
-	using System.Linq.Expressions;
-
 	using Model;
 
 	[TestFixture]
@@ -49,7 +49,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
-            ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate1(string context)
 		{
@@ -60,7 +60,7 @@ namespace Tests.Update
 		}
 
 		[Test, DataContextSource(false,
-            ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql, ProviderName.SapHana,
 			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
 		public void MergeWithDeletePredicate2(string context)
 		{
@@ -104,6 +104,64 @@ namespace Tests.Update
 			using (var db = new TestDataConnection(context))
 			{
 				db.Merge(db.Child, t => t.Parent.ParentID == 2 && t.GrandChildren.Any(g => g.Child.ChildID == 22));
+			}
+		}
+
+		[Table("AllTypes")]
+		class AllType
+		{
+			[PrimaryKey, Identity] public int ID;
+			[Column(DataType = DataType.Char,  Length = 1)]   public char   charDataType;
+			[Column(DataType = DataType.NChar, Length = 20)]  public string ncharDataType;
+		}
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeChar1(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
+				{
+					charDataType  = '\x0',
+					ncharDataType = "\x0"
+				}));
+
+				try
+				{
+					db.Merge(db.GetTable<AllType>().Where(t => t.ID == id));
+				}
+				finally
+				{
+					db.GetTable<AllType>().Delete(t => t.ID == id);
+				}
+			}
+		}
+
+		[Test, DataContextSource(false,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.Oracle, ProviderName.MySql,
+			ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.SqlServer2005, ProviderName.Sybase)]
+		public void MergeChar2(string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.Merge(new[]
+					{
+						new AllType
+						{
+							ID            = 10,
+							charDataType  = '\x0',
+							ncharDataType = "\x0"
+						}
+					});
+				}
+				finally
+				{
+					db.GetTable<AllType>().Delete(t => t.ID == 10);
+				}
 			}
 		}
 	}

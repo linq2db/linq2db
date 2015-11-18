@@ -40,6 +40,56 @@ namespace LinqToDB.DataProvider.SqlCe
 			AddScalarType(typeof(SqlXml),      SqlXml.     Null, true, DataType.Xml);
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
+		}
+
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("nchar(")
+				.Append(value)
+				.Append(')')
+				;
+		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
+		{
+			string start;
+
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    :
+					start = "'";
+					break;
+				default               :
+					start = "N'";
+					break;
+			}
+
+			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
+		{
+			string start;
+
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    :
+					start = "'";
+					break;
+				default               :
+					start = "N'";
+					break;
+			}
+
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 	}
 }

@@ -27,16 +27,21 @@ namespace LinqToDB.DataProvider
 		protected List<DataParameter> Parameters    = new List<DataParameter>();
 		protected List<ColumnInfo>    Columns;
 
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source)
+		protected virtual bool IsIdentitySupported { get { return false; } }
+
+		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> predicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
-			if (!BuildCommand(dataConnection, predicate, delete, source))
+			if (!BuildCommand(dataConnection, predicate, delete, source, tableName, databaseName, schemaName))
 				return 0;
 
 			return Execute(dataConnection);
 		}
 
-		protected virtual bool BuildCommand<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		protected virtual bool BuildCommand<T>(
+			DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
 			var table      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
@@ -52,9 +57,9 @@ namespace LinqToDB.DataProvider
 
 			StringBuilder.Append("MERGE INTO ");
 			sqlBuilder.BuildTableName(StringBuilder,
-				(string)sqlBuilder.Convert(table.DatabaseName, ConvertType.NameToDatabase),
-				(string)sqlBuilder.Convert(table.SchemaName,   ConvertType.NameToOwner),
-				(string)sqlBuilder.Convert(table.TableName,    ConvertType.NameToQueryTable));
+				(string)sqlBuilder.Convert(databaseName ?? table.DatabaseName, ConvertType.NameToDatabase),
+				(string)sqlBuilder.Convert(schemaName   ?? table.SchemaName,   ConvertType.NameToOwner),
+				(string)sqlBuilder.Convert(tableName    ?? table.TableName,    ConvertType.NameToQueryTable));
 
 			StringBuilder
 				.AppendLine(" Target")
@@ -83,7 +88,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine(")")
 				;
 
-			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey).ToList();
+			var updateColumns = Columns.Where(c => !c.Column.IsPrimaryKey && (IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnUpdate)).ToList();
 
 			if (updateColumns.Count > 0)
 			{
@@ -113,6 +118,8 @@ namespace LinqToDB.DataProvider
 				StringBuilder.Length -= 1 + Environment.NewLine.Length;
 			}
 
+			var insertColumns = Columns.Where(c => IsIdentitySupported && c.Column.IsIdentity || !c.Column.SkipOnInsert).ToList();
+
 			StringBuilder
 				.AppendLine()
 				.AppendLine("-- insert new rows")
@@ -121,7 +128,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\t(")
 				;
 
-			foreach (var column in Columns)
+			foreach (var column in insertColumns)
 				StringBuilder.AppendFormat("\t\t{0},", column.Name).AppendLine();
 
 			StringBuilder.Length -= 1 + Environment.NewLine.Length;
@@ -133,7 +140,7 @@ namespace LinqToDB.DataProvider
 				.AppendLine("\t(")
 				;
 
-			foreach (var column in Columns)
+			foreach (var column in insertColumns)
 				StringBuilder.AppendFormat("\t\tSource.{0},", column.Name).AppendLine();
 
 			StringBuilder.Length -= 1 + Environment.NewLine.Length;
@@ -257,6 +264,8 @@ namespace LinqToDB.DataProvider
 			public SelectQuery    SelectQuery { get; set; }
 			public object         Context     { get; set; }
 			public SqlParameter[] SqlParameters;
+			public List<string>   QueryHints  { get; set; }
+
 			public SqlParameter[] GetParameters()
 			{
 				return SqlParameters;

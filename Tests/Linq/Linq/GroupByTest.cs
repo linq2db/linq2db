@@ -804,16 +804,16 @@ namespace Tests.Linq
 				AreEqual(
 					from ch in Child
 						join max in
-							from ch in Child
-							group ch by ch.ParentID into g
+							from ch1 in Child
+							group ch1 by ch1.ParentID into g
 							select g.Max(c => c.ChildID)
 						on ch.ChildID equals max
 					select ch
 					,
 					from ch in db.Child
 						join max in
-							from ch in db.Child
-							group ch by ch.ParentID into g
+							from ch1 in db.Child
+							group ch1 by ch1.ParentID into g
 							select g.Max(c => c.ChildID)
 						on ch.ChildID equals max
 					select ch);
@@ -1684,6 +1684,103 @@ namespace Tests.Linq
 					select new
 					{
 						Value = grp.Sum(c => c.Parent.Value1 ?? 0)
+					});
+			}
+		}
+
+		[Test, DataContextSource]
+		public void FirstGroupBy(string context)
+		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(
+					(from t in    Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID),
+					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID));
+			}
+		}
+
+		public class ChildEntity
+		{
+			public int ParentID;
+			public int ChildID;
+			public int RandValue;
+		}
+
+		//////[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		public void GroupByCustomEntity1(string context)
+		{
+			var rand = new Random().Next(5);
+			//var rand = new Random();
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from e in
+						from c in Child
+						select new ChildEntity
+						{
+							RandValue = rand//.Next(5)
+							,
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					},
+					from e in
+						from c in db.Child
+						select new ChildEntity
+						{
+							RandValue = rand,
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					});
+			}
+		}
+
+		static int GetID(int id)
+		{
+			return id;
+		}
+
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.Sybase)]
+		public void GroupByCustomEntity2(string context)
+		{
+			var rand = new Random().Next(5);
+
+			using (var db = GetDataContext(context))
+			{
+				AreEqual(
+					from e in
+						from c in Child
+						select new ChildEntity
+						{
+							RandValue = GetID(rand),
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
+					},
+					from e in
+						from c in db.Child
+						select new ChildEntity
+						{
+							RandValue = GetID(rand),
+							ParentID  = c.ParentID,
+						}
+					group e by new { e.ParentID, e.RandValue } into g
+					select new
+					{
+						Count = g.Count()
 					});
 			}
 		}

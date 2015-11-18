@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	class OracleSqlOptimizer : BasicSqlOptimizer
+	public class OracleSqlOptimizer : BasicSqlOptimizer
 	{
 		public OracleSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

@@ -17,9 +17,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SelectQuery query, SqlParameter[] parameters)
+		public static string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(query, parameters);
+			return new QuerySerializer().Serialize(query, parameters, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(string str)
@@ -475,8 +475,16 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
-			public string Serialize(SelectQuery query, SqlParameter[] parameters)
+			public string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 			{
+				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
+
+				Builder.AppendLine(queryHintCount.ToString());
+
+				if (queryHintCount > 0)
+					foreach (var hint in queryHints)
+						Builder.AppendLine(hint);
+
 				var visitor = new QueryVisitor();
 
 				visitor.Visit(query, Visit);
@@ -568,6 +576,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Length);
 							Append(elem.Precision);
 							Append(elem.Scale);
+							Append(elem.CreateFormat);
 
 							break;
 						}
@@ -594,6 +603,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
+							Append(elem.ReplaceLike);
 
 							var value = elem.LikeStart != null ? elem.RawValue : elem.Value;
 							var type  = value == null ? elem.SystemType : value.GetType();
@@ -1045,18 +1055,41 @@ namespace LinqToDB.ServiceModel
 			SqlParameter[] _parameters;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
-			readonly List<Action>             _actions = new List<Action>();
+			readonly List<Action>                _actions = new List<Action>();
 
 			public LinqServiceQuery Deserialize(string str)
 			{
 				Str = str;
+
+				List<string> queryHints = null;
+
+				var queryHintCount = ReadInt();
+
+				NextLine();
+
+				if (queryHintCount > 0)
+				{
+					queryHints = new List<string>();
+
+					for (var i = 0; i < queryHintCount; i++)
+					{
+						var pos = Pos;
+
+						while (Pos < Str.Length && Peek() != '\n' && Peek() != '\r')
+							Pos++;
+
+						queryHints.Add(Str.Substring(pos, Pos - pos));
+
+						NextLine();
+					}
+				}
 
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Query = _query, Parameters = _parameters };
+				return new LinqServiceQuery { Query = _query, Parameters = _parameters, QueryHints = queryHints };
 			}
 
 			bool Parse()
@@ -1092,6 +1125,7 @@ namespace LinqToDB.ServiceModel
 							var length           = ReadNullableInt();
 							var precision        = ReadNullableInt();
 							var scale            = ReadNullableInt();
+							var createFormat     = ReadString();
 
 							obj = new SqlField
 							{
@@ -1109,6 +1143,7 @@ namespace LinqToDB.ServiceModel
 								Length          = length,
 								Precision       = precision,
 								Scale           = scale,
+								CreateFormat    = createFormat,
 							};
 
 							break;
@@ -1132,8 +1167,9 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dbType           = (DataType)ReadInt();
 							var dbSize           = ReadInt();
-							var likeStart = ReadString();
-							var likeEnd   = ReadString();
+							var likeStart        = ReadString();
+							var likeEnd          = ReadString();
+							var replaceLike      = ReadBool();
 
 							var systemType       = Read<Type>();
 							var value            = ReadValue(systemType);
@@ -1145,6 +1181,7 @@ namespace LinqToDB.ServiceModel
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
+								ReplaceLike      = replaceLike,
 							};
 
 							break;

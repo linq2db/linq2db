@@ -74,6 +74,7 @@
     <Compile Include="Common\Option.cs" />
     <Compile Include="Common\Silverlight4Compatibility.cs" />
     <Compile Include="Common\Silverlight5Compatibility.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Tools.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="DataExtensions.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="LinqToDBException.cs" />
     <Compile Include="Linq\Builder\AggregationBuilder.cs" />
     <Compile Include="Linq\Builder\AllAnyBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
     <Compile Include="Linq\Builder\CastBuilder.cs" />

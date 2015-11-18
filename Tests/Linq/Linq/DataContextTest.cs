@@ -53,5 +53,15 @@ namespace Tests.Linq
 				Console.WriteLine(q.ToString());
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void Issue210(string context)
+		{
+			using (var ctx = new DataContext(context))
+			{
+				ctx.KeepConnectionAlive = true;
+				ctx.KeepConnectionAlive = false;
+			}
+		}
 	}
 }

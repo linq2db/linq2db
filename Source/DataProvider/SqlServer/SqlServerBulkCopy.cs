@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -62,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					var sqlBuilder = _dataProvider.CreateSqlBuilder();
 					var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-					var tableName  = GetTableName(sqlBuilder, descriptor);
+					var tableName  = GetTableName(sqlBuilder, options, descriptor);
 
 					bc.DestinationTableName = tableName;
 
@@ -71,12 +72,21 @@ namespace LinqToDB.DataProvider.SqlServer
 							i,
 							sb.Convert(columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
 
-					bc.WriteToServer(rd);
+					TraceAction(
+						dataConnection,
+						"INSERT BULK " + tableName + Environment.NewLine,
+						() => { bc.WriteToServer(rd); return rd.Count; });
+				}
 
+				if (rc.RowsCopied != rd.Count)
+				{
 					rc.RowsCopied = rd.Count;
 
-					return rc;
+					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+						options.RowsCopiedCallback(rc);
 				}
+
+				return rc;
 			}
 
 			return MultipleRowsCopy(dataConnection, options, source);

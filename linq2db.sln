@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB", "Source\LinqToDB.csproj", "{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}"
 EndProject
@@ -29,11 +29,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{BAE16247
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\Push.bat = NuGet\Push.bat
+		NuGet\Readme.txt = NuGet\Readme.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Silverlight.5", "Source\LinqToDB.Silverlight.5.csproj", "{3BB30E13-DA74-49E0-853F-B524E0F9E1FF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.WindowsStore", "Source\LinqToDB.WindowsStore.csproj", "{B91B02AF-9DCF-4E6C-BD7C-3E1B2E02FDBA}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{56109866-4005-4852-9F9A-19A7A8D3B369}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +116,16 @@ Global
 		{B91B02AF-9DCF-4E6C-BD7C-3E1B2E02FDBA}.Release|x64.Build.0 = Release|x64
 		{B91B02AF-9DCF-4E6C-BD7C-3E1B2E02FDBA}.Release|x86.ActiveCfg = Release|x86
 		{B91B02AF-9DCF-4E6C-BD7C-3E1B2E02FDBA}.Release|x86.Build.0 = Release|x86
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|ARM.ActiveCfg = Release|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|x64.ActiveCfg = Release|Any CPU
+		{56109866-4005-4852-9F9A-19A7A8D3B369}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,5 +134,6 @@ Global
 		{07997A18-86D3-47AC-A514-AB1B03E6AEC8} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 		{D527524F-EC92-465E-9CAE-86278121675A} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 		{D11617AB-9F88-4C74-8ABD-F8580DB4B01B} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
+		{56109866-4005-4852-9F9A-19A7A8D3B369} = {B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}
 	EndGlobalSection
 EndGlobal

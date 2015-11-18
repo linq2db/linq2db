@@ -12,6 +12,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -93,6 +94,11 @@ namespace LinqToDB.DataProvider
 			dataConnection.Command.CommandText = commandText;
 		}
 
+		public virtual void DisposeCommand(DataConnection dataConnection)
+		{
+			dataConnection.Command.Dispose();
+		}
+
 		public virtual object GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -135,6 +141,14 @@ namespace LinqToDB.DataProvider
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
 			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
 			var typeName     = ((DbDataReader)reader).GetDataTypeName(idx);
+
+			if (fieldType == null)
+			{
+				throw new LinqToDBException("Can't create '{0}' type or '{1}' specific type for {2}.".Args(
+					typeName,
+					providerType,
+					((DbDataReader)reader).GetName(idx)));
+			}
 
 			Expression expr;
 
@@ -250,12 +264,8 @@ namespace LinqToDB.DataProvider
 			return type;
 		}
 
-		public abstract bool IsCompatibleConnection(IDbConnection connection);
-
-		public virtual ISchemaProvider GetSchemaProvider()
-		{
-			throw new NotImplementedException();
-		}
+		public abstract bool            IsCompatibleConnection(IDbConnection connection);
+		public abstract ISchemaProvider GetSchemaProvider     ();
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -353,10 +363,11 @@ namespace LinqToDB.DataProvider
 
 		#region Merge
 
-		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source)
+		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 			where T : class
 		{
-			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source);
+			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
 		#endregion

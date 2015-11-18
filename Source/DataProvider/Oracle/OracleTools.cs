@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
 
-	public static class OracleTools
+	public static partial class OracleTools
 	{
 		public static string AssemblyName = "Oracle.DataAccess";
 
@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection             dataConnection,
+			this DataConnection        dataConnection,
 			IEnumerable<T>             source,
 			int                        maxBatchSize       = 1000,
 			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)

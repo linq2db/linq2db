@@ -3,7 +3,6 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 
@@ -362,7 +361,7 @@ namespace Tests.Common
 			Assert.AreEqual(Enum11.Value3, ConvertTo<Enum11>.From(Enum10.Value3));
 		}
 
-		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.")]
+		[Test, ExpectedException(typeof(LinqToDBConvertException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.")]
 		public void ConvertToEnum12()
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>();
@@ -406,7 +405,7 @@ namespace Tests.Common
 			Value3,
 		}
 
-		[Test, ExpectedException(typeof(LinqToDBException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
+		[Test, ExpectedException(typeof(LinqToDBConvertException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
 		public void ConvertToEnum14()
 		{
 			Assert.AreEqual(Enum13.Value3, ConvertTo<Enum13>.From(Enum12.Value2));

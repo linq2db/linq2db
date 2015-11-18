@@ -21,6 +21,28 @@ namespace LinqToDB.DataProvider.Access
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
+		}
+
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("chr(")
+				.Append(value)
+				.Append(")")
+				;
+		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		{
+			DataTools.ConvertStringToSql(stringBuilder, "+", "'", AppendConversion, value);
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+		{
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)

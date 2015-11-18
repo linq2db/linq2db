@@ -33,24 +33,32 @@ namespace LinqToDB.SqlQuery
 		public int      DbSize           { get; set; }
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
+		public bool     ReplaceLike      { get; set; }
 
 		private object _value;
 		public  object  Value
 		{
 			get
 			{
+				var value = _value;
+
+				if (ReplaceLike && value != null)
+				{
+					value = value.ToString().Replace("[", "[[]");
+				}
+
 				if (LikeStart != null)
 				{
-					if (_value != null)
+					if (value != null)
 					{
-						return _value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
-							LikeStart + _value + LikeEnd :
-							LikeStart + EscapeLikeText(_value.ToString()) + LikeEnd;
+						return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
+							LikeStart + value + LikeEnd :
+							LikeStart + EscapeLikeText(value.ToString()) + LikeEnd;
 					}
 				}
 
 				var valueConverter = ValueConverter;
-				return valueConverter == null? _value: valueConverter(_value);
+				return valueConverter == null? value: valueConverter(value);
 			}
 
 			set { _value = value; }
@@ -205,6 +213,7 @@ namespace LinqToDB.SqlQuery
 						DbSize           = DbSize,
 						LikeStart        = LikeStart,
 						LikeEnd          = LikeEnd,
+						ReplaceLike      = ReplaceLike,
 					};
 
 				objectTree.Add(this, clone = p);

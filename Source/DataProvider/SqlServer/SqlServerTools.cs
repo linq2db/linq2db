@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -37,8 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
 		{
-			if (css.ElementInformation.Source == null ||
-			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+			if (DataConnection.IsMachineConfig(css))
 				return null;
 
 			switch (css.ProviderName)
@@ -49,6 +48,17 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name == "SqlServer")
 						goto case "SqlServer";
 					break;
+
+				case "SqlServer2000"         :
+				case "SqlServer.2000"        : return _sqlServerDataProvider2000;
+				case "SqlServer2005"         :
+				case "SqlServer.2005"        : return _sqlServerDataProvider2005;
+				case "SqlServer2008"         :
+				case "SqlServer.2008"        : return _sqlServerDataProvider2008;
+				case "SqlServer2012"         :
+				case "SqlServer.2012"        : return _sqlServerDataProvider2012;
+				case "SqlServer2014"         :
+				case "SqlServer.2014"        : return _sqlServerDataProvider2012;
 
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
@@ -63,17 +73,28 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						try
 						{
-							using (var conn = new SqlConnection(css.ConnectionString))
+							var connectionString = css.ConnectionString;
+
+							using (var conn = new SqlConnection(connectionString))
 							{
 								conn.Open();
 
-								switch (conn.ServerVersion.Split('.')[0])
+								int version;
+
+								if (int.TryParse(conn.ServerVersion.Split('.')[0], out version))
 								{
-									case  "8" : return _sqlServerDataProvider2000;
-									case  "9" :	return _sqlServerDataProvider2005;
-									case "10" :	return _sqlServerDataProvider2008;
-									case "11" : return _sqlServerDataProvider2012;
-									case "12" : return _sqlServerDataProvider2012;
+									switch (version)
+									{
+										case  8 : return _sqlServerDataProvider2000;
+										case  9 : return _sqlServerDataProvider2005;
+										case 10 : return _sqlServerDataProvider2008;
+										case 11 : return _sqlServerDataProvider2012;
+										case 12 : return _sqlServerDataProvider2012;
+										default :
+											if (version > 12)
+												return _sqlServerDataProvider2012;
+											break;
+									}
 								}
 							}
 						}
@@ -128,8 +149,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
-			new AssemblyResolver(assembly, "Microsoft.SqlServer.Types");
+			SqlHierarchyIdType = assembly.GetType("SqlHierarchyId", true);
+			SqlGeographyType   = assembly.GetType("SqlGeography",   true);
+			SqlGeometryType    = assembly.GetType("SqlGeometry",    true);
+		}
+
+		internal static Type SqlHierarchyIdType;
+		internal static Type SqlGeographyType;
+		internal static Type SqlGeometryType;
+
+		public static void SetSqlTypes(Type sqlHierarchyIdType, Type sqlGeographyType, Type sqlGeometryType)
+		{
+			SqlHierarchyIdType = sqlHierarchyIdType;
+			SqlGeographyType   = sqlGeographyType;
+			SqlGeometryType    = sqlGeometryType;
 		}
 
 		#endregion
@@ -226,5 +259,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		public static class Sql
+		{
+			public const string OptionRecompile = "OPTION(RECOMPILE)";
+		}
+
+		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

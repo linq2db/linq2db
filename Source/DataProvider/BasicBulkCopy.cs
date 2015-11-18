@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider
 
 			foreach (var item in source)
 			{
-				dataConnection.Insert(item);
+				dataConnection.Insert(item, options.TableName, options.DatabaseName, options.SchemaName);
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -54,13 +55,17 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected internal static string GetTableName(ISqlBuilder sqlBuilder, EntityDescriptor descriptor)
+		protected internal static string GetTableName(ISqlBuilder sqlBuilder, BulkCopyOptions options, EntityDescriptor descriptor)
 		{
+			var databaseName = options.DatabaseName ?? descriptor.DatabaseName;
+			var schemaName   = options.SchemaName   ?? descriptor.SchemaName;
+			var tableName    = options.TableName    ?? descriptor.TableName;
+
 			return sqlBuilder.BuildTableName(
 				new StringBuilder(),
-				descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
-				descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
-				descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
+				databaseName == null ? null : sqlBuilder.Convert(databaseName, ConvertType.NameToDatabase).  ToString(),
+				schemaName   == null ? null : sqlBuilder.Convert(schemaName,   ConvertType.NameToOwner).     ToString(),
+				tableName    == null ? null : sqlBuilder.Convert(tableName,    ConvertType.NameToQueryTable).ToString())
 			.ToString();
 		}
 
@@ -135,6 +140,54 @@ namespace LinqToDB.DataProvider
 			var dgt = lambda.Compile();
 
 			return (obj,action) => eventInfo.AddEventHandler(obj, dgt(action));
+		}
+
+		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
+		{
+			if (DataConnection.TraceSwitch.TraceInfo)
+			{
+				DataConnection.OnTrace(new TraceInfo
+				{
+					BeforeExecute  = true,
+					TraceLevel     = TraceLevel.Info,
+					DataConnection = dataConnection,
+					CommandText    = commandText,
+				});
+			}
+
+			try
+			{
+				var now = DateTime.Now;
+
+				var count = action();
+
+				if (DataConnection.TraceSwitch.TraceInfo)
+				{
+					DataConnection.OnTrace(new TraceInfo
+					{
+						TraceLevel      = TraceLevel.Info,
+						DataConnection  = dataConnection,
+						CommandText     = commandText,
+						ExecutionTime   = DateTime.Now - now,
+						RecordsAffected = count,
+					});
+				}
+			}
+			catch (Exception ex)
+			{
+				if (DataConnection.TraceSwitch.TraceError)
+				{
+					DataConnection.OnTrace(new TraceInfo
+					{
+						TraceLevel     = TraceLevel.Error,
+						DataConnection = dataConnection,
+						CommandText    = commandText,
+						Exception      = ex,
+					});
+				}
+
+				throw;
+			}
 		}
 
 		#endregion

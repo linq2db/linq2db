@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -127,7 +128,7 @@ namespace Tests.DDL
 			{
 				try
 				{
-					db.DropTable<TestEnumTable>("#TestTable");
+					db.DropTable<TestEnumTable>();
 				}
 				catch (Exception)
 				{
@@ -212,6 +213,46 @@ namespace Tests.DDL
 				Assert.That(qq.cc, Is.EqualTo("hallo"));
 
 				conn.DropTable<qq>();
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
+		public void CreateTable2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<TestEnumTable>("#TestTable");
+				table.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[]
+				{
+					new TestEnumTable
+					{
+						Field1  = FieldType1.Value1,
+						Field11 = FieldType1.Value1,
+						Field2  = FieldType2.Value1,
+						Field21 = FieldType2.Value1,
+						Field3  = FieldType3.Value1,
+					}
+				});
+				table.DropTable();
+			}
+		}
+
+		class TestCreateFormat
+		{
+			[Column(CreateFormat="{0}{1}{2}{3}/* test */"), NotNull]
+			public int Field1;
+			[Column]
+			public int Field2;
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]
+		public void CreateFormatTest(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var table = db.CreateTable<TestCreateFormat>("#TestTable");
+				table.DropTable();
 			}
 		}
 	}
