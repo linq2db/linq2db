@@ -270,8 +270,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.DateAdd(Sql.DateParts.Year, 1, t.DateTimeValue). Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 1, t.DateTimeValue)).Value.Date);
+					from t in    Types select           Sql.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue). Value.Date,
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.DateTimeValue)).Value.Date);
 		}
 
 		[Test, DataContextSource]
