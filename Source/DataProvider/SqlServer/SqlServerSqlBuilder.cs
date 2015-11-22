@@ -30,6 +30,28 @@ namespace LinqToDB.DataProvider.SqlServer
 				base.BuildSql();
 		}
 
+		protected override void BuildInsertQuery()
+		{
+			if (SelectQuery.Insert.WithIdentity)
+			{
+				var identityField = SelectQuery.Insert.Into.GetIdentityField();
+
+				if (identityField != null)
+				{
+					AppendIndent()
+						.Append("DECLARE @TableOutput TABLE (")
+						.Append(identityField.PhysicalName)
+						.Append(" ");
+					BuildCreateTableFieldType(identityField);
+					StringBuilder
+							.AppendLine(")")
+							.AppendLine();
+				}
+			}
+
+			base.BuildInsertQuery();
+		}
+
 		protected override void BuildOutputSubclause()
 		{
 			if (SelectQuery.Insert.WithIdentity)
@@ -43,14 +65,25 @@ namespace LinqToDB.DataProvider.SqlServer
 						.Append(identityField.PhysicalName)
 						.Append("]")
 						.AppendLine();
+					AppendIndent()
+						.Append("INTO @TableOutput")
+						.AppendLine();
 				}
 			}
 		}
 
 		protected override void BuildGetIdentity()
 		{
-			// The better way of retrieving identity value is to use the OUTPUT clause
-			// (since MS SQL Server 2005).
+			var identityField = SelectQuery.Insert.Into.GetIdentityField();
+			if (identityField == null) return;
+
+			StringBuilder
+				.AppendLine();
+			AppendIndent()
+				.Append("SELECT ")
+				.Append(identityField.PhysicalName)
+				.Append(" FROM @TableOutput")
+				.AppendLine();
 		}
 
 		protected override void BuildOrderByClause()
