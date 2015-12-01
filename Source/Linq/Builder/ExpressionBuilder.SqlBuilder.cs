@@ -1429,7 +1429,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.NotEqual:
 
 					if (!context.SelectQuery.IsParameterDependent &&
-						(l is SqlParameter && l.CanBeNull() || r is SqlParameter && r.CanBeNull()))
+						(l is SqlParameter && l.CanBeNull || r is SqlParameter && r.CanBeNull))
 						context.SelectQuery.IsParameterDependent = true;
 
 					// | (SqlQuery(Select([]) as q), SqlValue(null))
@@ -2375,7 +2375,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (sqlExpression is SelectQuery.SearchCondition)
 			{
-				if (sqlExpression.CanBeNull())
+				if (sqlExpression.CanBeNull)
 				{
 					var notExpr = new SelectQuery.SearchCondition
 					{

@@ -201,9 +201,9 @@ namespace LinqToDB.SqlQuery
 
 			#region ISqlExpression Members
 
-			public bool CanBeNull()
+			public bool CanBeNull
 			{
-				return Expression.CanBeNull();
+				get { return Expression.CanBeNull; }
 			}
 
 			public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -532,9 +532,9 @@ namespace LinqToDB.SqlQuery
 
 			#region ISqlExpression Members
 
-			public bool CanBeNull()
+			public bool CanBeNull
 			{
-				return Source.CanBeNull();
+				get { return Source.CanBeNull; }
 			}
 
 			public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -705,9 +705,9 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException();
 				}
 
-				public override bool CanBeNull()
+				public override bool CanBeNull
 				{
-					return Expr1.CanBeNull();
+					get { return Expr1.CanBeNull; }
 				}
 
 				protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -790,9 +790,9 @@ namespace LinqToDB.SqlQuery
 					Expr2 = Expr2.Walk(skipColumns, func);
 				}
 
-				public override bool CanBeNull()
+				public override bool CanBeNull
 				{
-					return base.CanBeNull() || Expr2.CanBeNull();
+					get { return base.CanBeNull || Expr2.CanBeNull; }
 				}
 
 				protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -1131,9 +1131,9 @@ namespace LinqToDB.SqlQuery
 					Function = (SqlFunction)((ISqlExpression)Function).Walk(skipColumns, func);
 				}
 
-				public override bool CanBeNull()
+				public override bool CanBeNull
 				{
-					return Function.CanBeNull();
+					get { return Function.CanBeNull; }
 				}
 
 				protected override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
@@ -1182,7 +1182,7 @@ namespace LinqToDB.SqlQuery
 
 			public int Precedence { get; private set; }
 
-			public    abstract bool              CanBeNull();
+			public    abstract bool              CanBeNull { get; }
 			protected abstract ICloneableElement Clone    (Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone);
 			protected abstract void              Walk     (bool skipColumns, Func<ISqlExpression,ISqlExpression> action);
 
@@ -1270,9 +1270,9 @@ namespace LinqToDB.SqlQuery
 				return clone;
 			}
 
-			public bool CanBeNull()
+			public bool CanBeNull
 			{
-				return Predicate.CanBeNull();
+				get { return Predicate.CanBeNull; }
 			}
 
 #if OVERRIDETOSTRING
@@ -1416,13 +1416,16 @@ namespace LinqToDB.SqlQuery
 
 			#region ISqlExpression Members
 
-			public bool CanBeNull()
+			public bool CanBeNull
 			{
-				foreach (var c in Conditions)
-					if (c.CanBeNull())
-						return true;
+				get
+				{
+					foreach (var c in Conditions)
+						if (c.CanBeNull)
+							return true;
 
-				return false;
+					return false;
+				}
 			}
 
 			public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -3756,9 +3759,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			return true;
+			get { return true; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

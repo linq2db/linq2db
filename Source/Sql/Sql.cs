@@ -64,6 +64,35 @@ namespace LinqToDB
 			return value ?? default(T);
 		}
 
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0)]
+		public static T AsNotNullable<T>(T? value)
+			where T : struct
+		{
+			return value ?? default(T);
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0, CanBeNull = true)]
+		public static T ToNullable<T>(T value)
+		{
+			return value;
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0, CanBeNull = false)]
+		public static T ToNotNull<T>(T value)
+		{
+			return value;
+		}
+
+		[CLSCompliant(false)]
+		[Sql.Expression("{0}", 0, CanBeNull = false)]
+		public static T ToNotNullable<T>(T value)
+		{
+			return value;
+		}
+
 		#endregion
 
 		#region Guid Functions

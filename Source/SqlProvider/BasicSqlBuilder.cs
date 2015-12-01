@@ -858,13 +858,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
 		{
-			if (defaulNullable == DefaulNullable.Null && field.Nullable)
+			if (defaulNullable == DefaulNullable.Null && field.CanBeNull)
 				return;
 
-			if (defaulNullable == DefaulNullable.NotNull && !field.Nullable)
+			if (defaulNullable == DefaulNullable.NotNull && !field.CanBeNull)
 				return;
 
-			StringBuilder.Append(field.Nullable ? "    NULL" : "NOT NULL");
+			StringBuilder.Append(field.CanBeNull ? "    NULL" : "NOT NULL");
 		}
 
 		protected virtual void BuildCreateTableIdentityAttribute1(SqlField field)
