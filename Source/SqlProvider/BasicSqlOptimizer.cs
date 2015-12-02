@@ -765,7 +765,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var se = (SqlExpression)expression;
 
-						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null)
+						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
 							return se.Parameters[0];
 					}
 

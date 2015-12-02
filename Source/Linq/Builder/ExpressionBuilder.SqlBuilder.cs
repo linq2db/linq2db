@@ -368,7 +368,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Expression.Call(
 					null,
-					MemberHelper.MethodOf<T?>(p => Sql.AsNotNull(p)),
+					MemberHelper.MethodOf<T?>(p => Sql.ToNotNull(p)),
 					expression.Expression);
 			}
 		}
