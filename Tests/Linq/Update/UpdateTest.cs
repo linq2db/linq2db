@@ -636,5 +636,43 @@ namespace Tests.Update
 				.Update();
 			}
 		}
+
+		[Test, DataContextSource]
+		public void UpdateIssue319Regression(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				try
+				{
+					var id = 100500;
+
+					db.Insert(new Parent1()
+					{
+						ParentID = id
+					});
+
+					var query = db.GetTable<Parent1>()
+						.Select(_ => new Parent1()
+						{
+							ParentID = _.ParentID
+						});
+
+					var queryResult = new Lazy<Parent1>(() => query.First());
+
+					var cnt = db.GetTable<Parent1>()
+						.Where(_ => query.Count() > 0)
+						.Update(_ => new Parent1()
+						{
+							Value1 = queryResult.Value.ParentID
+						});
+
+					Assert.AreEqual(1, cnt);
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > 1000);
+				}
+			}
+		}
 	}
 }
