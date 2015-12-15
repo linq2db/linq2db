@@ -567,7 +567,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Insert.TryGetValue(key, out ei))
 				lock (_sync)
@@ -629,7 +629,7 @@ namespace LinqToDB.Linq
 
 			Query<object> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.InsertWithIdentity.TryGetValue(key, out ei))
 				lock (_sync)
@@ -688,7 +688,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.InsertOrUpdate.TryGetValue(key, out ei))
 			{
@@ -849,7 +849,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Update.TryGetValue(key, out ei))
 				lock (_sync)
@@ -923,7 +923,7 @@ namespace LinqToDB.Linq
 
 			Query<int> ei;
 
-			var key = new { dataContextInfo.MappingSchema, dataContextInfo.ContextID };
+			var key = new { dataContextInfo.MappingSchema.ConfigurationID, dataContextInfo.ContextID };
 
 			if (!ObjectOperation<T>.Delete.TryGetValue(key, out ei))
 				lock (_sync)
