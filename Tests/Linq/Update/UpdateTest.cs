@@ -642,16 +642,16 @@ namespace Tests.Update
 		{
 			using (var db = GetDataContext(context))
 			{
+				var id = 100500;
 				try
 				{
-					var id = 100500;
-
 					db.Insert(new Parent1()
 					{
 						ParentID = id
 					});
 
 					var query = db.GetTable<Parent1>()
+						.Where(_ => _.ParentID == id)
 						.Select(_ => new Parent1()
 						{
 							ParentID = _.ParentID
@@ -660,7 +660,7 @@ namespace Tests.Update
 					var queryResult = new Lazy<Parent1>(() => query.First());
 
 					var cnt = db.GetTable<Parent1>()
-						.Where(_ => query.Count() > 0)
+						.Where(_ => _.ParentID == id && query.Count() > 0)
 						.Update(_ => new Parent1()
 						{
 							Value1 = queryResult.Value.ParentID
@@ -670,7 +670,7 @@ namespace Tests.Update
 				}
 				finally
 				{
-					db.Child.Delete(c => c.ChildID > 1000);
+					db.GetTable<Parent1>().Delete(_ => _.ParentID == id);
 				}
 			}
 		}
