@@ -668,7 +668,9 @@ namespace Tests.Update
 						.Where(_ => _.ID == id)
 						.Select(_ => _.SmallIntValue).First();
 
-					Assert.AreEqual(value1 / (value2 / value3), dbResult);
+					var expected = (short)(value1 / (value2 / value3));
+
+					Assert.AreEqual(expected, dbResult);
 				}
 				finally
 				{
