@@ -3,8 +3,8 @@
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
 		var afterGenerateLinqToDBModel  = AfterGenerateLinqToDBModel;
 
-		var obsoleteAttr        = new Attribute("Obsolete");
-		var obsoleteTables      = new List<Tuple<string, string>>();
+		var obsoleteAttr   = new Attribute("Obsolete");
+		var obsoleteTables = new List<Tuple<string, string>>();
 
 		BeforeGenerateLinqToDBModel = () =>
 		{
@@ -40,31 +40,30 @@
 				foreach (var cm in GetTreeNodes(Model)
 					.OfType<MemberBase>()
 					.Where(t => t.Type != null)
-					.Where(t =>
-						t.Type == name || t.Type.Contains("<" + name + ">")))
+					.Where(t => t.Type == name || t.Type.Contains("<" + name + ">")))
 				{
 					// check schema
 					
-					if(cm.Parent != null && cm.Parent.Parent != null)
+					if (cm.Parent != null && cm.Parent.Parent != null)
 					{
 						var parent = cm.Parent.Parent;
 
-						if(parent is Table)
+						if (parent is Table)
 						{
 							var table = (Table)parent;
 
-							if(schema == table.Schema)
+							if (schema == table.Schema)
 								cm.Attributes.Add(obsoleteAttr);
 						}
-						else
-						if(parent is Class)
+						else if (parent is Class)
 						{
 							var cls = (Class)parent;
 
 							bool parentClassIncludesSchemaName = cls.Name.Equals(schema + "Schema", StringComparison.InvariantCultureIgnoreCase);
 							bool classIsForDefaultSchema       = cls.Name == DataContextName;
+							bool isExtensionMethod             = cls.Parent is Namespace || cls.Name == "TableExtensions";
 
-							if(classIsForDefaultSchema || parentClassIncludesSchemaName)
+							if (classIsForDefaultSchema || parentClassIncludesSchemaName || isExtensionMethod)
 								cm.Attributes.Add(obsoleteAttr);
 						}
 					}
