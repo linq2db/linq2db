@@ -602,9 +602,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
@@ -630,6 +631,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -654,9 +656,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
@@ -681,6 +684,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -710,9 +714,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteReader(commandBehavior);
 
 				if (TraceSwitch.TraceInfo)
@@ -737,6 +742,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
