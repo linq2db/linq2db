@@ -9,11 +9,10 @@ namespace Tests.Exceptions
 	public class Aggregtion : TestBase
 	{
 		[Test, DataContextSource]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void NonNullableMax1(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID);
+				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
 		}
 
 		[Test, DataContextSource]
@@ -33,11 +32,10 @@ namespace Tests.Exceptions
 		}
 
 		[Test, DataContextSource]
-		[ExpectedException(typeof(InvalidOperationException))]
 		public void NonNullableAverage(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID);
+				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));
 		}
 	}
 }

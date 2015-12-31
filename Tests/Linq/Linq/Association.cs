@@ -508,8 +508,8 @@ namespace Tests.Linq
 
 					var list = q.ToList();
 
-					Assert.That(list.Count, Is.GreaterThan(0));
-					Assert.That(list[0].Children,    Is.Not.Null);
+					Assert.That(list.Count,       Is.GreaterThan(0));
+					Assert.That(list[0].Children, Is.Not.Null);
 				}
 			}
 			finally
@@ -528,6 +528,7 @@ namespace Tests.Linq
 			public Parent170 Parent;
 		}
 
+#pragma warning disable CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 		[Test, DataContextSource]
 		public void Issue170Test(string context)
 		{
@@ -538,6 +539,7 @@ namespace Tests.Linq
 				Assert.That(value, Is.Null);
 			}
 		}
+#pragma warning restore CS0472 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
 		[Table("Child")]
 		class StorageTestClass

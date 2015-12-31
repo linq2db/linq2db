@@ -6,7 +6,7 @@
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{07997A18-86D3-47AC-A514-AB1B03E6AEC8}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Tests</RootNamespace>
     <AssemblyName>linq2db.Tests</AssemblyName>
@@ -161,12 +161,9 @@
       <HintPath>..\..\packages\Npgsql.2.2.5\lib\net45\Npgsql.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="nunit-console-runner">
-      <HintPath>..\..\packages\NUnit.Runners.2.6.4\tools\lib\nunit-console-runner.dll</HintPath>
-    </Reference>
-    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    <Reference Include="nunit.framework, Version=3.0.5813.39031, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NUnit.3.0.1\lib\net45\nunit.framework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
       <Private>True</Private>
@@ -227,7 +224,6 @@
     <Compile Include="Common\ChangeTypeTest.cs" />
     <Compile Include="Common\ConvertTest.cs" />
     <Compile Include="Common\DefaultValueTest.cs" />
-    <Compile Include="DataContextTestCase.cs" />
     <Compile Include="DataProvider\SapHanaTest.cs" />
     <Compile Include="DataProvider\InformixTest.cs" />
     <Compile Include="DataProvider\DB2Test.cs" />
@@ -238,7 +234,7 @@
     <Compile Include="Data\MiniProfilerTest.cs" />
     <Compile Include="Data\TransactionTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />
-    <Compile Include="DDL\CreateTableTest.cs" />
+    <Compile Include="Update\CreateTableTest.cs" />
     <Compile Include="Linq\QueryHintsTest.cs" />
     <Compile Include="Linq\AsyncTest.cs" />
     <Compile Include="Linq\ColumnAliasTest.cs" />
@@ -265,7 +261,6 @@
     <Compile Include="Mapping\MappingSchemaTest.cs" />
     <Compile Include="Metadata\AttributeReaderTest.cs" />
     <Compile Include="Metadata\XmlReaderTest.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="DataProvider\SqlServerTest.cs" />
     <Compile Include="Reflection\TypeAccessorTest.cs" />
     <Compile Include="Security\TestHelpers\PartialTrustClassCommand.cs" />

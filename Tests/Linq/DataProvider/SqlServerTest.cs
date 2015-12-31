@@ -5,17 +5,14 @@ using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using Microsoft.SqlServer.Types;
 
@@ -23,8 +20,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SqlServerTest : DataProviderTestBase
 	{
@@ -989,29 +984,42 @@ namespace Tests.DataProvider
 		[Test, SqlServerDataContext]
 		public void OverflowTest(string context)
 		{
+			var func = SqlServerTools.DataReaderGetDecimal;
+
 			SqlServerTools.DataReaderGetDecimal = GetDecimal;
 
 			using (var db = new DataConnection(context))
 			{
 				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
+
+			SqlServerTools.DataReaderGetDecimal = func;
 		}
 
 		const int ClrPrecision = 29;
 
 		static decimal GetDecimal(IDataReader rd, int idx)
 		{
-			var value = ((SqlDataReader)rd).GetSqlDecimal(idx);
-
-			if (value.Precision > ClrPrecision)
+			try
 			{
-				var str = value.ToString();
-				var val = decimal.Parse(str);
+				var value = ((SqlDataReader)rd).GetSqlDecimal(idx);
 
-				return val;
+				if (value.Precision > ClrPrecision)
+				{
+					var str = value.ToString();
+					var val = decimal.Parse(str);
+
+					return val;
+				}
+
+				return value.Value;
 			}
-
-			return value.Value;
+			catch (Exception)
+			{
+				var vvv=  rd.GetValue(idx);
+				
+				throw;
+			}
 		}
 
 		[Table("DecimalOverflow")]
