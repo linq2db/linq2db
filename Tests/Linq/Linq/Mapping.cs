@@ -98,7 +98,7 @@ namespace Tests.Linq
 				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
 
 				if (context == ProviderName.PostgreSQL + ".LinqService")
-					new Create.CreateData().PostgreSQL(ProviderName.PostgreSQL);
+					new _Create._CreateData().PostgreSQL(ProviderName.PostgreSQL);
 			}
 		}
 

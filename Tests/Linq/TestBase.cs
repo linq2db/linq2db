@@ -16,6 +16,8 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
+//[assembly: Parallelizable]
+
 namespace Tests
 {
 	using Model;
@@ -24,8 +26,15 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			var traceCount = 0;
+
 			DataConnection.TurnTraceSwitchOn();
-			DataConnection.WriteTraceLine = (s,s1) => Debug.WriteLine(s, s1);
+			DataConnection.WriteTraceLine = (s1,s2) =>
+			{
+				Console.WriteLine("{0}: {1}", s2, s1);
+				if (traceCount++ > 1000)
+					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+			};
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
@@ -156,6 +165,18 @@ namespace Tests
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
+			void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
+			{
+
+				var name = method.Name + "." + provider;
+
+				if (isLinqService)
+					name += ".LinqService";
+
+				test.Name     = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+				//test.FullName = test.Name;
+			}
+
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
 				var builder = new NUnitTestCaseBuilder();
@@ -168,11 +189,12 @@ namespace Tests
 					var test = builder.BuildTestMethod(method, suite, data);
 
 					test.Properties.Set(PropertyNames.Category, provider);
+					SetName(test, method, provider, false);
 
 					if (isIgnore)
 					{
 						test.RunState = RunState.Ignored;
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UerDataProviders.txt");
+						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
 					}
 
 					yield return test;
@@ -183,12 +205,12 @@ namespace Tests
 						test = builder.BuildTestMethod(method, suite, data);
 
 						test.Properties.Set(PropertyNames.Category, provider);
-						test.Properties.Set(PropertyNames.Category, "LinqService");
+						SetName(test, method, provider, true);
 
 						if (isIgnore)
 						{
 							test.RunState = RunState.Ignored;
-							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UerDataProviders.txt");
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
 						}
 
 						yield return test;

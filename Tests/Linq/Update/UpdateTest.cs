@@ -11,7 +11,7 @@ using NUnit.Framework;
 // ReSharper disable ConvertToConstant.Local
 #endregion
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	using Model;
 

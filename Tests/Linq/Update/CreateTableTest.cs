@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	[TestFixture]
 	public class CreateTableTest : TestBase

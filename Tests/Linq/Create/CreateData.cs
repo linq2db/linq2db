@@ -8,12 +8,12 @@ using LinqToDB.DataProvider.Access;
 
 using NUnit.Framework;
 
-namespace Tests.Create
+namespace Tests._Create
 {
 	using Model;
 
 	[TestFixture]
-	public class CreateData : TestBase
+	public class _CreateData : TestBase
 	{
 		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null)
 		{
@@ -190,6 +190,7 @@ namespace Tests.Create
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access       (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void AccessData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "Access",   AccessAction); }
 		[Test, IncludeDataContextSource(ProviderName.SapHana)]       public void SapHana      (string ctx) { RunScript(ctx,          ";;\n"  ,  "SapHana");       }
+
 		static void AccessAction(IDbConnection connection)
 		{
 			using (var conn = AccessTools.CreateDataConnection(connection))
