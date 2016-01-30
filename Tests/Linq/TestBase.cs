@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,6 +12,9 @@ using LinqToDB.Data;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Builders;
 
 namespace Tests
 {
@@ -22,19 +24,24 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			DataConnection.TurnTraceSwitchOn();
+			DataConnection.WriteTraceLine = (s,s1) => Debug.WriteLine(s, s1);
+
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
 
-			var dataProvidersPath = typeof(TestBase).Assembly.CodeBase;
+			var assemblyPath = typeof(TestBase).Assembly.CodeBase;
 
-			dataProvidersPath = Path.GetDirectoryName(dataProvidersPath.Substring("file:///".Length));
+			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
+
+			Environment.CurrentDirectory = assemblyPath;
 
 			var providerListFile =
-				File.Exists(Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt")) ?
-					Path.Combine(dataProvidersPath, @"..\..\UserDataProviders.txt") :
-					Path.Combine(dataProvidersPath, @"..\..\DefaultDataProviders.txt");
+				File.Exists(Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt")) ?
+					Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt") :
+					Path.Combine(assemblyPath, @"..\..\DefaultDataProviders.txt");
 
-			UserProviders.AddRange(
+			_userProviders =
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
@@ -47,7 +54,8 @@ namespace Tests
 							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
 							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
 						}
-					}));
+					})
+					.ToDictionary(i => i.Name);
 
 			//var map = new ExeConfigurationFileMap();
 			//map.ExeConfigFilename = Path.Combine(
@@ -58,7 +66,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-			foreach (var provider in UserProviders)
+			foreach (var provider in _userProviders.Values)
 				if (provider.ConnectionString != null)
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 
@@ -73,8 +81,6 @@ namespace Tests
 					default                   : return null;
 				}
 			};
-
-			//OpenHost();
 		}
 
 		const int IP = 22654;
@@ -115,8 +121,9 @@ namespace Tests
 			public string ConnectionString;
 		}
 
-		public static readonly List<UserProviderInfo> UserProviders = new List<UserProviderInfo>();
-		public static readonly List<string>           Providers     = new List<string>
+		static readonly Dictionary<string,UserProviderInfo> _userProviders;
+
+		static readonly List<string>                        _providers     = new List<string>
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
@@ -137,39 +144,97 @@ namespace Tests
 			"SqlAzure.2012"
 		};
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class DataContextSourceAttribute : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
+			protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
+			{
+				_includeLinqService = includeLinqService;
+				_providerNames      = providers;
+			}
+
+			readonly bool     _includeLinqService;
+			readonly string[] _providerNames;
+
+			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
+			{
+				var builder = new NUnitTestCaseBuilder();
+
+				foreach (var provider in _providerNames)
+				{
+					var isIgnore = !_userProviders.ContainsKey(provider);
+
+					var data = new TestCaseParameters(new object[] { provider });
+					var test = builder.BuildTestMethod(method, suite, data);
+
+					test.Properties.Set(PropertyNames.Category, provider);
+
+					if (isIgnore)
+					{
+						test.RunState = RunState.Ignored;
+						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UerDataProviders.txt");
+					}
+
+					yield return test;
+
+					if (_includeLinqService)
+					{
+						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
+						test = builder.BuildTestMethod(method, suite, data);
+
+						test.Properties.Set(PropertyNames.Category, provider);
+						test.Properties.Set(PropertyNames.Category, "LinqService");
+
+						if (isIgnore)
+						{
+							test.RunState = RunState.Ignored;
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UerDataProviders.txt");
+						}
+
+						yield return test;
+					}
+				}
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method)]
+		public class DataContextSourceAttribute : BaseDataContextSourceAttribute
+		{
+			public DataContextSourceAttribute()
+				: this(true, null)
+			{
+			}
+
 			public DataContextSourceAttribute(params string[] except)
-				: base(DatabaseTestCase.GetDataContextType(true, except, null), "TestCases")
+				: this(true, except)
 			{
 			}
 
 			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(DatabaseTestCase.GetDataContextType(includeLinqService, except, null), "TestCases")
+				: base(includeLinqService,
+					_providers.Where(providerName => except == null || !except.Contains(providerName)).ToArray())
 			{
 			}
 		}
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class IncludeDataContextSourceAttribute : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public class IncludeDataContextSourceAttribute : BaseDataContextSourceAttribute
 		{
 			public IncludeDataContextSourceAttribute(params string[] include)
-				: base(DatabaseTestCase.GetDataContextType(false, null, include), "TestCases")
+				: this(false, include)
 			{
 			}
 
 			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
-				: base(DatabaseTestCase.GetDataContextType(includeLinqService, null, include), "TestCases")
+				: base(includeLinqService, include)
 			{
 			}
 		}
 
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-		public class NorthwindDataContext : TestCaseSourceAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public NorthwindDataContext()
-				: base(DatabaseTestCase.GetDataContextType(false, null, new [] { "Northwind" }), "TestCases")
+			public NorthwindDataContextAttribute() : base("Northwind")
 			{
 			}
 		}

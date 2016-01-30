@@ -12,7 +12,7 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class JoinTest : TestBase
 	{
-		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		[Test, DataContextSource]
 		public void InnerJoin(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -22,7 +22,8 @@ namespace Tests.Exceptions
 						join p2 in db.Person on new Person { FirstName = "", ID = p1.ID } equals new Person { ID = p2.ID }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
-				q.ToList();
+
+				Assert.Throws(typeof(LinqException), () => q.ToList());
 			}
 		}
 	}

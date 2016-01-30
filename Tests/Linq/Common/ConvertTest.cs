@@ -361,14 +361,19 @@ namespace Tests.Common
 			Assert.AreEqual(Enum11.Value3, ConvertTo<Enum11>.From(Enum10.Value3));
 		}
 
-		[Test, ExpectedException(typeof(LinqToDBConvertException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.")]
+		[Test]
 		public void ConvertToEnum12()
 		{
 			var cf = new MappingSchema("1").GetConverter<Enum10,Enum11>();
 
-			Assert.AreEqual(Enum11.Value1, cf(Enum10.Value2));
-			Assert.AreEqual(Enum11.Value2, cf(Enum10.Value1));
-			Assert.AreEqual(Enum11.Value3, cf(Enum10.Value1));
+			Assert.Throws(
+				typeof(LinqToDBConvertException),
+				() => cf(Enum10.Value2),
+				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
+			Assert.Throws(
+				typeof(LinqToDBConvertException),
+				() => cf(Enum10.Value1),
+				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum10.Value1' can be mapped to either 'Tests.Common.ConvertTest+Enum11.Value2' or 'Tests.Common.ConvertTest+Enum11.Value3'.");
 		}
 
 		[Test]
@@ -405,10 +410,13 @@ namespace Tests.Common
 			Value3,
 		}
 
-		[Test, ExpectedException(typeof(LinqToDBConvertException), ExpectedMessage = "Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.")]
+		[Test]
 		public void ConvertToEnum14()
 		{
-			Assert.AreEqual(Enum13.Value3, ConvertTo<Enum13>.From(Enum12.Value2));
+			Assert.Throws(
+				typeof(LinqToDBConvertException),
+				() => ConvertTo<Enum13>.From(Enum12.Value2),
+				"Mapping ambiguity. 'Tests.Common.ConvertTest+Enum12.Value2' can be mapped to either 'Tests.Common.ConvertTest+Enum13.Value1' or 'Tests.Common.ConvertTest+Enum13.Value3'.");
 		}
 
 		enum Enum14

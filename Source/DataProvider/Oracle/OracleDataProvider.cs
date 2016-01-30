@@ -35,6 +35,8 @@ namespace LinqToDB.DataProvider.Oracle
 //				(Expression<Func<IDataReader,int,TimeSpan>>)((rd,n) => new TimeSpan((long)rd.GetDecimal(n)));
 
 			_sqlOptimizer = new OracleSqlOptimizer(SqlProviderFlags);
+
+			SetField<IDataReader,decimal> ((r,i) => OracleTools.DataReaderGetDecimal(r, i));
 		}
 
 		Type _oracleBFile;

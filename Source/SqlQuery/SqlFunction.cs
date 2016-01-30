@@ -75,9 +75,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		private bool? _canBeNull;
+		public  bool   CanBeNull
 		{
-			return true;
+			get { return _canBeNull ?? true; }
+			set { _canBeNull = value;        }
 		}
 
 		#endregion

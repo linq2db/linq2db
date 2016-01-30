@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlField()
 		{
-			Nullable = true;
+			CanBeNull = true;
 		}
 
 		public SqlField(SqlField field)
@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 			Alias            = field.Alias;
 			Name             = field.Name;
 			PhysicalName     = field.PhysicalName;
-			Nullable         = field.Nullable;
+			CanBeNull        = field.CanBeNull;
 			IsPrimaryKey     = field.IsPrimaryKey;
 			PrimaryKeyOrder  = field.PrimaryKeyOrder;
 			IsIdentity       = field.IsIdentity;
@@ -37,7 +37,6 @@ namespace LinqToDB.SqlQuery
 		public Type             SystemType       { get; set; }
 		public string           Alias            { get; set; }
 		public string           Name             { get; set; }
-		public bool             Nullable         { get; set; }
 		public bool             IsPrimaryKey     { get; set; }
 		public int              PrimaryKeyOrder  { get; set; }
 		public bool             IsIdentity       { get; set; }
@@ -75,10 +74,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
-		{
-			return Nullable;
-		}
+		public bool CanBeNull { get; set; }
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

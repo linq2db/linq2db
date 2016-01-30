@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
@@ -1163,6 +1164,58 @@ namespace Tests.DataProvider
 
 				Assert.That(n, Is.EqualTo(3));
 			}
+		}
+
+		[Table("DecimalOverflow")]
+		class DecimalOverflow
+		{
+			[Column] public decimal Decimal1;
+			[Column] public decimal Decimal2;
+			[Column] public decimal Decimal3;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void OverflowTest(string context)
+		{
+			OracleTools.DataReaderGetDecimal = GetDecimal;
+
+			using (var db = new DataConnection(context))
+			{
+				var list = db.GetTable<DecimalOverflow>().ToList();
+			}
+		}
+
+		const int ClrPrecision = 29;
+
+		static decimal GetDecimal(IDataReader rd, int idx)
+		{
+			var value  = ((OracleDataReader)rd).GetOracleDecimal(idx);
+			var newval = OracleDecimal.SetPrecision(value, ClrPrecision);
+
+			return newval.Value;
+		}
+
+		[Table("DecimalOverflow")]
+		class DecimalOverflow2
+		{
+			[Column] public OracleDecimal Decimal1;
+			[Column] public OracleDecimal Decimal2;
+			[Column] public OracleDecimal Decimal3;
+		}
+
+		[Test, IncludeDataContextSource(CurrentProvider)]
+		public void OverflowTest2(string context)
+		{
+			var func = OracleTools.DataReaderGetDecimal;
+
+			OracleTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
+
+			using (var db = new DataConnection(context))
+			{
+				var list = db.GetTable<DecimalOverflow2>().ToList();
+			}
+
+			OracleTools.DataReaderGetDecimal = func;
 		}
 	}
 }

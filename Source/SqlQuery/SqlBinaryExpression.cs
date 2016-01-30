@@ -70,9 +70,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			return Expr1.CanBeNull() || Expr2.CanBeNull();
+			get { return Expr1.CanBeNull || Expr2.CanBeNull; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
