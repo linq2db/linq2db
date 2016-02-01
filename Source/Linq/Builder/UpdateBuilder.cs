@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = methodCall.Arguments[1].Unwrap();
 
-						if (expr is LambdaExpression)
+						if (expr is LambdaExpression && expr.Type == typeof(bool))
 						{
 							CheckAssociation(sequence);
 
@@ -65,9 +65,27 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
-							//
-							var into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+							IBuildContext into;
+
+							if (expr is LambdaExpression)
+							{
+								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
+								//
+								var body      = ((LambdaExpression)expr).Body;
+								int level     = body.GetLevel();
+								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
+
+								if (tableInfo.Result == false)
+									throw new LinqException("Expression '{0}' mast be a table.");
+
+								into = tableInfo.Context;
+							}
+							else
+							{
+								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
+								//
+								into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 							new SelectQueryOptimizer(builder.DataContextInfo.SqlProviderFlags, sequence.SelectQuery)

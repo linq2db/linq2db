@@ -940,6 +940,24 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
+		static public int GetLevel(this Expression expression)
+		{
+			switch (expression.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+					{
+						var e = ((MemberExpression)expression);
+
+						if (e.Expression != null)
+							return GetLevel(e.Expression.Unwrap()) + 1;
+
+						break;
+					}
+			}
+
+			return 0;
+		}
+
 		#endregion
 	}
 }

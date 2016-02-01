@@ -320,6 +320,36 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test, DataContextSource]
+		public void Update12(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p1 in db.Parent
+					join p2 in db.Parent on p1.ParentID equals p2.ParentID
+					where p1.ParentID < 3
+					select new { p1, p2 }
+				)
+				.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
+			}
+		}
+
+		[Test, DataContextSource]
+		public void Update13(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p1 in db.Parent
+					join p2 in db.Parent on p1.ParentID equals p2.ParentID
+					where p1.ParentID < 3
+					select new { p1, p2 }
+				)
+				.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
+			}
+		}
+
 		[Test, DataContextSource(ProviderName.Sybase, ProviderName.Informix)]
 		public void UpdateAssociation1(string context)
 		{

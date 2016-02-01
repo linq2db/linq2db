@@ -93,7 +93,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _withTableExpressionMethodInfo = MemberHelper.MethodOf(() => WithTableExpression<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
+		public static ITable<T> WithTableExpression<T>([NotNull] this ITable<T> table, [NotNull] string expression)
 		{
 			if (expression == null) throw new ArgumentNullException("expression");
 
@@ -107,7 +107,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _with = MemberHelper.MethodOf(() => With<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
+		public static ITable<T> With<T>([NotNull] this ITable<T> table, [NotNull] string args)
 		{
 			if (args == null) throw new ArgumentNullException("args");
 
@@ -195,7 +195,7 @@ namespace LinqToDB
 
 		#region Update
 
-		static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, null, null)).GetGenericMethodDefinition();
+		static readonly MethodInfo _updateMethodInfo = MemberHelper.MethodOf(() => Update<int,int>(null, (ITable<int>)null, null)).GetGenericMethodDefinition();
 
 		public static int Update<TSource,TTarget>(
 			[NotNull]                this IQueryable<TSource>          source,
@@ -261,6 +261,25 @@ namespace LinqToDB
 					_updateMethodInfo4.MakeGenericMethod(new[] { typeof(T) }),
 					new[] { query.Expression }));
 		}
+
+		static readonly MethodInfo _updateMethodInfo5 = MemberHelper.MethodOf(() => Update<int,int>(null, (Expression<Func<int,int>>)null, null)).GetGenericMethodDefinition();
+
+		public static int Update<TSource,TTarget>(
+			[NotNull]                this IQueryable<TSource>          source,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> target,
+			[NotNull, InstantHandle] Expression<Func<TSource,TTarget>> setter)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (target == null) throw new ArgumentNullException("target");
+			if (setter == null) throw new ArgumentNullException("setter");
+
+			return source.Provider.Execute<int>(
+				Expression.Call(
+					null,
+					_updateMethodInfo5.MakeGenericMethod(new[] { typeof(TSource), typeof(TTarget) }),
+					new[] { source.Expression, Expression.Quote(target), Expression.Quote(setter) }));
+		}
+
 
 		class Updatable<T> : IUpdatable<T>
 		{
