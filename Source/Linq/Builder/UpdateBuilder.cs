@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = methodCall.Arguments[1].Unwrap();
 
-						if (expr is LambdaExpression && expr.Type == typeof(bool))
+						if (expr is LambdaExpression && ((LambdaExpression)expr).ReturnType == typeof(bool))
 						{
 							CheckAssociation(sequence);
 
