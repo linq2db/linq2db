@@ -439,7 +439,7 @@ namespace Tests.DataProvider
 			{
 				using (var conn = new DataConnection(context))
 				{
-					Assert.That(conn.Execute<string>     ("SELECT XMLTYPE('<xml/>') FROM sys.dual"),            Is.EqualTo("<xml/>\n"));
+					Assert.That(conn.Execute<string>     ("SELECT XMLTYPE('<xml/>') FROM sys.dual").TrimEnd(),  Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>  ("SELECT XMLTYPE('<xml/>') FROM sys.dual").ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT XMLTYPE('<xml/>') FROM sys.dual").InnerXml,   Is.EqualTo("<xml />"));
 
