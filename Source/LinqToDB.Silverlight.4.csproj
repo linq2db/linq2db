@@ -100,6 +100,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServer2008SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2012SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlBuilder.cs" />
     <Compile Include="DataType.cs" />
     <Compile Include="Data\DataParameter.cs" />
