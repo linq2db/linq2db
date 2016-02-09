@@ -16,12 +16,14 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
+		[LinqTunnel]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
 			return new Table<T>(dataContext);
 		}
 
+		[LinqTunnel]
 		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,
