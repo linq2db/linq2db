@@ -17,7 +17,8 @@ namespace LinqToDB
 
 		static readonly MethodInfo _tableNameMethodInfo = MemberHelper.MethodOf(() => TableName<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		[LinqTunnel]
+		public static ITable<T> TableName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -36,7 +37,8 @@ namespace LinqToDB
 
 		static readonly MethodInfo _databaseNameMethodInfo = MemberHelper.MethodOf(() => DatabaseName<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		[LinqTunnel]
+		public static ITable<T> DatabaseName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -55,7 +57,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _ownerNameMethodInfo = MemberHelper.MethodOf(() => OwnerName<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> OwnerName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -74,7 +76,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _schemaNameMethodInfo = MemberHelper.MethodOf(() => SchemaName<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
+		public static ITable<T> SchemaName<T>([NotNull] this ITable<T> table, [NotNull] string name)
 		{
 			if (table == null) throw new ArgumentNullException("table");
 			if (name  == null) throw new ArgumentNullException("name");
@@ -125,7 +127,8 @@ namespace LinqToDB
 
 		static readonly MethodInfo _loadWithMethodInfo = MemberHelper.MethodOf(() => LoadWith<int>(null, null)).GetGenericMethodDefinition();
 
-		static public ITable<T> LoadWith<T>(
+		[LinqTunnel]
+		public static ITable<T> LoadWith<T>(
 			[NotNull]                this ITable<T> table,
 			[NotNull, InstantHandle] Expression<Func<T,object>> selector)
 		{
@@ -143,7 +146,7 @@ namespace LinqToDB
 
 		#region Scalar Select
 
-		static public T Select<T>(
+		public static T Select<T>(
 			[NotNull]                this IDataContext   dataContext,
 			[NotNull, InstantHandle] Expression<Func<T>> selector)
 		{
@@ -927,6 +930,7 @@ namespace LinqToDB
 
 		static readonly MethodInfo _setMethodInfo7 = MemberHelper.MethodOf(() => Having((IQueryable<int>)null,null)).GetGenericMethodDefinition();
 
+		[LinqTunnel]
 		public static IQueryable<TSource> Having<TSource>(
 			[NotNull]                this IQueryable<TSource>       source,
 			[NotNull, InstantHandle] Expression<Func<TSource,bool>> predicate)

@@ -274,7 +274,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		readonly static List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
+		static readonly List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
 			new List<Func<ConnectionStringSettings,IDataProvider>>();
 
 		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)

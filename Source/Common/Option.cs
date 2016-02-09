@@ -21,11 +21,11 @@ namespace LinqToDB.Common
 			get { return this != None; }
 		}
 
-		static public Option<T> Some(T value)
+		public static Option<T> Some(T value)
 		{
 			return new Option<T>(value);
 		}
 
-		static public Option<T> None = new Option<T>(default(T));
+		public static Option<T> None = new Option<T>(default(T));
 	}
 }

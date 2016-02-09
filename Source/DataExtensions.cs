@@ -16,13 +16,13 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		static public ITable<T> GetTable<T>(this IDataContext dataContext)
+		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
 			return new Table<T>(dataContext);
 		}
 
-		static public ITable<T> GetTable<T>(
+		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,
 			[NotNull] MethodInfo methodInfo,
@@ -78,7 +78,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TResult> Compile<TDc,TResult>(
+		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
@@ -105,7 +105,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
+		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
@@ -135,7 +135,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
+		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
@@ -168,7 +168,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
+		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext

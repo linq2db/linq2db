@@ -74,12 +74,12 @@ namespace LinqToDB.Linq.Builder
 		readonly Dictionary<Expression,Expression> _expressionAccessors;
 		private  HashSet<Expression>               _subQueryExpressions;
 
-		readonly public List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
+		public readonly List<ParameterAccessor>    CurrentSqlParameters = new List<ParameterAccessor>();
 
 #if FW4 || SILVERLIGHT || NETFX_CORE
 
-		readonly public List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
-		readonly public List<Expression>           BlockExpressions     = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables       = new List<ParameterExpression>();
+		public readonly List<Expression>           BlockExpressions     = new List<Expression>();
 		         public bool                       IsBlockDisable;
 		         public int                        VarIndex;
 

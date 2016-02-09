@@ -112,9 +112,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region OnInitialized
 
-		static private  bool                  _isInitialized;
+		private static  bool                  _isInitialized;
 		static readonly object                _syncAfterInitialized    = new object();
-		static private  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+		private static  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
 
 		internal static void Initialized()
 		{

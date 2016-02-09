@@ -44,7 +44,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		readonly static Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache =
+		static readonly Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache =
 			new Dictionary<MappingSchema,Tuple<T,MetadataInfo>>();
 
 		readonly MetadataProvider _metadata;
@@ -85,10 +85,10 @@ namespace LinqToDB.ServiceModel
 
 			readonly MappingSchema _mappingSchema;
 
-			readonly public Dictionary<Type,TypeInfo>                  TypeDic     = new Dictionary<Type,TypeInfo>();
-			readonly public Dictionary<string,ResourceType>            Types       = new Dictionary<string,ResourceType>();
-			readonly public Dictionary<string,ResourceSet>             Sets        = new Dictionary<string,ResourceSet>();
-			readonly public Dictionary<string,Func<object,IQueryable>> RootGetters = new Dictionary<string,Func<object,IQueryable>>();
+			public readonly Dictionary<Type,TypeInfo>                  TypeDic     = new Dictionary<Type,TypeInfo>();
+			public readonly Dictionary<string,ResourceType>            Types       = new Dictionary<string,ResourceType>();
+			public readonly Dictionary<string,ResourceSet>             Sets        = new Dictionary<string,ResourceSet>();
+			public readonly Dictionary<string,Func<object,IQueryable>> RootGetters = new Dictionary<string,Func<object,IQueryable>>();
 
 			void LoadMetadata()
 			{
