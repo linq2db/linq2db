@@ -21,6 +21,9 @@ New Update method overload:
 	.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
 
 
+New configuration option - LinqToDB.DataProvider.SqlServer.SqlServerConfiguration.GenerateScopeIdentity.
+
+
 
 What's new in 1.0.7.3
 ---------------------
