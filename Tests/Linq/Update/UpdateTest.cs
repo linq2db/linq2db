@@ -320,7 +320,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(
+			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL)]
 		public void Update12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -335,7 +337,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(
+			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL)]
 		public void Update13(string context)
 		{
 			using (var db = GetDataContext(context))
