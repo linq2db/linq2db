@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
-	using Mapping;
 	using SqlProvider;
 
 	class OracleBulkCopy : BasicBulkCopy
@@ -111,6 +109,8 @@ namespace LinqToDB.DataProvider.Oracle
 					return rc;
 				}
 			}
+
+			options.BulkCopyType = BulkCopyType.MultipleRows;
 
 			return MultipleRowsCopy(dataConnection, options, source);
 		}

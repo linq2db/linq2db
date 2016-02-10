@@ -130,21 +130,9 @@ namespace LinqToDB.DataProvider.Oracle
 							new Expression[]
 							{
 								Expression.Assign(tstz, Expression.Call(dataReaderParameter, "GetOracleTimeStampTZ", null, indexParameter)),
-								Expression.New(
-									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
-									Expression.PropertyOrField(tstz, "Year"),
-									Expression.PropertyOrField(tstz, "Month"),
-									Expression.PropertyOrField(tstz, "Day"),
-									Expression.PropertyOrField(tstz, "Hour"),
-									Expression.PropertyOrField(tstz, "Minute"),
-									Expression.PropertyOrField(tstz, "Second"),
-									Expression.Convert(Expression.PropertyOrField(tstz, "Millisecond"), typeof(int)),
-									Expression.Call(
-										MemberHelper.MethodOf(() => TimeSpan.Parse("")),
-										Expression.Call(
-											Expression.PropertyOrField(tstz, "TimeZone"),
-											MemberHelper.MethodOf(() => "".TrimStart(' ')),
-											Expression.NewArrayInit(typeof(char), Expression.Constant('+'))))
+								Expression.Call(
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									Expression.Convert(tstz, typeof(object))
 								)
 							}),
 						dataReaderParameter,
@@ -176,21 +164,9 @@ namespace LinqToDB.DataProvider.Oracle
 										"ToOracleTimeStampTZ",
 										null,
 										null)),
-								Expression.New(
-									MemberHelper.ConstructorOf(() => new DateTimeOffset(0,0,0,0,0,0,0,new TimeSpan())),
-									Expression.PropertyOrField(tstz, "Year"),
-									Expression.PropertyOrField(tstz, "Month"),
-									Expression.PropertyOrField(tstz, "Day"),
-									Expression.PropertyOrField(tstz, "Hour"),
-									Expression.PropertyOrField(tstz, "Minute"),
-									Expression.PropertyOrField(tstz, "Second"),
-									Expression.Convert(Expression.PropertyOrField(tstz, "Millisecond"), typeof(int)),
-									Expression.Call(
-										MemberHelper.MethodOf(() => TimeSpan.Parse("")),
-										Expression.Call(
-											Expression.PropertyOrField(tstz, "TimeZone"),
-											MemberHelper.MethodOf(() => "".TrimStart(' ')),
-											Expression.NewArrayInit(typeof(char), Expression.Constant('+'))))
+								Expression.Call(
+									MemberHelper.MethodOf(() => ToDateTimeOffset(null)),
+									Expression.Convert(tstz, typeof(object))
 								)
 							}),
 						dataReaderParameter,
@@ -278,6 +254,17 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (_oracleXmlStream != null)
 				MappingSchema.AddScalarType(_oracleXmlStream, GetNullValue(_oracleXmlStream), true, DataType.Xml); // ?
+		}
+
+		static DateTimeOffset ToDateTimeOffset(object value)
+		{
+			dynamic tstz        = value;
+			double  millisecond = tstz.Millisecond;
+
+			return new DateTimeOffset(
+				tstz.Year, tstz.Month,  tstz.Day, 
+				tstz.Hour, tstz.Minute, tstz.Second, (int)millisecond,
+				tstz.GetTimeZoneOffset());
 		}
 
 		static object GetNullValue(Type type)
