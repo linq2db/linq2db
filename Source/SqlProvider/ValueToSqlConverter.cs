@@ -15,7 +15,7 @@ namespace LinqToDB.SqlProvider
 	{
 		public ValueToSqlConverter(params ValueToSqlConverter[] converters)
 		{
-			_baseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
+			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
 		internal void SetDefauls()
@@ -38,7 +38,8 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(Guid),     (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
 		}
 
-		readonly ValueToSqlConverter[]          _baseConverters;
+		internal readonly ValueToSqlConverter[] BaseConverters;
+
 		readonly Dictionary<Type,ConverterType> _converters = new Dictionary<Type,ConverterType>();
 
 		ConverterType _booleanConverter;
@@ -126,10 +127,15 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return TryConvert(stringBuilder, new SqlDataType(value.GetType()), value);
+			return TryConvertImpl(stringBuilder, new SqlDataType(value.GetType()), value, true);
 		}
 
 		public bool TryConvert(StringBuilder stringBuilder, SqlDataType dataType, object value)
+		{
+			return TryConvertImpl(stringBuilder, dataType, value, true);
+		}
+
+		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object value, bool tryBase)
 		{
 			if (value == null)
 			{
@@ -171,9 +177,9 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			if (_baseConverters.Length > 0)
-				foreach (var valueConverter in _baseConverters)
-					if (valueConverter.TryConvert(stringBuilder, dataType, value))
+			if (tryBase && BaseConverters.Length > 0)
+				foreach (var valueConverter in BaseConverters)
+					if (valueConverter.TryConvertImpl(stringBuilder, dataType, value, false))
 						return true;
 
 			return false;
