@@ -860,8 +860,6 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		public 
-
 		#endregion
 
 		#region ICloneable Members

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
 	using Expressions;
 
+	[PublicAPI]
 	public static class ConvertTo<TTo>
 	{
 		public static TTo From<TFrom>(TFrom o)
@@ -13,6 +16,7 @@ namespace LinqToDB.Common
 		}
 	}
 
+	[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()
@@ -32,7 +36,7 @@ namespace LinqToDB.Common
 		}
 
 		private static Expression<Func<TFrom,TTo>> _expression;
-		public static  Expression<Func<TFrom,TTo>>  Expression
+		public  static Expression<Func<TFrom,TTo>>  Expression
 		{
 			get { return _expression; }
 			set

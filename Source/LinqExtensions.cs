@@ -11,6 +11,7 @@ namespace LinqToDB
 	using Linq;
 	using Linq.Builder;
 
+	[PublicAPI]
 	public static class LinqExtensions
 	{
 		#region Table Helpers

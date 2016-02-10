@@ -4,6 +4,8 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -16,6 +18,7 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 
+	[PublicAPI]
 	public static partial class Sql
 	{
 		#region Common Functions

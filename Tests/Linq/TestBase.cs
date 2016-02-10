@@ -32,6 +32,7 @@ namespace Tests
 			DataConnection.WriteTraceLine = (s1,s2) =>
 			{
 				Console.WriteLine("{0}: {1}", s2, s1);
+				Debug.WriteLine(s1, s2);
 				if (traceCount++ > 1000)
 					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
 			};
