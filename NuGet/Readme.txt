@@ -10,6 +10,20 @@ What's new in 1.0.7.4
 SqlServer Guid Identity support.
 
 
+New Update method overload:
+
+	(
+		from p1 in db.Parent
+		join p2 in db.Parent on p1.ParentID equals p2.ParentID
+		where p1.ParentID < 3
+		select new { p1, p2 }
+	)
+	.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
+
+
+New configuration option - LinqToDB.DataProvider.SqlServer.SqlServerConfiguration.GenerateScopeIdentity.
+
+
 
 What's new in 1.0.7.3
 ---------------------

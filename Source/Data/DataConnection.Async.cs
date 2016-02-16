@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -94,9 +93,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = await ((DbCommand)Command).ExecuteReaderAsync(cancellationToken);
 
 				if (TraceSwitch.TraceInfo)
@@ -121,6 +121,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}

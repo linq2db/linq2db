@@ -73,7 +73,7 @@ namespace Tests.Exceptions
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SqlServer2008), ExpectedException(typeof(System.Data.SqlClient.SqlException), ExpectedMessage = "Invalid object name 'Parent1'.")]
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
 		public void ReplaceTableTest(string context)
 		{
 			using (var db = new MyDataConnection(context))
@@ -82,11 +82,25 @@ namespace Tests.Exceptions
 
 				var n = 555;
 
-				db.Parent.Insert(() => new Parent
-				{
-					ParentID = n,
-					Value1   = n
-				});
+				Assert.Throws(
+					typeof(System.Data.SqlClient.SqlException),
+					() =>
+						db.Parent.Insert(() => new Parent
+						{
+							ParentID = n,
+							Value1   = n
+						}),
+					"Invalid object name 'Parent1'.");
+
+				Assert.Throws(
+					typeof(System.Data.SqlClient.SqlException),
+					() =>
+						db.Parent.Insert(() => new Parent
+						{
+							ParentID = n,
+							Value1   = n
+						}),
+					"Invalid object name 'Parent1'.");
 
 				db.Parent.Delete(p => p.ParentID == n);
 			}

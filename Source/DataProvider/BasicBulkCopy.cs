@@ -155,10 +155,10 @@ namespace LinqToDB.DataProvider
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
-
 				var count = action();
 
 				if (DataConnection.TraceSwitch.TraceInfo)
@@ -182,6 +182,7 @@ namespace LinqToDB.DataProvider
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
 						CommandText    = commandText,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}

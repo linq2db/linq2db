@@ -14,7 +14,12 @@ namespace Tests.Linq
 	public class AsyncTest : TestBase
 	{
 		[Test, DataContextSource(false)]
-		public async void Test(string context)
+		public void Test(string context)
+		{
+			TestImpl(context);
+		}
+
+		async void TestImpl(string context)
 		{
 			Test1(context);
 
@@ -36,7 +41,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(false)]
-		public async void TestForEach(string context)
+		public void TestForEach(string context)
+		{
+			TestForEachImpl(context);
+		}
+
+		async void TestForEachImpl(string context)
 		{
 			using (var db = GetDataContext(context + ".LinqService"))
 			{
@@ -49,7 +59,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(false)]
-		public async void TestExecute1(string context)
+		public void TestExecute1(string context)
+		{
+			TestExecute1Impl(context);
+		}
+
+		async void TestExecute1Impl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{
@@ -75,7 +90,12 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(false)]
-		public async void TestQueryToArray(string context)
+		public void TestQueryToArray(string context)
+		{
+			TestQueryToArrayImpl(context);
+		}
+
+		async void TestQueryToArrayImpl(string context)
 		{
 			using (var conn = new TestDataConnection(context))
 			{

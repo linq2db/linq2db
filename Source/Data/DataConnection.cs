@@ -274,7 +274,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		readonly static List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
+		static readonly List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
 			new List<Func<ConnectionStringSettings,IDataProvider>>();
 
 		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)
@@ -602,9 +602,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteNonQuery();
 
 				if (TraceSwitch.TraceInfo)
@@ -630,6 +631,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -654,9 +656,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteScalar();
 
 				if (TraceSwitch.TraceInfo)
@@ -681,6 +684,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -710,9 +714,10 @@ namespace LinqToDB.Data
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
 				var ret = Command.ExecuteReader(commandBehavior);
 
 				if (TraceSwitch.TraceInfo)
@@ -737,6 +742,7 @@ namespace LinqToDB.Data
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
 						Command        = Command,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}
@@ -853,8 +859,6 @@ namespace LinqToDB.Data
 
 			return this;
 		}
-
-		public 
 
 		#endregion
 

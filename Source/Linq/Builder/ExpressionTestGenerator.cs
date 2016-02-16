@@ -675,7 +675,7 @@ namespace {0}
 			return string.Join(".", newNames);
 		}
 
-		static public List<string> SystemNamespaces = new List<string>
+		public static List<string> SystemNamespaces = new List<string>
 		{
 			"System", "LinqToDB", "Microsoft"
 		};

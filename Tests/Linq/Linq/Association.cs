@@ -508,8 +508,8 @@ namespace Tests.Linq
 
 					var list = q.ToList();
 
-					Assert.That(list.Count, Is.GreaterThan(0));
-					Assert.That(list[0].Children,    Is.Not.Null);
+					Assert.That(list.Count,       Is.GreaterThan(0));
+					Assert.That(list[0].Children, Is.Not.Null);
 				}
 			}
 			finally

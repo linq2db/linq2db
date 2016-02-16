@@ -328,7 +328,7 @@ namespace LinqToDB.SqlQuery
 			throw new InvalidOperationException();
 		}
 
-		public static bool CanBeNull(Type type)
+		public static bool TypeCanBeNull(Type type)
 		{
 			if (type.IsValueTypeEx() == false ||
 				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>)
@@ -497,9 +497,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			return false;
+			get { return false; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

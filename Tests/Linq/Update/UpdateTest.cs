@@ -11,7 +11,7 @@ using NUnit.Framework;
 // ReSharper disable ConvertToConstant.Local
 #endregion
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -317,6 +317,40 @@ namespace Tests.Update
 				//db.GetTable<LinqDataTypes2>().Update(_ => q.Contains(_), _ => new LinqDataTypes2 { GuidValue = _.GuidValue });
 
 				q.Update(_ => new LinqDataTypes2 { GuidValue = _.GuidValue });
+			}
+		}
+
+		[Test, DataContextSource(
+			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL)]
+		public void Update12(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p1 in db.Parent
+					join p2 in db.Parent on p1.ParentID equals p2.ParentID
+					where p1.ParentID < 3
+					select new { p1, p2 }
+				)
+				.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
+			}
+		}
+
+		[Test, DataContextSource(
+			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.Firebird, ProviderName.Oracle, ProviderName.PostgreSQL)]
+		public void Update13(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p1 in db.Parent
+					join p2 in db.Parent on p1.ParentID equals p2.ParentID
+					where p1.ParentID < 3
+					select new { p1, p2 }
+				)
+				.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 			}
 		}
 

@@ -368,7 +368,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Expression.Call(
 					null,
-					MemberHelper.MethodOf<T?>(p => Sql.AsNotNull(p)),
+					MemberHelper.MethodOf<T?>(p => Sql.ToNotNull(p)),
 					expression.Expression);
 			}
 		}
@@ -786,7 +786,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess :
 					{
 						var ma   = (MemberExpression)expression;
-						var attr = GetFunctionAttribute(ma.Member);
+						var attr = GetExpressionAttribute(ma.Member);
 
 						if (attr != null)
 							return Convert(context, attr.GetExpression(ma.Member));
@@ -861,7 +861,7 @@ namespace LinqToDB.Linq.Builder
 						if (expr != null)
 							return ConvertToSql(context, expr, unwrap);
 
-						var attr = GetFunctionAttribute(e.Method);
+						var attr = GetExpressionAttribute(e.Method);
 
 						if (attr != null)
 						{
@@ -981,7 +981,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return IsServerSideOnly(l.Body.Unwrap());
 
-						var attr = GetFunctionAttribute(ex.Member);
+						var attr = GetExpressionAttribute(ex.Member);
 						return attr != null && attr.ServerSideOnly;
 					}
 
@@ -1010,7 +1010,7 @@ namespace LinqToDB.Linq.Builder
 							if (l != null)
 								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
 
-							var attr = GetFunctionAttribute(e.Method);
+							var attr = GetExpressionAttribute(e.Method);
 							return attr != null && attr.ServerSideOnly;
 						}
 
@@ -1084,7 +1084,7 @@ namespace LinqToDB.Linq.Builder
 							if (mc.Method.DeclaringType.IsConstantable() || mc.Method.DeclaringType == typeof(object))
 								return false;
 
-							var attr = GetFunctionAttribute(mc.Method);
+							var attr = GetExpressionAttribute(mc.Method);
 
 							if (attr != null && !attr.ServerSideOnly)
 								return false;
@@ -1115,13 +1115,13 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 						{
-							var attr = GetFunctionAttribute(((MemberExpression)ex).Member);
+							var attr = GetExpressionAttribute(((MemberExpression)ex).Member);
 							return attr != null && attr.ServerSideOnly;
 						}
 
 					case ExpressionType.Call         :
 						{
-							var attr = GetFunctionAttribute(((MethodCallExpression)ex).Method);
+							var attr = GetExpressionAttribute(((MethodCallExpression)ex).Method);
 							return attr != null && attr.ServerSideOnly;
 						}
 				}
@@ -1429,7 +1429,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.NotEqual:
 
 					if (!context.SelectQuery.IsParameterDependent &&
-						(l is SqlParameter && l.CanBeNull() || r is SqlParameter && r.CanBeNull()))
+						(l is SqlParameter && l.CanBeNull || r is SqlParameter && r.CanBeNull))
 						context.SelectQuery.IsParameterDependent = true;
 
 					// | (SqlQuery(Select([]) as q), SqlValue(null))
@@ -2251,7 +2251,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess :
 						{
 							var ma   = (MemberExpression)pi;
-							var attr = GetFunctionAttribute(ma.Member);
+							var attr = GetExpressionAttribute(ma.Member);
 
 							if (attr == null && !ma.Member.IsNullableValueMember())
 							{
@@ -2289,7 +2289,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (e.Method.DeclaringType != typeof(Enumerable))
 							{
-								var attr = GetFunctionAttribute(e.Method);
+								var attr = GetExpressionAttribute(e.Method);
 
 								if (attr == null && canBeCompiled)
 									return !CanBeCompiled(pi);
@@ -2351,9 +2351,9 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		Sql.FunctionAttribute GetFunctionAttribute(MemberInfo member)
+		Sql.ExpressionAttribute GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.FunctionAttribute>(member, a => a.Configuration);
+			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member, a => a.Configuration);
 		}
 
 		internal Sql.TableFunctionAttribute GetTableFunctionAttribute(MemberInfo member)
@@ -2375,7 +2375,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (sqlExpression is SelectQuery.SearchCondition)
 			{
-				if (sqlExpression.CanBeNull())
+				if (sqlExpression.CanBeNull)
 				{
 					var notExpr = new SelectQuery.SearchCondition
 					{

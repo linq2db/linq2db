@@ -68,7 +68,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
 
-			SetField<IDataReader,decimal> ((r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
+			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
+			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("smallmoney", (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("decimal",    (r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
 		}
 
 		#endregion

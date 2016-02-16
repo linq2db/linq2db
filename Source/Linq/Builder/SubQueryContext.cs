@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 			return base.IsExpression(expression, level, testFlag);
 		}
 
-		internal protected readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
+		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
 
 		protected virtual int GetIndex(SelectQuery.Column column)
 		{

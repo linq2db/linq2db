@@ -67,7 +67,8 @@ namespace Tests.Linq
 				AreEqual(
 					from ch in    Child
 					orderby ch.ChildID
-					select    Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p),
+					select    Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p)
+					,
 					from ch in db.Child
 					orderby ch.ChildID
 					select db.Parent.Where(p => p.ParentID == ch.Parent.ParentID).Select(p => p));

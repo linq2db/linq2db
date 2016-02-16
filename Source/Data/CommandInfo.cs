@@ -360,6 +360,10 @@ namespace LinqToDB.Data
 					{
 						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
 					}
+					catch (FormatException)
+					{
+						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
+					}
 				}
 			}
 
