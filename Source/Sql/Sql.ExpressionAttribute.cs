@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
+
+using JetBrains.Annotations;
 
 // ReSharper disable CheckNamespace
 
@@ -10,48 +13,81 @@ namespace LinqToDB
 
 	partial class Sql
 	{
+		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : FunctionAttribute
+		public class ExpressionAttribute : Attribute
 		{
 			public ExpressionAttribute(string expression)
-				: base(expression)
 			{
+				Expression = expression;
 				Precedence = SqlQuery.Precedence.Primary;
 			}
 
 			public ExpressionAttribute(string expression, params int[] argIndices)
-				: base(expression, argIndices)
 			{
+				Expression = expression;
+				ArgIndices = argIndices;
 				Precedence = SqlQuery.Precedence.Primary;
 			}
 
-			public ExpressionAttribute(string sqlProvider, string expression)
-				: base(sqlProvider, expression)
+			public ExpressionAttribute(string configuration, string expression)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Configuration = configuration;
+				Expression    = expression;
+				Precedence    = SqlQuery.Precedence.Primary;
 			}
 
-			public ExpressionAttribute(string sqlProvider, string expression, params int[] argIndices)
-				: base(sqlProvider, expression, argIndices)
+			public ExpressionAttribute(string configuration, string expression, params int[] argIndices)
 			{
-				Precedence = SqlQuery.Precedence.Primary;
+				Configuration = configuration;
+				Expression    = expression;
+				ArgIndices    = argIndices;
+				Precedence    = SqlQuery.Precedence.Primary;
 			}
 
-			protected new string Name
+			public string Expression       { get; set; }
+			public int[]  ArgIndices       { get; set; }
+			public int    Precedence       { get; set; }
+			public string Configuration    { get; set; }
+			public bool   ServerSideOnly   { get; set; }
+			public bool   PreferServerSide { get; set; }
+			public bool   InlineParameters { get; set; }
+
+			private bool? _canBeNull;
+			public  bool   CanBeNull
 			{
-				get { return base.Name; }
+				get { return _canBeNull ?? true;  }
+				set { _canBeNull = value;         }
 			}
 
-			public string Expression
+			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
 			{
-				get { return base.Name;  }
-				set { base.Name = value; }
+				if (member is MethodInfo)
+				{
+					var method = (MethodInfo)member;
+
+					if (method.DeclaringType.IsGenericTypeEx())
+						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+
+					if (method.IsGenericMethod)
+						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+				}
+
+				if (ArgIndices != null)
+				{
+					var idxs = new ISqlExpression[ArgIndices.Length];
+
+					for (var i = 0; i < ArgIndices.Length; i++)
+						idxs[i] = args[ArgIndices[i]];
+
+					return idxs;
+				}
+
+				return args;
 			}
 
-			public int Precedence { get; set; }
-
-			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
+			public virtual ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 			{
 				return new SqlExpression(member.GetMemberType(), Expression ?? member.Name, Precedence, ConvertArgs(member, args)) { CanBeNull = CanBeNull };
 			}

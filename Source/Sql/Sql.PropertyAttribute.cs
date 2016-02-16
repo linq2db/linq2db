@@ -12,9 +12,10 @@ namespace LinqToDB
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class PropertyAttribute : FunctionAttribute
+		public class PropertyAttribute : ExpressionAttribute
 		{
 			public PropertyAttribute()
+				: base(null)
 			{
 			}
 
@@ -23,14 +24,20 @@ namespace LinqToDB
 			{
 			}
 
-			public PropertyAttribute(string sqlProvider, string name)
-				: base(sqlProvider, name)
+			public PropertyAttribute(string configuraion, string name)
+				: base(configuraion, name)
 			{
+			}
+
+			public string Name
+			{
+				get { return Expression;  }
+				set { Expression = value; }
 			}
 
 			public override ISqlExpression GetExpression(MemberInfo member, params ISqlExpression[] args)
 			{
-				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, Precedence.Primary) { CanBeNull = CanBeNull };
+				return new SqlExpression(member.GetMemberType(), Name ?? member.Name, SqlQuery.Precedence.Primary) { CanBeNull = CanBeNull };
 			}
 		}
 	}

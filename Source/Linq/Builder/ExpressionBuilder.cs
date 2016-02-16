@@ -1011,7 +1011,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess   :
 					{
 						var ma   = (MemberExpression)ex;
-						var attr = GetFunctionAttribute(ma.Member);
+						var attr = GetExpressionAttribute(ma.Member);
 
 						if (attr != null)
 							return true;
