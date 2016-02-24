@@ -172,8 +172,30 @@ public abstract partial class TypeBase : IClassMember
 	public bool            IsPartial  = true;
 	public List<string>    Comment    = new List<string>();
 	public List<Attribute> Attributes = new List<Attribute>();
+	public string          Conditional;
 
 	public abstract void Render(GeneratedTextTransformation tt);
+
+	protected virtual void BeginConditional(GeneratedTextTransformation tt)
+	{
+		if (Conditional != null)
+		{
+			tt.RemoveSpace();
+			tt.WriteLine("#if " + Conditional);
+			tt.WriteLine("");
+		}
+	}
+
+	protected virtual void EndConditional(GeneratedTextTransformation tt)
+	{
+		if (Conditional != null)
+		{
+			tt.RemoveSpace();
+			tt.WriteLine("");
+			tt.RemoveSpace();
+			tt.WriteLine("#endif");
+		}
+	}
 
 	public          ITree              Parent { get; set; }
 	public abstract IEnumerable<ITree> GetNodes();
@@ -222,6 +244,8 @@ public partial class Class : TypeBase
 	
 	public override void Render(GeneratedTextTransformation tt)
 	{
+		BeginConditional(tt);
+
 		foreach (var c in Comment)
 			tt.WriteLine("//" + c);
 
@@ -261,6 +285,9 @@ public partial class Class : TypeBase
 			{
 				var m = (MemberBase)cm;
 				
+				if (!(m is MemberGroup))
+					m.BeginConditional(tt, false);
+
 				foreach (var c in m.Comment)
 					WriteComment(tt, c);
 
@@ -301,6 +328,9 @@ public partial class Class : TypeBase
 				m.Render(tt, false);
 				if (m.InsertBlankLineAfter)
 					tt.WriteLine("");
+
+				if (!(m is MemberGroup))
+					m.EndConditional(tt, false);
 			}
 			else if (cm is TypeBase)
 			{
@@ -315,6 +345,8 @@ public partial class Class : TypeBase
 
 		tt.PopIndent();
 		WriteEndClass(tt);
+
+		EndConditional(tt);
 	}
 
 	public override IEnumerable<ITree> GetNodes()
@@ -342,6 +374,7 @@ public abstract partial class MemberBase : IClassMember
 	public string          EndLineComment;
 	public List<Attribute> Attributes = new List<Attribute>();
 	public bool            InsertBlankLineAfter = true;
+	public string          Conditional;
 
 	public int AccessModifierLen;
 	public int ModifierLen;
@@ -354,6 +387,29 @@ public abstract partial class MemberBase : IClassMember
 	public abstract int  CalcBodyLen    ();
 	public virtual  int  CalcParamLen   () { return 0; }
 	public abstract void Render         (GeneratedTextTransformation tt, bool isCompact);
+
+	public virtual void BeginConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		if (Conditional != null)
+		{
+			tt.RemoveSpace();
+			tt.WriteLine("#if " + Conditional);
+			if (!isCompact)
+				tt.WriteLine("");
+		}
+	}
+
+	public virtual void EndConditional(GeneratedTextTransformation tt, bool isCompact)
+	{
+		if (Conditional != null)
+		{
+			tt.RemoveSpace();
+			if (!isCompact)
+				tt.WriteLine("");
+			tt.RemoveSpace();
+			tt.WriteLine("#endif");
+		}
+	}
 
 	public         ITree              Parent     { get; set; }
 	public virtual IEnumerable<ITree> GetNodes() { return Enumerable.Empty<ITree>(); }
@@ -380,6 +436,8 @@ public partial class MemberGroup : MemberBase
 			BeginRegion(tt, Region);
 			tt.WriteLine("");
 		}
+
+		BeginConditional(tt, isCompact);
 
 		if (Errors.Count > 0 && tt.GenerateProcedureErrors)
 		{
@@ -576,6 +634,9 @@ public partial class MemberGroup : MemberBase
 
 				foreach (var m in allMembers)
 				{
+					if (!(m is MemberGroup))
+						m.BeginConditional(tt, IsCompact);
+
 					foreach (var c in m.Comment)
 						WriteComment(tt, c);
 
@@ -634,6 +695,9 @@ public partial class MemberGroup : MemberBase
 
 					if (!IsCompact)
 						tt.WriteLine("");
+
+					if (!(m is MemberGroup))
+						m.EndConditional(tt, IsCompact);
 				}
 			}
 		}
@@ -644,7 +708,10 @@ public partial class MemberGroup : MemberBase
 				if (cm is MemberBase)
 				{
 					var m = (MemberBase)cm;
-					
+
+					if (!(m is MemberGroup))
+						m.BeginConditional(tt, IsCompact);
+
 					foreach (var c in m.Comment)
 						WriteComment(tt, c);
 
@@ -700,6 +767,9 @@ public partial class MemberGroup : MemberBase
 
 					if (m.InsertBlankLineAfter)
 						tt.WriteLine("");
+
+					if (!(m is MemberGroup))
+						m.EndConditional(tt, IsCompact);
 				}
 				else if (cm is TypeBase)
 				{
@@ -712,6 +782,8 @@ public partial class MemberGroup : MemberBase
 		}
 
 		tt.Trim();
+
+		EndConditional(tt, isCompact);
 
 		if (!string.IsNullOrEmpty(Region))
 		{
