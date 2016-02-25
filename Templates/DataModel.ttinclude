@@ -449,15 +449,17 @@ public class TableContext
 	public string                      TableName;
 
 	public TableContext Column(string columnName,
-		string MemberName = null,
-		string Type       = null,
-		bool?  IsNullable = null)
+		string MemberName  = null,
+		string Type        = null,
+		bool?  IsNullable  = null,
+		string Conditional = null)
 	{
 		var c = Transformation.GetColumn(TableName, columnName);
 
-		if (MemberName != null) c.MemberName = MemberName;
-		if (Type       != null) c.Type       = Type;
-		if (IsNullable != null) c.IsNullable = IsNullable.Value;
+		if (MemberName  != null) c.MemberName  = MemberName;
+		if (Type        != null) c.Type        = Type;
+		if (IsNullable  != null) c.IsNullable  = IsNullable.Value;
+		if (Conditional != null) c.Conditional = Conditional;
 
 		return this;
 	}

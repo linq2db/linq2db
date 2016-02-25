@@ -496,7 +496,9 @@ namespace T4Model.Tests
 		/// 123
 		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")                                                ] public int    Field1;
+#if AAA
 		[                                            XmlArray("Name1")                             ] public string Field2;
+#endif
 		[XmlArrayItem(typeof(int), DataType="List"), XmlArray("Name21"), XmlArrayItem(typeof(char))] public string Field21;
 		[XmlAttribute("Name1", typeof(int)),         XmlArray("N2")                                ] public string Field221  { get; set; }
 		                                                                                             public string Field2212;
@@ -516,11 +518,17 @@ namespace T4Model.Tests
 
 		#endregion
 
+#if AAA
+
 		/// <summary>
 		/// 456
 		/// </summary>
 		[XmlArrayItem(typeof(int), DataType="List")]
 		public List<int> Field3; // Field3 comment
+
+#endif
+
+#if AAA
 
 		[DisplayName("Prop"), XmlArrayItem(typeof(int), DataType="List")]
 		public char Property1 // Property1 comment
@@ -536,6 +544,8 @@ namespace T4Model.Tests
 				a.ToString();
 			}
 		}
+
+#endif
 
 		public char Property11
 		{

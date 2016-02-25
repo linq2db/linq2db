@@ -46,9 +46,10 @@
 					},
 					new Field
 					{
-						Type       = "string",
-						Name       = "Field2",
-						Attributes =
+						Type        = "string",
+						Name        = "Field2",
+						Conditional = "AAA",
+						Attributes  =
 						{
 							new Attribute("XmlArray", "\"Name1\""),
 						}
@@ -120,6 +121,7 @@
 				Type           = "List<int>",
 				Name           = "Field3",
 				EndLineComment = "Field3 comment",
+				Conditional    = "AAA",
 				Attributes     =
 				{
 					//new Attribute { Name = "DisplayName" },
@@ -139,6 +141,7 @@
 				})
 			{
 				EndLineComment = "Property1 comment",
+				Conditional    = "AAA",
 				Attributes     =
 				{
 					new Attribute("DisplayName", "\"Prop\""),

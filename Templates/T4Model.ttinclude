@@ -404,10 +404,9 @@ public abstract partial class MemberBase : IClassMember
 		if (Conditional != null)
 		{
 			tt.RemoveSpace();
+			tt.WriteLine("#endif");
 			if (!isCompact)
 				tt.WriteLine("");
-			tt.RemoveSpace();
-			tt.WriteLine("#endif");
 		}
 	}
 
