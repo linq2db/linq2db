@@ -431,8 +431,32 @@ void GenerateTypesFromMetadata()
 					new[] { (string.Format("this ITable<{0}> table", t.TypeName)) }
 						.Union(PKs.Select(c => c.Type + " " + c.MemberName)),
 					new[] { "return table.FirstOrDefault(t =>" }
-						.Union(PKs.Select((c,i) => string.Format("\tt.{0}{1} == {0}{3}{2}",
-							c.MemberName, LenDiff(maxNameLen1, c.MemberName), i == nPKs - 1 ? ");" : " &&", i == nPKs - 1 ? "" : LenDiff(maxNameLen2, c.MemberName)))))
+						.Union(PKs.SelectMany((c,i) =>
+						{
+							var ss = new List<string>();
+
+							if (c.Conditional != null)
+								ss.Add("#if " + c.Conditional);
+
+							ss.Add(string.Format("\tt.{0}{1} == {0}{3}{2}",
+								c.MemberName, LenDiff(maxNameLen1, c.MemberName), i == nPKs - 1 ? ");" : " &&", i == nPKs - 1 ? "" : LenDiff(maxNameLen2, c.MemberName)));
+
+							if (c.Conditional != null)
+							{
+								if (ss[1].EndsWith(");"))
+								{
+									ss[1] = ss[1].Substring(0, ss[1].Length - 2);
+									ss.Add("#endif");
+									ss.Add("\t\t);");
+								}
+								else
+								{
+									ss.Add("#endif");
+								}
+							}
+
+							return ss;
+						})))
 				{
 					IsStatic = true
 				});
