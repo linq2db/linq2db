@@ -378,6 +378,7 @@ namespace LinqToDB.Linq.Builder
 			return expression.Transform(e =>
 			{
 				if (CanBeConstant(e) || CanBeCompiled(e))
+				//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
 					return new TransformInfo(e, true);
 
 				switch (e.NodeType)
@@ -621,11 +622,14 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, bool unwrap = false)
 		{
-			if (CanBeConstant(expression))
-				return BuildConstant(expression);
+			if (!PreferServerSide(expression))
+			{
+				if (CanBeConstant(expression))
+					return BuildConstant(expression);
 
-			if (CanBeCompiled(expression))
-				return BuildParameter(expression).SqlParameter;
+				if (CanBeCompiled(expression))
+					return BuildParameter(expression).SqlParameter;
+			}
 
 			if (unwrap)
 				expression = expression.Unwrap();
@@ -789,7 +793,17 @@ namespace LinqToDB.Linq.Builder
 						var attr = GetExpressionAttribute(ma.Member);
 
 						if (attr != null)
-							return Convert(context, attr.GetExpression(ma.Member));
+						{
+							if (attr.ExpectExpression)
+							{
+								var exp = ConvertToSql(context, ma.Expression);
+								return Convert(context, attr.GetExpression(ma.Member, exp));
+							}
+							else
+							{
+								return Convert(context, attr.GetExpression(ma.Member));
+							}
+						}
 
 						var ctx = GetContext(context, expression);
 
@@ -969,8 +983,16 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
+		Expression _lastExpr3;
+		bool       _lastResult3;
+
 		bool IsServerSideOnly(Expression expr)
 		{
+			if (_lastExpr3 == expr)
+				return _lastResult3;
+
+			var result = false;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
@@ -979,10 +1001,16 @@ namespace LinqToDB.Linq.Builder
 						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression == null ? null : ex.Expression.Type, ex.Member);
 
 						if (l != null)
-							return IsServerSideOnly(l.Body.Unwrap());
+						{
+							result = IsServerSideOnly(l.Body.Unwrap());
+						}
+						else
+						{
+							var attr = GetExpressionAttribute(ex.Member);
+							result = attr != null && attr.ServerSideOnly;
+						}
 
-						var attr = GetExpressionAttribute(ex.Member);
-						return attr != null && attr.ServerSideOnly;
+						break;
 					}
 
 				case ExpressionType.Call:
@@ -992,7 +1020,7 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method.DeclaringType == typeof(Enumerable))
 						{
 							if (CountBuilder.MethodNames.Concat(AggregationBuilder.MethodNames).Contains(e.Method.Name))
-								return IsQueryMember(e.Arguments[0]);
+								result = IsQueryMember(e.Arguments[0]);
 						}
 						else if (e.Method.DeclaringType == typeof(Queryable))
 						{
@@ -1000,7 +1028,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								case "Any"      :
 								case "All"      :
-								case "Contains" : return true;
+								case "Contains" : result = true; break;
 							}
 						}
 						else
@@ -1008,17 +1036,22 @@ namespace LinqToDB.Linq.Builder
 							var l = Expressions.ConvertMember(MappingSchema, e.Object == null ? null : e.Object.Type, e.Method);
 
 							if (l != null)
-								return l.Body.Unwrap().Find(IsServerSideOnly) != null;
-
-							var attr = GetExpressionAttribute(e.Method);
-							return attr != null && attr.ServerSideOnly;
+							{
+								result = l.Body.Unwrap().Find(IsServerSideOnly) != null;
+							}
+							else
+							{
+								var attr = GetExpressionAttribute(e.Method);
+								result = attr != null && attr.ServerSideOnly;
+							}
 						}
 
 						break;
 					}
 			}
 
-			return false;
+			_lastExpr3 = expr;
+			return _lastResult3 = result;
 		}
 
 		static bool IsQueryMember(Expression expr)
@@ -1048,9 +1081,15 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeConstant
 
+		Expression _lastExpr1;
+		bool       _lastResult1;
+
 		bool CanBeConstant(Expression expr)
 		{
-			return null == expr.Find(ex =>
+			if (_lastExpr1 == expr)
+				return _lastResult1;
+
+			var result = null == expr.Find(ex =>
 			{
 				if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
 					return false;
@@ -1095,15 +1134,25 @@ namespace LinqToDB.Linq.Builder
 
 				return true;
 			});
+
+
+			_lastExpr1 = expr;
+			return _lastResult1 = result;
 		}
 
 		#endregion
 
 		#region CanBeCompiled
 
+		Expression _lastExpr2;
+		bool       _lastResult2;
+
 		bool CanBeCompiled(Expression expr)
 		{
-			return null == expr.Find(ex =>
+			if (_lastExpr2 == expr)
+				return _lastResult2;
+
+			var result = null == expr.Find(ex =>
 			{
 				if (IsServerSideOnly(ex))
 					return true;
@@ -1112,7 +1161,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.Parameter    :
 						return !ReferenceEquals(ex, ParametersParam);
-
+/*
 					case ExpressionType.MemberAccess :
 						{
 							var attr = GetExpressionAttribute(((MemberExpression)ex).Member);
@@ -1124,10 +1173,14 @@ namespace LinqToDB.Linq.Builder
 							var attr = GetExpressionAttribute(((MethodCallExpression)ex).Method);
 							return attr != null && attr.ServerSideOnly;
 						}
+*/
 				}
 
 				return false;
 			});
+
+			_lastExpr2 = expr;
+			return _lastResult2 = result;
 		}
 
 		#endregion

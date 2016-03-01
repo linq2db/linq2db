@@ -90,6 +90,20 @@ namespace LinqToDB.Mapping
 					PrimaryKeyOrder = a.Order;
 				}
 			}
+
+			if (DbType == null || DataType == DataType.Undefined)
+			{
+				var a = mappingSchema.GetAttribute<ColumnTypeAttribute>(MemberInfo, attr => attr.Configuration);
+
+				if (a != null)
+				{
+					if (DbType == null)
+						DbType = a.DbType;
+
+					if (DataType == DataType.Undefined && a.DataType.HasValue)
+						DataType = a.DataType.Value;
+				}
+			}
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }

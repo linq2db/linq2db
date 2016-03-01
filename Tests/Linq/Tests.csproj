@@ -231,6 +231,7 @@
     <Compile Include="DataProvider\MySqlTest.cs" />
     <Compile Include="DataProvider\DataProviderTestBase.cs" />
     <Compile Include="DataProvider\PostgreSQLTest.cs" />
+    <Compile Include="DataProvider\SqlServerTypesTest.cs" />
     <Compile Include="Data\MiniProfilerTest.cs" />
     <Compile Include="Data\TransactionTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />

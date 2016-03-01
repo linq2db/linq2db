@@ -611,7 +611,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					throw new InvalidOperationException();
+					throw new LinqException("'{0}' cannot be converted to SQL.", expression);
 				}
 
 				if (table.Field == null)

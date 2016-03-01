@@ -182,12 +182,16 @@ namespace Tests
 			{
 				var builder = new NUnitTestCaseBuilder();
 
+				TestMethod test = null;
+				var hasTest = false;
+
 				foreach (var provider in _providerNames)
 				{
 					var isIgnore = !_userProviders.ContainsKey(provider);
 
 					var data = new TestCaseParameters(new object[] { provider });
-					var test = builder.BuildTestMethod(method, suite, data);
+
+					test = builder.BuildTestMethod(method, suite, data);
 
 					test.Properties.Set(PropertyNames.Category, provider);
 					SetName(test, method, provider, false);
@@ -196,7 +200,10 @@ namespace Tests
 					{
 						test.RunState = RunState.Ignored;
 						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+						continue;
 					}
+
+					hasTest = true;
 
 					yield return test;
 
@@ -208,15 +215,12 @@ namespace Tests
 						test.Properties.Set(PropertyNames.Category, provider);
 						SetName(test, method, provider, true);
 
-						if (isIgnore)
-						{
-							test.RunState = RunState.Ignored;
-							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
-						}
-
 						yield return test;
 					}
 				}
+
+				if (!hasTest)
+					yield return test;
 			}
 		}
 
