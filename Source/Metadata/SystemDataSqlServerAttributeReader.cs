@@ -95,7 +95,7 @@ namespace LinqToDB.Metadata
 				return (T[])attrs;
 			}
 
-			if (typeof(T) == typeof(ColumnTypeAttribute))
+			if (typeof(T) == typeof(DataTypeAttribute))
 			{
 				var attrs = _reader.GetAttributes<SqlUserDefinedTypeAttribute>(memberInfo.GetMemberType(), inherit);
 
@@ -107,7 +107,7 @@ namespace LinqToDB.Metadata
 					if (n.ToLower().StartsWith("sql"))
 						n = n.Substring(3);
 
-					var attr = new ColumnTypeAttribute(DataType.Udt, n);
+					var attr = new DataTypeAttribute(DataType.Udt, n);
 
 					return new[] { (T)(Attribute)attr };
 				}

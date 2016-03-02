@@ -93,7 +93,7 @@ namespace LinqToDB.Mapping
 
 			if (DbType == null || DataType == DataType.Undefined)
 			{
-				var a = mappingSchema.GetAttribute<ColumnTypeAttribute>(MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberInfo, attr => attr.Configuration);
 
 				if (a != null)
 				{

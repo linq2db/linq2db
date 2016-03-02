@@ -180,7 +180,7 @@
     <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
-    <Compile Include="Mapping\ColumnTypeAttribute.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />

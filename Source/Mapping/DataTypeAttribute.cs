@@ -8,19 +8,19 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property| AttributeTargets.Class | AttributeTargets.Interface,
 		AllowMultiple = true, Inherited = true)]
-	public class ColumnTypeAttribute : Attribute
+	public class DataTypeAttribute : Attribute
 	{
-		public ColumnTypeAttribute(DataType dataType)
+		public DataTypeAttribute(DataType dataType)
 		{
 			DataType = dataType;
 		}
 
-		public ColumnTypeAttribute(string dbType)
+		public DataTypeAttribute(string dbType)
 		{
 			DbType   = dbType;
 		}
 
-		public ColumnTypeAttribute(DataType dataType, string dbType)
+		public DataTypeAttribute(DataType dataType, string dbType)
 		{
 			DataType = dataType;
 			DbType   = dbType;
