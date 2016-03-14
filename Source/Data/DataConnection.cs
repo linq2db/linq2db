@@ -165,6 +165,14 @@ namespace LinqToDB.Data
 			set { _onTrace = value ?? OnTraceInternal; }
 		}
 
+		private Action<TraceInfo> _onTraceConnection = OnTrace;
+		[JetBrains.Annotations.CanBeNull]
+		public  Action<TraceInfo>  OnTraceConnection
+		{
+			get { return _onTraceConnection;  }
+			set { _onTraceConnection = value; }
+		}
+
 		static void OnTraceInternal(TraceInfo info)
 		{
 			if (info.BeforeExecute)
@@ -591,9 +599,12 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off)
 				return Command.ExecuteNonQuery();
 
+			if (OnTraceConnection == null)
+				return Command.ExecuteNonQuery();
+
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTrace(new TraceInfo
+				OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -610,7 +621,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
@@ -626,7 +637,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -645,9 +656,12 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off)
 				return Command.ExecuteScalar();
 
+			if (OnTraceConnection == null)
+				return Command.ExecuteScalar();
+
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTrace(new TraceInfo
+				OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -664,7 +678,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
@@ -679,7 +693,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -703,9 +717,12 @@ namespace LinqToDB.Data
 			if (TraceSwitch.Level == TraceLevel.Off)
 				return Command.ExecuteReader(commandBehavior);
 
+			if (OnTraceConnection == null)
+				return Command.ExecuteReader(commandBehavior);
+
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTrace(new TraceInfo
+				OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -722,7 +739,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
@@ -737,7 +754,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,

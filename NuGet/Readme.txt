@@ -24,6 +24,8 @@ New Update method overload:
 New configuration option - LinqToDB.DataProvider.SqlServer.SqlServerConfiguration.GenerateScopeIdentity.
 
 
+New DataConnection event OnTraceConnection.
+
 
 What's new in 1.0.7.3
 ---------------------
