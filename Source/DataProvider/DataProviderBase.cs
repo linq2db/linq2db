@@ -162,10 +162,6 @@ namespace LinqToDB.DataProvider
 			}
 
 #if DEBUG1
-			if (toType == typeof(int) && providerType == typeof(decimal))
-			{
-			}
-
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
