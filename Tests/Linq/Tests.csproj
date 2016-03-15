@@ -178,10 +178,8 @@
       <HintPath>..\..\Redist\SAPHana\Sap.Data.Hana.v4.5.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Sybase.AdoNet2.AseClient, Version=2.157.401.0, Culture=neutral, PublicKeyToken=95d94fac46c88e1e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet2.AseClient.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="Sybase.AdoNet45.AseClient">
+      <HintPath>..\..\Redist\Sybase\Sybase.AdoNet45.AseClient.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">

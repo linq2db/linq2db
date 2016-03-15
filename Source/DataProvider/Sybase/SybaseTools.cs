@@ -23,10 +23,10 @@ namespace LinqToDB.DataProvider.Sybase
 				path = Path.GetDirectoryName(path);
 
 				var _ =
-					File.Exists(Path.Combine(path, AssemblyName = "Sybase.AdoNet45.AseClient")) ||
-					File.Exists(Path.Combine(path, AssemblyName = "Sybase.AdoNet4.AseClient"))  ||
-					File.Exists(Path.Combine(path, AssemblyName = "Sybase.AdoNet35.AseClient")) ||
-					File.Exists(Path.Combine(path, AssemblyName = "Sybase.AdoNet2.AseClient"));
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet4.AseClient")  + ".dll"))  ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet35.AseClient") + ".dll")) ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet2.AseClient")  + ".dll"));
 			}
 			catch (Exception)
 			{
