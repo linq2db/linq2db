@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_bulkCopyCreator == null)
 				{
-					var clientNamespace    = OracleTools.AssemblyName + ".Client.";
+					var clientNamespace    = ((OracleDataProvider)dataConnection.DataProvider).AssemblyName + ".Client.";
 					var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
 					var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyOptions",       false);
 					var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);

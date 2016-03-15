@@ -126,6 +126,11 @@ namespace LinqToDB.DataProvider.Access
 			return new List<ForeingKeyInfo>();
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
+		}
+
 		List<ProcedureInfo> _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)

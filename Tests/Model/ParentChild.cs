@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
@@ -188,7 +189,20 @@ namespace Tests.Model
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
 		[Column] public int       ParentID;
-		[Column] public TypeValue Value1;
+		public TypeValue _Value1;
+		[Column] public TypeValue Value1
+		{
+			get { return _Value1; }
+			set
+			{
+				if ((int)value == 1)
+				{
+					
+				}
+
+				_Value1 = value;
+			}
+		}
 
 		public override bool Equals(object obj)
 		{
@@ -211,6 +225,11 @@ namespace Tests.Model
 		public int CompareTo(object obj)
 		{
 			return ParentID - ((Parent4)obj).ParentID;
+		}
+
+		public override string ToString()
+		{
+			return "ParentID: {0}, Value1: {1}".Args(ParentID, Value1);
 		}
 	}
 

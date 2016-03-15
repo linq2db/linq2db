@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -63,6 +64,15 @@ namespace Tests.Linq
 				AreEqual(
 					from p in    Parent4 where p.Value1 == TypeValue.Value1 select p,
 					from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
+		}
+
+		[Test]
+		public void EnumValue1()
+		{
+			var value = ConvertTo<TypeValue>.From(1);
+
+			Assert.AreEqual(TypeValue.Value1, value);
+			Assert.AreEqual(10,               (int)value);
 		}
 
 		[Test, DataContextSource]

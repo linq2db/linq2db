@@ -249,14 +249,14 @@ namespace Tests.Linq
 				{
 					db.GetTable<RawTable>().Insert(() => new RawTable
 					{
-						Id = RID,
+						Id        = RID,
 						TestField = VAL2
 					});
 
 					var result = db.GetTable<NullableTestTable2>()
 						.Where(r => r.Id == RID && r.TestField == TestEnum21.Value2)
 						.Select(r => r.TestField).FirstOrDefault();
-					Assert.True(result == TestEnum21.Value2);
+					Assert.That(result, Is.EqualTo(TestEnum21.Value2));
 				}
 			}
 		}

@@ -146,7 +146,8 @@ namespace Tests
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.Firebird,
-			ProviderName.Oracle,
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
@@ -507,7 +508,7 @@ namespace Tests
 			}
 		}
 
-		protected List<Child> _child;
+		protected        List<Child> _child;
 		protected IEnumerable<Child>  Child
 		{
 			get

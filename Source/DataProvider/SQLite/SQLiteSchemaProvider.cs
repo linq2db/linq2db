@@ -162,6 +162,11 @@ namespace LinqToDB.DataProvider.SQLite
 			return DataType.Undefined;
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
+		}
+
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			switch (dataType)

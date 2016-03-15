@@ -105,5 +105,23 @@ namespace LinqToDB.DataProvider.Oracle
 
 			stringBuilder.AppendFormat(format, value);
 		}
+
+		internal static readonly OracleMappingSchema Instance = new OracleMappingSchema();
+
+		public class NativeMappingSchema : MappingSchema
+		{
+			public NativeMappingSchema()
+				: base(ProviderName.OracleNative, Instance)
+			{
+			}
+		}
+
+		public class ManagedMappingSchema : MappingSchema
+		{
+			public ManagedMappingSchema()
+				: base(ProviderName.OracleManaged, Instance)
+			{
+			}
+		}
 	}
 }

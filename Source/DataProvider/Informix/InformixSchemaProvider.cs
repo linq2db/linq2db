@@ -80,6 +80,24 @@ namespace LinqToDB.DataProvider.Informix
 			return DataType.Undefined;
 		}
 
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.Informix";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "DATETIME" : return "IfxDateTime";
+				case "INTERVAL" : return "IfxTimeSpan";
+				case "DECIMAL"  : return "IfxDecimal";
+			}
+
+			return base.GetProviderSpecificType(dataType);
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"

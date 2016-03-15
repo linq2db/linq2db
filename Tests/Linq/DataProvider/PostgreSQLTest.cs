@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Xml;
 using System.Xml.Linq;
 

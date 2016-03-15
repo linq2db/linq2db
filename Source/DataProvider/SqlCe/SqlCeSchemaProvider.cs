@@ -127,5 +127,38 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			return DataType.Undefined;
 		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "System.Data.SqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "varbinary"        :
+				case "rowversion"       :
+				case "image"            : return "SqlBinary";
+				case "binary"           : return "SqlBinary";
+				case "tinyint"          : return "SqlByte";
+				case "datetime"         : return "SqlDateTime";
+				case "bit"              : return "SqlBoolean";
+				case "smallint"         : return "SqlInt16";
+				case "numeric"          :
+				case "decimal"          : return "SqlDecimal";
+				case "int"              : return "SqlInt32";
+				case "real"             : return "SqlSingle";
+				case "float"            : return "SqlDouble";
+				case "money"            : return "SqlMoney";
+				case "bigint"           : return "SqlInt64";
+				case "nvarchar"         :
+				case "nchar"            :
+				case "ntext"            : return "SqlString";
+				case "uniqueidentifier" : return "SqlGuid";
+			}
+
+			return base.GetProviderSpecificType(dataType);
+		}
 	}
 }

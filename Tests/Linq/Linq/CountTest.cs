@@ -193,7 +193,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.Oracle,
+			ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
 		public void GroupBy23(string context)
 		{
@@ -504,7 +504,7 @@ namespace Tests.Linq
 					db.Parent.Take(5).OrderByDescending(p => p.ParentID).Select(p => p.Children.Count()));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.Oracle, ProviderName.Sybase, ProviderName.Access /* Fix It*/)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.Sybase, ProviderName.Access /* Fix It*/)]
 		public void SubQuery7(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -136,6 +136,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
 		}
 
+		protected void SetToType<TP,T,TF>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
+		}
+
 		#endregion
 
 		#region GetReaderExpression
@@ -156,8 +161,18 @@ namespace LinqToDB.DataProvider
 					((DbDataReader)reader).GetName(idx)));
 			}
 
-#if DEBUG1
+#if DEBUG
+			if (toType == typeof(int) && providerType == typeof(decimal))
+			{
+			}
+
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
+			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+				toType       == null ? "(null)" : toType.Name,
+				providerType == null ? "(null)" : providerType.Name,
+				fieldType.Name,
+				typeName ?? "(null)"));
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 
 			foreach (var ex in ReaderExpressions)
@@ -170,9 +185,6 @@ namespace LinqToDB.DataProvider
 						ex.Key.DataTypeName,
 						ex.Value));
 			}
-
-			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName");
-			Debug.WriteLine("--------------------- --------------------- --------------------- ---------------------");
 #endif
 
 			Expression expr;

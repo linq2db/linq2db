@@ -39,7 +39,7 @@ namespace Tests.UserTests
 	public class SelectManyDeleteTest : TestBase
 	{
 		[Test, DataContextSource(
-			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.Oracle,
+			ProviderName.Access, ProviderName.DB2, ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged,
 			ProviderName.PostgreSQL, ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Firebird, ProviderName.SapHana
 			)]
 		public void Test(string context)

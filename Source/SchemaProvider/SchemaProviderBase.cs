@@ -18,6 +18,7 @@ namespace LinqToDB.SchemaProvider
 		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
 		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
 		protected abstract List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection);
+		protected abstract string               GetProviderSpecificTypeNamespace();
 
 		protected virtual List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
 		{
@@ -33,6 +34,7 @@ namespace LinqToDB.SchemaProvider
 		protected string[]           IncludedSchemas;
 		protected string[]           ExcludedSchemas;
 		protected bool               GenerateChar1AsString;
+		protected DataTable          DataTypesSchema;
 
 		protected Dictionary<string,DataTypeInfo> DataTypesDic;
 
@@ -106,23 +108,24 @@ namespace LinqToDB.SchemaProvider
 
 					column.t.Columns.Add(new ColumnSchema
 					{
-						Table           = column.t,
-						ColumnName      = column.c.Name,
-						ColumnType      = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
-						IsNullable      = isNullable,
-						MemberName      = ToValidName(column.c.Name),
-						MemberType      = ToTypeName(systemType, isNullable),
-						SystemType      = systemType ?? typeof(object),
-						DataType        = GetDataType(dataType, column.c.ColumnType),
-						SkipOnInsert    = column.c.SkipOnInsert || column.c.IsIdentity,
-						SkipOnUpdate    = column.c.SkipOnUpdate || column.c.IsIdentity,
-						IsPrimaryKey    = column.pk != null,
-						PrimaryKeyOrder = column.pk != null ? column.pk.Ordinal : -1,
-						IsIdentity      = column.c.IsIdentity,
-						Description     = column.c.Description,
-						Length          = column.c.Length,
-						Precision       = column.c.Precision,
-						Scale           = column.c.Scale,
+						Table                = column.t,
+						ColumnName           = column.c.Name,
+						ColumnType           = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+						IsNullable           = isNullable,
+						MemberName           = ToValidName(column.c.Name),
+						MemberType           = ToTypeName(systemType, isNullable),
+						SystemType           = systemType ?? typeof(object),
+						DataType             = GetDataType(dataType, column.c.ColumnType),
+						ProviderSpecificType = GetProviderSpecificType(dataType),
+						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
+						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
+						IsPrimaryKey         = column.pk != null,
+						PrimaryKeyOrder      = column.pk != null ? column.pk.Ordinal : -1,
+						IsIdentity           = column.c.IsIdentity,
+						Description          = column.c.Description,
+						Length               = column.c.Length,
+						Precision            = column.c.Precision,
+						Scale                = column.c.Scale,
 					});
 				}
 
@@ -217,16 +220,17 @@ namespace LinqToDB.SchemaProvider
 								orderby pr.Ordinal
 								select new ParameterSchema
 								{
-									SchemaName    = pr.ParameterName,
-									SchemaType    = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale),
-									IsIn          = pr.IsIn,
-									IsOut         = pr.IsOut,
-									IsResult      = pr.IsResult,
-									Size          = pr.Length,
-									ParameterName = ToValidName(pr.ParameterName ?? "par" + ++n),
-									ParameterType = ToTypeName(systemType, true),
-									SystemType    = systemType ?? typeof(object),
-									DataType      = GetDataType(pr.DataType, null)
+									SchemaName           = pr.ParameterName,
+									SchemaType           = GetDbType(pr.DataType, dt, pr.Length, pr.Precision, pr.Scale),
+									IsIn                 = pr.IsIn,
+									IsOut                = pr.IsOut,
+									IsResult             = pr.IsResult,
+									Size                 = pr.Length,
+									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
+									ParameterType        = ToTypeName(systemType, true),
+									SystemType           = systemType ?? typeof(object),
+									DataType             = GetDataType(pr.DataType, null),
+									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 								}
 							).ToList()
 						} into ps
@@ -267,11 +271,14 @@ namespace LinqToDB.SchemaProvider
 
 			return ProcessSchema(new DatabaseSchema
 			{
-				DataSource    = GetDataSourceName(dbConnection),
-				Database      = GetDatabaseName  (dbConnection),
-				ServerVersion = dbConnection.ServerVersion,
-				Tables        = tables,
-				Procedures    = procedures,
+				DataSource                    = GetDataSourceName(dbConnection),
+				Database                      = GetDatabaseName  (dbConnection),
+				ServerVersion                 = dbConnection.ServerVersion,
+				Tables                        = tables,
+				Procedures                    = procedures,
+				ProviderSpecificTypeNamespace = GetProviderSpecificTypeNamespace(),
+				DataTypesSchema               = DataTypesSchema,
+
 			}, options);
 		}
 
@@ -363,6 +370,11 @@ namespace LinqToDB.SchemaProvider
 			}
 		}
 
+		protected virtual string GetProviderSpecificType(string dataType)
+		{
+			return null;
+		}
+
 		protected DataTypeInfo GetDataType(string typeName)
 		{
 			DataTypeInfo dt;
@@ -398,14 +410,15 @@ namespace LinqToDB.SchemaProvider
 
 				select new ColumnSchema
 				{
-					ColumnName = columnName,
-					ColumnType = GetDbType(columnType, dt, length, precision, scale),
-					IsNullable = isNullable,
-					MemberName = ToValidName(columnName),
-					MemberType = ToTypeName(systemType, isNullable),
-					SystemType = systemType ?? typeof(object),
-					DataType   = GetDataType(columnType, null),
-					IsIdentity = r.Field<bool>("IsIdentity"),
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(columnType, dt, length, precision, scale),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = systemType ?? typeof(object),
+					DataType             = GetDataType(columnType, null),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = r.Field<bool>("IsIdentity"),
 				}
 			).ToList();
 		}
@@ -426,9 +439,9 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-			return dts.AsEnumerable()
+			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("TypeName"),

@@ -227,6 +227,26 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "MySql.Data.Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType.ToLower())
+			{
+				case "geometry"  : return "MySqlGeometry";
+				case "decimal"   : return "MySqlDecimal";
+				case "date"      :
+				case "newdate"   :
+				case "datetime"  :
+				case "timestamp" : return "MySqlDateTime";
+			}
+
+			return base.GetProviderSpecificType(dataType);
+		}
+
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
 			if (columnType != null && columnType.Contains("unsigned"))

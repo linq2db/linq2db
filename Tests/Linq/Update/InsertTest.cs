@@ -921,7 +921,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle)]
+		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void InsertBatch1(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -6,8 +6,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-using IBM.Data.DB2;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;

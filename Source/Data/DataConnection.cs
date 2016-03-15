@@ -342,7 +342,7 @@ namespace LinqToDB.Data
 			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
-				throw new ArgumentException("dataProvider.Name cant be empty.", "dataProvider");
+				throw new ArgumentException("dataProvider.Name cannot be empty.", "dataProvider");
 
 			_dataProviders[providerName] = dataProvider;
 		}

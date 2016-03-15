@@ -210,36 +210,64 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (dataType)
 			{
-				case "character"                      : return DataType.NChar;
-				case "text"                           : return DataType.Text;
-				case "smallint"                       : return DataType.Int16;
-				case "integer"                        : return DataType.Int32;
-				case "bigint"                         : return DataType.Int64;
-				case "real"                           : return DataType.Single;
-				case "double precision"               : return DataType.Double;
-				case "bytea"                          : return DataType.Binary;
-				case "boolean"                        : return DataType.Boolean;
-				case "numeric"                        : return DataType.Decimal;
-				case "money"                          : return DataType.Money;
-				case "uuid"                           : return DataType.Guid;
-				case "character varying"              : return DataType.NVarChar;
-				case "timestamp with time zone"       : return DataType.DateTimeOffset;
-				case "timestamp without time zone"    : return DataType.DateTime2;
-				case "time with time zone"            : return DataType.Time;
-				case "time without time zone"         : return DataType.Time;
-				case "date"                           : return DataType.Date;
-				case "xml"                            : return DataType.Xml;
-				case "point"                          : return DataType.Udt;
-				case "lseg"                           : return DataType.Udt;
-				case "box"                            : return DataType.Udt;
-				case "circle"                         : return DataType.Udt;
-				case "path"                           : return DataType.Udt;
-				case "polygon"                        : return DataType.Udt;
-				case "macaddr"                        : return DataType.Udt;
-				case "USER-DEFINED"                   : return DataType.Udt;
+				case "character"                   : return DataType.NChar;
+				case "text"                        : return DataType.Text;
+				case "smallint"                    : return DataType.Int16;
+				case "integer"                     : return DataType.Int32;
+				case "bigint"                      : return DataType.Int64;
+				case "real"                        : return DataType.Single;
+				case "double precision"            : return DataType.Double;
+				case "bytea"                       : return DataType.Binary;
+				case "boolean"                     : return DataType.Boolean;
+				case "numeric"                     : return DataType.Decimal;
+				case "money"                       : return DataType.Money;
+				case "uuid"                        : return DataType.Guid;
+				case "character varying"           : return DataType.NVarChar;
+				case "timestamp with time zone"    : return DataType.DateTimeOffset;
+				case "timestamp without time zone" : return DataType.DateTime2;
+				case "time with time zone"         : return DataType.Time;
+				case "time without time zone"      : return DataType.Time;
+				case "date"                        : return DataType.Date;
+				case "xml"                         : return DataType.Xml;
+				case "point"                       : return DataType.Udt;
+				case "lseg"                        : return DataType.Udt;
+				case "box"                         : return DataType.Udt;
+				case "circle"                      : return DataType.Udt;
+				case "path"                        : return DataType.Udt;
+				case "line"                        : return DataType.Udt;
+				case "polygon"                     : return DataType.Udt;
+				case "macaddr"                     : return DataType.Udt;
+				case "USER-DEFINED"                : return DataType.Udt;
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "NpgsqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "interval"                    : return "NpgsqlTimeSpan";
+				case "timestamp with time zone"    :
+				case "timestamp without time zone" :
+				case "date"                        : return "NpgsqlDate";
+				case "point"                       : return "NpgsqlPoint";
+				case "lseg"                        : return "NpgsqlLSeg";
+				case "box"                         : return "NpgsqlBox";
+				case "circle"                      : return "NpgsqlCircle";
+				case "path"                        : return "NpgsqlPath";
+				case "polygon"                     : return "NpgsqlPolygon";
+				case "line"                        : return "NpgsqlLine";
+				case "inet"                        : return "NpgsqlInet";
+				case "geometry "                   : return "PostgisGeometry";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

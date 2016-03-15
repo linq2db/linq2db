@@ -14,9 +14,9 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-			return dts.AsEnumerable()
+			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("SQL_TYPE_NAME"),
@@ -292,6 +292,48 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.DB2Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "XML"                       : return "DB2Xml";
+				case "DECFLOAT"                  : return "DB2DecimalFloat";
+				case "DBCLOB"                    :
+				case "CLOB"                      : return "DB2Clob";
+				case "BLOB"                      : return "DB2Blob";
+				case "BIGINT"                    : return "DB2Int64";
+				case "LONG VARCHAR FOR BIT DATA" :
+				case "VARCHAR () FOR BIT DATA"   :
+				case "VARBIN"                    :
+				case "BINARY"                    :
+				case "CHAR () FOR BIT DATA"      : return "DB2Binary";
+				case "LONG VARGRAPHIC"           :
+				case "VARGRAPHIC"                :
+				case "GRAPHIC"                   :
+				case "LONG VARCHAR"              :
+				case "CHARACTER"                 :
+				case "VARCHAR"                   :
+				case "CHAR"                      : return "DB2String";
+				case "DECIMAL"                   : return "DB2Decimal";
+				case "INTEGER"                   : return "DB2Int32";
+				case "SMALLINT"                  : return "DB2Int16";
+				case "REAL"                      : return "DB2Real";
+				case "DOUBLE"                    : return "DB2Double";
+				case "DATE"                      : return "DB2Date";
+				case "TIME"                      : return "DB2Time";
+				case "TIMESTMP"                  :
+				case "TIMESTAMP"                 : return "DB2TimeStamp";
+				case "ROWID"                     : return "DB2RowId";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override string GetDataSourceName(DbConnection dbConnection)

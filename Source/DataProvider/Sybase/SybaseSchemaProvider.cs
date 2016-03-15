@@ -51,6 +51,11 @@ namespace LinqToDB.DataProvider.Sybase
 			return DataType.Undefined;
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "Sybase.Data.AseClient";
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			return dataConnection.Query<TableInfo>(@"
