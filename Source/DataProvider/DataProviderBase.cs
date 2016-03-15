@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider
 					((DbDataReader)reader).GetName(idx)));
 			}
 
-#if DEBUG
+#if DEBUG1
 			if (toType == typeof(int) && providerType == typeof(decimal))
 			{
 			}

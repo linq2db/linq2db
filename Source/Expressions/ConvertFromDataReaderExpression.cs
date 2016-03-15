@@ -63,7 +63,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			if (toType.IsEnum)
+			if (toType.IsEnumEx())
 			{
 				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
 
