@@ -872,6 +872,8 @@ namespace Tests.DataProvider
 			{
 				using (var db = new DataConnection(context))
 				{
+					db.CommandTimeout = 60;
+
 					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
 					db.BulkCopy(

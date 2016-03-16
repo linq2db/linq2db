@@ -529,7 +529,8 @@ namespace Tests
 						}
 					}
 
-				return _child;
+				foreach (var item in _child)
+					yield return item;
 			}
 		}
 

@@ -181,7 +181,7 @@ namespace LinqToDB.Expressions
 						break;
 					}
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					Visit(((ChangeTypeExpression)expr).Expression,  func); break;
 			}
 
@@ -347,7 +347,7 @@ namespace LinqToDB.Expressions
 						break;
 					}
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					Visit(((ChangeTypeExpression)expr).Expression,  func);
 					break;
 			}
@@ -523,7 +523,7 @@ namespace LinqToDB.Expressions
 							Find(e.Variables,   func);
 					}
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					return Find(((ChangeTypeExpression)expr).Expression, func);
 
 				case ExpressionType.Extension :
@@ -852,7 +852,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr);
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					{
 						var exp = func(expr);
 						if (exp != expr)
@@ -1211,7 +1211,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant :
 				case ExpressionType.Parameter: return func(expr).Expression;
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					{
 						ti = func(expr);
 						if (ti.Stop || ti.Expression != expr)

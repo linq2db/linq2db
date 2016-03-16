@@ -57,36 +57,36 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestType(conn, "bigintDataType",           1000000L);
-				TestType(conn, "uBigintDataType",          2233332UL);
-				TestType(conn, "numericDataType",          9999999m);
-				TestType(conn, "bitDataType",              true);
-				TestType(conn, "smallintDataType",         (short)25555);
-				TestType(conn, "uSmallintDataType",        (ushort)33333);
-				TestType(conn, "decimalDataType",          2222222m);
-				TestType(conn, "smallmoneyDataType",       100000m);
-				TestType(conn, "intDataType",              7777777);
-				TestType(conn, "uIntDataType",             3333333U);
-				TestType(conn, "tinyintDataType",          (sbyte)100);
-				TestType(conn, "moneyDataType",            100000m);
-				TestType(conn, "floatDataType",            20.31d);
-				TestType(conn, "realDataType",             16.2f);
+				TestType(conn, "bigintDataType",        1000000L);
+				TestType(conn, "uBigintDataType",       2233332UL);
+				TestType(conn, "numericDataType",       9999999m);
+				TestType(conn, "bitDataType",           true);
+				TestType(conn, "smallintDataType",      (short)25555);
+				TestType(conn, "uSmallintDataType",     (ushort)33333);
+				TestType(conn, "decimalDataType",       2222222m);
+				TestType(conn, "smallmoneyDataType",    100000m);
+				TestType(conn, "intDataType",           7777777);
+				TestType(conn, "uIntDataType",          3333333U);
+				TestType(conn, "tinyintDataType",       (sbyte)100);
+				TestType(conn, "moneyDataType",         100000m);
+				TestType(conn, "floatDataType",         20.31d);
+				TestType(conn, "realDataType",          16.2f);
 
-				TestType(conn, "datetimeDataType",         new DateTime(2012, 12, 12, 12, 12, 12));
-				TestType(conn, "smalldatetimeDataType",    new DateTime(2012, 12, 12, 12, 12, 00));
-				TestType(conn, "dateDataType",             new DateTime(2012, 12, 12));
-				TestType(conn, "timeDataType",             new TimeSpan(0, 12, 12, 12, 10));
+				TestType(conn, "datetimeDataType",      new DateTime(2012, 12, 12, 12, 12, 12));
+				TestType(conn, "smalldatetimeDataType", new DateTime(2012, 12, 12, 12, 12, 00));
+				TestType(conn, "dateDataType",          new DateTime(2012, 12, 12));
+				TestType(conn, "timeDataType",          new TimeSpan(0, 12, 12, 12, 10));
 
-				TestType(conn, "charDataType",             '1');
-				TestType(conn, "varcharDataType",          "234");
-				TestType(conn, "textDataType",             "567");
-				TestType(conn, "ncharDataType",            "23233");
-				TestType(conn, "nvarcharDataType",         "3323");
-				TestType(conn, "ntextDataType",            "111");
+				TestType(conn, "charDataType",          '1');
+				TestType(conn, "varcharDataType",       "234");
+				TestType(conn, "textDataType",          "567");
+				TestType(conn, "ncharDataType",         "23233");
+				TestType(conn, "nvarcharDataType",      "3323");
+				TestType(conn, "ntextDataType",         "111");
 
-				TestType(conn, "binaryDataType",           new byte[] { 1 });
-				TestType(conn, "varbinaryDataType",        new byte[] { 2 });
-				TestType(conn, "imageDataType",            new byte[] { 3, 0, 0, 0 });
+				TestType(conn, "binaryDataType",        new byte[] { 1 });
+				TestType(conn, "varbinaryDataType",     new byte[] { 2 });
+				TestType(conn, "imageDataType",         new byte[] { 3, 0, 0, 0 });
 
 				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
 			}

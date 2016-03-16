@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -959,6 +960,15 @@ namespace LinqToDB.Linq
 
 					#endregion
 
+					#region SqlTypes
+
+					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
+					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
+					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },
+					{ M(() => SqlBoolean.True),          N(() => L<bool>           (()               => true))  },
+					{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
+
+					#endregion
 				}},
 
 				#region SqlServer

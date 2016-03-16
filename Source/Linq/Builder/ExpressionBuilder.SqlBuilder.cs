@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -264,15 +265,15 @@ namespace LinqToDB.Linq.Builder
 				if (fromGroupBy)
 				{
 					if (subQuery.Select.Columns.Count == 1 &&
-					    subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-					    subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
-					    subQuery.Where.SearchCondition.Conditions.Count == 1)
+						subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
+						subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasUnion &&
+						subQuery.Where.SearchCondition.Conditions.Count == 1)
 					{
 						var cond = subQuery.Where.SearchCondition.Conditions[0];
 
 						if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate && query.GroupBy.Items.Count == 1 ||
-						    cond.Predicate.ElementType == QueryElementType.SearchCondition &&
-						    query.GroupBy.Items.Count == ((SelectQuery.SearchCondition)cond.Predicate).Conditions.Count)
+							cond.Predicate.ElementType == QueryElementType.SearchCondition &&
+							query.GroupBy.Items.Count == ((SelectQuery.SearchCondition)cond.Predicate).Conditions.Count)
 						{
 							var func = (SqlFunction)subQuery.Select.Columns[0].Expression;
 
@@ -737,9 +738,13 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.ConvertChecked :
 					{
 						var e = (UnaryExpression)expression;
+
 						var o = ConvertToSql(context, e.Operand);
 
 						if (e.Method == null && e.IsLifted)
+							return o;
+
+						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
 
 						var t = e.Operand.Type;
@@ -962,7 +967,7 @@ namespace LinqToDB.Linq.Builder
 						return condition;
 					}
 
-				case (ExpressionType)ChangeTypeExpression.ChangeTypeType :
+				case ChangeTypeExpression.ChangeTypeType :
 					return ConvertToSql(context, ((ChangeTypeExpression)expression).Expression);
 			}
 
@@ -1311,8 +1316,8 @@ namespace LinqToDB.Linq.Builder
 						else if (e.Method.Name == "Contains")
 						{
 							if (e.Method.DeclaringType == typeof(Enumerable) ||
-							    typeof(IList).        IsSameOrParentOf(e.Method.DeclaringType) ||
-							    typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType))
+								typeof(IList).        IsSameOrParentOf(e.Method.DeclaringType) ||
+								typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType))
 							{
 								predicate = ConvertInPredicate(context, e);
 							}
@@ -1355,7 +1360,12 @@ namespace LinqToDB.Linq.Builder
 						if (predicate != null)
 							return Convert(context, predicate);
 
-						break;
+						var attr = GetExpressionAttribute(e.Method);
+
+						if (attr != null && attr.IsPredicate)
+							break;
+
+						return ConvertPredicate(context, AddEqualTrue(expression));
 					}
 
 				case ExpressionType.Conditional  :
@@ -1377,7 +1387,12 @@ namespace LinqToDB.Linq.Builder
 							return Convert(context, new SelectQuery.Predicate.IsNull(expr, true));
 						}
 
-						break;
+						var attr = GetExpressionAttribute(e.Member);
+
+						if (attr != null && attr.IsPredicate)
+							break;
+
+						return ConvertPredicate(context, AddEqualTrue(expression));
 					}
 
 				case ExpressionType.TypeIs:
@@ -1390,6 +1405,19 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}
+
+				case ExpressionType.Convert:
+					{
+						var e = (UnaryExpression)expression;
+
+						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
+							return ConvertPredicate(context, e.Operand);
+
+						return ConvertPredicate(context, AddEqualTrue(expression));
+					}
+
+				case ChangeTypeExpression.ChangeTypeType:
+					return ConvertPredicate(context, AddEqualTrue(expression));
 			}
 
 			var ex = ConvertToSql(context, expression);
@@ -1398,6 +1426,14 @@ namespace LinqToDB.Linq.Builder
 				return Convert(context, new SelectQuery.Predicate.ExprExpr(ex, SelectQuery.Predicate.Operator.Equal, new SqlValue(true)));
 
 			return Convert(context, new SelectQuery.Predicate.Expr(ex));
+		}
+
+		Expression AddEqualTrue(Expression expr)
+		{
+			if (expr.Type != typeof(bool))
+				expr = Expression.Convert(expr, typeof(bool));
+
+			return Expression.Equal(expr, Expression.Constant(true));
 		}
 
 		#region ConvertCompare
@@ -1906,8 +1942,8 @@ namespace LinqToDB.Linq.Builder
 			var ctx = GetContext(context, arg);
 
 			if (ctx is TableBuilder.TableContext &&
-			    ctx.SelectQuery != context.SelectQuery &&
-			    ctx.IsExpression(arg, 0, RequestFor.Object).Result)
+				ctx.SelectQuery != context.SelectQuery &&
+				ctx.IsExpression(arg, 0, RequestFor.Object).Result)
 			{
 				expr = ctx.SelectQuery;
 			}
@@ -2374,7 +2410,7 @@ namespace LinqToDB.Linq.Builder
 								if (ctx != null)
 								{
 									if (ctx.IsExpression(obj, 0, RequestFor.Table).      Result ||
-									    ctx.IsExpression(obj, 0, RequestFor.Association).Result)
+										ctx.IsExpression(obj, 0, RequestFor.Association).Result)
 									{
 										ignoredMembers = obj.GetMembers();
 									}

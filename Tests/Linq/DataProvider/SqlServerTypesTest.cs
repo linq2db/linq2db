@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -15,6 +17,18 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTypesTest : DataProviderTestBase
 	{
+		[SetUp]
+		public void SetUp()
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = true;
+		}
+
+		[TearDown]
+		public void TearDown()
+		{
+			Configuration.LinqService.SerializeAssemblyQualifiedName = false;
+		}
+
 		[Table(Database="TestData", Name="AllTypes2")]
 		public class AllTypes2
 		{
@@ -31,22 +45,16 @@ namespace Tests.DataProvider
 		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
-			public SqlServerDataContextAttribute()
-				: base(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")
+			public SqlServerDataContextAttribute(bool includeLinqService = true)
+				: base(includeLinqService, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")
 			{
 			}
-		}
-
-		[Test]
-		public void TestInit()
-		{
-			//LinqToDB.SqlServer.Types.Configuration.Init();
 		}
 
 		[Test, SqlServerDataContext]
 		public void TestHierarchyId(string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.GetTable<AllTypes2>()
 					.Where (t => (bool)(t.hierarchyidDataType.GetLevel() > 0))
@@ -74,16 +82,17 @@ namespace Tests.DataProvider
 		[Test, SqlServerDataContext]
 		public void CreateTest(string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.CreateTable<MyTable>();
 			}
 		}
 
-		[Test, SqlServerDataContext]
+		//[Test, SqlServerDataContext]
+		[Test, SqlServerDataContext(false)]
 		public void TestGeography(string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 
@@ -105,6 +114,162 @@ namespace Tests.DataProvider
 						v13 = SqlGeography.STGeomFromText(new SqlChars("LINESTRING(-122.360 47.656, -122.343 47.656)"), 4326),
 					})
 					.ToList();
+			}
+		}
+
+		[Table]
+		public class SqlTypes
+		{
+			[Column] public int            ID;
+			[Column] public SqlHierarchyId HID;
+
+			static List<SqlTypes> _data;
+			public  static IEnumerable<SqlTypes> Data(string context)
+			{
+				if (_data == null)
+					using (var db = new DataConnection(context.Replace(".LinqService", "")))
+						_data = db.GetTable<SqlTypes>().ToList();
+
+				foreach (var item in _data)
+					yield return item;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return obj is SqlTypes && ((SqlTypes)obj).ID == ID;
+			}
+
+			public override int GetHashCode()
+			{
+				return ID.GetHashCode();
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => (bool)(hid.IsDescendantOf(t.HID) == SqlBoolean.True)),
+					db.GetTable<SqlTypes>()
+						.Where(t => (bool)(hid.IsDescendantOf(t.HID) == SqlBoolean.True)));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true),
+					db.GetTable<SqlTypes>()
+						.Where(t => (bool)hid.IsDescendantOf(t.HID) == true));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => (bool)hid.IsDescendantOf(t.HID)),
+					db.GetTable<SqlTypes>()
+						.Where(t => (bool)hid.IsDescendantOf(t.HID)));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where4(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => hid.IsDescendantOf(t.HID).Value),
+					db.GetTable<SqlTypes>()
+						.Where(t => hid.IsDescendantOf(t.HID).Value));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where5(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => hid.IsDescendantOf(t.HID).IsTrue),
+					db.GetTable<SqlTypes>()
+						.Where(t => hid.IsDescendantOf(t.HID).IsTrue));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where6(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => (bool)(hid.IsDescendantOf(t.HID) == SqlBoolean.True) && t.ID != 1)
+						.OrderBy(c => c.HID),
+					db.GetTable<SqlTypes>()
+						.Where(t => (bool)(hid.IsDescendantOf(t.HID) == SqlBoolean.True) && t.ID != 1)
+						.OrderBy(c => c.HID));
+			}
+		}
+
+		[Sql.Expression("{0}.IsDescendantOf({1})", ServerSideOnly = true)]
+		static bool IsDescendantOf(SqlHierarchyId child, SqlHierarchyId parent)
+		{
+			return child.IsDescendantOf(parent).Value;
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where7(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => IsDescendantOf(hid, t.HID)),
+					db.GetTable<SqlTypes>()
+						.Where(t => IsDescendantOf(hid, t.HID)));
+			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void Where8(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var hid = SqlHierarchyId.Parse("/1/");
+
+				AreEqual(
+					SqlTypes.Data(context)
+						.Where(t => IsDescendantOf(hid, t.HID)),
+					db.GetTable<SqlTypes>()
+						.Where(t => IsDescendantOf(hid, t.HID) == true));
 			}
 		}
 	}

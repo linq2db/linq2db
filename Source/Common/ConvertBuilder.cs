@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -110,7 +111,21 @@ namespace LinqToDB.Common
 			if (from == typeof(string))
 			{
 				var mi = to.GetMethodEx("Parse", from);
-				return mi != null ? Expression.Convert(p, to, mi) : null;
+
+				if (mi != null)
+				{
+					return Expression.Convert(p, to, mi);
+				}
+
+				mi = to.GetMethodEx("Parse", typeof(SqlString));
+
+				if (mi != null)
+				{
+					p = GetCtor(from, typeof(SqlString), p);
+					return Expression.Convert(p, to, mi);
+				}
+
+				return null;
 			}
 
 			return null;
