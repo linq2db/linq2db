@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
 #endif
 
@@ -965,7 +965,7 @@ namespace LinqToDB.Linq
 
 					#region SqlTypes
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
 					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
 					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },

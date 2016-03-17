@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
 #endif
 
@@ -120,7 +120,7 @@ namespace LinqToDB.Common
 					return Expression.Convert(p, to, mi);
 				}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 				mi = to.GetMethodEx("Parse", typeof(SqlString));
 
 				if (mi != null)

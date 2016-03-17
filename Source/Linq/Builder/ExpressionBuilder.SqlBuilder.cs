@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
 #endif
 
@@ -747,7 +747,7 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
 #endif
@@ -1418,7 +1418,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Convert:
 					{
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 						var e = (UnaryExpression)expression;
 
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
