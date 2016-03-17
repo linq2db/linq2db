@@ -107,7 +107,8 @@ namespace LinqToDB.DataProvider.DB2
 					IDENTITY,
 					COLNO,
 					TYPENAME,
-					REMARKS
+					REMARKS,
+					CODEPAGE
 				FROM
 					SYSCAT.COLUMNS
 				WHERE
@@ -115,6 +116,12 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _columns = dataConnection.Query(rd =>
 				{
+					var typeName = rd.ToString(8);
+					var cp   = Converter.ChangeTypeTo<int>(rd[10]);
+
+					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
+					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
+
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
@@ -122,7 +129,7 @@ namespace LinqToDB.DataProvider.DB2
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
-						DataType    = rd.ToString(8),
+						DataType    = typeName,
 						Description = rd.ToString(9),
 					};
 
