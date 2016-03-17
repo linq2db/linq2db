@@ -1115,6 +1115,11 @@ namespace LinqToDB.Linq.Builder
 						{
 							var ma = (MemberExpression)ex;
 
+							var l = Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member);
+
+							if (l != null)
+								return l.Body.Unwrap().Find(CanBeConstant) == null;
+
 							if (ma.Member.DeclaringType.IsConstantable() || ma.Member.IsNullableValueMember())
 								return false;
 
