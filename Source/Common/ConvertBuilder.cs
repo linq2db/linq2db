@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+
+#if !SILVERLIGHT
+using System.Data.SqlTypes;
+#endif
 
 namespace LinqToDB.Common
 {
@@ -117,6 +120,7 @@ namespace LinqToDB.Common
 					return Expression.Convert(p, to, mi);
 				}
 
+#if !SILVERLIGHT
 				mi = to.GetMethodEx("Parse", typeof(SqlString));
 
 				if (mi != null)
@@ -124,6 +128,7 @@ namespace LinqToDB.Common
 					p = GetCtor(from, typeof(SqlString), p);
 					return Expression.Convert(p, to, mi);
 				}
+#endif
 
 				return null;
 			}

@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+
+#if !SILVERLIGHT
+using System.Data.SqlTypes;
+#endif
 
 using LinqToDB.Data;
 
@@ -744,8 +747,10 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && e.IsLifted)
 							return o;
 
+#if !SILVERLIGHT
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return o;
+#endif
 
 						var t = e.Operand.Type;
 						var s = SqlDataType.GetDataType(t);
@@ -1413,10 +1418,12 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Convert:
 					{
+#if !SILVERLIGHT
 						var e = (UnaryExpression)expression;
 
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return ConvertPredicate(context, e.Operand);
+#endif
 
 						return ConvertPredicate(context, AddEqualTrue(expression));
 					}
