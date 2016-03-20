@@ -90,6 +90,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						indexParameter);
 			}
 
+			_setMoney     = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Money");
 			_setVarBinary = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bytea");
 			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Boolean");
 			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Xml");
@@ -156,6 +157,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider();
 		}
 
+		static Action<IDbDataParameter> _setMoney;
 		static Action<IDbDataParameter> _setVarBinary;
 		static Action<IDbDataParameter> _setBoolean;
 		static Action<IDbDataParameter> _setXml;
@@ -181,8 +183,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.UInt64     : parameter.DbType = DbType.Decimal;          break;
 				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;         break;
 				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;          break;
-				case DataType.Decimal    :
-				case DataType.Money      : break;
+				case DataType.Decimal    : parameter.DbType = DbType.Decimal;          break;
+				case DataType.Money      : _setMoney(parameter);                       break;
 				case DataType.Image      :
 				case DataType.Binary     :
 				case DataType.VarBinary  : _setVarBinary(parameter);                   break;

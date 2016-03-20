@@ -51,7 +51,7 @@ namespace Tests.DataProvider
 			bool     skipNull          = false,
 			bool     skipDefinedNull   = false, //true,
 			bool     skipDefaultNull   = false, //true,
-			bool     skipUndefinedNull = false, //true,
+			bool     skipUndefinedNull = true,
 			bool     skipNotNull       = false,
 			bool     skipDefined       = false,
 			bool     skipDefault       = false,
@@ -77,8 +77,8 @@ namespace Tests.DataProvider
 				Assert.That(TestTypeEx<double?>           (conn, "doubleDataType",      DataType.Double),                  Is.EqualTo(20.31d));
 				Assert.That(TestTypeEx<float?>            (conn, "realDataType",        DataType.Single),                  Is.EqualTo(16.2f));
 
-#if !NPG2
-				Assert.That(TestTypeEx<NpgsqlTimeStamp?>  (conn, "timestampDataType"),                                     Is.EqualTo(new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)));
+#if NPG2
+				Assert.That(TestTypeEx<NpgsqlTypes.. NpgsqlTimeStamp?>  (conn, "timestampDataType"),                                     Is.EqualTo(new NpgsqlTimeStamp(2012, 12, 12, 12, 12, 12)));
 				Assert.That(TestTypeEx<NpgsqlTimeStampTZ?>(conn, "timestampTZDataType"),                                   Is.EqualTo(new NpgsqlTimeStampTZ(2012, 12, 12, 11, 12, 12, new NpgsqlTimeZone(-5, 0))));
 				Assert.That(TestTypeEx<NpgsqlTime?>       (conn, "timeDataType"),                                          Is.EqualTo(new NpgsqlTime(12, 12, 12)));
 				Assert.That(TestTypeEx<NpgsqlTimeTZ?>     (conn, "timeTZDataType"),                                        Is.EqualTo(new NpgsqlTimeTZ(12, 12, 12)));
