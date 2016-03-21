@@ -238,7 +238,7 @@ using (var db = new DbNorthwind())
 }
 ```
 
-This inserts all the columns from our Product class, but without retrieving the generated identity value. To do that we can use `InsertWithIndentity`, like this:
+This inserts all the columns from our Product class, but without retrieving the generated identity value. To do that we can use `InsertWithIdentity`, like this:
 
 ```c#
 using (var db = new DbNorthwind())
