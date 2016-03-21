@@ -865,38 +865,46 @@ namespace Tests.DataProvider
 			#endregion
 		};
 
-		[Test, SqlServerDataContext]
-		public void BulkCopyAllTypes(string context)
+		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
+			using (var db = new DataConnection(context))
 			{
-				using (var db = new DataConnection(context))
-				{
-					db.CommandTimeout = 60;
+				db.CommandTimeout = 60;
 
-					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-					db.BulkCopy(
-						new BulkCopyOptions
-						{
-							BulkCopyType       = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
-							KeepIdentity       = true,
-						},
-						_allTypeses);
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType       = bulkCopyType,
+						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
+						KeepIdentity       = true,
+					},
+					_allTypeses);
 
-					var ids = _allTypeses.Select(at => at.ID).ToArray();
+				var ids = _allTypeses.Select(at => at.ID).ToArray();
 
-					var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+				var list = db.GetTable<AllTypes>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
 
-					db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
+				db.GetTable<AllTypes>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-					Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
+				Assert.That(list.Count, Is.EqualTo(_allTypeses.Length));
 
-					for (var i = 0; i < list.Count; i++)
-						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
-				}
+				for (var i = 0; i < list.Count; i++)
+					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
 			}
+		}
+
+		[Test, SqlServerDataContext]
+		public void BulkCopyAllTypesMultipleRows(string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, SqlServerDataContext]
+		public void BulkCopyAllTypesProviderSpecific(string context)
+		{
+			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
 		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
