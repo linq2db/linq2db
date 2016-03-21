@@ -674,7 +674,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(
+			ProviderName.SQLite, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
+			ProviderName.MySql, ProviderName.Sybase)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))
