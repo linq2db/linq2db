@@ -713,5 +713,46 @@ namespace Tests.xUpdate
 				}
 			}
 		}
+		[Test, DataContextSource]
+		public void UpdateIssue321Regression(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 100500;
+
+				try
+				{
+					var value1 = 3000m;
+					var value2 = 13621m;
+					var value3 = 60;
+
+					db.Insert(new LinqDataTypes2()
+					{
+						ID = id,
+						MoneyValue = value1,
+						IntValue = value3
+					});
+
+
+					db.GetTable<LinqDataTypes2>()
+						.Update(_ => new LinqDataTypes2()
+						{
+							SmallIntValue = (short)(_.MoneyValue / (value2 / _.IntValue))
+						});
+
+					var dbResult = db.GetTable<LinqDataTypes2>()
+						.Where(_ => _.ID == id)
+						.Select(_ => _.SmallIntValue).First();
+
+					var expected = (short)(value1 / (value2 / value3));
+
+					Assert.AreEqual(expected, dbResult);
+				}
+				finally
+				{
+					db.GetTable<LinqDataTypes2>().Delete(c => c.ID == id);
+				}
+			}
+		}
 	}
 }
