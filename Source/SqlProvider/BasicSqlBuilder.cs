@@ -2447,7 +2447,7 @@ namespace LinqToDB.SqlProvider
 				/* maybe it will be no harm to put "<=" here? */
 				precedence < parentPrecedence ||
 				(precedence == parentPrecedence && 
-					(parentPrecedence == Precedence.Subtraction ||
+					(parentPrecedence == Precedence.Subtraction    ||
 					 parentPrecedence == Precedence.Multiplicative ||
 					 parentPrecedence == Precedence.LogicalNegation));
 		}

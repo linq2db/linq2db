@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto;
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
 
 		public override object Convert(object value, ConvertType convertType)
 		{

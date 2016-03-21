@@ -713,7 +713,8 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-		[Test, DataContextSource]
+
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.Firebird, ProviderName.Sybase)]
 		public void UpdateIssue321Regression(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -732,7 +733,6 @@ namespace Tests.xUpdate
 						MoneyValue = value1,
 						IntValue = value3
 					});
-
 
 					db.GetTable<LinqDataTypes2>()
 						.Update(_ => new LinqDataTypes2()
