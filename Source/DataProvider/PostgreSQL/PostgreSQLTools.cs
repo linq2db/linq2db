@@ -44,6 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static Type GetNpgsqlCircleType    () { return _postgreSQLDataProvider.NpgsqlCircleType;     }
 		public static Type GetNpgsqlMacAddressType() { return _postgreSQLDataProvider.NpgsqlMacAddressType; }
 
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)

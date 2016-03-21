@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
@@ -44,6 +45,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		Type _npgsqlTimeStamp;
 		Type _npgsqlTimeStampTZ;
 		Type _npgsqlDate;
+        Type _npgsqlDateTime;
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -59,10 +61,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_npgsqlTimeStamp      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
 			_npgsqlTimeStampTZ    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
 			_npgsqlDate           = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDate",        true);
+            _npgsqlDateTime       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDateTime",    true);
 			NpgsqlMacAddressType  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
 			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
-
+            
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
 			if (NpgsqlTimeType       != null) SetProviderField(NpgsqlTimeType,       NpgsqlTimeType,       "GetTime");
@@ -70,6 +73,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (_npgsqlTimeStamp     != null) SetProviderField(_npgsqlTimeStamp,     _npgsqlTimeStamp,     "GetTimeStamp");
 			if (_npgsqlTimeStampTZ   != null) SetProviderField(_npgsqlTimeStampTZ,   _npgsqlTimeStampTZ,   "GetTimeStampTZ");
 			if (NpgsqlMacAddressType != null) SetProviderField(NpgsqlMacAddressType, NpgsqlMacAddressType, "GetProviderSpecificValue");
+            if (_npgsqlDateTime      != null) SetProviderField(_npgsqlDateTime,      _npgsqlDateTime,      "GetTimeStamp");
+
 
 			SetProviderField(NpgsqlInetType,       NpgsqlInetType,       "GetProviderSpecificValue");
 			SetProviderField(_npgsqlDate,          _npgsqlDate,          "GetDate");
@@ -96,6 +101,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Xml");
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
 			_setBit       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bit");
+            _setHstore    = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Hstore");
+
 
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
 			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
@@ -104,6 +111,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (_npgsqlTimeStamp     != null) MappingSchema.AddScalarType(_npgsqlTimeStamp);
 			if (_npgsqlTimeStampTZ   != null) MappingSchema.AddScalarType(_npgsqlTimeStampTZ);
 			if (NpgsqlMacAddressType != null) MappingSchema.AddScalarType(NpgsqlMacAddressType);
+            if (_npgsqlDateTime      != null) MappingSchema.AddScalarType(_npgsqlDateTime);
 
 			MappingSchema.AddScalarType(NpgsqlInetType);
 			MappingSchema.AddScalarType(NpgsqlPointType);
@@ -113,6 +121,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			MappingSchema.AddScalarType(NpgsqlCircleType);
 			MappingSchema.AddScalarType(_npgsqlDate);
 			MappingSchema.AddScalarType(NpgsqlPolygonType);
+            
 
 			if (_npgsqlTimeStampTZ != null) 
 			{
@@ -135,6 +144,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						p
 					));
 			}
+
+            if (_npgsqlDateTime != null)
+            {
+                var p = Expression.Parameter(_npgsqlDateTime, "p");
+
+                MappingSchema.SetConvertExpression(_npgsqlDateTime, typeof(DateTimeOffset),
+                    Expression.Lambda(
+                        Expression.New(
+                            MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
+                            Expression.PropertyOrField(p, "DateTime")),p));
+            }
+
 		}
 
 		public    override string ConnectionNamespace { get { return "Npgsql";                          } }
@@ -164,6 +185,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setXml;
 		static Action<IDbDataParameter> _setText;
 		static Action<IDbDataParameter> _setBit;
+        static Action<IDbDataParameter> _setHstore;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -171,6 +193,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 //			{
 //				dataType = DataType.Char;
 //			}
+
+            if(value is IDictionary && dataType == DataType.Undefined)
+            {
+                dataType = DataType.Dictionary;
+            }
 
 			base.SetParameter(parameter, name, dataType, value);
 		}
@@ -195,6 +222,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Text       :
 				case DataType.NText      : _setText     (parameter);                   break;
 				case DataType.BitArray   : _setBit      (parameter);                   break;
+                case DataType.Dictionary : _setHstore(parameter);                      break;
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}

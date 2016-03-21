@@ -32,6 +32,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        FullName },
 				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
+                new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string, string>).FullName},
+
 				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
 				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
