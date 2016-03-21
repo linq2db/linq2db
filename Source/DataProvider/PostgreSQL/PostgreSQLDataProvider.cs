@@ -95,6 +95,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_setBoolean   = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Boolean");
 			_setXml       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Xml");
 			_setText      = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Text");
+			_setBit       = GetSetParameter(connectionType, "NpgsqlParameter", "NpgsqlDbType", "NpgsqlTypes.NpgsqlDbType", "Bit");
 
 			if (BitStringType        != null) MappingSchema.AddScalarType(BitStringType);
 			if (NpgsqlIntervalType   != null) MappingSchema.AddScalarType(NpgsqlIntervalType);
@@ -162,6 +163,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static Action<IDbDataParameter> _setBoolean;
 		static Action<IDbDataParameter> _setXml;
 		static Action<IDbDataParameter> _setText;
+		static Action<IDbDataParameter> _setBit;
 
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
@@ -192,6 +194,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Xml        : _setXml      (parameter);                   break;
 				case DataType.Text       :
 				case DataType.NText      : _setText     (parameter);                   break;
+				case DataType.BitArray   : _setBit      (parameter);                   break;
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}

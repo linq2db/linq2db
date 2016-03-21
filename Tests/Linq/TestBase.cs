@@ -51,7 +51,7 @@ namespace Tests
 					Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt") :
 					Path.Combine(assemblyPath, @"..\..\DefaultDataProviders.txt");
 
-			_userProviders =
+			UserProviders =
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())
 					.Where (s => s.Length > 0 && !s.StartsWith("--"))
@@ -76,7 +76,7 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
-			foreach (var provider in _userProviders.Values)
+			foreach (var provider in UserProviders.Values)
 				if (provider.ConnectionString != null)
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 
@@ -131,9 +131,9 @@ namespace Tests
 			public string ConnectionString;
 		}
 
-		static readonly Dictionary<string,UserProviderInfo> _userProviders;
+		protected static readonly Dictionary<string,UserProviderInfo> UserProviders;
 
-		static readonly List<string>                        _providers     = new List<string>
+		static readonly List<string> _providers = new List<string>
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
@@ -188,7 +188,7 @@ namespace Tests
 
 				foreach (var provider in _providerNames)
 				{
-					var isIgnore = !_userProviders.ContainsKey(provider);
+					var isIgnore = !UserProviders.ContainsKey(provider);
 
 					var data = new TestCaseParameters(new object[] { provider });
 

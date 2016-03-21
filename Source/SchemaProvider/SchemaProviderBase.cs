@@ -13,7 +13,7 @@ namespace LinqToDB.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType             GetDataType   (string dataType, string columnType);
+		protected abstract DataType             GetDataType   (string dataType, string columnType, long? length, int? prec, int? scale);
 		protected abstract List<TableInfo>      GetTables     (DataConnection dataConnection);
 		protected abstract List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection);
 		protected abstract List<ColumnInfo>     GetColumns    (DataConnection dataConnection);
@@ -105,17 +105,18 @@ namespace LinqToDB.SchemaProvider
 					var dataType   = column.c.DataType;
 					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
 					var isNullable = column.c.IsNullable;
+					var columnType = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale);
 
 					column.t.Columns.Add(new ColumnSchema
 					{
 						Table                = column.t,
 						ColumnName           = column.c.Name,
-						ColumnType           = column.c.ColumnType ?? GetDbType(dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale),
+						ColumnType           = columnType,
 						IsNullable           = isNullable,
 						MemberName           = ToValidName(column.c.Name),
 						MemberType           = ToTypeName(systemType, isNullable),
 						SystemType           = systemType ?? typeof(object),
-						DataType             = GetDataType(dataType, column.c.ColumnType),
+						DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
 						ProviderSpecificType = GetProviderSpecificType(dataType),
 						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
 						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
@@ -229,7 +230,7 @@ namespace LinqToDB.SchemaProvider
 									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType ?? typeof(object),
-									DataType             = GetDataType(pr.DataType, null),
+									DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 								}
 							).ToList()
@@ -416,7 +417,7 @@ namespace LinqToDB.SchemaProvider
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType ?? typeof(object),
-					DataType             = GetDataType(columnType, null),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 					IsIdentity           = r.Field<bool>("IsIdentity"),
 				}

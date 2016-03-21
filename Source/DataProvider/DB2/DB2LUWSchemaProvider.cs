@@ -264,7 +264,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{

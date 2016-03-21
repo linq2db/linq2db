@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -754,6 +755,8 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float?),          DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 				AddScalarType(typeof(double?),         DataType.Double);
+
+				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				ValueToSqlConverter.SetDefauls();
 			}

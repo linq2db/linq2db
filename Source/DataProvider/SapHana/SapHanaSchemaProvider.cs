@@ -382,7 +382,7 @@ namespace LinqToDB.DataProvider.SapHana
 					MemberName           = ToValidName(columnName),
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType ?? typeof(object),
-					DataType             = GetDataType(columnType, null),
+					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 				}
 			).ToList();
@@ -407,7 +407,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -432,7 +432,6 @@ namespace LinqToDB.DataProvider.SapHana
 				case "ALPHANUM"     :
 				case "SHORTTEXT"    :
 				case "NVARCHAR"     : return DataType.NVarChar;
-				
 
 				case "BINARY"       : return DataType.Binary;
 				case "VARBINARY"    : return DataType.VarBinary;
@@ -692,7 +691,7 @@ namespace LinqToDB.DataProvider.SapHana
 							ParameterName        = ToValidName(pr.ParameterName),
 							ParameterType        = ToTypeName(systemType, !pr.IsIn),
 							SystemType           = systemType ?? typeof(object),
-							DataType             = GetDataType(pr.DataType, null),
+							DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 							ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 						}
 					).ToList()
@@ -720,7 +719,7 @@ namespace LinqToDB.DataProvider.SapHana
 					MemberName           = ToValidName(column.c.Name),
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType ?? typeof(object),
-					DataType             = GetDataType(dataType, column.c.ColumnType),
+					DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
 					ProviderSpecificType = GetProviderSpecificType(dataType),
 					SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
 					SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,

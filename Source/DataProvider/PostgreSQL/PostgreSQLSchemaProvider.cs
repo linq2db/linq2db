@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -227,6 +227,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "timestamp without time zone" : return DataType.DateTime2;
 				case "time with time zone"         : return DataType.Time;
 				case "time without time zone"      : return DataType.Time;
+				case "interval"                    : return DataType.Time;
 				case "date"                        : return DataType.Date;
 				case "xml"                         : return DataType.Xml;
 				case "point"                       : return DataType.Udt;
@@ -238,6 +239,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "polygon"                     : return DataType.Udt;
 				case "macaddr"                     : return DataType.Udt;
 				case "USER-DEFINED"                : return DataType.Udt;
+				case "bit"                         :
+				case "varbit"                      : return DataType.BitArray;
 			}
 
 			return DataType.Undefined;

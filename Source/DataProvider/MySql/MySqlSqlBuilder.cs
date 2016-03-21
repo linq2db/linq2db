@@ -75,11 +75,11 @@ namespace LinqToDB.DataProvider.MySql
 					if (createDbType) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
-				case DataType.Money         : StringBuilder.Append("Decimal(19,4)"); break;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
+				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
 				case DataType.DateTime2     :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime"); break;
-				case DataType.Boolean       : StringBuilder.Append("Boolean"); break;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
+				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
 				case DataType.Double        :
 				case DataType.Single        : base.BuildDataType(SqlDataType.Decimal); break;
 				case DataType.VarChar       :
