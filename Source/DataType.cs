@@ -202,15 +202,14 @@ namespace LinqToDB
 		/// </summary>
 		Udt,
 
-        /// <summary>
-        /// Dictionary type for key-value pairs
-        /// </summary>
-        Dictionary
-		
-		/*
-		Structured	A special data type for specifying structured data contained in table-valued parameters.
-		*/
-
+		/// <summary>
+		/// Array of bits.
+		/// </summary>
 		BitArray,
+
+		/// <summary>
+		/// Dictionary type for key-value pairs
+		/// </summary>
+		Dictionary,
 	}
 }

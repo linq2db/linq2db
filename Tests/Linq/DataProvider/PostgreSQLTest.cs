@@ -38,12 +38,12 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<string>("SELECT :p",        new { p =  1  }), Is.EqualTo("1"));
-				Assert.That(conn.Execute<string>("SELECT :p",        new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT :p",        new { p = "1" }),        Is.EqualTo("1"));
 				Assert.That(conn.Execute<int>   ("SELECT :p",        new { p =  new DataParameter { Value = 1   } }), Is.EqualTo(1));
 				Assert.That(conn.Execute<string>("SELECT :p1",       new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<int>   ("SELECT :p1 + :p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 				Assert.That(conn.Execute<int>   ("SELECT :p2 + :p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
+				Assert.That(conn.Execute<string>("SELECT :p",        new { p =  1  }),        Is.EqualTo("1"));
 			}
 		}
 
@@ -238,9 +238,9 @@ namespace Tests.DataProvider
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
 			where T : struct
 		{
-			TestNumeric (conn, expectedValue, dataType);
+			TestNumeric    (conn, expectedValue, dataType);
 			TestNumeric<T?>(conn, expectedValue, dataType);
-			TestNumeric(conn, (T?)null,      dataType);
+			TestNumeric    (conn, (T?)null,      dataType);
 		}
 
 		[Test, IncludeDataContextSource(CurrentProvider)]
@@ -248,20 +248,20 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
-				TestSimple<short>  (conn, 1,    DataType.Int16);
-				TestSimple    (conn, 1,    DataType.Int32);
-				TestSimple   (conn, 1L,   DataType.Int64);
-				TestSimple<byte>   (conn, 1,    DataType.Byte);
-				TestSimple<ushort> (conn, 1,    DataType.UInt16);
-				TestSimple   (conn, 1u,   DataType.UInt32);
-				TestSimple  (conn, 1ul,  DataType.UInt64);
-				TestSimple<float>  (conn, 1,    DataType.Single);
-				TestSimple (conn, 1d,   DataType.Double);
-				TestSimple(conn, 1m,   DataType.Decimal);
-				TestSimple(conn, 1m,   DataType.VarNumeric);
-				TestSimple(conn, 1m,   DataType.Money);
-				TestSimple(conn, 1m,   DataType.SmallMoney);
+				TestSimple<short> (conn, 1,   DataType.Int16);
+				TestSimple        (conn, 1,   DataType.Int32);
+				TestSimple        (conn, 1L,  DataType.Int64);
+				TestSimple<byte>  (conn, 1,   DataType.Byte);
+				TestSimple<ushort>(conn, 1,   DataType.UInt16);
+				TestSimple        (conn, 1u,  DataType.UInt32);
+				TestSimple        (conn, 1ul, DataType.UInt64);
+				TestSimple<float> (conn, 1,   DataType.Single);
+				TestSimple        (conn, 1d,  DataType.Double);
+				TestSimple        (conn, 1m,  DataType.Decimal);
+				TestSimple        (conn, 1m,  DataType.VarNumeric);
+				TestSimple        (conn, 1m,  DataType.Money);
+				TestSimple        (conn, 1m,  DataType.SmallMoney);
+				TestSimple<sbyte> (conn, 1,   DataType.SByte);
 
 				TestNumeric(conn, sbyte.MinValue,    DataType.SByte,      "money");
 				TestNumeric(conn, sbyte.MaxValue,    DataType.SByte);

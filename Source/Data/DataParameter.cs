@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace LinqToDB.Data
@@ -155,8 +154,7 @@ namespace LinqToDB.Data
 		public static DataParameter Variant       (string name, object         value) { return new DataParameter { DataType = DataType.Variant,        Name = name, Value = value, }; }
 		public static DataParameter VarNumeric    (string name, decimal        value) { return new DataParameter { DataType = DataType.VarNumeric,     Name = name, Value = value, }; }
 		public static DataParameter Udt           (string name, object         value) { return new DataParameter { DataType = DataType.Udt,            Name = name, Value = value, }; }
-
-        public static DataParameter Dictionary    (string name, IDictionary    value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
+		public static DataParameter Dictionary    (string name, IDictionary    value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
 
 		public static DataParameter Create        (string name, char           value) { return new DataParameter { DataType = DataType.NChar,          Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, string         value) { return new DataParameter { DataType = DataType.NVarChar,       Name = name, Value = value, }; }
@@ -187,5 +185,6 @@ namespace LinqToDB.Data
 		public static DataParameter Create        (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 #endif
 		public static DataParameter Create        (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Dictionary<string,string> value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
 	}
 }
