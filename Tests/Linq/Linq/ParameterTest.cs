@@ -2,8 +2,11 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
+
+using Tests.FSharp.Models;
 
 namespace Tests.Linq
 {
@@ -97,6 +100,54 @@ namespace Tests.Linq
 				var s2 = db.Select(() => Sql.ToSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
+			}
+		}
+
+		[Test, DataContextSource(false)]
+		public void ExposeSqlStringParameter(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p   = "abc";
+				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
+
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Contains.Substring("(3)"));
+			}
+		}
+
+		class AllTypes
+		{
+			public decimal DecimalDataType;
+			public byte[]  BinaryDataType;
+		}
+
+		[Test, DataContextSource(false)]
+		public void ExposeSqlDecimalParameter(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p   = 123.456m;
+				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
+
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Contains.Substring("(6,3)"));
+			}
+		}
+
+		[Test, DataContextSource(false)]
+		public void ExposeSqlBinaryParameter(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var p   = new byte[] { 0, 1, 2 };
+				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
+
+				Console.WriteLine(sql);
+
+				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob"));
 			}
 		}
 	}

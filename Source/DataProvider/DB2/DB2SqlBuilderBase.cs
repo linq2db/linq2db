@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 
@@ -210,6 +211,12 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			{
+				var d = new SqlDecimal((decimal)parameter.Value);
+				return "(" + d.Precision + "," + d.Scale + ")";
+			}
+
 			dynamic p = parameter;
 			return p.DB2Type.ToString();
 		}

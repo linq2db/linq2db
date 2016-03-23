@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 
@@ -2618,6 +2620,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual string GetProviderTypeName(IDbDataParameter parameter)
 		{
+			switch (parameter.DbType)
+			{
+				case DbType.AnsiString           : return "VarChar";
+				case DbType.AnsiStringFixedLength: return "Char";
+				case DbType.String               : return "NVarChar";
+				case DbType.StringFixedLength    : return "NChar";
+				case DbType.Decimal              : return "Decimal";
+				case DbType.Binary               : return "Binary";
+			}
+
 			return null;
 		}
 
@@ -2635,6 +2647,59 @@ namespace LinqToDB.SqlProvider
 			var t2 = parameter.DbType.ToString();
 
 			sb.Append(t1);
+
+			if (t1 != null)
+			{
+				if (parameter.Size != 0)
+				{
+					if (t1.IndexOf('(') < 0)
+						sb.Append('(').Append(parameter.Size).Append(')');
+				}
+				else if (parameter.Precision != 0)
+				{
+					if (t1.IndexOf('(') < 0)
+						sb.Append('(').Append(parameter.Precision).Append(',').Append(parameter.Scale).Append(')');
+				}
+				else
+				{
+					switch (parameter.DbType)
+					{
+						case DbType.AnsiString           :
+						case DbType.AnsiStringFixedLength:
+						case DbType.String               :
+						case DbType.StringFixedLength    :
+							{
+								var value = parameter.Value as string;
+
+								if (!string.IsNullOrEmpty(value))
+									sb.Append('(').Append(value.Length).Append(')');
+
+								break;
+							}
+						case DbType.Decimal              :
+							{
+								var value = parameter.Value;
+
+								if (value is decimal)
+								{
+									var d = new SqlDecimal((decimal)value);
+									sb.Append('(').Append(d.Precision).Append(',').Append(d.Scale).Append(')');
+								}
+
+								break;
+							}
+						case DbType.Binary                :
+							{
+								var value = parameter.Value as byte[];
+
+								if (value != null)
+									sb.Append('(').Append(value.Length).Append(')');
+
+								break;
+							}
+					}
+				}
+			}
 
 			if (t1 != t2)
 				sb.Append(" -- ").Append(t2);
@@ -2680,12 +2745,12 @@ namespace LinqToDB.SqlProvider
 			return sb.ToString();
 		}
 
-		private        string _name;
-		public virtual string  Name
+		private string _name;
+
+		public virtual string Name
 		{
 			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
 		}
-
 		#endregion
 	}
 }
