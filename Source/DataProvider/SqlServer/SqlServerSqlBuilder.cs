@@ -179,8 +179,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] == '[')
 							return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
+//						if (name.IndexOf('.') > 0)
+//							value = string.Join("].[", name.Split('.'));
 
 						return "[" + value + "]";
 					}

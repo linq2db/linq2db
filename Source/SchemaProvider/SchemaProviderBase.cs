@@ -245,10 +245,10 @@ namespace LinqToDB.SchemaProvider
 					{
 						if ((!procedure.IsFunction || procedure.IsTableFunction) && options.LoadProcedure(procedure))
 						{
-							var catalog     = procedure.CatalogName   == null ? null : sqlProvider.Convert(procedure.CatalogName,   ConvertType.NameToDatabase).  ToString();
-							var schema      = procedure.SchemaName    == null ? null : sqlProvider.Convert(procedure.SchemaName,    ConvertType.NameToOwner).     ToString();
-							var procName    = procedure.ProcedureName == null ? null : sqlProvider.Convert(procedure.ProcedureName, ConvertType.NameToQueryTable).ToString();
-							var commandText = sqlProvider.BuildTableName(new StringBuilder(), catalog, schema, procName).ToString();
+							var commandText = sqlProvider.ConvertTableName(new StringBuilder(),
+								 procedure.CatalogName,
+								 procedure.SchemaName,
+								 procedure.ProcedureName).ToString();
 
 							LoadProcedureTableSchema(dataConnection, procedure, commandText, tables);
 						}

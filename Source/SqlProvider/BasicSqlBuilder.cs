@@ -213,6 +213,15 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", SelectQuery.QueryType);
 		}
 
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (database != null) database = Convert(database, ConvertType.NameToDatabase).  ToString();
+			if (owner    != null) owner    = Convert(owner,    ConvertType.NameToOwner).     ToString();
+			if (table    != null) table    = Convert(table,    ConvertType.NameToQueryTable).ToString();
+
+			return BuildTableName(sb, database, owner, table);
+		}
+
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
 			if (database != null)
