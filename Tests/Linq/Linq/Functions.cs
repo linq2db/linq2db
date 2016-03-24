@@ -423,6 +423,32 @@ namespace Tests.Linq
 					where Sql.AsNotNull(p1.Value1) == Sql.AsNotNull(p2.Value1)
 					select p1);
 		}
+
+		[Test, DataContextSource]
+		public void Between1(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					where p.Value1.Between(1, 10)
+					select p,
+					from p in db.Parent
+					where p.Value1.Between(1, 10)
+					select p);
+		}
+
+		[Test, DataContextSource]
+		public void Between2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent
+					where p.ParentID.Between(1, 10)
+					select p,
+					from p in db.Parent
+					where p.ParentID.Between(1, 10)
+					select p);
+		}
 	}
 
 	public static class FunctionExtension

@@ -97,6 +97,20 @@ namespace LinqToDB
 			return value ?? default(T);
 		}
 
+		[Sql.Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
+		public static bool Between<T>(this T value, T low, T high)
+			where T : IComparable
+		{
+			return value != null && value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
+		}
+
+		[Sql.Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
+		public static bool Between<T>(this T? value, T? low, T? high)
+			where T : struct, IComparable
+		{
+			return value != null && value.Value.CompareTo(low) >= 0 && value.Value.CompareTo(high) <= 0;
+		}
+
 		#endregion
 
 		#region Guid Functions
