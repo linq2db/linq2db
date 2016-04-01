@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Data
 {
 	using System.Text;
@@ -463,6 +465,7 @@ namespace LinqToDB.Data
 			_configurations[configuration].ConnectionString = connectionString;
 		}
 
+		[Pure]
 		public static string GetConnectionString(string configurationString)
 		{
 			InitConfig();

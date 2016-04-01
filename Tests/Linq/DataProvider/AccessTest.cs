@@ -348,5 +348,20 @@ namespace Tests.DataProvider
 				}
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.Access)]
+		[Explicit("Long running test. Run explicitly.")]
+		public void DataConnectionTest(string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+
+			for (var i = 0; i < 1000; i++)
+			{
+				using (var db = AccessTools.CreateDataConnection(cs))
+				{
+					var list = db.GetTable<Person>().Where(p => p.ID > 0).ToList();
+				}
+			}
+		}
 	}
 }

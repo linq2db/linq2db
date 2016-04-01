@@ -167,20 +167,23 @@ namespace Tests
 			readonly bool     _includeLinqService;
 			readonly string[] _providerNames;
 
-			void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
 			{
-
 				var name = method.Name + "." + provider;
 
 				if (isLinqService)
 					name += ".LinqService";
 
-				test.Name     = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
-				//test.FullName = test.Name;
+				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
 			}
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
+				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
+					.Cast<IApplyToTest>()
+					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
+					.ToList();
+
 				var builder = new NUnitTestCaseBuilder();
 
 				TestMethod test = null;
@@ -194,12 +197,17 @@ namespace Tests
 
 					test = builder.BuildTestMethod(method, suite, data);
 
+					foreach (var attr in explic)
+						attr.ApplyToTest(test);
+
 					test.Properties.Set(PropertyNames.Category, provider);
 					SetName(test, method, provider, false);
 
 					if (isIgnore)
 					{
-						test.RunState = RunState.Ignored;
+						if (test.RunState != RunState.Ignored && test.RunState != RunState.Explicit)
+							test.RunState = RunState.NotRunnable;
+
 						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
 						continue;
 					}
@@ -212,6 +220,9 @@ namespace Tests
 					{
 						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
 						test = builder.BuildTestMethod(method, suite, data);
+
+						foreach (var attr in explic)
+							attr.ApplyToTest(test);
 
 						test.Properties.Set(PropertyNames.Category, provider);
 						SetName(test, method, provider, true);
