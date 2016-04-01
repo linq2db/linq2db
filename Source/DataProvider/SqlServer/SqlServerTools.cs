@@ -26,7 +26,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			AutoDetectProvider = true;
 
-			DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(ProviderName.SqlServer2014, _sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
