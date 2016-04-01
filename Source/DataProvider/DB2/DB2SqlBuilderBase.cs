@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Data;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
+
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -207,7 +210,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{

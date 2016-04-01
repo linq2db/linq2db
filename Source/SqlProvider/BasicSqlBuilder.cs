@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
+
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
 
 namespace LinqToDB.SqlProvider
 {
@@ -2676,6 +2678,7 @@ namespace LinqToDB.SqlProvider
 
 								break;
 							}
+#if !SILVERLIGHT && !NETFX_CORE
 						case DbType.Decimal              :
 							{
 								var value = parameter.Value;
@@ -2688,6 +2691,7 @@ namespace LinqToDB.SqlProvider
 
 								break;
 							}
+#endif
 						case DbType.Binary                :
 							{
 								var value = parameter.Value as byte[];
