@@ -761,6 +761,11 @@ namespace LinqToDB.Data
 			}
 		}
 
+		public static void ClearObjectReaderCache()
+		{
+			CommandInfo.ClearObjectReaderCache();
+		}
+
 		#endregion
 
 		#region Transaction
