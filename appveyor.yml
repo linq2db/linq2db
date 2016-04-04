@@ -1,0 +1,40 @@
+version: 1.0.{build}
+configuration: Release
+
+environment:
+  packageVersion: 1.0.7.4
+
+cache:
+- packages -> **\packages.config
+
+init:
+- cmd: git config --global core.autocrlf true
+- ps: $env:buildVersion = "$env:packageVersion"
+- ps: $env:nugetVersion = "$env:packageVersion-alpha$env:appveyor_build_number"
+- ps: Update-AppveyorBuild -Version $env:buildVersion
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '$(buildVersion)'
+  assembly_file_version: '$(buildVersion)'
+  assembly_informational_version: '$(nugetVersion)'
+
+nuget:
+  account_feed: false
+  project_feed: false
+
+before_build:
+- cmd: nuget restore
+
+build:
+  project: linq2db.4.5.sln
+  publish_nuget: false
+  verbosity: minimal
+
+after_build:
+- cmd: cd Source
+- cmd: Compile.bat
+- cmd: cd ..
+- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
+- ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
