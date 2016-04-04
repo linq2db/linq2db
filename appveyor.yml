@@ -1,4 +1,4 @@
-configuration: Release
+configuration: Debug
 
 environment:
   packageVersion: 1.7.4
@@ -42,3 +42,7 @@ after_build:
 
 before_test:
 - ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
+- ps: Push-Location -Path Tests\Linq\bin\Debug
+
+after_test:
+- ps: Pop-Location
