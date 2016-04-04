@@ -11,8 +11,8 @@ See [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
 
 Code examples and demos can be found [here] (https://github.com/linq2db/examples).
 
-### Project Build Status
------------------
+Project Build Status
+--------------------
 [![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)
 
 Let's get started
