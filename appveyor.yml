@@ -40,10 +40,10 @@ after_build:
 - ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
 - ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
 
-test: off
+test: on
 
 before_test:
-- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
+- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt Tests\Linq\UserDataProviders.txt
 - ps: Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
 
 after_test:
