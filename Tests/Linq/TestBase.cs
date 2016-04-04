@@ -205,8 +205,8 @@ namespace Tests
 
 					if (isIgnore)
 					{
-						if (test.RunState != RunState.Ignored && test.RunState != RunState.Explicit)
-							test.RunState = RunState.NotRunnable;
+						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+							test.RunState = RunState.Ignored;
 
 						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
 						continue;
