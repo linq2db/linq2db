@@ -403,6 +403,7 @@
       <Link>SqlServerTypes\x86\SqlServerSpatial110.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
     <None Include="..\..\Data\TestData.sqlite">
