@@ -16,8 +16,8 @@ init:
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
-  assembly_version: '$(buildVersion)'
-  assembly_file_version: '$(buildVersion)'
+  assembly_version: '$(packageVersion)'
+  assembly_file_version: '$(packageVersion)'
   assembly_informational_version: '$(nugetVersion)'
 
 nuget:
