@@ -9,7 +9,7 @@ cache:
 
 init:
 - cmd: git config --global core.autocrlf true
-- ps: $env:buildVersion = "$env:packageVersion"
+- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
 - ps: $env:nugetVersion = "$env:packageVersion-alpha$env:appveyor_build_number"
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 
@@ -25,7 +25,7 @@ nuget:
   project_feed: false
 
 before_build:
-- cmd: nuget restore
+- cmd: nuget restore linq2db.4.5.sln
 
 build:
   project: linq2db.4.5.sln
