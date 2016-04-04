@@ -1,4 +1,4 @@
-LINQ to DB 1.0.7.3  Release Notes
+LINQ to DB 1.0.7.4  Release Notes
 ---------------------------------
 
 Welcome to the release notes for LINQ to DB 1.0.7.4
@@ -25,6 +25,10 @@ New configuration option - LinqToDB.DataProvider.SqlServer.SqlServerConfiguratio
 
 
 New DataConnection event OnTraceConnection.
+
+
+PostgreSQL v3+ support.
+
 
 
 What's new in 1.0.7.3
