@@ -12,10 +12,10 @@ namespace Tests.Security
 	using Model;
 	using TestHelpers;
 
-	[PartialTrustFixture]
+//	[PartialTrustFixture]
 	public class PartialTrustTests : MarshalByRefObject
 	{
-		[Fact]
+//		[Fact]
 		public void Test()
 		{
 			if (TestBase.UserProviders.ContainsKey("SqlServer.2012"))
