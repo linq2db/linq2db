@@ -43,7 +43,6 @@ after_build:
 test: on
 
 before_test:
-- cmd: dir
 - ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
 - ps: Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
 

@@ -26,6 +26,8 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+
 			var traceCount = 0;
 
 			DataConnection.TurnTraceSwitchOn();
