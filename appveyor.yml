@@ -8,6 +8,10 @@ version: $(packageVersion).{build}
 cache:
 - packages -> **\packages.config
 
+services:
+- mssql2012sp1
+- mysql56
+
 init:
 - cmd: git config --global core.autocrlf true
 - ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"

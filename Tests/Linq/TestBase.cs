@@ -133,7 +133,7 @@ namespace Tests
 			public string ConnectionString;
 		}
 
-		protected static readonly Dictionary<string,UserProviderInfo> UserProviders;
+		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
 
 		static readonly List<string> _providers = new List<string>
 		{
