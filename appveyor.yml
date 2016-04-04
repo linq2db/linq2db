@@ -39,3 +39,6 @@ after_build:
 - cmd: cd ..
 - ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
 - ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
+
+before_test:
+- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
