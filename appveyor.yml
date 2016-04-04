@@ -1,8 +1,9 @@
-version: 1.0.{build}
 configuration: Release
 
 environment:
-  packageVersion: 1.0.7.4
+  packageVersion: 1.7.4
+
+version: $(packageVersion).{build}
 
 cache:
 - packages -> **\packages.config
@@ -16,8 +17,8 @@ init:
 assembly_info:
   patch: true
   file: '**\AssemblyInfo.*'
-  assembly_version: '$(packageVersion)'
-  assembly_file_version: '$(packageVersion)'
+  assembly_version: '$(buildVersion)'
+  assembly_file_version: '$(buildVersion)'
   assembly_informational_version: '$(nugetVersion)'
 
 nuget:
