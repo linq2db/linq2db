@@ -1,5 +1,5 @@
-LINQ to DB
-=========
+LINQ to DB [![build status](https://ci.appveyor.com/api/projects/status/github/linq2db/linq2db)](https://ci.appveyor.com/project/igor-tkachev/linq2db)
+==========
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -447,3 +447,5 @@ private static IDataProvider GetDataProvider()
   return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
 }
 ```        
+
+[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)
