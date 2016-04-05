@@ -339,5 +339,150 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+//		[ExpressionMethod("AssociationExpression")]
+//		static IEnumerable<GrandChild> GrandChildren(Parent p)
+//		{
+//			throw new InvalidOperationException();
+//		}
+//
+//		static Expression<Func<Parent,IEnumerable<GrandChild>>> AssociationExpression()
+//		{
+//			return parent => parent.Children.SelectMany(gc => gc.GrandChildren);
+//		}
+
+		[ExpressionMethod("MyWhereImpl")]
+		static IQueryable<TSource> MyWhere<TSource>(IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
+		{
+			return source.Where(predicate);
+		}
+
+		static Expression<Func<IQueryable<TSource>,Expression<Func<TSource,bool>>,IQueryable<TSource>>> MyWhereImpl<TSource>()
+		{
+			return (source, predicate) => source.Where(predicate);
+		}
+
+		[Test, DataContextSource]
+		public void PredicateExpressionTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				MyWhere(db.Parent, p => p.ParentID == 1).ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void PredicateExpressionTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from c in db.Child
+					from p in MyWhere(db.Parent, p => p.ParentID == c.ParentID)
+					select p
+				).ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void LeftJoinTest1(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
+			}
+		}
+
+		[Test, DataContextSource]
+		public void LeftJoinTest2(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from g in db.GrandChild
+					where db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).Any(t => t.Outer.ChildID == g.ChildID)
+					select g
+				).ToList();
+			}
+		}
+
+		/*
+		[Test, DataContextSource]
+		public void LeftJoinTest3(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from g in db.GrandChild
+					where db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID, (c,p) => c).Any(t => t.ChildID == g.ChildID)
+					select g
+				).ToList();
+			}
+		}
+		*/
+	}
+
+	static class ExpressionTestExtensions
+	{
+		public class LeftJoinInfo<TOuter,TInner>
+		{
+			public TOuter Outer;
+			public TInner Inner;
+		}
+
+		[ExpressionMethod("LeftJoinImpl")]
+		public static IQueryable<LeftJoinInfo<TOuter,TInner>> LeftJoin<TOuter, TInner, TKey>(
+			this IQueryable<TOuter> outer,
+			IEnumerable<TInner> inner,
+			Expression<Func<TOuter, TKey>> outerKeySelector,
+			Expression<Func<TInner, TKey>> innerKeySelector)
+		{
+			return outer
+				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+		}
+
+		static Expression<Func<
+			IQueryable<TOuter>,
+			IEnumerable<TInner>,
+			Expression<Func<TOuter,TKey>>,
+			Expression<Func<TInner,TKey>>,
+			IQueryable<LeftJoinInfo<TOuter,TInner>>>>
+			LeftJoinImpl<TOuter, TInner, TKey>()
+		{
+			return (outer,inner,outerKeySelector,innerKeySelector) => outer
+				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new LeftJoinInfo<TOuter,TInner> { Outer = o.o, Inner = i });
+		}
+
+		/*
+		[ExpressionMethod("LeftJoinImpl1")]
+		public static IQueryable<TResult> LeftJoin<TOuter,TInner,TKey,TResult>(
+			this IQueryable<TOuter> outer,
+			IEnumerable<TInner> inner,
+			Expression<Func<TOuter,TKey>> outerKeySelector,
+			Expression<Func<TInner,TKey>> innerKeySelector,
+			Expression<Func<TOuter,TInner,TResult>> resultSelector)
+		{
+			return outer
+				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => o, resultSelector);
+		}
+
+		static Expression<Func<
+			IQueryable<TOuter>,
+			IEnumerable<TInner>,
+			Expression<Func<TOuter,TKey>>,
+			Expression<Func<TInner,TKey>>,
+			Expression<Func<TOuter,TInner, TResult>>,
+			IQueryable<TResult>>>
+			LeftJoinImpl1<TOuter,TInner,TKey,TResult>()
+		{
+			return (outer,inner,outerKeySelector,innerKeySelector,resultSelector) => outer
+				.GroupJoin(inner, outerKeySelector, innerKeySelector, (o, gr) => new { o, gr })
+				.SelectMany(t => t.gr.DefaultIfEmpty(), (o,i) => new { o.o, i })
+				.Select(resultSelector);
+		}
+		*/
 	}
 }
