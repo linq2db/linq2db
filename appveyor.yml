@@ -45,8 +45,6 @@ after_build:
 - ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
 
 test: off
-  assemblies:
-    - '**\*.Tests.dll'
 
 before_test:
 - ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
