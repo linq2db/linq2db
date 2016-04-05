@@ -707,8 +707,7 @@ namespace Tests.DataProvider
 
 		#region BulkCopy
 
-		[Test]
-		public void BulkCopyLinqTypes([Values(ProviderName.OracleNative, ProviderName.OracleManaged)] string context, [Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		static void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new DataConnection(context))
 			{
@@ -743,6 +742,18 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test, OracleDataContext]
+		public void BulkCopyLinqTypesMultipleRows(string context)
+		{
+			BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, OracleDataContext]
+		public void BulkCopyLinqTypesProviderSpecific(string context)
+		{
+			BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
+		}
+
 		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
 		public class Trade
 		{
@@ -755,8 +766,7 @@ namespace Tests.DataProvider
 			[Column("value_as_date")]         public DateTime? ValueAsDate    { get; set; }
 		}
 
-		[Test]
-		public void BulkCopy1([Values(ProviderName.OracleNative, ProviderName.OracleManaged)] string context, [Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		static void BulkCopy1(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -786,8 +796,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void BulkCopy21([Values(ProviderName.OracleNative, ProviderName.OracleManaged)] string context, [Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		[Test, OracleDataContext]
+		public void BulkCopy1MultipleRows(string context)
+		{
+			BulkCopy1(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, OracleDataContext]
+		public void BulkCopy1ProviderSpecific(string context)
+		{
+			BulkCopy1(context, BulkCopyType.ProviderSpecific);
+		}
+
+		static void BulkCopy21(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -820,8 +841,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
-		public void BulkCopy22([Values(ProviderName.OracleNative, ProviderName.OracleManaged)] string context, [Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
+		[Test, OracleDataContext]
+		public void BulkCopy21MultipleRows(string context)
+		{
+			BulkCopy21(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, OracleDataContext]
+		public void BulkCopy21ProviderSpecific(string context)
+		{
+			BulkCopy21(context, BulkCopyType.ProviderSpecific);
+		}
+
+		static void BulkCopy22(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -849,6 +881,18 @@ namespace Tests.DataProvider
 
 				db.Types2.Delete(_ => _.ID > 1000);
 			}
+		}
+
+		[Test, OracleDataContext]
+		public void BulkCopy22MultipleRows(string context)
+		{
+			BulkCopy22(context, BulkCopyType.MultipleRows);
+		}
+
+		[Test, OracleDataContext]
+		public void BulkCopy22ProviderSpecific(string context)
+		{
+			BulkCopy22(context, BulkCopyType.ProviderSpecific);
 		}
 
 		#endregion
