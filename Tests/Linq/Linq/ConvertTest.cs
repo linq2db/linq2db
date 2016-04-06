@@ -37,7 +37,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Convert<int,decimal>(t.MoneyValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.MySql)]
+		[Test, DataContextSource(ProviderName.MySql, TestProvName.MariaDB)]
 		public void ToBigInt(string context)
 		{
 			using (var db = GetDataContext(context))

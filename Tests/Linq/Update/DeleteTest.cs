@@ -270,6 +270,7 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			ProviderName.Informix,
 			ProviderName.MySql,
+			TestProvName.MariaDB,
 			ProviderName.PostgreSQL,
 			ProviderName.SQLite,
 			ProviderName.SqlCe,

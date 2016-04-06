@@ -148,7 +148,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB)]
 		public void DatePartMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -229,7 +229,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.Second));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB)]
 		public void Millisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -355,7 +355,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.DateTimeValue)).Value.Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB)]
 		public void DateAddMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -416,7 +416,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddSeconds(-35)).Second);
 		}
 
-		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.Informix, ProviderName.MySql, ProviderName.Access, ProviderName.SapHana, TestProvName.MariaDB)]
 		public void AddMilliseconds(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -508,7 +508,8 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
+			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
 		public void SubDateMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -518,7 +519,8 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
+			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
 		public void DateDiffMillisecond(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -637,7 +639,8 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
+			ProviderName.Informix, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL,
+			TestProvName.MariaDB, ProviderName.MySql, ProviderName.SQLite, ProviderName.Access)]
 		public void DateTimeSum(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -772,7 +772,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void InsertWithGuidIdentity(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -788,7 +788,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, IncludeDataContextSource(
-			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void InsertWithGuidIdentity2(string context)
 		{
 			using (var db = new DataConnection(context))

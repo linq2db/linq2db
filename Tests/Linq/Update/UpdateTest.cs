@@ -228,16 +228,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, 
-			ProviderName.SqlCe, 
-			ProviderName.DB2, 
-			ProviderName.Firebird, 
+			ProviderName.Informix,
+			ProviderName.SqlCe,
+			ProviderName.DB2,
+			ProviderName.Firebird,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL, 
-			ProviderName.MySql, 
-			ProviderName.SQLite, 
-			ProviderName.Access, 
+			ProviderName.MySql,
+			TestProvName.MariaDB,
+			ProviderName.SQLite,
+			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update9(string context)
 		{
@@ -268,16 +269,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.Informix, 
-			ProviderName.SqlCe, 
-			ProviderName.DB2, 
-			ProviderName.Firebird, 
+			ProviderName.Informix,
+			ProviderName.SqlCe,
+			ProviderName.DB2,
+			ProviderName.Firebird,
 			ProviderName.OracleNative,
 			ProviderName.OracleManaged,
-			ProviderName.PostgreSQL, 
-			ProviderName.MySql, 
-			ProviderName.SQLite, 
-			ProviderName.Access, 
+			ProviderName.PostgreSQL,
+			ProviderName.MySql,
+			TestProvName.MariaDB,
+			ProviderName.SQLite,
+			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update10(string context)
 		{
@@ -676,7 +678,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SQLite, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, ProviderName.Sybase)]
+			ProviderName.MySql, TestProvName.MariaDB, ProviderName.Sybase)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))

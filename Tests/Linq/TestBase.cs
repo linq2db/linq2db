@@ -154,7 +154,8 @@ namespace Tests
 			ProviderName.MySql,
 			ProviderName.Sybase,
 			ProviderName.SapHana,
-			"SqlAzure.2012"
+			TestProvName.SqlAzure,
+			TestProvName.MariaDB,
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]

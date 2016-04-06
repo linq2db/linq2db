@@ -234,6 +234,7 @@
     <Compile Include="Data\TransactionTest.cs" />
     <Compile Include="Data\ProcedureTest.cs" />
     <Compile Include="Linq\InterfaceTest.cs" />
+    <Compile Include="TestProvName.cs" />
     <Compile Include="Update\CreateTableTest.cs" />
     <Compile Include="Linq\QueryHintsTest.cs" />
     <Compile Include="Linq\AsyncTest.cs" />
