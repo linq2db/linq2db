@@ -87,7 +87,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql)]
+		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB)]
 		public void MySqlTest(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -103,6 +103,20 @@ namespace Tests.SchemaProvider
 				var view = dbSchema.Tables.Single(t => t.TableName == "personview");
 
 				Assert.That(view.Columns.Count, Is.EqualTo(1));
+			}
+		}
+
+		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB)]
+		public void MySqlPKTest(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var sp       = conn.DataProvider.GetSchemaProvider();
+				var dbSchema = sp.GetSchema(conn);
+				var table    = dbSchema.Tables.Single(t => t.TableName == "person");
+				var pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
+
+				Assert.That(pk, Is.Not.Null);
 			}
 		}
 

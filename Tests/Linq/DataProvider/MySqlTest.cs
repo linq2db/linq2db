@@ -20,9 +20,16 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class MySqlTest : DataProviderTestBase
 	{
-		const string CurrentProvider = ProviderName.MySql;
+		[AttributeUsage(AttributeTargets.Method)]
+		class MySqlDataContextAttribute : IncludeDataContextSourceAttribute
+		{
+			public MySqlDataContextAttribute()
+				: base(ProviderName.MySql, TestProvName.MariaDB)
+			{
+			}
+		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestParameters(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -36,7 +43,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestDataTypes(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -84,7 +91,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestDate(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -98,7 +105,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestDateTime(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -114,7 +121,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestChar(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -145,7 +152,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestString(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -165,7 +172,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestBinary(string context)
 		{
 			var arr1 = new byte[] { 48, 57 };
@@ -184,7 +191,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestXml(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -210,7 +217,7 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB,
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestEnum1(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -222,7 +229,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestEnum2(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -313,19 +320,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider), Ignore("It works too long.")]
+		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
 		public void BulkCopyMultipleRows(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.MultipleRows);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider), Ignore("It works too long.")]
+		[Test, MySqlDataContextAttribute, Ignore("It works too long.")]
 		public void BulkCopyProviderSpecific(string context)
 		{
 			BulkCopyTest(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void BulkCopyLinqTypes(string context)
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
@@ -351,7 +358,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestTransaction1(string context)
 		{
 			using (var db = new DataConnection(context))
@@ -370,7 +377,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(CurrentProvider)]
+		[Test, MySqlDataContextAttribute]
 		public void TestTransaction2(string context)
 		{
 			using (var db = new DataConnection(context))
