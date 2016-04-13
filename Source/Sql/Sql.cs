@@ -13,7 +13,7 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
+	using Common;
 	using Extensions;
 	using Linq;
 	using SqlQuery;

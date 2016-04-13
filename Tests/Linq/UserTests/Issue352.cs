@@ -10,7 +10,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue352 : TestBase
 	{
-
 		[Test, NorthwindDataContext]
 		public void Test(string context)
 		{

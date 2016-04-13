@@ -30,7 +30,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table(Database="TestData", Name="AllTypes2")]
-		public class AllTypes2
+		class AllTypes2
 		{
 			[Column(DbType="int"),   PrimaryKey, Identity] public int             ID                     { get; set; } // int
 			[Column(DbType="date"),              Nullable] public DateTime?       dateDataType           { get; set; } // date
