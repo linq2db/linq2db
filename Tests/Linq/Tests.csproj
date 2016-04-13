@@ -333,6 +333,7 @@
     <Compile Include="UserTests\FirstOrDefaultNullReferenceExceptionTest.cs" />
     <Compile Include="UserTests\GenericsFilterTest.cs" />
     <Compile Include="UserTests\GroupBySubqueryTest.cs" />
+    <Compile Include="UserTests\Issue357.cs" />
     <Compile Include="UserTests\Issue352.cs" />
     <Compile Include="UserTests\LetTest.cs" />
     <Compile Include="UserTests\MultiPartIdentifierTest.cs" />
