@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_npgsqlTimeStamp      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
 			_npgsqlTimeStampTZ    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
 			_npgsqlDate           = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDate",        true);
-			_npgsqlDateTime       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDateTime",    true);
+			_npgsqlDateTime       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDateTime",    false);
 			NpgsqlMacAddressType  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
 			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
 			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
