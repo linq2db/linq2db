@@ -63,7 +63,7 @@ namespace LinqToDB.Mapping
 
 		public FluentMappingBuilder HasAttribute(LambdaExpression func, Attribute attribute)
 		{
-			var memberInfo = MemberHelper.GetMemeberInfo(func);
+			var memberInfo = MemberHelper.GetMemberInfo(func);
 			_reader.AddAttribute(memberInfo, attribute);
 			return this;
 		}
