@@ -319,15 +319,13 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB())
 			{
-				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null);
-				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null);
+				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
+				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 
-				var list = result.ToList();
-
-				Assert.Greater(list.Count, 0);
-				Assert.AreEqual(expected.Count(), list.Count);
-				Assert.IsTrue(list.Except(expected).Count() == 0);
-				Assert.IsTrue(list.Contains(null));
+				Assert.That(result.Count,                    Is.GreaterThan(0));
+				Assert.That(expected.Count(),                Is.EqualTo(result.Count));
+				Assert.That(result.Contains(null),           Is.True);
+				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
 			}
 		}
 
