@@ -178,13 +178,9 @@
             </summary>
         </member>
         <member name="T:Npgsql.FrontendMessages.QueryMessage">
-             <summary>
-             A simple query message.
-            
-             Note that since this is only used to send some specific control messages (e.g. start transaction)
-             and never arbitrary-length user-provided queries, this message is treated as simple and not chunking,
-             and only ASCII is supported.
-             </summary>
+            <summary>
+            A simple query message.
+            </summary>
         </member>
         <member name="M:Npgsql.FrontendMessages.PasswordMessage.CreateMD5(System.String,System.String,System.Byte[])">
             <summary>
@@ -2056,9 +2052,9 @@
         </member>
         <member name="M:Npgsql.NpgsqlConnection.BeginBinaryExport(System.String)">
             <summary>
-            Begins a binary COPY TO STDIN operation, a high-performance data export mechanism from a PostgreSQL table.
+            Begins a binary COPY TO STDOUT operation, a high-performance data export mechanism from a PostgreSQL table.
             </summary>
-            <param name="copyToCommand">A COPY TO STDIN SQL command</param>
+            <param name="copyToCommand">A COPY TO STDOUT SQL command</param>
             <returns>A <see cref="T:Npgsql.NpgsqlBinaryExporter"/> which can be used to read rows and columns</returns>
             <remarks>
             See http://www.postgresql.org/docs/current/static/sql-copy.html.
@@ -2079,11 +2075,11 @@
         </member>
         <member name="M:Npgsql.NpgsqlConnection.BeginTextExport(System.String)">
             <summary>
-            Begins a textual COPY FROM STDIN operation, a data import mechanism to a PostgreSQL table.
+            Begins a textual COPY TO STDOUT operation, a data export mechanism from a PostgreSQL table.
             It is the user's responsibility to parse the textual input according to the format specified
             in <paramref name="copyToCommand"/>.
             </summary>
-            <param name="copyToCommand">A COPY TO STDIN SQL command</param>
+            <param name="copyToCommand">A COPY TO STDOUT SQL command</param>
             <returns>
             A TextReader that can be used to read textual data.</returns>
             <remarks>
@@ -2092,12 +2088,12 @@
         </member>
         <member name="M:Npgsql.NpgsqlConnection.BeginRawBinaryCopy(System.String)">
             <summary>
-            Begins a raw binary COPY operation (TO or FROM), a high-performance data export/import mechanism to a PostgreSQL table.
+            Begins a raw binary COPY operation (TO STDOUT or FROM STDIN), a high-performance data export/import mechanism to a PostgreSQL table.
             Note that unlike the other COPY API methods, <see cref="M:Npgsql.NpgsqlConnection.BeginRawBinaryCopy(System.String)"/> doesn't implement any encoding/decoding
             and is unsuitable for structured import/export operation. It is useful mainly for exporting a table as an opaque
             blob, for the purpose of importing it back later.
             </summary>
-            <param name="copyCommand">A COPY FROM STDIN or COPY TO STDIN SQL command</param>
+            <param name="copyCommand">A COPY TO STDOUT or COPY FROM STDIN SQL command</param>
             <returns>A <see cref="T:Npgsql.NpgsqlRawCopyStream"/> that can be used to read or write raw binary data.</returns>
             <remarks>
             See http://www.postgresql.org/docs/current/static/sql-copy.html.
@@ -2785,11 +2781,6 @@
             Called when a connector becomes completely unusable, e.g. when an unexpected I/O exception is raised or when
             we lose protocol sync.
             Note that fatal errors during the Open phase do *not* pass through here.
-            </summary>
-        </member>
-        <member name="M:Npgsql.NpgsqlConnector.BreakFromOpen">
-            <summary>
-            Called when an open attempt fails (e.g. I/O error, timeout).
             </summary>
         </member>
         <member name="M:Npgsql.NpgsqlConnector.Cleanup">
@@ -4419,6 +4410,12 @@
             Specifies the <see cref="T:Npgsql.NpgsqlConnection"/> object associated with the transaction.
             </summary>
             <value>The <see cref="T:Npgsql.NpgsqlConnection"/> object associated with the transaction.</value>
+        </member>
+        <member name="P:Npgsql.NpgsqlTransaction.IsCompleted">
+            <summary>
+            Specifies the completion state of the transaction.
+            </summary>
+            <value>The completion state of the transaction.</value>
         </member>
         <member name="P:Npgsql.NpgsqlTransaction.DbConnection">
             <summary>
