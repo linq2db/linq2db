@@ -1,13 +1,13 @@
-Oracle.ManagedDataAccess Nuget Package Version 12.1.2400 README
-===============================================================
+Oracle.ManagedDataAccess NuGet Package 12.1.24160419 README
+===========================================================
 
-Release 12.1.2400 for ODAC 12c Release 4
+for ODAC 12c Release 4
 
 Release Notes: Oracle Data Provider for .NET, Managed Driver
 
-October 2015
+April 2016
 
-Copyright (c) Oracle Corporation 2015
+Copyright (c) Oracle Corporation 2016
 
 This document provides information that supplements the Oracle Data Provider for .NET (ODP.NET) documentation. 
 You have downloaded Oracle Data Provider for .NET from Oracle, the license agreement to which is available at 
@@ -18,7 +18,6 @@ TABLE OF CONTENTS
 *Installation and Configuration Steps
 *Installation Changes
 *Documentation Corrections and Additions
-*Fixed Bugs Since Last ODP.NET NuGet Release
 *ODP.NET, Managed Driver Tips, Limitations, and Known Issues
 
 Note: The 32-bit "Oracle Developer Tools for Visual Studio" download from http://otn.oracle.com/dotnet is 
@@ -28,33 +27,85 @@ This version of ODP.NET supports Oracle Database version 10.2 and higher.
 
 
 
-New Features since Oracle.ManagedDataAccess Nuget Package Version 12.1.022
-==========================================================================
-1. .NET Framework 4.6 Certification
-ODP.NET, Managed Driver is certified for .NET Framework 4.6.
+New Features since Oracle.ManagedDataAccess NuGet Package 12.1.2400
+===================================================================
+1. Data Integrity
+ODP.NET, Managed Driver supports cryptographic hash functions to better ensure data integrity between the 
+database server and client. The algorithms supported include MD5, SHA-1, and SHA-2 (SHA-256, SHA-384, and 
+SHA-512).
 
-2. Network Data Encryption
-ODP.NET, Managed Driver supports database security network data encryption using Advanced Encryption Standard 
-(AES), RC4, or Triple-DES to enable more secure database communication over intranet and cloud access.
+To enable ODP.NET, Managed Driver data integrity, use the following .NET configuration file (i.e. 
+web.config, machine.config) properties available in the oracle.manageddataaccess.client section:
 
-3. Secure External Password Store
-ODP.NET, Managed Driver supports connection establishment by retrieving password credentials from a client-side 
-Oracle wallet.
+* SQLNET.CRYPTO_CHECKSUM_CLIENT = Specifies the desired data integrity behavior when this client connects 
+to a server. Supported values are accepted, rejected, requested, or required. Default = accepted.
+More info: http://docs.oracle.com/database/121/NETRF/sqlnet.htm#NETRF200
 
-4. Service Relocation Connection Timeout
-Whenever a database service becomes unavailable, an application can encounter numerous connectivity errors. 
-To avoid connection attempts to an unavailable service, ODP.NET, Managed Driver blocks any connection attempts 
-until the service is up or until the configured time limit expires from the time when the service DOWN event 
-was received. This feature is useful for planned outages and service relocations. It works with Oracle RAC and 
-Oracle Data Guard.
+* SQLNET.CRYPTO_CHECKSUM_TYPES_CLIENT = Specifies the data integrity algorithms that this client uses. 
+Supported values are SHA512, SHA384, SHA256, SHA1, and MD5.
+More info: http://docs.oracle.com/database/121/NETRF/sqlnet.htm#NETRF202
 
-5. Transaction Guard
-ODP.NET, Managed Driver now supports Transaction Guard. Its API and architecture are the same as ODP.NET, 
-Unmanaged Driver's in ODAC 12c Release 4 to provide improved developer productivity.
 
-6. Tracing Enhancements
-ODP.NET improves and unifies tracing features between managed and unmanaged ODP.NET. Key features include traces 
-now output to a Windows temporary files directory and both providers use the same tracing parameters.
+2. Secure Sockets Layer (SSL) and Transport Layer Security (TLS)
+    ODP.NET, Managed Driver has added support for TLS 1.1 and 1.2, to go along with our previous support for
+    SSL 3.0 and TLS 1.0.
+
+    To utilize a specific version of SSL/TLS, use the SSL_VERSION .NET Application configuration setting parameter.
+    By default the SSL_VERSION is set to all supported versions, in the order 3.0, 1.0, 1.1, and 1.2.
+
+    The client and server negotiate to the highest version among the common conversions
+    specified in the client and server configurations.  The versions from lowest to highest are:
+    3.0 (lowest), 1.0, 1.1, and 1.2 (highest).
+
+    Please reference the following documentation for a more thorough discussion of the SSL_VERSION parameter:
+
+https://docs.oracle.com/cd/E11882_01/network.112/e10835/sqlnet.htm#NETRF235
+
+
+3. Configuration Settings with Relative Windows Path and Windows Environment Variables
+
+The following managed ODP.NET configuration settings support relative Windows path and environment 
+variables:
+
+a. TraceFileLocation
+b. WALLET_LOCATION
+
+File locations for the above config parameters can now be set using relative Windows paths. The 
+"." notation informs ODP.NET to use the current working directory. Sub-directories can be added by 
+appending them. For example, ".\mydir" refers to the sub-directory "mydir" in the current working 
+directory.  To navigate to a parent directory, use the ".." notation.
+
+For web applications, the current working directory is the application directory. For Windows
+applications, the .EXE location is the current working directory.
+
+Windows paths can also be set using Windows environment variable names within "%" characters.
+(e.g. "%tns_admin%", "c:\%dir%\my_app_location", "c:\%top_level_dir%\%bottom_level_dir%")
+
+Please note the following for Windows environment variables:
+- If the environment variable that is used by the configuration parameter is not set to anything, 
+an exception will be thrown.
+- A directory name cannot partially be using an environment variable (i.e. "c:\my_app_%id%")
+- Multiple variables can used in given directory location. 
+(i.e. "c:\%top_level_dir%\%bottom_level_dir%")
+
+
+4. .ORA File Search Order
+For Windows applications, ODP.NET will now search for tnsnames.ora, sqlnet.ora. and ldap.ora 
+files first in the .EXE directory before looking in the current working directory.
+
+
+5. NuGet Package Versioning - new versioning scheme
+Oracle .NET NuGet packages will use a new versioning scheme as NuGet releases are expected to be more 
+frequent than ODAC releases. This scheme will help customers distinguish the version they are using.
+
+[DB major version].[DB minor version].[DB patchset version][ODAC version][6-digit patchset version]
+
+For example, this NuGet version is 12.1.24160419, which is equivalent to
+[DB major version] = 12
+[DB minor version] = 1
+[DB patchset version] = 2
+[ODAC version] = 4
+[6-digit patchset version] = 160419
 
 
 
@@ -65,7 +116,7 @@ to install ODP.NET, Managed Driver.
 
 1. Un-GAC and un-configure any existing assembly (i.e. Oracle.ManagedDataAccess.dll) and policy DLL 
 (i.e. Policy.4.121.Oracle.ManagedDataAccess.dll) for the ODP.NET, Managed Driver, version 12.1.0.2
-that exist in the GAC.
+that exist in the GAC. Remove all references of Oracle.ManagedDataAccess from machine.config file, if any exists.
 
 2. In Visual Studio 2010, 2012, 2013, or 2015 open NuGet Package Manager from an existing Visual Studio project. 
 
@@ -86,7 +137,7 @@ that exist in the GAC.
    From Nuget.org
    --------------
    A. In the Search box in the upper right, search for the package with id, "Oracle.ManagedDataAccess". Verify 
-   that the package uses this unique ID to ensure it is the offical Oracle Data Provider for .NET, Managed Driver 
+   that the package uses this unique ID to ensure it is the official Oracle Data Provider for .NET, Managed Driver 
    download.
 
    B. Select the package you wish to install.
@@ -118,10 +169,10 @@ The Oracle.ManagedDataAccessDTC.dll assembly is ONLY needed if you are using Dis
 .NET Framework being used is 4.5.1 or lower. If you are using .NET Framework 4.5.2 or higher, this assembly does 
 not need to be referenced by your application.
 
-The Oracle.ManagedDataAccessIOP.dll assembly is ONLY needed if you are using Kerberos. Kerberos users will need 
-to download MIT Kerberos for Windows 4.0.1 or higher from 
-  http://web.mit.edu/kerberos/dist/ 
-to utilize ODP.NET, Managed Driver's support of Kerberos.
+The Oracle.ManagedDataAccessIOP.dll assembly is ONLY needed if you are using Kerberos5 based external 
+authentication. Kerberos5 users will need to download MIT Kerberos for Windows version 4.0.1 from 
+	http://web.mit.edu/kerberos/dist/
+to utilize ODP.NET, Managed Driver's support of Kerberos5.
 
 These asssemblies are located under
       packages\Oracle.ManagedDataAccess.<version>\bin\x64
