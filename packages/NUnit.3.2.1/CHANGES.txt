@@ -1,4 +1,52 @@
-﻿NUnit 3.2 - March 5, 2016
+﻿NUnit 3.2.1 - April 19, 2016
+
+Framework
+
+ * The output and error files are now thread safe when running tests in parallel
+ * Added a .NET 3.5 build of the framework preventing conflicts with the compatiblity classes in the 2.0 framework
+ * Added a SingleThreadedAttribute to be added to a TestFixture to indicate all child tests should run on the same thread
+
+Engine
+
+ * Unless required, run all tests within a fixture on the same thread
+ * Added an EventListener extension point
+ * Reduced memory usage
+
+Console Runner
+
+ * No longer probes for newer versions of the engine, instead uses the engine that is included with the console
+
+Issues Resolved
+
+ *  332 Add CF to the Appveyor CI build
+ *  640 Keep CF Build (and other future builds) in Sync
+ *  773 Upgrade Travis CI from Legacy Infrastructure
+ * 1141 Explicit Tests get run when using --where with some filters
+ * 1161 NUnit3-Console should disallow the combination of --inprocess and --x86, giving an error message
+ * 1208 Apartment on assembly level broken
+ * 1231 Build may silently fail some tests
+ * 1247 Potential memory issue
+ * 1266 SetCultureAttribute does not work if set on assembly level
+ * 1302 Create EventListener ExtensionPoint for the Engine
+ * 1317 Getting CF framework unit tests running on CI build
+ * 1318 NUnit console runner fails with error code -100
+ * 1327 TestCaseSource in NUnit 3 converts an argument declared as String[] to String
+ * 1329 Unable to build without Compact Framework
+ * 1333 Single Thread per Worker
+ * 1338 BUILDING.txt is outdated
+ * 1349 Collision on System.Func from nunit.framework with System.Core in .Net 3.5 (CS0433)
+ * 1352 Tests losing data setup on thread
+ * 1359 Compilation error in NUnitPortableDriverTests.cs
+ * 1383 Skip Silverlight build if SDK not installed
+ * 1386 Bug when using Assert.Equals() with types that explicitly implement IEquatable<T>
+ * 1390 --testlist with file with blank first line causes IndexOutOfRangeException
+ * 1399 Fixed NullReference issue introduced by the fix for #681
+ * 1405 ITestRunner.StopRun throws exception of type 'System.MissingMethodException'
+ * 1406 TextCapture is not threadsafe but is used to intercept calls that are expected to be threadsafe
+ * 1410 Make OutFile and ErrFile streamwriters synchronized
+ * 1413 Switch console to use a local engine
+
+NUnit 3.2 - March 5, 2016
 
 Framework
 

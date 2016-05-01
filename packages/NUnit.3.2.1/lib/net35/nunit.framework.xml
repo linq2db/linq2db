@@ -873,6 +873,24 @@
             Return a list of the composing filters.
             </summary>
         </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.Pass(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.Match(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is explicit matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+        </member>
         <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.AddToXml(NUnit.Framework.Interfaces.TNode,System.Boolean)">
             <summary>
             Adds an XML node
@@ -1084,6 +1102,13 @@
             <param name="test">The test to be matched</param>
             <returns>True if all the component filters match, otherwise false</returns>
         </member>
+        <member name="M:NUnit.Framework.Internal.Filters.AndFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the AndFilter is explicit matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+            <returns>True if all the component filters explicit match, otherwise false</returns>
+        </member>
         <member name="P:NUnit.Framework.Internal.Filters.AndFilter.ElementName">
             <summary>
             Gets the element name
@@ -1196,6 +1221,13 @@
             </summary>
             <param name="test">The test to be matched</param>
             <returns>True if any of the component filters match, otherwise false</returns>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.OrFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the OrFilter is explicit matched by a test
+            </summary>
+            <param name="test">The test to be matched</param>
+            <returns>True if any of the component filters explicit match, otherwise false</returns>
         </member>
         <member name="P:NUnit.Framework.Internal.Filters.OrFilter.ElementName">
             <summary>
@@ -2535,6 +2567,11 @@
         <member name="P:NUnit.Framework.Internal.Execution.WorkItem.Context">
             <summary>
             The execution context
+            </summary>
+        </member>
+        <member name="P:NUnit.Framework.Internal.Execution.WorkItem.WorkerId">
+            <summary>
+            The unique id of the worker executing this item.
             </summary>
         </member>
         <member name="P:NUnit.Framework.Internal.Execution.WorkItem.Actions">
@@ -4569,6 +4606,12 @@
             For builds with out the parallel feature, it has no effect.
             </summary>
         </member>
+        <member name="P:NUnit.Framework.Internal.TestExecutionContext.WorkerId">
+            <summary>
+            The unique name of the worker that spawned the context.
+            For builds with out the parallel feature, it is null.
+            </summary>
+        </member>
         <member name="P:NUnit.Framework.Internal.TestExecutionContext.RandomGenerator">
             <summary>
             Gets the RandomGenerator specific to this Test
@@ -4608,6 +4651,11 @@
         <member name="P:NUnit.Framework.Internal.TestExecutionContext.CurrentValueFormatter">
             <summary>
             The current head of the ValueFormatter chain, copied from MsgUtils.ValueFormatter
+            </summary>
+        </member>
+        <member name="P:NUnit.Framework.Internal.TestExecutionContext.IsSingleThreaded">
+            <summary>
+            If true, all tests must run on the same thread. No new thread may be spawned.
             </summary>
         </member>
         <member name="M:NUnit.Framework.Internal.TestExecutionContext.UpdateContextFromEnvironment">
@@ -5677,6 +5725,22 @@
             <param name="filter">A string containing the XML representation of the filter to use</param>
             <returns>The XML result of the test run</returns>
         </member>
+        <member name="M:NUnit.Framework.Api.FrameworkController.RunTests(System.Action{System.String},System.String)">
+            <summary>
+            Runs the tests in an assembly syncronously reporting back the test results through the callback
+            or through the return value
+            </summary>
+            <param name="callback">The callback that receives the test results</param>
+            <param name="filter">A string containing the XML representation of the filter to use</param>
+            <returns>The XML result of the test run</returns>
+        </member>
+        <member name="M:NUnit.Framework.Api.FrameworkController.RunAsync(System.Action{System.String},System.String)">
+            <summary>
+            Runs the tests in an assembly asyncronously reporting back the test results through the callback
+            </summary>
+            <param name="callback">The callback that receives the test results</param>
+            <param name="filter">A string containing the XML representation of the filter to use</param>
+        </member>
         <member name="M:NUnit.Framework.Api.FrameworkController.StopRun(System.Boolean)">
             <summary>
             Stops the test run
@@ -6134,6 +6198,21 @@
             to the properties.
             </summary>
             <param name="test">The test to modify</param>
+        </member>
+        <member name="T:NUnit.Framework.SingleThreadedAttribute">
+            <summary>
+            SingleThreadedAttribute applies to a test fixture and indicates
+            that all the child tests must be run on the same thread as the
+            OneTimeSetUp and OneTimeTearDown. It sets a flag in the
+            TestExecutionContext and forces all tests to be run sequentially
+            on the current thread. Any ParallelScope setting is ignored.
+            </summary>
+        </member>
+        <member name="M:NUnit.Framework.SingleThreadedAttribute.ApplyToContext(NUnit.Framework.Internal.TestExecutionContext)">
+            <summary>
+            Apply changes to the TestExecutionContext
+            </summary>
+            <param name="context">The TestExecutionContext</param>
         </member>
         <member name="T:NUnit.Framework.TestAssemblyDirectoryResolveAttribute">
             <summary>
@@ -11312,6 +11391,22 @@
             </summary>
             <param name="condition">The evaluated condition</param>
         </member>
+        <member name="M:NUnit.Framework.Assert.That(System.Func{System.Boolean},System.String,System.Object[])">
+            <summary>
+            Asserts that a condition is true. If the condition is false the method throws
+            an <see cref="T:NUnit.Framework.AssertionException"/>.
+            </summary> 
+            <param name="condition">A lambda that returns a Boolean</param>
+            <param name="message">The message to display if the condition is false</param>
+            <param name="args">Arguments to be used in formatting the message</param>
+        </member>
+        <member name="M:NUnit.Framework.Assert.That(System.Func{System.Boolean})">
+            <summary>
+            Asserts that a condition is true. If the condition is false the method throws
+            an <see cref="T:NUnit.Framework.AssertionException"/>.
+            </summary>
+            <param name="condition">A lambda that returns a Boolean</param>
+        </member>
         <member name="M:NUnit.Framework.Assert.That``1(NUnit.Framework.Constraints.ActualValueDelegate{``0},NUnit.Framework.Constraints.IResolveConstraint)">
             <summary>
             Apply a constraint to an actual value, succeeding if the constraint
@@ -14108,6 +14203,22 @@
             </summary>
             <param name="condition">The evaluated condition</param>
         </member>
+        <member name="M:NUnit.Framework.Assume.That(System.Func{System.Boolean},System.String,System.Object[])">
+            <summary>
+            Asserts that a condition is true. If the condition is false the method throws
+            an <see cref="T:NUnit.Framework.InconclusiveException"/>.
+            </summary> 
+            <param name="condition">A lambda that returns a Boolean</param>
+            <param name="message">The message to display if the condition is false</param>
+            <param name="args">Arguments to be used in formatting the message</param>
+        </member>
+        <member name="M:NUnit.Framework.Assume.That(System.Func{System.Boolean})">
+            <summary>
+            Asserts that a condition is true. If the condition is false the method throws
+            an <see cref="T:NUnit.Framework.InconclusiveException"/>.
+            </summary>
+            <param name="condition">A lambda that returns a Boolean</param>
+        </member>
         <member name="M:NUnit.Framework.Assume.That(NUnit.Framework.TestDelegate,NUnit.Framework.Constraints.IResolveConstraint)">
             <summary>
             Asserts that the code represented by a delegate throws an exception
@@ -16694,6 +16805,11 @@
             Gets a Representation of the TestResult for the current test. 
             </summary>
         </member>
+        <member name="P:NUnit.Framework.TestContext.WorkerId">
+            <summary>
+            Gets the unique name of the  Worker that is executing this test.
+            </summary>
+        </member>
         <member name="P:NUnit.Framework.TestContext.TestDirectory">
             <summary>
             Gets the directory containing the current test assembly.
@@ -17190,22 +17306,6 @@
         <member name="F:NUnit.Common.PackageSettings.ImageTargetFrameworkName">
             <summary>
             The FrameworkName specified on a TargetFrameworkAttribute for the assembly
-            </summary>
-        </member>
-        <member name="T:System.Func`3">
-            <summary>
-            Allows us to use Func when compiling against .NET 2.0
-            </summary>
-            <typeparam name="T1"></typeparam>
-            <typeparam name="T2"></typeparam>
-            <typeparam name="TResult"></typeparam>
-            <param name="arg1"></param>
-            <param name="arg2"></param>
-            <returns></returns>
-        </member>
-        <member name="T:System.Runtime.CompilerServices.ExtensionAttribute">
-            <summary>
-            Enables compiling extension methods in .NET 2.0
             </summary>
         </member>
     </members>

@@ -1470,6 +1470,11 @@
             The execution context
             </summary>
         </member>
+        <member name="P:NUnit.Framework.Internal.Execution.WorkItem.WorkerId">
+            <summary>
+            The unique id of the worker executing this item.
+            </summary>
+        </member>
         <member name="P:NUnit.Framework.Internal.Execution.WorkItem.Actions">
             <summary>
             The test actions to be performed before and after this test
@@ -1697,6 +1702,13 @@
             <param name="test">The test to be matched</param>
             <returns>True if all the component filters match, otherwise false</returns>
         </member>
+        <member name="M:NUnit.Framework.Internal.Filters.AndFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the AndFilter is explicit matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+            <returns>True if all the component filters explicit match, otherwise false</returns>
+        </member>
         <member name="P:NUnit.Framework.Internal.Filters.AndFilter.ElementName">
             <summary>
             Gets the element name
@@ -1777,6 +1789,24 @@
             <summary>
             Return a list of the composing filters.
             </summary>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.Pass(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.Match(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the CompositeFilter is explicit matched by a test.
+            </summary>
+            <param name="test">The test to be matched</param>
         </member>
         <member name="M:NUnit.Framework.Internal.Filters.CompositeFilter.AddToXml(NUnit.Framework.Interfaces.TNode,System.Boolean)">
             <summary>
@@ -1938,6 +1968,13 @@
             </summary>
             <param name="test">The test to be matched</param>
             <returns>True if any of the component filters match, otherwise false</returns>
+        </member>
+        <member name="M:NUnit.Framework.Internal.Filters.OrFilter.IsExplicitMatch(NUnit.Framework.Interfaces.ITest)">
+            <summary>
+            Checks whether the OrFilter is explicit matched by a test
+            </summary>
+            <param name="test">The test to be matched</param>
+            <returns>True if any of the component filters explicit match, otherwise false</returns>
         </member>
         <member name="P:NUnit.Framework.Internal.Filters.OrFilter.ElementName">
             <summary>
@@ -3311,6 +3348,12 @@
             For builds with out the parallel feature, it has no effect.
             </summary>
         </member>
+        <member name="P:NUnit.Framework.Internal.TestExecutionContext.WorkerId">
+            <summary>
+            The unique name of the worker that spawned the context.
+            For builds with out the parallel feature, it is null.
+            </summary>
+        </member>
         <member name="P:NUnit.Framework.Internal.TestExecutionContext.RandomGenerator">
             <summary>
             Gets the RandomGenerator specific to this Test
@@ -3345,6 +3388,11 @@
         <member name="P:NUnit.Framework.Internal.TestExecutionContext.CurrentValueFormatter">
             <summary>
             The current head of the ValueFormatter chain, copied from MsgUtils.ValueFormatter
+            </summary>
+        </member>
+        <member name="P:NUnit.Framework.Internal.TestExecutionContext.IsSingleThreaded">
+            <summary>
+            If true, all tests must run on the same thread. No new thread may be spawned.
             </summary>
         </member>
         <member name="M:NUnit.Framework.Internal.TestExecutionContext.UpdateContextFromEnvironment">
@@ -7470,6 +7518,21 @@
             <summary>
             The reason for including or excluding the test
             </summary>
+        </member>
+        <member name="T:NUnit.Framework.SingleThreadedAttribute">
+            <summary>
+            SingleThreadedAttribute applies to a test fixture and indicates
+            that all the child tests must be run on the same thread as the
+            OneTimeSetUp and OneTimeTearDown. It sets a flag in the
+            TestExecutionContext and forces all tests to be run sequentially
+            on the current thread. Any ParallelScope setting is ignored.
+            </summary>
+        </member>
+        <member name="M:NUnit.Framework.SingleThreadedAttribute.ApplyToContext(NUnit.Framework.Internal.TestExecutionContext)">
+            <summary>
+            Apply changes to the TestExecutionContext
+            </summary>
+            <param name="context">The TestExecutionContext</param>
         </member>
         <member name="T:NUnit.Framework.TestAssemblyDirectoryResolveAttribute">
             <summary>
@@ -15141,6 +15204,11 @@
         <member name="P:NUnit.Framework.TestContext.Result">
             <summary>
             Gets a Representation of the TestResult for the current test. 
+            </summary>
+        </member>
+        <member name="P:NUnit.Framework.TestContext.WorkerId">
+            <summary>
+            Gets the unique name of the  Worker that is executing this test.
             </summary>
         </member>
         <member name="P:NUnit.Framework.TestContext.WorkDirectory">
