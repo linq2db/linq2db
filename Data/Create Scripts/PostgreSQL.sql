@@ -98,6 +98,11 @@ CREATE TABLE "LinqDataTypes"
 )
 GO
 
+CREATE OR REPLACE FUNCTION "GetParentByID"(id int)
+RETURNS TABLE ("ParentID" int, "Value1" int)
+AS $$ SELECT * FROM "Parent" WHERE "ParentID" = $1 $$
+LANGUAGE SQL;
+GO
 
 DROP TABLE entity
 GO

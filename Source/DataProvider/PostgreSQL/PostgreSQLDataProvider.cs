@@ -13,14 +13,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase
 	{
-		public PostgreSQLDataProvider()
-			: this(ProviderName.PostgreSQL, new PostgreSQLMappingSchema())
+		public PostgreSQLDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
+			: this(
+				version == PostgreSQLVersion.v92 ? ProviderName.PostgreSQL92 : ProviderName.PostgreSQL93,
+				new PostgreSQLMappingSchema(),
+				version)
 		{
 		}
 
-		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema)
+		public PostgreSQLDataProvider(string providerName, PostgreSQLVersion version)
+			: this(providerName, new PostgreSQLMappingSchema(), version)
+		{
+		}
+
+		protected PostgreSQLDataProvider(string name, MappingSchema mappingSchema, PostgreSQLVersion version = PostgreSQLVersion.v92)
 			: base(name, mappingSchema)
 		{
+			Version = version;
+
+			if (version == PostgreSQLVersion.v93)
+				SqlProviderFlags.IsApplyJoinSupported = true;
+
 			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
@@ -28,6 +41,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 		}
+
+		public PostgreSQLVersion Version { get; private set; }
 
 		internal Type BitStringType;
 		internal Type NpgsqlIntervalType;

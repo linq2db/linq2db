@@ -450,7 +450,7 @@ namespace Tests.Linq
 					from p1 in db.Parent select p1.ParentTest);
 		}
 
-		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2012)]
+		[Test, IncludeDataContextSource(false, ProviderName.SqlServer2012, ProviderName.PostgreSQL)]
 		public void MultipleUse(string context)
 		{
 			using (var db = new TestDataConnection(context))
