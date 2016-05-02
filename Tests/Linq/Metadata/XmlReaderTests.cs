@@ -27,7 +27,7 @@ namespace Tests.Metadata
 					<Attr3><Value1 Value='4' Type='System.Int32' /></Attr3>
 				</Type>
 
-				<Type Name='XmlReaderTest'>
+				<Type Name='XmlReaderTests'>
 					<Table>
 						<Name Value='TestName' />
 					</Table>
