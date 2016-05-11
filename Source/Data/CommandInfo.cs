@@ -582,7 +582,9 @@ namespace LinqToDB.Data
 				var dataParameter = parameters[i];
 
 				if (dataParameter.Direction.HasValue &&
-					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput))
+					(dataParameter.Direction == ParameterDirection.Output ||
+					 dataParameter.Direction == ParameterDirection.InputOutput ||
+					 dataParameter.Direction == ParameterDirection.ReturnValue))
 				{
 					var dbParameter = (IDbDataParameter)dbParameters[i];
 
