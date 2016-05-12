@@ -19,6 +19,12 @@ namespace Tests.Reflection
 			public int Prop2 { get; set; }
 
 			public TestClass2 Class2;
+
+			int _prop3;
+			public int Prop3
+			{
+				set { _prop3 = value; }
+			}
 		}
 
 		class TestClass2
@@ -118,5 +124,26 @@ namespace Tests.Reflection
 
 			Assert.That(obj.Class2.Struct1.Class3.Class4.Field1, Is.EqualTo(42));
 		}
+
+		[Test]
+		public void GetterTest()
+		{
+			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+			var ma = ta[nameof(TestClass1.Prop1)];
+
+			Assert.That(ma.HasGetter, Is.True);
+			Assert.That(ma.HasSetter, Is.False);
+		}
+
+		[Test]
+		public void SetterTest()
+		{
+			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
+			var ma = ta[nameof(TestClass1.Prop3)];
+
+			Assert.That(ma.HasGetter, Is.False);
+			Assert.That(ma.HasSetter, Is.True);
+		}
+
 	}
 }

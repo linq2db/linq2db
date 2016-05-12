@@ -92,7 +92,7 @@ namespace LinqToDB.Reflection
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
 		static readonly IObjectFactory   _objectFactory;
 
-		public TypeAccessor()
+		internal TypeAccessor()
 		{
 			foreach (var member in _members)
 				AddMember(new MemberAccessor(this, member));
