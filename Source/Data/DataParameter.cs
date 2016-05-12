@@ -64,6 +64,8 @@ namespace LinqToDB.Data
 		/// </returns>
 		public string Name { get; set; }
 
+		public bool IsArray { get; set; }
+
 /*
 		/// <summary>
 		/// Gets or sets the maximum number of digits used to represent the <see cref="P:LinqToDB.Data.DataParameter.Value"/> property.
