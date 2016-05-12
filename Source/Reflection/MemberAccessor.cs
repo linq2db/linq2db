@@ -12,7 +12,7 @@ namespace LinqToDB.Reflection
 
 	public class MemberAccessor
 	{
-		public MemberAccessor(TypeAccessor typeAccessor, string memberName)
+		internal MemberAccessor(TypeAccessor typeAccessor, string memberName)
 		{
 			TypeAccessor = typeAccessor;
 
@@ -190,22 +190,33 @@ namespace LinqToDB.Reflection
 			MemberInfo = memberInfo;
 			Type       = MemberInfo is PropertyInfo ? ((PropertyInfo)MemberInfo).PropertyType : ((FieldInfo)MemberInfo).FieldType;
 
-			HasGetter = true;
-
 			if (memberInfo is PropertyInfo)
-				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
+			{
+				HasGetter = ((PropertyInfo)memberInfo).GetGetMethod(true) != null;
+				HasSetter = ((PropertyInfo)memberInfo).GetSetMethod(true) != null;
+			}
 			else
+			{
+				HasGetter = true;
 				HasSetter = !((FieldInfo)memberInfo).IsInitOnly;
+			}
 
 			var objParam   = Expression.Parameter(TypeAccessor.Type, "obj");
 			var valueParam = Expression.Parameter(Type, "value");
 
-			GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
+			if (HasGetter)
+			{
+				GetterExpression = Expression.Lambda(Expression.MakeMemberAccess(objParam, memberInfo), objParam);
+			}
+			else
+			{
+				GetterExpression = Expression.Lambda(new DefaultValueExpression(MappingSchema.Default, Type), objParam);
+			}
 
 			if (HasSetter)
 			{
 				SetterExpression = Expression.Lambda(
-					Expression.Assign(GetterExpression.Body, valueParam),
+					Expression.Assign(Expression.MakeMemberAccess(objParam, memberInfo), valueParam),
 					objParam,
 					valueParam);
 			}

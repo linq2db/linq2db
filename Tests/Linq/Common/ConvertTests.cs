@@ -162,11 +162,11 @@ namespace Tests.Common
 		[Test]
 		public void EnumValue()
 		{
+			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2?>.From((int?)1));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From(Enum2.Value1));
 			Assert.AreEqual(Enum2.Value2, ConvertTo<Enum2>. From(Enum3.Value2));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From(1));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2>. From((int?)1));
-			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2?>.From((int?)1));
 			Assert.AreEqual(Enum2.Value1, ConvertTo<Enum2?>.From(1));
 			Assert.AreEqual(Enum3.Value1, ConvertTo<Enum3>. From(1.0));
 			Assert.AreEqual(Enum3.Value1, ConvertTo<Enum3?>.From(1.0));
