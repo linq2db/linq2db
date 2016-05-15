@@ -10,7 +10,6 @@ cache:
 
 services:
 - mssql2012sp1
-- mysql56
 
 init:
 - cmd: git config --global core.autocrlf true
