@@ -408,7 +408,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="AppveyorDataProviders.txt" />
-    <Content Include="UserDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
     <None Include="..\..\Data\TestData.sqlite">
