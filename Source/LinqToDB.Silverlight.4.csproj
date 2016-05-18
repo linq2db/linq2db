@@ -155,6 +155,8 @@
     <Compile Include="Linq\Builder\ExpressionHoder.cs" />
     <Compile Include="Linq\Builder\ExpressionTestGenerator.cs" />
     <Compile Include="Linq\Builder\FirstSingleBuilder.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Linq\Builder\GroupByBuilder.cs" />
     <Compile Include="Linq\Builder\IBuildContext.cs" />
     <Compile Include="Linq\Builder\InsertBuilder.cs" />

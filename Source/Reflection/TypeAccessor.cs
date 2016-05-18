@@ -92,7 +92,7 @@ namespace LinqToDB.Reflection
 
 			var accessorType = typeof(TypeAccessor<>).MakeGenericType(type);
 
-			accessor = (TypeAccessor)Activator.CreateInstance(accessorType);
+			accessor = (TypeAccessor)Activator.CreateInstance(accessorType, true);
 
 			_accessors[type] = accessor;
 

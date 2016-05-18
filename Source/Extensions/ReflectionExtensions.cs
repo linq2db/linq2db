@@ -610,7 +610,8 @@ namespace LinqToDB.Extensions
 		public static Type ToNullableUnderlying([NotNull] this Type type)
 		{
 			if (type == null) throw new ArgumentNullException("type");
-			return type.IsNullable() ? type.GetGenericArgumentsEx()[0] : type;
+			//return type.IsNullable() ? type.GetGenericArgumentsEx()[0] : type;
+			return Nullable.GetUnderlyingType(type) ?? type;
 		}
 
 		public static IEnumerable<Type> GetDefiningTypes(this Type child, MemberInfo member)

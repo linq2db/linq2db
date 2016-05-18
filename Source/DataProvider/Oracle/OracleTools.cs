@@ -176,6 +176,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		#endregion
 
+		public static bool UseAlternativeBulkCopy = false;
+
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

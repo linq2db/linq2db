@@ -8,9 +8,7 @@ using System.Xml;
 namespace LinqToDB.Common
 {
 	using Expressions;
-
 	using Extensions;
-
 	using Mapping;
 
 	public static class Converter
