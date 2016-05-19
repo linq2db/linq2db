@@ -33,63 +33,68 @@ namespace LinqToDB.Metadata
 
 				if (!_cache.TryGetValue(memberInfo, out attrs))
 				{
-					if (memberInfo.IsMethodEx())
+					lock (_cache)
 					{
-						var ma = _reader.GetAttributes<SqlMethodAttribute>(memberInfo);
-
-						if (ma.Length > 0)
+						if (!_cache.TryGetValue(memberInfo, out attrs))
 						{
-							var mi = (MethodInfo)memberInfo;
-							var ps = mi.GetParameters();
-
-							var ex = mi.IsStatic
-								?
-								"{0}::{1}({2})".Args(
-									memberInfo.DeclaringType.Name.ToLower().StartsWith("sql")
-										? memberInfo.DeclaringType.Name.Substring(3)
-										: memberInfo.DeclaringType.Name,
-									ma[0].Name ?? memberInfo.Name,
-									string.Join(", ", ps.Select((_,i) => '{' + i.ToString() + '}').ToArray()))
-								:
-								"{{0}}.{0}({1})".Args(
-									ma[0].Name ?? memberInfo.Name,
-									string.Join(", ", ps.Select((_,i) => '{' + (i + 1).ToString() + '}').ToArray()));
-
-							attrs = new [] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
-						}
-						else
-						{
-							attrs = Array<T>.Empty;
-						}
-					}
-					else
-					{
-						var pi = (PropertyInfo)memberInfo;
-						var gm = pi.GetGetMethod();
-
-						if (gm != null)
-						{
-							var ma = _reader.GetAttributes<SqlMethodAttribute>(gm);
-
-							if (ma.Length > 0)
+							if (memberInfo.IsMethodEx())
 							{
-								var ex = "{{0}}.{0}".Args(ma[0].Name ?? memberInfo.Name);
+								var ma = _reader.GetAttributes<SqlMethodAttribute>(memberInfo);
 
-								attrs = new [] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+								if (ma.Length > 0)
+								{
+									var mi = (MethodInfo)memberInfo;
+									var ps = mi.GetParameters();
+
+									var ex = mi.IsStatic
+										?
+										"{0}::{1}({2})".Args(
+											memberInfo.DeclaringType.Name.ToLower().StartsWith("sql")
+												? memberInfo.DeclaringType.Name.Substring(3)
+												: memberInfo.DeclaringType.Name,
+											ma[0].Name ?? memberInfo.Name,
+											string.Join(", ", ps.Select((_,i) => '{' + i.ToString() + '}').ToArray()))
+										:
+										"{{0}}.{0}({1})".Args(
+											ma[0].Name ?? memberInfo.Name,
+												string.Join(", ", ps.Select((_,i) => '{' + (i + 1).ToString() + '}').ToArray()));
+
+									attrs = new [] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
+								}
+								else
+								{
+									attrs = Array<T>.Empty;
+								}
 							}
 							else
 							{
-								attrs = Array<T>.Empty;
+								var pi = (PropertyInfo)memberInfo;
+								var gm = pi.GetGetMethod();
+
+								if (gm != null)
+								{
+									var ma = _reader.GetAttributes<SqlMethodAttribute>(gm);
+
+									if (ma.Length > 0)
+									{
+										var ex = "{{0}}.{0}".Args(ma[0].Name ?? memberInfo.Name);
+
+										attrs = new [] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+									}
+									else
+									{
+										attrs = Array<T>.Empty;
+									}
+								}
+								else
+								{
+									attrs = Array<T>.Empty;
+								}
 							}
-						}
-						else
-						{
-							attrs = Array<T>.Empty;
+
+							_cache[memberInfo] = attrs;
 						}
 					}
-
-					_cache[memberInfo] = attrs;
-
 				}
 
 				return (T[])attrs;
