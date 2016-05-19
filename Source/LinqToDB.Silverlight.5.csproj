@@ -225,8 +225,10 @@
     <Compile Include="Mapping\NullableAttribute.cs" />
     <Compile Include="Mapping\PrimaryKeyAttribute.cs" />
     <Compile Include="Mapping\PropertyMappingBuilder.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />

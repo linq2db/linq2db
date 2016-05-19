@@ -340,6 +340,24 @@ namespace LinqToDB.DataProvider.Oracle
 			_setBindByName(dataConnection);
 
 			base.InitCommand(dataConnection, commandType, commandText, parameters);
+
+			if (parameters != null)
+				foreach (var parameter in parameters)
+				{
+					if (parameter.IsArray && parameter.Value is object[])
+					{
+						var value = (object[])parameter.Value;
+
+						if (value.Length != 0)
+						{
+							dynamic command = dataConnection.Command;
+						
+							command.ArrayBindCount = value.Length;
+
+							break;
+						}
+					}
+				}
 		}
 
 		public override void DisposeCommand(DataConnection dataConnection)

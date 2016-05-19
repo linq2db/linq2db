@@ -10,7 +10,8 @@ namespace Tests.Linq
 {
 	using Model;
 
-	partial class IdlTest
+	// ReSharper disable once TestClassNameDoesNotMatchFileNameWarning
+	partial class IdlTests
 	{
 		partial class GenericQueryBase
 		{

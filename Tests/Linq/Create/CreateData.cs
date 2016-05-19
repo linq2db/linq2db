@@ -13,6 +13,8 @@ namespace Tests._Create
 	using Model;
 
 	[TestFixture]
+	// ReSharper disable once InconsistentNaming
+	// ReSharper disable once TestClassNameSuffixWarning
 	public class _CreateData : TestBase
 	{
 		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null)
