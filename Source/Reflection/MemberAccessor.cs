@@ -192,8 +192,8 @@ namespace LinqToDB.Reflection
 
 			if (memberInfo is PropertyInfo)
 			{
-				HasGetter = ((PropertyInfo)memberInfo).GetGetMethod(true) != null;
-				HasSetter = ((PropertyInfo)memberInfo).GetSetMethod(true) != null;
+				HasGetter = ((PropertyInfo)memberInfo).GetGetMethodEx(true) != null;
+				HasSetter = ((PropertyInfo)memberInfo).GetSetMethodEx(true) != null;
 			}
 			else
 			{

@@ -129,7 +129,7 @@ namespace Tests.Reflection
 		public void GetterTest()
 		{
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
-			var ma = ta[nameof(TestClass1.Prop1)];
+			var ma = ta["Prop1"];
 
 			Assert.That(ma.HasGetter, Is.True);
 			Assert.That(ma.HasSetter, Is.False);
@@ -139,7 +139,7 @@ namespace Tests.Reflection
 		public void SetterTest()
 		{
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
-			var ma = ta[nameof(TestClass1.Prop3)];
+			var ma = ta["Prop3"];
 
 			Assert.That(ma.HasGetter, Is.False);
 			Assert.That(ma.HasSetter, Is.True);
