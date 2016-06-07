@@ -235,8 +235,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.NText      : _setText     (parameter);                   break;
 				case DataType.BitArray   : _setBit      (parameter);                   break;
 				case DataType.Dictionary : _setHstore(parameter);                      break;
-                case DataType.Jsonb:
-			        _setJsonb(parameter); break;
+                case DataType.Jsonb      : _setJsonb(parameter);                       break;
 				default                  : base.SetParameterType(parameter, dataType); break;
 			}
 		}
