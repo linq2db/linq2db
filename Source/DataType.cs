@@ -211,5 +211,10 @@ namespace LinqToDB
 		/// Dictionary type for key-value pairs
 		/// </summary>
 		Dictionary,
+
+        /// <summary>
+        /// A PostgreSQL jsonb type
+        /// </summary>
+        Jsonb
 	}
 }

@@ -449,6 +449,15 @@ namespace Tests.DataProvider
 			}
 		}
 
+	    [Test, IncludeDataContextSource(CurrentProvider)]
+	    public void TestJsonb(string context)
+	    {
+	        using (var conn = new DataConnection(context))
+	        {
+	            Assert.That(conn.Execute<string>("SELECT '{'Id': '1', 'Name': '1'}'"), Is.EqualTo("{'Id': '1', 'Name': '1'}"));
+	        }
+	    }
+
 		enum TestEnum
 		{
 			[MapValue("A")] AA,

@@ -84,7 +84,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				base.BuildFromClause();
 		}
 
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
+	    protected override void BuildInsertQuery()
+	    {
+
+	        base.BuildInsertQuery();
+	    }
+
+	    public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
 
 		public override object Convert(object value, ConvertType convertType)
 		{
