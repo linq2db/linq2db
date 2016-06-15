@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -150,9 +151,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			SqlHierarchyIdType = assembly.GetType("SqlHierarchyId", true);
-			SqlGeographyType   = assembly.GetType("SqlGeography",   true);
-			SqlGeometryType    = assembly.GetType("SqlGeometry",    true);
+			var types = assembly.GetTypes();
+
+			SqlHierarchyIdType = types.First(t => t.Name == "SqlHierarchyId");
+			SqlGeographyType   = types.First(t => t.Name == "SqlGeography");
+			SqlGeometryType    = types.First(t => t.Name == "SqlGeometry");
 		}
 
 		internal static Type SqlHierarchyIdType;
