@@ -360,6 +360,10 @@ namespace LinqToDB.Data
 					{
 						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
 					}
+					catch (FormatException)
+					{
+						return GetObjectReader2<T>(DataConnection, rd, CommandText)(rd);
+					}
 				}
 			}
 
@@ -703,7 +707,7 @@ namespace LinqToDB.Data
 											Expression.Constant(m.ColumnName));
 									}
 
-									if (memberType.IsEnum)
+									if (memberType.IsEnumEx())
 									{
 										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
 										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);

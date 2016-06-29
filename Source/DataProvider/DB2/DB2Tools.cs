@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.DataProvider.DB2
 {
 	using System.Configuration;
@@ -12,6 +14,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	using Data;
 
+	[PublicAPI]
 	public static class DB2Tools
 	{
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
@@ -112,9 +115,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region OnInitialized
 
-		static private  bool                  _isInitialized;
+		private static  bool                  _isInitialized;
 		static readonly object                _syncAfterInitialized    = new object();
-		static private  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+		private static  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
 
 		internal static void Initialized()
 		{

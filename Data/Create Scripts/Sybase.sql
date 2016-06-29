@@ -1,3 +1,15 @@
+USE master
+GO
+
+DROP DATABASE TestData
+GO
+
+CREATE DATABASE TestData
+GO
+
+USE TestData
+GO
+
 IF OBJECT_ID('dbo.Doctor') IS NOT NULL
 BEGIN DROP TABLE Doctor END
 GO

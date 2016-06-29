@@ -10,13 +10,13 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GenerateExpressionTest : TestBase
 	{
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void SetUp()
 		{
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
 		}
 
-		[TestFixtureTearDown]
+		[OneTimeTearDown]
 		public void TearDown()
 		{
 			LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = false;

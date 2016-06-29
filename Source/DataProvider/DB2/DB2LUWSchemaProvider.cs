@@ -14,9 +14,9 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-			return dts.AsEnumerable()
+			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("SQL_TYPE_NAME"),
@@ -107,7 +107,8 @@ namespace LinqToDB.DataProvider.DB2
 					IDENTITY,
 					COLNO,
 					TYPENAME,
-					REMARKS
+					REMARKS,
+					CODEPAGE
 				FROM
 					SYSCAT.COLUMNS
 				WHERE
@@ -115,6 +116,12 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _columns = dataConnection.Query(rd =>
 				{
+					var typeName = rd.ToString(8);
+					var cp   = Converter.ChangeTypeTo<int>(rd[10]);
+
+					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
+					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
+
 					var ci = new ColumnInfo
 					{
 						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
@@ -122,7 +129,7 @@ namespace LinqToDB.DataProvider.DB2
 						IsNullable  = rd.ToString(5) == "Y",
 						IsIdentity  = rd.ToString(6) == "Y",
 						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
-						DataType    = rd.ToString(8),
+						DataType    = typeName,
 						Description = rd.ToString(9),
 					};
 
@@ -257,7 +264,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -292,6 +299,48 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.DB2Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "XML"                       : return "DB2Xml";
+				case "DECFLOAT"                  : return "DB2DecimalFloat";
+				case "DBCLOB"                    :
+				case "CLOB"                      : return "DB2Clob";
+				case "BLOB"                      : return "DB2Blob";
+				case "BIGINT"                    : return "DB2Int64";
+				case "LONG VARCHAR FOR BIT DATA" :
+				case "VARCHAR () FOR BIT DATA"   :
+				case "VARBIN"                    :
+				case "BINARY"                    :
+				case "CHAR () FOR BIT DATA"      : return "DB2Binary";
+				case "LONG VARGRAPHIC"           :
+				case "VARGRAPHIC"                :
+				case "GRAPHIC"                   :
+				case "LONG VARCHAR"              :
+				case "CHARACTER"                 :
+				case "VARCHAR"                   :
+				case "CHAR"                      : return "DB2String";
+				case "DECIMAL"                   : return "DB2Decimal";
+				case "INTEGER"                   : return "DB2Int32";
+				case "SMALLINT"                  : return "DB2Int16";
+				case "REAL"                      : return "DB2Real";
+				case "DOUBLE"                    : return "DB2Double";
+				case "DATE"                      : return "DB2Date";
+				case "TIME"                      : return "DB2Time";
+				case "TIMESTMP"                  :
+				case "TIMESTAMP"                 : return "DB2TimeStamp";
+				case "ROWID"                     : return "DB2RowId";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override string GetDataSourceName(DbConnection dbConnection)

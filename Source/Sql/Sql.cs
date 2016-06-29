@@ -4,6 +4,8 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -16,6 +18,7 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 
+	[PublicAPI]
 	public static partial class Sql
 	{
 		#region Common Functions
@@ -297,17 +300,17 @@ namespace LinqToDB
 			return str == null ? null : (int?)str.Length;
 		}
 
-		[Sql.Function]
-		[Sql.Function  (PN.Access,   "Mid")]
-		[Sql.Function  (PN.DB2,      "Substr")]
-		[Sql.Function  (PN.Informix, "Substr")]
-		[Sql.Function  (PN.Oracle,   "Substr")]
-		[Sql.Function  (PN.SQLite,   "Substr")]
-		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})")]
-		[Sql.Function  (PN.SapHana,  "Substring")]
+		[Sql.Function  (                                                PreferServerSide = true)]
+		[Sql.Function  (PN.Access,   "Mid",                             PreferServerSide = true)]
+		[Sql.Function  (PN.DB2,      "Substr",                          PreferServerSide = true)]
+		[Sql.Function  (PN.Informix, "Substr",                          PreferServerSide = true)]
+		[Sql.Function  (PN.Oracle,   "Substr",                          PreferServerSide = true)]
+		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
+		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
+		[Sql.Function  (PN.SapHana,  "Substring",                       PreferServerSide = true)]
 		public static string Substring(string str, int? startIndex, int? length)
 		{
-			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value, length.Value);
+			return str == null || startIndex == null || length == null ? null : str.Substring(startIndex.Value - 1, length.Value);
 		}
 
 		[Sql.Function(ServerSideOnly = true)]
@@ -1025,7 +1028,7 @@ namespace LinqToDB
 
 		#region Text Functions
 
-		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true)]
+		[Sql.Expression("FREETEXT({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
 		public static bool FreeText(object table, string text)
 		{
 			throw new LinqException("'FreeText' is only server-side method.");

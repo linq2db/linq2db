@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
 namespace LinqToDB.SqlProvider
 {
 	using Common;
@@ -15,30 +19,47 @@ namespace LinqToDB.SqlProvider
 	{
 		public ValueToSqlConverter(params ValueToSqlConverter[] converters)
 		{
-			_baseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
+			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
 		}
 
 		internal void SetDefauls()
 		{
-			SetConverter(typeof(Boolean),  (sb,dt,v) => sb.Append((bool)v ? "1" : "0"));
-			SetConverter(typeof(Char),     (sb,dt,v) => BuildChar(sb, (char)v));
-			SetConverter(typeof(SByte),    (sb,dt,v) => sb.Append((SByte) v));
-			SetConverter(typeof(Byte),     (sb,dt,v) => sb.Append((Byte)  v));
-			SetConverter(typeof(Int16),    (sb,dt,v) => sb.Append((Int16) v));
-			SetConverter(typeof(UInt16),   (sb,dt,v) => sb.Append((UInt16)v));
-			SetConverter(typeof(Int32),    (sb,dt,v) => sb.Append((Int32) v));
-			SetConverter(typeof(UInt32),   (sb,dt,v) => sb.Append((UInt32)v));
-			SetConverter(typeof(Int64),    (sb,dt,v) => sb.Append((Int64) v));
-			SetConverter(typeof(UInt64),   (sb,dt,v) => sb.Append((UInt64)v));
-			SetConverter(typeof(Single),   (sb,dt,v) => sb.Append(((float)  v).ToString(_numberFormatInfo)));
-			SetConverter(typeof(Double),   (sb,dt,v) => sb.Append(((double) v).ToString(_numberFormatInfo)));
-			SetConverter(typeof(Decimal),  (sb,dt,v) => sb.Append(((decimal)v).ToString(_numberFormatInfo)));
-			SetConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, (DateTime)v));
-			SetConverter(typeof(String),   (sb,dt,v) => BuildString  (sb, v.ToString()));
-			SetConverter(typeof(Guid),     (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+			SetConverter(typeof(Boolean),    (sb,dt,v) => sb.Append((bool)v       ? "1" : "0"));
+			SetConverter(typeof(Char),       (sb,dt,v) => BuildChar(sb, (char)  v));
+			SetConverter(typeof(SByte),      (sb,dt,v) => sb.Append((SByte)     v));
+			SetConverter(typeof(Byte),       (sb,dt,v) => sb.Append((Byte)      v));
+			SetConverter(typeof(Int16),      (sb,dt,v) => sb.Append((Int16)     v));
+			SetConverter(typeof(UInt16),     (sb,dt,v) => sb.Append((UInt16)    v));
+			SetConverter(typeof(Int32),      (sb,dt,v) => sb.Append((Int32)     v));
+			SetConverter(typeof(UInt32),     (sb,dt,v) => sb.Append((UInt32)    v));
+			SetConverter(typeof(Int64),      (sb,dt,v) => sb.Append((Int64)     v));
+			SetConverter(typeof(UInt64),     (sb,dt,v) => sb.Append((UInt64)    v));
+			SetConverter(typeof(Single),     (sb,dt,v) => sb.Append(((float)    v). ToString(_numberFormatInfo)));
+			SetConverter(typeof(Double),     (sb,dt,v) => sb.Append(((double)   v). ToString(_numberFormatInfo)));
+			SetConverter(typeof(Decimal),    (sb,dt,v) => sb.Append(((decimal)v).   ToString(_numberFormatInfo)));
+			SetConverter(typeof(DateTime),   (sb,dt,v) => BuildDateTime(sb, (DateTime)v));
+			SetConverter(typeof(String),     (sb,dt,v) => BuildString  (sb, v.ToString()));
+			SetConverter(typeof(Guid),       (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+
+#if !SILVERLIGHT && !NETFX_CORE
+			SetConverter(typeof(SqlBoolean), (sb,dt,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
+			SetConverter(typeof(SqlByte),    (sb,dt,v) => sb.Append((SqlByte)   v));
+			SetConverter(typeof(SqlInt16),   (sb,dt,v) => sb.Append((SqlInt16)  v));
+			SetConverter(typeof(SqlInt32),   (sb,dt,v) => sb.Append((SqlInt32)  v));
+			SetConverter(typeof(SqlInt64),   (sb,dt,v) => sb.Append((SqlInt64)  v));
+			SetConverter(typeof(SqlSingle),  (sb,dt,v) => sb.Append(((SqlSingle)v). ToString()));
+			SetConverter(typeof(SqlDouble),  (sb,dt,v) => sb.Append(((SqlDouble)v). ToString()));
+			SetConverter(typeof(SqlDecimal), (sb,dt,v) => sb.Append(((SqlDecimal)v).ToString()));
+			SetConverter(typeof(SqlMoney),   (sb,dt,v) => sb.Append(((SqlMoney)v).  ToString()));
+			SetConverter(typeof(SqlDateTime),(sb,dt,v) => BuildDateTime(sb, (DateTime)(SqlDateTime)v));
+			SetConverter(typeof(SqlString),  (sb,dt,v) => BuildString  (sb, v.ToString()));
+			SetConverter(typeof(SqlChars),   (sb,dt,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
+			SetConverter(typeof(SqlGuid),    (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
+#endif
 		}
 
-		readonly ValueToSqlConverter[]          _baseConverters;
+		internal readonly ValueToSqlConverter[] BaseConverters;
+
 		readonly Dictionary<Type,ConverterType> _converters = new Dictionary<Type,ConverterType>();
 
 		ConverterType _booleanConverter;
@@ -120,18 +141,31 @@ namespace LinqToDB.SqlProvider
 
 		public bool TryConvert(StringBuilder stringBuilder, object value)
 		{
-			if (value == null)
+			if (value == null
+#if !SILVERLIGHT && !NETFX_CORE
+				|| (value is INullable && ((INullable)value).IsNull)
+#endif
+				)
 			{
 				stringBuilder.Append("NULL");
 				return true;
 			}
 
-			return TryConvert(stringBuilder, new SqlDataType(value.GetType()), value);
+			return TryConvertImpl(stringBuilder, new SqlDataType(value.GetType()), value, true);
 		}
 
 		public bool TryConvert(StringBuilder stringBuilder, SqlDataType dataType, object value)
 		{
-			if (value == null)
+			return TryConvertImpl(stringBuilder, dataType, value, true);
+		}
+
+		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object value, bool tryBase)
+		{
+			if (value == null
+#if !SILVERLIGHT && !NETFX_CORE
+				|| (value is INullable && ((INullable)value).IsNull)
+#endif
+				)
 			{
 				stringBuilder.Append("NULL");
 				return true;
@@ -171,10 +205,21 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			if (_baseConverters.Length > 0)
-				foreach (var valueConverter in _baseConverters)
-					if (valueConverter.TryConvert(stringBuilder, dataType, value))
+			if (tryBase && BaseConverters.Length > 0)
+				foreach (var valueConverter in BaseConverters)
+					if (valueConverter.TryConvertImpl(stringBuilder, dataType, value, false))
 						return true;
+
+			/*
+			var ar      = new AttributeReader();
+			var udtAttr = ar.GetAttributes<Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute>(type);
+
+			if (udtAttr.Length > 0 && udtAttr[0].Format == Microsoft.SqlServer.Server.Format.UserDefined)
+			{
+				SetConverter(type, (sb,dt,v) => BuildString(sb, v.ToString()));
+				return TryConvertImpl(stringBuilder, dataType, value, tryBase);
+			}
+			*/
 
 			return false;
 		}

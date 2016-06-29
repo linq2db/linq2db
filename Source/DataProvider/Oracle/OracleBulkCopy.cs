@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
-	using Mapping;
 	using SqlProvider;
 
 	class OracleBulkCopy : BasicBulkCopy
@@ -40,7 +38,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				if (_bulkCopyCreator == null)
 				{
-					var clientNamespace    = OracleTools.AssemblyName + ".Client.";
+					var clientNamespace    = ((OracleDataProvider)dataConnection.DataProvider).AssemblyName + ".Client.";
 					var bulkCopyType       = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopy",              false);
 					var bulkCopyOptionType = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyOptions",       false);
 					var columnMappingType  = _connectionType.Assembly.GetType(clientNamespace + "OracleBulkCopyColumnMapping", false);
@@ -111,6 +109,8 @@ namespace LinqToDB.DataProvider.Oracle
 					return rc;
 				}
 			}
+
+			options.BulkCopyType = BulkCopyType.MultipleRows;
 
 			return MultipleRowsCopy(dataConnection, options, source);
 		}

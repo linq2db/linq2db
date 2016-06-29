@@ -10,7 +10,7 @@ using NUnit.Framework;
 // ReSharper disable ConvertToConstant.Local
 #endregion
 
-namespace Tests.Update
+namespace Tests.xUpdate
 {
 	using Model;
 
@@ -921,7 +921,7 @@ namespace Tests.Update
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.Oracle)]
+		[Test, IncludeDataContextSource(ProviderName.OracleNative, ProviderName.OracleManaged)]
 		public void InsertBatch1(string context)
 		{
 			using (var db = GetDataContext(context))

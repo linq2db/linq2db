@@ -121,6 +121,11 @@ namespace LinqToDB.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T) }] = expr;
 		}
 
+		protected void SetField<TP,T>(string dataTypeName, Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
+		}
+
 		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
@@ -129,6 +134,11 @@ namespace LinqToDB.DataProvider
 		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
+		}
+
+		protected void SetToType<TP,T,TF>(Expression<Func<TP,int,T>> expr)
+		{
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(TF) }] = expr;
 		}
 
 		#endregion
@@ -154,6 +164,12 @@ namespace LinqToDB.DataProvider
 #if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+				toType       == null ? "(null)" : toType.Name,
+				providerType == null ? "(null)" : providerType.Name,
+				fieldType.Name,
+				typeName ?? "(null)"));
+			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 
 			foreach (var ex in ReaderExpressions)
 			{
@@ -165,9 +181,6 @@ namespace LinqToDB.DataProvider
 						ex.Key.DataTypeName,
 						ex.Value));
 			}
-
-			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName");
-			Debug.WriteLine("--------------------- --------------------- --------------------- ---------------------");
 #endif
 
 			Expression expr;

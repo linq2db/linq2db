@@ -373,7 +373,7 @@ namespace LinqToDB.Linq.Builder
 							return info.Find(PreferServerSide) != null;
 						}
 
-						var attr = GetFunctionAttribute(pi.Member);
+						var attr = GetExpressionAttribute(pi.Member);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 
@@ -386,7 +386,7 @@ namespace LinqToDB.Linq.Builder
 						if (l != null)
 							return l.Body.Unwrap().Find(PreferServerSide) != null;
 
-						var attr = GetFunctionAttribute(e.Method);
+						var attr = GetExpressionAttribute(e.Method);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 			}

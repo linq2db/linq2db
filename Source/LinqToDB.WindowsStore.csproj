@@ -113,11 +113,19 @@
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
-    <Compile Include="Common\Silverlight5Compatibility.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Common\WindowsStoreCompatibility.cs" />
     <Compile Include="Common\Tools.cs" />
+    <Compile Include="Compatibility\System\Data\DataRowVersion.cs" />
+    <Compile Include="Compatibility\System\Data\DataTable.cs" />
+    <Compile Include="Compatibility\System\Data\DbType.cs" />
+    <Compile Include="Compatibility\System\Data\IDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\IDataReader.cs" />
+    <Compile Include="Compatibility\System\Data\IDataRecord.cs" />
+    <Compile Include="Compatibility\System\Data\IDbDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+    <Compile Include="Compatibility\System\Data\ParameterDirection.cs" />
+    <Compile Include="Compatibility\System\Data\SqlDbType.cs" />
+    <Compile Include="Compatibility\System\SerializableAttribute.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="DataProvider\Access\AccessSqlBuilder.cs" />
@@ -141,6 +149,7 @@
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2008SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2012SqlBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlBuilder.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlBuilder.cs" />
     <Compile Include="DataType.cs" />
@@ -239,6 +248,7 @@
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />

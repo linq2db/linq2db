@@ -297,6 +297,15 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static bool IsMethodEx(this MemberInfo memberInfo)
+		{
+#if NETFX_CORE
+			return memberInfo is MethodInfo;
+#else
+			return memberInfo.MemberType == MemberTypes.Method;
+#endif
+		}
+
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
 		{
 #if NETFX_CORE

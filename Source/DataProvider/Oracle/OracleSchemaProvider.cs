@@ -12,6 +12,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleSchemaProvider : SchemaProviderBase
 	{
+		public OracleSchemaProvider(string providerName)
+		{
+			_providerName = providerName;
+		}
+
+		readonly string _providerName;
+
 		protected override string GetDataSourceName(DbConnection dbConnection)
 		{
 			return ((dynamic)dbConnection).HostName;
@@ -211,7 +218,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -239,11 +246,43 @@ namespace LinqToDB.DataProvider.Oracle
 				default:
 					if (dataType.StartsWith("TIMESTAMP"))
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
-
 					break;
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return _providerName == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "BFILE"                          : return "OracleBFile";
+				case "RAW"                            :
+				case "LONG RAW"                       : return "OracleBinary";
+				case "BLOB"                           : return "OracleBlob";
+				case "CLOB"                           : return "OracleClob";
+				case "DATE"                           : return "OracleDate";
+				case "BINARY_DOUBLE"                  :
+				case "BINARY_FLOAT"                   :
+				case "NUMBER"                         : return "OracleDecimal";
+				case "INTERVAL DAY TO SECOND"         : return "OracleIntervalDS";
+				case "INTERVAL YEAR TO MONTH"         : return "OracleIntervalYM";
+				case "NCHAR"                          :
+				case "LONG"                           :
+				case "ROWID"                          :
+				case "CHAR"                           : return "OracleString";
+				case "TIMESTAMP"                      : return "OracleTimeStamp";
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return "OracleTimeStampLTZ";
+				case "TIMESTAMP WITH TIME ZONE"       : return "OracleTimeStampTZ";
+				case "XMLTYPE"                        : return "OracleXmlType";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

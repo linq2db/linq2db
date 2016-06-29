@@ -126,6 +126,11 @@ namespace LinqToDB.DataProvider.Access
 			return new List<ForeingKeyInfo>();
 		}
 
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
+		}
+
 		List<ProcedureInfo> _procedures;
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
@@ -218,7 +223,7 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{

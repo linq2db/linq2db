@@ -6,7 +6,7 @@ namespace LinqToDB.Common
 	{
 		public readonly T Value;
 
-		public Option(T value)
+		Option(T value)
 		{
 			Value = value;
 		}
@@ -21,11 +21,11 @@ namespace LinqToDB.Common
 			get { return this != None; }
 		}
 
-		static public Option<T> Some(T value)
+		public static Option<T> Some(T value)
 		{
 			return new Option<T>(value);
 		}
 
-		static public Option<T> None = new Option<T>(default(T));
+		public static readonly Option<T> None = new Option<T>(default(T));
 	}
 }

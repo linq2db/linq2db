@@ -5,7 +5,7 @@ namespace LinqToDB.Expressions
 {
 	class ChangeTypeExpression : Expression
 	{
-		public const int ChangeTypeType = 1000;
+		public const ExpressionType ChangeTypeType = (ExpressionType)1000;
 
 		public ChangeTypeExpression(Expression expression, Type type)
 		{
@@ -15,8 +15,8 @@ namespace LinqToDB.Expressions
 
 		readonly Type _type;
 
-		public override Type           Type     { get { return _type;                          } }
-		public override ExpressionType NodeType { get { return (ExpressionType)ChangeTypeType; } }
+		public override Type           Type     { get { return _type;          } }
+		public override ExpressionType NodeType { get { return ChangeTypeType; } }
 
 		public Expression Expression { get; private set; }
 

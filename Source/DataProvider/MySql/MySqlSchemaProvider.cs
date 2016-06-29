@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.MySql
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -225,6 +225,26 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "MySql.Data.Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType.ToLower())
+			{
+				case "geometry"  : return "MySqlGeometry";
+				case "decimal"   : return "MySqlDecimal";
+				case "date"      :
+				case "newdate"   :
+				case "datetime"  :
+				case "timestamp" : return "MySqlDateTime";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)

@@ -6,12 +6,19 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
+using JetBrains.Annotations;
+
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable RedundantCast
 // ReSharper disable PossibleInvalidOperationException
 // ReSharper disable CSharpWarnings::CS0693
 // ReSharper disable RedundantToStringCall
+// ReSharper disable RedundantLambdaParameterType
 #endregion
 
 namespace LinqToDB.Linq
@@ -21,6 +28,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using Mapping;
 
+	[PublicAPI]
 	public static class Expressions
 	{
 		#region MapMember
@@ -347,6 +355,8 @@ namespace LinqToDB.Linq
 				}
 			}
 		}
+
+		#region Mapping
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> _members;
 		static readonly object                                           _memberSync = new object();
@@ -953,6 +963,17 @@ namespace LinqToDB.Linq
 
 					#endregion
 
+					#region SqlTypes
+
+#if !SILVERLIGHT && !NETFX_CORE
+					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
+					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
+					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },
+					{ M(() => SqlBoolean.True),          N(() => L<bool>           (()               => true))  },
+					{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
+#endif
+
+					#endregion
 				}},
 
 				#region SqlServer
@@ -1296,6 +1317,8 @@ namespace LinqToDB.Linq
 			};
 		}
 
+		#endregion
+
 		class TypeMember
 		{
 			public TypeMember(Type type, string member)
@@ -1317,10 +1340,51 @@ namespace LinqToDB.Linq
 			{
 				unchecked
 				{
-					return (Type.GetHashCode()*397) ^ Member.GetHashCode();
+					return (Type.GetHashCode() * 397) ^ Member.GetHashCode();
 				}
 			}
 		}
+
+		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
+		{
+			Dictionary<TypeMember,IExpressionInfo> dic;
+
+			if (!_typeMembers.TryGetValue(providerName, out dic))
+				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+
+			var expr = new LazyExpressionInfo();
+
+			expr.SetExpression(expression);
+
+			dic[new TypeMember(objectType, memberInfo.Name)] = expr;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, IExpressionInfo expressionInfo)
+		{
+			Dictionary<TypeMember,IExpressionInfo> dic;
+
+			if (!_typeMembers.TryGetValue(providerName, out dic))
+				_typeMembers.Add(providerName, dic = new Dictionary<TypeMember,IExpressionInfo>());
+
+			dic[new TypeMember(objectType, memberInfo.Name)] = expressionInfo;
+
+			_checkUserNamespace = false;
+		}
+
+		public static void MapMember<TR>               (string providerName, Type objectType, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<TR>               (                     Type objectType, Expression<Func<TR>>                memberInfo, Expression<Func<TR>>                expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (string providerName, Type objectType, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,TR>            (                     Type objectType, Expression<Func<T1,TR>>             memberInfo, Expression<Func<T1,TR>>             expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (string providerName, Type objectType, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,TR>         (                     Type objectType, Expression<Func<T1,T2,TR>>          memberInfo, Expression<Func<T1,T2,TR>>          expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (string providerName, Type objectType, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,TR>      (                     Type objectType, Expression<Func<T1,T2,T3,TR>>       memberInfo, Expression<Func<T1,T2,T3,TR>>       expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,TR>   (                     Type objectType, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
+		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           objectType, MemberHelper.GetMemeberInfo(memberInfo), expression); }
 
 		static TypeMember MT<T>(Expression<Func<object>> func)
 		{

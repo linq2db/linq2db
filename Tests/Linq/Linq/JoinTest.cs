@@ -402,7 +402,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var q1 = 
+				var q1 =
 					from p in Parent
 						join c in Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
 					where p.ParentID == 1
@@ -411,7 +411,7 @@ namespace Tests.Linq
 				var list1 = q1.ToList();
 				var ch1   = list1[0].j.ToList();
 
-				var q2 = 
+				var q2 =
 					from p in db.Parent
 						join c in db.Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
 					where p.ParentID == 1

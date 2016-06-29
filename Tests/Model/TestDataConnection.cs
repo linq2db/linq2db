@@ -80,7 +80,7 @@ namespace Tests.Model
 		}
 
 		[ExpressionMethod("Expression9")]
-		static public IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
+		public static IQueryable<Parent> GetParent9(ITestDataContext db, Child ch)
 		{
 			throw new InvalidOperationException();
 		}

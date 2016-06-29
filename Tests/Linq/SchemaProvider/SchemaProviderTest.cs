@@ -131,5 +131,19 @@ namespace Tests.SchemaProvider
 				conn.DropTable<PKTest>();
 			}
 		}
+
+		[Test, IncludeDataContextSource(ProviderName.DB2)]
+		public void DB2Test(string context)
+		{
+			using (var conn = new DataConnection(context))
+			{
+				var sp       = conn.DataProvider.GetSchemaProvider();
+				var dbSchema = sp.GetSchema(conn);
+				var table    = dbSchema.Tables.Single(t => t.TableName == "ALLTYPES");
+
+				Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").   ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
+				Assert.That(table.Columns.Single(c => c.ColumnName == "VARBINARYDATATYPE").ColumnType, Is.EqualTo("VARCHAR (5) FOR BIT DATA"));
+			}
+		}
 	}
 }

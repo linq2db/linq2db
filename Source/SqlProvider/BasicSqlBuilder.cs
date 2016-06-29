@@ -323,9 +323,16 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildUpdateTableName()
 		{
 			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
+			{
 				BuildPhysicalTable(SelectQuery.Update.Table, null);
+			}
 			else
+			{
+				if (SelectQuery.From.Tables[0].Source is SelectQuery)
+					StringBuilder.Length--;
+
 				BuildTableName(SelectQuery.From.Tables[0], true, true);
+			}
 		}
 
 		protected virtual void BuildUpdateSet()
@@ -2437,10 +2444,12 @@ namespace LinqToDB.SqlProvider
 		{
 			return
 				precedence == 0 ||
+				/* maybe it will be no harm to put "<=" here? */
 				precedence < parentPrecedence ||
 				(precedence == parentPrecedence && 
-					(parentPrecedence == PrecedenceLevel.Subtraction ||
-					 parentPrecedence == PrecedenceLevel.LogicalNegation));
+					(parentPrecedence == Precedence.Subtraction    ||
+					 parentPrecedence == Precedence.Multiplicative ||
+					 parentPrecedence == Precedence.LogicalNegation));
 		}
 
 		protected string[] GetTempAliases(int n, string defaultAlias)

@@ -5,6 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
 namespace LinqToDB.Common
 {
 	using Expressions;
@@ -110,7 +114,23 @@ namespace LinqToDB.Common
 			if (from == typeof(string))
 			{
 				var mi = to.GetMethodEx("Parse", from);
-				return mi != null ? Expression.Convert(p, to, mi) : null;
+
+				if (mi != null)
+				{
+					return Expression.Convert(p, to, mi);
+				}
+
+#if !SILVERLIGHT && !NETFX_CORE
+				mi = to.GetMethodEx("Parse", typeof(SqlString));
+
+				if (mi != null)
+				{
+					p = GetCtor(from, typeof(SqlString), p);
+					return Expression.Convert(p, to, mi);
+				}
+#endif
+
+				return null;
 			}
 
 			return null;

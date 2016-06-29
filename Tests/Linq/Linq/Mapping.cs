@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -65,6 +66,15 @@ namespace Tests.Linq
 					from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
 		}
 
+		[Test]
+		public void EnumValue1()
+		{
+			var value = ConvertTo<TypeValue>.From(1);
+
+			Assert.AreEqual(TypeValue.Value1, value);
+			Assert.AreEqual(10,               (int)value);
+		}
+
 		[Test, DataContextSource]
 		public void Enum5(string context)
 		{
@@ -98,7 +108,7 @@ namespace Tests.Linq
 				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
 
 				if (context == ProviderName.PostgreSQL + ".LinqService")
-					new Create.CreateData().PostgreSQL(ProviderName.PostgreSQL);
+					new _Create._CreateData().PostgreSQL(ProviderName.PostgreSQL);
 			}
 		}
 

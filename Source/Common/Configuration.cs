@@ -14,5 +14,11 @@ namespace LinqToDB.Common
 			public static bool AllowMultipleQuery;
 			public static bool GenerateExpressionTest;
 		}
+
+		public static class LinqService
+		{
+			public static bool SerializeAssemblyQualifiedName;
+			public static bool ThrowUnresolvedTypeException;
+		}
 	}
 }

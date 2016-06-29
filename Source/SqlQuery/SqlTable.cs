@@ -110,6 +110,12 @@ namespace LinqToDB.SqlQuery
 
 					if (field.Length == null)
 						field.Length = dataType.Length;
+
+					if (field.Precision == null)
+						field.Precision = dataType.Precision;
+
+					if (field.Scale == null)
+						field.Scale = dataType.Scale;
 				}
 			}
 

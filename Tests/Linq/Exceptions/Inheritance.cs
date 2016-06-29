@@ -10,13 +10,13 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class Inheritance : TestBase
 	{
-		[Test, DataContextSource, ExpectedException(typeof(LinqException))]
+		[Test, DataContextSource]
 		public void Test1(string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance2 select p;
-				q.ToList();
+				Assert.Throws(typeof(LinqException), () => q.ToList());
 			}
 		}
 	}

@@ -53,8 +53,8 @@
     <Compile Include="WhereTest.fs" />
     <Compile Include="SelectTest.fs" />
     <Compile Include="InsertTest.fs" />
-    <None Include="packages.config" />
     <Compile Include="AssemblyInfo.fs" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -62,7 +62,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+      <HintPath>..\..\packages\NUnit.3.2.0\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />

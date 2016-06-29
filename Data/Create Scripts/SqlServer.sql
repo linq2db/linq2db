@@ -727,3 +727,31 @@ SELECT  12345678901234.5678901234567,                            NULL,          
 SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
 
 GO
+
+-- SKIP SqlServer.2005 BEGIN
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'SqlTypes')
+BEGIN DROP TABLE [SqlTypes] END
+GO
+
+CREATE TABLE [SqlTypes]
+(
+	ID  int NOT NULL PRIMARY KEY CLUSTERED,
+	HID hierarchyid,
+)
+GO
+
+INSERT INTO [SqlTypes]
+SELECT 1, hierarchyid::Parse('/')      UNION ALL
+SELECT 2, hierarchyid::Parse('/1/')    UNION ALL
+SELECT 3, hierarchyid::Parse('/1/1/')  UNION ALL
+SELECT 4, hierarchyid::Parse('/1/2/')  UNION ALL
+SELECT 5, hierarchyid::Parse('/2/')    UNION ALL
+SELECT 6, hierarchyid::Parse('/2/1/')  UNION ALL
+SELECT 7, hierarchyid::Parse('/2/2/')  UNION ALL
+SELECT 8, hierarchyid::Parse('/2/1/1/')
+
+GO
+
+-- SKIP SqlServer.2005 END
+

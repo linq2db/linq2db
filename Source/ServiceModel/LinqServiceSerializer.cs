@@ -196,7 +196,7 @@ namespace LinqToDB.ServiceModel
 							.Append(' ')
 							.Append(TypeIndex);
 
-						Append(type.FullName);
+						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
 
 					Builder.AppendLine();
@@ -457,6 +457,9 @@ namespace LinqToDB.ServiceModel
 
 					if (type == null)
 					{
+						if (Configuration.LinqService.ThrowUnresolvedTypeException)
+							throw new LinqToDBException("Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.".Args(str));
+
 						UnresolvedTypes.Add(str);
 
 						Debug.WriteLine(
@@ -1599,7 +1602,7 @@ namespace LinqToDB.ServiceModel
 
 				foreach (var type in result.FieldTypes)
 				{
-					Append(type.FullName);
+					Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					Builder.AppendLine();
 				}
 

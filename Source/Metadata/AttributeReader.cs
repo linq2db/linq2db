@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Metadata
 {
 	using Extensions;
 
 	public class AttributeReader : IMetadataReader
 	{
+		[NotNull]
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
@@ -19,6 +22,7 @@ namespace LinqToDB.Metadata
 			return arr;
 		}
 
+		[NotNull]
 		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{

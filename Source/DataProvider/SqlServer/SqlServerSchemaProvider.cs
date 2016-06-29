@@ -262,7 +262,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -303,6 +303,51 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "System.Data.SqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "varbinary"        :
+				case "timestamp"        :
+				case "rowversion"       :
+				case "image"            : return "SqlBinary";
+				case "binary"           : return "SqlBinary";
+				case "tinyint"          : return "SqlByte";
+				case "date"             :
+				case "smalldatetime"    :
+				case "datetime"         :
+				case "datetime2"        : return "SqlDateTime";
+				case "bit"              : return "SqlBoolean";
+				case "smallint"         : return "SqlInt16";
+				case "numeric"          :
+				case "decimal"          : return "SqlDecimal";
+				case "int"              : return "SqlInt32";
+				case "real"             : return "SqlSingle";
+				case "float"            : return "SqlDouble";
+				case "smallmoney"       :
+				case "money"            : return "SqlMoney";
+				case "bigint"           : return "SqlInt64";
+				case "text"             :
+				case "nvarchar"         :
+				case "char"             :
+				case "nchar"            :
+				case "varchar"          :
+				case "ntext"            : return "SqlString";
+				case "uniqueidentifier" : return "SqlGuid";
+				case "xml"              : return "SqlXml";
+				case "hierarchyid"      : return "Microsoft.SqlServer.Types.SqlHierarchyId";
+				case "geography"        : return "Microsoft.SqlServer.Types.SqlGeography";
+				case "geometry"         : return "Microsoft.SqlServer.Types.SqlGeometry";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)

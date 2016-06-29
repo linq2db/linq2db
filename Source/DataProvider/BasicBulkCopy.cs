@@ -144,9 +144,9 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
 		{
-			if (DataConnection.TraceSwitch.TraceInfo)
+			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				DataConnection.OnTrace(new TraceInfo
+				dataConnection.OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -155,15 +155,15 @@ namespace LinqToDB.DataProvider
 				});
 			}
 
+			var now = DateTime.Now;
+
 			try
 			{
-				var now = DateTime.Now;
-
 				var count = action();
 
-				if (DataConnection.TraceSwitch.TraceInfo)
+				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
@@ -175,13 +175,14 @@ namespace LinqToDB.DataProvider
 			}
 			catch (Exception ex)
 			{
-				if (DataConnection.TraceSwitch.TraceError)
+				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
 						CommandText    = commandText,
+						ExecutionTime  = DateTime.Now - now,
 						Exception      = ex,
 					});
 				}

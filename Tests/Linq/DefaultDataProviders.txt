@@ -18,7 +18,8 @@ SQLite
 --SqlAzure.2012  * Server=tcp:----.database.windows.net,1433;Database=TestData;User ID=TestUser@----;Password=;Trusted_Connection=False;Encrypt=True;
 --SapHana        * Server=hanahost----:port;Current Schema=TEST;UserID=Test;Password=TestPassword;
 --MySql
---Oracle
+--Oracle.Native
+--Oracle.Managed
 --PostgreSQL
 --Sybase
 --Northwind
