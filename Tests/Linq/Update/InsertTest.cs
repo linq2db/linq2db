@@ -764,7 +764,6 @@ namespace Tests.Update
 			}
 		}
 
-		// IT : # test
 		class GuidID
 		{
 			[Identity]

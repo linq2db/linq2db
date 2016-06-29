@@ -255,8 +255,14 @@ namespace LinqToDB.Linq.Builder
 						table.Table.LoadWith = member.NextLoadWith;
 					}
 
+					var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.MemberInfo);
+
 					var ex = BuildExpression(ma, 1, parentObject);
-					var ax = Expression.Assign(Expression.MakeMemberAccess(parentObject, member.MemberInfo), ex);
+					var ax = Expression.Assign(
+						attr != null && attr.Storage != null ?
+							Expression.PropertyOrField (parentObject, attr.Storage) :
+							Expression.MakeMemberAccess(parentObject, member.MemberInfo),
+						ex);
 
 					exprs.Add(ax);
 				}

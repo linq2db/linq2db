@@ -427,6 +427,19 @@ namespace LinqToDB.Data
 			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
+		public static void SetConnectionStrings(System.Configuration.Configuration config)
+		{
+			foreach (ConnectionStringSettings css in config.ConnectionStrings.ConnectionStrings)
+			{
+				_configurations[css.Name] = new ConfigurationInfo(css);
+
+				if (DefaultConfiguration == null && !IsMachineConfig(css))
+				{
+					DefaultConfiguration = css.Name;
+				}
+			}
+		}
+
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations =
 			new ConcurrentDictionary<string, ConfigurationInfo>();
 

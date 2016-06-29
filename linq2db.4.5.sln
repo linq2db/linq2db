@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB", "Source\LinqToDB.csproj", "{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B4CC1DAB-FF2D-4247-9A46-B7DE236981BB}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\linq2db.runsettings = Tests\linq2db.runsettings
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Linq\Tests.csproj", "{07997A18-86D3-47AC-A514-AB1B03E6AEC8}"
 EndProject
