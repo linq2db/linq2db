@@ -1072,7 +1072,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
 						{
-							if (me.Member == binding.Member)
+							if (me.Member.EqualsTo(binding.Member))
 								return ReferenceEquals(levelExpresion, expression) ?
 									binding.Expression.Unwrap() :
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);

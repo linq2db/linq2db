@@ -1,7 +1,14 @@
 LINQ to DB 1.0.7.3  Release Notes
 ---------------------------------
 
-Welcome to the release notes for LINQ to DB 1.0.7.3
+Welcome to the release notes for LINQ to DB 1.0.7.4
+
+
+What's new in 1.0.7.4
+---------------------
+
+SqlServer Guid Identity support.
+
 
 
 What's new in 1.0.7.3

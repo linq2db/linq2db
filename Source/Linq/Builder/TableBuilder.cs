@@ -1043,9 +1043,27 @@ namespace LinqToDB.Linq.Builder
 						{
 							var alias = EntityDescriptor[memberExpression.Member.Name];
 
-							if (alias != null)
-								expression = memberExpression = Expression.PropertyOrField(
-									memberExpression.Expression, alias.MemberName);
+							if (alias == null)
+							{
+								foreach (var column in EntityDescriptor.Columns)
+								{
+									if (column.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
+									{
+										expression = memberExpression = Expression.PropertyOrField(
+											Expression.Convert(memberExpression.Expression, column.MemberInfo.DeclaringType), column.MemberName);
+										break;
+									}
+								}
+							}
+							else
+							{
+								var expr = memberExpression.Expression;
+
+								if (alias.MemberInfo.DeclaringType != memberExpression.Member.DeclaringType)
+									expr = Expression.Convert(memberExpression.Expression, alias.MemberInfo.DeclaringType);
+
+								expression = memberExpression = Expression.PropertyOrField(expr, alias.MemberName);
+							}
 						}
 					}
 

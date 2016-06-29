@@ -188,7 +188,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
-							((SqlParameter)parameter).UdtTypeName = s;
+							if (parameter is SqlParameter)
+								((SqlParameter)parameter).UdtTypeName = s;
 					}
 
 					break;

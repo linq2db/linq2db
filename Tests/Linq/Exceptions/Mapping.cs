@@ -45,7 +45,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test, ExpectedException(
-			typeof(LinqToDBException),
+			typeof(LinqToDBConvertException),
 			ExpectedMessage = "Inconsistent mapping. 'Tests.Exceptions.Mapping+Enum4.Value2' does not have MapValue(<System.Int32>) attribute.")]
 		public void ConvertFromEnum()
 		{

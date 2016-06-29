@@ -681,3 +681,24 @@ CREATE TABLE [Name.Test]
 )
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'GuidID')
+BEGIN DROP TABLE [GuidID] END
+GO
+
+CREATE TABLE [GuidID]
+(
+	ID uniqueidentifier default(NewID()) PRIMARY KEY CLUSTERED,
+	Field1 int
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'GuidID2')
+BEGIN DROP TABLE [GuidID2] END
+GO
+
+CREATE TABLE [GuidID2]
+(
+	ID uniqueidentifier default(NewID()) PRIMARY KEY CLUSTERED
+)
+GO
+

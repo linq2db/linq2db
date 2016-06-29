@@ -30,6 +30,7 @@ namespace LinqToDB.SqlQuery
 			Length           = field.Length;
 			Precision        = field.Precision;
 			Scale            = field.Scale;
+			CreateFormat     = field.CreateFormat;
 			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
@@ -47,6 +48,7 @@ namespace LinqToDB.SqlQuery
 		public int?             Length           { get; set; }
 		public int?             Precision        { get; set; }
 		public int?             Scale            { get; set; }
+		public string           CreateFormat     { get; set; }
 
 		public ISqlTableSource  Table            { get; set; }
 		public ColumnDescriptor ColumnDescriptor { get; set; }

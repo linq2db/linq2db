@@ -23,7 +23,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerTest : DataProviderTestBase
 	{
-		[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+		[AttributeUsage(AttributeTargets.Method)]
 		class SqlServerDataContextAttribute : IncludeDataContextSourceAttribute
 		{
 			public SqlServerDataContextAttribute()

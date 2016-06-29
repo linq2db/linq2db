@@ -87,6 +87,7 @@ namespace LinqToDB.SqlQuery
 					Length           = column.Length,
 					Precision        = column.Precision,
 					Scale            = column.Scale,
+					CreateFormat     = column.CreateFormat,
 					ColumnDescriptor = column,
 				};
 

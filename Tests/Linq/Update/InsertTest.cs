@@ -764,6 +764,40 @@ namespace Tests.Update
 			}
 		}
 
+		// IT : # test
+		class GuidID
+		{
+			[Identity]
+			public Guid ID;
+			public int  Field1;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+			}
+		}
+
+		class GuidID2
+		{
+			[Identity]
+			public Guid ID;
+		}
+
+		[Test, IncludeDataContextSource(
+			ProviderName.SqlServer2005, ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, "SqlAzure.2012")]
+		public void InsertWithGuidIdentity2(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
+			}
+		}
+
 		[Test, DataContextSource]
 		public void InsertOrUpdate1(string context)
 		{
