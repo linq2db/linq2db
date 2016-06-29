@@ -111,7 +111,11 @@ CREATE TABLE LinqDataTypes
 (
 	ID             int,
 	MoneyValue     decimal(10,4),
-	DateTimeValue  datetime,
+	DateTimeValue  datetime
+-- SKIP MySql BEGIN
+	(3)
+-- SKIP MySql END
+	,
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
 	GuidValue      char(36),

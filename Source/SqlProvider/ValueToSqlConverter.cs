@@ -43,14 +43,14 @@ namespace LinqToDB.SqlProvider
 
 #if !SILVERLIGHT && !NETFX_CORE
 			SetConverter(typeof(SqlBoolean), (sb,dt,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
-			SetConverter(typeof(SqlByte),    (sb,dt,v) => sb.Append((SqlByte)   v));
-			SetConverter(typeof(SqlInt16),   (sb,dt,v) => sb.Append((SqlInt16)  v));
-			SetConverter(typeof(SqlInt32),   (sb,dt,v) => sb.Append((SqlInt32)  v));
-			SetConverter(typeof(SqlInt64),   (sb,dt,v) => sb.Append((SqlInt64)  v));
-			SetConverter(typeof(SqlSingle),  (sb,dt,v) => sb.Append(((SqlSingle)v). ToString()));
-			SetConverter(typeof(SqlDouble),  (sb,dt,v) => sb.Append(((SqlDouble)v). ToString()));
+			SetConverter(typeof(SqlByte),    (sb,dt,v) => sb.Append(((SqlByte)   v).ToString()));
+			SetConverter(typeof(SqlInt16),   (sb,dt,v) => sb.Append(((SqlInt16)  v).ToString()));
+			SetConverter(typeof(SqlInt32),   (sb,dt,v) => sb.Append(((SqlInt32)  v).ToString()));
+			SetConverter(typeof(SqlInt64),   (sb,dt,v) => sb.Append(((SqlInt64)  v).ToString()));
+			SetConverter(typeof(SqlSingle),  (sb,dt,v) => sb.Append(((SqlSingle) v).ToString()));
+			SetConverter(typeof(SqlDouble),  (sb,dt,v) => sb.Append(((SqlDouble) v).ToString()));
 			SetConverter(typeof(SqlDecimal), (sb,dt,v) => sb.Append(((SqlDecimal)v).ToString()));
-			SetConverter(typeof(SqlMoney),   (sb,dt,v) => sb.Append(((SqlMoney)v).  ToString()));
+			SetConverter(typeof(SqlMoney),   (sb,dt,v) => sb.Append(((SqlMoney)  v).ToString()));
 			SetConverter(typeof(SqlDateTime),(sb,dt,v) => BuildDateTime(sb, (DateTime)(SqlDateTime)v));
 			SetConverter(typeof(SqlString),  (sb,dt,v) => BuildString  (sb, v.ToString()));
 			SetConverter(typeof(SqlChars),   (sb,dt,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));

@@ -10,6 +10,7 @@ namespace LinqToDB.Data
 {
 	using Linq;
 
+	[PublicAPI]
 	public static class DataConnectionExtensions
 	{
 		#region SetCommand

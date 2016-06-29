@@ -633,8 +633,8 @@ GO
 
 CREATE TABLE IndexTable2
 (
-	PKField1    int NOT NULL,
-	PKField2    int NOT NULL,
+	PKField1 int NOT NULL,
+	PKField2 int NOT NULL,
 	CONSTRAINT PK_IndexTable2 PRIMARY KEY CLUSTERED (PKField2, PKField1),
 	CONSTRAINT FK_Patient2_IndexTable FOREIGN KEY (PKField2,PKField1)
 			REFERENCES IndexTable (PKField2,PKField1)

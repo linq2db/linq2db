@@ -1,0 +1,54 @@
+configuration: Debug
+
+environment:
+  packageVersion: 1.7.4
+
+version: $(packageVersion).{build}
+
+cache:
+- packages -> **\packages.config
+
+services:
+- mssql2012sp1
+- mysql56
+
+init:
+- cmd: git config --global core.autocrlf true
+- ps: $env:buildVersion = "$env:packageVersion.$env:appveyor_build_number"
+- ps: $env:nugetVersion = "$env:packageVersion-alpha$env:appveyor_build_number"
+- ps: Update-AppveyorBuild -Version $env:buildVersion
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '$(buildVersion)'
+  assembly_file_version: '$(buildVersion)'
+  assembly_informational_version: '$(nugetVersion)'
+
+nuget:
+  account_feed: false
+  project_feed: false
+
+before_build:
+- cmd: nuget restore linq2db.4.5.sln
+
+build:
+  project: linq2db.4.5.sln
+  publish_nuget: false
+  verbosity: minimal
+
+after_build:
+- cmd: cd Source
+- cmd: Compile.bat
+- cmd: cd ..
+- ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
+- ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
+
+test: off
+
+before_test:
+- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
+- ps: Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+
+after_test:
+- ps: Pop-Location

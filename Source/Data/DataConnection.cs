@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Data
 {
 	using System.Text;
@@ -46,17 +48,10 @@ namespace LinqToDB.Data
 			if (providerName     == null) throw new ArgumentNullException("providerName");
 			if (connectionString == null) throw new ArgumentNullException("connectionString");
 
-			var dataProvider =
-			(
-				from key in _dataProviders.Keys
-				where string.Compare(key, providerName, StringComparison.InvariantCultureIgnoreCase) == 0
-				select _dataProviders[key]
-			).FirstOrDefault();
+			IDataProvider dataProvider;
 
-			if (dataProvider == null)
-			{
-				throw new LinqToDBException("DataProvider with name '{0}' are not compatible.".Args(providerName));
-			}
+			if (!_dataProviders.TryGetValue(providerName, out dataProvider))
+				throw new LinqToDBException("DataProvider '{0}' not found.".Args(providerName));
 
 			InitConfig();
 
@@ -319,18 +314,12 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static          bool   _isInitialized;
-		static readonly object _initSync = new object();
+		static int _isInitialized;
 
 		static void InitConfig()
 		{
-			if (!_isInitialized)
-				lock (_initSync)
-					if (!_isInitialized)
-					{
-						InitConnectionStrings();
-						_isInitialized = true;
-					}
+			if (Interlocked.Exchange(ref _isInitialized, 1) == 0)
+				InitConnectionStrings();
 		}
 
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
@@ -476,6 +465,7 @@ namespace LinqToDB.Data
 			_configurations[configuration].ConnectionString = connectionString;
 		}
 
+		[Pure]
 		public static string GetConnectionString(string configurationString)
 		{
 			InitConfig();
@@ -766,6 +756,11 @@ namespace LinqToDB.Data
 
 				throw;
 			}
+		}
+
+		public static void ClearObjectReaderCache()
+		{
+			CommandInfo.ClearObjectReaderCache();
 		}
 
 		#endregion
