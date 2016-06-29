@@ -565,7 +565,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Name);
 							Append(elem.PhysicalName);
-							Append(elem.Nullable);
+							Append(elem.CanBeNull);
 							Append(elem.IsPrimaryKey);
 							Append(elem.PrimaryKeyOrder);
 							Append(elem.IsIdentity);
@@ -1132,7 +1132,7 @@ namespace LinqToDB.ServiceModel
 								SystemType      = systemType,
 								Name            = name,
 								PhysicalName    = physicalName,
-								Nullable        = nullable,
+								CanBeNull       = nullable,
 								IsPrimaryKey    = isPrimaryKey,
 								PrimaryKeyOrder = primaryKeyOrder,
 								IsIdentity      = isIdentity,

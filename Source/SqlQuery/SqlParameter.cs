@@ -180,12 +180,16 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			if (SystemType == null && _value == null)
-				return true;
+			get
+			{
+				if (SystemType == null && _value == null)
+					return true;
 
-			return SqlDataType.CanBeNull(SystemType ?? _value.GetType());
+				return SqlDataType.TypeCanBeNull(SystemType ?? _value.GetType());
+				
+			}
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

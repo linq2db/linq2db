@@ -764,7 +764,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var se = (SqlExpression)expression;
 
-						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null)
+						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
 							return se.Parameters[0];
 					}
 
@@ -822,7 +822,7 @@ namespace LinqToDB.SqlProvider
 									var expr1 = expr.Expr1;
 									var expr2 = expr.Expr2;
 
-									if (expr1.CanBeNull() && expr2.CanBeNull())
+									if (expr1.CanBeNull && expr2.CanBeNull)
 									{
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;
@@ -1045,7 +1045,7 @@ namespace LinqToDB.SqlProvider
 						if (Equals(value.Value, v1.Value))
 							return sc;
 
-						if (Equals(value.Value, v2.Value) && !sc.CanBeNull())
+						if (Equals(value.Value, v2.Value) && !sc.CanBeNull)
 							return ConvertPredicate(
 								selectQuery,
 								new SelectQuery.Predicate.NotExpr(sc, true, PrecedenceLevel.LogicalNegation));

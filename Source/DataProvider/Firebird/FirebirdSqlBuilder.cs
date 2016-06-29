@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
 		{
-			if (!field.Nullable)
+			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
 		}
 

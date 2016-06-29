@@ -826,3 +826,28 @@ create table t_entity
 	duration  interval day(3) to second(2)
 )
 /
+
+DROP TABLE DecimalOverflow
+/
+
+CREATE TABLE DecimalOverflow
+(
+	Decimal1 numeric(38,20),
+	Decimal2 numeric(31,2),
+	Decimal3 numeric(38,36),
+	Decimal4 numeric(29,0),
+	Decimal5 numeric(38,38)
+)
+/
+
+INSERT INTO DecimalOverflow
+SELECT  123456789012345.12345678901234567890,  1234567890123456789.91,  12.345678901234512345678901234567890,  1234567890123456789,  .12345678901234512345678901234567890 FROM dual UNION ALL
+SELECT -123456789012345.12345678901234567890, -1234567890123456789.91, -12.345678901234512345678901234567890, -1234567890123456789, -.12345678901234512345678901234567890 FROM dual UNION ALL
+SELECT  12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT  12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual UNION ALL
+SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL FROM dual
+
+/
