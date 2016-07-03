@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Xml;
 using System.Xml.Linq;
@@ -6,6 +7,7 @@ using System.Xml.Linq;
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -22,11 +24,12 @@ namespace LinqToDB.DataProvider.Sybase
 		protected SybaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter   = false;
-			SqlProviderFlags.IsSkipSupported          = false;
-			SqlProviderFlags.IsSubQueryTakeSupported  = false;
-			SqlProviderFlags.IsCountSubQuerySupported = false;
-			SqlProviderFlags.CanCombineParameters     = false;
+			SqlProviderFlags.AcceptsTakeAsParameter    = false;
+			SqlProviderFlags.IsSkipSupported           = false;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			//SqlProviderFlags.IsCountSubQuerySupported  = false;
+			SqlProviderFlags.CanCombineParameters      = false;
+			SqlProviderFlags.IsSybaseBuggyGroupBy      = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
@@ -93,7 +96,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new SybaseSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -174,6 +177,20 @@ namespace LinqToDB.DataProvider.Sybase
 
 				default                     : base.SetParameterType(parameter, dataType); break;
 			}
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new SybaseBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
 		}
 
 		#endregion

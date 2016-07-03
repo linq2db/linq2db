@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Mapping;
+	using SqlQuery;
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
@@ -37,6 +38,58 @@ namespace LinqToDB.DataProvider.SqlCe
 			AddScalarType(typeof(SqlSingle),   SqlSingle.  Null, true, DataType.Single);
 			AddScalarType(typeof(SqlString),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),      SqlXml.     Null, true, DataType.Xml);
+
+			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetValueToSqlConverter(typeof(String), (sb,dt,v) => ConvertStringToSql(sb, dt, v.ToString()));
+			SetValueToSqlConverter(typeof(Char),   (sb,dt,v) => ConvertCharToSql  (sb, dt, (char)v));
+		}
+
+		static void AppendConversion(StringBuilder stringBuilder, int value)
+		{
+			stringBuilder
+				.Append("nchar(")
+				.Append(value)
+				.Append(')')
+				;
+		}
+
+		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
+		{
+			string start;
+
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    :
+					start = "'";
+					break;
+				default               :
+					start = "N'";
+					break;
+			}
+
+			DataTools.ConvertStringToSql(stringBuilder, "+", start, AppendConversion, value);
+		}
+
+		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
+		{
+			string start;
+
+			switch (sqlDataType.DataType)
+			{
+				case DataType.Char    :
+				case DataType.VarChar :
+				case DataType.Text    :
+					start = "'";
+					break;
+				default               :
+					start = "N'";
+					break;
+			}
+
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
 		}
 	}
 }

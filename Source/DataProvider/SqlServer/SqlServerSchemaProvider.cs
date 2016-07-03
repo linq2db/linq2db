@@ -9,9 +9,36 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServerSchemaProvider : SchemaProviderBase
 	{
+		bool _isAzure;
+
+		protected override void InitProvider(DataConnection dataConnection)
+		{
+			var version = dataConnection.Execute<string>("select @@version");
+
+			_isAzure = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
-			return dataConnection.Query<TableInfo>(@"
+			return dataConnection.Query<TableInfo>(
+				_isAzure ? @"
+				SELECT
+					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					TABLE_CATALOG                                         as CatalogName,
+					TABLE_SCHEMA                                          as SchemaName,
+					TABLE_NAME                                            as TableName,
+					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END       as IsView,
+					''                                                    as Description,
+					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END      as IsDefaultSchema
+				FROM
+					INFORMATION_SCHEMA.TABLES s
+					LEFT JOIN
+						sys.tables t
+					ON
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
+				WHERE
+					t.object_id IS NULL OR t.is_ms_shipped <> 1"
+				: @"
 				SELECT
 					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					TABLE_CATALOG                                         as CatalogName,
@@ -25,11 +52,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.tables t
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = t.object_id
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
+						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
 						x.minor_id = 0 AND 
 						x.name = 'MS_Description'
 				WHERE
@@ -72,7 +99,24 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			return dataConnection.Query<ColumnInfo>(@"
+			return dataConnection.Query<ColumnInfo>(
+				_isAzure ? @"
+				SELECT
+					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+					COLUMN_NAME                                           as Name,
+					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END       as IsNullable,
+					ORDINAL_POSITION                                      as Ordinal,
+					c.DATA_TYPE                                           as DataType,
+					CHARACTER_MAXIMUM_LENGTH                              as Length,
+					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)         as [Precision],
+					NUMERIC_SCALE                                         as Scale,
+					''                                                    as [Description],
+					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
+					CASE WHEN c.DATA_TYPE = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+				FROM
+					INFORMATION_SCHEMA.COLUMNS c"
+				: @"
 				SELECT
 					TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
 					COLUMN_NAME                                           as Name,
@@ -91,9 +135,70 @@ namespace LinqToDB.DataProvider.SqlServer
 					LEFT JOIN
 						sys.extended_properties x
 					ON
-						OBJECT_ID(TABLE_CATALOG + '.' + TABLE_SCHEMA + '.' + TABLE_NAME) = x.major_id AND
-						ORDINAL_POSITION = x.minor_id AND
+						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
 						x.name = 'MS_Description'")
+				.Select(c =>
+				{
+					DataTypeInfo dti;
+
+					if (DataTypesDic.TryGetValue(c.DataType, out dti))
+					{
+						switch (dti.CreateParameters)
+						{
+							case null :
+								c.Length    = null;
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "scale" :
+								c.Length = null;
+
+								if (c.Scale.HasValue)
+									c.Precision = null;
+
+								break;
+
+							case "precision,scale" :
+								c.Length = null;
+								break;
+
+							case "max length" :
+								if (c.Length < 0)
+									c.Length = int.MaxValue;
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "length"     :
+								c.Precision = null;
+								c.Scale     = null;
+								break;
+
+							case "number of bits used to store the mantissa":
+								break;
+
+							default :
+								break;
+						}
+					}
+
+					switch (c.DataType)
+					{
+						case "geometry"    :
+						case "geography"   :
+						case "hierarchyid" :
+						case "float"       :
+							c.Length    = null;
+							c.Precision = null;
+							c.Scale     = null;
+							break;
+					}
+
+					return c;
+				})
 				.ToList();
 		}
 
@@ -101,28 +206,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return dataConnection.Query<ForeingKeyInfo>(@"
 				SELECT
-					rc.CONSTRAINT_NAME                                             as Name,
-					fk.TABLE_CATALOG + '.' + fk.TABLE_SCHEMA + '.' + fk.TABLE_NAME as ThisTableID,
-					fk.COLUMN_NAME                                                 as ThisColumn,
-					pk.TABLE_CATALOG + '.' + pk.TABLE_SCHEMA + '.' + pk.TABLE_NAME as OtherTableID,
-					pk.COLUMN_NAME                                                 as OtherColumn,
-					pk.ORDINAL_POSITION                                            as Ordinal
-				FROM
-					INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-					JOIN
-						INFORMATION_SCHEMA.KEY_COLUMN_USAGE fk
-					ON
-						fk.CONSTRAINT_CATALOG = rc.CONSTRAINT_CATALOG AND
-						fk.CONSTRAINT_SCHEMA  = rc.CONSTRAINT_SCHEMA  AND
-						fk.CONSTRAINT_NAME    = rc.CONSTRAINT_NAME
-					JOIN
-						INFORMATION_SCHEMA.KEY_COLUMN_USAGE pk
-					ON
-						pk.CONSTRAINT_CATALOG = rc.UNIQUE_CONSTRAINT_CATALOG AND
-						pk.CONSTRAINT_SCHEMA  = rc.UNIQUE_CONSTRAINT_SCHEMA  AND
-						pk.CONSTRAINT_NAME    = rc.UNIQUE_CONSTRAINT_NAME
-				WHERE
-					fk.ORDINAL_POSITION = pk.ORDINAL_POSITION
+					fk.name                                                     as Name,
+					DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
+					pc.name                                                     as ThisColumn,
+					DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
+					fc.name                                                     as OtherColumn,
+					fkc.constraint_column_id                                    as Ordinal
+				FROM sys.foreign_keys fk
+					inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+					inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
+					inner join sys.objects             po  ON fk.parent_object_id = po.object_id
+					inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
+					inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
 				ORDER BY
 					ThisTableID,
 					Ordinal")
@@ -139,6 +234,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					SPECIFIC_NAME                                                                 as ProcedureName,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END as IsFunction,
 					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END as IsTableFunction,
+					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF') 
+					                                                            THEN 1 ELSE 0 END as IsAggregateFunction,
 					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END as IsDefaultSchema
 				FROM
 					INFORMATION_SCHEMA.ROUTINES")
@@ -165,14 +262,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
-				case "tinyint"          : return DataType.SByte;
+				case "tinyint"          : return DataType.Byte;
 				case "date"             : return DataType.Date;
 				case "time"             : return DataType.Time;
 				case "bit"              : return DataType.Boolean;
@@ -208,16 +305,62 @@ namespace LinqToDB.DataProvider.SqlServer
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override string GetProviderSpecificTypeNamespace()
 		{
-			switch (columnType)
+			return "System.Data.SqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
 			{
-				case "hierarchyid" :
-				case "geography"   :
-				case "geometry"    : return SqlServerDataProvider.GetUdtType(columnType);
+				case "varbinary"        :
+				case "timestamp"        :
+				case "rowversion"       :
+				case "image"            : return "SqlBinary";
+				case "binary"           : return "SqlBinary";
+				case "tinyint"          : return "SqlByte";
+				case "date"             :
+				case "smalldatetime"    :
+				case "datetime"         :
+				case "datetime2"        : return "SqlDateTime";
+				case "bit"              : return "SqlBoolean";
+				case "smallint"         : return "SqlInt16";
+				case "numeric"          :
+				case "decimal"          : return "SqlDecimal";
+				case "int"              : return "SqlInt32";
+				case "real"             : return "SqlSingle";
+				case "float"            : return "SqlDouble";
+				case "smallmoney"       :
+				case "money"            : return "SqlMoney";
+				case "bigint"           : return "SqlInt64";
+				case "text"             :
+				case "nvarchar"         :
+				case "char"             :
+				case "nchar"            :
+				case "varchar"          :
+				case "ntext"            : return "SqlString";
+				case "uniqueidentifier" : return "SqlGuid";
+				case "xml"              : return "SqlXml";
+				case "hierarchyid"      : return "Microsoft.SqlServer.Types.SqlHierarchyId";
+				case "geography"        : return "Microsoft.SqlServer.Types.SqlGeography";
+				case "geometry"         : return "Microsoft.SqlServer.Types.SqlGeometry";
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetProviderSpecificType(dataType);
+		}
+
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		{
+			switch (dataType)
+			{
+				case "tinyint"     : return typeof(byte);
+				case "hierarchyid" :
+				case "geography"   :
+				case "geometry"    : return SqlServerDataProvider.GetUdtType(dataType);
+			}
+
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

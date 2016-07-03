@@ -17,9 +17,9 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(SelectQuery query, SqlParameter[] parameters)
+		public static string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 		{
-			return new QuerySerializer().Serialize(query, parameters);
+			return new QuerySerializer().Serialize(query, parameters, queryHints);
 		}
 
 		public static LinqServiceQuery Deserialize(string str)
@@ -63,7 +63,7 @@ namespace LinqToDB.ServiceModel
 
 			static string ConvertToString(Type type, object value)
 			{
-				switch (Type.GetTypeCode(type))
+				switch (type.GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return ((decimal) value).ToString(CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return ((double)  value).ToString(CultureInfo.InvariantCulture);
@@ -119,6 +119,14 @@ namespace LinqToDB.ServiceModel
 			protected void Append(int value)
 			{
 				Builder.Append(' ').Append(value);
+			}
+
+			protected void Append(int? value)
+			{
+				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
+
+				if (value.HasValue)
+					Builder.Append(value.Value);
 			}
 
 			protected void Append(Type value)
@@ -188,7 +196,7 @@ namespace LinqToDB.ServiceModel
 							.Append(' ')
 							.Append(TypeIndex);
 
-						Append(type.FullName);
+						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
 
 					Builder.AppendLine();
@@ -233,6 +241,24 @@ namespace LinqToDB.ServiceModel
 			protected int ReadInt()
 			{
 				Get(' ');
+
+				var minus = Get('-');
+				var value = 0;
+
+				for (var c = Peek(); char.IsDigit(c); c = Next())
+					value = value * 10 + ((int)c - '0');
+
+				return minus ? -value : value;
+			}
+
+			protected int? ReadNullableInt()
+			{
+				Get(' ');
+
+				if (Get('0'))
+					return null;
+
+				Get('1');
 
 				var minus = Get('-');
 				var value = 0;
@@ -395,7 +421,7 @@ namespace LinqToDB.ServiceModel
 				if (str == null)
 					return null;
 
-				switch (Type.GetTypeCode(type))
+				switch (type.GetTypeCodeEx())
 				{
 					case TypeCode.Decimal  : return decimal. Parse(str, CultureInfo.InvariantCulture);
 					case TypeCode.Double   : return double.  Parse(str, CultureInfo.InvariantCulture);
@@ -423,7 +449,7 @@ namespace LinqToDB.ServiceModel
 					if (str == "System.Data.Linq.Binary")
 						return typeof(System.Data.Linq.Binary);
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 					type = LinqService.TypeResolver(str);
 
@@ -431,6 +457,9 @@ namespace LinqToDB.ServiceModel
 
 					if (type == null)
 					{
+						if (Configuration.LinqService.ThrowUnresolvedTypeException)
+							throw new LinqToDBException("Type '{0}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.".Args(str));
+
 						UnresolvedTypes.Add(str);
 
 						Debug.WriteLine(
@@ -449,8 +478,16 @@ namespace LinqToDB.ServiceModel
 
 		class QuerySerializer : SerializerBase
 		{
-			public string Serialize(SelectQuery query, SqlParameter[] parameters)
+			public string Serialize(SelectQuery query, SqlParameter[] parameters, List<string> queryHints)
 			{
+				var queryHintCount = queryHints == null ? 0 : queryHints.Count;
+
+				Builder.AppendLine(queryHintCount.ToString());
+
+				if (queryHintCount > 0)
+					foreach (var hint in queryHints)
+						Builder.AppendLine(hint);
+
 				var visitor = new QueryVisitor();
 
 				visitor.Visit(query, Visit);
@@ -531,7 +568,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.SystemType);
 							Append(elem.Name);
 							Append(elem.PhysicalName);
-							Append(elem.Nullable);
+							Append(elem.CanBeNull);
 							Append(elem.IsPrimaryKey);
 							Append(elem.PrimaryKeyOrder);
 							Append(elem.IsIdentity);
@@ -542,6 +579,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Length);
 							Append(elem.Precision);
 							Append(elem.Scale);
+							Append(elem.CreateFormat);
 
 							break;
 						}
@@ -568,6 +606,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.DbSize);
 							Append(elem.LikeStart);
 							Append(elem.LikeEnd);
+							Append(elem.ReplaceLike);
 
 							var value = elem.LikeStart != null ? elem.RawValue : elem.Value;
 							var type  = value == null ? elem.SystemType : value.GetType();
@@ -1019,18 +1058,41 @@ namespace LinqToDB.ServiceModel
 			SqlParameter[] _parameters;
 
 			readonly Dictionary<int,SelectQuery> _queries = new Dictionary<int,SelectQuery>();
-			readonly List<Action>             _actions = new List<Action>();
+			readonly List<Action>                _actions = new List<Action>();
 
 			public LinqServiceQuery Deserialize(string str)
 			{
 				Str = str;
+
+				List<string> queryHints = null;
+
+				var queryHintCount = ReadInt();
+
+				NextLine();
+
+				if (queryHintCount > 0)
+				{
+					queryHints = new List<string>();
+
+					for (var i = 0; i < queryHintCount; i++)
+					{
+						var pos = Pos;
+
+						while (Pos < Str.Length && Peek() != '\n' && Peek() != '\r')
+							Pos++;
+
+						queryHints.Add(Str.Substring(pos, Pos - pos));
+
+						NextLine();
+					}
+				}
 
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Query = _query, Parameters = _parameters };
+				return new LinqServiceQuery { Query = _query, Parameters = _parameters, QueryHints = queryHints };
 			}
 
 			bool Parse()
@@ -1063,16 +1125,17 @@ namespace LinqToDB.ServiceModel
 							var isInsertable     = ReadBool();
 							var dataType         = ReadInt();
 							var dbType           = ReadString();
-							var length           = ReadInt();
-							var precision        = ReadInt();
-							var scale            = ReadInt();
+							var length           = ReadNullableInt();
+							var precision        = ReadNullableInt();
+							var scale            = ReadNullableInt();
+							var createFormat     = ReadString();
 
 							obj = new SqlField
 							{
 								SystemType      = systemType,
 								Name            = name,
 								PhysicalName    = physicalName,
-								Nullable        = nullable,
+								CanBeNull       = nullable,
 								IsPrimaryKey    = isPrimaryKey,
 								PrimaryKeyOrder = primaryKeyOrder,
 								IsIdentity      = isIdentity,
@@ -1083,6 +1146,7 @@ namespace LinqToDB.ServiceModel
 								Length          = length,
 								Precision       = precision,
 								Scale           = scale,
+								CreateFormat    = createFormat,
 							};
 
 							break;
@@ -1106,8 +1170,9 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dbType           = (DataType)ReadInt();
 							var dbSize           = ReadInt();
-							var likeStart = ReadString();
-							var likeEnd   = ReadString();
+							var likeStart        = ReadString();
+							var likeEnd          = ReadString();
+							var replaceLike      = ReadBool();
 
 							var systemType       = Read<Type>();
 							var value            = ReadValue(systemType);
@@ -1119,6 +1184,7 @@ namespace LinqToDB.ServiceModel
 								DbSize           = dbSize,
 								LikeStart        = likeStart,
 								LikeEnd          = likeEnd,
+								ReplaceLike      = replaceLike,
 							};
 
 							break;
@@ -1163,9 +1229,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var dbType     = (DataType)ReadInt();
 							var systemType = Read<Type>();
-							var length     = ReadInt();
-							var precision  = ReadInt();
-							var scale      = ReadInt();
+							var length     = ReadNullableInt();
+							var precision  = ReadNullableInt();
+							var scale      = ReadNullableInt();
 
 							obj = new SqlDataType(dbType, systemType, length, precision, scale);
 
@@ -1536,7 +1602,7 @@ namespace LinqToDB.ServiceModel
 
 				foreach (var type in result.FieldTypes)
 				{
-					Append(type.FullName);
+					Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					Builder.AppendLine();
 				}
 

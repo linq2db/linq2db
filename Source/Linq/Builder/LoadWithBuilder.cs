@@ -24,15 +24,15 @@ namespace LinqToDB.Linq.Builder
 			var table    = (TableBuilder.TableContext)sequence;
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			if (table.SqlTable.LoadWith == null)
-				table.SqlTable.LoadWith = new List<MemberInfo[]>();
+			if (table.LoadWith == null)
+				table.LoadWith = new List<MemberInfo[]>();
 
-			table.SqlTable.LoadWith.Add(GetAssosiations(builder, selector.Body.Unwrap()).ToArray());
+			table.LoadWith.Add(GetAssociations(builder, selector.Body.Unwrap()).Reverse().ToArray());
 
 			return sequence;
 		}
 
-		static IEnumerable<MemberInfo> GetAssosiations(ExpressionBuilder builder, Expression expression)
+		static IEnumerable<MemberInfo> GetAssociations(ExpressionBuilder builder, Expression expression)
 		{
 			MemberInfo lastMember = null;
 
@@ -65,11 +65,9 @@ namespace LinqToDB.Linq.Builder
 								goto default;
 
 							var member = ((MemberExpression)expr).Member;
-							var mtype  = member.MemberType == MemberTypes.Field ?
-								((FieldInfo)   member).FieldType :
-								((PropertyInfo)member).PropertyType;
+							var mtype  = member.GetMemberType();
 
-							if (lastMember.ReflectedType != mtype.GetItemType())
+							if (lastMember.ReflectedTypeEx() != mtype.GetItemType())
 								goto default;
 
 							expression = expr;
@@ -85,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (attr == null)
 								throw new LinqToDBException(
-									string.Format("Member '{0}' is not an assosiation.", expression));
+									string.Format("Member '{0}' is not an association.", expression));
 
 							yield return member;
 
@@ -94,10 +92,27 @@ namespace LinqToDB.Linq.Builder
 							break;
 						}
 
+					case ExpressionType.ArrayIndex   :
+						{
+							expression = ((BinaryExpression)expression).Left;
+							break;
+						}
+
+					case ExpressionType.Extension    :
+						{
+							if (expression is GetItemExpression)
+							{
+								expression = ((GetItemExpression)expression).Expression;
+								break;
+							}
+
+							goto default;
+						}
+
 					default :
 						{
 							throw new LinqToDBException(
-								string.Format("Expression '{0}' is not an assosiation.", expression));
+								string.Format("Expression '{0}' is not an association.", expression));
 						}
 				}
 			}

@@ -334,43 +334,80 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       int          NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
+	ID                       int           NOT NULL IDENTITY(1,1) CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED,
 
-	bigintDataType           bigint           NULL,
-	numericDataType          numeric          NULL,
-	bitDataType              bit              NULL,
-	smallintDataType         smallint         NULL,
-	decimalDataType          decimal          NULL,
-	smallmoneyDataType       smallmoney       NULL,
-	intDataType              int              NULL,
-	tinyintDataType          tinyint          NULL,
-	moneyDataType            money            NULL,
-	floatDataType            float            NULL,
-	realDataType             real             NULL,
+	bigintDataType           bigint            NULL,
+	numericDataType          numeric(18,1)     NULL,
+	bitDataType              bit               NULL,
+	smallintDataType         smallint          NULL,
+	decimalDataType          decimal(18,1)     NULL,
+	smallmoneyDataType       smallmoney        NULL,
+	intDataType              int               NULL,
+	tinyintDataType          tinyint           NULL,
+	moneyDataType            money             NULL,
+	floatDataType            float             NULL,
+	realDataType             real              NULL,
 
-	datetimeDataType         datetime         NULL,
-	smalldatetimeDataType    smalldatetime    NULL,
+	datetimeDataType         datetime          NULL,
+	smalldatetimeDataType    smalldatetime     NULL,
 
-	charDataType             char(1)          NULL,
-	varcharDataType          varchar(20)      NULL,
-	textDataType             text             NULL,
-	ncharDataType            nchar(20)        NULL,
-	nvarcharDataType         nvarchar(20)     NULL,
-	ntextDataType            ntext            NULL,
+	charDataType             char(1)           NULL,
+	varcharDataType          varchar(20)       NULL,
+	textDataType             text              NULL,
+	ncharDataType            nchar(20)         NULL,
+	nvarcharDataType         nvarchar(20)      NULL,
+	ntextDataType            ntext             NULL,
 
-	binaryDataType           binary           NULL,
-	varbinaryDataType        varbinary        NULL,
-	imageDataType            image            NULL,
+	binaryDataType           binary            NULL,
+	varbinaryDataType        varbinary         NULL,
+	imageDataType            image             NULL,
 
-	timestampDataType        timestamp        NULL,
-	uniqueidentifierDataType uniqueidentifier NULL,
-	sql_variantDataType      sql_variant      NULL,
+	timestampDataType        timestamp         NULL,
+	uniqueidentifierDataType uniqueidentifier  NULL,
+	sql_variantDataType      sql_variant       NULL,
 
-	nvarchar_max_DataType    nvarchar(max)    NULL,
-	varchar_max_DataType     varchar(max)     NULL,
-	varbinary_max_DataType   varbinary(max)   NULL,
+	nvarchar_max_DataType    nvarchar(max)     NULL,
+	varchar_max_DataType     varchar(max)      NULL,
+	varbinary_max_DataType   varbinary(max)    NULL,
 
-	xmlDataType              xml              NULL
+	xmlDataType              xml               NULL,
+
+-- SKIP SqlServer.2005 BEGIN
+	datetime2DataType        datetime2         NULL,
+	datetimeoffsetDataType   datetimeoffset    NULL,
+	datetimeoffset0DataType  datetimeoffset(0) NULL,
+	datetimeoffset1DataType  datetimeoffset(1) NULL,
+	datetimeoffset2DataType  datetimeoffset(2) NULL,
+	datetimeoffset3DataType  datetimeoffset(3) NULL,
+	datetimeoffset4DataType  datetimeoffset(4) NULL,
+	datetimeoffset5DataType  datetimeoffset(5) NULL,
+	datetimeoffset6DataType  datetimeoffset(6) NULL,
+	datetimeoffset7DataType  datetimeoffset(7) NULL,
+	dateDataType             date              NULL,
+	timeDataType             time              NULL
+-- SKIP SqlServer.2005 END
+
+-- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
+	datetime2DataType        varchar(50)       NULL,
+	datetimeoffsetDataType   varchar(50)       NULL,
+	datetimeoffset0DataType  varchar(50)       NULL,
+	datetimeoffset1DataType  varchar(50)       NULL,
+	datetimeoffset2DataType  varchar(50)       NULL,
+	datetimeoffset3DataType  varchar(50)       NULL,
+	datetimeoffset4DataType  varchar(50)       NULL,
+	datetimeoffset5DataType  varchar(50)       NULL,
+	datetimeoffset6DataType  varchar(50)       NULL,
+	datetimeoffset7DataType  varchar(50)       NULL,
+	dateDataType             varchar(50)       NULL,
+	timeDataType             varchar(50)       NULL
+-- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2014 END
+-- SKIP SqlAzure.2012 END
+
 ) ON [PRIMARY]
 GO
 
@@ -451,8 +488,9 @@ GO
 
 
 -- GetParentByID function
-
-DROP FUNCTION GetParentByID
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'GetParentByID')
+BEGIN DROP FUNCTION GetParentByID
+END
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ParentView') AND type in (N'V'))
@@ -471,18 +509,21 @@ GO
 DROP TABLE GrandChild
 GO
 
-CREATE TABLE Parent      (ParentID int, Value1 int)
+CREATE TABLE Parent      (ParentID int, Value1 int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE Child       (ParentID int, ChildID int)
+CREATE TABLE Child       (ParentID int, ChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
-CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int)
+CREATE TABLE GrandChild  (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
+
+-- SKIP SqlAzure.2012 BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
+-- SKIP SqlAzure.2012 END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -523,6 +564,7 @@ GO
 -- SKIP SqlServer.2005 BEGIN
 CREATE TABLE LinqDataTypes
 (
+	_ID            int IDENTITY  PRIMARY KEY,
 	ID             int,
 	MoneyValue     decimal(10,4),
 	DateTimeValue  datetime,
@@ -539,6 +581,8 @@ GO
 
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlAzure.2012 BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -553,7 +597,9 @@ CREATE TABLE LinqDataTypes
 	BigIntValue    bigint          NULL
 )
 GO
+-- SKIP SqlAzure.2012 END
 -- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2014 END
 -- SKIP SqlServer.2008 END
 
 DROP TABLE TestIdentity
@@ -561,7 +607,7 @@ GO
 
 CREATE TABLE TestIdentity (
 	ID int NOT NULL IDENTITY(1,1) CONSTRAINT PK_TestIdentity PRIMARY KEY CLUSTERED
-)
+) ON [PRIMARY]
 GO
 
 
@@ -587,8 +633,8 @@ GO
 
 CREATE TABLE IndexTable2
 (
-	PKField1    int NOT NULL,
-	PKField2    int NOT NULL,
+	PKField1 int NOT NULL,
+	PKField2 int NOT NULL,
 	CONSTRAINT PK_IndexTable2 PRIMARY KEY CLUSTERED (PKField2, PKField1),
 	CONSTRAINT FK_Patient2_IndexTable FOREIGN KEY (PKField2,PKField1)
 			REFERENCES IndexTable (PKField2,PKField1)
@@ -622,3 +668,90 @@ BEGIN
 	SELECT 123 as id, '456' as id
 END
 GO
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'Name.Test')
+BEGIN DROP TABLE [Name.Test] END
+GO
+
+CREATE TABLE [Name.Test]
+(
+--	ID INT IDENTITY PRIMARY KEY CLUSTERED,
+	[Name.Test] int
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'GuidID')
+BEGIN DROP TABLE [GuidID] END
+GO
+
+CREATE TABLE [GuidID]
+(
+	ID uniqueidentifier default(NewID()) PRIMARY KEY CLUSTERED,
+	Field1 int
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'GuidID2')
+BEGIN DROP TABLE [GuidID2] END
+GO
+
+CREATE TABLE [GuidID2]
+(
+	ID uniqueidentifier default(NewID()) PRIMARY KEY CLUSTERED
+)
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'DecimalOverflow')
+BEGIN DROP TABLE [DecimalOverflow] END
+GO
+
+CREATE TABLE [DecimalOverflow]
+(
+	Decimal1 decimal(38,20) NOT NULL PRIMARY KEY CLUSTERED,
+	Decimal2 decimal(31,2),
+	Decimal3 decimal(38,36),
+	Decimal4 decimal(29,0),
+	Decimal5 decimal(38,38)
+)
+GO
+
+INSERT INTO [DecimalOverflow]
+SELECT  123456789012345.12345678901234567890,  1234567890123456789.91,  12.345678901234512345678901234567890,  1234567890123456789,  .12345678901234512345678901234567890 UNION ALL
+SELECT -123456789012345.12345678901234567890, -1234567890123456789.91, -12.345678901234512345678901234567890, -1234567890123456789, -.12345678901234512345678901234567890 UNION ALL
+SELECT  12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.567890123456789,                          NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT  12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.56789012345678,                           NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT  12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL UNION ALL
+SELECT -12345678901234.5678901234567,                            NULL,                                  NULL,                 NULL,                                  NULL
+
+GO
+
+-- SKIP SqlServer.2005 BEGIN
+
+IF EXISTS (SELECT * FROM sys.objects WHERE name = 'SqlTypes')
+BEGIN DROP TABLE [SqlTypes] END
+GO
+
+CREATE TABLE [SqlTypes]
+(
+	ID  int NOT NULL PRIMARY KEY CLUSTERED,
+	HID hierarchyid,
+)
+GO
+
+INSERT INTO [SqlTypes]
+SELECT 1, hierarchyid::Parse('/')      UNION ALL
+SELECT 2, hierarchyid::Parse('/1/')    UNION ALL
+SELECT 3, hierarchyid::Parse('/1/1/')  UNION ALL
+SELECT 4, hierarchyid::Parse('/1/2/')  UNION ALL
+SELECT 5, hierarchyid::Parse('/2/')    UNION ALL
+SELECT 6, hierarchyid::Parse('/2/1/')  UNION ALL
+SELECT 7, hierarchyid::Parse('/2/2/')  UNION ALL
+SELECT 8, hierarchyid::Parse('/2/1/1/')
+
+GO
+
+-- SKIP SqlServer.2005 END
+

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 #region ReSharper disable
@@ -12,16 +13,16 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 
-	class FirebirdSqlBuilder : BasicSqlBuilder
+	public class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new FirebirdSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildSelectClause()
@@ -73,25 +74,62 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (type.DataType)
 			{
 				case DataType.Decimal       :
-					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, 18, type.Scale) : type);
+					base.BuildDataType(type.Precision > 18 ? new SqlDataType(type.DataType, type.Type, null, 18, type.Scale) : type);
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");        break;
 				case DataType.Money         : StringBuilder.Append("Decimal(18,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");       break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
+					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					break;
 				default                      : base.BuildDataType(type); break;
 			}
 		}
+
+//		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+//		{
+//			switch (type.DataType)
+//			{
+//				case DataType.DateTimeOffset :
+//				case DataType.DateTime2      :
+//				case DataType.Time           :
+//				case DataType.Date           : StringBuilder.Append("DateTime"); return;
+//				case DataType.Xml            : StringBuilder.Append("NText");    return;
+//				case DataType.NVarChar       :
+//
+//					if (type.Length == int.MaxValue || type.Length < 0)
+//					{
+//						StringBuilder
+//							.Append(type.DataType)
+//							.Append("(4000)");
+//						return;
+//					}
+//
+//					break;
+//
+//				case DataType.VarChar        :
+//				case DataType.VarBinary      :
+//
+//					if (type.Length == int.MaxValue || type.Length < 0)
+//					{
+//						StringBuilder
+//							.Append(type.DataType)
+//							.Append("(8000)");
+//						return;
+//					}
+//
+//					break;
+//			}
+//
+//			base.BuildDataType(type, createDbType);
+//		}
 
 		protected override void BuildFromClause()
 		{
@@ -119,7 +157,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
 		}
 
-		public static bool QuoteIdentifiers = false;
+		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode = FirebirdIdentifierQuoteMode.None;
 
 		public override object Convert(object value, ConvertType convertType)
 		{
@@ -127,14 +165,21 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryTable:
-					if (QuoteIdentifiers)
+					if (value != null && IdentifierQuoteMode != FirebirdIdentifierQuoteMode.None)
 					{
-						string name = value.ToString();
+						var name = value.ToString();
 
 						if (name.Length > 0 && name[0] == '"')
-							return value;
+							return name;
 
-						return '"' + name + '"';
+						if (IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+							name.StartsWith("_") ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							return '"' + name + '"';
 					}
 
 					break;
@@ -164,7 +209,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
 		{
-			if (!field.Nullable)
+			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
 		}
 
@@ -234,5 +279,15 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.FbDbType.ToString();
+		}
+
+#endif
 	}
 }

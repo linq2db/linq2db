@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using System.Text;
+
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -9,8 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -106,29 +111,6 @@ namespace LinqToDB.DataProvider.DB2
 				base.BuildFromClause();
 		}
 
-		protected override void BuildValue(object value)
-		{
-			if (value is Guid)
-			{
-				var s = ((Guid)value).ToString("N");
-
-				StringBuilder
-					.Append("Cast(x'")
-					.Append(s.Substring( 6,  2))
-					.Append(s.Substring( 4,  2))
-					.Append(s.Substring( 2,  2))
-					.Append(s.Substring( 0,  2))
-					.Append(s.Substring(10,  2))
-					.Append(s.Substring( 8,  2))
-					.Append(s.Substring(14,  2))
-					.Append(s.Substring(12,  2))
-					.Append(s.Substring(16, 16))
-					.Append("' as char(16) for bit data)");
-			}
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
 		{
 			var wrap = false;
@@ -147,6 +129,16 @@ namespace LinqToDB.DataProvider.DB2
 			if (wrap) StringBuilder.Append("CASE WHEN ");
 			base.BuildColumnExpression(expr, alias, ref addAlias);
 			if (wrap) StringBuilder.Append(" THEN 1 ELSE 0 END");
+		}
+
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.DateTime  : StringBuilder.Append("timestamp"); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
+				default                 : base.BuildDataType(type);          break;
+			}
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
@@ -184,7 +176,11 @@ namespace LinqToDB.DataProvider.DB2
 
 						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
 							name.StartsWith("_") ||
-							name.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 
@@ -213,5 +209,21 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
+
+#if !SILVERLIGHT && !NETFX_CORE
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			{
+				var d = new SqlDecimal((decimal)parameter.Value);
+				return "(" + d.Precision + "," + d.Scale + ")";
+			}
+
+			dynamic p = parameter;
+			return p.DB2Type.ToString();
+		}
+
+#endif
 	}
 }

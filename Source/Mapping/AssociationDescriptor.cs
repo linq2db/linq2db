@@ -33,10 +33,10 @@ namespace LinqToDB.Mapping
 						type.Name, memberInfo.Name));
 
 			MemberInfo = memberInfo;
-			ThisKey        = thisKey;
-			OtherKey       = otherKey;
-			Storage        = storage;
-			CanBeNull      = canBeNull;
+			ThisKey    = thisKey;
+			OtherKey   = otherKey;
+			Storage    = storage;
+			CanBeNull  = canBeNull;
 		}
 
 		public MemberInfo MemberInfo { get; set; }

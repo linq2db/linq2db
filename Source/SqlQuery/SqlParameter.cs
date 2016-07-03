@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlParameter(Type systemType, string name, object value)
 		{
-			if (systemType.ToNullableUnderlying().IsEnum)
+			if (systemType.ToNullableUnderlying().IsEnumEx())
 				throw new ArgumentException();
 
 			IsQueryParameter = true;
@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 			DataType         = DataType.Undefined;
 		}
 
-		public SqlParameter(Type systemType, string name, object value, Converter<object,object> valueConverter)
+		public SqlParameter(Type systemType, string name, object value, Func<object,object> valueConverter)
 			: this(systemType, name, value)
 		{
 			_valueConverter = valueConverter;
@@ -33,24 +33,32 @@ namespace LinqToDB.SqlQuery
 		public int      DbSize           { get; set; }
 		public string   LikeStart        { get; set; }
 		public string   LikeEnd          { get; set; }
+		public bool     ReplaceLike      { get; set; }
 
 		private object _value;
 		public  object  Value
 		{
 			get
 			{
+				var value = _value;
+
+				if (ReplaceLike && value != null)
+				{
+					value = value.ToString().Replace("[", "[[]");
+				}
+
 				if (LikeStart != null)
 				{
-					if (_value != null)
+					if (value != null)
 					{
-						return _value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
-							LikeStart + _value + LikeEnd :
-							LikeStart + EscapeLikeText(_value.ToString()) + LikeEnd;
+						return value.ToString().IndexOfAny(new[] { '%', '_' }) < 0 ?
+							LikeStart + value + LikeEnd :
+							LikeStart + EscapeLikeText(value.ToString()) + LikeEnd;
 					}
 				}
 
 				var valueConverter = ValueConverter;
-				return valueConverter == null? _value: valueConverter(_value);
+				return valueConverter == null? value: valueConverter(value);
 			}
 
 			set { _value = value; }
@@ -65,8 +73,8 @@ namespace LinqToDB.SqlQuery
 
 		internal List<int>  TakeValues;
 
-		private Converter<object,object> _valueConverter;
-		public  Converter<object,object>  ValueConverter
+		private Func<object,object> _valueConverter;
+		public  Func<object,object>  ValueConverter
 		{
 			get
 			{
@@ -172,12 +180,16 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			if (SystemType == null && _value == null)
-				return true;
+			get
+			{
+				if (SystemType == null && _value == null)
+					return true;
 
-			return SqlDataType.CanBeNull(SystemType ?? _value.GetType());
+				return SqlDataType.TypeCanBeNull(SystemType ?? _value.GetType());
+				
+			}
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -201,10 +213,11 @@ namespace LinqToDB.SqlQuery
 				var p = new SqlParameter(SystemType, Name, _value, _valueConverter)
 					{
 						IsQueryParameter = IsQueryParameter,
-						DataType           = DataType,
+						DataType         = DataType,
 						DbSize           = DbSize,
 						LikeStart        = LikeStart,
 						LikeEnd          = LikeEnd,
+						ReplaceLike      = ReplaceLike,
 					};
 
 				objectTree.Add(this, clone = p);

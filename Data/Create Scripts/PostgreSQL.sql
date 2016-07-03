@@ -98,6 +98,11 @@ CREATE TABLE "LinqDataTypes"
 )
 GO
 
+CREATE OR REPLACE FUNCTION "GetParentByID"(id int)
+RETURNS TABLE ("ParentID" int, "Value1" int)
+AS $$ SELECT * FROM "Parent" WHERE "ParentID" = $1 $$
+LANGUAGE SQL;
+GO
 
 DROP TABLE entity
 GO
@@ -231,7 +236,8 @@ CREATE TABLE AllTypes
 	inetDataType        inet                     NULL,
 	macaddrDataType     macaddr                  NULL,
 
-	xmlDataType         xml                      NULL
+	xmlDataType         xml                      NULL,
+	varBitDataType      varbit                   NULL
 )
 GO
 
@@ -273,7 +279,8 @@ INSERT INTO AllTypes
 	inetDataType,
 	macaddrDataType,
 
-	xmlDataType
+	xmlDataType,
+	varBitDataType
 )
 SELECT
 	NULL,
@@ -310,6 +317,8 @@ SELECT
 	NULL,
 
 	NULL,
+	NULL,
+
 	NULL,
 
 	NULL
@@ -351,6 +360,55 @@ SELECT
 	'192.168.1.1'::inet,
 	'01:02:03:04:05:06'::macaddr,
 
-	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>')
+	XMLPARSE (DOCUMENT'<root><element strattr="strvalue" intattr="12345"/></root>'),
 
+	B'1011'
+
+GO
+
+DROP TABLE TestSameName
+GO
+
+DROP TABLE test_schema.TestSameName
+GO
+
+DROP TABLE test_schema.TestSerialIdentity
+GO
+
+DROP TABLE test_schema."TestSchemaIdentity"
+GO
+
+DROP SEQUENCE test_schema."TestSchemaIdentity_ID_seq"
+GO
+
+DROP SCHEMA test_schema
+GO
+
+CREATE SCHEMA test_schema
+GO
+
+CREATE SEQUENCE test_schema."TestSchemaIdentity_ID_seq" INCREMENT 1 START 1
+GO
+
+CREATE TABLE test_schema."TestSchemaIdentity" (
+	"ID" INTEGER PRIMARY KEY DEFAULT NEXTVAL('test_schema."TestSchemaIdentity_ID_seq"')
+)
+GO
+
+CREATE TABLE test_schema.TestSerialIdentity
+(
+	"ID" serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE test_schema.TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE TestSameName
+(
+	ID serial NOT NULL PRIMARY KEY
+)
 GO

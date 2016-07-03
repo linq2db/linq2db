@@ -14,9 +14,9 @@ namespace LinqToDB.DataProvider.DB2
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
-			return dts.AsEnumerable()
+			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("SQL_TYPE_NAME"),
@@ -107,26 +107,67 @@ namespace LinqToDB.DataProvider.DB2
 					IDENTITY,
 					COLNO,
 					TYPENAME,
-					REMARKS
+					REMARKS,
+					CODEPAGE
 				FROM
 					SYSCAT.COLUMNS
 				WHERE
 					" + GetSchemaFilter("TABSCHEMA");
 
-			return _columns = dataConnection.Query(
-				rd => new ColumnInfo
+			return _columns = dataConnection.Query(rd =>
 				{
-					TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
-					Name        = rd.ToString(2),
-					Length      = Converter.ChangeTypeTo<int>(rd[3]),
-					Scale       = Converter.ChangeTypeTo<int>(rd[4]),
-					IsNullable  = rd.ToString(5) == "Y",
-					IsIdentity  = rd.ToString(6) == "Y",
-					Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
-					DataType    = rd.ToString(8),
-					Description = rd.ToString(9),
+					var typeName = rd.ToString(8);
+					var cp   = Converter.ChangeTypeTo<int>(rd[10]);
+
+					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
+					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
+
+					var ci = new ColumnInfo
+					{
+						TableID     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1),
+						Name        = rd.ToString(2),
+						IsNullable  = rd.ToString(5) == "Y",
+						IsIdentity  = rd.ToString(6) == "Y",
+						Ordinal     = Converter.ChangeTypeTo<int>(rd[7]),
+						DataType    = typeName,
+						Description = rd.ToString(9),
+					};
+
+					SetColumnParameters(ci, Converter.ChangeTypeTo<long?>(rd[3]), Converter.ChangeTypeTo<int?> (rd[4]));
+
+					return ci;
 				},
 				sql).ToList();
+		}
+
+		static void SetColumnParameters(ColumnInfo ci, long? size, int? scale)
+		{
+			switch (ci.DataType)
+			{
+				case "DECIMAL"                   :
+				case "DECFLOAT"                  :
+					if ((size  ?? 0) > 0) ci.Precision = (int?)size.Value;
+					if ((scale ?? 0) > 0) ci.Scale     = scale;
+					break;
+
+				case "DBCLOB"                    :
+				case "CLOB"                      :
+				case "BLOB"                      :
+				case "LONG VARGRAPHIC"           :
+				case "VARGRAPHIC"                :
+				case "GRAPHIC"                   :
+				case "LONG VARCHAR FOR BIT DATA" :
+				case "VARCHAR () FOR BIT DATA"   :
+				case "VARBIN"                    :
+				case "BINARY"                    :
+				case "CHAR () FOR BIT DATA"      :
+				case "LONG VARCHAR"              :
+				case "CHARACTER"                 :
+				case "CHAR"                      :
+				case "VARCHAR"                   :
+					ci.Length = size;
+					break;
+			}
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
@@ -185,7 +226,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
 		{
 			var type = DataTypes.FirstOrDefault(dt => dt.TypeName == columnType);
 
@@ -223,7 +264,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -258,6 +299,48 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.DB2Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "XML"                       : return "DB2Xml";
+				case "DECFLOAT"                  : return "DB2DecimalFloat";
+				case "DBCLOB"                    :
+				case "CLOB"                      : return "DB2Clob";
+				case "BLOB"                      : return "DB2Blob";
+				case "BIGINT"                    : return "DB2Int64";
+				case "LONG VARCHAR FOR BIT DATA" :
+				case "VARCHAR () FOR BIT DATA"   :
+				case "VARBIN"                    :
+				case "BINARY"                    :
+				case "CHAR () FOR BIT DATA"      : return "DB2Binary";
+				case "LONG VARGRAPHIC"           :
+				case "VARGRAPHIC"                :
+				case "GRAPHIC"                   :
+				case "LONG VARCHAR"              :
+				case "CHARACTER"                 :
+				case "VARCHAR"                   :
+				case "CHAR"                      : return "DB2String";
+				case "DECIMAL"                   : return "DB2Decimal";
+				case "INTEGER"                   : return "DB2Int32";
+				case "SMALLINT"                  : return "DB2Int16";
+				case "REAL"                      : return "DB2Real";
+				case "DOUBLE"                    : return "DB2Double";
+				case "DATE"                      : return "DB2Date";
+				case "TIME"                      : return "DB2Time";
+				case "TIMESTMP"                  :
+				case "TIMESTAMP"                 : return "DB2TimeStamp";
+				case "ROWID"                     : return "DB2RowId";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override string GetDataSourceName(DbConnection dbConnection)
@@ -317,22 +400,30 @@ namespace LinqToDB.DataProvider.DB2
 				{
 					var schema   = rd.ToString(0);
 					var procname = rd.ToString(1);
-					var length   = ConvertTo<int>.   From(rd["LENGTH"]);
+					var length   = ConvertTo<long?>.From(rd["LENGTH"]);
+					var scale    = ConvertTo<int?>. From(rd["SCALE"]);
 					var mode     = ConvertTo<string>.From(rd[4]);
 
-					return new ProcedureParameterInfo
+					var ppi = new ProcedureParameterInfo
 					{
 						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
 						ParameterName = rd.ToString(2),
 						DataType      = rd.ToString(3),
 						Ordinal       = ConvertTo<int>.From(rd["ORDINAL"]),
-						Length        = length,
-						Precision     = length,
-						Scale         = ConvertTo<int>.From(rd["SCALE"]),
 						IsIn          = mode.Contains("IN"),
 						IsOut         = mode.Contains("OUT"),
 						IsResult      = false
 					};
+
+					var ci = new ColumnInfo { DataType = ppi.DataType };
+
+					SetColumnParameters(ci, length, scale);
+
+					ppi.Length    = ci.Length;
+					ppi.Precision = ci.Precision;
+					ppi.Scale     = ci.Scale;
+
+					return ppi;
 				},@"
 					SELECT
 						PROCSCHEMA,

@@ -17,22 +17,20 @@ namespace LinqToDB.Reflection
 			//
 			var type = typeof(T);
 
-			if (type.IsValueType)
+			if (type.IsValueTypeEx())
 			{
 				_createInstance = () => default(T);
 			}
 			else
 			{
-				var ctor = type.IsAbstract ?
-					null :
-					type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, Type.EmptyTypes, null);
+				var ctor = type.IsAbstractEx() ? null : type.GetDefaultConstructorEx();
 
 				if (ctor == null)
 				{
 					Expression<Func<T>> mi;
 
-					if (type.IsAbstract) mi = () => ThrowAbstractException();
-					else                 mi = () => ThrowException();
+					if (type.IsAbstractEx()) mi = () => ThrowAbstractException();
+					else                     mi = () => ThrowException();
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
 
@@ -44,26 +42,25 @@ namespace LinqToDB.Reflection
 				}
 			}
 
-			foreach (var memberInfo in type.GetMembers(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var memberInfo in type.GetPublicInstanceMembersEx())
 			{
-				if (memberInfo.MemberType == MemberTypes.Field ||
-					memberInfo.MemberType == MemberTypes.Property && ((PropertyInfo)memberInfo).GetIndexParameters().Length == 0)
+				if (memberInfo.IsFieldEx() || memberInfo.IsPropertyEx() && ((PropertyInfo)memberInfo).GetIndexParameters().Length == 0)
 					_members.Add(memberInfo);
 			}
 
 			// Add explicit iterface implementation properties support
 			// Or maybe we should support all private fields/properties?
 			//
-			var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods).ToList();
+			var interfaceMethods = type.GetInterfacesEx().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods).ToList();
 
 			if (interfaceMethods.Count > 0)
 			{
-				foreach (var pi in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic))
+				foreach (var pi in type.GetNonPublicPropertiesEx())
 				{
 					if (pi.GetIndexParameters().Length == 0)
 					{
-						var getMethod = pi.GetGetMethod(true);
-						var setMethod = pi.GetSetMethod(true);
+						var getMethod = pi.GetGetMethodEx(true);
+						var setMethod = pi.GetSetMethodEx(true);
 
 						if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
 							(setMethod == null || interfaceMethods.Contains(setMethod)))
@@ -95,7 +92,7 @@ namespace LinqToDB.Reflection
 		static readonly List<MemberInfo> _members = new List<MemberInfo>();
 		static readonly IObjectFactory   _objectFactory;
 
-		public TypeAccessor()
+		internal TypeAccessor()
 		{
 			foreach (var member in _members)
 				AddMember(new MemberAccessor(this, member));

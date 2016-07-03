@@ -12,6 +12,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleSchemaProvider : SchemaProviderBase
 	{
+		public OracleSchemaProvider(string providerName)
+		{
+			_providerName = providerName;
+		}
+
+		readonly string _providerName;
+
 		protected override string GetDataSourceName(DbConnection dbConnection)
 		{
 			return ((dynamic)dbConnection).HostName;
@@ -95,10 +102,10 @@ namespace LinqToDB.DataProvider.Oracle
 					Name         = c.Field<string>("COLUMN_NAME"),
 					DataType     = c.Field<string>("DATATYPE"),
 					IsNullable   = Converter.ChangeTypeTo<string>(c["NULLABLE"]) == "Y",
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ID"]),
-					Length       = Converter.ChangeTypeTo<int> (c["LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int> (c["PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["SCALE"]),
+					Ordinal      = Converter.ChangeTypeTo<int>   (c["ID"]),
+					Length       = Converter.ChangeTypeTo<long?> (c["LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int?>  (c["PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int?>  (c["SCALE"]),
 					IsIdentity   = false,
 				}
 			).ToList();
@@ -173,17 +180,17 @@ namespace LinqToDB.DataProvider.Oracle
 					ProcedureID   = schema + "." + name,
 					ParameterName = pp.Field<string>("ARGUMENT_NAME"),
 					DataType      = pp.Field<string>("DATA_TYPE"),
-					Ordinal       = Converter.ChangeTypeTo<int>(pp["POSITION"]),
-					Length        = Converter.ChangeTypeTo<int>(pp["DATA_LENGTH"]),
-					Precision     = Converter.ChangeTypeTo<int>(pp["DATA_PRECISION"]),
-					Scale         = Converter.ChangeTypeTo<int>(pp["DATA_SCALE"]),
+					Ordinal       = Converter.ChangeTypeTo<int>  (pp["POSITION"]),
+					Length        = Converter.ChangeTypeTo<long?>(pp["DATA_LENGTH"]),
+					Precision     = Converter.ChangeTypeTo<int?> (pp["DATA_PRECISION"]),
+					Scale         = Converter.ChangeTypeTo<int?> (pp["DATA_SCALE"]),
 					IsIn          = direction.StartsWith("IN"),
 					IsOut         = direction.EndsWith("OUT"),
 				}
 			).ToList();
 		}
 
-		protected override string GetDbType(string columnType, DataTypeInfo dataType, int length, int prec, int scale)
+		protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale)
 		{
 			switch (columnType)
 			{
@@ -195,9 +202,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetDbType(columnType, dataType, length, prec, scale);
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (columnType == "NUMBER" && precision > 0 && scale == 0)
+			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
 			{
 				if (precision <  3) return typeof(sbyte);
 				if (precision <  5) return typeof(short);
@@ -205,45 +212,77 @@ namespace LinqToDB.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
-			if (columnType.StartsWith("TIMESTAMP"))
-				return columnType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
+			if (dataType.StartsWith("TIMESTAMP"))
+				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
-				case "OBJECT"                         : return DataType.Variant;
-				case "BFILE"                          : return DataType.VarBinary;
-				case "BINARY_DOUBLE"                  : return DataType.Double;
-				case "BINARY_FLOAT"                   : return DataType.Single;
-				case "BLOB"                           : return DataType.Blob;
-				case "CHAR"                           : return DataType.Char;
-				case "CLOB"                           : return DataType.Text;
-				case "DATE"                           : return DataType.DateTime;
-				case "FLOAT"                          : return DataType.Decimal;
-				case "INTERVAL DAY TO SECOND"         : return DataType.Time;
-				case "INTERVAL YEAR TO MONTH"         : return DataType.Int64;
-				case "LONG"                           : return DataType.Text;
-				case "LONG RAW"                       : return DataType.Binary;
-				case "NCHAR"                          : return DataType.NChar;
-				case "NCLOB"                          : return DataType.NText;
-				case "NUMBER"                         : return DataType.Decimal;
-				case "NVARCHAR2"                      : return DataType.NVarChar;
-				case "RAW"                            : return DataType.Binary;
-				case "VARCHAR2"                       : return DataType.VarChar;
-				case "XMLTYPE"                        : return DataType.Xml;
-				case "ROWID"                          : return DataType.VarChar;
+				case "OBJECT"                 : return DataType.Variant;
+				case "BFILE"                  : return DataType.VarBinary;
+				case "BINARY_DOUBLE"          : return DataType.Double;
+				case "BINARY_FLOAT"           : return DataType.Single;
+				case "BLOB"                   : return DataType.Blob;
+				case "CHAR"                   : return DataType.Char;
+				case "CLOB"                   : return DataType.Text;
+				case "DATE"                   : return DataType.DateTime;
+				case "FLOAT"                  : return DataType.Decimal;
+				case "INTERVAL DAY TO SECOND" : return DataType.Time;
+				case "INTERVAL YEAR TO MONTH" : return DataType.Int64;
+				case "LONG"                   : return DataType.Text;
+				case "LONG RAW"               : return DataType.Binary;
+				case "NCHAR"                  : return DataType.NChar;
+				case "NCLOB"                  : return DataType.NText;
+				case "NUMBER"                 : return DataType.Decimal;
+				case "NVARCHAR2"              : return DataType.NVarChar;
+				case "RAW"                    : return DataType.Binary;
+				case "VARCHAR2"               : return DataType.VarChar;
+				case "XMLTYPE"                : return DataType.Xml;
+				case "ROWID"                  : return DataType.VarChar;
 				default:
 					if (dataType.StartsWith("TIMESTAMP"))
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
-
 					break;
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return _providerName == ProviderName.OracleManaged ? "Oracle.ManagedDataAccess.Types" : "Oracle.DataAccess.Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "BFILE"                          : return "OracleBFile";
+				case "RAW"                            :
+				case "LONG RAW"                       : return "OracleBinary";
+				case "BLOB"                           : return "OracleBlob";
+				case "CLOB"                           : return "OracleClob";
+				case "DATE"                           : return "OracleDate";
+				case "BINARY_DOUBLE"                  :
+				case "BINARY_FLOAT"                   :
+				case "NUMBER"                         : return "OracleDecimal";
+				case "INTERVAL DAY TO SECOND"         : return "OracleIntervalDS";
+				case "INTERVAL YEAR TO MONTH"         : return "OracleIntervalYM";
+				case "NCHAR"                          :
+				case "LONG"                           :
+				case "ROWID"                          :
+				case "CHAR"                           : return "OracleString";
+				case "TIMESTAMP"                      : return "OracleTimeStamp";
+				case "TIMESTAMP WITH LOCAL TIME ZONE" : return "OracleTimeStampLTZ";
+				case "TIMESTAMP WITH TIME ZONE"       : return "OracleTimeStampTZ";
+				case "XMLTYPE"                        : return "OracleXmlType";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

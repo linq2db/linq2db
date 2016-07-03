@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
@@ -24,10 +25,23 @@ namespace LinqToDB
 			MappingSchema       = DataProvider.MappingSchema;
 		}
 
+		public DataContext([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] string connectionString)
+		{
+			if (dataProvider     == null) throw new ArgumentNullException("dataProvider");
+			if (connectionString == null) throw new ArgumentNullException("connectionString");
+
+			DataProvider     = dataProvider;
+			ConnectionString = connectionString;
+			ContextID        = DataProvider.Name;
+			MappingSchema    = DataProvider.MappingSchema;
+		}
+
 		public string        ConfigurationString { get; private set; }
+		public string        ConnectionString    { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ContextID           { get; set;         }
 		public MappingSchema MappingSchema       { get; set;         }
+		public bool          InlineParameters    { get; set;         }
 		public string        LastQuery           { get; set;         }
 
 		private bool _keepConnectionAlive;
@@ -60,23 +74,72 @@ namespace LinqToDB
 			set { _isMarsEnabled = value; }
 		}
 
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get
+			{
+				if (_dataConnection != null)
+					return _dataConnection.QueryHints;
+
+				return _queryHints ?? (_queryHints = new List<string>());
+			}
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get
+			{
+				if (_dataConnection != null)
+					return _dataConnection.NextQueryHints;
+
+				return _nextQueryHints ?? (_nextQueryHints = new List<string>());
+			}
+		}
+
 		internal int LockDbManagerCounter;
 
 		DataConnection _dataConnection;
 
 		internal DataConnection GetDataConnection()
 		{
-			return _dataConnection ?? (_dataConnection = new DataConnection(ConfigurationString));
+			if (_dataConnection == null)
+			{
+				_dataConnection = ConnectionString != null
+					? new DataConnection(DataProvider, ConnectionString)
+					: new DataConnection(ConfigurationString);
+
+				if (_queryHints != null && _queryHints.Count > 0)
+				{
+					_dataConnection.QueryHints.AddRange(_queryHints);
+					_queryHints = null;
+				}
+
+				if (_nextQueryHints != null && _nextQueryHints.Count > 0)
+				{
+					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
+					_nextQueryHints = null;
+				}
+			}
+
+			return _dataConnection;
 		}
 
 		internal void ReleaseQuery()
 		{
-			LastQuery = _dataConnection.LastQuery;
-
-			if (_dataConnection != null && LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+			if (_dataConnection != null)
 			{
-				_dataConnection.Dispose();
-				_dataConnection = null;
+				LastQuery = _dataConnection.LastQuery;
+
+				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				{
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
+
+					_dataConnection.Dispose();
+					_dataConnection = null;
+				}
 			}
 		}
 
@@ -159,16 +222,21 @@ namespace LinqToDB
 			var dc = new DataContext(0)
 			{
 				ConfigurationString = ConfigurationString,
+				ConnectionString    = ConnectionString,
 				KeepConnectionAlive = KeepConnectionAlive,
 				DataProvider        = DataProvider,
 				ContextID           = ContextID,
 				MappingSchema       = MappingSchema,
+				InlineParameters    = InlineParameters,
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 				dc._dataConnection = _dataConnection.Transaction != null ?
 					new DataConnection(DataProvider, _dataConnection.Transaction) :
 					new DataConnection(DataProvider, _dataConnection.Connection);
+
+			dc.QueryHints.    AddRange(QueryHints);
+			dc.NextQueryHints.AddRange(NextQueryHints);
 
 			return dc;
 		}
@@ -182,9 +250,30 @@ namespace LinqToDB
 				if (OnClosing != null)
 					OnClosing(this, EventArgs.Empty);
 
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints);
+
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
+		}
+
+		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
+		{
+			var dct = new DataContextTransaction(this);
+
+			dct.BeginTransaction(level);
+
+			return dct;
+		}
+
+		public virtual DataContextTransaction BeginTransaction(bool autoCommitOnDispose = true)
+		{
+			var dct = new DataContextTransaction(this);
+
+			dct.BeginTransaction();
+
+			return dct;
 		}
 	}
 }

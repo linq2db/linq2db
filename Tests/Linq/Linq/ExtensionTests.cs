@@ -18,34 +18,34 @@ namespace Tests.Linq
 			public int? Value1;
 		}
 
-		[Test]
-		public void TableName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void TableName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>().TableName("Parent").ToList();
 		}
 
-		[Test]
-		public void DatabaseName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void DatabaseName(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>().DatabaseName("TestData").ToList();
 		}
 
-		[Test]
-		public void OwnerName([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void OwnerName(string context)
 		{
 			using (var db = GetDataContext(context))
-				db.GetTable<Parent>().OwnerName("dbo").ToList();
+				db.GetTable<Parent>().SchemaName("dbo").ToList();
 		}
 
-		[Test]
-		public void AllNames([IncludeDataContexts(ProviderName.SqlServer2008)] string context)
+		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
+		public void AllNames(string context)
 		{
 			using (var db = GetDataContext(context))
 				db.GetTable<ParenTable>()
 					.DatabaseName("TestData")
-					.OwnerName("dbo")
+					.SchemaName("dbo")
 					.TableName("Parent")
 					.ToList();
 		}

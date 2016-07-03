@@ -16,13 +16,15 @@ namespace LinqToDB
 	{
 		#region Table Helpers
 
-		static public ITable<T> GetTable<T>(this IDataContext dataContext)
+		[LinqTunnel]
+		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
 			return new Table<T>(dataContext);
 		}
 
-		static public ITable<T> GetTable<T>(
+		[LinqTunnel]
+		public static ITable<T> GetTable<T>(
 			this IDataContext dataContext,
 			object instance,
 			[NotNull] MethodInfo methodInfo,
@@ -50,10 +52,10 @@ namespace LinqToDB
 					args.Add(Expression.Constant(parameters[i], type.IsByRef ? type.GetElementType() : type));
 				}
 
-				expr = Expression.Call(Expression.Constant(instance), methodInfo, args); 
+				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
 			}
 			else
-				expr = Expression.Call(Expression.Constant(instance), methodInfo); 
+				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo); 
 
 			return new Table<T>(dataContext, expr);
 		}
@@ -78,7 +80,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TResult> Compile<TDc,TResult>(
+		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
@@ -105,7 +107,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
+		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
@@ -135,7 +137,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
+		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
@@ -168,7 +170,7 @@ namespace LinqToDB
 		/// <typeparam name="TResult">
 		/// Returned type of the delegate returned by the method.
 		/// </typeparam>
-		static public Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
+		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			[NotNull] this IDataContext dataContext,
 			[NotNull] Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
@@ -182,15 +184,17 @@ namespace LinqToDB
 
 		#region Insert
 
-		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj)
+		public static int Insert<T>([NotNull] this IDataContextInfo dataContextInfo, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			return Query<T>.Insert(dataContextInfo, obj);
+			return Query<T>.Insert(dataContextInfo, obj, tableName, databaseName, schemaName);
 		}
 
-		public static int Insert<T>(this IDataContext dataContext, T obj)
+		public static int Insert<T>(this IDataContext dataContext, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
-			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj);
+			return Query<T>.Insert(DataContextInfo.Create(dataContext), obj, tableName, databaseName, schemaName);
 		}
 
 		#endregion
@@ -288,16 +292,25 @@ namespace LinqToDB
 		public static void DropTable<T>([NotNull] this IDataContextInfo dataContextInfo,
 			string tableName    = null,
 			string databaseName = null,
-			string ownerName    = null)
+			string schemaName    = null)
 		{
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
-			Query<T>.DropTable(dataContextInfo, tableName, databaseName, ownerName);
+			Query<T>.DropTable(dataContextInfo, tableName, databaseName, schemaName);
 		}
 
-		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string ownerName = null)
+		public static void DropTable<T>([NotNull] this IDataContext dataContext, string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
-			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, ownerName);
+			Query<T>.DropTable(DataContextInfo.Create(dataContext), tableName, databaseName, schemaName);
+		}
+
+		public static void DropTable<T>([NotNull] this ITable<T> table, string tableName = null, string databaseName = null, string schemaName = null)
+		{
+			if (table == null) throw new ArgumentNullException("table");
+
+			var tbl = (Table<T>)table;
+
+			Query<T>.DropTable(tbl.DataContextInfo, tableName ?? tbl.TableName, databaseName ?? tbl.DatabaseName, schemaName ?? tbl.SchemaName);
 		}
 
 		#endregion

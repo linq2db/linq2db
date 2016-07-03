@@ -1,7 +1,9 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -25,7 +27,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			AutoDetectProvider = true;
 
-			DataConnection.AddDataProvider(ProviderName.SqlServer, _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(ProviderName.SqlServer,     _sqlServerDataProvider2008);
+			DataConnection.AddDataProvider(ProviderName.SqlServer2014, _sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2012);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2008);
 			DataConnection.AddDataProvider(_sqlServerDataProvider2005);
@@ -36,8 +39,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
 		{
-			if (css.ElementInformation.Source == null ||
-			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+			if (DataConnection.IsMachineConfig(css))
 				return null;
 
 			switch (css.ProviderName)
@@ -49,29 +51,52 @@ namespace LinqToDB.DataProvider.SqlServer
 						goto case "SqlServer";
 					break;
 
+				case "SqlServer2000"         :
+				case "SqlServer.2000"        : return _sqlServerDataProvider2000;
+				case "SqlServer2005"         :
+				case "SqlServer.2005"        : return _sqlServerDataProvider2005;
+				case "SqlServer2008"         :
+				case "SqlServer.2008"        : return _sqlServerDataProvider2008;
+				case "SqlServer2012"         :
+				case "SqlServer.2012"        : return _sqlServerDataProvider2012;
+				case "SqlServer2014"         :
+				case "SqlServer.2014"        : return _sqlServerDataProvider2012;
+
 				case "SqlServer"             :
 				case "System.Data.SqlClient" :
 
-					if (css.Name.Contains("2000") ||
-					    css.Name.Contains("2005") ||
-					    css.Name.Contains("2008") ||
-					    css.Name.Contains("2012"))
-						break;
+					if (css.Name.Contains("2000")) return _sqlServerDataProvider2000;
+					if (css.Name.Contains("2005")) return _sqlServerDataProvider2005;
+					if (css.Name.Contains("2008")) return _sqlServerDataProvider2008;
+					if (css.Name.Contains("2012")) return _sqlServerDataProvider2012;
+					if (css.Name.Contains("2014")) return _sqlServerDataProvider2012;
 
 					if (AutoDetectProvider)
 					{
 						try
 						{
-							using (var conn = new SqlConnection(css.ConnectionString))
+							var connectionString = css.ConnectionString;
+
+							using (var conn = new SqlConnection(connectionString))
 							{
 								conn.Open();
 
-								switch (conn.ServerVersion.Split('.')[0])
+								int version;
+
+								if (int.TryParse(conn.ServerVersion.Split('.')[0], out version))
 								{
-									case  "8" : return _sqlServerDataProvider2000;
-									case  "9" :	return _sqlServerDataProvider2005;
-									case "10" :	return _sqlServerDataProvider2008;
-									case "11" : return _sqlServerDataProvider2012;
+									switch (version)
+									{
+										case  8 : return _sqlServerDataProvider2000;
+										case  9 : return _sqlServerDataProvider2005;
+										case 10 : return _sqlServerDataProvider2008;
+										case 11 : return _sqlServerDataProvider2012;
+										case 12 : return _sqlServerDataProvider2012;
+										default :
+											if (version > 12)
+												return _sqlServerDataProvider2012;
+											break;
+									}
 								}
 							}
 						}
@@ -126,8 +151,22 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static void ResolveSqlTypes([NotNull] Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException("assembly");
-			new AssemblyResolver(assembly, "Microsoft.SqlServer.Types");
+			var types = assembly.GetTypes();
+
+			SqlHierarchyIdType = types.First(t => t.Name == "SqlHierarchyId");
+			SqlGeographyType   = types.First(t => t.Name == "SqlGeography");
+			SqlGeometryType    = types.First(t => t.Name == "SqlGeometry");
+		}
+
+		internal static Type SqlHierarchyIdType;
+		internal static Type SqlGeographyType;
+		internal static Type SqlGeometryType;
+
+		public static void SetSqlTypes(Type sqlHierarchyIdType, Type sqlGeographyType, Type sqlGeometryType)
+		{
+			SqlHierarchyIdType = sqlHierarchyIdType;
+			SqlGeographyType   = sqlGeographyType;
+			SqlGeometryType    = sqlGeometryType;
 		}
 
 		#endregion
@@ -171,5 +210,66 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.ProviderSpecific;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+//		public static int MultipleRowsCopy<T>(DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000)
+//		{
+//			return dataConnection.BulkCopy(
+//				new BulkCopyOptions
+//				{
+//					BulkCopyType = BulkCopyType.MultipleRows,
+//					MaxBatchSize = maxBatchSize,
+//				}, source);
+//		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       maxBatchSize       = null,
+			int?                       bulkCopyTimeout    = null,
+			bool                       keepIdentity       = false,
+			bool                       checkConstraints   = false,
+			int                        notifyAfter        = 0,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					MaxBatchSize       = maxBatchSize,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					KeepIdentity       = keepIdentity,
+					CheckConstraints   = checkConstraints,
+					NotifyAfter        = notifyAfter,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
+		}
+
+		#endregion
+
+		#region Extensions
+
+		public static void SetIdentityInsert<T>(this DataConnection dataConnection, ITable<T> table, bool isOn)
+		{
+			dataConnection.Execute("SET IDENTITY_INSERT ");
+		}
+
+		#endregion
+
+		public static class Sql
+		{
+			public const string OptionRecompile = "OPTION(RECOMPILE)";
+		}
+
+		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
+		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
+using LinqToDB.Data;
+
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -46,14 +50,14 @@ namespace LinqToDB.DataProvider.Access
 		public override string ConnectionNamespace { get { return typeof(OleDbConnection).Namespace; } }
 		public override Type   DataReaderType      { get { return typeof(OleDbDataReader);           } }
 		
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new OleDbConnection(connectionString);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new AccessSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -61,6 +65,11 @@ namespace LinqToDB.DataProvider.Access
 		public override ISqlOptimizer GetSqlOptimizer()
 		{
 			return _sqlOptimizer;
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return typeof(OleDbConnection).IsSameOrParentOf(connection.GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -137,5 +146,20 @@ namespace LinqToDB.DataProvider.Access
 
 			DropFileDatabase(databaseName, ".mdb");
 		}
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+
+			return new AccessBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

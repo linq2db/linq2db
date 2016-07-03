@@ -6,8 +6,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Reflection;
-
 	using Mapping;
 
 	public class SqlTable : ISqlTableSource
@@ -73,12 +71,12 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var column in ed.Columns)
 			{
-				Add(new SqlField
+				var field = new SqlField
 				{
 					SystemType       = column.MemberType,
 					Name             = column.MemberName,
 					PhysicalName     = column.ColumnName,
-					Nullable         = column.CanBeNull,
+					CanBeNull        = column.CanBeNull,
 					IsPrimaryKey     = column.IsPrimaryKey,
 					PrimaryKeyOrder  = column.PrimaryKeyOrder,
 					IsIdentity       = column.IsIdentity,
@@ -89,8 +87,36 @@ namespace LinqToDB.SqlQuery
 					Length           = column.Length,
 					Precision        = column.Precision,
 					Scale            = column.Scale,
+					CreateFormat     = column.CreateFormat,
 					ColumnDescriptor = column,
-				});
+				};
+
+				Add(field);
+
+				if (field.DataType == DataType.Undefined)
+				{
+					var dataType = mappingSchema.GetDataType(field.SystemType);
+
+					if (dataType.DataType == DataType.Undefined)
+					{
+						var  canBeNull = field.CanBeNull;
+
+						dataType = mappingSchema.GetUnderlyingDataType(field.SystemType, ref canBeNull);
+
+						field.CanBeNull = canBeNull;
+					}
+
+					field.DataType = dataType.DataType;
+
+					if (field.Length == null)
+						field.Length = dataType.Length;
+
+					if (field.Precision == null)
+						field.Precision = dataType.Precision;
+
+					if (field.Scale == null)
+						field.Scale = dataType.Scale;
+				}
 			}
 
 			var identityField = GetIdentityField();
@@ -173,15 +199,14 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public string             Name            { get; set; }
-		public string             Alias           { get; set; }
-		public string             Database        { get; set; }
-		public string             Owner           { get; set; }
-		public Type               ObjectType      { get; set; }
-		public string             PhysicalName    { get; set; }
-		public List<MemberInfo[]> LoadWith        { get; set; }
-		public SqlTableType       SqlTableType    { get; set; }
-		public ISqlExpression[]   TableArguments  { get; set; }
+		public string           Name           { get; set; }
+		public string           Alias          { get; set; }
+		public string           Database       { get; set; }
+		public string           Owner          { get; set; }
+		public Type             ObjectType     { get; set; }
+		public string           PhysicalName   { get; set; }
+		public SqlTableType     SqlTableType   { get; set; }
+		public ISqlExpression[] TableArguments { get; set; }
 
 		public Dictionary<string,SqlField> Fields { get; private set; }
 
@@ -311,9 +336,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		bool ISqlExpression.CanBeNull()
+		bool ISqlExpression.CanBeNull
 		{
-			return true;
+			get { return true; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

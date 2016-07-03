@@ -69,11 +69,11 @@ namespace LinqToDB.DataProvider.SqlCe
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME"),
 					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
-					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length     = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity = false,
 				}
 			).ToList();
@@ -91,21 +91,17 @@ namespace LinqToDB.DataProvider.SqlCe
 			return Path.GetFileNameWithoutExtension(dbConnection.Database);
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType == null)
+			switch (dataType.ToLower())
 			{
-				switch (columnType.ToLower())
-				{
-					//case "text" : return typeof(string);
-					default     : throw new InvalidOperationException();
-				}
+				case "tinyint" : return typeof(byte);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{
@@ -115,7 +111,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case "float"            : return DataType.Double;
 				case "money"            : return DataType.Money;
 				case "bit"              : return DataType.Boolean;
-				case "tinyint"          : return DataType.SByte;
+				case "tinyint"          : return DataType.Byte;
 				case "bigint"           : return DataType.Int64;
 				case "uniqueidentifier" : return DataType.Guid;
 				case "varbinary"        : return DataType.VarBinary;
@@ -130,6 +126,39 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "System.Data.SqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "varbinary"        :
+				case "rowversion"       :
+				case "image"            : return "SqlBinary";
+				case "binary"           : return "SqlBinary";
+				case "tinyint"          : return "SqlByte";
+				case "datetime"         : return "SqlDateTime";
+				case "bit"              : return "SqlBoolean";
+				case "smallint"         : return "SqlInt16";
+				case "numeric"          :
+				case "decimal"          : return "SqlDecimal";
+				case "int"              : return "SqlInt32";
+				case "real"             : return "SqlSingle";
+				case "float"            : return "SqlDouble";
+				case "money"            : return "SqlMoney";
+				case "bigint"           : return "SqlInt64";
+				case "nvarchar"         :
+				case "nchar"            :
+				case "ntext"            : return "SqlString";
+				case "uniqueidentifier" : return "SqlGuid";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

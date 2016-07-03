@@ -6,14 +6,14 @@ namespace LinqToDB.DataProvider.DB2
 
 	class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{
-		public DB2LUWSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public DB2LUWSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new DB2LUWSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new DB2LUWSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override DB2Version Version

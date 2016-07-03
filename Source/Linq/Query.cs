@@ -92,10 +92,18 @@ namespace LinqToDB.Linq
 			Expression       = parseContext.Builder.OriginalExpression;
 		}
 
+		void ClearParameters()
+		{
+			foreach (var query in Queries)
+				foreach (var sqlParameter in query.Parameters)
+					sqlParameter.Expression = null;
+		}
+
 		#endregion
 
 		#region Properties & Fields
 
+		public          bool              DoNotChache;
 		public          Query<T>          Next;
 		public readonly List<QueryInfo>   Queries = new List<QueryInfo>(1);
 		public          ISqlOptimizer     SqlOptimizer;
@@ -132,7 +140,7 @@ namespace LinqToDB.Linq
 						if (Configuration.Linq.GenerateExpressionTest)
 						{
 							var testFile = new ExpressionTestGenerator().GenerateSource(expr);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 							DataConnection.WriteTraceLine(
 								"Expression test code generated: '" + testFile + "'.", 
 								DataConnection.TraceSwitch.DisplayName);
@@ -147,7 +155,7 @@ namespace LinqToDB.Linq
 						{
 							if (!Configuration.Linq.GenerateExpressionTest)
 							{
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 								DataConnection.WriteTraceLine(
 									"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
 									DataConnection.TraceSwitch.DisplayName);
@@ -157,8 +165,11 @@ namespace LinqToDB.Linq
 							throw;
 						}
 
-						query.Next = _first;
-						_first = query;
+						if (!query.DoNotChache)
+						{
+							query.Next = _first;
+							_first = query;
+						}
 					}
 				}
 			}
@@ -224,6 +235,8 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
 
+			ClearParameters();
+
 			GetElement = (ctx,db,expr,ps) => NonQueryQuery(db, expr, ps);
 		}
 
@@ -235,8 +248,11 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = SetCommand(dataContext, expr, parameters, 0);
-				return dataContext.ExecuteNonQuery(query);
+				query = SetCommand(dataContext, expr, parameters, 0, true);
+
+				var res = dataContext.ExecuteNonQuery(query);
+
+				return res;
 			}
 			finally
 			{
@@ -255,6 +271,8 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 2)
 				throw new InvalidOperationException();
 
+			ClearParameters();
+
 			GetElement = (ctx,db,expr,ps) => NonQueryQuery2(db, expr, ps);
 		}
 
@@ -266,14 +284,14 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = SetCommand(dataContext, expr, parameters, 0);
+				query = SetCommand(dataContext, expr, parameters, 0, true);
 
 				var n = dataContext.ExecuteNonQuery(query);
 
 				if (n != 0)
 					return n;
 
-				query = SetCommand(dataContext, expr, parameters, 1);
+				query = SetCommand(dataContext, expr, parameters, 1, true);
 				return dataContext.ExecuteNonQuery(query);
 			}
 			finally
@@ -297,6 +315,8 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
 
+			ClearParameters();
+
 			GetElement = (ctx,db,expr,ps) => ScalarQuery<TS>(db, expr, ps);
 		}
 
@@ -308,7 +328,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = SetCommand(dataContext, expr, parameters, 0);
+				query = SetCommand(dataContext, expr, parameters, 0, true);
 				return (TS)dataContext.ExecuteScalar(query);
 			}
 			finally
@@ -346,7 +366,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = SetCommand(dataContext, expr, parameters, queryNumber);
+				query = SetCommand(dataContext, expr, parameters, queryNumber, true);
 
 				using (var dr = dataContext.ExecuteReader(query))
 					while (dr.Read())
@@ -362,18 +382,30 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx)
+		object SetCommand(IDataContext dataContext, Expression expr, object[] parameters, int idx, bool clearQueryHints)
 		{
 			lock (this)
 			{
 				SetParameters(expr, parameters, idx);
-				return dataContext.SetQuery(Queries[idx]);
+
+				var query = Queries[idx];
+
+				if (idx == 0 && (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0))
+				{
+					query.QueryHints = new List<string>(dataContext.QueryHints);
+					query.QueryHints.AddRange(dataContext.NextQueryHints);
+
+					if (clearQueryHints)
+						dataContext.NextQueryHints.Clear();
+				}
+
+				return dataContext.SetQuery(query);
 			}
 		}
 
 		ConcurrentDictionary<Type,Func<object,object>> _enumConverters;
 
-		void SetParameters(Expression expr, object[] parameters, int idx)
+		internal void SetParameters(Expression expr, object[] parameters, int idx)
 		{
 			foreach (var p in Queries[idx].Parameters)
 			{
@@ -384,8 +416,8 @@ namespace LinqToDB.Linq
 					var type  = value.GetType();
 					var etype = type.GetItemType();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArguments()[0].IsEnum))
+					if (etype == null || etype == typeof(object) || etype.IsEnumEx() ||
+						(type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>) && etype.GetGenericArgumentsEx()[0].IsEnumEx()))
 					{
 						var values = new List<object>();
 
@@ -397,7 +429,7 @@ namespace LinqToDB.Linq
 							{
 								var valueType = v.GetType();
 
-								if (valueType.ToNullableUnderlying().IsEnum)
+								if (valueType.ToNullableUnderlying().IsEnumEx())
 								{
 									if (_enumConverters == null)
 										_enumConverters = new ConcurrentDictionary<Type,Func<object,object>>();
@@ -438,7 +470,7 @@ namespace LinqToDB.Linq
 
 		public string GetSqlText(IDataContext dataContext, Expression expr, object[] parameters, int idx)
 		{
-			var query = SetCommand(dataContext, expr, parameters, 0);
+			var query = SetCommand(dataContext, expr, parameters, 0, false);
 			return dataContext.GetSqlText(query);
 		}
 
@@ -462,8 +494,9 @@ namespace LinqToDB.Linq
 				SelectQuery = new SelectQuery();
 			}
 
-			public SelectQuery SelectQuery { get; set; }
-			public object      Context     { get; set; }
+			public SelectQuery  SelectQuery { get; set; }
+			public object       Context     { get; set; }
+			public List<string> QueryHints  { get; set; }
 
 			public SqlParameter[] GetParameters()
 			{
@@ -518,15 +551,16 @@ namespace LinqToDB.Linq
 				getter = Expression.PropertyOrField(expr.GetBody(getter), "Value");
 
 			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext.MappingSchema,
-				getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
+				dataContext, getter, getter, exprParam, Expression.Parameter(typeof(object[]), "ps"), field.Name.Replace('.', '_'));
 
 			return param;
 		}
 
 		#region Insert
 
-		public static int Insert(IDataContextInfo dataContextInfo, T obj)
+		public static int Insert(
+			IDataContextInfo dataContextInfo, T obj,
+			string tableName = null, string databaseName = null, string schemaName = null)
 		{
 			if (Equals(default(T), obj))
 				return 0;
@@ -541,6 +575,10 @@ namespace LinqToDB.Linq
 					{
 						var sqlTable = new SqlTable<T>(dataContextInfo.MappingSchema);
 						var sqlQuery = new SelectQuery { QueryType = QueryType.Insert };
+
+						if (tableName    != null) sqlTable.PhysicalName = tableName;
+						if (databaseName != null) sqlTable.Database     = databaseName;
+						if (schemaName   != null) sqlTable.Owner        = schemaName;
 
 						sqlQuery.Insert.Into = sqlTable;
 
@@ -838,7 +876,11 @@ namespace LinqToDB.Linq
 							if (Configuration.Linq.IgnoreEmptyUpdate)
 								return 0;
 
-							throw new LinqException("There are no fields to update in the type '{0}'.".Args(sqlTable.Name));
+							throw new LinqException(
+								(keys.Count == sqlTable.Fields.Count ?
+									"There are no fields to update in the type '{0}'. No PK is defined or all fields are keys." :
+									"There are no fields to update in the type '{0}'.")
+								.Args(sqlTable.Name));
 						}
 
 						foreach (var field in fields)
@@ -858,7 +900,7 @@ namespace LinqToDB.Linq
 
 							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
 
-							if (field.Nullable)
+							if (field.CanBeNull)
 								sqlQuery.IsParameterDependent = true;
 						}
 
@@ -913,7 +955,7 @@ namespace LinqToDB.Linq
 
 							sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
 
-							if (field.Nullable)
+							if (field.CanBeNull)
 								sqlQuery.IsParameterDependent = true;
 						}
 
@@ -934,7 +976,7 @@ namespace LinqToDB.Linq
 		public static ITable<T> CreateTable(IDataContextInfo dataContextInfo,
 			string         tableName       = null,
 			string         databaseName    = null,
-			string         ownerName       = null,
+			string         schemaName      = null,
 			string         statementHeader = null,
 			string         statementFooter = null,
 			DefaulNullable defaulNullable  = DefaulNullable.None)
@@ -944,18 +986,12 @@ namespace LinqToDB.Linq
 
 			if (tableName    != null) sqlTable.PhysicalName = tableName;
 			if (databaseName != null) sqlTable.Database     = databaseName;
-			if (ownerName    != null) sqlTable.Owner        = ownerName;
+			if (schemaName   != null) sqlTable.Owner        = schemaName;
 
 			sqlQuery.CreateTable.Table           = sqlTable;
 			sqlQuery.CreateTable.StatementHeader = statementHeader;
 			sqlQuery.CreateTable.StatementFooter = statementFooter;
 			sqlQuery.CreateTable.DefaulNullable  = defaulNullable;
-
-			foreach (var field in sqlTable.Fields.Values)
-			{
-				if (field.DataType == DataType.Undefined)
-					field.DataType = dataContextInfo.MappingSchema.GetDataType(field.SystemType);
-			}
 
 			var query = new Query<int>
 			{
@@ -973,7 +1009,7 @@ namespace LinqToDB.Linq
 
 			if (tableName    != null) table = table.TableName   (tableName);
 			if (databaseName != null) table = table.DatabaseName(databaseName);
-			if (ownerName    != null) table = table.OwnerName   (ownerName);
+			if (schemaName    != null) table = table.SchemaName  (schemaName);
 
 			return table;
 		}
@@ -1017,7 +1053,9 @@ namespace LinqToDB.Linq
 			if (Queries.Count != 1)
 				throw new InvalidOperationException();
 
-			GetElement = (ctx,db,expr,ps) => RunQuery(ctx, db,expr, ps, mapper);
+			ClearParameters();
+
+			GetElement = (ctx,db,expr,ps) => RunQuery(ctx, db, expr, ps, mapper);
 		}
 
 		TE RunQuery<TE>(
@@ -1033,7 +1071,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = SetCommand(dataContext, expr, parameters, 0);
+				query = SetCommand(dataContext, expr, parameters, 0, true);
 
 				using (var dr = dataContext.ExecuteReader(query))
 					while (dr.Read())
@@ -1105,6 +1143,9 @@ namespace LinqToDB.Linq
 		{
 			var query   = GetQuery();
 			var mapInfo = new MapInfo { Expression = expression };
+
+			ClearParameters();
+
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 
@@ -1112,6 +1153,7 @@ namespace LinqToDB.Linq
 		{
 			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> Expression;
 			public            Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>  Mapper;
+			public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> MapperExpression;
 		}
 
 		static IEnumerable<T> Map(
@@ -1122,8 +1164,13 @@ namespace LinqToDB.Linq
 			object[]                 ps,
 			MapInfo                  mapInfo)
 		{
+			var closeQueryContext = false;
+
 			if (queryContext == null)
+			{
+				closeQueryContext = true;
 				queryContext = new QueryContext(dataContextInfo, expr, ps);
+			}
 
 			var isFaulted = false;
 
@@ -1133,13 +1180,15 @@ namespace LinqToDB.Linq
 
 				if (mapper == null)
 				{
-					var mapperExpression = mapInfo.Expression.Transform(e =>
+					mapInfo.MapperExpression = mapInfo.Expression.Transform(e =>
 					{
 						var ex = e as ConvertFromDataReaderExpression;
 						return ex != null ? ex.Reduce(dr) : e;
 					}) as Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>>;
 
-					mapInfo.Mapper = mapper = mapperExpression.Compile();
+					// IT : # MapperExpression.Compile()
+					//
+					mapInfo.Mapper = mapper = mapInfo.MapperExpression.Compile();
 				}
 
 				T result;
@@ -1168,6 +1217,11 @@ namespace LinqToDB.Linq
 					mapInfo.Mapper = mapInfo.Expression.Compile();
 					result         = mapInfo.Mapper(queryContext, dataContextInfo.DataContext, dr, expr, ps);
 				}
+				finally
+				{
+					if (closeQueryContext)
+						queryContext.Close();
+				}
 
 				yield return result;
 			}
@@ -1177,6 +1231,9 @@ namespace LinqToDB.Linq
 		{
 			var query   = GetQuery();
 			var mapInfo = new MapInfo2 { Expression = expression };
+
+			ClearParameters();
+
 			GetIEnumerable = (ctx,db,expr,ps) => Map(query(db, expr, ps, 0), ctx, db, expr, ps, mapInfo);
 		}
 

@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security;
 
 using LinqToDB;
 
@@ -18,7 +17,7 @@ using LinqToDB;
 [assembly: AssemblyFileVersion     (LinqToDBConstants.FullVersionString)]
 [assembly: CLSCompliant            (true)]
 [assembly: NeutralResourcesLanguage("en-US")]
-[assembly: AllowPartiallyTrustedCallers]
+[assembly: System.Security.AllowPartiallyTrustedCallers]
 
 [assembly: InternalsVisibleTo("linq2db.Tests, PublicKey=" +
 	"00240000048000009400000006020000002400005253413100040000010001006f967cbdfdadb7" +

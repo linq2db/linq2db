@@ -42,7 +42,7 @@ namespace LinqToDB.Linq
 
 		public static IDataContextInfo Create(IDataContext dataContext)
 		{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 			if (dataContext == null) throw new ArgumentNullException("dataContext");
 			return new DataContextInfo(dataContext);
 #else

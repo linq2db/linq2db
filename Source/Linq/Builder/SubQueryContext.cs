@@ -39,8 +39,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var le = (LambdaExpression)Expression;
 
-				if (le.Parameters.Count == 1 && null != Expression.Find(
-					e => e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable()))
+				if (le.Parameters.Count == 2 ||
+					le.Parameters.Count == 1 && null != Expression.Find(
+						e => e.NodeType == ExpressionType.Call && ((MethodCallExpression)e).IsQueryable()))
 				{
 					if (le.Body.NodeType == ExpressionType.New)
 					{
@@ -125,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 			return base.IsExpression(expression, level, testFlag);
 		}
 
-		internal protected readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
+		protected internal readonly Dictionary<ISqlExpression,int> ColumnIndexes = new Dictionary<ISqlExpression,int>();
 
 		protected virtual int GetIndex(SelectQuery.Column column)
 		{
@@ -148,7 +149,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override void SetAlias(string alias)
 		{
+#if NETFX_CORE
+			if (alias.Contains("<"))
+#else
 			if (alias.Contains('<'))
+#endif
 				return;
 
 			if (SelectQuery.From.Tables[0].Alias == null)

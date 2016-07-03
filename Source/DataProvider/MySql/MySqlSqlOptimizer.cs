@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml.Schema;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -35,6 +36,23 @@ namespace LinqToDB.DataProvider.MySql
 									var list = new List<ISqlExpression>(func.Parameters) { be.Expr2 };
 									return new SqlFunction(be.SystemType, "Concat", list.ToArray());
 								}
+							}
+							else if (be.Expr1 is SqlBinaryExpression && be.Expr1.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
+							{
+								var list = new List<ISqlExpression> { be.Expr2 };
+								var ex   = be.Expr1;
+
+								while (ex is SqlBinaryExpression && ex.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
+								{
+									var bex = (SqlBinaryExpression)ex;
+
+									list.Insert(0, bex.Expr2);
+									ex = bex.Expr1;
+								}
+
+								list.Insert(0, ex);
+
+								return new SqlFunction(be.SystemType, "Concat", list.ToArray());
 							}
 
 							return new SqlFunction(be.SystemType, "Concat", be.Expr1, be.Expr2);

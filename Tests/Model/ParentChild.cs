@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -26,11 +29,17 @@ namespace Tests.Model
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public List<GrandChild> GrandChildren;
 
+		[Association(ThisKey = "ParentID, Value1", OtherKey = "ParentID, Value1")]
+		public Parent ParentTest;
+
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 		public IEnumerable<Child> Children2
 		{
 			get { return Children; }
 		}
+
+		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+		public ImmutableList<Child> Children3;
 
 		public override bool Equals(object obj)
 		{
@@ -75,6 +84,12 @@ namespace Tests.Model
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
 		public List<GrandChild> GrandChildren;
+
+		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID", CanBeNull = false)]
+		public List<GrandChild> GrandChildren1;
+
+		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
+		public GrandChild[] GrandChildren2;
 
 		public override bool Equals(object obj)
 		{
@@ -174,7 +189,20 @@ namespace Tests.Model
 	public class Parent4 : IEquatable<Parent4>, IComparable
 	{
 		[Column] public int       ParentID;
-		[Column] public TypeValue Value1;
+		public TypeValue _Value1;
+		[Column] public TypeValue Value1
+		{
+			get { return _Value1; }
+			set
+			{
+				if ((int)value == 1)
+				{
+					
+				}
+
+				_Value1 = value;
+			}
+		}
 
 		public override bool Equals(object obj)
 		{
@@ -197,6 +225,11 @@ namespace Tests.Model
 		public int CompareTo(object obj)
 		{
 			return ParentID - ((Parent4)obj).ParentID;
+		}
+
+		public override string ToString()
+		{
+			return "ParentID: {0}, Value1: {1}".Args(ParentID, Value1);
 		}
 	}
 
@@ -501,6 +534,39 @@ namespace Tests.Model
 			where T : class 
 		{
 			return _ctx.GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+		}
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock1<T>()
+		{
+			throw new InvalidOperationException();
+		}
+
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock1<int>()).GetGenericMethodDefinition();
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
+			where T : class 
+		{
+			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
+		}
+	}
+
+	public static class Functions1
+	{
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		static ITable<T> WithTabLock<T>()
+		{
+			throw new InvalidOperationException();
+		}
+
+		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock<int>()).GetGenericMethodDefinition();
+
+		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
+		public static ITable<T> WithTabLock<T>(this IDataContext ctx)
+			where T : class 
+		{
+			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
 		}
 	}
 }

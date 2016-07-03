@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
@@ -14,6 +12,11 @@ using LinqToDB.Data;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
+using NUnit.Framework.Internal.Builders;
+
+//[assembly: Parallelizable]
 
 namespace Tests
 {
@@ -23,18 +26,61 @@ namespace Tests
 	{
 		static TestBase()
 		{
+			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+
+			var traceCount = 0;
+
+			DataConnection.TurnTraceSwitchOn();
+			DataConnection.WriteTraceLine = (s1,s2) =>
+			{
+				Console.WriteLine("{0}: {1}", s2, s1);
+				Debug.WriteLine(s1, s2);
+				if (traceCount++ > 1000)
+					DataConnection.TurnTraceSwitchOn(TraceLevel.Off);
+			};
+
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
 
-			var providerListFile =
-				File.Exists(@"..\..\UserDataProviders.txt") ?
-					@"..\..\UserDataProviders.txt" :
-					@"..\..\DefaultDataProviders.txt";
+			var assemblyPath = typeof(TestBase).Assembly.CodeBase;
 
-			UserProviders.AddRange(
+			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
+
+			Environment.CurrentDirectory = assemblyPath;
+
+			var providerListFile =
+				File.Exists(Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt")) ?
+					Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt") :
+					Path.Combine(assemblyPath, @"..\..\DefaultDataProviders.txt");
+
+			UserProviders =
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())
-					.Where (s => s.Length > 0 && !s.StartsWith("--")));
+					.Where (s => s.Length > 0 && !s.StartsWith("--"))
+					.Select(s =>
+					{
+						var ss = s.Split('*');
+						switch (ss.Length)
+						{
+							case 0 : return null;
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
+						}
+					})
+					.ToDictionary(i => i.Name);
+
+			//var map = new ExeConfigurationFileMap();
+			//map.ExeConfigFilename = Path.Combine(
+			//	Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Substring("file:///".Length)),
+			//	@"..\..\App.config");
+
+			//var config = ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
+
+			//DataConnection.SetConnectionStrings(config);
+
+			foreach (var provider in UserProviders.Values)
+				if (provider.ConnectionString != null)
+					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -47,14 +93,18 @@ namespace Tests
 					default                   : return null;
 				}
 			};
-
-			OpenHost();
 		}
 
 		const int IP = 22654;
+		static bool _isHostOpen;
 
 		static void OpenHost()
 		{
+			if (_isHostOpen)
+				return;
+
+			_isHostOpen = true;
+
 			var host = new ServiceHost(new LinqService { AllowUpdates = true }, new Uri("net.tcp://localhost:" + IP));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
@@ -77,11 +127,19 @@ namespace Tests
 			host.Open();
 		}
 
-		public static readonly List<string> UserProviders = new List<string>();
-		public static readonly List<string> Providers     = new List<string>
+		public class UserProviderInfo
+		{
+			public string Name;
+			public string ConnectionString;
+		}
+
+		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
+
+		static readonly List<string> _providers = new List<string>
 		{
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
+			ProviderName.SqlServer2014,
 			ProviderName.SqlCe,
 			ProviderName.SQLite,
 			ProviderName.Access,
@@ -90,66 +148,136 @@ namespace Tests
 			ProviderName.DB2,
 			ProviderName.Informix,
 			ProviderName.Firebird,
-			ProviderName.Oracle,
+			ProviderName.OracleNative,
+			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
 			ProviderName.Sybase,
+			ProviderName.SapHana,
+			TestProvName.SqlAzure,
+			TestProvName.MariaDB,
 		};
 
-		[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-		public class DataContextsAttribute : ValuesAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public abstract class BaseDataContextSourceAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
-			public DataContextsAttribute(params string[] except)
+			protected BaseDataContextSourceAttribute(bool includeLinqService, string[] providers)
 			{
-				Except = except;
+				_includeLinqService = includeLinqService;
+				_providerNames      = providers;
 			}
 
-			const bool IncludeLinqService = true;
+			readonly bool     _includeLinqService;
+			readonly string[] _providerNames;
 
-			public string[] Except             { get; set; }
-			public string[] Include            { get; set; }
-			public bool     ExcludeLinqService { get; set; }
-
-			public override IEnumerable GetData(ParameterInfo parameter)
+			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
 			{
-				if (Include != null)
+				var name = method.Name + "." + provider;
+
+				if (isLinqService)
+					name += ".LinqService";
+
+				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+			}
+
+			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
+			{
+				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
+					.Cast<IApplyToTest>()
+					.Union(method.GetCustomAttributes<IgnoreAttribute>(true))
+					.ToList();
+
+				var builder = new NUnitTestCaseBuilder();
+
+				TestMethod test = null;
+				var hasTest = false;
+
+				foreach (var provider in _providerNames)
 				{
-					var list = Include.Intersect(
-						IncludeLinqService ? 
-							UserProviders.Concat(UserProviders.Select(p => p + ".LinqService")) :
-							UserProviders).
-						ToArray();
+					var isIgnore = !UserProviders.ContainsKey(provider);
 
-					return list;
-				}
+					var data = new TestCaseParameters(new object[] { provider });
 
-				var providers = new List<string>();
+					test = builder.BuildTestMethod(method, suite, data);
 
-				foreach (var providerName in Providers)
-				{
-					if (Except != null && Except.Contains(providerName))
-						continue;
+					foreach (var attr in explic)
+						attr.ApplyToTest(test);
 
-					if (!UserProviders.Contains(providerName))
-						continue;
+					test.Properties.Set(PropertyNames.Category, provider);
+					SetName(test, method, provider, false);
 
-					providers.Add(providerName);
-
-					if (IncludeLinqService && !ExcludeLinqService)
+					if (isIgnore)
 					{
-						providers.Add(providerName + ".LinqService");
+						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+							test.RunState = RunState.Ignored;
+
+						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+						continue;
+					}
+
+					hasTest = true;
+
+					yield return test;
+
+					if (_includeLinqService)
+					{
+						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
+						test = builder.BuildTestMethod(method, suite, data);
+
+						foreach (var attr in explic)
+							attr.ApplyToTest(test);
+
+						test.Properties.Set(PropertyNames.Category, provider);
+						SetName(test, method, provider, true);
+
+						yield return test;
 					}
 				}
 
-				return providers.ToArray();
+				if (!hasTest)
+					yield return test;
 			}
 		}
 
-		public class IncludeDataContextsAttribute : DataContextsAttribute
+		[AttributeUsage(AttributeTargets.Method)]
+		public class DataContextSourceAttribute : BaseDataContextSourceAttribute
 		{
-			public IncludeDataContextsAttribute(params string[] include)
+			public DataContextSourceAttribute()
+				: this(true, null)
 			{
-				Include = include;
+			}
+
+			public DataContextSourceAttribute(params string[] except)
+				: this(true, except)
+			{
+			}
+
+			public DataContextSourceAttribute(bool includeLinqService, params string[] except)
+				: base(includeLinqService,
+					_providers.Where(providerName => except == null || !except.Contains(providerName)).ToArray())
+			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method)]
+		public class IncludeDataContextSourceAttribute : BaseDataContextSourceAttribute
+		{
+			public IncludeDataContextSourceAttribute(params string[] include)
+				: this(false, include)
+			{
+			}
+
+			public IncludeDataContextSourceAttribute(bool includeLinqService, params string[] include)
+				: base(includeLinqService, include)
+			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method)]
+		public class NorthwindDataContextAttribute : IncludeDataContextSourceAttribute
+		{
+			public NorthwindDataContextAttribute() : base("Northwind")
+			{
 			}
 		}
 
@@ -157,6 +285,8 @@ namespace Tests
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
+				OpenHost();
+
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 				var dx  = new TestServiceModelDataContext(IP) { Configuration = str };
 
@@ -187,7 +317,7 @@ namespace Tests
 			TestOnePerson(1, "John", persons);
 		}
 
-		protected void TestPerson(int id, string firstName, IQueryable<Person> persons)
+		protected void TestPerson(int id, string firstName, IQueryable<IPerson> persons)
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
@@ -195,7 +325,7 @@ namespace Tests
 			Assert.AreEqual(firstName, person.FirstName);
 		}
 
-		protected void TestJohn(IQueryable<Person> persons)
+		protected void TestJohn(IQueryable<IPerson> persons)
 		{
 			TestPerson(1, "John", persons);
 		}
@@ -293,6 +423,7 @@ namespace Tests
 
 						foreach (var p in _parent)
 						{
+							p.ParentTest    = p;
 							p.Children      = Child.     Where(c => c.ParentID == p.ParentID).ToList();
 							p.GrandChildren = GrandChild.Where(c => c.ParentID == p.ParentID).ToList();
 							p.Types         = Types.FirstOrDefault(t => t.ID == p.ParentID);
@@ -391,7 +522,7 @@ namespace Tests
 			}
 		}
 
-		private          List<Child> _child;
+		protected        List<Child> _child;
 		protected IEnumerable<Child>  Child
 		{
 			get
@@ -412,7 +543,8 @@ namespace Tests
 						}
 					}
 
-				return _child;
+				foreach (var item in _child)
+					yield return item;
 			}
 		}
 

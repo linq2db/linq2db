@@ -111,7 +111,11 @@ CREATE TABLE LinqDataTypes
 (
 	ID             int,
 	MoneyValue     decimal(10,4),
-	DateTimeValue  datetime,
+	DateTimeValue  datetime
+-- SKIP MySql BEGIN
+	(3)
+-- SKIP MySql END
+	,
 	DateTimeValue2 datetime NULL,
 	BoolValue      boolean,
 	GuidValue      char(36),
@@ -169,6 +173,7 @@ CREATE TABLE AllTypes
 	enumDataType        enum('Green', 'Red', 'Blue') NULL,
 	setDataType         set('one', 'two')            NULL,
 	intUnsignedDataType int unsigned                 NULL,
+	boolDataType        bool                         NULL,
 
 	CONSTRAINT PK_AllTypes PRIMARY KEY CLUSTERED (ID)
 )
@@ -204,7 +209,8 @@ INSERT INTO AllTypes
 
 	bitDataType,
 	enumDataType,
-	setDataType
+	setDataType,
+	boolDataType
 )
 SELECT
 	NULL,
@@ -233,6 +239,7 @@ SELECT
 	NULL,
 	NULL,
 
+	NULL,
 	NULL,
 	NULL,
 	NULL
@@ -266,6 +273,40 @@ SELECT
 
 	B'101',
 	'Green',
-	'one'
+	'one',
+	1
 
+GO
+
+
+DROP TABLE TestSameName
+GO
+
+DROP TABLE test_schema.TestSameName
+GO
+
+DROP SCHEMA test_schema
+GO
+
+CREATE SCHEMA test_schema
+GO
+
+CREATE TABLE test_schema.TestSameName
+(
+	ID int NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE TABLE TestSameName
+(
+	ID int NOT NULL PRIMARY KEY
+)
+GO
+
+CREATE OR REPLACE
+VIEW PersonView
+AS
+	SELECT `Person`.`PersonID` AS `ID`
+	FROM `Person`
+	WHERE (`Person`.`Gender` = 'M')
 GO

@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 
 		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
 		{
-#if SILVERLIGHT
+#if SILVERLIGHT || NETFX_CORE
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
 
 			DataContextInfo = dataContextInfo;
@@ -50,10 +50,17 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				if (_sqlTextHolder == null)
+				var hasQueryHints = DataContextInfo.DataContext.QueryHints.Count > 0 || DataContextInfo.DataContext.NextQueryHints.Count > 0;
+
+				if (_sqlTextHolder == null || hasQueryHints)
 				{
-					var info = GetQuery(Expression, true);
-					_sqlTextHolder = info.GetSqlText(DataContextInfo.DataContext, Expression, Parameters, 0);
+					var info    = GetQuery(Expression, true);
+					var sqlText = info.GetSqlText(DataContextInfo.DataContext, Expression, Parameters, 0);
+
+					if (hasQueryHints)
+						return sqlText;
+
+					_sqlTextHolder = sqlText;
 				}
 
 				return _sqlTextHolder;

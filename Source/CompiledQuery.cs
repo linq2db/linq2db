@@ -83,7 +83,7 @@ namespace LinqToDB
 
 								var qtype  = type.GetGenericType(expr.Type);
 								var helper = (ITableHelper)Activator.CreateInstance(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
+									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArgumentsEx()[0]));
 
 								return helper.CallTable(query, expr, ps, qtype != null);
 							}
@@ -99,7 +99,7 @@ namespace LinqToDB
 						{
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
-								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
+								.MakeGenericType(pi.Type.GetGenericArgumentsEx()[0]));
 							return helper.CallTable(query, pi, ps, true);
 						}
 

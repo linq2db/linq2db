@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlField()
 		{
-			Nullable = true;
+			CanBeNull = true;
 		}
 
 		public SqlField(SqlField field)
@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 			Alias            = field.Alias;
 			Name             = field.Name;
 			PhysicalName     = field.PhysicalName;
-			Nullable         = field.Nullable;
+			CanBeNull        = field.CanBeNull;
 			IsPrimaryKey     = field.IsPrimaryKey;
 			PrimaryKeyOrder  = field.PrimaryKeyOrder;
 			IsIdentity       = field.IsIdentity;
@@ -30,13 +30,13 @@ namespace LinqToDB.SqlQuery
 			Length           = field.Length;
 			Precision        = field.Precision;
 			Scale            = field.Scale;
+			CreateFormat     = field.CreateFormat;
 			ColumnDescriptor = field.ColumnDescriptor;
 		}
 
 		public Type             SystemType       { get; set; }
 		public string           Alias            { get; set; }
 		public string           Name             { get; set; }
-		public bool             Nullable         { get; set; }
 		public bool             IsPrimaryKey     { get; set; }
 		public int              PrimaryKeyOrder  { get; set; }
 		public bool             IsIdentity       { get; set; }
@@ -44,9 +44,10 @@ namespace LinqToDB.SqlQuery
 		public bool             IsUpdatable      { get; set; }
 		public DataType         DataType         { get; set; }
 		public string           DbType           { get; set; }
-		public int              Length           { get; set; }
-		public int              Precision        { get; set; }
-		public int              Scale            { get; set; }
+		public int?             Length           { get; set; }
+		public int?             Precision        { get; set; }
+		public int?             Scale            { get; set; }
+		public string           CreateFormat     { get; set; }
 
 		public ISqlTableSource  Table            { get; set; }
 		public ColumnDescriptor ColumnDescriptor { get; set; }
@@ -73,10 +74,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
-		{
-			return Nullable;
-		}
+		public bool CanBeNull { get; set; }
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

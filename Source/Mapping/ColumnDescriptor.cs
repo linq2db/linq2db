@@ -7,6 +7,9 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Data;
 	using Expressions;
+
+	using Extensions;
+
 	using Reflection;
 
 	public class ColumnDescriptor
@@ -17,12 +20,12 @@ namespace LinqToDB.Mapping
 			MemberAccessor = memberAccessor;
 			MemberInfo     = memberAccessor.MemberInfo;
 
-			if (MemberInfo.MemberType == MemberTypes.Field)
+			if (MemberInfo.IsFieldEx())
 			{
 				var fieldInfo = (FieldInfo)MemberInfo;
 				MemberType = fieldInfo.FieldType;
 			}
-			else if (MemberInfo.MemberType == MemberTypes.Property)
+			else if (MemberInfo.IsPropertyEx())
 			{
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType = propertyInfo.PropertyType;
@@ -35,9 +38,11 @@ namespace LinqToDB.Mapping
 			IsDiscriminator = columnAttribute.IsDiscriminator;
 			DataType        = columnAttribute.DataType;
 			DbType          = columnAttribute.DbType;
-			Length          = columnAttribute.Length;
-			Precision       = columnAttribute.Precision;
-			Scale           = columnAttribute.Scale;
+			CreateFormat    = columnAttribute.CreateFormat;
+
+			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
+			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
+			if (columnAttribute.HasScale    ()) Scale     =  columnAttribute.Scale;
 
 			var defaultCanBeNull = false;
 
@@ -85,6 +90,20 @@ namespace LinqToDB.Mapping
 					PrimaryKeyOrder = a.Order;
 				}
 			}
+
+			if (DbType == null || DataType == DataType.Undefined)
+			{
+				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberInfo, attr => attr.Configuration);
+
+				if (a != null)
+				{
+					if (DbType == null)
+						DbType = a.DbType;
+
+					if (DataType == DataType.Undefined && a.DataType.HasValue)
+						DataType = a.DataType.Value;
+				}
+			}
 		}
 
 		public MappingSchema  MappingSchema   { get; private set; }
@@ -103,9 +122,10 @@ namespace LinqToDB.Mapping
 		public bool           IsPrimaryKey    { get; private set; }
 		public int            PrimaryKeyOrder { get; private set; }
 		public bool           CanBeNull       { get; private set; }
-		public int            Length          { get; private set; }
-		public int            Precision       { get; private set; }
-		public int            Scale           { get; private set; }
+		public int?           Length          { get; private set; }
+		public int?           Precision       { get; private set; }
+		public int?           Scale           { get; private set; }
+		public string         CreateFormat    { get; private set; }
 
 		Func<object,object> _getter;
 

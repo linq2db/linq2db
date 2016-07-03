@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
@@ -8,6 +9,7 @@ namespace LinqToDB.Linq
 	{
 		SelectQuery    SelectQuery { get; }
 		object         Context     { get; set; }
+		List<string>   QueryHints  { get; }
 		SqlParameter[] GetParameters();
 	}
 }

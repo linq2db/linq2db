@@ -3,8 +3,6 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -13,13 +11,14 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug.4.5\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FW4</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -39,6 +38,24 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>linq2db.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseMono|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release.4.5\</OutputPath>
+    <DefineConstants>TRACE;FW4;MONO</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugMono|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug.4.5\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FW4;OVERRIDETOSTRING1</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
@@ -54,8 +71,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
+    <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />
+    <Compile Include="DataProvider\Access\AccessBulkCopy.cs" />
+    <Compile Include="DataProvider\BasicMerge.cs" />
+    <Compile Include="DataProvider\BasicBulkCopy.cs" />
+    <Compile Include="DataProvider\DB2\DB2BulkCopy.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2LUWSqlBuilder.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlOptimizer.cs" />
@@ -63,17 +89,24 @@
     <Compile Include="DataProvider\DB2\DB2DataProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2Factory.cs" />
     <Compile Include="DataProvider\DB2\DB2MappingSchema.cs" />
+    <Compile Include="DataProvider\DB2\DB2Types.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSchemaProvider.cs" />
     <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2IdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2\DB2Merge.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlOptimizer.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdTools.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSchemaProvider.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdBulkCopy.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdMerge.cs" />
     <Compile Include="DataProvider\IDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataProvider\Informix\InformixMerge.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlOptimizer.cs" />
     <Compile Include="DataProvider\Informix\InformixTools.cs" />
     <Compile Include="DataProvider\Informix\InformixFactory.cs" />
@@ -81,8 +114,14 @@
     <Compile Include="DataProvider\Informix\InformixMappingSchema.cs" />
     <Compile Include="DataProvider\Informix\InformixSchemaProvider.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
+    <Compile Include="DataProvider\Informix\InformixBulkCopy.cs" />
+    <Compile Include="DataProvider\MultipleRowsHelper.cs" />
+    <Compile Include="DataProvider\MySql\MySqlBulkCopy.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlOptimizer.cs" />
     <Compile Include="DataProvider\MySql\MySqlTools.cs" />
+    <Compile Include="DataProvider\Oracle\OracleXmlTable.cs" />
+    <Compile Include="DataProvider\Oracle\OracleMerge.cs" />
+    <Compile Include="DataProvider\Oracle\OracleBulkCopy.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlOptimizer.cs" />
     <Compile Include="DataProvider\Oracle\OracleTools.cs" />
     <Compile Include="DataProvider\Oracle\OracleSchemaProvider.cs" />
@@ -90,6 +129,7 @@
     <Compile Include="DataProvider\Oracle\OracleDataProvider.cs" />
     <Compile Include="DataProvider\Oracle\OracleMappingSchema.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
+    <Compile Include="DataProvider\PostgreSQL\PostgreSQLBulkCopy.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlOptimizer.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLTools.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSchemaProvider.cs" />
@@ -98,18 +138,53 @@
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLMappingSchema.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\SapHana\CalculationViewInputParametersExpressionAttribute.cs" />
+    <Compile Include="DataProvider\SapHana\GetHanaSchemaOptions.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaOdbcSchemaProvider.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaOdbcSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaOdbcDataProvider.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaBulkCopy.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaDataProvider.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaFactory.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaMappingSchema.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSchemaProvider.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaTools.cs" />
+    <Compile Include="DataProvider\SapHana\ViewWithParametersTableSchema.cs" />
+    <Compile Include="DataProvider\SqlCe\SqlCeBulkCopy.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlOptimizer.cs" />
+    <Compile Include="DataProvider\SQLite\SQLiteBulkCopy.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlOptimizer.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlOptimizer.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerBulkCopy.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerMerge.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlOptimizer.cs" />
+    <Compile Include="DataProvider\Sybase\SybaseBulkCopy.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlOptimizer.cs" />
+    <Compile Include="DataProvider\DataTools.cs" />
     <Compile Include="Data\BulkCopyOptions.cs" />
+    <Compile Include="Data\BulkCopyRowsCopied.cs" />
     <Compile Include="Data\BulkCopyType.cs" />
+    <Compile Include="Data\CommandInfo.cs" />
+    <Compile Include="Data\DataConnection.Async.cs" />
+    <Compile Include="Data\DataConnectionTransaction.cs" />
+    <Compile Include="Data\DataReaderAsync.cs" />
     <Compile Include="Data\TraceInfo.cs" />
+    <Compile Include="Expressions\GetItemExpression.cs" />
+    <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\DropBuilder.cs" />
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
+    <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
+    <Compile Include="Expressions\IGenericInfoProvider.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
+    <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />
@@ -136,7 +211,6 @@
     <Compile Include="DataProvider\Access\AccessSchemaProvider.cs" />
     <Compile Include="DataProvider\AssemblyResolver.cs" />
     <Compile Include="DataProvider\BulkCopyReader.cs" />
-    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdDataProvider.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdFactory.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdMappingSchema.cs" />
@@ -316,7 +390,9 @@
     <Compile Include="Linq\Query.cs" />
     <Compile Include="Linq\QueryContext.cs" />
     <Compile Include="Linq\ReflectionHelper.cs" />
+    <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
     <Compile Include="Sql\Sql.ExpressionAttribute.cs" />
@@ -385,6 +461,7 @@
     <Compile Include="ServiceModel\ServiceModelDataContext.cs" />
     <Compile Include="ServiceModel\ServiceModelDataReader.cs" />
     <Compile Include="ServiceModel\SoapDataContext.cs" />
+    <Compile Include="DataProvider\DynamicDataProviderBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

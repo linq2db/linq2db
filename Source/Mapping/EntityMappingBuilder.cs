@@ -3,10 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Mapping
 {
-	using SqlQuery;
-
 	public class EntityMappingBuilder<T>
 	{
 		#region Init
@@ -33,6 +33,12 @@ namespace LinqToDB.Mapping
 			return _builder.GetAttributes<TA>(typeof(T));
 		}
 
+		public TA[] GetAttributes<TA>(Type type)
+			where TA : Attribute
+		{
+			return _builder.GetAttributes<TA>(type);
+		}
+
 		public TA[] GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : Attribute
 		{
@@ -43,6 +49,16 @@ namespace LinqToDB.Mapping
 			where TA : Attribute
 		{
 			var attrs = GetAttributes<TA>();
+
+			return string.IsNullOrEmpty(Configuration) ?
+				attrs.Where(a => string.IsNullOrEmpty(configGetter(a))).ToArray() :
+				attrs.Where(a => Configuration ==    configGetter(a)). ToArray();
+		}
+
+		public TA[] GetAttributes<TA>(Type type, Func<TA,string> configGetter)
+			where TA : Attribute
+		{
+			var attrs = GetAttributes<TA>(type);
 
 			return string.IsNullOrEmpty(Configuration) ?
 				attrs.Where(a => string.IsNullOrEmpty(configGetter(a))).ToArray() :
@@ -161,7 +177,7 @@ namespace LinqToDB.Mapping
 			return SetAttribute(
 				() =>
 				{
-					var a = new TableAttribute { Configuration = Configuration };
+					var a = new TableAttribute { Configuration = Configuration, IsColumnAttributeRequired = false };
 					setColumn(a);
 					return a;
 				},
@@ -181,22 +197,23 @@ namespace LinqToDB.Mapping
 			Func<TA>        getNew,
 			Action<TA>      modifyExisting,
 			Func<TA,string> configGetter,
-			Func<TA,TA>     overrideAttribute = null)
+			Func<TA,TA>     overrideAttribute)
 			where TA : Attribute
 		{
 			var attrs = GetAttributes(typeof(T), configGetter);
 
 			if (attrs.Length == 0)
 			{
-				if (overrideAttribute != null)
-				{
-					var attr = _builder.MappingSchema.GetAttribute(typeof(T), configGetter);
+				var attr = _builder.MappingSchema.GetAttribute(typeof(T), configGetter);
 
-					if (attr != null)
-					{
-						modifyExisting(overrideAttribute(attr));
-						return this;
-					}
+				if (attr != null)
+				{
+					var na = overrideAttribute(attr);
+
+					modifyExisting(na);
+					_builder.HasAttribute(typeof(T), na);
+
+					return this;
 				}
 
 				_builder.HasAttribute(typeof(T), getNew());
@@ -227,6 +244,9 @@ namespace LinqToDB.Mapping
 					e is MemberExpression     ? ((MemberExpression)    e).Member :
 					e is MethodCallExpression ? ((MethodCallExpression)e).Method : null;
 
+				if (e is MemberExpression && memberInfo.ReflectedTypeEx() != typeof(T))
+					memberInfo = typeof(T).GetPropertyEx(memberInfo.Name);
+
 				if (memberInfo == null)
 					throw new ArgumentException(string.Format("'{0}' cant be converted to a class member.", e));
 
@@ -240,7 +260,11 @@ namespace LinqToDB.Mapping
 
 						if (attr != null)
 						{
-							modifyExisting(m, overrideAttribute(attr));
+							var na = overrideAttribute(attr);
+
+							modifyExisting(m, na);
+							_builder.HasAttribute(memberInfo, na);
+
 							return;
 						}
 					}

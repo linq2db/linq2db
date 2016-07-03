@@ -25,6 +25,7 @@ namespace Tests.Model
 		}
 
 		public ITable<Person>                 Person                 { get { return this.GetTable<Person>();                 } }
+		public ITable<ComplexPerson>          ComplexPerson          { get { return this.GetTable<ComplexPerson>();          } }
 		public ITable<Patient>                Patient                { get { return this.GetTable<Patient>();                } }
 		public ITable<Doctor>                 Doctor                 { get { return this.GetTable<Doctor>();                 } }
 		public ITable<Parent>                 Parent                 { get { return this.GetTable<Parent>();                 } }

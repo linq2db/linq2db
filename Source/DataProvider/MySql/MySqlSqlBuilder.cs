@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -10,8 +11,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -32,7 +33,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new MySqlSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat { get { return "LIMIT {0}"; } }
@@ -60,22 +61,23 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32         :
-				case DataType.UInt16        :
 				case DataType.Int16         :
+				case DataType.Int32         :
+				case DataType.Int64         :
 					if (createDbType) goto default;
 					StringBuilder.Append("Signed");
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          :
+				case DataType.UInt16        :
+				case DataType.UInt32        :
+				case DataType.UInt64        :
 					if (createDbType) goto default;
 					StringBuilder.Append("Unsigned");
 					break;
 				case DataType.Money         : StringBuilder.Append("Decimal(19,4)");   break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)");   break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime");        break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");         break;
 				case DataType.Double        :
@@ -86,7 +88,7 @@ namespace LinqToDB.DataProvider.MySql
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default                     : base.BuildDataType(type); break;
+				default: base.BuildDataType(type); break;
 			}
 		}
 
@@ -207,14 +209,21 @@ namespace LinqToDB.DataProvider.MySql
 			return value;
 		}
 
-		protected override StringBuilder BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, string alias, ref bool addAlias)
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool           buildTableName,
+			bool           checkParentheses,
+			string         alias,
+			ref bool       addAlias,
+			bool           throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
 				expr,
 				buildTableName && SelectQuery.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
-				ref addAlias);
+				ref addAlias,
+				throwExceptionIfTableNotFound);
 		}
 
 		protected override void BuildInsertOrUpdateQuery()
@@ -261,17 +270,14 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(")");
 		}
 
-		protected override void BuildString(string value)
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
-			base.BuildString(value.Replace("\\", "\\\\"));
+			dynamic p = parameter;
+			return p.MySqlDbType.ToString();
 		}
 
-		protected override void BuildChar(char value)
-		{
-			if (value == '\\')
-				StringBuilder.Append("\\\\");
-			else
-				base.BuildChar(value);
-		}
+#endif
 	}
 }

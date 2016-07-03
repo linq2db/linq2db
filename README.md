@@ -1,5 +1,5 @@
-LINQ to DB
-=========
+LINQ to DB [![build status](https://ci.appveyor.com/api/projects/status/github/linq2db/linq2db)](https://ci.appveyor.com/project/igor-tkachev/linq2db)
+==========
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -7,9 +7,13 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the plus side you get more control and faster access to your data.
 
-See [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
+Visit our [blog](http://blog.linq2db.com/) and see [Wiki](https://github.com/linq2db/linq2db/wiki) for more details.
 
 Code examples and demos can be found [here] (https://github.com/linq2db/examples).
+
+Project Build Status
+--------------------
+[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m/branch/master?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db/branch/master)
 
 Let's get started
 -----------------
@@ -29,6 +33,9 @@ In your `web.config` or `app.config` make sure you have a connection string:
 Now let's create a **POCO** class:
 
 ```c#
+using System;
+using LinqToDB.Mapping;
+
 [Table(Name = "Products")]
 public class Product
 {
@@ -49,7 +56,9 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 {
   public DbNorthwind() : base("Northwind") { }
 
-  public Table<Product> Product { get { return GetTable<Product>(); } }
+  public ITable<Product> Product { get { return GetTable<Product>(); } }
+  public ITable<Category> Category { get { return GetTable<Category>(); } }
+  
   // ... other tables ...
 }
 ```
@@ -59,6 +68,9 @@ We call the base constructor with the "Northwind" parameter. This parameter has 
 And now let's get some data:
 
 ```c#
+using LinqToDB;
+using LinqToDB.Common;
+
 public static List<Product> All()
 {
   using (var db = new DbNorthwind())
@@ -102,21 +114,58 @@ Composing queries
 Rather than concatenating strings we can 'compose' LINQ expressions.  In the example below the final SQL will be different if `onlyActive` is true or false, or if `searchFor` is not null.
 
 ```c#
-using (var db = new DbNorthwind())
+public static List<Product> All(bool onlyActive, string searchFor)
 {
-  var products = from p in db.Product select p;
-
-  if (onlyActive)
+  using (var db = new DbNorthwind())
   {
-    products = from p in products where !p.Discontinued select p;
-  }
+    var products = from p in db.Product 
+                   select p;
 
-  if (searchFor != null)
+    if (onlyActive)
+    {
+      products = from p in products 
+                 where !p.Discontinued 
+                 select p;
+    }
+
+    if (searchFor != null)
+    {
+      products = from p in products 
+                 where p.Name.Contains(searchFor) 
+                 select p;
+    }
+
+    return products.ToList();
+  }
+}
+```
+
+Paging
+-----
+
+A lot of times we need to write code that returns only a subset of the entire dataset. We expand on the previous example to show what a product search function could look like. 
+
+Keep in mind that the code below will query the database twice. Once to find out the total number of records, something that is required by many paging controls, and once to return the actual data.
+
+```c#
+public static List<Product> Search(string searchFor, int currentPage, int pageSize, out int totalRecords)
+{
+  using (var db = new DbNorthwind())
   {
-    products = from p in products where p.Name.Contains(searchFor) select p;
-  }
+    var products = from p in db.Product 
+                   select p;
 
-  return products.ToList();
+    if (searchFor != null)
+    {
+      products = from p in products 
+                 where p.Name.Contains(searchFor) 
+                 select p;
+    }
+
+    totalRecords = products.Count();
+
+    return products.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+  }
 }
 ```
 
@@ -193,7 +242,7 @@ using (var db = new DbNorthwind())
 }
 ```
 
-This inserts all the columns from our Product class, but without retrieving the generated identity value. To do that we can use `InsertWithIndentity`, like this:
+This inserts all the columns from our Product class, but without retrieving the generated identity value. To do that we can use `InsertWithIdentity`, like this:
 
 ```c#
 using (var db = new DbNorthwind())
@@ -297,3 +346,106 @@ using (var db = new DbNorthwind())
     .Delete();
 }
 ```
+
+Bulk Copy
+------
+
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For faster data inserting DO NOT use a transaction. If you use a transaction an adhoc implementation of the bulk copy feature has been added in order to insert multiple lines at once. You get faster results then inserting lines one by one, but it's still slower than the database provider bulk copy. So, DO NOT use transactions whenever you can (Take care of unicity constraints, primary keys, etc. since bulk copy ignores them at insertion)
+
+```c#
+[Table(Name = "ProductsTemp")]
+public class ProductTemp
+{
+  public int ProductID { get; set; }
+
+  [Column(Name = "ProductName"), NotNull]
+  public string Name { get; set; }
+
+  // ... other columns ...
+}
+
+list = List<ProductTemp>
+
+using (var db = new DbNorthwind())
+{
+  db.BulkCopy(list);
+}
+```
+
+Transactions
+------
+
+Using database transactions is easy. All you have to do is call BeginTransaction() on your DataConnection, run one or more queries, and then commit the changes by calling CommitTransaction(). If something happened and you need to roll back your changes you can either call RollbackTransaction() or throw an exception.
+
+```c#
+using (var db = new DbNorthwind())
+{
+  db.BeginTransaction();
+  
+  // ... select / insert / update / delete ...
+
+  if (somethingIsNotRight)
+  {
+    db.RollbackTransaction();
+  }
+  else
+  {
+    db.CommitTransaction();
+  }
+}
+```
+
+Also, you can use .NET built-in TransactionScope class:
+
+```c#
+// don't forget isolation level is serializable by default
+using (var transaction = new TransactionScope()) 
+{
+  using (var db = new DbNorthwind())
+  {
+    ...
+  }
+  transaction.Complete();
+}
+```
+
+MiniProfiler
+------
+
+If you would like to use MiniProfiler from StackExchange you'd need to wrap ProfiledDbConnection around our regular DataConnection.
+
+
+```c#
+public class DbDataContext : DataConnection
+{
+#if !DEBUG
+  public DbDataContext() : base("Northwind") { }
+#else
+  public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
+
+  private static IDataProvider GetDataProvider()
+  {
+    return new SqlServerDataProvider("", SqlServerVersion.v2012);
+  }
+
+  private static IDbConnection GetConnection()
+  {
+    LinqToDB.Common.Configuration.AvoidSpecificDataProviderAPI = true;
+
+    var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+    return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+  }
+#endif
+}
+```
+
+This assumes that you only want to use MiniProfiler while in DEBUG mode and that you are using SQL Server for your database. If you're using a different database you would need to change GetDataProvider() to return the appropriate IDataProvider. For example, if using MySql you would use:
+
+```c#
+private static IDataProvider GetDataProvider()
+{
+  return new LinqToDB.DataProvider.MySql.MySqlDataProvider();
+}
+```        
+
+[![Build status](https://ci.appveyor.com/api/projects/status/4au5v7xm5gi19o8m?svg=true)](https://ci.appveyor.com/project/igor-tkachev/linq2db)

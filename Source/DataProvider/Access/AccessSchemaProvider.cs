@@ -113,10 +113,10 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType   = dt != null ? dt.TypeName : null,
-					Length     = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision  = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
-					IsIdentity = Converter.ChangeTypeTo<int>(c["COLUMN_FLAGS"]) == 90,
+					Length     = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision  = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
+					IsIdentity = Converter.ChangeTypeTo<int>  (c["COLUMN_FLAGS"]) == 90,
 				}
 			).ToList();
 		}
@@ -124,6 +124,11 @@ namespace LinqToDB.DataProvider.Access
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
 			return new List<ForeingKeyInfo>();
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
 		}
 
 		List<ProcedureInfo> _procedures;
@@ -168,21 +173,21 @@ namespace LinqToDB.DataProvider.Access
 
 				for (var i = 0; i < names.Count; ++i)
 				{
-					var  paramName = names[i].Value;
-					var  rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
-					var  dataType  = rawType[0];
-					byte precision = 0;
-					byte scale     = 0;
-					var  size      = 0;
+					var   paramName = names[i].Value;
+					var   rawType   = types[i].Value.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+					var   dataType  = rawType[0];
+					long? size      = null;
+					int?  precision = null;
+					int?  scale     = null;
 
 					if (rawType.Length > 2)
 					{
-						precision = ConvertTo<byte>.From(rawType[1]);
-						scale     = ConvertTo<byte>.From(rawType[2]);
+						precision = ConvertTo<int?>.From(rawType[1]);
+						scale     = ConvertTo<int?>.From(rawType[2]);
 					}
 					else if (rawType.Length > 1)
 					{
-						size      = ConvertTo<int>.From(rawType[1]);
+						size      = ConvertTo<long?>.From(rawType[1]);
 					}
 
 					list.Add(new ProcedureParameterInfo
@@ -204,21 +209,21 @@ namespace LinqToDB.DataProvider.Access
 			return list;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
 		{
-			if (dataType == null)
+			if (dataTypeInfo == null)
 			{
-				switch (columnType.ToLower())
+				switch (dataType.ToLower())
 				{
 					case "text" : return typeof(string);
 					default     : throw new InvalidOperationException();
 				}
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType.ToLower())
 			{

@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,7 +16,8 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		readonly HashSet<Expression> _skippedExpressions = new HashSet<Expression>();
+		readonly HashSet<Expression>                    _skippedExpressions   = new HashSet<Expression>();
+		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new Dictionary<Expression,UnaryExpression>();
 
 		public Expression BuildExpression(IBuildContext context, Expression expression)
 		{
@@ -29,6 +31,28 @@ namespace LinqToDB.Linq.Builder
 
 				switch (expr.NodeType)
 				{
+					case ExpressionType.Convert       :
+					case ExpressionType.ConvertChecked:
+						{
+							if (expr.Type == typeof(object))
+								break;
+
+							var cex = (UnaryExpression)expr;
+
+							_convertedExpressions.Add(cex.Operand, cex);
+
+							var nex = BuildExpression(context, cex.Operand);
+
+							if (nex.Type != cex.Type)
+								nex = cex.Update(nex);
+
+							var ret = new TransformInfo(nex, true);
+
+							_convertedExpressions.Remove(cex.Operand);
+
+							return ret;
+						}
+
 					case ExpressionType.MemberAccess:
 						{
 							if (IsServerSideOnly(expr) || PreferServerSide(expr))
@@ -36,15 +60,74 @@ namespace LinqToDB.Linq.Builder
 
 							var ma = (MemberExpression)expr;
 
-							if (Expressions.ConvertMember(MappingSchema, ma.Member) != null)
+							if (Expressions.ConvertMember(MappingSchema, ma.Expression == null ? null : ma.Expression.Type, ma.Member) != null)
 								break;
 
-							var ctx = GetContext(context, expr);
+							if (ma.Member.IsNullableValueMember())
+								break;
+
+							if (ma.Member.IsNullableHasValueMember())
+							{
+								Expression e = Expression.NotEqual(
+									ma.Expression, Expression.Constant(null, ma.Expression.Type));
+
+								return new TransformInfo(
+									BuildExpression(
+										context,
+										ma.Expression.Type.IsPrimitiveEx() ?
+											Expression.Call(
+												MemberHelper.MethodOf(() => Sql.AsSql(true)),
+												e) :
+											e),
+									true);
+							}
+
+							var ctx = GetContext(context, ma);
 
 							if (ctx != null)
-								return new TransformInfo(ctx.BuildExpression(expr, 0));
+							{
+								if (ma.Type.IsGenericTypeEx() && typeof(IEnumerable<>).IsSameOrParentOf(ma.Type))
+								{
+									var res = ctx.IsExpression(ma, 0, RequestFor.Association);
+
+									if (res.Result)
+									{
+										var table = (TableBuilder.AssociatedTableContext)res.Context;
+										if (table.IsList)
+										{
+											var mexpr = GetMultipleQueryExpression(context, ma, new HashSet<ParameterExpression>());
+											return new TransformInfo(BuildExpression(context, mexpr));
+										}
+									}
+								}
+
+								return new TransformInfo(ctx.BuildExpression(ma, 0));
+							}
 
 							var ex = ma.Expression;
+
+							while (ex is MemberExpression)
+								ex = ((MemberExpression)ex).Expression;
+
+							if (ex is MethodCallExpression)
+							{
+								var ce = (MethodCallExpression)ex;
+
+								if (IsSubQuery(context, ce))
+								{
+									if (!IsMultipleQuery(ce))
+									{
+										var info = GetSubQueryContext(context, ce);
+										var par  = Expression.Parameter(ex.Type);
+										var bex  = info.Context.BuildExpression(ma.Transform(e => e == ex ? par : e), 0);
+
+										if (bex != null)
+											return new TransformInfo(bex);
+									}
+								}
+							}
+
+							ex = ma.Expression;
 
 							if (ex != null && ex.NodeType == ExpressionType.Constant)
 							{
@@ -107,15 +190,27 @@ namespace LinqToDB.Linq.Builder
 									if (!_skippedExpressions.Contains(arg))
 										_skippedExpressions.Add(arg);
 
+								if (IsSubQuery(context, ce))
+								{
+									if (ce.IsQueryable())
+									//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
+									{
+										var ctx = GetContext(context, expr);
+								
+										if (ctx != null)
+											return new TransformInfo(ctx.BuildExpression(expr, 0));
+									}
+								}
+
 								break;
 							}
 
-							if (IsSubQuery(context, ce))
+							if ((_buildMultipleQueryExpressions == null || !_buildMultipleQueryExpressions.Contains(ce)) && IsSubQuery(context, ce))
 							{
-									if (typeof(IEnumerable).IsSameOrParentOf(expr.Type) && expr.Type != typeof(string) && !expr.Type.IsArray)
-									return new TransformInfo(BuildMultipleQuery(context, expr));
+								if (IsMultipleQuery(ce))
+									return new TransformInfo(BuildMultipleQuery(context, ce));
 
-								return new TransformInfo(GetSubQuery(context, ce).BuildExpression(null, 0));
+								return new TransformInfo(GetSubQueryExpression(context, ce));
 							}
 
 							if (IsServerSideOnly(expr) || PreferServerSide(expr))
@@ -147,6 +242,48 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
+		static bool IsMultipleQuery(MethodCallExpression ce)
+		{
+			return typeof(IEnumerable).IsSameOrParentOf(ce.Type) && ce.Type != typeof(string) && !ce.Type.IsArray;
+		}
+
+		class SubQueryContextInfo
+		{
+			public MethodCallExpression Method;
+			public IBuildContext        Context;
+			public Expression           Expression;
+		}
+
+		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new Dictionary<IBuildContext,List<SubQueryContextInfo>>();
+
+		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
+		{
+			List<SubQueryContextInfo> sbi;
+
+			if (!_buildContextCache.TryGetValue(context, out sbi))
+				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+
+			foreach (var item in sbi)
+			{
+				if (expr.EqualsTo(item.Method, new Dictionary<Expression,QueryableAccessor>()))
+					return item;
+			}
+
+			var ctx = GetSubQuery(context, expr);
+
+			var info = new SubQueryContextInfo { Method = expr, Context = ctx };
+
+			sbi.Add(info);
+
+			return info;
+		}
+
+		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr)
+		{
+			var info = GetSubQueryContext(context, expr);
+			return info.Expression ?? (info.Expression = info.Context.BuildExpression(null, 0));
+		}
+
 		static bool EnforceServerSide(IBuildContext context)
 		{
 			return context.SelectQuery.Select.IsDistinct;
@@ -163,9 +300,24 @@ namespace LinqToDB.Linq.Builder
 
 			idx = context.ConvertToParentIndex(idx, context);
 
-			var field = BuildSql(expression.Type, idx);
+			var field = BuildSql(expression, idx);
 
 			return field;
+		}
+
+		public Expression BuildSql(Expression expression, int idx)
+		{
+			UnaryExpression cex;
+
+			var type = expression.Type;
+
+			if (_convertedExpressions.TryGetValue(expression, out cex))
+			{
+				if (cex.Type.IsNullable() && !type.IsNullable() && type.IsSameOrParentOf(cex.Type.ToNullableUnderlying()))
+					type = cex.Type;
+			}
+
+			return BuildSql(type, idx);
 		}
 
 		public Expression BuildSql(Type type, int idx)
@@ -209,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 					{
 						var pi = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, pi.Member);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression == null ? null : pi.Expression.Type, pi.Member);
 
 						if (l != null)
 						{
@@ -221,7 +373,7 @@ namespace LinqToDB.Linq.Builder
 							return info.Find(PreferServerSide) != null;
 						}
 
-						var attr = GetFunctionAttribute(pi.Member);
+						var attr = GetExpressionAttribute(pi.Member);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 
@@ -229,12 +381,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var pi = (MethodCallExpression)expr;
 						var e  = pi;
-						var l  = Expressions.ConvertMember(MappingSchema, e.Method);
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Object == null ? null : pi.Object.Type, e.Method);
 
 						if (l != null)
 							return l.Body.Unwrap().Find(PreferServerSide) != null;
 
-						var attr = GetFunctionAttribute(e.Method);
+						var attr = GetExpressionAttribute(e.Method);
 						return attr != null && attr.PreferServerSide && !CanBeCompiled(expr);
 					}
 			}
@@ -259,6 +411,21 @@ namespace LinqToDB.Linq.Builder
 			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
 
 			return expression;
+		}
+
+		public ParameterExpression BuildVariable(Expression expr, string name = null)
+		{
+			if (name == null)
+				name = expr.Type.Name + Interlocked.Increment(ref VarIndex);
+
+			var variable = Expression.Variable(
+				expr.Type,
+				name.IndexOf('<') >= 0 ? null : name);
+
+			BlockVariables.  Add(variable);
+			BlockExpressions.Add(Expression.Assign(variable, expr));
+
+			return variable;
 		}
 
 		public Expression<Func<QueryContext,IDataContext,IDataReader,Expression,object[],T>> BuildMapper<T>(Expression expr)
@@ -335,12 +502,13 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
+		static readonly MethodInfo _whereMethodInfo =
+			MemberHelper.MethodOf(() => LinqExtensions.Where<int,int,object>(null,null)).GetGenericMethodDefinition();
+
+		static Expression GetMultipleQueryExpression(IBuildContext context, Expression expression, HashSet<ParameterExpression> parameters)
 		{
 			if (!Common.Configuration.Linq.AllowMultipleQuery)
 				throw new LinqException("Multiple queries are not allowed. Set the 'LinqToDB.Common.Configuration.Linq.AllowMultipleQuery' flag to 'true' to allow multiple queries.");
-
-			var parameters = new HashSet<ParameterExpression>();
 
 			expression.Visit(e =>
 			{
@@ -351,7 +519,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Convert associations.
 			//
-			expression = expression.Transform(e =>
+			return expression.Transform(e =>
 			{
 				switch (e.NodeType)
 				{
@@ -373,9 +541,9 @@ namespace LinqToDB.Linq.Builder
 									{
 										var ttype  = typeof(Table<>).MakeGenericType(table.ObjectType);
 										var tbl    = Activator.CreateInstance(ttype);
-										var method = typeof(LinqExtensions)
-											.GetMethod("Where", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static)
-											.MakeGenericMethod(e.Type, table.ObjectType, ttype);
+										var method = e == expression ?
+											MemberHelper.MethodOf<IEnumerable<bool>>(n => n.Where(a => a)).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType) :
+											_whereMethodInfo.MakeGenericMethod(e.Type, table.ObjectType, ttype);
 
 										var me = (MemberExpression)e;
 										var op = Expression.Parameter(table.ObjectType, "t");
@@ -396,7 +564,16 @@ namespace LinqToDB.Linq.Builder
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
 
-										return Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+										var expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
+
+										if (e == expression)
+										{
+											expr = Expression.Call(
+												MemberHelper.MethodOf<IEnumerable<int>>(n => n.ToList()).GetGenericMethodDefinition().MakeGenericMethod(table.ObjectType),
+												expr);
+										}
+
+										return expr;
 									}
 								}
 							}
@@ -407,6 +584,15 @@ namespace LinqToDB.Linq.Builder
 
 				return e;
 			});
+		}
+
+		HashSet<Expression> _buildMultipleQueryExpressions;
+
+		public Expression BuildMultipleQuery(IBuildContext context, Expression expression)
+		{
+			var parameters = new HashSet<ParameterExpression>();
+
+			expression = GetMultipleQueryExpression(context, expression, parameters);
 
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();
@@ -421,7 +607,14 @@ namespace LinqToDB.Linq.Builder
 					root.NodeType == ExpressionType.Parameter &&
 					!parameters.Contains((ParameterExpression)root))
 				{
+					if (_buildMultipleQueryExpressions == null)
+						_buildMultipleQueryExpressions = new HashSet<Expression>();
+
+					_buildMultipleQueryExpressions.Add(e);
+
 					var ex = Expression.Convert(BuildExpression(context, e), typeof(object));
+
+					_buildMultipleQueryExpressions.Remove(e);
 
 					parms.Add(ex);
 

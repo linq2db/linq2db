@@ -4,11 +4,12 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
+	using System.Threading;
+
 	using Common;
+	using Extensions;
 	using Linq;
 	using Reflection;
-
-	using SqlQuery;
 
 	public class EntityDescriptor
 	{
@@ -32,8 +33,24 @@ namespace LinqToDB.Mapping
 		public bool                        IsColumnAttributeRequired { get; private set; }
 		public List<ColumnDescriptor>      Columns                   { get; private set; }
 		public List<AssociationDescriptor> Associations              { get; private set; }
-		public List<InheritanceMapping>    InheritanceMapping        { get; private set; }
 		public Dictionary<string,string>   Aliases                   { get; private set; }
+
+		readonly ManualResetEvent _mre = new ManualResetEvent(false);
+
+		private List<InheritanceMapping> _inheritanceMappings;
+		public  List<InheritanceMapping>  InheritanceMapping
+		{
+			get
+			{
+				if (_inheritanceMappings == null)
+				{
+					_mre.WaitOne();
+					_mre.Close();
+				}
+
+				return _inheritanceMappings;
+			}
+		}
 
 		public Type ObjectType { get { return TypeAccessor.Type; } }
 
@@ -53,7 +70,7 @@ namespace LinqToDB.Mapping
 			{
 				TableName = TypeAccessor.Type.Name;
 
-				if (TypeAccessor.Type.IsInterface && TableName.Length > 1 && TableName[0] == 'I')
+				if (TypeAccessor.Type.IsInterfaceEx() && TableName.Length > 1 && TableName[0] == 'I')
 					TableName = TableName.Substring(1);
 			}
 
@@ -166,8 +183,7 @@ namespace LinqToDB.Mapping
 		internal void InitInheritanceMapping()
 		{
 			var mappingAttrs = _mappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
-
-			InheritanceMapping = new List<InheritanceMapping>(mappingAttrs.Length);
+			var result       = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
 			{
@@ -191,17 +207,23 @@ namespace LinqToDB.Mapping
 							mapping.Discriminator = column;
 					}
 
-					InheritanceMapping.Add(mapping);
+					result.Add(mapping);
 				}
 
-				var discriminator = InheritanceMapping.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
+				var discriminator = result.Select(m => m.Discriminator).FirstOrDefault(d => d != null);
 
 				if (discriminator == null)
 					throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
 
-				foreach (var mapping in InheritanceMapping)
+				foreach (var mapping in result)
 					if (mapping.Discriminator == null)
 						mapping.Discriminator = discriminator;
+			}
+
+			if (_inheritanceMappings == null)
+			{
+				_inheritanceMappings = result;
+				_mre.Set();
 			}
 		}
 	}

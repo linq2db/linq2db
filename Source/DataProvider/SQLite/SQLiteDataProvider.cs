@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -19,9 +21,10 @@ namespace LinqToDB.DataProvider.SQLite
 		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema)
 		{
-			SqlProviderFlags.IsSkipSupported           = false;
-			SqlProviderFlags.IsSkipSupportedIfTake     = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsSkipSupported                = false;
+			SqlProviderFlags.IsSkipSupportedIfTake          = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd());
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd());
@@ -29,9 +32,9 @@ namespace LinqToDB.DataProvider.SQLite
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 		}
 
-		public    override string ConnectionNamespace { get { return "System.Data.SQLite"; } }
-		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteConnection"); } }
-		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(ConnectionNamespace, "SQLiteDataReader"); } }
+		public    override string ConnectionNamespace { get { return SQLiteTools.AssemblyName; } }
+		protected override string ConnectionTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.ConnectionName); } }
+		protected override string DataReaderTypeName  { get { return "{0}.{1}, {0}".Args(SQLiteTools.AssemblyName, SQLiteTools.DataReaderName); } }
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
@@ -39,7 +42,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -108,5 +111,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 			DropFileDatabase(databaseName, ".sqlite");
 		}
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new SQLiteBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
 	}
 }

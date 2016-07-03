@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
 
 	class AccessSqlBuilder : BasicSqlBuilder
 	{
-		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public AccessSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new AccessSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override bool ParenthesizeJoin()
@@ -152,14 +152,38 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
 		{
+			if (predicate.Expr2 is SqlValue)
+			{
+				var value = ((SqlValue)predicate.Expr2).Value;
+
+				if (value != null)
+				{
+					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var ntext = text.Replace("[", "[[]");
+
+					if (text != ntext)
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+				}
+			}
+			else if (predicate.Expr2 is SqlParameter)
+			{
+				var p = ((SqlParameter)predicate.Expr2);
+				p.ReplaceLike = true;
+			}
+
 			if (predicate.Escape != null)
 			{
 				if (predicate.Expr2 is SqlValue && predicate.Escape is SqlValue)
 				{
-					var text = ((SqlValue)predicate.Expr2).Value.ToString();
-					var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+					var value = ((SqlValue)predicate.Expr2).Value;
 
-					predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+					if (value != null)
+					{
+						var text = ((SqlValue)predicate.Expr2).Value.ToString();
+						var val  = new SqlValue(ReescapeLikeText(text, (char)((SqlValue)predicate.Escape).Value));
+
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, val, null);
+					}
 				}
 				else if (predicate.Expr2 is SqlParameter)
 				{
@@ -172,7 +196,7 @@ namespace LinqToDB.DataProvider.Access
 						if (value != null)
 						{
 							value     = value.Replace("[", "[[]").Replace("~%", "[%]").Replace("~_", "[_]").Replace("~~", "[~]");
-							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType };
+							p         = new SqlParameter(p.SystemType, p.Name, value) { DbSize = p.DbSize, DataType = p.DataType, IsQueryParameter = p.IsQueryParameter };
 							predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, p, null);
 						}
 					}
@@ -250,7 +274,7 @@ namespace LinqToDB.DataProvider.Access
 					break;
 
 				case "Convert"   :
-					switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 					{
 						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
 						case TypeCode.DateTime :
@@ -290,16 +314,6 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else if (value is Guid)
-				StringBuilder.Append("'").Append(((Guid)value).ToString("B")).Append("'");
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildUpdateClause()
 		{
 			base.BuildFromClause();
@@ -311,6 +325,15 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause();
+		}
+
+		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
+		{
+			switch (type.DataType)
+			{
+				case DataType.DateTime2 : StringBuilder.Append("timestamp"); break;
+				default                 : base.BuildDataType(type);          break;
+			}
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -365,15 +388,6 @@ namespace LinqToDB.DataProvider.Access
 			return value;
 		}
 
-		protected override void BuildDateTime(DateTime value)
-		{
-			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-				"#{0:yyyy-MM-dd}#" :
-				"#{0:yyyy-MM-dd HH:mm:ss}#";
-
-			StringBuilder.AppendFormat(format, value);
-		}
-
 		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
 		{
 			StringBuilder.Append("IDENTITY");
@@ -386,5 +400,14 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+#if !NETFX_CORE && !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			return ((System.Data.OleDb.OleDbParameter)parameter).OleDbType.ToString();
+		}
+
+#endif
 	}
 }

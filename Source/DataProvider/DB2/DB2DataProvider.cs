@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -21,74 +19,92 @@ namespace LinqToDB.DataProvider.DB2
 
 			SqlProviderFlags.AcceptsTakeAsParameter       = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip = true;
+			SqlProviderFlags.IsDistinctOrderBySupported   = version != DB2Version.zOS;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd());
 
 			_sqlOptimizer = new DB2SqlOptimizer(SqlProviderFlags);
 		}
 
-		Type _db2Int64;  Type _db2Int32;   Type _db2Int16;  Type _db2Decimal; Type _db2DecimalFloat;
-		Type _db2Real;   Type _db2Real370; Type _db2Double; Type _db2String;  Type _db2Clob;
-		Type _db2Binary; Type _db2Blob;    Type _db2Date;   Type _db2Time;    Type _db2TimeStamp;
-		Type _db2Xml;    Type _db2RowId;
-
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			_db2Int64        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int64",        true);
-			_db2Int32        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int32",        true);
-			_db2Int16        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int16",        true);
-			_db2Decimal      = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Decimal",      true);
-			_db2DecimalFloat = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DecimalFloat", true);
-			_db2Real         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real",         true);
-			_db2Real370      = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real370",      true);
-			_db2Double       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Double",       true);
-			_db2String       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2String",       true);
-			_db2Clob         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Clob",         true);
-			_db2Binary       = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Binary",       true);
-			_db2Blob         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Blob",         true);
-			_db2Date         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Date",         true);
-			_db2Time         = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Time",         true);
-			_db2TimeStamp    = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
-			_db2Xml          = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
-			_db2RowId        = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
+			DB2Types.ConnectionType = connectionType;
 
-			SetProviderField(_db2Int64,        typeof(Int64),    "GetDB2Int64");
-			SetProviderField(_db2Int32,        typeof(Int32),    "GetDB2Int32");
-			SetProviderField(_db2Int16,        typeof(Int16),    "GetDB2Int16");
-			SetProviderField(_db2Decimal,      typeof(Decimal),  "GetDB2Decimal");
-			SetProviderField(_db2DecimalFloat, typeof(Decimal),  "GetDB2DecimalFloat");
-			SetProviderField(_db2Real,         typeof(Single),   "GetDB2Real");
-			SetProviderField(_db2Real370,      typeof(Single),   "GetDB2Real370");
-			SetProviderField(_db2Double,       typeof(Double),   "GetDB2Double");
-			SetProviderField(_db2String,       typeof(String),   "GetDB2String");
-			SetProviderField(_db2Clob,         typeof(String),   "GetDB2Clob");
-			SetProviderField(_db2Binary,       typeof(byte[]),   "GetDB2Binary");
-			SetProviderField(_db2Blob,         typeof(byte[]),   "GetDB2Blob");
-			SetProviderField(_db2Date,         typeof(DateTime), "GetDB2Date");
-			SetProviderField(_db2Time,         typeof(TimeSpan), "GetDB2Time");
-			SetProviderField(_db2TimeStamp,    typeof(DateTime), "GetDB2TimeStamp");
-			SetProviderField(_db2Xml,          typeof(string),   "GetDB2Xml");
-			SetProviderField(_db2RowId,        typeof(byte[]),   "GetDB2RowId");
+			DB2Types.DB2Int64.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int64",        true);
+			DB2Types.DB2Int32.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int32",        true);
+			DB2Types.DB2Int16.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Int16",        true);
+			DB2Types.DB2Decimal.     Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Decimal",      true);
+			DB2Types.DB2DecimalFloat.Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DecimalFloat", true);
+			DB2Types.DB2Real.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real",         true);
+			DB2Types.DB2Real370.     Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Real370",      true);
+			DB2Types.DB2Double.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Double",       true);
+			DB2Types.DB2String.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2String",       true);
+			DB2Types.DB2Clob.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Clob",         true);
+			DB2Types.DB2Binary.      Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Binary",       true);
+			DB2Types.DB2Blob.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Blob",         true);
+			DB2Types.DB2Date.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Date",         true);
+			DB2Types.DB2Time.        Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Time",         true);
+			DB2Types.DB2TimeStamp.   Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2TimeStamp",    true);
+			DB2Types.DB2Xml               = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2Xml",          true);
+			DB2Types.DB2RowId.       Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2RowId",        true);
+			DB2Types.DB2DateTime.    Type = connectionType.Assembly.GetType("IBM.Data.DB2Types.DB2DateTime",     false);
 
-			MappingSchema.AddScalarType(_db2Int64,        GetNullValue(_db2Int64),        true, DataType.Int64);
-			MappingSchema.AddScalarType(_db2Int32,        GetNullValue(_db2Int32),        true, DataType.Int32);
-			MappingSchema.AddScalarType(_db2Int16,        GetNullValue(_db2Int16),        true, DataType.Int16);
-			MappingSchema.AddScalarType(_db2Decimal,      GetNullValue(_db2Decimal),      true, DataType.Decimal);
-			MappingSchema.AddScalarType(_db2DecimalFloat, GetNullValue(_db2DecimalFloat), true, DataType.Decimal);
-			MappingSchema.AddScalarType(_db2Real,         GetNullValue(_db2Real),         true, DataType.Single);
-			MappingSchema.AddScalarType(_db2Real370,      GetNullValue(_db2Real370),      true, DataType.Single);
-			MappingSchema.AddScalarType(_db2Double,       GetNullValue(_db2Double),       true, DataType.Double);
-			MappingSchema.AddScalarType(_db2String,       GetNullValue(_db2String),       true, DataType.NVarChar);
-			MappingSchema.AddScalarType(_db2Clob,         GetNullValue(_db2Clob),         true, DataType.NText);
-			MappingSchema.AddScalarType(_db2Binary,       GetNullValue(_db2Binary),       true, DataType.VarBinary);
-			MappingSchema.AddScalarType(_db2Blob,         GetNullValue(_db2Blob),         true, DataType.Blob);
-			MappingSchema.AddScalarType(_db2Date,         GetNullValue(_db2Date),         true, DataType.Date);
-			MappingSchema.AddScalarType(_db2Time,         GetNullValue(_db2Time),         true, DataType.Time);
-			MappingSchema.AddScalarType(_db2TimeStamp,    GetNullValue(_db2TimeStamp),    true, DataType.DateTime2);
-			MappingSchema.AddScalarType(_db2Xml,          GetNullValue(_db2Xml),          true, DataType.Xml);
-			MappingSchema.AddScalarType(_db2RowId,        GetNullValue(_db2RowId),        true, DataType.VarBinary);
+			SetProviderField(DB2Types.DB2Int64,        typeof(Int64),    "GetDB2Int64");
+			SetProviderField(DB2Types.DB2Int32,        typeof(Int32),    "GetDB2Int32");
+			SetProviderField(DB2Types.DB2Int16,        typeof(Int16),    "GetDB2Int16");
+			SetProviderField(DB2Types.DB2Decimal,      typeof(Decimal),  "GetDB2Decimal");
+			SetProviderField(DB2Types.DB2DecimalFloat, typeof(Decimal),  "GetDB2DecimalFloat");
+			SetProviderField(DB2Types.DB2Real,         typeof(Single),   "GetDB2Real");
+			SetProviderField(DB2Types.DB2Real370,      typeof(Single),   "GetDB2Real370");
+			SetProviderField(DB2Types.DB2Double,       typeof(Double),   "GetDB2Double");
+			SetProviderField(DB2Types.DB2String,       typeof(String),   "GetDB2String");
+			SetProviderField(DB2Types.DB2Clob,         typeof(String),   "GetDB2Clob");
+			SetProviderField(DB2Types.DB2Binary,       typeof(byte[]),   "GetDB2Binary");
+			SetProviderField(DB2Types.DB2Blob,         typeof(byte[]),   "GetDB2Blob");
+			SetProviderField(DB2Types.DB2Date,         typeof(DateTime), "GetDB2Date");
+			SetProviderField(DB2Types.DB2Time,         typeof(TimeSpan), "GetDB2Time");
+			SetProviderField(DB2Types.DB2TimeStamp,    typeof(DateTime), "GetDB2TimeStamp");
+			SetProviderField(DB2Types.DB2Xml,          typeof(string),   "GetDB2Xml");
+			SetProviderField(DB2Types.DB2RowId,        typeof(byte[]),   "GetDB2RowId");
+
+			MappingSchema.AddScalarType(DB2Types.DB2Int64,        GetNullValue(DB2Types.DB2Int64),        true, DataType.Int64);
+			MappingSchema.AddScalarType(DB2Types.DB2Int32,        GetNullValue(DB2Types.DB2Int32),        true, DataType.Int32);
+			MappingSchema.AddScalarType(DB2Types.DB2Int16,        GetNullValue(DB2Types.DB2Int16),        true, DataType.Int16);
+			MappingSchema.AddScalarType(DB2Types.DB2Decimal,      GetNullValue(DB2Types.DB2Decimal),      true, DataType.Decimal);
+			MappingSchema.AddScalarType(DB2Types.DB2DecimalFloat, GetNullValue(DB2Types.DB2DecimalFloat), true, DataType.Decimal);
+			MappingSchema.AddScalarType(DB2Types.DB2Real,         GetNullValue(DB2Types.DB2Real),         true, DataType.Single);
+			MappingSchema.AddScalarType(DB2Types.DB2Real370,      GetNullValue(DB2Types.DB2Real370),      true, DataType.Single);
+			MappingSchema.AddScalarType(DB2Types.DB2Double,       GetNullValue(DB2Types.DB2Double),       true, DataType.Double);
+			MappingSchema.AddScalarType(DB2Types.DB2String,       GetNullValue(DB2Types.DB2String),       true, DataType.NVarChar);
+			MappingSchema.AddScalarType(DB2Types.DB2Clob,         GetNullValue(DB2Types.DB2Clob),         true, DataType.NText);
+			MappingSchema.AddScalarType(DB2Types.DB2Binary,       GetNullValue(DB2Types.DB2Binary),       true, DataType.VarBinary);
+			MappingSchema.AddScalarType(DB2Types.DB2Blob,         GetNullValue(DB2Types.DB2Blob),         true, DataType.Blob);
+			MappingSchema.AddScalarType(DB2Types.DB2Date,         GetNullValue(DB2Types.DB2Date),         true, DataType.Date);
+			MappingSchema.AddScalarType(DB2Types.DB2Time,         GetNullValue(DB2Types.DB2Time),         true, DataType.Time);
+			MappingSchema.AddScalarType(DB2Types.DB2TimeStamp,    GetNullValue(DB2Types.DB2TimeStamp),    true, DataType.DateTime2);
+			MappingSchema.AddScalarType(DB2Types.DB2Xml,          GetNullValue(DB2Types.DB2Xml),          true, DataType.Xml);
+			MappingSchema.AddScalarType(DB2Types.DB2RowId,        GetNullValue(DB2Types.DB2RowId),        true, DataType.VarBinary);
 
 			_setBlob = GetSetParameter(connectionType, "DB2Parameter", "DB2Type", "DB2Type", "Blob");
+
+			if (DB2Types.DB2DateTime.IsSupported)
+			{
+				SetProviderField(DB2Types.DB2DateTime, typeof(DateTime), "GetDB2DateTime");
+				MappingSchema.AddScalarType(DB2Types.DB2DateTime, GetNullValue(DB2Types.DB2DateTime), true, DataType.DateTime);
+			}
+
+			if (DataConnection.TraceSwitch.TraceInfo)
+			{
+				DataConnection.WriteTraceLine(
+					DataReaderType.Assembly.FullName,
+					DataConnection.TraceSwitch.DisplayName);
+
+				DataConnection.WriteTraceLine(
+					DB2Types.DB2DateTime.IsSupported ? "DB2DateTime is supported." : "DB2DateTime is not supported.",
+					DataConnection.TraceSwitch.DisplayName);
+			}
+
+			DB2Tools.Initialized();
 		}
 
 		static object GetNullValue(Type type)
@@ -133,8 +149,8 @@ namespace LinqToDB.DataProvider.DB2
 		public override ISqlBuilder CreateSqlBuilder()
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
-				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				new DB2zOSSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter) as ISqlBuilder:
+				new DB2LUWSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly DB2SqlOptimizer _sqlOptimizer;
@@ -144,10 +160,10 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection)
+		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters)
 		{
 			dataConnection.DisposeCommand();
-			base.InitCommand(dataConnection);
+			base.InitCommand(dataConnection, commandType, commandText, parameters);
 		}
 
 		static Action<IDbDataParameter> _setBlob;
@@ -208,244 +224,35 @@ namespace LinqToDB.DataProvider.DB2
 			base.SetParameter(parameter, "@" + name, dataType, value);
 		}
 
-		static Func<IDbConnection,IDisposable> _bulkCopyCreator;
-		static Func<int,string,object>         _columnMappingCreator;
+		#region BulkCopy
 
-		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection  dataConnection,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+		DB2BulkCopy _bulkCopy;
+
+		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (options.BulkCopyType == BulkCopyType.RowByRow)
-				return base.BulkCopy(dataConnection, options, source);
+			if (_bulkCopy == null)
+				_bulkCopy = new DB2BulkCopy(GetConnectionType());
 
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
-
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = sqlBuilder
-				.BuildTableName(
-					new StringBuilder(),
-					descriptor.DatabaseName == null ? null : sqlBuilder.Convert(descriptor.DatabaseName, ConvertType.NameToDatabase).  ToString(),
-					descriptor.SchemaName   == null ? null : sqlBuilder.Convert(descriptor.SchemaName,   ConvertType.NameToOwner).     ToString(),
-					descriptor.TableName    == null ? null : sqlBuilder.Convert(descriptor.TableName,    ConvertType.NameToQueryTable).ToString())
-				.ToString();
-
-			if (options.BulkCopyType == BulkCopyType.ProviderSpecific && dataConnection.Transaction == null)
-			{
-				if (_bulkCopyCreator == null)
-				{
-					var connType          = GetConnectionType();
-					var bulkCopyType      = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopy",              false);
-					var columnMappingType = connType.Assembly.GetType("IBM.Data.DB2.DB2BulkCopyColumnMapping", false);
-
-					if (bulkCopyType != null)
-					{
-						{
-							var p = Expression.Parameter(typeof(IDbConnection), "p");
-							var l = Expression.Lambda<Func<IDbConnection,IDisposable>>(
-								Expression.Convert(
-									Expression.New(
-										bulkCopyType.GetConstructor(new[] { connType }),
-										Expression.Convert(p, connType)),
-									typeof(IDisposable)),
-								p);
-
-							_bulkCopyCreator = l.Compile();
-						}
-						{
-							var p1 = Expression.Parameter(typeof(int),    "p1");
-							var p2 = Expression.Parameter(typeof(string), "p2");
-							var l  = Expression.Lambda<Func<int,string,object>>(
-								Expression.Convert(
-									Expression.New(
-										columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
-										new [] { p1, p2 }),
-									typeof(object)),
-								p1, p2);
-
-							_columnMappingCreator = l.Compile();
-						}
-					}
-				}
-
-				if (_bulkCopyCreator != null)
-				{
-					var rd = new BulkCopyReader(descriptor, source);
-
-					using (var bc = _bulkCopyCreator(dataConnection.Connection))
-					{
-						dynamic dbc = bc;
-
-						if (options.BulkCopyTimeout.HasValue)
-							dbc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-
-						dbc.DestinationTableName = tableName;
-
-						for (var i = 0; i < rd.Columns.Length; i++)
-							dbc.ColumnMappings.Add((dynamic)_columnMappingCreator(i, rd.Columns[i].ColumnName));
-
-						dbc.WriteToServer(rd);
-					}
-
-					return rd.Count;
-				}
-			}
-
-			return MultipleRowsBulkCopy(dataConnection, options, source, sqlBuilder, descriptor, tableName);
+			return _bulkCopy.BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
 		}
 
-		int MultipleRowsBulkCopy<T>(
-			DataConnection   dataConnection,
-			BulkCopyOptions  options,
-			IEnumerable<T>   source,
-			BasicSqlBuilder  sqlBuilder,
-			EntityDescriptor descriptor,
-			string           tableName)
+		#endregion
+
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
 		{
-			var iszOS = Version == DB2Version.zOS;
+			if (delete)
+				throw new LinqToDBException("DB2 MERGE statement does not support DELETE by source.");
 
-			{
-				var sb = new StringBuilder();
-				var buildValue = BasicSqlBuilder.GetBuildValue(sqlBuilder, sb);
-				var columns = descriptor.Columns.Where(c => !c.SkipOnInsert).ToArray();
-				var pname = sqlBuilder.Convert("p", ConvertType.NameToQueryParameter).ToString();
-
-				sb
-					.AppendFormat("INSERT INTO {0}", tableName).AppendLine()
-					.Append("(");
-
-				foreach (var column in columns)
-					sb
-						.AppendLine()
-						.Append("\t")
-						.Append(sqlBuilder.Convert(column.ColumnName, ConvertType.NameToQueryField))
-						.Append(",");
-
-				sb.Length--;
-				sb
-					.AppendLine()
-					.Append(")");
-
-				if (!iszOS)
-					sb
-						.AppendLine()
-						.Append("VALUES");
-
-				var headerLen = sb.Length;
-				var totalCount = 0;
-				var currentCount = 0;
-				var batchSize = options.MaxBatchSize ?? 1000;
-
-				if (batchSize <= 0)
-					batchSize = 1000;
-
-				var parms = new List<DataParameter>();
-				var pidx = 0;
-
-				foreach (var item in source)
-				{
-					sb
-						.AppendLine()
-						.Append(iszOS ? "SELECT " : "(");
-
-					foreach (var column in columns)
-					{
-						var value = column.GetValue(item);
-
-						if (value == null)
-						{
-							sb.Append("NULL");
-						}
-						else
-							switch (Type.GetTypeCode(value.GetType()))
-							{
-								case TypeCode.DBNull:
-									sb.Append("NULL");
-									break;
-								case TypeCode.String:
-									var isString = false;
-
-									switch (column.DataType)
-									{
-										case DataType.NVarChar  :
-										case DataType.Char      :
-										case DataType.VarChar   :
-										case DataType.NChar     :
-										case DataType.Undefined :
-											isString = true;
-											break;
-									}
-
-									if (isString) goto case TypeCode.Int32;
-									goto default;
-
-								case TypeCode.Boolean  :
-								case TypeCode.Char     :
-								case TypeCode.SByte    :
-								case TypeCode.Byte     :
-								case TypeCode.Int16    :
-								case TypeCode.UInt16   :
-								case TypeCode.Int32    :
-								case TypeCode.UInt32   :
-								case TypeCode.Int64    :
-								case TypeCode.UInt64   :
-								case TypeCode.Single   :
-								case TypeCode.Double   :
-								case TypeCode.Decimal  :
-								case TypeCode.DateTime :
-									//SetParameter(dataParam, "", column.DataType, value);
-
-									buildValue(value);
-									break;
-
-								default:
-									var name = pname + ++pidx;
-
-									sb.Append(name);
-									parms.Add(new DataParameter("p" + pidx, value, column.DataType));
-
-									break;
-							}
-
-						sb.Append(",");
-					}
-
-					sb.Length--;
-					sb.Append(iszOS ? " FROM SYSIBM.SYSDUMMY1 UNION ALL" : "),");
-
-					totalCount++;
-					currentCount++;
-
-					if (currentCount >= batchSize || parms.Count > 100000 || sb.Length > 100000)
-					{
-						if (iszOS)
-							sb.Length -= " UNION ALL".Length;
-						else
-							sb.Length--;
-
-						dataConnection.Execute(sb.AppendLine().ToString(), parms.ToArray());
-
-						parms.Clear();
-						pidx = 0;
-						currentCount = 0;
-						sb.Length = headerLen;
-					}
-				}
-
-				if (currentCount > 0)
-				{
-					if (iszOS)
-						sb.Length -= " UNION ALL".Length;
-					else
-						sb.Length--;
-
-					dataConnection.Execute(sb.ToString(), parms.ToArray());
-					sb.Length = headerLen;
-				}
-
-				return totalCount;
-			}
+			return new DB2Merge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
+
+		#endregion
 	}
 }

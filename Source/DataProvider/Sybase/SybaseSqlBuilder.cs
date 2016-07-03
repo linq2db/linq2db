@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -9,8 +10,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 	class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -32,8 +33,8 @@ namespace LinqToDB.DataProvider.Sybase
 		private  bool _isSelect;
 		readonly bool _skipAliases;
 
-		SybaseSqlBuilder(bool skipAliases, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		SybaseSqlBuilder(bool skipAliases, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 			_skipAliases = skipAliases;
 		}
@@ -69,16 +70,14 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags);
+			return new SybaseSqlBuilder(_isSelect, SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
-#if !MONO
 				case DataType.DateTime2 : StringBuilder.Append("DateTime"); break;
-#endif
 				default                 : base.BuildDataType(type); break;
 			}
 		}
@@ -107,34 +106,36 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
+		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
+		{
+			if (predicate.Expr2 is SqlValue)
+			{
+				var value = ((SqlValue)predicate.Expr2).Value;
+
+				if (value != null)
+				{
+					var text  = ((SqlValue)predicate.Expr2).Value.ToString();
+					var ntext = text.Replace("[", "[[]");
+
+					if (text != ntext)
+						predicate = new SelectQuery.Predicate.Like(predicate.Expr1, predicate.IsNot, new SqlValue(ntext), predicate.Escape);
+				}
+			}
+			else if (predicate.Expr2 is SqlParameter)
+			{
+				var p = ((SqlParameter)predicate.Expr2);
+				p.ReplaceLike = true;
+			}
+
+			base.BuildLikePredicate(predicate);
+		}
+
 		protected override void BuildUpdateTableName()
 		{
 			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
 				BuildPhysicalTable(SelectQuery.Update.Table, null);
 			else
 				BuildTableName(SelectQuery.From.Tables[0], true, false);
-		}
-
-		protected override void BuildString(string value)
-		{
-			foreach (var ch in value)
-			{
-				if (ch > 127)
-				{
-					StringBuilder.Append("N");
-					break;
-				}
-			}
-
-			base.BuildString(value);
-		}
-
-		protected override void BuildChar(char value)
-		{
-			if (value > 127)
-				StringBuilder.Append("N");
-
-			base.BuildChar(value);
 		}
 
 		public override object Convert(object value, ConvertType convertType)
@@ -218,5 +219,15 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.AseDbType.ToString();
+		}
+
+#endif
 	}
 }

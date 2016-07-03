@@ -9,6 +9,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -44,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
 			var sequence        = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			var groupingType    = methodCall.Type.GetGenericArguments()[0];
+			var groupingType    = methodCall.Type.GetGenericArgumentsEx()[0];
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
@@ -56,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var type = ((LambdaExpression)call.Arguments[1].Unwrap()).Body.Type;
 
-					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
+					if (type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
 						sequence = new SubQueryContext(sequence);
 					}
@@ -369,7 +370,7 @@ namespace LinqToDB.Linq.Builder
 							if (arg.Arguments[0].NodeType != ExpressionType.Call)
 							{
 								var l     = (LambdaExpression)arg.Arguments[1].Unwrap();
-								var largs = l.Type.GetGenericArguments();
+								var largs = l.Type.GetGenericArgumentsEx();
 
 								if (largs.Length == 2)
 								{
@@ -474,7 +475,7 @@ namespace LinqToDB.Linq.Builder
 									if (e.Member.Name == "Key")
 									{
 										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetProperty("Key");
+											_keyProperty = _groupingType.GetPropertyEx("Key");
 
 										if (e.Member == _keyProperty)
 										{
@@ -535,6 +536,9 @@ namespace LinqToDB.Linq.Builder
 								_key.IsExpression(expression, level + 1, requestFlag);
 						}
 					}
+					else if (levelExpression.NodeType == ExpressionType.Call)
+						if (requestFlag == RequestFor.Expression)
+							return IsExpressionResult.True;
 				}
 
 				return IsExpressionResult.False;

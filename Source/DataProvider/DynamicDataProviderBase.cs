@@ -2,6 +2,8 @@
 using System.Data;
 using System.Linq.Expressions;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.DataProvider
 {
 	using Mapping;
@@ -43,6 +45,11 @@ namespace LinqToDB.DataProvider
 			return _connectionType;
 		}
 
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return GetConnectionType().IsSameOrParentOf(connection.GetType());
+		}
+
 		private         Type _dataReaderType;
 		public override Type  DataReaderType
 		{
@@ -51,7 +58,7 @@ namespace LinqToDB.DataProvider
 
 		Func<string,IDbConnection> _createConnection;
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			if (_createConnection == null)
 			{

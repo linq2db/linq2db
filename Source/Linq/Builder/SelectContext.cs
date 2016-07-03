@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -70,6 +73,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
+		ParameterExpression _rootExpression;
+
 		public virtual Expression BuildExpression(Expression expression, int level)
 		{
 			{
@@ -85,7 +90,19 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (expression == null)
-				return Builder.BuildExpression(this, Body);
+			{
+				if (_rootExpression == null)
+				{
+					var expr = Builder.BuildExpression(this, Body);
+
+					if (Builder.IsBlockDisable)
+						return expr;
+
+					_rootExpression = Builder.BuildVariable(expr);
+				}
+
+				return _rootExpression;
+			}
 
 			var levelExpression = expression.GetLevelExpression(level);
 
@@ -125,7 +142,8 @@ namespace LinqToDB.Linq.Builder
 							var memberExpression = GetMemberExpression(
 								((MemberExpression)levelExpression).Member,
 								ReferenceEquals(levelExpression, expression),
-								levelExpression.Type);
+								levelExpression.Type,
+								expression);
 
 							if (ReferenceEquals(levelExpression, expression))
 							{
@@ -303,7 +321,7 @@ namespace LinqToDB.Linq.Builder
 											if (!_sql.TryGetValue(member, out sql))
 											{
 												var memberExpression = GetMemberExpression(
-													member, levelExpression == expression, levelExpression.Type);
+													member, levelExpression == expression, levelExpression.Type, expression);
 
 												sql = ConvertExpressions(memberExpression, flags)
 													.Select(si => si.Clone(member)).ToArray();
@@ -572,7 +590,37 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsExpression
 
+		Expression _lastAssociationExpression;
+		int        _lastAssociationLevel = -1;
+
 		public virtual IsExpressionResult IsExpression(Expression expression, int level, RequestFor requestFlag)
+		{
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					if (expression == _lastAssociationExpression && level == _lastAssociationLevel)
+						return IsExpressionResult.False;
+
+					_lastAssociationExpression = expression;
+					_lastAssociationLevel      = level;
+
+					break;
+			}
+
+			var res = IsExpressionInternal(expression, level, requestFlag);
+
+			switch (requestFlag)
+			{
+				case RequestFor.Association :
+					_lastAssociationExpression = null;
+					_lastAssociationLevel      = -1;
+					break;
+			}
+
+			return res;
+		}
+
+		public IsExpressionResult IsExpressionInternal(Expression expression, int level, RequestFor requestFlag)
 		{
 			switch (requestFlag)
 			{
@@ -637,7 +685,7 @@ namespace LinqToDB.Linq.Builder
 										{
 											var nm = Members.Keys.FirstOrDefault(m => m.Name == member.Name);
 
-											if (nm != null && member.DeclaringType.IsInterface)
+											if (nm != null && member.DeclaringType.IsInterfaceEx())
 											{
 												if (member.DeclaringType.IsSameOrParentOf(nm.DeclaringType))
 													memberExpression = Members[nm];
@@ -671,8 +719,8 @@ namespace LinqToDB.Linq.Builder
 											expression,
 											(MemberExpression)levelExpression,
 											level,
-											(n,ctx,ex,l,_) => n == 0 ?
-												new IsExpressionResult(requestFlag == RequestFor.Expression) : 
+											(n,ctx,ex,l,ex1) => n == 0 ?
+												new IsExpressionResult(requestFlag == RequestFor.Expression, ex1) : 
 												ctx.IsExpression(ex, l, requestFlag));
 									}
 
@@ -736,7 +784,8 @@ namespace LinqToDB.Linq.Builder
 								var memberExpression = GetMemberExpression(
 									((MemberExpression)levelExpression).Member,
 									levelExpression == expression,
-									levelExpression.Type);
+									levelExpression.Type,
+									expression);
 
 								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery));
 							}
@@ -1027,7 +1076,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
 						{
-							if (me.Member == binding.Member)
+							if (me.Member.EqualsTo(binding.Member))
 								return ReferenceEquals(levelExpresion, expression) ?
 									binding.Expression.Unwrap() :
 									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
@@ -1040,7 +1089,7 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		Expression GetMemberExpression(MemberInfo member, bool add, Type type)
+		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
 		{
 			Expression memberExpression;
 
@@ -1066,7 +1115,7 @@ namespace LinqToDB.Linq.Builder
 							string value;
 
 							if (ed.Aliases.TryGetValue(member.Name, out value))
-								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type);
+								return GetMemberExpression(ed.TypeAccessor[value].MemberInfo, add, type, sourceExpression);
 
 							foreach (var a in ed.Aliases)
 							{
@@ -1091,7 +1140,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				throw new InvalidOperationException();
+				throw new LinqToDBException("'{0}' cannot be converted to SQL.".Args(sourceExpression));
 			}
 
 			return memberExpression;

@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 using System.Data.SqlTypes;
 #endif
 
@@ -26,20 +27,15 @@ namespace LinqToDB.SqlQuery
 			Scale     = defaultType.Scale;
 		}
 
-		public SqlDataType(DataType dbType, int length)
+		public SqlDataType(DataType dbType, int? length)
 		{
-			if (length <= 0) throw new ArgumentOutOfRangeException("length");
-
 			DataType = dbType;
 			Type     = GetDataType(dbType).Type;
 			Length   = length;
 		}
 
-		public SqlDataType(DataType dbType, int precision, int scale)
+		public SqlDataType(DataType dbType, int? precision, int? scale)
 		{
-			if (precision <= 0) throw new ArgumentOutOfRangeException("precision");
-			if (scale     <  0) throw new ArgumentOutOfRangeException("scale");
-
 			DataType  = dbType;
 			Type      = GetDataType(dbType).Type;
 			Precision = precision;
@@ -122,9 +118,26 @@ namespace LinqToDB.SqlQuery
 
 		public DataType DataType  { get; private set; }
 		public Type     Type      { get; private set; }
-		public int      Length    { get; private set; }
-		public int      Precision { get; private set; }
-		public int      Scale     { get; private set; }
+		public int?     Length    { get; private set; }
+		public int?     Precision { get; private set; }
+		public int?     Scale     { get; private set; }
+
+		public static readonly SqlDataType Undefined = new SqlDataType(DataType.Undefined, typeof(object), null, null, null);
+
+		public bool IsCharDataType
+		{
+			get
+			{
+				switch (DataType)
+				{
+					case DataType.Char     :
+					case DataType.NChar    :
+					case DataType.VarChar  :
+					case DataType.NVarChar : return true;
+					default                : return false;
+				}
+			}
+		}
 
 		#endregion
 
@@ -180,15 +193,11 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.Single,               4,                     7,                     7,               7 + 2 + 4),
 
 			new TypeInfo(DataType.DateTime,             8,                    -1,                    -1,                      23),
-#if !MONO
 			new TypeInfo(DataType.DateTime2,            8,                    -1,                    -1,                      27),
-#endif				
 			new TypeInfo(DataType.SmallDateTime,        4,                    -1,                    -1,                      19),
 			new TypeInfo(DataType.Date,                 3,                    -1,                    -1,                      10),
 			new TypeInfo(DataType.Time,                 5,                    -1,                    -1,                      16),
-#if !MONO
 			new TypeInfo(DataType.DateTimeOffset,      10,                    -1,                    -1,                      34),
-#endif
 
 			new TypeInfo(DataType.Char,              8000,                    -1,                    -1,                    8000),
 			new TypeInfo(DataType.VarChar,           8000,                    -1,                    -1,                    8000),
@@ -206,7 +215,8 @@ namespace LinqToDB.SqlQuery
 
 			new TypeInfo(DataType.Variant,             -1,                    -1,                    -1,                      -1),
 			new TypeInfo(DataType.Xml,                 -1,                    -1,                    -1,                      -1),
-			new TypeInfo(DataType.Udt,                 -1,                    -1,                    -1,                      -1)
+			new TypeInfo(DataType.Udt,                 -1,                    -1,                    -1,                      -1),
+			new TypeInfo(DataType.BitArray,            -1,                    -1,                    -1,                      -1)
 		);
 
 		public static int GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
@@ -218,13 +228,13 @@ namespace LinqToDB.SqlQuery
 		{
 			var underlyingType = type;
 
-			if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
-				underlyingType = underlyingType.GetGenericArguments()[0];
+			if (underlyingType.IsGenericTypeEx() && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
+				underlyingType = underlyingType.GetGenericArgumentsEx()[0];
 
-			if (underlyingType.IsEnum)
+			if (underlyingType.IsEnumEx())
 				underlyingType = Enum.GetUnderlyingType(underlyingType);
 
-			switch (Type.GetTypeCode(underlyingType))
+			switch (underlyingType.GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return Boolean;
 				case TypeCode.Char     : return Char;
@@ -246,9 +256,7 @@ namespace LinqToDB.SqlQuery
 					if (underlyingType == typeof(byte[]))         return ByteArray;
 					if (underlyingType == typeof(System.Data.Linq.Binary)) return LinqBinary;
 					if (underlyingType == typeof(char[]))         return CharArray;
-#if !MONO
 					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
-#endif
 					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
 					break;
 
@@ -257,7 +265,7 @@ namespace LinqToDB.SqlQuery
 				default                : break;
 			}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 			if (underlyingType == typeof(SqlByte))     return SqlByte;
 			if (underlyingType == typeof(SqlInt16))    return SqlInt16;
@@ -309,26 +317,25 @@ namespace LinqToDB.SqlQuery
 				case DataType.VarBinary        : return DbVarBinary;
 				case DataType.VarChar          : return DbVarChar;
 				case DataType.Variant          : return DbVariant;
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 				case DataType.Xml              : return DbXml;
 #endif
+				case DataType.BitArray         : return DbBitArray;
 				case DataType.Udt              : return DbUdt;
 				case DataType.Date             : return DbDate;
 				case DataType.Time             : return DbTime;
-#if !MONO
 				case DataType.DateTime2        : return DbDateTime2;
 				case DataType.DateTimeOffset   : return DbDateTimeOffset;
-#endif
 			}
 
 			throw new InvalidOperationException();
 		}
 
-		public static bool CanBeNull(Type type)
+		public static bool TypeCanBeNull(Type type)
 		{
-			if (type.IsValueType == false ||
-				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)
-#if !SILVERLIGHT
+			if (type.IsValueTypeEx() == false ||
+				type.IsGenericTypeEx() && type.GetGenericTypeDefinition() == typeof(Nullable<>)
+#if !SILVERLIGHT && !NETFX_CORE
 				|| typeof(INullable).IsSameOrParentOf(type)
 #endif
 				)
@@ -341,7 +348,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Default Types
 
-		internal SqlDataType(DataType dbType, Type type, int length, int precision, int scale)
+		internal SqlDataType(DataType dbType, Type type, int? length, int? precision, int? scale)
 		{
 			DataType  = dbType;
 			Type      = type;
@@ -374,17 +381,11 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbSingle         = new SqlDataType(DataType.Single,         typeof(Single),                 0,               0,  0);
 
 		public static readonly SqlDataType DbDateTime       = new SqlDataType(DataType.DateTime,       typeof(DateTime),               0,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DbDateTime2      = new SqlDataType(DataType.DateTime2,      typeof(DateTime),               0,               0,  0);
-#else		
-		public static readonly SqlDataType DbDateTime2      = new SqlDataType(DataType.DateTime,       typeof(DateTime),               0,               0,  0);
-#endif		
 		public static readonly SqlDataType DbSmallDateTime  = new SqlDataType(DataType.SmallDateTime,  typeof(DateTime),               0,               0,  0);
 		public static readonly SqlDataType DbDate           = new SqlDataType(DataType.Date,           typeof(DateTime),               0,               0,  0);
 		public static readonly SqlDataType DbTime           = new SqlDataType(DataType.Time,           typeof(TimeSpan),               0,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DbDateTimeOffset = new SqlDataType(DataType.DateTimeOffset, typeof(DateTimeOffset),         0,               0,  0);
-#endif
 
 		public static readonly SqlDataType DbChar           = new SqlDataType(DataType.Char,           typeof(String),      GetMaxLength,               0,  0);
 		public static readonly SqlDataType DbVarChar        = new SqlDataType(DataType.VarChar,        typeof(String),      GetMaxLength,               0,  0);
@@ -401,9 +402,10 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType DbGuid           = new SqlDataType(DataType.Guid,           typeof(Guid),                   0,               0,  0);
 
 		public static readonly SqlDataType DbVariant        = new SqlDataType(DataType.Variant,        typeof(Object),                 0,               0,  0);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static readonly SqlDataType DbXml            = new SqlDataType(DataType.Xml,            typeof(SqlXml),                 0,               0,  0);
 #endif
+		public static readonly SqlDataType DbBitArray       = new SqlDataType(DataType.BitArray,       typeof(BitArray),               0,               0,  0);
 		public static readonly SqlDataType DbUdt            = new SqlDataType(DataType.Udt,            typeof(Object),                 0,               0,  0);
 
 		public static readonly SqlDataType Boolean          = DbBoolean;
@@ -424,12 +426,10 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType ByteArray        = DbVarBinary;
 		public static readonly SqlDataType LinqBinary       = DbVarBinary;
 		public static readonly SqlDataType CharArray        = new SqlDataType(DataType.NVarChar,       typeof(Char[]),      GetMaxLength,               0,  0);
-#if !MONO
 		public static readonly SqlDataType DateTimeOffset   = DbDateTimeOffset;
-#endif
 		public static readonly SqlDataType TimeSpan         = DbTime;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static readonly SqlDataType SqlByte          = new SqlDataType(DataType.Byte,           typeof(SqlByte),                0,               0,  0);
 		public static readonly SqlDataType SqlInt16         = new SqlDataType(DataType.Int16,          typeof(SqlInt16),               0,               0,  0);
 		public static readonly SqlDataType SqlInt32         = new SqlDataType(DataType.Int32,          typeof(SqlInt32),               0,               0,  0);
@@ -501,9 +501,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		public bool CanBeNull
 		{
-			return false;
+			get { return false; }
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -9,8 +11,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -30,27 +32,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						string.Format("{0}_{1}_seq", into.PhysicalName, into.GetIdentityField().PhysicalName),
 						ConvertType.NameToQueryField);
 
+			name = Convert(name, ConvertType.NameToQueryTable);
+
+			var database = GetTableDatabaseName(into);
+			var owner    = GetTableOwnerName   (into);
+
 			AppendIndent()
-				.Append("SELECT currval('")
-				.Append(name)
-				.AppendLine("')");
+				.Append("SELECT currval('");
+
+			BuildTableName(StringBuilder, database, owner, name.ToString());
+
+			StringBuilder.AppendLine("')");
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override string LimitFormat  { get { return "LIMIT {0}";   } }
 		protected override string OffsetFormat { get { return "OFFSET {0} "; } }
-
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append(value);
-			else
-				base.BuildValue(value);
-		}
 
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
@@ -60,9 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Byte          : StringBuilder.Append("SmallInt");      break;
 				case DataType.Money         : StringBuilder.Append("Decimal(19,4)"); break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.SmallDateTime :
 				case DataType.DateTime      : StringBuilder.Append("TimeStamp");     break;
 				case DataType.Boolean       : StringBuilder.Append("Boolean");       break;
@@ -95,6 +94,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToQueryTableAlias:
+				case ConvertType.NameToDatabase:
+				case ConvertType.NameToOwner:
 					if (value != null && IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						var name = value.ToString();
@@ -102,7 +103,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (name.Length > 0 && name[0] == '"')
 							return name;
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote || name.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
+						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote ||
+							name
+#if NETFX_CORE
+								.ToCharArray()
+#endif
+								.Any(c => char.IsUpper(c) || char.IsWhiteSpace(c)))
 							return '"' + name + '"';
 					}
 
@@ -131,9 +137,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (!table.SequenceAttributes.IsNullOrEmpty())
 			{
 				var attr = GetSequenceNameAttribute(table, false);
-	
+
 				if (attr != null)
-					return new SqlExpression("nextval('" + attr.SequenceName+"')", Precedence.Primary);
+				{
+					var name     = Convert(attr.SequenceName, ConvertType.NameToQueryTable).ToString();
+					var database = GetTableDatabaseName(table);
+					var owner    = GetTableOwnerName   (table);
+
+					var sb = BuildTableName(new StringBuilder(), database, owner, name);
+
+					return new SqlExpression("nextval('" + sb + "')", Precedence.Primary);
+				}
 			}
 
 			return base.GetIdentityExpression(table);
@@ -158,5 +172,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			base.BuildCreateTableFieldType(field);
 		}
+
+		protected override bool BuildJoinType(SelectQuery.JoinedTable join)
+		{
+			switch (join.JoinType)
+			{
+				case SelectQuery.JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL "); return true;
+				case SelectQuery.JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
+			}
+
+			return base.BuildJoinType(join);
+		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.NpgsqlDbType.ToString();
+		}
+
+#endif
 	}
 }

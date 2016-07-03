@@ -29,7 +29,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug.Silverlight.5\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -64,6 +64,7 @@
     <Reference Include="System.Xml.Linq, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\ArrayT.cs" />
     <Compile Include="Common\Configuration.cs" />
     <Compile Include="Common\ConvertBuilder.cs" />
@@ -71,9 +72,21 @@
     <Compile Include="Common\ConvertInfo.cs" />
     <Compile Include="Common\ConvertT.cs" />
     <Compile Include="Common\DefaultValue.cs" />
+    <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
-    <Compile Include="Common\Silverlight5Compatibility.cs" />
     <Compile Include="Common\Tools.cs" />
+    <Compile Include="Compatibility\System\Collections\Concurrent\ConcurrentDictionary.cs" />
+    <Compile Include="Compatibility\System\Data\DataRowVersion.cs" />
+    <Compile Include="Compatibility\System\Data\DataTable.cs" />
+    <Compile Include="Compatibility\System\Data\DbType.cs" />
+    <Compile Include="Compatibility\System\Data\IDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\IDataReader.cs" />
+    <Compile Include="Compatibility\System\Data\IDataRecord.cs" />
+    <Compile Include="Compatibility\System\Data\IDbDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+    <Compile Include="Compatibility\System\Data\ParameterDirection.cs" />
+    <Compile Include="Compatibility\System\Data\SqlDbType.cs" />
+    <Compile Include="Compatibility\System\SerializableAttribute.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="DataProvider\Access\AccessSqlBuilder.cs" />
@@ -82,18 +95,22 @@
     <Compile Include="DataProvider\DB2\DB2SqlBuilderBase.cs" />
     <Compile Include="DataProvider\DB2\DB2Version.cs" />
     <Compile Include="DataProvider\DB2\DB2zOSSqlBuilder.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdConfiguration.cs" />
+    <Compile Include="DataProvider\Firebird\FirebirdIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\Firebird\FirebirdSqlBuilder.cs" />
     <Compile Include="DataProvider\Informix\InformixSqlBuilder.cs" />
     <Compile Include="DataProvider\MySql\MySqlSqlBuilder.cs" />
     <Compile Include="DataProvider\Oracle\OracleSqlBuilder.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLIdentifierQuoteMode.cs" />
     <Compile Include="DataProvider\PostgreSQL\PostgreSQLSqlBuilder.cs" />
+    <Compile Include="DataProvider\SapHana\SapHanaSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlCe\SqlCeSqlBuilder.cs" />
     <Compile Include="DataProvider\SQLite\SQLiteSqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2000SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2005SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2008SqlBuilder.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServer2012SqlBuilder.cs" />
+    <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerSqlBuilder.cs" />
     <Compile Include="DataProvider\Sybase\SybaseSqlBuilder.cs" />
     <Compile Include="DataType.cs" />
@@ -103,6 +120,8 @@
     <Compile Include="Expressions\ConvertFromDataReaderExpression.cs" />
     <Compile Include="Expressions\DefaultValueExpression.cs" />
     <Compile Include="Expressions\Extensions.cs" />
+    <Compile Include="Expressions\GetItemExpression.cs" />
+    <Compile Include="Expressions\IGenericInfoProvider.cs" />
     <Compile Include="Expressions\InternalExtensions.cs" />
     <Compile Include="Expressions\MemberHelper.cs" />
     <Compile Include="Expressions\TransformInfo.cs" />
@@ -117,8 +136,10 @@
     <Compile Include="Linq\Builder\AsUpdatableBuilder.cs" />
     <Compile Include="Linq\Builder\BuildInfo.cs" />
     <Compile Include="Linq\Builder\CastBuilder.cs" />
+    <Compile Include="Linq\Builder\ChangeTypeExpressionBuilder.cs" />
     <Compile Include="Linq\Builder\ConcatUnionBuilder.cs" />
     <Compile Include="Linq\Builder\ContainsBuilder.cs" />
+    <Compile Include="Linq\Builder\ContextParser.cs" />
     <Compile Include="Linq\Builder\ConvertFlags.cs" />
     <Compile Include="Linq\Builder\CountBuilder.cs" />
     <Compile Include="Linq\Builder\DefaultIfEmptyBuilder.cs" />
@@ -161,12 +182,14 @@
     <Compile Include="Linq\Builder\TakeSkipBuilder.cs" />
     <Compile Include="Linq\Builder\UpdateBuilder.cs" />
     <Compile Include="Linq\Builder\WhereBuilder.cs" />
+    <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\CompiledTableT.cs" />
     <Compile Include="Linq\DataContextInfo.cs" />
     <Compile Include="Linq\ExpressionQuery.cs" />
     <Compile Include="Linq\ExpressionQueryImpl.cs" />
     <Compile Include="Linq\Expressions.cs" />
     <Compile Include="Linq\IDataContextInfo.cs" />
+    <Compile Include="Linq\IExpressionInfo.cs" />
     <Compile Include="Linq\IExpressionQuery.cs" />
     <Compile Include="Linq\IExpressionQueryT.cs" />
     <Compile Include="Linq\IQueryContext.cs" />
@@ -186,6 +209,7 @@
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
@@ -201,8 +225,10 @@
     <Compile Include="Mapping\NullableAttribute.cs" />
     <Compile Include="Mapping\PrimaryKeyAttribute.cs" />
     <Compile Include="Mapping\PropertyMappingBuilder.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
@@ -241,6 +267,7 @@
     <Compile Include="SqlProvider\ISqlBuilder.cs" />
     <Compile Include="SqlProvider\ISqlOptimizer.cs" />
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
+    <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
     <Compile Include="SqlQuery\Extensions.cs" />
     <Compile Include="SqlQuery\ICloneableElement.cs" />
@@ -255,6 +282,7 @@
     <Compile Include="SqlQuery\QueryType.cs" />
     <Compile Include="SqlQuery\QueryVisitor.cs" />
     <Compile Include="SqlQuery\SelectQuery.cs" />
+    <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="SqlQuery\SqlBinaryExpression.cs" />
     <Compile Include="SqlQuery\SqlDataType.cs" />
     <Compile Include="SqlQuery\SqlException.cs" />
@@ -280,6 +308,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Compatibility\System\Security\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Reflection;
@@ -7,13 +9,69 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Data;
 
-	public static class OracleTools
+	public static partial class OracleTools
 	{
-		public static string AssemblyName = "Oracle.DataAccess";
+		public static string AssemblyName;
 
-		static readonly OracleDataProvider _oracleDataProvider = new OracleDataProvider();
+		static readonly OracleDataProvider _oracleNativeDataProvider  = new OracleDataProvider(ProviderName.OracleNative);
+		static readonly OracleDataProvider _oracleManagedDataProvider = new OracleDataProvider(ProviderName.OracleManaged);
 
 		static OracleTools()
+		{
+			AssemblyName = DetectedProviderName == ProviderName.OracleNative ? "Oracle.DataAccess" : "Oracle.ManagedDataAccess";
+
+			DataConnection.AddDataProvider(ProviderName.Oracle, DetectedProvider);
+			DataConnection.AddDataProvider(_oracleNativeDataProvider);
+			DataConnection.AddDataProvider(_oracleManagedDataProvider);
+
+			DataConnection.AddProviderDetector(ProviderDetector);
+		}
+
+		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		{
+			if (DataConnection.IsMachineConfig(css))
+				return null;
+
+			switch (css.ProviderName)
+			{
+				case ""                                :
+				case null                              :
+
+					if (css.Name.Contains("Oracle"))
+						goto case "Oracle";
+					break;
+
+				case "Oracle.Native"                   :
+				case "Oracle.DataAccess.Client"        : return _oracleNativeDataProvider;
+				case "Oracle.Managed"                  :
+				case "Oracle.ManagedDataAccess.Client" : return _oracleManagedDataProvider;
+				case "Oracle"                          :
+
+					if (css.Name.Contains("Managed"))
+						return _oracleManagedDataProvider;
+
+					if (css.Name.Contains("Native"))
+						return _oracleNativeDataProvider;
+
+					return DetectedProvider;
+			}
+
+			return null;
+		}
+
+		static string _detectedProviderName;
+
+		public static string  DetectedProviderName
+		{
+			get { return _detectedProviderName ?? (_detectedProviderName = DetectProviderName()); }
+		}
+
+		static OracleDataProvider  DetectedProvider
+		{
+			get { return DetectedProviderName == ProviderName.OracleNative ? _oracleNativeDataProvider : _oracleManagedDataProvider; }
+		}
+
+		static string DetectProviderName()
 		{
 			try
 			{
@@ -23,18 +81,18 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (!File.Exists(Path.Combine(path, "Oracle.DataAccess.dll")))
 					if (File.Exists(Path.Combine(path, "Oracle.ManagedDataAccess.dll")))
-						AssemblyName = "Oracle.ManagedDataAccess";
+						return ProviderName.OracleManaged;;
 			}
 			catch (Exception)
 			{
 			}
 
-			DataConnection.AddDataProvider(_oracleDataProvider);
+			return ProviderName.OracleNative;
 		}
 
 		public static IDataProvider GetDataProvider()
 		{
-			return _oracleDataProvider;
+			return DetectedProvider;
 		}
 
 		public static void ResolveOracle(string path)
@@ -49,26 +107,77 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static bool IsXmlTypeSupported
 		{
-			get { return _oracleDataProvider.IsXmlTypeSupported; }
+			get
+			{
+				return DetectedProvider.IsXmlTypeSupported;
+			}
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_oracleDataProvider, connectionString);
+			return new DataConnection(DetectedProvider, connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(IDbConnection connection)
 		{
-			return new DataConnection(_oracleDataProvider, connection);
+			return new DataConnection(DetectedProvider, connection);
 		}
 
 		public static DataConnection CreateDataConnection(IDbTransaction transaction)
 		{
-			return new DataConnection(_oracleDataProvider, transaction);
+			return new DataConnection(DetectedProvider, transaction);
 		}
 
 		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
+			this DataConnection        dataConnection,
+			IEnumerable<T>             source,
+			int                        maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.MultipleRows,
+					MaxBatchSize       = maxBatchSize,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
+		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       maxBatchSize       = null,
+			int?                       bulkCopyTimeout    = null,
+			int                        notifyAfter        = 0,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					NotifyAfter        = notifyAfter,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
+		}
+
+		#endregion
+
+		public static bool UseAlternativeBulkCopy = false;
+
+		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

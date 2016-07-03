@@ -112,6 +112,10 @@ namespace Tests.Model
 			[Association(ThisKey="EmployeeID", OtherKey="EmployeeID")] public List<Order>             Orders;
 			[Association(ThisKey="ReportsTo",  OtherKey="EmployeeID")] public Employee                ReportsToEmployee;
 
+			public Employee          Employee2         { get; set; }
+			public Order             Order             { get; set; }
+			public EmployeeTerritory EmployeeTerritory { get; set; }
+
 			protected override int Key
 			{
 				get { return EmployeeID; }
@@ -163,6 +167,8 @@ namespace Tests.Model
 			[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)] public Customer          Customer;
 			[Association(ThisKey="EmployeeID", OtherKey="EmployeeID")]                  public Employee          Employee;
 			[Association(ThisKey="ShipVia",    OtherKey="ShipperID")]                   public Shipper           Shipper;
+
+			public OrderDetail OrderDetail { get; set; }
 
 			protected override int Key
 			{
@@ -241,6 +247,8 @@ namespace Tests.Model
 			[PrimaryKey, NotNull] public string TerritoryID;
 			[Column, NotNull]     public string TerritoryDescription;
 			[Column]              public int    RegionID;
+
+			public EmployeeTerritory EmployeeTerritory { get; set; }
 
 			[Association(ThisKey="TerritoryID", OtherKey="TerritoryID")]
 			public List<EmployeeTerritory> EmployeeTerritories;

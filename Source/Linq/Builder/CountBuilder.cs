@@ -18,22 +18,24 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var returnType = methodCall.Method.ReturnType;
-			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
 			if (sequence.SelectQuery != buildInfo.SelectQuery)
 			{
-				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
-				{
-					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
-					{
-						SelectQuery = ((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
-					};
-
-					ctx.Sql        = ctx.SelectQuery;
-					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
-
-					return ctx;
-				}
+//				if (sequence is JoinBuilder.GroupJoinSubQueryContext)
+//				{
+//					var ctx = new CountContext(buildInfo.Parent, sequence, returnType)
+//					{
+//						SelectQuery =
+//							sequence.SelectQuery
+//							//((JoinBuilder.GroupJoinSubQueryContext)sequence).GetCounter(methodCall)
+//					};
+//
+//					ctx.Sql        = ctx.SelectQuery;
+//					ctx.FieldIndex = ctx.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, ctx.SelectQuery), "cnt");
+//
+//					return ctx;
+//				}
 
 				if (sequence is GroupByBuilder.GroupByContext)
 				{
@@ -47,10 +49,19 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null ||
-			   !sequence.SelectQuery.GroupBy.IsEmpty)
+			    sequence.SelectQuery.Select.SkipValue != null)
 			{
 				sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
+				sequence = new SubQueryContext(sequence);
+			}
+			else if (!sequence.SelectQuery.GroupBy.IsEmpty)
+			{
+				if (!builder.DataContextInfo.SqlProviderFlags.IsSybaseBuggyGroupBy)
+					sequence.SelectQuery.Select.Add(new SqlValue(0));
+				else
+					foreach (var item in sequence.SelectQuery.GroupBy.Items)
+						sequence.SelectQuery.Select.Add(item);
+
 				sequence = new SubQueryContext(sequence);
 			}
 

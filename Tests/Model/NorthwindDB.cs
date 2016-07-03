@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -33,7 +28,7 @@ namespace Tests.Model
 		public ITable<Northwind.Supplier>            Supplier            { get { return GetTable<Northwind.Supplier>();            } }
 		public ITable<Northwind.Territory>           Territory           { get { return GetTable<Northwind.Territory>();           } }
 		
-#if !MONO
+//#if !MONO
 		
 		public class FreeTextKey<T>
 		{
@@ -60,7 +55,14 @@ namespace Tests.Model
 				fieldSelector,
 				text);
 		}
-		
-#endif
+
+//#endif
+
+		[Sql.TableExpression("{0} {1} WITH (UPDLOCK)")]
+		public ITable<T> WithUpdateLock<T>()
+			where T : class 
+		{
+			return GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+		}
 	}
 }

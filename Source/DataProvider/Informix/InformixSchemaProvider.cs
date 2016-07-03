@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -78,6 +78,24 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return DataType.Undefined;
+		}
+
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.Informix";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "DATETIME" : return "IfxDateTime";
+				case "INTERVAL" : return "IfxTimeSpan";
+				case "DECIMAL"  : return "IfxDecimal";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -141,6 +159,8 @@ namespace LinqToDB.DataProvider.Informix
 						FROM systables t
 							JOIN sysindexes x ON t.tabid = x.tabid
 						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
+				group pk by pk.TableID into gr
+				select gr.First() into pk
 				from c in pk.arr.Select((c,i) => new { c, i })
 				where c.c != null
 				select new PrimaryKeyInfo
@@ -265,9 +285,9 @@ namespace LinqToDB.DataProvider.Informix
 						case    4 : c.DataType = "SMALLFLOAT";       break;
 						case    5 :
 							c.DataType  = "DECIMAL";
-							c.Precision = len / 256;
+							c.Precision = (int)(len / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = len % 256;
+								c.Scale = (int)(len % 256);
 							break;
 						case    6 :
 							c.DataType   = "SERIAL";
@@ -276,14 +296,14 @@ namespace LinqToDB.DataProvider.Informix
 						case    7 : c.DataType = "DATE";             break;
 						case    8 :
 							c.DataType  = "MONEY";
-							c.Precision = len / 256;
+							c.Precision = (int)(len / 256);
 							if (c.Precision >= len % 256)
-								c.Scale = len % 256;
+								c.Scale = (int)(len % 256);
 							break;
 						case    9 : c.DataType = "NULL";             break;
 						case   10 :
 							c.DataType = "DATETIME";
-							SetDate(c, len);
+							SetDate(c, (int)len);
 							break;
 						case   11 : c.DataType = "BYTE";             break;
 						case   12 : c.DataType = "TEXT";             break;
@@ -293,7 +313,7 @@ namespace LinqToDB.DataProvider.Informix
 							break;
 						case   14 :
 							c.DataType = "INTERVAL";
-							SetDate(c, len);
+							SetDate(c, (int)len);
 							break;
 						case   15 :
 							c.DataType = "NCHAR";
@@ -336,6 +356,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
+			var names = new HashSet<string>();
+
 			return
 			(
 				from fk in dataConnection.Query(
@@ -367,6 +389,14 @@ namespace LinqToDB.DataProvider.Informix
 							if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
 							{
 								name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
+
+								var origName = name;
+								var n        = 0;
+
+								while (names.Contains(name))
+									name = origName + "_" + ++n;
+
+								names.Add(name);
 							}
 						}
 
@@ -420,13 +450,11 @@ namespace LinqToDB.DataProvider.Informix
 						FROM
 							sysreferences r
 								JOIN sysconstraints tc ON r.constrid = tc.constrid
-									JOIN sysindexes tx ON tc.tabid   = tx.tabid
+									JOIN sysindexes tx ON tc.tabid   = tx.tabid AND tc.idxname = tx.idxname
 									JOIN systables  tt ON tc.tabid   = tt.tabid
 								JOIN sysconstraints oc ON r.primary  = oc.constrid
-									JOIN sysindexes ox ON oc.tabid   = ox.tabid
-									JOIN systables  ot ON oc.tabid   = ot.tabid
-						WHERE
-							oc.constrtype = 'P'")
+									JOIN sysindexes ox ON oc.tabid   = ox.tabid AND oc.idxname = ox.idxname
+									JOIN systables  ot ON oc.tabid   = ot.tabid")
 				from c in fk.arr.Select((c,i) => new { c, i })
 				where c.c[0] != null
 				select new ForeingKeyInfo

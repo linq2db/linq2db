@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.ServiceModel
 {
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -86,6 +87,20 @@ namespace LinqToDB.ServiceModel
 			set { _mappingSchema = value; }
 		}
 
+		public  bool InlineParameters { get; set; }
+
+		private List<string> _queryHints;
+		public  List<string>  QueryHints
+		{
+			get { return _queryHints ?? (_queryHints = new List<string>()); }
+		}
+
+		private List<string> _nextQueryHints;
+		public  List<string>  NextQueryHints
+		{
+			get { return _nextQueryHints ?? (_nextQueryHints = new List<string>()); }
+		}
+
 		private        Type _sqlProviderType;
 		public virtual Type  SqlProviderType
 		{
@@ -145,7 +160,7 @@ namespace LinqToDB.ServiceModel
 
 		static MethodInfo GetReaderMethodInfo(Type type)
 		{
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
 				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
@@ -189,15 +204,17 @@ namespace LinqToDB.ServiceModel
 								_sqlBuilders.Add(type, _createSqlProvider =
 									Expression.Lambda<Func<ISqlBuilder>>(
 										Expression.New(
-											type.GetConstructor(new[]
+											type.GetConstructorEx(new[]
 											{
 												typeof(ISqlOptimizer),
-												typeof(SqlProviderFlags)
+												typeof(SqlProviderFlags),
+												typeof(ValueToSqlConverter)
 											}),
 											new Expression[]
 											{
 												Expression.Constant(GetSqlOptimizer()),
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
+												Expression.Constant(((IDataContext)this).SqlProviderFlags),
+												Expression.Constant(((IDataContext)this).MappingSchema.ValueToSqlConverter)
 											})).Compile());
 				}
 
@@ -223,7 +240,7 @@ namespace LinqToDB.ServiceModel
 								_sqlOptimizers.Add(type, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
 										Expression.New(
-											type.GetConstructor(new[]
+											type.GetConstructorEx(new[]
 											{
 												typeof(SqlProviderFlags)
 											}),
@@ -287,7 +304,7 @@ namespace LinqToDB.ServiceModel
 		{
 			var ctx  = (QueryContext)query;
 			var q    = ctx.Query.SelectQuery.ProcessParameters();
-			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters());
+			var data = LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints);
 
 			if (_batchCounter > 0)
 			{
@@ -313,7 +330,7 @@ namespace LinqToDB.ServiceModel
 
 			return ctx.Client.ExecuteScalar(
 				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
+				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
 		}
 
 		IDataReader IDataContext.ExecuteReader(object query)
@@ -328,7 +345,7 @@ namespace LinqToDB.ServiceModel
 			var q      = ctx.Query.SelectQuery.ProcessParameters();
 			var ret    = ctx.Client.ExecuteReader(
 				Configuration,
-				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters()));
+				LinqServiceSerializer.Serialize(q, q.IsParameterDependent ? q.Parameters.ToArray() : ctx.Query.GetParameters(), ctx.Query.QueryHints));
 			var result = LinqServiceSerializer.DeserializeResult(ret);
 
 			return new ServiceModelDataReader(MappingSchema, result);
@@ -387,22 +404,21 @@ namespace LinqToDB.ServiceModel
 				sb.AppendLine();
 			}
 
-			var cc       = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
-			var commands = new string[cc];
+			var cc = sqlBuilder.CommandCount(ctx.Query.SelectQuery);
 
 			for (var i = 0; i < cc; i++)
 			{
-				sb.Length = 0;
-
 				sqlBuilder.BuildSql(i, ctx.Query.SelectQuery, sb);
-				commands[i] = sb.ToString();
+
+				if (i == 0 && ctx.Query.QueryHints != null && ctx.Query.QueryHints.Count > 0)
+				{
+					var sql = sb.ToString();
+
+					sql = sqlBuilder.ApplyQueryHints(sql, ctx.Query.QueryHints);
+
+					sb = new StringBuilder(sql);
+				}
 			}
-
-			if (!ctx.Query.SelectQuery.IsParameterDependent)
-				ctx.Query.Context = commands;
-
-			foreach (var command in commands)
-				sb.AppendLine(command);
 
 			return sb.ToString();
 		}

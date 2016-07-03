@@ -8,9 +8,6 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
-	using System.Diagnostics;
-
-	using Common;
 	using DataProvider;
 	using Linq;
 	using Mapping;
@@ -37,18 +34,19 @@ namespace LinqToDB.Data
 			return DataExtensions.GetTable<T>(this, instance, methodInfo, parameters);
 		}
 
-		class PreparedQuery
+		internal class PreparedQuery
 		{
 			public string[]           Commands;
 			public List<SqlParameter> SqlParameters;
 			public IDbDataParameter[] Parameters;
 			public SelectQuery        SelectQuery;
 			public ISqlBuilder        SqlProvider;
+			public List<string>       QueryHints;
 		}
 
 		#region SetQuery
 
-		PreparedQuery GetCommand(IQueryContext query)
+		internal PreparedQuery GetCommand(IQueryContext query)
 		{
 			if (query.Context != null)
 			{
@@ -56,7 +54,8 @@ namespace LinqToDB.Data
 				{
 					Commands      = (string[])query.Context,
 					SqlParameters = query.SelectQuery.Parameters,
-					SelectQuery   = query.SelectQuery
+					SelectQuery   = query.SelectQuery,
+					QueryHints    = query.QueryHints,
 				 };
 			}
 
@@ -92,7 +91,8 @@ namespace LinqToDB.Data
 				Commands      = commands,
 				SqlParameters = sql.Parameters,
 				SelectQuery   = sql,
-				SqlProvider   = sqlProvider
+				SqlProvider   = sqlProvider,
+				QueryHints    = query.QueryHints,
 			};
 		}
 
@@ -148,7 +148,7 @@ namespace LinqToDB.Data
 				dataType = MappingSchema.GetDataType(
 					parm.SystemType == typeof(object) && parm.Value != null ?
 						parm.Value.GetType() :
-						parm.SystemType);
+						parm.SystemType).DataType;
 			}
 
 			DataProvider.SetParameter(p, name, dataType, parm.Value);
@@ -166,7 +166,7 @@ namespace LinqToDB.Data
 
 			if (pq.Commands.Length == 1)
 			{
-				SetCommand(pq.Commands[0]);
+				InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 				if (pq.Parameters != null)
 					foreach (var p in pq.Parameters)
@@ -178,7 +178,7 @@ namespace LinqToDB.Data
 			{
 				for (var i = 0; i < pq.Commands.Length; i++)
 				{
-					SetCommand(pq.Commands[i]);
+					InitCommand(CommandType.Text, pq.Commands[i], null, i == 0 ? pq.QueryHints : null);
 
 					if (i == 0 && pq.Parameters != null)
 						foreach (var p in pq.Parameters)
@@ -208,7 +208,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
+			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -249,7 +249,7 @@ namespace LinqToDB.Data
 
 			ExecuteNonQuery();
 
-			SetCommand(pq.Commands[1]);
+			InitCommand(CommandType.Text, pq.Commands[1], null, null);
 
 			return ExecuteScalar();
 		}
@@ -258,7 +258,7 @@ namespace LinqToDB.Data
 		{
 			var pq = (PreparedQuery)query;
 
-			SetCommand(pq.Commands[0]);
+			InitCommand(CommandType.Text, pq.Commands[0], null, pq.QueryHints);
 
 			if (pq.Parameters != null)
 				foreach (var p in pq.Parameters)
@@ -293,38 +293,31 @@ namespace LinqToDB.Data
 
 			sb.AppendLine();
 
-			if (pq.Parameters != null && pq.Parameters.Length > 0)
-			{
-				foreach (var p in pq.Parameters)
-					sb
-						.Append("-- DECLARE ")
-						.Append(p.ParameterName)
-						.Append(' ')
-						.Append(p.Value == null ? p.DbType.ToString() : p.Value.GetType().Name)
-						.AppendLine();
+			sqlProvider.PrintParameters(sb, pq.Parameters);
 
-				sb.AppendLine();
-
-				foreach (var p in pq.Parameters)
-				{
-					var value = p.Value;
-
-					if (value is string || value is char)
-						value = "'" + value.ToString().Replace("'", "''") + "'";
-
-					sb
-						.Append("-- SET ")
-						.Append(p.ParameterName)
-						.Append(" = ")
-						.Append(value)
-						.AppendLine();
-				}
-
-				sb.AppendLine();
-			}
+			var isFirst = true;
 
 			foreach (var command in pq.Commands)
+			{
 				sb.AppendLine(command);
+
+				if (isFirst && pq.QueryHints != null && pq.QueryHints.Count > 0)
+				{
+					isFirst = false;
+
+					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+						sb.Length--;
+
+					sb.AppendLine();
+
+					var sql = sb.ToString();
+
+					var sqlBuilder = DataProvider.CreateSqlBuilder();
+					sql = sqlBuilder.ApplyQueryHints(sql, pq.QueryHints);
+
+					sb = new StringBuilder(sql);
+				}
+			}
 
 			while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
 				sb.Length--;
@@ -337,6 +330,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region IDataContext Members
+
 		SqlProviderFlags IDataContext.SqlProviderFlags { get { return DataProvider.SqlProviderFlags; } }
 		Type             IDataContext.DataReaderType   { get { return DataProvider.DataReaderType;   } }
 

@@ -10,8 +10,9 @@ namespace LinqToDB.Metadata
 	{
 		public static MetadataReader Default = new MetadataReader(
 			new AttributeReader()
-#if !SILVERLIGHT
-			,new SystemDataLinqAttributeReader()
+#if !SILVERLIGHT && !NETFX_CORE
+			, new SystemDataLinqAttributeReader()
+			, new SystemDataSqlServerAttributeReader()
 #endif
 		);
 

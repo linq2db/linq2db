@@ -15,10 +15,10 @@ namespace LinqToDB.Expressions
 
 		public static bool IsConstantable(this Type type)
 		{
-			if (type.IsEnum)
+			if (type.IsEnumEx())
 				return true;
 
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.Int16   :
 				case TypeCode.Int32   :
@@ -37,7 +37,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (type.IsNullable())
-				return type.GetGenericArguments()[0].IsConstantable();
+				return type.GetGenericArgumentsEx()[0].IsConstantable();
 
 			return false;
 		}
@@ -717,7 +717,7 @@ namespace LinqToDB.Expressions
 
 		#region Helpers
 
-		static public Expression Unwrap(this Expression ex)
+		public static Expression Unwrap(this Expression ex)
 		{
 			if (ex == null)
 				return null;
@@ -730,7 +730,7 @@ namespace LinqToDB.Expressions
 					{
 						var ue = (UnaryExpression)ex;
 
-						if (!ue.Operand.Type.IsEnum)
+						if (!ue.Operand.Type.IsEnumEx())
 							return ue.Operand.Unwrap();
 
 						break;
@@ -740,7 +740,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		static public Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
+		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
 		{
 			var accessors = new Dictionary<Expression,Expression>();
 
@@ -785,7 +785,7 @@ namespace LinqToDB.Expressions
 			return accessors;
 		}
 
-		static public Expression GetRootObject(this Expression expr)
+		public static Expression GetRootObject(this Expression expr)
 		{
 			if (expr == null)
 				return null;
@@ -819,7 +819,7 @@ namespace LinqToDB.Expressions
 			return expr;
 		}
 
-		static public List<Expression> GetMembers(this Expression expr)
+		public static List<Expression> GetMembers(this Expression expr)
 		{
 			if (expr == null)
 				return new List<Expression>();
@@ -861,19 +861,19 @@ namespace LinqToDB.Expressions
 			return list;
 		}
 
-		static public bool IsQueryable(this MethodCallExpression method)
+		public static bool IsQueryable(this MethodCallExpression method)
 		{
 			var type = method.Method.DeclaringType;
 
 			return type == typeof(Queryable) || type == typeof(Enumerable) || type == typeof(LinqExtensions);
 		}
 
-		static public bool IsQueryable(this MethodCallExpression method, string name)
+		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
 			return method.Method.Name == name && method.IsQueryable();
 		}
 
-		static public bool IsQueryable(this MethodCallExpression method, params string[] names)
+		public static bool IsQueryable(this MethodCallExpression method, params string[] names)
 		{
 			if (method.IsQueryable())
 				foreach (var name in names)
@@ -929,7 +929,7 @@ namespace LinqToDB.Expressions
 			return expression;
 		}
 
-		static public Expression GetLevelExpression(this Expression expression, int level)
+		public static Expression GetLevelExpression(this Expression expression, int level)
 		{
 			var current = 0;
 			var expr    = FindLevel(expression, level, ref current);
@@ -938,6 +938,24 @@ namespace LinqToDB.Expressions
 				throw new InvalidOperationException();
 
 			return expr;
+		}
+
+		public static int GetLevel(this Expression expression)
+		{
+			switch (expression.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+					{
+						var e = ((MemberExpression)expression);
+
+						if (e.Expression != null)
+							return GetLevel(e.Expression.Unwrap()) + 1;
+
+						break;
+					}
+			}
+
+			return 0;
 		}
 
 		#endregion

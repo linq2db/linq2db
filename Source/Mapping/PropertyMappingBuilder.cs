@@ -6,8 +6,6 @@ namespace LinqToDB.Mapping
 {
 	using Expressions;
 
-	using SqlQuery;
-
 	public class PropertyMappingBuilder<T>
 	{
 		#region Init
@@ -91,6 +89,11 @@ namespace LinqToDB.Mapping
 			return SetColumn(a => a.DbType = dbType);
 		}
 
+		public PropertyMappingBuilder<T> HasCreateFormat(string format)
+		{
+			return SetColumn(a => a.CreateFormat = format);
+		}
+
 		public PropertyMappingBuilder<T> HasStorage(string storage)
 		{
 			return SetColumn(a => a.Storage = storage);
@@ -114,6 +117,11 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<T> IsNullable(bool isNullable = true)
 		{
 			return SetColumn(a => a.CanBeNull = isNullable);
+		}
+
+		public PropertyMappingBuilder<T> IsNotColumn()
+		{
+			return SetColumn(a => a.IsColumn = false);
 		}
 
 		public PropertyMappingBuilder<T> HasLength(int length)

@@ -160,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 						var types  = methodCall.Method.GetGenericArguments();
 						var mgen   = methodCall.Method.GetGenericMethodDefinition();
 						var btype  = typeof(ExpressionHoder<,>).MakeGenericType(types[0], selector.Body.Type);
-						var fields = btype.GetFields();
+						var fields = btype.GetFieldsEx();
 						var pold   = selector.Parameters[0];
 						var psel   = Expression.Parameter(types[0], pold.Name);
 

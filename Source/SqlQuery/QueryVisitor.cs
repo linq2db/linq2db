@@ -1316,7 +1316,16 @@ namespace LinqToDB.SqlQuery
 						var q = (SelectQuery)element;
 						IQueryElement parent = null;
 
-						var doConvert = q.ParentSelect != null && !_visitedElements.TryGetValue(q.ParentSelect, out parent);
+						var doConvert = false;
+
+						if (q.ParentSelect != null)
+						{
+							if (!_visitedElements.TryGetValue(q.ParentSelect, out parent))
+							{
+								doConvert = true;
+								parent    = q.ParentSelect;
+							}
+						}
 
 						if (!doConvert)
 						{
@@ -1342,7 +1351,8 @@ namespace LinqToDB.SqlQuery
 
 						var nq = new SelectQuery { QueryType = q.QueryType };
 
-						_visitedElements.Add(q, nq);
+						_visitedElements.Add(q,     nq);
+						_visitedElements.Add(q.All, nq.All);
 
 						var fc = (SelectQuery.FromClause)   ConvertInternal(q.From,    action) ?? q.From;
 						var sc = (SelectQuery.SelectClause) ConvertInternal(q.Select,  action) ?? q.Select;

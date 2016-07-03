@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
+	using Extensions;
 	using Metadata;
+	using SqlQuery;
 
 	class MappingSchemaInfo
 	{
@@ -66,6 +71,58 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
+		#region GenericConvertProvider
+
+		volatile Dictionary<Type,List<Type[]>> _genericConvertProviders;
+
+		public bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
+		{
+			var changed = false;
+
+			if (_genericConvertProviders != null)
+			{
+				lock (_genericConvertProviders)
+				{
+					foreach (var type in _genericConvertProviders)
+					{
+						var args = type.Key.GetGenericArgumentsEx();
+
+						if (args.Length == types.Length)
+						{
+							if (type.Value.Aggregate(false, (cur,ts) => cur || ts.SequenceEqual(types)))
+								continue;
+
+							var gtype    = type.Key.MakeGenericType(types);
+							var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype);
+
+							provider.SetInfo(new MappingSchema(this));
+
+							type.Value.Add(types);
+
+							changed = true;
+						}
+					}
+				}
+			}
+
+			return changed;
+		}
+
+		public void SetGenericConvertProvider(Type type)
+		{
+			if (_genericConvertProviders == null)
+				lock (this)
+					if (_genericConvertProviders == null)
+						_genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+
+			if (!_genericConvertProviders.ContainsKey(type))
+				lock (_genericConvertProviders)
+					if (!_genericConvertProviders.ContainsKey(type))
+						_genericConvertProviders[type] = new List<Type[]>();
+		}
+
+		#endregion
+
 		#region ConvertInfo
 
 		ConvertInfo _convertInfo;
@@ -120,26 +177,31 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
-		volatile ConcurrentDictionary<Type,DataType> _dataTypes;
+		volatile ConcurrentDictionary<Type,SqlDataType> _dataTypes;
 
-		public Option<DataType> GetDataType(Type type)
+		public Option<SqlDataType> GetDataType(Type type)
 		{
 			if (_dataTypes != null)
 			{
-				DataType dataType;
+				SqlDataType dataType;
 				if (_dataTypes.TryGetValue(type, out dataType))
-					return Option<DataType>.Some(dataType);
+					return Option<SqlDataType>.Some(dataType);
 			}
 
-			return Option<DataType>.None;
+			return Option<SqlDataType>.None;
 		}
 
 		public void SetDataType(Type type, DataType dataType)
 		{
+			SetDataType(type, new SqlDataType(dataType, type, null, null, null));
+		}
+
+		public void SetDataType(Type type, SqlDataType dataType)
+		{
 			if (_dataTypes == null)
 				lock (this)
 					if (_dataTypes == null)
-						_dataTypes = new ConcurrentDictionary<Type,DataType>();
+						_dataTypes = new ConcurrentDictionary<Type,SqlDataType>();
 
 			_dataTypes[type] = dataType;
 		}

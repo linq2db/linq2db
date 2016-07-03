@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = methodCall.Arguments[1].Unwrap();
 
-						if (expr is LambdaExpression)
+						if (expr is LambdaExpression && ((LambdaExpression)expr).ReturnType == typeof(bool))
 						{
 							CheckAssociation(sequence);
 
@@ -65,12 +65,31 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
-							//
-							var into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+							IBuildContext into;
+
+							if (expr is LambdaExpression)
+							{
+								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
+								//
+								var body      = ((LambdaExpression)expr).Body;
+								int level     = body.GetLevel();
+								var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
+
+								if (tableInfo.Result == false)
+									throw new LinqException("Expression '{0}' mast be a table.");
+
+								into = tableInfo.Context;
+							}
+							else
+							{
+								// static int Update<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
+								//
+								into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+							}
 
 							sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-							sequence.SelectQuery.ResolveWeakJoins(new List<ISqlTableSource>());
+							new SelectQueryOptimizer(builder.DataContextInfo.SqlProviderFlags, sequence.SelectQuery)
+								.ResolveWeakJoins(new List<ISqlTableSource>());
 							sequence.SelectQuery.Select.Columns.Clear();
 
 							BuildSetter(
@@ -213,6 +232,17 @@ namespace LinqToDB.Linq.Builder
 					{
 						var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 						var expr   = builder.ConvertToSqlExpression(ctx, ma.Expression);
+
+						if (expr.ElementType == QueryElementType.SqlParameter)
+						{
+							var parm  = (SqlParameter)expr;
+							var field = column[0].Sql is SqlField
+								? (SqlField)column[0].Sql
+								: (SqlField)((SelectQuery.Column)column[0].Sql).Expression;
+
+							if (parm.DataType == DataType.Undefined)
+								parm.DataType = field.DataType;
+						}
 
 						items.Add(new SelectQuery.SetExpression(column[0].Sql, expr));
 					}

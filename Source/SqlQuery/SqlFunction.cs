@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 		public int              Precedence { get; private set; }
 		public ISqlExpression[] Parameters { get; private set; }
 
-		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count",  table.All); }
+		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count",  new SqlExpression("*")); }
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   SqlQuery.Precedence.Comparison, subQuery); }
@@ -75,9 +75,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull()
+		private bool? _canBeNull;
+		public  bool   CanBeNull
 		{
-			return true;
+			get { return _canBeNull ?? true; }
+			set { _canBeNull = value;        }
 		}
 
 		#endregion

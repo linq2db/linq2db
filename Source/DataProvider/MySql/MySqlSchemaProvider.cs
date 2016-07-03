@@ -12,6 +12,28 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlSchemaProvider : SchemaProviderBase
 	{
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			return base.GetDataTypes(dataConnection)
+				.Select(dt =>
+				{
+					if (dt.CreateFormat != null && dt.CreateFormat.EndsWith(" UNSIGNED", StringComparison.OrdinalIgnoreCase))
+					{
+						return new DataTypeInfo
+						{
+							TypeName         = dt.CreateFormat,
+							DataType         = dt.DataType,
+							CreateFormat     = dt.CreateFormat,
+							CreateParameters = dt.CreateParameters,
+							ProviderDbType   = dt.ProviderDbType,
+						};
+					}
+
+					return dt;
+				})
+				.ToList();
+		}
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
 		{
 			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
@@ -81,9 +103,9 @@ namespace LinqToDB.DataProvider.MySql
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
 			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
-			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
+//			var vcs = ((DbConnection)dataConnection.Connection).GetSchema("ViewColumns");
 
-			return
+			var ret =
 			(
 				from c in tcs.AsEnumerable()
 				let dataType = c.Field<string>("DATA_TYPE")
@@ -92,31 +114,58 @@ namespace LinqToDB.DataProvider.MySql
 					TableID      = c.Field<string>("TABLE_SCHEMA") + ".." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
 					ColumnType   = c.Field<string>("COLUMN_TYPE"),
 					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
 				}
-			).Concat(
-				from c in vcs.AsEnumerable()
-				let dataType = c.Field<string>("DATA_TYPE")
-				select new ColumnInfo
+			)
+//			.Concat(
+//				from c in vcs.AsEnumerable()
+//				let dataType = c.Field<string>("DATA_TYPE")
+//				select new ColumnInfo
+//				{
+//					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
+//					Name         = c.Field<string>("COLUMN_NAME"),
+//					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
+//					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
+//					DataType     = dataType,
+//					Length       = Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]),
+//					Precision    = Converter.ChangeTypeTo<int?> (c["NUMERIC_PRECISION"]),
+//					Scale        = Converter.ChangeTypeTo<int?> (c["NUMERIC_SCALE"]),
+//					ColumnType   = c.Field<string>("COLUMN_TYPE"),
+//					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
+//				}
+//			)
+			.Select(ci =>
+			{
+				switch (ci.DataType)
 				{
-					TableID      = c.Field<string>("VIEW_SCHEMA") + ".." + c.Field<string>("VIEW_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
-					IsNullable   = c.Field<string>("IS_NULLABLE") == "YES",
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
-					ColumnType   = c.Field<string>("COLUMN_TYPE"),
-					IsIdentity   = c.Field<string>("EXTRA") == "auto_increment",
+					case "bit"        :
+					case "date"       :
+					case "datetime"   :
+					case "timestamp"  :
+					case "time"       :
+					case "tinyint"    :
+					case "smallint"   :
+					case "int"        :
+					case "year"       :
+					case "mediumint"  :
+					case "bigint"     :
+					case "tiny int"   :
+						ci.Precision = null;
+						ci.Scale     = null;
+						break;
 				}
-			).ToList();
+
+				return ci;
+			})
+			.ToList();
+
+			return ret;
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
@@ -138,9 +187,9 @@ namespace LinqToDB.DataProvider.MySql
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
-			switch (dataType.ToUpper())
+			switch (dataType.ToLower())
 			{
 				case "bit"        : return DataType.UInt64;
 				case "blob"       : return DataType.Blob;
@@ -165,7 +214,7 @@ namespace LinqToDB.DataProvider.MySql
 				case "longtext"   : return DataType.Text;
 				case "double"     : return DataType.Double;
 				case "float"      : return DataType.Single;
-				case "tinyint"    : return DataType.SByte;
+				case "tinyint"    : return columnType == "tinyint(1)" ? DataType.Boolean : DataType.SByte;
 				case "smallint"   : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16;
 				case "int"        : return columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32;
 				case "year"       : return DataType.Int32;
@@ -178,14 +227,50 @@ namespace LinqToDB.DataProvider.MySql
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override string GetProviderSpecificTypeNamespace()
 		{
-			switch (columnType)
+			return "MySql.Data.Types";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType.ToLower())
 			{
+				case "geometry"  : return "MySqlGeometry";
+				case "decimal"   : return "MySqlDecimal";
+				case "date"      :
+				case "newdate"   :
+				case "datetime"  :
+				case "timestamp" : return "MySqlDateTime";
+			}
+
+			return base.GetProviderSpecificType(dataType);
+		}
+
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		{
+			if (columnType != null && columnType.Contains("unsigned"))
+			{
+				switch (dataType.ToLower())
+				{
+					case "smallint"   : return typeof(UInt16);
+					case "int"        : return typeof(UInt32);
+					case "mediumint"  : return typeof(UInt32);
+					case "bigint"     : return typeof(UInt64);
+					case "tiny int"   : return typeof(Byte);
+				}
+			}
+
+			switch (dataType)
+			{
+				case "tinyint"   :
+					if (columnType == "tinyint(1)")
+						return typeof(Boolean);
+					break;
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

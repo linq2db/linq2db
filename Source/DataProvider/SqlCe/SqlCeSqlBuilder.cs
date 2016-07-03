@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.Data;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -8,8 +8,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public SqlCeSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new SqlCeSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new SqlCeSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildFunction(SqlFunction func)
@@ -46,9 +46,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Char          : base.BuildDataType(new SqlDataType(DataType.NChar,    type.Length)); break;
 				case DataType.VarChar       : base.BuildDataType(new SqlDataType(DataType.NVarChar, type.Length)); break;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10,4)"); break;
-#if !MONO
 				case DataType.DateTime2     :
-#endif
 				case DataType.Time          :
 				case DataType.Date          :
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime"); break;
@@ -158,5 +156,15 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			StringBuilder.Append("IDENTITY");
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.SqlDbType.ToString();
+		}
+
+#endif
 	}
 }

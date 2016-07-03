@@ -120,6 +120,9 @@
   <ItemGroup>
     <Reference Include="System">
     </Reference>
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\..\packages\Microsoft.Bcl.Immutable.1.0.34\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core">
     </Reference>
     <Reference Include="System.Data.Linq">
@@ -138,6 +141,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FullName.cs" />
+    <Compile Include="ComplexPerson.cs" />
+    <Compile Include="IPerson.cs" />
     <Compile Include="TestDataConnection.cs" />
     <Compile Include="PostgreSQLSpecific.cs" />
     <Compile Include="Extensions.cs" />
@@ -184,6 +190,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.Tests.snk" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 	using Extensions;
 	using SqlQuery;
 
-	class BasicSqlOptimizer : ISqlOptimizer
+	public class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
 
@@ -25,7 +25,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SelectQuery Finalize(SelectQuery selectQuery)
 		{
-			selectQuery.FinalizeAndValidate(
+			new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 				SqlProviderFlags.IsApplyJoinSupported,
 				SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -33,7 +33,7 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery);
 
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
-				selectQuery.FinalizeAndValidate(
+				new SelectQueryOptimizer(SqlProviderFlags, selectQuery).FinalizeAndValidate(
 					SqlProviderFlags.IsApplyJoinSupported,
 					SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -79,7 +79,7 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+					SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 					var allAnd = true;
 
@@ -252,7 +252,7 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						SelectQuery.OptimizeSearchCondition(subQuery.Where.SearchCondition);
+						SelectQueryOptimizer.OptimizeSearchCondition(subQuery.Where.SearchCondition);
 
 						var isCount      = false;
 						var isAggregated = false;
@@ -758,14 +758,14 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SearchCondition :
-					SelectQuery.OptimizeSearchCondition((SelectQuery.SearchCondition)expression);
+					SelectQueryOptimizer.OptimizeSearchCondition((SelectQuery.SearchCondition)expression);
 					break;
 
 				case QueryElementType.SqlExpression   :
 					{
 						var se = (SqlExpression)expression;
 
-						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null)
+						if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
 							return se.Parameters[0];
 					}
 
@@ -783,6 +783,17 @@ namespace LinqToDB.SqlProvider
 					{
 						var expr = (SelectQuery.Predicate.ExprExpr)predicate;
 
+						if (expr.Expr1 is SqlField && expr.Expr2 is SqlParameter)
+						{
+							if (((SqlParameter)expr.Expr2).DataType == DataType.Undefined)
+								((SqlParameter)expr.Expr2).DataType = ((SqlField)expr.Expr1).DataType;
+						}
+						else if (expr.Expr2 is SqlField && expr.Expr1 is SqlParameter)
+						{
+							if (((SqlParameter)expr.Expr1).DataType == DataType.Undefined)
+								((SqlParameter)expr.Expr1).DataType = ((SqlField)expr.Expr2).DataType;
+						}
+
 						if (expr.Operator == SelectQuery.Predicate.Operator.Equal && expr.Expr1 is SqlValue && expr.Expr2 is SqlValue)
 						{
 							var value = Equals(((SqlValue)expr.Expr1).Value, ((SqlValue)expr.Expr2).Value);
@@ -791,12 +802,12 @@ namespace LinqToDB.SqlProvider
 
 						switch (expr.Operator)
 						{
-							case SelectQuery.Predicate.Operator.Equal         :
-							case SelectQuery.Predicate.Operator.NotEqual      :
-							case SelectQuery.Predicate.Operator.Greater       :
-							case SelectQuery.Predicate.Operator.GreaterOrEqual:
-							case SelectQuery.Predicate.Operator.Less          :
-							case SelectQuery.Predicate.Operator.LessOrEqual   :
+							case SelectQuery.Predicate.Operator.Equal          :
+							case SelectQuery.Predicate.Operator.NotEqual       :
+							case SelectQuery.Predicate.Operator.Greater        :
+							case SelectQuery.Predicate.Operator.GreaterOrEqual :
+							case SelectQuery.Predicate.Operator.Less           :
+							case SelectQuery.Predicate.Operator.LessOrEqual    :
 								predicate = OptimizeCase(selectQuery, expr);
 								break;
 						}
@@ -807,12 +818,12 @@ namespace LinqToDB.SqlProvider
 
 							switch (expr.Operator)
 							{
-								case SelectQuery.Predicate.Operator.Equal :
-								case SelectQuery.Predicate.Operator.NotEqual :
+								case SelectQuery.Predicate.Operator.Equal      :
+								case SelectQuery.Predicate.Operator.NotEqual   :
 									var expr1 = expr.Expr1;
 									var expr2 = expr.Expr2;
 
-									if (expr1.CanBeNull() && expr2.CanBeNull())
+									if (expr1.CanBeNull && expr2.CanBeNull)
 									{
 										if (expr1 is SqlParameter || expr2 is SqlParameter)
 											selectQuery.IsParameterDependent = true;
@@ -873,7 +884,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.Operator == SelectQuery.Predicate.Operator.Equal)
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNull. Or
-					.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And .Expr(expr1).Equal.Expr(expr2);
+					/*.Expr(expr1).IsNotNull. And .Expr(expr2).IsNotNull. And */.Expr(expr1).Equal.Expr(expr2);
 			else
 				cond
 					.Expr(expr1).IsNull.    And .Expr(expr2).IsNotNull. Or
@@ -926,7 +937,7 @@ namespace LinqToDB.SqlProvider
 					var v3 = func.Parameters[4] as SqlValue;
 
 					if (c1 != null && c1.Conditions.Count == 1 && v1 != null && v1.Value is int &&
-					    c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
+						c2 != null && c2.Conditions.Count == 1 && v2 != null && v2.Value is int && v3 != null && v3.Value is int)
 					{
 						var ee1 = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 						var ee2 = c2.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
@@ -1000,13 +1011,13 @@ namespace LinqToDB.SqlProvider
 						var bv2 = (bool)v2.Value;
 
 						if (bv == bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal ||
-						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
+							bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual)
 						{
 							return c1;
 						}
 
 						if (bv == bv2 && expr.Operator == SelectQuery.Predicate.Operator.NotEqual ||
-						    bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
+							bv != bv1 && expr.Operator == SelectQuery.Predicate.Operator.Equal)
 						{
 							var ee = c1.Conditions[0].Predicate as SelectQuery.Predicate.ExprExpr;
 
@@ -1035,7 +1046,7 @@ namespace LinqToDB.SqlProvider
 						if (Equals(value.Value, v1.Value))
 							return sc;
 
-						if (Equals(value.Value, v2.Value) && !sc.CanBeNull())
+						if (Equals(value.Value, v2.Value) && !sc.CanBeNull)
 							return ConvertPredicate(
 								selectQuery,
 								new SelectQuery.Predicate.NotExpr(sc, true, Precedence.LogicalNegation));
@@ -1084,19 +1095,19 @@ namespace LinqToDB.SqlProvider
 			{
 				var maxPrecision = GetMaxPrecision(from);
 				var maxScale     = GetMaxScale    (from);
-				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision, maxPrecision) : to.Precision;
-				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale,     maxScale)     : to.Scale;
+				var newPrecision = maxPrecision >= 0 ? Math.Min(to.Precision ?? 0, maxPrecision) : to.Precision;
+				var newScale     = maxScale     >= 0 ? Math.Min(to.Scale     ?? 0, maxScale)     : to.Scale;
 
 				if (to.Precision != newPrecision || to.Scale != newScale)
-					to = new SqlDataType(to.DataType, to.Type, newPrecision, newScale);
+					to = new SqlDataType(to.DataType, to.Type, null, newPrecision, newScale);
 			}
 			else if (to.Length > 0)
 			{
 				var maxLength = to.Type == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength >= 0 ? Math.Min(to.Length, maxLength) : to.Length;
+				var newLength = maxLength >= 0 ? Math.Min(to.Length ?? 0, maxLength) : to.Length;
 
 				if (to.Length != newLength)
-					to = new SqlDataType(to.DataType, to.Type, newLength);
+					to = new SqlDataType(to.DataType, to.Type, newLength, null, null);
 			}
 			else if (from.Type == typeof(short) && to.Type == typeof(int))
 				return func.Parameters[2];
@@ -1161,7 +1172,7 @@ namespace LinqToDB.SqlProvider
 				(selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0) && 
 				selectQuery.From.Tables[0].Source is SqlTable)
 			{
-				var sql = new SelectQuery { QueryType = QueryType.Delete };
+				var sql = new SelectQuery { QueryType = QueryType.Delete, IsParameterDependent = selectQuery.IsParameterDependent };
 
 				selectQuery.ParentSelect = sql;
 				selectQuery.QueryType = QueryType.Select;
@@ -1211,7 +1222,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (selectQuery.From.Tables.Count > 1 || selectQuery.From.Tables[0].Joins.Count > 0)
 				{
-					var sql = new SelectQuery { QueryType = QueryType.Update };
+					var sql = new SelectQuery { QueryType = QueryType.Update, IsParameterDependent = selectQuery.IsParameterDependent  };
 
 					selectQuery.ParentSelect = sql;
 					selectQuery.QueryType = QueryType.Select;

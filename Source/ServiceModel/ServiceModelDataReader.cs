@@ -6,6 +6,7 @@ using System.Globalization;
 namespace LinqToDB.ServiceModel
 {
 	using Common;
+	using Extensions;
 	using Mapping;
 
 	class ServiceModelDataReader : IDataReader
@@ -47,14 +48,10 @@ namespace LinqToDB.ServiceModel
 			get { return 0; }
 		}
 
-#if !SILVERLIGHT
-
 		public DataTable GetSchemaTable()
 		{
 			throw new NotImplementedException();
 		}
-
-#endif
 
 		public bool IsClosed
 		{
@@ -222,7 +219,7 @@ namespace LinqToDB.ServiceModel
 			if (type.IsArray && type == typeof(byte[]))
 				return ConvertTo<byte[]>.From(value);
 
-			switch (Type.GetTypeCode(type))
+			switch (type.GetTypeCodeEx())
 			{
 				case TypeCode.String   : return value;
 				case TypeCode.Double   : return double.  Parse(value, CultureInfo.InvariantCulture);

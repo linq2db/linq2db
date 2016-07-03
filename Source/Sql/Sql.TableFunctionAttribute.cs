@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
+	using Extensions;
+
 	using SqlQuery;
 
 	partial class Sql
@@ -46,6 +49,8 @@ namespace LinqToDB
 
 			public string Configuration { get; set; }
 			public string Name          { get; set; }
+			public string Schema        { get; set; }
+			public string Database      { get; set; }
 			public int[]  ArgIndices    { get; set; }
 
 			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
@@ -54,8 +59,8 @@ namespace LinqToDB
 				{
 					var method = (MethodInfo)member;
 
-					if (method.DeclaringType.IsGenericType)
-						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
+					if (method.DeclaringType.IsGenericTypeEx())
+						args = args.Concat(method.DeclaringType.GetGenericArgumentsEx().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
 
 					if (method.IsGenericMethod)
 						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
@@ -74,12 +79,15 @@ namespace LinqToDB
 				return args;
 			}
 
-			public virtual void SetTable(SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public virtual void SetTable(MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
 			{
 				table.SqlTableType   = SqlTableType.Function;
 				table.Name           = Name ?? member.Name;
 				table.PhysicalName   = Name ?? member.Name;
 				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+
+				if (Schema   != null) table.Owner    = Schema;
+				if (Database != null) table.Database = Database;
 			}
 		}
 	}

@@ -2,17 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -68,6 +67,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlOptimizer              = new SqlServerSqlOptimizer    (SqlProviderFlags);
 			_sqlServer2000SqlOptimizer = new SqlServer2000SqlOptimizer(SqlProviderFlags);
 			_sqlServer2005SqlOptimizer = new SqlServer2005SqlOptimizer(SqlProviderFlags);
+
+			SetField<IDataReader,decimal>((r,i) => r.GetDecimal(i));
+			SetField<IDataReader,decimal>("money",      (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("smallmoney", (r,i) => SqlServerTools.DataReaderGetMoney  (r, i));
+			SetField<IDataReader,decimal>("decimal",    (r,i) => SqlServerTools.DataReaderGetDecimal(r, i));
 		}
 
 		#endregion
@@ -107,7 +111,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override IDbConnection CreateConnection(string connectionString)
+		protected override IDbConnection CreateConnectionInternal(string connectionString)
 		{
 			return new SqlConnection(connectionString);
 		}
@@ -116,10 +120,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (Version)
 			{
-				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
-				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+				case SqlServerVersion.v2000 : return new SqlServer2000SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2005 : return new SqlServer2005SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2008 : return new SqlServer2008SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+				case SqlServerVersion.v2012 : return new SqlServer2012SqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 			}
 
 			throw new InvalidOperationException();
@@ -138,6 +142,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			return _sqlOptimizer;
+		}
+
+		public override bool IsCompatibleConnection(IDbConnection connection)
+		{
+			return typeof(SqlConnection).IsSameOrParentOf(connection.GetType());
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -180,32 +189,25 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
-				case DataType.Image      :
-				case DataType.Binary     :
-				case DataType.Blob       :
-				case DataType.VarBinary  :
-					if (value is Binary) value = ((Binary)value).ToArray();
-					break;
-				case DataType.Xml        :
-					     if (value is XDocument)   value = value.ToString();
-					else if (value is XmlDocument) value = ((XmlDocument)value).InnerXml;
-					break;
 				case DataType.Udt        :
 					{
 						string s;
 						if (value != null && _udtTypes.TryGetValue(value.GetType(), out s))
-							((SqlParameter)parameter).UdtTypeName = s;
+							if (parameter is SqlParameter)
+								((SqlParameter)parameter).UdtTypeName = s;
 					}
+
 					break;
 			}
 
-			parameter.ParameterName = name;
-			SetParameterType(parameter, dataType);
-			parameter.Value = value ?? DBNull.Value;
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
 		protected override void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
+			if (parameter is BulkCopyReader.Parameter)
+				return;
+
 			switch (dataType)
 			{
 				case DataType.SByte         : parameter.DbType = DbType.Int16;   break;
@@ -273,42 +275,28 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 
-		public override int BulkCopy<T>(
-			[JetBrains.Annotations.NotNull] DataConnection dataConnection,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+		SqlServerBulkCopy _bulkCopy;
+
+		public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (dataConnection == null) throw new ArgumentNullException("dataConnection");
+			if (_bulkCopy == null)
+				_bulkCopy = new SqlServerBulkCopy(this);
 
-			var connection = dataConnection.Connection as SqlConnection;
+			return _bulkCopy.BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? SqlServerTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
 
-			if (connection != null)
-			{
-				var ed = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-				var sb = CreateSqlBuilder();
-				var rd = new BulkCopyReader(ed, source);
+		#endregion
 
-				using (var bc = dataConnection.Transaction == null ?
-					new SqlBulkCopy(connection) :
-					new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, (SqlTransaction)dataConnection.Transaction))
-				{
-					if (options.MaxBatchSize.   HasValue) bc.BatchSize       = options.MaxBatchSize.   Value;
-					if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+		#region Merge
 
-					bc.DestinationTableName = sb.Convert(ed.TableName, ConvertType.NameToQueryTable).ToString();
-
-					for (var i = 0; i < rd.Columns.Length; i++)
-						bc.ColumnMappings.Add(new SqlBulkCopyColumnMapping(
-							i,
-							sb.Convert(rd.Columns[i].ColumnName, ConvertType.NameToQueryField).ToString()));
-
-					bc.WriteToServer(rd);
-
-					return rd.Count;
-				}
-			}
-
-			return base.BulkCopy(dataConnection, options, source);
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
+		{
+			return new SqlServerMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
 		#endregion

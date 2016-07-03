@@ -71,11 +71,11 @@ namespace LinqToDB.DataProvider.SQLite
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME"),
 					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal      = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
-					Length       = Converter.ChangeTypeTo<int>(c["CHARACTER_MAXIMUM_LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int>(c["NUMERIC_SCALE"]),
+					Length       = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"]),
+					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
 					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
 					SkipOnInsert = dataType == "timestamp",
 					SkipOnUpdate = dataType == "timestamp",
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return dbConnection.DataSource;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -162,14 +162,19 @@ namespace LinqToDB.DataProvider.SQLite
 			return DataType.Undefined;
 		}
 
-		protected override Type GetSystemType(string columnType, DataTypeInfo dataType, int length, int precision, int scale)
+		protected override string GetProviderSpecificTypeNamespace()
 		{
-			switch (columnType)
+			return null;
+		}
+
+		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
+		{
+			switch (dataType)
 			{
 				case "datetime2" : return typeof(DateTime);
 			}
 
-			return base.GetSystemType(columnType, dataType, length, precision, scale);
+			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale);
 		}
 	}
 }

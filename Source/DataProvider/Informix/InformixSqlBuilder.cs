@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -10,8 +11,8 @@ namespace LinqToDB.DataProvider.Informix
 
 	class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -27,7 +28,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new InformixSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildSql(int commandNumber, SelectQuery selectQuery, StringBuilder sb, int indent, bool skipAlias)
@@ -78,23 +79,12 @@ namespace LinqToDB.DataProvider.Informix
 			base.BuildFunction(func);
 		}
 
-		public virtual object ConvertBooleanValue(bool value)
-		{
-			return value ? 't' : 'f';
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is bool)
-				StringBuilder.Append("'").Append(ConvertBooleanValue((bool)value)).Append("'");
-			else
-				base.BuildValue(value);
-		}
-
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
 			{
+				case DataType.DateTime  : StringBuilder.Append("datetime year to second");   break;
+				case DataType.DateTime2 : StringBuilder.Append("datetime year to fraction"); break;
 				case DataType.SByte      :
 				case DataType.Byte       : StringBuilder.Append("SmallInt");      break;
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10,4)"); break;
@@ -155,5 +145,15 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 			StringBuilder.Append(")");
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.IfxType.ToString();
+		}
+
+#endif
 	}
 }

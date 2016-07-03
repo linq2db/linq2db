@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -10,6 +14,7 @@ namespace LinqToDB.DataProvider.DB2
 
 	using Data;
 
+	[PublicAPI]
 	public static class DB2Tools
 	{
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
@@ -30,8 +35,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static IDataProvider ProviderDetector(ConnectionStringSettings css)
 		{
-			if (css.ElementInformation.Source == null ||
-			    css.ElementInformation.Source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase))
+			if (DataConnection.IsMachineConfig(css))
 				return null;
 
 			switch (css.ProviderName)
@@ -109,6 +113,54 @@ namespace LinqToDB.DataProvider.DB2
 			new AssemblyResolver(assembly, "IBM.Data.DB2");
 		}
 
+		#region OnInitialized
+
+		private static  bool                  _isInitialized;
+		static readonly object                _syncAfterInitialized    = new object();
+		private static  ConcurrentBag<Action> _afterInitializedActions = new ConcurrentBag<Action>();
+
+		internal static void Initialized()
+		{
+			if (!_isInitialized)
+			{
+				lock (_syncAfterInitialized)
+				{
+					if (!_isInitialized)
+					{
+						_isInitialized = true;
+
+						foreach (var action in _afterInitializedActions)
+							action();
+						_afterInitializedActions = null;
+					}
+				}
+			}
+		}
+
+		public static void AfterInitialized(Action action)
+		{
+			if (_isInitialized)
+			{
+				action();
+			}
+			else
+			{
+				lock (_syncAfterInitialized)
+				{
+					if (_isInitialized)
+					{
+						action();
+					}
+					else
+					{
+						_afterInitializedActions.Add(action);
+					}
+				}
+			}
+		}
+
+		#endregion
+
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, DB2Version version = DB2Version.LUW)
@@ -139,6 +191,51 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return new DataConnection(_db2DataProviderLUW, transaction);
+		}
+
+		#endregion
+
+		#region BulkCopy
+
+		private static BulkCopyType _defaultBulkCopyType = BulkCopyType.MultipleRows;
+		public  static BulkCopyType  DefaultBulkCopyType
+		{
+			get { return _defaultBulkCopyType;  }
+			set { _defaultBulkCopyType = value; }
+		}
+
+		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int                        maxBatchSize       = 1000,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.MultipleRows,
+					MaxBatchSize       = maxBatchSize,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
+		}
+
+		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
+			DataConnection             dataConnection,
+			IEnumerable<T>             source,
+			int?                       bulkCopyTimeout    = null,
+			bool                       keepIdentity       = false,
+			int                        notifyAfter        = 0,
+			Action<BulkCopyRowsCopied> rowsCopiedCallback = null)
+		{
+			return dataConnection.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType       = BulkCopyType.ProviderSpecific,
+					BulkCopyTimeout    = bulkCopyTimeout,
+					KeepIdentity       = keepIdentity,
+					NotifyAfter        = notifyAfter,
+					RowsCopiedCallback = rowsCopiedCallback,
+				}, source);
 		}
 
 		#endregion

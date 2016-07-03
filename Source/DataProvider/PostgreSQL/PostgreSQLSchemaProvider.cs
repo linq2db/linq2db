@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -11,43 +13,49 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			return new[]
+			var list = new[]
 			{
-				new DataTypeInfo { TypeName = "name",              DataType = typeof(string).                             FullName },
-				new DataTypeInfo { TypeName = "oid",               DataType = typeof(int).                                FullName },
-				new DataTypeInfo { TypeName = "xid",               DataType = typeof(int).                                FullName },
-				new DataTypeInfo { TypeName = "smallint",          DataType = typeof(short).                              FullName },
-				new DataTypeInfo { TypeName = "integer",           DataType = typeof(int).                                FullName },
-				new DataTypeInfo { TypeName = "bigint",            DataType = typeof(long).                               FullName },
-				new DataTypeInfo { TypeName = "real",              DataType = typeof(float).                              FullName },
-				new DataTypeInfo { TypeName = "double precision",  DataType = typeof(double).                             FullName },
-				new DataTypeInfo { TypeName = "boolean",           DataType = typeof(bool).                               FullName },
-				new DataTypeInfo { TypeName = "regproc",           DataType = typeof(object).                             FullName },
-				new DataTypeInfo { TypeName = "money",             DataType = typeof(decimal).                            FullName },
-				new DataTypeInfo { TypeName = "text",              DataType = typeof(string).                             FullName },
-				new DataTypeInfo { TypeName = "xml",               DataType = typeof(string).                             FullName },
-				new DataTypeInfo { TypeName = "date",              DataType = typeof(DateTime).                           FullName },
-				new DataTypeInfo { TypeName = "bytea",             DataType = typeof(byte[]).                             FullName },
-				new DataTypeInfo { TypeName = "uuid",              DataType = typeof(Guid).                               FullName },
-				new DataTypeInfo { TypeName = "inet",              DataType = PostgreSQLTools.GetNpgsqlInetType().      FullName },
-				new DataTypeInfo { TypeName = "point",             DataType = PostgreSQLTools.GetNpgsqlPointType().     FullName },
-				new DataTypeInfo { TypeName = "lseg",              DataType = PostgreSQLTools.GetNpgsqlLSegType().      FullName },
-				new DataTypeInfo { TypeName = "box",               DataType = PostgreSQLTools.GetNpgsqlBoxType().       FullName },
-				new DataTypeInfo { TypeName = "path",              DataType = PostgreSQLTools.GetNpgsqlPathType().      FullName },
-				new DataTypeInfo { TypeName = "polygon",           DataType = PostgreSQLTools.GetNpgsqlPolygonType().   FullName },
-				new DataTypeInfo { TypeName = "circle",            DataType = PostgreSQLTools.GetNpgsqlCircleType().    FullName },
-				new DataTypeInfo { TypeName = "macaddr",           DataType = PostgreSQLTools.GetNpgsqlMacAddressType().FullName },
+				new DataTypeInfo { TypeName = "name",                        DataType = typeof(string).        FullName },
+				new DataTypeInfo { TypeName = "oid",                         DataType = typeof(int).           FullName },
+				new DataTypeInfo { TypeName = "xid",                         DataType = typeof(int).           FullName },
+				new DataTypeInfo { TypeName = "smallint",                    DataType = typeof(short).         FullName },
+				new DataTypeInfo { TypeName = "integer",                     DataType = typeof(int).           FullName },
+				new DataTypeInfo { TypeName = "bigint",                      DataType = typeof(long).          FullName },
+				new DataTypeInfo { TypeName = "real",                        DataType = typeof(float).         FullName },
+				new DataTypeInfo { TypeName = "double precision",            DataType = typeof(double).        FullName },
+				new DataTypeInfo { TypeName = "boolean",                     DataType = typeof(bool).          FullName },
+				new DataTypeInfo { TypeName = "regproc",                     DataType = typeof(object).        FullName },
+				new DataTypeInfo { TypeName = "money",                       DataType = typeof(decimal).       FullName },
+				new DataTypeInfo { TypeName = "text",                        DataType = typeof(string).        FullName },
+				new DataTypeInfo { TypeName = "xml",                         DataType = typeof(string).        FullName },
+				new DataTypeInfo { TypeName = "date",                        DataType = typeof(DateTime).      FullName },
+				new DataTypeInfo { TypeName = "bytea",                       DataType = typeof(byte[]).        FullName },
+				new DataTypeInfo { TypeName = "uuid",                        DataType = typeof(Guid).          FullName },
 
-				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).                           FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).                           FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
-				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).                          FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
-				new DataTypeInfo { TypeName = "bit",                         DataType = PostgreSQLTools.GetBitStringType().     FullName, CreateFormat = "bit({0})",                          CreateParameters = "size"      },
-				new DataTypeInfo { TypeName = "interval",                    DataType = PostgreSQLTools.GetNpgsqlIntervalType().FullName, CreateFormat = "interval({0})",                     CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "time with time zone",         DataType = PostgreSQLTools.GetNpgsqlTimeType().    FullName, CreateFormat = "time with time zone({0})",          CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "time without time zone",      DataType = PostgreSQLTools.GetNpgsqlTimeTZType().  FullName, CreateFormat = "time without time zone({0})",       CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).                   FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
-				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).                         FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "hstore",                      DataType = typeof(Dictionary<string,string>).FullName},
+
+				new DataTypeInfo { TypeName = "character varying",           DataType = typeof(string).        FullName, CreateFormat = "character varying({0})",            CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "character",                   DataType = typeof(string).        FullName, CreateFormat = "character({0})",                    CreateParameters = "length" },
+				new DataTypeInfo { TypeName = "numeric",                     DataType = typeof(decimal).       FullName, CreateFormat = "numeric({0},{1})",                  CreateParameters = "precision,scale" },
+				new DataTypeInfo { TypeName = "timestamp with time zone",    DataType = typeof(DateTimeOffset).FullName, CreateFormat = "timestamp ({0}) with time zone",    CreateParameters = "precision" },
+				new DataTypeInfo { TypeName = "timestamp without time zone", DataType = typeof(DateTime).      FullName, CreateFormat = "timestamp ({0}) without time zone", CreateParameters = "precision" },
 			}.ToList();
+
+			if (PostgreSQLTools.GetNpgsqlInetType()       != null) list.Add(new DataTypeInfo { TypeName = "inet",                   DataType = PostgreSQLTools.GetNpgsqlInetType().      FullName });
+			if (PostgreSQLTools.GetNpgsqlPointType()      != null) list.Add(new DataTypeInfo { TypeName = "point",                  DataType = PostgreSQLTools.GetNpgsqlPointType().     FullName });
+			if (PostgreSQLTools.GetNpgsqlLSegType()       != null) list.Add(new DataTypeInfo { TypeName = "lseg",                   DataType = PostgreSQLTools.GetNpgsqlLSegType().      FullName });
+			if (PostgreSQLTools.GetNpgsqlBoxType()        != null) list.Add(new DataTypeInfo { TypeName = "box",                    DataType = PostgreSQLTools.GetNpgsqlBoxType().       FullName });
+			if (PostgreSQLTools.GetNpgsqlPathType()       != null) list.Add(new DataTypeInfo { TypeName = "path",                   DataType = PostgreSQLTools.GetNpgsqlPathType().      FullName });
+			if (PostgreSQLTools.GetNpgsqlPolygonType()    != null) list.Add(new DataTypeInfo { TypeName = "polygon",                DataType = PostgreSQLTools.GetNpgsqlPolygonType().   FullName });
+			if (PostgreSQLTools.GetNpgsqlCircleType()     != null) list.Add(new DataTypeInfo { TypeName = "circle",                 DataType = PostgreSQLTools.GetNpgsqlCircleType().    FullName });
+			if (PostgreSQLTools.GetNpgsqlIntervalType()   != null) list.Add(new DataTypeInfo { TypeName = "interval",               DataType = PostgreSQLTools.GetNpgsqlIntervalType().  FullName, CreateFormat = "interval({0})",               CreateParameters = "precision" });
+			if (PostgreSQLTools.GetNpgsqlTimeType()       != null) list.Add(new DataTypeInfo { TypeName = "time with time zone",    DataType = PostgreSQLTools.GetNpgsqlTimeType().      FullName, CreateFormat = "time with time zone({0})",    CreateParameters = "precision" });
+			if (PostgreSQLTools.GetNpgsqlTimeTZType()     != null) list.Add(new DataTypeInfo { TypeName = "time without time zone", DataType = PostgreSQLTools.GetNpgsqlTimeTZType().    FullName, CreateFormat = "time without time zone({0})", CreateParameters = "precision" });
+
+			list.Add(new DataTypeInfo { TypeName = "macaddr", DataType = (PostgreSQLTools.GetNpgsqlMacAddressType() ?? typeof(PhysicalAddress)).FullName });
+			list.Add(new DataTypeInfo { TypeName = "bit",     DataType = (PostgreSQLTools.GetBitStringType()        ?? typeof(BitArray)).       FullName, CreateFormat = "bit({0})", CreateParameters = "size" });
+
+			return list;
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)
@@ -78,11 +86,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
-						(select attname from pg_attribute where attrelid = pg_constraint.conrelid and attnum = pg_constraint.conkey[1])
-						                                                                             as ColumnName,
-						pg_constraint.conkey[1]                                                      as Ordinal
+						attname                                                                      as ColumnName,
+						attnum                                                                       as Ordinal
 					FROM
-						pg_constraint
+						pg_attribute
+							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
 							JOIN pg_class ON pg_class.oid = pg_constraint.conrelid
 								JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
@@ -200,40 +208,72 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			).ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
-				case "character"                      : return DataType.NChar;
-				case "text"                           : return DataType.Text;
-				case "smallint"                       : return DataType.Int16;
-				case "integer"                        : return DataType.Int32;
-				case "bigint"                         : return DataType.Int64;
-				case "real"                           : return DataType.Single;
-				case "double precision"               : return DataType.Double;
-				case "bytea"                          : return DataType.Binary;
-				case "boolean"                        : return DataType.Boolean;
-				case "numeric"                        : return DataType.Decimal;
-				case "money"                          : return DataType.Money;
-				case "uuid"                           : return DataType.Guid;
-				case "character varying"              : return DataType.NVarChar;
-				case "timestamp with time zone"       : return DataType.DateTimeOffset;
-				case "timestamp without time zone"    : return DataType.DateTime2;
-				case "time with time zone"            : return DataType.Time;
-				case "time without time zone"         : return DataType.Time;
-				case "date"                           : return DataType.Date;
-				case "xml"                            : return DataType.Xml;
-				case "point"                          : return DataType.Udt;
-				case "lseg"                           : return DataType.Udt;
-				case "box"                            : return DataType.Udt;
-				case "circle"                         : return DataType.Udt;
-				case "path"                           : return DataType.Udt;
-				case "polygon"                        : return DataType.Udt;
-				case "macaddr"                        : return DataType.Udt;
-				case "USER-DEFINED"                   : return DataType.Udt;
+				case "character"                   : return DataType.NChar;
+				case "text"                        : return DataType.Text;
+				case "smallint"                    : return DataType.Int16;
+				case "integer"                     : return DataType.Int32;
+				case "bigint"                      : return DataType.Int64;
+				case "real"                        : return DataType.Single;
+				case "double precision"            : return DataType.Double;
+				case "bytea"                       : return DataType.Binary;
+				case "boolean"                     : return DataType.Boolean;
+				case "numeric"                     : return DataType.Decimal;
+				case "money"                       : return DataType.Money;
+				case "uuid"                        : return DataType.Guid;
+				case "character varying"           : return DataType.NVarChar;
+				case "timestamp with time zone"    : return DataType.DateTimeOffset;
+				case "timestamp without time zone" : return DataType.DateTime2;
+				case "time with time zone"         : return DataType.Time;
+				case "time without time zone"      : return DataType.Time;
+				case "interval"                    : return DataType.Time;
+				case "date"                        : return DataType.Date;
+				case "xml"                         : return DataType.Xml;
+				case "point"                       : return DataType.Udt;
+				case "lseg"                        : return DataType.Udt;
+				case "box"                         : return DataType.Udt;
+				case "circle"                      : return DataType.Udt;
+				case "path"                        : return DataType.Udt;
+				case "line"                        : return DataType.Udt;
+				case "polygon"                     : return DataType.Udt;
+				case "macaddr"                     : return DataType.Udt;
+				case "USER-DEFINED"                : return DataType.Udt;
+				case "bit"                         :
+				case "varbit"                      : return DataType.BitArray;
+				case "hstore"                      : return DataType.Dictionary;
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "NpgsqlTypes";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "interval"                    : return "NpgsqlTimeSpan";
+				case "timestamp with time zone"    :
+				case "timestamp without time zone" :
+				case "date"                        : return "NpgsqlDate";
+				case "point"                       : return "NpgsqlPoint";
+				case "lseg"                        : return "NpgsqlLSeg";
+				case "box"                         : return "NpgsqlBox";
+				case "circle"                      : return "NpgsqlCircle";
+				case "path"                        : return "NpgsqlPath";
+				case "polygon"                     : return "NpgsqlPolygon";
+				case "line"                        : return "NpgsqlLine";
+				case "inet"                        : return "NpgsqlInet";
+				case "geometry "                   : return "PostgisGeometry";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 	}
 }

@@ -1,0 +1,9 @@
+; What is EditorConfig? http://editorconfig.org/
+; Extension for VS2010/2012 to support .editorconfig files: http://visualstudiogallery.msdn.microsoft.com/c8bccfe2-650c-4b42-bc5c-845e21f96328
+
+root = true
+
+; use tabs identation for all files
+[*]
+indent_style = tab
+

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
@@ -47,7 +48,9 @@ namespace LinqToDB.Expressions
 		static Expression GetColumnReader(
 			IDataContext dataContext, MappingSchema mappingSchema, IDataReader dataReader, Type type, int idx, Expression dataReaderExpr)
 		{
-			var ex = dataContext.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, type.ToNullableUnderlying());
+			var toType = type.ToNullableUnderlying();
+
+			var ex = dataContext.GetReaderExpression(mappingSchema, dataReader, idx, dataReaderExpr, toType);
 
 			if (ex.NodeType == ExpressionType.Lambda)
 			{
@@ -57,6 +60,28 @@ namespace LinqToDB.Expressions
 				{
 					case 1 : ex = l.GetBody(dataReaderExpr);                break;
 					case 2 : ex = l.GetBody(dataReaderExpr, Constant(idx)); break;
+				}
+			}
+
+			if (toType.IsEnumEx())
+			{
+				var mapType = ConvertBuilder.GetDefaultMappingFromEnumType(mappingSchema, toType);
+
+				if (mapType != ex.Type)
+				{
+					var econv = mappingSchema.GetConvertExpression(ex.Type, mapType, false);
+
+					if (econv.Body.GetCount(e => e == econv.Parameters[0]) > 1)
+					{
+						var variable = Variable(ex.Type);
+						var assign   = Assign(variable, ex);
+
+						ex = Block(new[] { variable }, new[] { assign, econv.GetBody(variable) });
+					}
+					else
+					{
+						ex = econv.GetBody(ex);
+					}
 				}
 			}
 

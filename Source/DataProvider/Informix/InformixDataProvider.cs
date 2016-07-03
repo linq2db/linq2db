@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Security;
 using System.Threading;
 
 namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlProvider;
 
@@ -127,8 +130,15 @@ namespace LinqToDB.DataProvider.Informix
 
 		static object GetNullValue(Type type)
 		{
-			var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-			return getValue.Compile()();
+			try
+			{
+				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+				return getValue.Compile()();
+			}
+			catch (SecurityException)
+			{
+				return null;
+			}
 		}
 
 		public    override string ConnectionNamespace { get { return "IBM.Data.Informix"; } }
@@ -137,7 +147,7 @@ namespace LinqToDB.DataProvider.Informix
 		
 		public override ISqlBuilder CreateSqlBuilder()
 		{
-			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags);
+			return new InformixSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -157,7 +167,10 @@ namespace LinqToDB.DataProvider.Informix
 		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
 		{
 			if (value is TimeSpan)
-				value = _newIfxTimeSpan((TimeSpan)value);
+			{
+				if (dataType != DataType.Int64)
+					value = _newIfxTimeSpan((TimeSpan)value);
+			}
 			else if (value is Guid)
 			{
 				value    = value.ToString();
@@ -189,5 +202,32 @@ namespace LinqToDB.DataProvider.Informix
 
 			base.SetParameterType(parameter, dataType);
 		}
+
+		#region BulkCopy
+
+		public override BulkCopyRowsCopied BulkCopy<T>(
+			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
+		{
+			return new InformixBulkCopy().BulkCopy(
+				options.BulkCopyType == BulkCopyType.Default ? InformixTools.DefaultBulkCopyType : options.BulkCopyType,
+				dataConnection,
+				options,
+				source);
+		}
+
+		#endregion
+
+		#region Merge
+
+		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
+			string tableName, string databaseName, string schemaName)
+		{
+			if (delete)
+				throw new LinqToDBException("Informix MERGE statement does not support DELETE by source.");
+
+			return new InformixMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+		}
+
+		#endregion
 	}
 }

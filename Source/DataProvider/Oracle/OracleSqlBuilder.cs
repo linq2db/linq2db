@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -9,8 +10,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	class OracleSqlBuilder : BasicSqlBuilder
 	{
-		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags) 
-			: base(sqlOptimizer, sqlProviderFlags)
+		public OracleSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
+			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
 		{
 		}
 
@@ -33,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (identityField == null)
 				throw new SqlException("Identity field must be defined for '{0}'.", SelectQuery.Insert.Into.Name);
 
-			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append("\t");
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
@@ -61,17 +62,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags);
+			return new OracleSqlBuilder(SqlOptimizer, SqlProviderFlags, ValueToSqlConverter);
 		}
 
 		protected override void BuildSql()
 		{
-			var buildRowNum = NeedSkip || NeedTake && (!SelectQuery.OrderBy.IsEmpty || !SelectQuery.Having.IsEmpty);
-			var aliases     = null as string[];
-
-			if (buildRowNum)
+			if (NeedSkip)
 			{
-				aliases = GetTempAliases(2, "t");
+				var aliases = GetTempAliases(2, "t");
 
 				if (_rowNumberAlias == null)
 					_rowNumberAlias = GetTempAliases(1, "rn")[0];
@@ -85,16 +83,13 @@ namespace LinqToDB.DataProvider.Oracle
 				AppendIndent().Append("FROM").    AppendLine();
 				AppendIndent().Append("(").       AppendLine();
 				Indent++;
-			}
 
-			base.BuildSql();
+				base.BuildSql();
 
-			if (buildRowNum)
-			{
 				Indent--;
 				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
 
-				if (NeedTake && NeedSkip)
+				if (NeedTake)
 				{
 					AppendIndent().AppendLine("WHERE");
 					AppendIndent().Append("\tROWNUM <= ");
@@ -108,24 +103,38 @@ namespace LinqToDB.DataProvider.Oracle
 
 				Indent++;
 
-				if (NeedTake && NeedSkip)
-				{
-					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(SelectQuery.Select.SkipValue);
-				}
-				else if (NeedTake)
-				{
-					AppendIndent().AppendFormat("{0}.{1} <= ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.TakeValue);
-				}
-				else
-				{
-					AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
-					BuildExpression(Precedence.Comparison, SelectQuery.Select.SkipValue);
-				}
+				AppendIndent().AppendFormat("{0}.{1} > ", aliases[1], _rowNumberAlias);
+				BuildExpression(SelectQuery.Select.SkipValue);
 
 				StringBuilder.AppendLine();
 				Indent--;
+			}
+			else if (NeedTake && (!SelectQuery.OrderBy.IsEmpty || !SelectQuery.Having.IsEmpty))
+			{
+				var aliases = GetTempAliases(1, "t");
+
+				AppendIndent().AppendFormat("SELECT {0}.*", aliases[0]).AppendLine();
+				AppendIndent().Append("FROM").    AppendLine();
+				AppendIndent().Append("(").       AppendLine();
+				Indent++;
+
+				base.BuildSql();
+
+				Indent--;
+				AppendIndent().Append(") ").Append(aliases[0]).AppendLine();
+				AppendIndent().Append("WHERE").AppendLine();
+
+				Indent++;
+
+				AppendIndent().Append("ROWNUM <= ");
+				BuildExpression(SelectQuery.Select.TakeValue);
+
+				StringBuilder.AppendLine();
+				Indent--;
+			}
+			else
+			{
+				base.BuildSql();
 			}
 		}
 
@@ -160,6 +169,8 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (type.DataType)
 			{
+				case DataType.DateTime   : StringBuilder.Append("timestamp");    break;
+				case DataType.DateTime2  : StringBuilder.Append("timestamp");    break;
 				case DataType.UInt32     :
 				case DataType.Int64      : StringBuilder.Append("Number(19)");   break;
 				case DataType.SByte      :
@@ -179,33 +190,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (!SelectQuery.IsUpdate)
 				base.BuildFromClause();
-		}
-
-		protected override void BuildValue(object value)
-		{
-			if (value is Guid)
-			{
-				var s = ((Guid)value).ToString("N");
-
-				StringBuilder
-					.Append("Cast('")
-					.Append(s.Substring( 6,  2))
-					.Append(s.Substring( 4,  2))
-					.Append(s.Substring( 2,  2))
-					.Append(s.Substring( 0,  2))
-					.Append(s.Substring(10,  2))
-					.Append(s.Substring( 8,  2))
-					.Append(s.Substring(14,  2))
-					.Append(s.Substring(12,  2))
-					.Append(s.Substring(16, 16))
-					.Append("' as raw(16))");
-			}
-			else if (value is DateTime)
-			{
-				StringBuilder.AppendFormat("TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')", value);
-			}
-			else
-				base.BuildValue(value);
 		}
 
 		protected override void BuildColumnExpression(ISqlExpression expr, string alias, ref bool addAlias)
@@ -317,9 +301,19 @@ namespace LinqToDB.DataProvider.Oracle
 						.AppendLine  ("BEGIN")
 						.AppendFormat("\tSELECT SIDENTITY_{1}.NEXTVAL INTO :NEW.{0} FROM dual;", _identityField.PhysicalName, SelectQuery.CreateTable.Table.PhysicalName)
 						.AppendLine  ()
-						.AppendLine  ("END");
+						.AppendLine  ("END;");
 				}
 			}
 		}
+
+#if !SILVERLIGHT
+
+		protected override string GetProviderTypeName(IDbDataParameter parameter)
+		{
+			dynamic p = parameter;
+			return p.OracleDbType.ToString();
+		}
+
+#endif
 	}
 }

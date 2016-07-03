@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Data;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {
@@ -61,6 +63,8 @@ namespace LinqToDB.Data
 		/// The name of the <see cref="T:LinqToDB.Data.DataParameter"/>. The default is an empty string.
 		/// </returns>
 		public string Name { get; set; }
+
+		public bool IsArray { get; set; }
 
 /*
 		/// <summary>
@@ -145,12 +149,14 @@ namespace LinqToDB.Data
 		public static DataParameter Timestamp     (string name, byte[]         value) { return new DataParameter { DataType = DataType.Timestamp,      Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, string         value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static DataParameter Xml           (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 #endif
+		public static DataParameter BitArray      (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
 		public static DataParameter Variant       (string name, object         value) { return new DataParameter { DataType = DataType.Variant,        Name = name, Value = value, }; }
 		public static DataParameter VarNumeric    (string name, decimal        value) { return new DataParameter { DataType = DataType.VarNumeric,     Name = name, Value = value, }; }
 		public static DataParameter Udt           (string name, object         value) { return new DataParameter { DataType = DataType.Udt,            Name = name, Value = value, }; }
+		public static DataParameter Dictionary    (string name, IDictionary    value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
 
 		public static DataParameter Create        (string name, char           value) { return new DataParameter { DataType = DataType.NChar,          Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, string         value) { return new DataParameter { DataType = DataType.NVarChar,       Name = name, Value = value, }; }
@@ -177,8 +183,10 @@ namespace LinqToDB.Data
 		public static DataParameter Create        (string name, DateTime       value) { return new DataParameter { DataType = DataType.DateTime2,      Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, DateTimeOffset value) { return new DataParameter { DataType = DataType.DateTimeOffset, Name = name, Value = value, }; }
 		public static DataParameter Create        (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 		public static DataParameter Create        (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 #endif
+		public static DataParameter Create        (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
+		public static DataParameter Create        (string name, Dictionary<string,string> value) { return new DataParameter { DataType = DataType.Dictionary,     Name = name, Value = value, }; }
 	}
 }
