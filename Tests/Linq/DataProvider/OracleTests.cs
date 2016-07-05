@@ -499,6 +499,38 @@ namespace Tests.DataProvider
 			}
 		}
 
+	    [Test, OracleDataContext]
+	    public void TestTreatEmptyStringsAsNulls(string context)
+	    {
+	        using (var db = new TestDataConnection(context))
+	        {
+	            const string personToken = "TestTreatEmptyStringsAsNulls";
+	            db.Person.Delete(x => x.FirstName == personToken);
+	            var id = (int) (decimal) db.InsertWithIdentity(new Person
+	            {
+	                FirstName = personToken,
+	                LastName = "b",
+	                Gender = Gender.Male,
+	                MiddleName = ""
+	            });
+	            Assert.That(db.Person.Single(x => x.ID == id).MiddleName, Is.Null);
+	            Assert.That(db.Person.Single(x => x.FirstName == personToken && x.MiddleName == GetNullString()).ID,
+	                Is.EqualTo(id));
+	            Assert.That(db.Person.Single(x => x.FirstName == personToken && x.MiddleName == GetEmptyString()).ID,
+	                Is.EqualTo(id));
+	        }
+	    }
+
+	    private static string GetNullString()
+	    {
+	        return null;
+	    }
+
+	    private static string GetEmptyString()
+	    {
+	        return "";
+	    }
+
 		#region DateTime Tests
 
 		[Table(Schema="TESTUSER", Name="ALLTYPES")]
