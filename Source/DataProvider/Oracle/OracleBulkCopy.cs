@@ -185,7 +185,9 @@ namespace LinqToDB.DataProvider.Oracle
 			for (var i = 0; i < helper.Columns.Length; i++)
 				helper.StringBuilder.Append(":p" + ( i + 1)).Append(", ");
 
-			helper.StringBuilder.AppendLine(")");
+            		helper.StringBuilder.Length -= 2;
+
+            		helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
 			var list = new List<T>(31);
@@ -201,6 +203,8 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (!Execute(dataConnection, helper, list))
 						return helper.RowsCopied;
+
+                    			list.Clear();
 				}
 			}
 
