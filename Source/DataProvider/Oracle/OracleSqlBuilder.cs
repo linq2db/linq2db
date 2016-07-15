@@ -178,11 +178,14 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.Money      : StringBuilder.Append("Number(19,4)"); break;
 				case DataType.SmallMoney : StringBuilder.Append("Number(10,4)"); break;
 				case DataType.NVarChar   :
-					StringBuilder.Append("VarChar2");
-					if (type.Length > 0)
-						StringBuilder.Append('(').Append(type.Length).Append(')');
-					break;
-				default                   : base.BuildDataType(type);            break;
+                    StringBuilder.Append("VarChar2");
+                    if (type.Length > 0)
+                        StringBuilder.Append('(').Append(type.Length).Append(')');
+                    break;
+                case DataType.Boolean    : StringBuilder.Append("Char(1)");      break;
+                case DataType.NText      : StringBuilder.Append("NClob");        break;
+                case DataType.Text       : StringBuilder.Append("Clob");         break;
+                default                  : base.BuildDataType(type);             break;
 			}
 		}
 
