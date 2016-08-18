@@ -69,21 +69,40 @@ namespace LinqToDB.SqlProvider
 
 			if (commandNumber == 0)
 			{
-				BuildSql();
-
 				if (selectQuery.HasUnion)
 				{
+                    foreach (var union in selectQuery.Unions)
+                    {
+                        AppendIndent();
+                        sb.AppendLine("(");
+                        Indent++;
+                    }
+						
+                    BuildSql();
 					foreach (var union in selectQuery.Unions)
 					{
-						AppendIndent();
+                        Indent--;
+                        AppendIndent();
+						sb.AppendLine(")");
+						
+                        AppendIndent();
 						sb.Append("UNION");
 						if (union.IsAll) sb.Append(" ALL");
 						sb.AppendLine();
 
-						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, union.SelectQuery, sb, indent, skipAlias);
+                        AppendIndent();
+                        sb.AppendLine("(");
+                        Indent++;
+
+						((BasicSqlBuilder)CreateSqlBuilder()).BuildSql(commandNumber, union.SelectQuery, sb, Indent, skipAlias);
+                        Indent--;
+                        AppendIndent();
+						sb.AppendLine(")");
 					}
 				}
-			}
+                else
+                    BuildSql();
+            }
 			else
 			{
 				BuildCommand(commandNumber);
