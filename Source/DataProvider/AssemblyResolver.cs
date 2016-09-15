@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using System.Runtime.Loader;
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider
@@ -34,6 +34,7 @@ namespace LinqToDB.DataProvider
 			SetResolver();
 		}
 
+#if !NETSTANDARD
 		void SetResolver()
 		{
 			ResolveEventHandler resolver = Resolver;
@@ -60,5 +61,19 @@ namespace LinqToDB.DataProvider
 				return _assembly ?? (_assembly = Assembly.LoadFile(File.Exists(_path) ? _path : Path.Combine(_path, args.Name, ".dll")));
 			return null;
 		}
+#else
+		public class MyAssemblyLoadContext : AssemblyLoadContext
+		{
+			protected override Assembly Load(AssemblyName assemblyName)
+			{
+				return base.LoadFromAssemblyPath("/home/steveharter/netcore/temp/" + assemblyName + ".dll");
+			}
+		}
+		void SetResolver()
+		{
+		}
+#endif
+
 	}
+
 }

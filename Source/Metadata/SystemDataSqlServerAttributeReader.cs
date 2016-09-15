@@ -65,7 +65,7 @@ namespace LinqToDB.Metadata
 					else
 					{
 						var pi = (PropertyInfo)memberInfo;
-						var gm = pi.GetGetMethod();
+						var gm = pi.GetGetMethodEx();
 
 						if (gm != null)
 						{

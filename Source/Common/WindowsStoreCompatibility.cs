@@ -39,6 +39,7 @@ namespace System
 		String   = 18,
 	}
 
+#if !NETSTANDARD
 	[ComVisible(true)]
 	[Serializable]
 	public sealed class DBNull
@@ -64,6 +65,7 @@ namespace System
 			return TypeCode.DBNull;
 		}
 	}
+#endif
 }
 
 namespace System.Threading

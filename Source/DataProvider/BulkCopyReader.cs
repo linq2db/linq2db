@@ -133,6 +133,7 @@ namespace LinqToDB.DataProvider
 
 		public DataTable GetSchemaTable()
 		{
+#if !NETSTANDARD
 			var table = new DataTable("SchemaTable")
 			{
 				Locale = CultureInfo.InvariantCulture
@@ -185,6 +186,9 @@ namespace LinqToDB.DataProvider
 			}
 
 			return table;
+#else
+			return new DataTable();
+#endif
 		}
 
 		public bool NextResult()

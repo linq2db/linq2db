@@ -44,6 +44,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
@@ -74,6 +75,9 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 				return x;
 			}).ToList();
+#else 
+			return new List<DataTypeInfo>();
+#endif
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)

@@ -1,0 +1,111 @@
+﻿{
+	"version": "1.0.7.4-beta",
+
+
+	"dependencies": {
+		"NETStandard.Library": "1.6.0"
+	},
+
+	"frameworks": {
+		"net40": {
+			"frameworkAssemblies": {
+				"Microsoft.CSharp": "",
+				"System": "",
+				"System.Configuration": "",
+				"System.Core": "",
+				"System.Data.DataSetExtensions": "",
+				"System.Data.Linq": "",
+				"System.Data.Services": "",
+				"System.ServiceModel": "",
+				"System.Web.Services": "",
+				"System.Xml.Linq": "",
+				"System.Data": "",
+				"System.Xml": "",
+				"System.Runtime.Serialization": ""
+			},
+			"dependencies": {
+				"Microsoft.Bcl.Async": "1.0.*"
+			},
+			"buildOptions": {
+				"define": [ "FW4", "NOASYNC" ],
+				"compile": {
+					"exclude": [
+						"**/*.Silverlight.cs",
+						"**/SerializableAttribute.cs",
+						"**/ConcurrentDictionary.cs",
+						"**/WindowsStoreCompatibility.cs",
+						"**/IDataParameter.cs",
+						"**/IDataReader.cs",
+						"**/DbType.cs",
+						"**/Binary.cs",
+						"**/AllowPartiallyTrustedCallersAttribute.cs",
+						"**/IDbDataParameter.cs",
+						"Compatibility/**/*.cs"
+					]
+				}
+			}
+
+		},
+		"net45": {
+			"frameworkAssemblies": {
+				"Microsoft.CSharp": "",
+				"System": "",
+				"System.Configuration": "",
+				"System.Core": "",
+				"System.Data.DataSetExtensions": "",
+				"System.Data.Linq": "",
+				"System.Data.Services": "",
+				"System.ServiceModel": "",
+				"System.Web.Services": "",
+				"System.Xml.Linq": "",
+				"System.Data": "",
+				"System.Xml": "",
+				"System.Runtime.Serialization": ""
+			},
+					"buildOptions": {
+						"define": [ "FW4" ],
+						"compile": {
+							"exclude": [
+								"**/*.Silverlight.cs",
+								"**/SerializableAttribute.cs",
+								"**/ConcurrentDictionary.cs",
+								"**/WindowsStoreCompatibility.cs",
+								"**/IDataParameter.cs",
+								"**/IDataReader.cs",
+								"**/DbType.cs",
+								"**/Binary.cs",
+								"**/AllowPartiallyTrustedCallersAttribute.cs",
+								"**/IDbDataParameter.cs",
+								"Compatibility/**/*.cs"
+							]
+						}
+					}
+		},
+			"netstandard1.5": {
+							"buildOptions": {
+								"define": [ "FW4", "NETSTANDARD", "NETFX_CORE" ],
+								"compile": {
+																	"exclude": [
+																		"**/*.Silverlight.cs",
+																		"Compatibility/System/Collections/**/*.cs",
+																		"Compatibility/System/Data/*.cs",
+																		"Compatibility/System/Security/**/*.cs",
+
+																		"Configuration/**/*.cs",
+																		"ServiceModel/**/*.cs",
+																		"**/SapHanaOdbc*.cs",
+																		"**/DataProvider/Access/*.cs"
+																	]
+								}
+							},
+							"dependencies": {
+								"System.Data.Common": "4.1.0",
+								"System.Data.SqlClient": "4.1.0",
+								"System.Runtime.Serialization.Primitives": "4.1.1",
+								"System.Runtime.Loader": "4.0.0",
+								"System.Dynamic.Runtime": "4.0.11",
+								"System.Diagnostics.TraceSource": "4.0.0" 
+							}
+			}
+	}
+}

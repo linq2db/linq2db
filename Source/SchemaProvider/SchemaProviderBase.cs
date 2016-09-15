@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -392,6 +393,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable)
 		{
+#if !NETSTANDARD
 			return
 			(
 				from r in resultTable.AsEnumerable()
@@ -422,6 +424,9 @@ namespace LinqToDB.SchemaProvider
 					IsIdentity           = r.Field<bool>("IsIdentity"),
 				}
 			).ToList();
+#else
+			return new List<ColumnSchema>();
+#endif
 		}
 
 		protected virtual string GetDataSourceName(DbConnection dbConnection)
@@ -440,6 +445,7 @@ namespace LinqToDB.SchemaProvider
 
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
+#if !NETSTANDARD
 			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
@@ -452,6 +458,9 @@ namespace LinqToDB.SchemaProvider
 					ProviderDbType   = t.Field<int>   ("ProviderDbType"),
 				})
 				.ToList();
+#else
+			return new List<DataTypeInfo>();
+#endif
 		}
 
 		protected virtual Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)
@@ -547,7 +556,7 @@ namespace LinqToDB.SchemaProvider
 				case "Object"  : memberType = "object";  break;
 			}
 
-			if (!type.IsClass && isNullable)
+			if (!type.IsClassEx() && isNullable)
 				memberType += "?";
 
 			return memberType;

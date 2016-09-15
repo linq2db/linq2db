@@ -227,8 +227,12 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
+#if !NETSTANDARD
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+#else
+			return true;
+#endif
 		}
 
 		#endregion
