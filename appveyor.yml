@@ -46,8 +46,7 @@ after_build:
 
 test: 
   assemblies:
-- 'Tests\Linq\bin\$(configuration)\linq2db.Tests.dll'
-
+- 'Tests\Linq\bin\Release\linq2db.Tests.dll'
 
 before_test:
 - ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
