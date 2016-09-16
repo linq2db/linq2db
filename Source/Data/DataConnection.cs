@@ -229,6 +229,11 @@ namespace LinqToDB.Data
 
 		#region Configuration
 
+		public static ILinqToDBSettings DefaultSettings
+		{
+			get { return LinqToDBSection.Instance; }
+		}
+
 		static IDataProvider FindProvider(string configuration, IEnumerable<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
 		{
 			foreach (var p in ps.OrderByDescending(kv => kv.Key.Length))
@@ -259,14 +264,14 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
 			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
-			var section = LinqToDBSection.Instance;
+			var section = DefaultSettings;
 
 			if (section != null)
 			{
 				DefaultConfiguration = section.DefaultConfiguration;
 				DefaultDataProvider  = section.DefaultDataProvider;
 
-				foreach (DataProviderElement provider in section.DataProviders)
+				foreach (var provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true);
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType);
@@ -277,37 +282,23 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<ConnectionStringSettings,IDataProvider>> _providerDetectors =
-			new List<Func<ConnectionStringSettings,IDataProvider>>();
+		static readonly List<Func<IConnectionStringSettings,IDataProvider>> _providerDetectors =
+			new List<Func<IConnectionStringSettings,IDataProvider>>();
 
-		public static void AddProviderDetector(Func<ConnectionStringSettings,IDataProvider> providerDetector)
+		public static void AddProviderDetector(Func<IConnectionStringSettings,IDataProvider> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
 		}
 
-		internal static bool IsMachineConfig(ConnectionStringSettings css)
-		{
-			string source;
-
-			try
-			{
-				source = css.ElementInformation.Source;
-			}
-			catch (Exception)
-			{
-				source = "";
-			}
-
-			return source == null || source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase);
-		}
-
 		static void InitConnectionStrings()
 		{
-			foreach (ConnectionStringSettings css in ConfigurationManager.ConnectionStrings)
+			if (DefaultSettings == null)
+				return;
+			foreach (var css in DefaultSettings.ConnectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null && !IsMachineConfig(css))
+				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -358,7 +349,7 @@ namespace LinqToDB.Data
 				DataProvider     = dataProvider;
 			}
 
-			public ConfigurationInfo(ConnectionStringSettings connectionStringSettings)
+			public ConfigurationInfo(IConnectionStringSettings connectionStringSettings)
 			{
 				ConnectionString = connectionStringSettings.ConnectionString;
 
@@ -367,7 +358,7 @@ namespace LinqToDB.Data
 
 			public  string ConnectionString;
 
-			private readonly ConnectionStringSettings _connectionStringSettings;
+			private readonly IConnectionStringSettings _connectionStringSettings;
 
 			private IDataProvider _dataProvider;
 			public  IDataProvider  DataProvider
@@ -376,7 +367,7 @@ namespace LinqToDB.Data
 				set { _dataProvider = value; }
 			}
 
-			static IDataProvider GetDataProvider(ConnectionStringSettings css)
+			static IDataProvider GetDataProvider(IConnectionStringSettings css)
 			{
 				var configuration = css.Name;
 				var providerName  = css.ProviderName;
@@ -405,7 +396,7 @@ namespace LinqToDB.Data
 					}
 				}
 
-				if (dataProvider != null && DefaultConfiguration == null && !IsMachineConfig(css))
+				if (dataProvider != null && DefaultConfiguration == null && !css.IsGlobal/*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}
@@ -424,13 +415,13 @@ namespace LinqToDB.Data
 			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
-		public static void SetConnectionStrings(System.Configuration.Configuration config)
+		public static void SetConnectionStrings(IEnumerable<IConnectionStringSettings> connectionStrings)
 		{
-			foreach (ConnectionStringSettings css in config.ConnectionStrings.ConnectionStrings)
+			foreach (var css in connectionStrings)
 			{
 				_configurations[css.Name] = new ConfigurationInfo(css);
 
-				if (DefaultConfiguration == null && !IsMachineConfig(css))
+				if (DefaultConfiguration == null && !css.IsGlobal /*IsMachineConfig(css)*/)
 				{
 					DefaultConfiguration = css.Name;
 				}

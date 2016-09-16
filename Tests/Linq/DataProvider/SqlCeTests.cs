@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -91,7 +93,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 

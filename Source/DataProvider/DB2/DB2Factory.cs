@@ -5,20 +5,22 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Collections.Generic;
+	using System.Linq;
+	using Configuration;
+
 	[UsedImplicitly]
 	class DB2Factory : IDataProviderFactory
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(NameValueCollection attributes)
+		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			for (var i = 0; i < attributes.Count; i++)
+			var version = attributes.FirstOrDefault(_ => _.Name == "version");
+			if (version != null)
 			{
-				if (attributes.GetKey(i) == "version")
+				switch (version.Value)
 				{
-					switch (attributes.Get(i))
-					{
-						case "zOS"  :
-						case "z/OS" : return new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
-					}
+					case "zOS" :
+					case "z/OS": return new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
 				}
 			}
 

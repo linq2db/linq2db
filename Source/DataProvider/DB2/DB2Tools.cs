@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.DB2
 	using System.Linq;
 	using System.Linq.Expressions;
 
+	using Configuration;
+
 	using Data;
 
 	[PublicAPI]
@@ -33,9 +35,9 @@ namespace LinqToDB.DataProvider.DB2
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)

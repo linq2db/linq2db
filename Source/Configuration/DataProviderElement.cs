@@ -1,11 +1,10 @@
-using System;
 using System.Configuration;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.Configuration
 {
-	using DataProvider;
-
-	public class DataProviderElement : ElementBase
+	public class DataProviderElement : ElementBase, IDataProviderSettings
 	{
 		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 		static readonly ConfigurationProperty _propName     = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);
@@ -41,6 +40,11 @@ namespace LinqToDB.Configuration
 		public bool Default
 		{
 			get { return (bool)base[_propDefault]; }
+		}
+
+		IEnumerable<NamedValue> IDataProviderSettings.Attributes
+		{
+			get { return Attributes.AllKeys.Select(e => new NamedValue() {Name = e, Value = Attributes[e]}); }
 		}
 	}
 }

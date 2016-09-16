@@ -10,6 +10,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Configuration;
+
 	using Data;
 
 	[PublicAPI]
@@ -32,9 +34,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
