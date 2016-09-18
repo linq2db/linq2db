@@ -52,10 +52,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
+#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
@@ -111,7 +113,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			DropFileDatabase(databaseName, ".sqlite");
 		}
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -123,6 +125,6 @@ namespace LinqToDB.DataProvider.SQLite
 				source);
 		}
 
-		#endregion
+#endregion
 	}
 }

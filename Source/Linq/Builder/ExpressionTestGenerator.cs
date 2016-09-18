@@ -844,7 +844,7 @@ namespace {0}
 			}
 		}
 
-#if NETFX_CORE
+#if NETFX_CORE && !NETSTANDARD
 
 		public string GenerateSource(Expression expr)
 		{
@@ -983,7 +983,7 @@ namespace Tests.UserTests
 			finally
 			{
 				if (sw != null)
-					sw.Close();
+					sw.Dispose();
 			}
 
 			return fileName;

@@ -162,7 +162,7 @@ namespace LinqToDB.Extensions
 
 		public static TypeCode GetTypeCodeEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE && !NETSTANDARD
 			if (type == null)
 				return TypeCode.Empty;
 
@@ -184,6 +184,7 @@ namespace LinqToDB.Extensions
 			}
 
 			if (type == typeof(DBNull))   return TypeCode.DBNull;
+
 			if (type == typeof(DateTime)) return TypeCode.DateTime;
 			if (type == typeof(String))   return TypeCode.String;
 
@@ -194,6 +195,11 @@ namespace LinqToDB.Extensions
 
 			return TypeCode.Object;
 #else
+
+#if NETSTANDARD
+			if (type == typeof(DBNull))   return (TypeCode)2;
+#endif
+
 			return Type.GetTypeCode(type);
 #endif
 		}
@@ -342,6 +348,14 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
+		{
+#if NETFX_CORE
+			return type.GetTypeInfo().GetProperties(flags);
+#else
+			return type.GetProperties(flags);
+#endif
+		}
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
 #if NETFX_CORE
@@ -972,6 +986,15 @@ namespace LinqToDB.Extensions
 			return helper.GetDefaultValue();
 		}
 
+		public static EventInfo GetEventEx(this Type type, string eventName)
+		{
+#if NETSTANDARD
+			return type.GetTypeInfo().GetEvent(eventName);
+#else
+			return type.GetEvent(eventName);
+#endif
+		}
+		
 		#endregion
 
 		#region MethodInfo extensions
@@ -1143,5 +1166,6 @@ namespace LinqToDB.Extensions
 		}
 
 		#endregion
+
 	}
 }

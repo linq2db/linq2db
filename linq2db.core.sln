@@ -3,7 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "linq2db", "Source\linq2db.xproj", "{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{AF93451E-198C-4A94-8EB4-C330D886E102}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "LinqToDB", "Source\LinqToDB.xproj", "{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +25,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0E4E9A56-F285-4067-ADAA-392ACB9CAAA7} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 EndGlobal

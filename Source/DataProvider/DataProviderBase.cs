@@ -324,7 +324,9 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
+#if !NETSTANDARD
 		public abstract ISchemaProvider GetSchemaProvider     ();
+#endif
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -364,9 +366,9 @@ namespace LinqToDB.DataProvider
 			parameter.DbType = dbType;
 		}
 
-		#endregion
+#endregion
 
-		#region Create/Drop Database
+#region Create/Drop Database
 
 		internal static void CreateFileDatabase(
 			string databaseName,
@@ -409,18 +411,18 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -429,6 +431,6 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

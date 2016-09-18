@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			try
 			{
-				var path = typeof(SQLiteTools).Assembly.CodeBase.Replace("file:///", "");
+				var path = typeof(SQLiteTools).AssemblyEx().CodeBase.Replace("file:///", "");
 
 				path = Path.GetDirectoryName(path);
 

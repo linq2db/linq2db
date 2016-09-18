@@ -15,6 +15,7 @@ namespace System
 		object Clone();
 	}
 
+#if !NETSTANDARD
 	[ComVisible(true)]
 	[Serializable]
 	public enum TypeCode
@@ -39,7 +40,6 @@ namespace System
 		String   = 18,
 	}
 
-#if !NETSTANDARD
 	[ComVisible(true)]
 	[Serializable]
 	public sealed class DBNull

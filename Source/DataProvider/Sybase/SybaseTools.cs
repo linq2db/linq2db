@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -18,7 +19,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			try
 			{
-				var path = typeof(SybaseTools).Assembly.CodeBase.Replace("file:///", "");
+				var path = typeof(SybaseTools).AssemblyEx().CodeBase.Replace("file:///", "");
 
 				path = Path.GetDirectoryName(path);
 

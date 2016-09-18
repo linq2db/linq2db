@@ -2,13 +2,20 @@
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.Loader;
 using JetBrains.Annotations;
+#if NETSTANDARD
+using System.Runtime.Loader;
+using System.Linq;
+#endif
 
 namespace LinqToDB.DataProvider
 {
 	class AssemblyResolver
 	{
+		readonly string   _path;
+		readonly string   _resolveName;
+		         Assembly _assembly;
+
 		public AssemblyResolver([NotNull] string path, [NotNull] string resolveName)
 		{
 			if (path        == null) throw new ArgumentNullException("path");
@@ -51,9 +58,6 @@ namespace LinqToDB.DataProvider
 #endif
 		}
 
-		readonly string   _path;
-		readonly string   _resolveName;
-		         Assembly _assembly;
 
 		public Assembly Resolver(object sender, ResolveEventArgs args)
 		{
@@ -62,15 +66,44 @@ namespace LinqToDB.DataProvider
 			return null;
 		}
 #else
-		public class MyAssemblyLoadContext : AssemblyLoadContext
+		public class FileAssemblyLoadContext : AssemblyLoadContext
 		{
+			readonly string _path;
+
+			public FileAssemblyLoadContext(string path)
+			{
+				_path = path;
+			}
+
 			protected override Assembly Load(AssemblyName assemblyName)
 			{
-				return base.LoadFromAssemblyPath("/home/steveharter/netcore/temp/" + assemblyName + ".dll");
+				var deps = Microsoft.Extensions.DependencyModel.DependencyContext.Default;
+				var res = deps.CompileLibraries.Where(d => d.Name.Contains(assemblyName.Name)).ToList();
+				if (res.Count > 0)
+				{
+					return Assembly.Load(new AssemblyName(res.First().Name));
+				}
+				else
+				{
+					var fullName = Path.Combine(_path, assemblyName.Name, ".dll");
+					if (File.Exists(fullName))
+					{
+						var asl = new FileAssemblyLoadContext(_path);
+						return asl.LoadFromAssemblyPath(fullName);
+					}
+				}
+				return Assembly.Load(assemblyName);
 			}
 		}
+
 		void SetResolver()
 		{
+			var fullName = Path.Combine(_path, _resolveName, ".dll");
+			if(File.Exists(fullName))
+			{ 
+				var f = new FileAssemblyLoadContext(_path);
+				f.LoadFromAssemblyPath(fullName);
+			}
 		}
 #endif
 

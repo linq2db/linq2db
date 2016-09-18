@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -173,7 +174,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				((MethodInfo)(typeof(OracleTools).GetMethodEx("OracleXmlTable", typeof(IDataContext), typeof(IEnumerable<T>)) /*MethodBase.GetCurrentMethod()*/)).MakeGenericMethod(typeof(T)),
 				dataContext,
 				data);
 		}
@@ -184,7 +185,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				((MethodInfo)(typeof(OracleTools).GetMethodEx("OracleXmlTable", typeof(IDataContext), typeof(string)) /*MethodBase.GetCurrentMethod()*/)).MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}
@@ -195,7 +196,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return dataContext.GetTable<T>(
 				null,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)),
+				((MethodInfo)(typeof(OracleTools).GetMethodEx("OracleXmlTable", typeof(IDataContext), typeof(string)) /*MethodBase.GetCurrentMethod()*/)).MakeGenericMethod(typeof(T)),
 				dataContext,
 				xmlData);
 		}

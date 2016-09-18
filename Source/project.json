@@ -1,9 +1,24 @@
 ﻿{
+	"name": "linq2db",
 	"version": "1.0.7.4-beta",
+	"authors": [ "Igor Tkachev" ],
+	"description": "LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
 
+	"packOptions": {
+		"licenseUrl": "https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt",
+		"projectUrl": "https://github.com/linq2db/linq2db",
+		"iconUrl": "http://www.gravatar.com/avatar/fc2e509b6ed116b9aa29a7988fdb8990?s=320",
+
+		"requireLicenseAcceptance": false,
+		"tags": [ "linq", "linq2db", "LinqToDB", "ORM", "database", "DB", "SQL", "SqlServer", "Access", "SqlCe", "SqlServerCe", "MySql", "Firebird", "SQLite", "Sybase", "Oracle", "ODP", "PostgreSQL", "DB2", "Informix", "SapHana" ]
+	},
+
+
+	"buildOptions": {
+		"outputName": "linq2db"
+	},
 
 	"dependencies": {
-		"NETStandard.Library": "1.6.0"
 	},
 
 	"frameworks": {
@@ -62,50 +77,66 @@
 				"System.Xml": "",
 				"System.Runtime.Serialization": ""
 			},
-					"buildOptions": {
-						"define": [ "FW4" ],
-						"compile": {
-							"exclude": [
-								"**/*.Silverlight.cs",
-								"**/SerializableAttribute.cs",
-								"**/ConcurrentDictionary.cs",
-								"**/WindowsStoreCompatibility.cs",
-								"**/IDataParameter.cs",
-								"**/IDataReader.cs",
-								"**/DbType.cs",
-								"**/Binary.cs",
-								"**/AllowPartiallyTrustedCallersAttribute.cs",
-								"**/IDbDataParameter.cs",
-								"Compatibility/**/*.cs"
-							]
-						}
-					}
-		},
-			"netstandard1.5": {
-							"buildOptions": {
-								"define": [ "FW4", "NETSTANDARD", "NETFX_CORE" ],
-								"compile": {
-																	"exclude": [
-																		"**/*.Silverlight.cs",
-																		"Compatibility/System/Collections/**/*.cs",
-																		"Compatibility/System/Data/*.cs",
-																		"Compatibility/System/Security/**/*.cs",
-
-																		"Configuration/**/*.cs",
-																		"ServiceModel/**/*.cs",
-																		"**/SapHanaOdbc*.cs",
-																		"**/DataProvider/Access/*.cs"
-																	]
-								}
-							},
-							"dependencies": {
-								"System.Data.Common": "4.1.0",
-								"System.Data.SqlClient": "4.1.0",
-								"System.Runtime.Serialization.Primitives": "4.1.1",
-								"System.Runtime.Loader": "4.0.0",
-								"System.Dynamic.Runtime": "4.0.11",
-								"System.Diagnostics.TraceSource": "4.0.0" 
-							}
+			"buildOptions": {
+				"define": [ "FW4" ],
+				"compile": {
+					"exclude": [
+						"**/*.Silverlight.cs",
+						"**/SerializableAttribute.cs",
+						"**/ConcurrentDictionary.cs",
+						"**/WindowsStoreCompatibility.cs",
+						"**/IDataParameter.cs",
+						"**/IDataReader.cs",
+						"**/DbType.cs",
+						"**/Binary.cs",
+						"**/AllowPartiallyTrustedCallersAttribute.cs",
+						"**/IDbDataParameter.cs",
+						"Compatibility/**/*.cs"
+					]
+				}
 			}
+		},
+		"netstandard1.6": {
+			"buildOptions": {
+				"define": [ "FW4", "NETSTANDARD", "NETFX_CORE" ],
+				"compile": {
+					"exclude": [
+						"**/*.Silverlight.cs",
+						"Compatibility/System/Collections/**/*.cs",
+						"Compatibility/System/Data/*.cs",
+						"Compatibility/System/Security/**/*.cs",
+
+						"**/SystemDataLinqAttributeReader.cs",
+
+						"Configuration/DataProviderElement.cs",
+						"Configuration/DataProviderElementCollection.cs",
+						"Configuration/ElementBase.cs",
+						"Configuration/ElementCollectionBase.cs",
+						"Configuration/LinqToDBSection.cs",
+
+						"ServiceModel/**/*.cs",
+						"**/SapHanaOdbc*.cs",
+						"**/DataProvider/Access/*.cs",
+						"**/*SchemaProvider*.cs"
+					]
+				}
+			},
+			"dependencies": {
+				"NETStandard.Library": "1.6.0",
+				"System.Data.Common": "4.1.0",
+				"System.Data.SqlClient": "4.1.0",
+				"System.Runtime.Serialization.Primitives": "4.1.1",
+				"System.Runtime.Loader": "4.0.0",
+				"System.Dynamic.Runtime": "4.0.11",
+				"System.Diagnostics.TraceSource": "4.0.0",
+				"Microsoft.CSharp": "4.0.1",
+				"System.Linq.Queryable": "4.0.1",
+				"System.Xml.XmlDocument": "4.0.1",
+				"System.Threading.Thread": "4.0.0",
+				"System.Net.NetworkInformation": "4.1.0",
+				"System.ComponentModel.Annotations": "4.1.0",
+				"Microsoft.Extensions.DependencyModel": "1.0.0"
+			}
+		}
 	}
 }

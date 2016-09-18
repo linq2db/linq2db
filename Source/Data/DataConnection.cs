@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
@@ -229,9 +228,20 @@ namespace LinqToDB.Data
 
 		#region Configuration
 
+		private static ILinqToDBSettings _defaultSettings = null;
+
 		public static ILinqToDBSettings DefaultSettings
 		{
-			get { return LinqToDBSection.Instance; }
+			get
+			{
+#if !NETSTANDARD
+				return _defaultSettings ?? (_defaultSettings = LinqToDBSection.Instance);
+#else
+				return _defaultSettings;
+#endif
+
+			}
+			set { _defaultSettings = value; }
 		}
 
 		static IDataProvider FindProvider(string configuration, IEnumerable<KeyValuePair<string,IDataProvider>> ps, IDataProvider defp)
@@ -252,7 +262,9 @@ namespace LinqToDB.Data
 			_configurationIDs = new ConcurrentDictionary<string,int>();
 
 			LinqToDB.DataProvider.SqlServer. SqlServerTools. GetDataProvider();
+#if !NETSTANDARD
 			LinqToDB.DataProvider.Access.    AccessTools.    GetDataProvider();
+#endif
 			LinqToDB.DataProvider.SqlCe.     SqlCeTools.     GetDataProvider();
 			LinqToDB.DataProvider.Firebird.  FirebirdTools.  GetDataProvider();
 			LinqToDB.DataProvider.MySql.     MySqlTools.     GetDataProvider();
@@ -469,9 +481,9 @@ namespace LinqToDB.Data
 			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
 		}
 
-		#endregion
+#endregion
 
-		#region Connection
+#region Connection
 
 		bool          _closeConnection;
 		bool          _closeTransaction;
@@ -520,9 +532,9 @@ namespace LinqToDB.Data
 				OnClosed(this, EventArgs.Empty);
 		}
 
-		#endregion
+#endregion
 
-		#region Command
+#region Command
 
 		public string LastQuery;
 
@@ -754,9 +766,9 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
-		#region Transaction
+#region Transaction
 
 		public IDbTransaction Transaction { get; private set; }
 		
@@ -830,9 +842,9 @@ namespace LinqToDB.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MappingSchema
+#region MappingSchema
 
 		private MappingSchema _mappingSchema;
 
@@ -863,9 +875,9 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		#endregion
+#endregion
 
-		#region ICloneable Members
+#region ICloneable Members
 
 		DataConnection(string configurationString, IDataProvider dataProvider, string connectionString, IDbConnection connection, MappingSchema mappingSchema)
 		{
@@ -887,15 +899,15 @@ namespace LinqToDB.Data
 			return new DataConnection(ConfigurationString, DataProvider, ConnectionString, connection, MappingSchema);
 		}
 		
-		#endregion
+#endregion
 
-		#region System.IDisposable Members
+#region System.IDisposable Members
 
 		public void Dispose()
 		{
 			Close();
 		}
 
-		#endregion
+#endregion
 	}
 }

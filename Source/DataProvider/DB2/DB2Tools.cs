@@ -5,10 +5,10 @@ using System.Data;
 using System.Reflection;
 
 using JetBrains.Annotations;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Configuration;
 	using System.Linq;
 	using System.Linq.Expressions;
 
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var connectionType = Type.GetType("IBM.Data.DB2.DB2Connection, IBM.Data.DB2", true);
 							var serverTypeProp = connectionType
-								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
+								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
 								.FirstOrDefault(p => p.Name == "eServerType");
 
 							if (serverTypeProp != null)

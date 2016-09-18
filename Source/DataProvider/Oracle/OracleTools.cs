@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			try
 			{
-				var path = typeof(OracleTools).Assembly.CodeBase.Replace("file:///", "");
+				var path = typeof(OracleTools).AssemblyEx().CodeBase.Replace("file:///", "");
 
 				path = Path.GetDirectoryName(path);
 
