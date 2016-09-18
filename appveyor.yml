@@ -10,7 +10,7 @@ cache:
 
 services:
 - mssql2012sp1
-- mysql56
+- mysql
 
 init:
 - cmd: git config --global core.autocrlf true
@@ -44,7 +44,9 @@ after_build:
 - ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
 - ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
 
-test: off
+test: 
+  assemblies:
+    - Tests\Linq\bin\Release\linq2db.Tests.dll
 
 before_test:
 - ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
