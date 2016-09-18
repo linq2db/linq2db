@@ -992,7 +992,11 @@ namespace LinqToDB.Extensions
 		public static EventInfo GetEventEx(this Type type, string eventName)
 		{
 #if NETFX_CORE
+#if !NETSTANDARD
+			return type.GetTypeInfo().GetDeclaredEvent(eventName);
+#else
 			return type.GetTypeInfo().GetEvent(eventName);
+#endif
 #else
 			return type.GetEvent(eventName);
 #endif
