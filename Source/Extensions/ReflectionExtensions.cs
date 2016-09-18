@@ -348,14 +348,17 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+#if NETSTANDARD || FW4
 		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
 		{
-#if NETFX_CORE
+#if NETSTANDARD
 			return type.GetTypeInfo().GetProperties(flags);
 #else
 			return type.GetProperties(flags);
 #endif
 		}
+#endif
+
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
 #if NETFX_CORE
@@ -478,7 +481,7 @@ namespace LinqToDB.Extensions
 			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ConcurrentDictionary<Type,T[]>();
 		}
 
-		#region Attributes cache
+#region Attributes cache
 
 		static readonly Dictionary<Type, object[]> _typeAttributesTopInternal = new Dictionary<Type, object[]>(10);
 
@@ -544,7 +547,7 @@ namespace LinqToDB.Extensions
 				GetAttributesTreeInternal(list, type.BaseTypeEx());
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -995,9 +998,9 @@ namespace LinqToDB.Extensions
 #endif
 		}
 		
-		#endregion
+#endregion
 
-		#region MethodInfo extensions
+#region MethodInfo extensions
 
 		public static PropertyInfo GetPropertyInfo(this MethodInfo method)
 		{
@@ -1018,9 +1021,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-		#endregion
+#endregion
 
-		#region MemberInfo extensions
+#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1165,7 +1168,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-		#endregion
+#endregion
 
 	}
 }
