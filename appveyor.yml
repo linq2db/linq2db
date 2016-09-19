@@ -1,7 +1,7 @@
 configuration: Debug
 
 environment:
-  packageVersion: 1.7.4
+  packageVersion: 1.7.5
 
 version: $(packageVersion).{build}
 
