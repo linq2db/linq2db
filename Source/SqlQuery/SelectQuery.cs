@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 #if NETFX_CORE
 			using (var stream = assembly.GetManifestResourceStream(name))
 #else
-			using (var stream = assembly.GetManifestResourceStream(typeof(SelectQuery), name))
+			using (var stream = assembly.GetManifestResourceStream(name))
 #endif
 			using (var reader = new StreamReader(stream))
 			{
