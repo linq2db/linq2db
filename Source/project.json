@@ -1,4 +1,5 @@
 ﻿{
+	"name": "linq2db", 
 	"version": "1.7.5-*",
 	"authors": [ "Igor Tkachev" ],
 	"description": "LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
@@ -14,8 +15,8 @@
 
 
 	"buildOptions": {
-			"outputName": "linq2db",
-			"embed": [ "**/*.resx", "**/*.txt" ]
+		"outputName": "linq2db",
+		"embed": [ "**/*.resx", "**/*.txt" ]
 	},
 
 	"dependencies": {
