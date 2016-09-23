@@ -3,9 +3,10 @@
 
 
 	"dependencies": {
-		"Source": "1.7.5-*", 
+		"Source": "1.7.5-*",
 		"NUnit": "3.4.1",
-		"dotnet-test-nunit": "3.4.0-*" 
+		"Microsoft.Data.SQLite": "1.0.0",
+		"dotnet-test-nunit": "3.4.0-*"
 	},
 
     "testRunner": "nunit",

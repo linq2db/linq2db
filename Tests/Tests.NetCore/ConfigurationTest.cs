@@ -1,52 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using NUnit.Framework;
 
 namespace Tests.NetCore
 {
 	[TestFixture]
-    public class ConfigurationTest
-    {
-		[Test]
-        public void Configuration()
-        {
-			DataConnection.DefaultSettings = new MySettings();
-			var d = new DataContext();
-			Assert.AreEqual("Sql", DataConnection.DefaultConfiguration);
-	        var now = d.Select(() => Sql.GetDate());
-			Assert.AreNotEqual(default(DateTime), now);
-        }
-
-		public class ConnectionStringSettings :IConnectionStringSettings
+	public class ConfigurationTest
+	{
+		public class ConnectionStringSettings : IConnectionStringSettings
 		{
 			public string ConnectionString { get; set; }
 			public string Name { get; set; }
 			public string ProviderName { get; set; }
 			public bool IsGlobal => false;
 		}
-	    public class MySettings : ILinqToDBSettings
-	    {
-		    public IEnumerable<IDataProviderSettings> DataProviders
-		    {
-			    get
-			    {
-				  yield break;  
-			    } 
-		    }
 
-		    public string DefaultConfiguration => "Sql";
-		    public string DefaultDataProvider => "SqlServer";
+		public class MySettings : ILinqToDBSettings
+		{
+			public IEnumerable<IDataProviderSettings> DataProviders
+			{
+				get { yield break; }
+			}
 
-		    public IEnumerable<IConnectionStringSettings> ConnectionStrings
-		    {
-			    get
-			    {
-				    yield return new ConnectionStringSettings {Name = "Sql", ProviderName = "SqlServer", ConnectionString = "Server=.;Default Catalog=TestData;Integrated Security=SSPI"};
-			    }
-		    }
-	    }
-    }
+			public string DefaultConfiguration => "SqLite";
+			public string DefaultDataProvider => "SqlServer";
+
+			public IEnumerable<IConnectionStringSettings> ConnectionStrings
+			{
+				get
+				{
+					yield return
+						new ConnectionStringSettings
+						{
+							Name = "SQLite",
+							ProviderName = "SQLite",
+							ConnectionString = @"Data Source=..\..\..\..\..\Data\TestData.sqlite"
+						};
+				}
+			}
+		}
+
+		[Test]
+		public void Configuration()
+		{
+			DataConnection.DefaultSettings = new MySettings();
+			var d = new DataContext();
+			Assert.AreEqual("SQLite", DataConnection.DefaultConfiguration);
+
+			var now = d.Select(() => Sql.GetDate());
+			var one = d.Select(() => 1);
+
+			Assert.AreNotEqual(default(DateTime), now);
+			Assert.AreEqual   (1,                 one);
+		}
+	}
 }
