@@ -401,7 +401,7 @@ namespace LinqToDB.Linq
 					{ M(() => "".ToLower    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Lower(obj))) },
 					{ M(() => "".ToUpper    ()        ), N(() => L<String,String>                  ((String obj)                              => Sql.Upper(obj))) },
 					{ M(() => "".CompareTo  ("")      ), N(() => L<String,String,Int32>            ((String obj,String p0)                    => ConvertToCaseCompareTo(obj, p0).Value)) },
-#if !NETFX_CORE
+#if !NETFX_CORE 
 					{ M(() => "".CompareTo  (1)       ), N(() => L<String,Object,Int32>            ((String obj,Object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString()).Value)) },
 #endif
 
@@ -419,8 +419,10 @@ namespace LinqToDB.Linq
 					{ M(() => string.CompareOrdinal("",0,"",0,0)),      N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 					{ M(() => string.Compare       ("","")),            N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
 					{ M(() => string.Compare       ("",0,"",0,0)),      N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
 					{ M(() => string.Compare       ("","",true)),       N(() => L<String,String,Boolean,Int32>                  ((String s1,String s2,Boolean b)                           => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+#endif
+#if !SILVERLIGHT && !NETFX_CORE
 					{ M(() => string.Compare       ("",0,"",0,0,true)), N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 #endif
 
@@ -471,7 +473,7 @@ namespace LinqToDB.Linq
 
 					{ M(() => Boolean. Parse("")), N(() => L<String,Boolean> ((String p0) => Sql.ConvertTo<Boolean>. From(p0))) },
 					{ M(() => Byte.    Parse("")), N(() => L<String,Byte>    ((String p0) => Sql.ConvertTo<Byte>.    From(p0))) },
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE || NETSTANDARD
 					{ M(() => Char.    Parse("")), N(() => L<String,Char>    ((String p0) => Sql.ConvertTo<Char>.    From(p0))) },
 #endif
 					{ M(() => DateTime.Parse("")), N(() => L<String,DateTime>((String p0) => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -965,7 +967,7 @@ namespace LinqToDB.Linq
 
 					#region SqlTypes
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE 
 					{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
 					{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
 					{ M(() => new SqlBoolean().IsTrue),  N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == true))  },
