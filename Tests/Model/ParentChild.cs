@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Reflection;
+#if !NOIMMUTABLE
+using System.Collections.Immutable;
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -39,7 +41,11 @@ namespace Tests.Model
 		}
 
 		[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+#if !NOIMMUTABLE
 		public ImmutableList<Child> Children3;
+#else
+		public List<Child> Children3;
+#endif
 
 		public override bool Equals(object obj)
 		{
@@ -266,9 +272,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Parent1/GrandChild1
+#region Parent1/GrandChild1
 
 	[Table("Parent")]
 	public class Parent1 : IEquatable<Parent1>, IComparable
@@ -347,9 +353,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance
+#region Inheritance
 
 	[Table(Name="Parent", IsColumnAttributeRequired=false)]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceNull))]
@@ -434,9 +440,9 @@ namespace Tests.Model
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance2
+#region Inheritance2
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase2))]
@@ -456,9 +462,9 @@ namespace Tests.Model
 		public int Value1;
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance3
+#region Inheritance3
 
 	[Table(Name="Parent")]
 	[InheritanceMapping(Code = null, Type = typeof(ParentInheritanceBase3))]
@@ -479,9 +485,9 @@ namespace Tests.Model
 		public int Value;
 	}
 
-	#endregion
+#endregion
 
-	#region Inheritance4
+#region Inheritance4
 
 	public enum Parent4Type
 	{
@@ -512,7 +518,7 @@ namespace Tests.Model
 		public override Parent4Type Value1 { get { return Parent4Type.Value2; } }
 	}
 
-	#endregion
+#endregion
 
 	public class Functions
 	{
@@ -526,14 +532,26 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return _ctx.GetTable<Parent>(this, (MethodInfo)(MethodBase.GetCurrentMethod()), id);
+#if !NETSTANDARD
+			var methodInfo = (MethodInfo)(MethodBase.GetCurrentMethod());
+#else
+			var methodInfo = typeof(Functions).GetMethod(nameof(GetParentByID), new [] {typeof(int?)});
+#endif
+
+			return _ctx.GetTable<Parent>(this, methodInfo, id);
 		}
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public ITable<T> WithTabLock<T>()
-			where T : class 
+			where T : class
 		{
-			return _ctx.GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+#if !NETSTANDARD
+			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T));
+#else
+			var methodInfo = typeof(Functions).GetMethod(nameof(WithTabLock)).MakeGenericMethod(typeof(T));
+#endif
+
+			return _ctx.GetTable<T>(this, methodInfo);
 		}
 
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]

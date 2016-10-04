@@ -1,0 +1,46 @@
+﻿{
+	"version": "1.0.0-*",
+
+	"dependencies": {
+		"Source": "1.7.5-*"
+	},
+
+	"frameworks": {
+		"net40": {
+			"buildOptions": { "define": ["NOIMMUTABLE"] }
+		},
+		"net45": {
+			"dependencies": {
+				"Microsoft.Bcl.Immutable": "1.0.34",
+				"System.Collections.Immutable": "1.2.0"
+			}
+		},
+		"netstandard1.6": {
+			"imports": "dnxcore50",
+			"buildOptions": {
+				"define": ["NETSTANDARD"],
+				"compile": {
+					"exclude": ["TestServiceModelDataContext.cs"]
+				}
+			},
+			"dependencies": {
+				"NETStandard.Library": "1.6.0",
+				"System.Data.Common": "4.1.0",
+				"System.Data.SqlClient": "4.1.0",
+				"System.Runtime.Serialization.Primitives": "4.1.1",
+				"System.Runtime.Loader": "4.0.0",
+				"System.Dynamic.Runtime": "4.0.11",
+				"System.Diagnostics.TraceSource": "4.0.0",
+				"Microsoft.CSharp": "4.0.1",
+				"System.Linq.Queryable": "4.0.1",
+				"System.Xml.XmlDocument": "4.0.1",
+				"System.Threading.Thread": "4.0.0",
+				"System.Net.NetworkInformation": "4.1.0",
+				"System.ComponentModel.Annotations": "4.1.0",
+				"Microsoft.Extensions.DependencyModel": "1.0.0",
+				"System.Collections.Immutable": "1.2.0"
+			}
+		}
+
+	}
+}

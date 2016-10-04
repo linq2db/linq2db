@@ -51,7 +51,13 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(), id);
+#if !NETSTANDARD
+			var methodInfo = (MethodInfo)MethodBase.GetCurrentMethod();
+#else
+			var methodInfo = (MethodInfo)(typeof(TestDataConnection)).GetMethod(nameof(GetParentByID), new [] {typeof(int?)});
+#endif
+
+			return GetTable<Parent>(this, methodInfo, id);
 		}
 
 		public string GetSqlText(SelectQuery query)

@@ -39,9 +39,16 @@ namespace Tests.Model
 		[FreeTextTableExpression]
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
+#if !NETSTANDARD
+			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey));
+#else
+			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(FreeTextTable), new [] {typeof(string), typeof(string)})
+				.MakeGenericMethod(typeof(TTable), typeof(TKey));
+#endif
+
 			return GetTable<FreeTextKey<TKey>>(
 				this,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),
+				methodInfo,
 				field,
 				text);
 		}
@@ -49,9 +56,15 @@ namespace Tests.Model
 		[FreeTextTableExpression]
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
+#if !NETSTANDARD
+			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey));
+#else
+			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(FreeTextTable), new [] {typeof(Expression<Func<TTable,string>>), typeof(string)})
+				.MakeGenericMethod(typeof(TTable), typeof(TKey));
+#endif
 			return GetTable<FreeTextKey<TKey>>(
 				this,
-				((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey)),
+				methodInfo,
 				fieldSelector,
 				text);
 		}
@@ -60,9 +73,16 @@ namespace Tests.Model
 
 		[Sql.TableExpression("{0} {1} WITH (UPDLOCK)")]
 		public ITable<T> WithUpdateLock<T>()
-			where T : class 
+			where T : class
 		{
-			return GetTable<T>(this, ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T)));
+#if !NETSTANDARD
+			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T));
+#else
+			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(WithUpdateLock))
+				.MakeGenericMethod(typeof(T));
+#endif
+
+			return GetTable<T>(this, methodInfo);
 		}
 	}
 }

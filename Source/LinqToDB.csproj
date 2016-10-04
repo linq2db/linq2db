@@ -478,6 +478,7 @@
   <ItemGroup>
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
+    <None Include="LinqToDB.project.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,4 +1,5 @@
 ﻿{
+	"name": "Tests.NetCore", 
 	"version": "1.0.0-*",
 
 
@@ -9,18 +10,18 @@
 		"dotnet-test-nunit": "3.4.0-*"
 	},
 
-    "testRunner": "nunit",
+	"testRunner": "nunit",
 
-    "frameworks": {
-        "netcoreapp1.0": {
-            "imports": "portable-net45+win8",
-            "dependencies": {
-													"Microsoft.NETCore.App": {
-														"version": "1.0.1",
-														"type": "platform"
-													}
-            }
-        }
-    }
+	"frameworks": {
+		"netcoreapp1.0": {
+			"imports": "portable-net45+win8",
+			"dependencies": {
+				"Microsoft.NETCore.App": {
+					"version": "1.0.1",
+					"type": "platform"
+				}
+			}
+		}
+	}
 }
 
