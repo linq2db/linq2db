@@ -21,7 +21,7 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(@"..\..\..\..\Data\Create Scripts\" + name + ".sql");
+			var text = File.ReadAllText(ProjectPath + @"..\..\Data\Create Scripts\" + name + ".sql");
 
 			while (true)
 			{

@@ -46,12 +46,15 @@ namespace Tests
 
 			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
 
+			ProjectPath = FindProjectPath(assemblyPath);
+
 			Environment.CurrentDirectory = assemblyPath;
 
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+			
 			var providerListFile =
-				File.Exists(Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt")) ?
-					Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt") :
-					Path.Combine(assemblyPath, @"..\..\DefaultDataProviders.txt");
+				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
 			UserProviders =
 				File.ReadAllLines(providerListFile)
@@ -93,6 +96,18 @@ namespace Tests
 					default                   : return null;
 				}
 			};
+		}
+
+		protected static readonly string ProjectPath;
+
+		protected static string FindProjectPath(string basePath)
+		{
+			while (!File.Exists(Path.Combine(basePath, "DefaultDataProviders.txt")))
+			{
+				basePath = Path.Combine(basePath, @"..\");
+			}
+
+			return basePath;
 		}
 
 		const int IP = 22654;
