@@ -316,7 +316,7 @@ namespace Tests.DataProvider
 
 				//var list = conn.GetTable<ALLTYPE>().ToList();
 
-				conn.GetTable<DB2Tests.ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
 			}
 		}
 

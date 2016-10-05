@@ -1,13 +1,18 @@
 ﻿{
 	"version": "1.0.0-*",
 
+	"buildOptions": {
+		"publicSign": true,
+		"keyFile": "linq2db.Tests.snk"
+	},
+
 	"dependencies": {
 		"Source": "1.7.5-*"
 	},
 
 	"frameworks": {
 		"net40": {
-			"buildOptions": { "define": ["NOIMMUTABLE"] }
+			"buildOptions": { "define": [ "NOIMMUTABLE" ] }
 		},
 		"net45": {
 			"dependencies": {
@@ -18,9 +23,9 @@
 		"netstandard1.6": {
 			"imports": "dnxcore50",
 			"buildOptions": {
-				"define": ["NETSTANDARD"],
+				"define": [ "NETSTANDARD" ],
 				"compile": {
-					"exclude": ["TestServiceModelDataContext.cs"]
+					"exclude": [ "TestServiceModelDataContext.cs" ]
 				}
 			},
 			"dependencies": {

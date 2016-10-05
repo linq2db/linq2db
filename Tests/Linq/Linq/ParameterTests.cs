@@ -6,7 +6,11 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+#if !NOFSHARP
 using Tests.FSharp.Models;
+#else
+using Tests.Model;
+#endif
 
 namespace Tests.Linq
 {
