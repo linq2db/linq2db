@@ -1,8 +1,9 @@
 ﻿{
 	"name": "linq2db.Tests",
 	"version": "1.7.5-*",
-	"authors": [ "Igor Tkachev" ],
-	"description": "LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
+	"authors": ["Igor Tkachev"],
+	"description":
+		"LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",
 
 
 	"buildOptions": {
@@ -16,86 +17,105 @@
 		"NUnit": "3.4.1"
 	},
 
-	"frameworks": {
-			"net40": {
-				"frameworkAssemblies": {
-					"Microsoft.CSharp": "",
-					"System": "",
-					"System.Configuration": "",
-					"System.Core": "",
-					"System.Data.DataSetExtensions": "",
-					"System.Data.Linq": "",
-					"System.Data.Services": "",
-					"System.ServiceModel": "",
-					"System.Web.Services": "",
-					"System.Xml.Linq": "",
-					"System.Data": "",
-					"System.Xml": "",
-									"System.Runtime.Serialization": "",
-									"System.Windows.Forms": ""
-				},
-				"dependencies": {
-					"Microsoft.Bcl.Async": "1.0.*",
-					"FirebirdSql.Data.FirebirdClient": "4.10.0",
-					"Microsoft.SqlServer.Compact": "4.0.8876.1",
-					"Microsoft.SqlServer.Types": "11.0.2",
-					"MiniProfiler": "3.2.0.157",
-					"MySql.Data": "6.9.8",
-					"Npgsql": "2.2.6",
-					"Oracle.DataAccess.x86": "2.112.1.0",
-					"Oracle.ManagedDataAccess": "12.1.24160419",
-					"System.Data.SQLite.Core": "1.0.101.0",
-					"xunit": "1.9.1",
-					"xunit.extensions": "1.9.1"
+	"testRunner": "nunit",
 
-				},
-				"buildOptions": {
-									"define": [ "FW4", "NOASYNC", "NOIMMUTABLE", "NOFSHARP", "NPGSQL226" ],
-					"compile": {
-											"exclude": [
-												"**/VisualBasicTests.cs",
-												"**/FSharpTests.cs",
-												"**/AsyncTests.cs",
-												"**/ParserTests.cs",
-												"**/DB2Tests.cs",
-												"**/InformixTests.cs"
-											]
-					}
-				}
+	"frameworks": {
+		"net40": {
+			"frameworkAssemblies": {
+				"Microsoft.CSharp": "",
+				"System": "",
+				"System.Configuration": "",
+				"System.Core": "",
+				"System.Data.DataSetExtensions": "",
+				"System.Data.Linq": "",
+				"System.Data.Services": "",
+				"System.ServiceModel": "",
+				"System.Web.Services": "",
+				"System.Xml.Linq": "",
+				"System.Data": "",
+				"System.Xml": "",
+				"System.Runtime.Serialization": "",
+				"System.Windows.Forms": ""
+			},
+			"dependencies": {
+				"Microsoft.Bcl.Async": "1.0.*",
+				"FirebirdSql.Data.FirebirdClient": "4.10.0",
+				"Microsoft.SqlServer.Compact": "4.0.8876.1",
+				"Microsoft.SqlServer.Types": "11.0.2",
+				"MiniProfiler": "3.2.0.157",
+				"MySql.Data": "6.9.8",
+				"Npgsql": "2.2.6",
+				"Oracle.DataAccess.x86": "2.112.1.0",
+				"Oracle.ManagedDataAccess": "12.1.24160419",
+				"System.Data.SQLite.Core": "1.0.101.0",
+				"xunit": "1.9.1",
+				"xunit.extensions": "1.9.1",
+				"NUnit.Runners": "3.4.1"
 
 			},
+			"buildOptions": {
+				"define": ["FW4", "NOASYNC", "NOIMMUTABLE", "NOFSHARP", "NPGSQL226"],
+				"compile": {
+					"exclude": [
+						"**/VisualBasicTests.cs",
+						"**/FSharpTests.cs",
+						"**/AsyncTests.cs",
+						"**/ParserTests.cs",
+						"**/DB2Tests.cs",
+						"**/InformixTests.cs"
+					]
+				},
+				"copyToOutput": {
+					"mappings": {
+						"x86/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net40/x86/" },
+						"x64/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net40/x64/" },
+						"Database/": {
+							"include": "../../Data/"
+						}
+					}
+				}
+			}
+		},
 
 		"net45": {
-					"frameworkAssemblies": {
-						"Microsoft.CSharp": "",
-						"System": "",
-						"System.Configuration": "",
-						"System.Core": "",
-						"System.Data.DataSetExtensions": "",
-						"System.Data.Linq": "",
-						"System.Data.Services": "",
-						"System.ServiceModel": "",
-						"System.Web.Services": "",
-						"System.Xml.Linq": "",
-						"System.Data": "",
-						"System.Xml": "",
-						"System.Runtime.Serialization": "",
-						"System.Windows.Forms": ""
-					},
+			"frameworkAssemblies": {
+				"Microsoft.CSharp": "",
+				"System": "",
+				"System.Configuration": "",
+				"System.Core": "",
+				"System.Data.DataSetExtensions": "",
+				"System.Data.Linq": "",
+				"System.Data.Services": "",
+				"System.ServiceModel": "",
+				"System.Web.Services": "",
+				"System.Xml.Linq": "",
+				"System.Data": "",
+				"System.Xml": "",
+				"System.Runtime.Serialization": "",
+				"System.Windows.Forms": ""
+			},
 			"buildOptions": {
-							"define": [ "FW4", "NOFSHARP" ],
+				"define": ["FW4", "NOFSHARP"],
 				"compile": {
-									"exclude": [
-										"**/VisualBasicTests.cs",
-										"**/FSharpTests.cs",
-										"**/ParserTests.cs",
-										"**/DB2Tests.cs",
-										"**/InformixTests.cs"
-									]
+					"exclude": [
+						"**/VisualBasicTests.cs",
+						"**/FSharpTests.cs",
+						"**/ParserTests.cs",
+						"**/DB2Tests.cs",
+						"**/InformixTests.cs"
+					]
+				},
+				"copyToOutput": {
+					"mappings": {
+						"x86/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net45/x86/" },
+						"x64/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net45/x64/" },
+						"Database/": {
+							"include": "../../Data/"
+						}
+					}
 				}
 			},
 			"dependencies": {
-
 				"FirebirdSql.Data.FirebirdClient": "4.10.0",
 				"Microsoft.Bcl.Immutable": "1.0.34",
 				"Microsoft.SqlServer.Compact": "4.0.8876.1",
@@ -107,7 +127,8 @@
 				"Oracle.ManagedDataAccess": "12.1.24160419",
 				"System.Data.SQLite.Core": "1.0.101.0",
 				"xunit": "1.9.1",
-				"xunit.extensions": "1.9.1"
+				"xunit.extensions": "1.9.1",
+				"NUnit.Runners": "3.4.1"
 
 			}
 		}

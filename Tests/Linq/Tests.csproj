@@ -346,42 +346,55 @@
   <ItemGroup>
     <Content Include="..\..\Data\Create Scripts\Access.sql">
       <Link>Database\Create Scripts\Access.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\DB2.sql">
       <Link>Database\Create Scripts\DB2.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Firebird.sql">
       <Link>Database\Create Scripts\Firebird.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Informix.sql">
       <Link>Database\Create Scripts\Informix.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\MySql.sql">
       <Link>Database\Create Scripts\MySql.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Oracle.sql">
       <Link>Database\Create Scripts\Oracle.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\PostgreSQL.sql">
       <Link>Database\Create Scripts\PostgreSQL.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SapHana.sql">
       <Link>Database\Create Scripts\SapHana.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlCe.sql">
       <Link>Database\Create Scripts\SqlCe.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SQLite.sql">
       <Link>Database\Create Scripts\SQLite.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlServer.sql">
       <Link>Database\Create Scripts\SqlServer.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\SqlServer2000.sql">
       <Link>Database\Create Scripts\SqlServer2000.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\Create Scripts\Sybase.sql">
       <Link>Database\Create Scripts\Sybase.sql</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\Data\TestData.mdb">
       <Link>Database\TestData.mdb</Link>

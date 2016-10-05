@@ -56,6 +56,14 @@ namespace Tests
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
 
+			if (Directory.Exists(@"Database\Data"))
+				Directory.Delete(@"Database\Data", true);
+
+			Directory.CreateDirectory(@"Database\Data");
+
+			foreach (var file in Directory.GetFiles(@"Database", "*.*"))
+				File.Copy(file, Path.Combine(@"Database\Data\",  Path.GetFileName(file)), true);
+
 			UserProviders =
 				File.ReadAllLines(providerListFile)
 					.Select(s => s.Trim())

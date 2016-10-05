@@ -13,6 +13,7 @@ namespace Tests._Create
 	using Model;
 
 	[TestFixture]
+	[Category("Create")]
 	// ReSharper disable once InconsistentNaming
 	// ReSharper disable once TestClassNameSuffixWarning
 	public class _CreateData : TestBase
@@ -21,7 +22,7 @@ namespace Tests._Create
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(ProjectPath + @"..\..\Data\Create Scripts\" + name + ".sql");
+			var text = File.ReadAllText(@"Database\Create Scripts\" + name + ".sql");
 
 			while (true)
 			{
