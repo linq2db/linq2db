@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+
+#if !NETSTANDARD
 using System.ServiceModel;
 using System.ServiceModel.Description;
+#endif 
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
+
+#if !NETSTANDARD
 using LinqToDB.ServiceModel;
+#endif 
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -26,7 +33,13 @@ namespace Tests
 	{
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+			Console.WriteLine("Tests started in {0}...",
+#if NETSTANDARD
+				System.IO.Directory.GetCurrentDirectory()
+#else
+				Environment.CurrentDirectory
+#endif
+				);
 
 			var traceCount = 0;
 
@@ -41,15 +54,17 @@ namespace Tests
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
-
-			var assemblyPath = typeof(TestBase).Assembly.CodeBase;
+			var assemblyPath = typeof(TestBase).AssemblyEx().CodeBase;
 
 			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
 
 			ProjectPath = FindProjectPath(assemblyPath);
 
+#if NETSTANDARD
+			System.IO.Directory.SetCurrentDirectory(assemblyPath);
+#else
 			Environment.CurrentDirectory = assemblyPath;
-
+#endif
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
 			
@@ -95,6 +110,7 @@ namespace Tests
 
 			DataConnection.TurnTraceSwitchOn();
 
+#if !NETSTANDARD
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -104,6 +120,7 @@ namespace Tests
 					default                   : return null;
 				}
 			};
+#endif
 		}
 
 		protected static readonly string ProjectPath;
@@ -123,6 +140,7 @@ namespace Tests
 
 		static void OpenHost()
 		{
+#if !NETSTANDARD
 			if (_isHostOpen)
 				return;
 
@@ -148,6 +166,7 @@ namespace Tests
 				"LinqOverWCF");
 
 			host.Open();
+#endif
 		}
 
 		public class UserProviderInfo
@@ -306,6 +325,7 @@ namespace Tests
 
 		protected ITestDataContext GetDataContext(string configuration)
 		{
+#if !NETSTANDARD
 			if (configuration.EndsWith(".LinqService"))
 			{
 				OpenHost();
@@ -317,7 +337,13 @@ namespace Tests
 
 				return dx;
 			}
+#else
+			if (configuration.EndsWith(".LinqService"))
+			{
+				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
+			}
 
+#endif
 			Debug.WriteLine(configuration, "Provider ");
 
 			return new TestDataConnection(configuration);
@@ -430,7 +456,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -611,9 +637,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Northwind
+#region Northwind
 
 		private List<Northwind.Category> _category;
 		public  List<Northwind.Category>  Category
@@ -786,7 +812,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{

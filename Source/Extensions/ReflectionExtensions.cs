@@ -26,6 +26,15 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+//		public static Type GetGenericTypeDefinitionEx(this Type type)
+//		{
+//#if NETFX_CORE
+//			return type.GetTypeInfo().GetGenericTypeDefinition();
+//#else
+//			return type.GetGenericTypeDefinition();
+//#endif
+//		}
+
 		public static bool IsValueTypeEx(this Type type)
 		{
 #if NETFX_CORE

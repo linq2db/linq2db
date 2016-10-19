@@ -318,7 +318,8 @@ namespace Tests.Linq
 			var ps = Parent1.OrderBy(p => p.ParentID).Take(2).ToArray();
 
 			using (var db = GetDataContext(context))
-				Array.ForEach(ps, p => TestContains(db, p));
+				foreach (var p in ps)
+					TestContains(db, p);
 		}
 
 		[Test, DataContextSource]

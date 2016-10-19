@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -27,6 +28,21 @@ namespace LinqToDB.DataProvider.Oracle
 			DataConnection.AddDataProvider(_oracleManagedDataProvider);
 
 			DataConnection.AddProviderDetector(ProviderDetector);
+
+			foreach (var method in typeof(OracleTools).GetMethodsEx().Where(_ => _.Name == "OracleXmlTable" && _.IsGenericMethod))
+			{
+				var parameters = method.GetParameters();
+
+				if (parameters[1].ParameterType == typeof(string))
+					OracleXmlTableString = method;
+				else if (parameters[1].ParameterType == typeof(Func<string>))
+					OracleXmlTableFuncString = method;
+				else if (parameters[1].ParameterType.IsGenericTypeEx() &&
+				         parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					OracleXmlTableIEnumerableT = method;
+				else
+					throw new InvalidOperationException("Overload method for OracleXmlTable is unknown");
+			}
 		}
 
 		static IDataProvider ProviderDetector(IConnectionStringSettings css)

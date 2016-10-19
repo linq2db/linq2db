@@ -8,6 +8,7 @@ using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -167,7 +168,7 @@ namespace Tests.Linq
 									Expression.PropertyOrField(parm, "GuidValue"),
 									Expression.Constant(guid3),
 									false,
-									typeof(Guid).GetMethod("op_Equality")),
+									typeof(Guid).GetMethodEx("op_Equality")),
 								new[] { parm }))
 						.Single().GuidValue,
 					db.Types
@@ -177,7 +178,7 @@ namespace Tests.Linq
 									Expression.PropertyOrField(parm, "GuidValue"),
 									Expression.Constant(guid4),
 									false,
-									typeof(Guid).GetMethod("op_Equality")),
+									typeof(Guid).GetMethodEx("op_Equality")),
 								new[] { parm }))
 						.Single().GuidValue);
 		}
@@ -507,6 +508,7 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource(
 			ProviderName.Informix
 			)]
@@ -523,6 +525,7 @@ namespace Tests.Linq
 
 			Thread.CurrentThread.CurrentCulture = current;
 		}
+#endif
 
 		[Test, DataContextSource]
 		public void SmallInt(string context)

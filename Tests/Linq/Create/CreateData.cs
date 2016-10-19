@@ -4,7 +4,9 @@ using System.IO;
 
 using LinqToDB;
 using LinqToDB.Data;
+#if !NETSTANDARD
 using LinqToDB.DataProvider.Access;
+#endif
 
 using NUnit.Framework;
 
@@ -199,6 +201,7 @@ namespace Tests._Create
 
 		static void AccessAction(IDbConnection connection)
 		{
+#if !NETSTANDARD
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
@@ -230,6 +233,7 @@ namespace Tests._Create
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});
 			}
+#endif
 		}
 
 		static void SQLiteAction(IDbConnection connection)

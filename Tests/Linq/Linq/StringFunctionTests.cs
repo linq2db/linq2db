@@ -1,5 +1,9 @@
 ﻿using System;
+#if !NETSTANDARD
 using System.Data.Linq.SqlClient;
+#else
+using System.Data;
+#endif
 using System.Linq;
 
 using LinqToDB;
@@ -263,6 +267,7 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource]
 		public void Like11(string context)
 		{
@@ -282,6 +287,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
+#endif 
 
 		[Test, DataContextSource]
 		public void Like21(string context)
@@ -750,6 +756,7 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource]
 		public void CompareTo3(string context)
 		{
@@ -779,6 +786,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
+#endif
 
 		[Test, DataContextSource]
 		public void CompareOrdinal1(string context)
@@ -835,7 +843,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#if !NETSTANDARD
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
+#else
+				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;
+#endif
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

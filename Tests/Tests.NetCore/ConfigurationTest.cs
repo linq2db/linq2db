@@ -8,6 +8,7 @@ using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using NUnit.Framework;
+using LinqToDB.Extensions;
 
 namespace Tests.NetCore
 {
@@ -59,6 +60,23 @@ namespace Tests.NetCore
 
 			Assert.AreNotEqual(default(DateTime), now);
 			Assert.AreEqual   (1,                 one);
+		}
+
+		[Test]
+		public void CurrentDirectory()
+		{
+			var oldPath = System.IO.Directory.GetCurrentDirectory();
+			Console.WriteLine(oldPath);
+
+			var path = typeof(ConfigurationTest).AssemblyEx().CodeBase.Substring("file:///".Length);
+			path = System.IO.Path.GetDirectoryName(path);
+			Console.WriteLine(path);
+
+			System.IO.Directory.SetCurrentDirectory(path);
+			Assert.AreEqual(path, System.IO.Directory.GetCurrentDirectory());
+
+			System.IO.Directory.SetCurrentDirectory(oldPath);
+
 		}
 	}
 }

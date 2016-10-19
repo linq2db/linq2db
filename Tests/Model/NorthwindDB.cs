@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Extensions;
 
 namespace Tests.Model
 {
@@ -39,12 +41,8 @@ namespace Tests.Model
 		[FreeTextTableExpression]
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
-#if !NETSTANDARD
-			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey));
-#else
 			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(FreeTextTable), new [] {typeof(string), typeof(string)})
 				.MakeGenericMethod(typeof(TTable), typeof(TKey));
-#endif
 
 			return GetTable<FreeTextKey<TKey>>(
 				this,
@@ -56,12 +54,12 @@ namespace Tests.Model
 		[FreeTextTableExpression]
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(Expression<Func<TTable,string>> fieldSelector, string text)
 		{
-#if !NETSTANDARD
-			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(TTable), typeof(TKey));
-#else
-			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(FreeTextTable), new [] {typeof(Expression<Func<TTable,string>>), typeof(string)})
-				.MakeGenericMethod(typeof(TTable), typeof(TKey));
-#endif
+			var methodInfo = typeof(NorthwindDB).GetMethods()
+				.Where(_ =>  _.Name == "FreeTextTable")
+				.Where(_ => _.GetParameters().Length == 2)
+				.Where(_ => _.GetParameters().First().ParameterType.IsGenericTypeEx()) 
+				.Single();
+
 			return GetTable<FreeTextKey<TKey>>(
 				this,
 				methodInfo,
@@ -75,12 +73,8 @@ namespace Tests.Model
 		public ITable<T> WithUpdateLock<T>()
 			where T : class
 		{
-#if !NETSTANDARD
-			var methodInfo = ((MethodInfo)(MethodBase.GetCurrentMethod())).MakeGenericMethod(typeof(T));
-#else
 			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(WithUpdateLock))
 				.MakeGenericMethod(typeof(T));
-#endif
 
 			return GetTable<T>(this, methodInfo);
 		}

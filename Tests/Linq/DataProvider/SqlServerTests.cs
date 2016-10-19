@@ -14,7 +14,9 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
+#if !NETSTANDARD
 using Microsoft.SqlServer.Types;
+#endif
 
 using NUnit.Framework;
 
@@ -107,9 +109,11 @@ namespace Tests.DataProvider
 				Assert.That(TestType<DateTime?>      (conn, "datetime2DataType",      DataType.DateTime2,      "AllTypes2"), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
 				Assert.That(TestType<TimeSpan?>      (conn, "timeDataType",           DataType.Time,           "AllTypes2"), Is.EqualTo(new TimeSpan(0, 12, 12, 12, 12)));
 
+#if !NETSTANDARD
 				Assert.That(TestType<SqlHierarchyId?>(conn, "hierarchyidDataType",              tableName:"AllTypes2"),            Is.EqualTo(SqlHierarchyId.Parse("/1/3/")));
 				Assert.That(TestType<SqlGeography>   (conn, "geographyDataType", skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (-122.36 47.656, -122.343 47.656)"));
 				Assert.That(TestType<SqlGeometry>    (conn, "geometryDataType",  skipPass:true, tableName:"AllTypes2").ToString(), Is.EqualTo("LINESTRING (100 100, 20 180, 180 180)"));
+#endif
 			}
 		}
 
@@ -561,6 +565,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008, ProviderName.SqlServer2012, ProviderName.SqlServer2014, TestProvName.SqlAzure)]
 		public void TestHierarchyID(string context)
 		{
@@ -614,6 +619,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlGeography>("SELECT @p", DataParameter.Udt("p", id)).ToString(),               Is.EqualTo(id.ToString()));
 			}
 		}
+#endif
 
 		[Test, SqlServerDataContext]
 		public void TestXml(string context)
@@ -815,7 +821,7 @@ namespace Tests.DataProvider
 
 		static readonly AllTypes[] _allTypeses =
 		{
-			#region data
+#region data
 			new AllTypes
 			{
 				ID                       = 700,
@@ -864,7 +870,7 @@ namespace Tests.DataProvider
 			{
 				ID                       = 701,
 			},
-			#endregion
+#endregion
 		};
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)

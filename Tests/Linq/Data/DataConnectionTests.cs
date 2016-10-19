@@ -9,7 +9,9 @@ using LinqToDB.DataProvider.SqlServer;
 
 namespace Tests.Data
 {
+#if !NETSTANDARD
 	using System.Configuration;
+#endif
 
 	using Model;
 
@@ -19,7 +21,11 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void Test1(string context)
 		{
+#if !NETSTANDARD
 			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+#else
+			var connectionString = "TODO";
+#endif
 
 			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
 			{

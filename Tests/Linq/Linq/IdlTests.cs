@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -606,7 +607,7 @@ namespace Tests.Linq
 
 				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString();
 					
-				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.InvariantCultureIgnoreCase);
+				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 				 
 				Assert.That(rqp.Count(),  Is.EqualTo(3));
@@ -772,7 +773,7 @@ namespace Tests.Linq
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					typeof(Queryable).GetMethod("Concat").MakeGenericMethod(typeof(TSource)),
+					typeof(Queryable).GetMethodEx("Concat").MakeGenericMethod(typeof(TSource)),
 					new[] { source1.Expression, Expression.Constant(source2, typeof (IEnumerable<TSource>)) }));
 		}
 

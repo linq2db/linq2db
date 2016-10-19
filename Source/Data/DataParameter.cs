@@ -149,7 +149,7 @@ namespace LinqToDB.Data
 		public static DataParameter Timestamp     (string name, byte[]         value) { return new DataParameter { DataType = DataType.Timestamp,      Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, string         value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 		public static DataParameter Xml           (string name, XDocument      value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 		public static DataParameter Xml           (string name, XmlDocument    value) { return new DataParameter { DataType = DataType.Xml,            Name = name, Value = value, }; }
 #endif
 		public static DataParameter BitArray      (string name, BitArray       value) { return new DataParameter { DataType = DataType.BitArray,       Name = name, Value = value, }; }
