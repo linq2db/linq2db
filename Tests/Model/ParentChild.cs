@@ -532,7 +532,7 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			var methodInfo = typeof(Functions).GetMethod(nameof(GetParentByID), new [] {typeof(int?)});
+			var methodInfo = typeof(Functions).GetMethod("GetParentByID", new [] {typeof(int?)});
 
 			return _ctx.GetTable<Parent>(this, methodInfo, id);
 		}
@@ -541,7 +541,7 @@ namespace Tests.Model
 		public ITable<T> WithTabLock<T>()
 			where T : class
 		{
-			var methodInfo = typeof(Functions).GetMethod(nameof(WithTabLock)).MakeGenericMethod(typeof(T));
+			var methodInfo = typeof(Functions).GetMethod("WithTabLock").MakeGenericMethod(typeof(T));
 
 			return _ctx.GetTable<T>(this, methodInfo);
 		}

@@ -41,7 +41,7 @@ namespace Tests.Model
 		[FreeTextTableExpression]
 		public ITable<FreeTextKey<TKey>> FreeTextTable<TTable,TKey>(string field, string text)
 		{
-			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(FreeTextTable), new [] {typeof(string), typeof(string)})
+			var methodInfo = typeof(NorthwindDB).GetMethod("FreeTextTable", new [] {typeof(string), typeof(string)})
 				.MakeGenericMethod(typeof(TTable), typeof(TKey));
 
 			return GetTable<FreeTextKey<TKey>>(
@@ -73,7 +73,7 @@ namespace Tests.Model
 		public ITable<T> WithUpdateLock<T>()
 			where T : class
 		{
-			var methodInfo = typeof(NorthwindDB).GetMethod(nameof(WithUpdateLock))
+			var methodInfo = typeof(NorthwindDB).GetMethod("WithUpdateLock")
 				.MakeGenericMethod(typeof(T));
 
 			return GetTable<T>(this, methodInfo);

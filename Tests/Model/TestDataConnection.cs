@@ -51,7 +51,7 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			var methodInfo = (typeof(TestDataConnection)).GetMethod(nameof(GetParentByID), new [] {typeof(int?)});
+			var methodInfo = (typeof(TestDataConnection)).GetMethod("GetParentByID", new [] {typeof(int?)});
 
 			return GetTable<Parent>(this, methodInfo, id);
 		}

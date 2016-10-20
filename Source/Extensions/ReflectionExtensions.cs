@@ -156,6 +156,19 @@ namespace LinqToDB.Extensions
 #endif
 		}
 
+		public static MethodInfo GetMethodEx(this Type type, string name)
+		{
+#if NETFX_CORE
+			var all = type.GetRuntimeMethods().Where(_ => _.Name == name).ToArray();
+			if (all.Length == 0)
+				return null;
+			if (all.Length > 1)
+				throw new AmbiguousMatchException(string.Format("{0} defines {1} methods with name {2}", type.FullName, all.Length, name));
+			return all[0];
+#else
+			return type.GetMethod(name);
+#endif
+		}
 		public static ConstructorInfo GetDefaultConstructorEx(this Type type)
 		{
 #if NETFX_CORE
