@@ -1,0 +1,24 @@
+﻿-- This file defines data providers loaded by default for all users.
+-- Copy this file as UserDataProviders.txt and uncomment providers you need to work on.
+-- UserDataProviders.txt is in .gitignore and it is not committed to the repository.
+
+SQLite * Data Source=Database\TestData.sqlite
+SQLite.Data * Data Source=Database\Data\TestData.sqlite * SQLite
+
+--DB2
+--Firebird
+--Informix
+--SqlServer
+--SqlServer.2000
+--SqlServer.2005
+--SqlServer.2008
+--SqlServer.2012
+--SqlServer.2014
+--SqlAzure.2012  * Server=tcp:----.database.windows.net,1433;Database=TestData;User ID=TestUser@----;Password=;Trusted_Connection=False;Encrypt=True;
+--SapHana        * Server=hanahost----:port;Current Schema=TEST;UserID=Test;Password=TestPassword;
+--MySql
+--Oracle.Native
+--Oracle.Managed
+--PostgreSQL
+--Sybase
+--Northwind

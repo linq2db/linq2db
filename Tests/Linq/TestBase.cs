@@ -65,8 +65,13 @@ namespace Tests
 #else
 			Environment.CurrentDirectory = assemblyPath;
 #endif
+#if NETSTANDARD
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
+#else
 			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
 			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+#endif
 			
 			var providerListFile =
 				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
@@ -89,8 +94,9 @@ namespace Tests
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
 						}
 					})
 					.ToDictionary(i => i.Name);
@@ -104,9 +110,24 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
+#if NETSTANDARD
+			DataConnection.DefaultSettings = TxtSettings.Instance;
+			foreach (var provider in UserProviders.Values)
+			{
+				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
+					throw new InvalidOperationException("ConnectionString should be provided");
+
+				if (string.IsNullOrWhiteSpace(provider.ProviderName))
+					throw new InvalidOperationException("provider.ProviderName should be provided");
+
+				TxtSettings.Instance.AddConnectionString(provider.Name,provider.ProviderName, provider.ConnectionString);
+			}
+#else
 			foreach (var provider in UserProviders.Values)
 				if (provider.ConnectionString != null)
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
+#endif
+
 
 			DataConnection.TurnTraceSwitchOn();
 
@@ -173,6 +194,7 @@ namespace Tests
 		{
 			public string Name;
 			public string ConnectionString;
+			public string ProviderName;
 		}
 
 		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
@@ -215,7 +237,6 @@ namespace Tests
 			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
 			{
 				var name = method.Name + "." + provider;
-
 				if (isLinqService)
 					name += ".LinqService";
 
@@ -261,6 +282,7 @@ namespace Tests
 
 					yield return test;
 
+#if !NETSTANDARD
 					if (_includeLinqService)
 					{
 						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
@@ -274,6 +296,7 @@ namespace Tests
 
 						yield return test;
 					}
+#endif
 				}
 
 				if (!hasTest)
@@ -325,9 +348,9 @@ namespace Tests
 
 		protected ITestDataContext GetDataContext(string configuration)
 		{
-#if !NETSTANDARD
 			if (configuration.EndsWith(".LinqService"))
 			{
+#if !NETSTANDARD
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -336,14 +359,9 @@ namespace Tests
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				return dx;
-			}
-#else
-			if (configuration.EndsWith(".LinqService"))
-			{
+#endif
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 			}
-
-#endif
 			Debug.WriteLine(configuration, "Provider ");
 
 			return new TestDataConnection(configuration);

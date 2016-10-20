@@ -51,24 +51,34 @@
 			"buildOptions": {
 				"define": [ "NETSTANDARD", "NOFSHARP" ],
 				"compile": {
-									"exclude": [
-										"**/AccessTests.cs",
-										"**/DB2Tests.cs",
-										"**/SybaseTests.cs",
-										"**/SapHanaTests.cs",
-										"**/MiniProfilerTests.cs",
-										"**/FirebirdTests.cs",
-										"**/InformixTests.cs",
-										"**/DataServiceTests.cs",
-										"**/AttributeReaderTests.cs",
-										"**/XmlReaderTests.cs",
-										"**/VisualBasicTests.cs",
-										"**/OracleTests.cs",
-										"**/SqlServerTypesTests.cs",
-										"**/PartialTrust*.cs",
-										"**/FSharpTests.cs",
-										"**/SchemaProviderTests.cs"
-									]
+					"exclude": [
+						"**/AccessTests.cs",
+						"**/DB2Tests.cs",
+						"**/SybaseTests.cs",
+						"**/SapHanaTests.cs",
+						"**/MiniProfilerTests.cs",
+						"**/FirebirdTests.cs",
+						"**/InformixTests.cs",
+						"**/DataServiceTests.cs",
+						"**/AttributeReaderTests.cs",
+						"**/XmlReaderTests.cs",
+						"**/VisualBasicTests.cs",
+						"**/OracleTests.cs",
+						"**/SqlServerTypesTests.cs",
+						"**/PartialTrust*.cs",
+						"**/FSharpTests.cs",
+						"**/SchemaProviderTests.cs"
+					]
+				},
+				"copyToOutput": {
+									"mappings": {
+										"x86/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x86/" },
+										"x64/": { "include": "../../packages/System.Data.SQLite.Core.1.0.101.0/build/net451/x64/" },
+										"Database/": {
+											"include": "../../Data/"
+										}
+									}
+
 				}
 			}
 		},
