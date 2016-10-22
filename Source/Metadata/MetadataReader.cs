@@ -14,6 +14,9 @@ namespace LinqToDB.Metadata
 			, new SystemDataLinqAttributeReader()
 			, new SystemDataSqlServerAttributeReader()
 #endif
+#if NETSTANDARD
+			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
+#endif
 		);
 
 		public MetadataReader([NotNull] params IMetadataReader[] readers)
