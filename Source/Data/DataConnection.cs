@@ -824,6 +824,9 @@ namespace LinqToDB.Data
 				{
 					Transaction.Dispose();
 					Transaction = null;
+
+					if (_command != null)
+						_command.Transaction = null;
 				}
 			}
 		}
@@ -838,6 +841,9 @@ namespace LinqToDB.Data
 				{
 					Transaction.Dispose();
 					Transaction = null;
+
+					if (_command != null)
+						_command.Transaction = null;
 				}
 			}
 		}
