@@ -80,14 +80,4 @@ namespace Tests
 		}
 	}
 
-	[TestFixture]
-	public class OverrideTests : TestBase
-	{
-		[Test]
-		public void InheritanceMappingIssueTest()
-		{
-			var t = new Tests.Linq.InheritanceTests();
-			t.InheritanceMappingIssueTest();
-		}
-	}
 }
