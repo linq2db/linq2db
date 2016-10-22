@@ -15,6 +15,64 @@ namespace LinqToDB.Extensions
 {
 	public static class ReflectionExtensions
 	{
+		#region NETFX_CORE specific
+
+#if NETFX_CORE
+		private static IEnumerable<ConstructorInfo> GetAllConstructors(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredConstructors);
+		}
+
+		private static IEnumerable<EventInfo> GetAllEvents(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredEvents);
+		}
+
+		private static IEnumerable<FieldInfo> GetAllFields(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredFields);
+		}
+
+		private static IEnumerable<MemberInfo> GetAllMembers(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredMembers);
+		}
+
+		private static IEnumerable<MethodInfo> GetAllMethods(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredMethods);
+		}
+
+		private static IEnumerable<TypeInfo> GetAllNestedTypes(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredNestedTypes);
+		}
+
+		private static IEnumerable<PropertyInfo> GetAllProperties(this TypeInfo typeInfo)
+		{
+			return GetAll(typeInfo, ti => ti.DeclaredProperties);
+		}
+
+		private static IEnumerable<T> GetAll<T>(TypeInfo typeInfo, Func<TypeInfo, IEnumerable<T>> accessor)
+		{
+			while (typeInfo != null)
+			{
+				foreach (var t in accessor(typeInfo))
+				{
+					yield return t;
+				}
+
+				var baseType = typeInfo.BaseType;
+
+				typeInfo = baseType != null
+					? baseType.GetTypeInfo()
+					: null;
+			}
+		}
+#endif
+
+		#endregion
+
 		#region Type extensions
 
 		public static bool IsGenericTypeEx(this Type type)
@@ -128,7 +186,7 @@ namespace LinqToDB.Extensions
 		public static MemberInfo[] GetPublicInstanceMembersEx(this Type type)
 		{
 #if NETFX_CORE
-			return type.GetTypeInfo().DeclaredMembers.Where(m =>
+			return type.GetTypeInfo().GetAllMembers().Where(m =>
 			{
 				var fieldInfo = m as FieldInfo;
 
@@ -438,7 +496,7 @@ namespace LinqToDB.Extensions
 		public static PropertyInfo GetPropertyEx(this Type type, string propertyName)
 		{
 #if NETFX_CORE
-			return type.GetTypeInfo().DeclaredProperties.FirstOrDefault(property => property.Name == propertyName);
+			return type.GetTypeInfo().GetAllProperties().FirstOrDefault(property => property.Name == propertyName);
 #else
 			return type.GetProperty(propertyName);
 #endif
@@ -447,7 +505,7 @@ namespace LinqToDB.Extensions
 		public static FieldInfo GetFieldEx(this Type type, string propertyName)
 		{
 #if NETFX_CORE
-			return type.GetTypeInfo().DeclaredFields.FirstOrDefault(field => field.Name == propertyName);
+			return type.GetTypeInfo().GetAllFields().FirstOrDefault(field => field.Name == propertyName);
 #else
 			return type.GetField(propertyName);
 #endif
@@ -465,7 +523,7 @@ namespace LinqToDB.Extensions
 		public static MemberInfo[] GetInstanceMemberEx(this Type type, string name)
 		{
 #if NETFX_CORE
-			return type.GetTypeInfo().DeclaredMembers.Where(m => m.Name == name).ToArray();
+			return type.GetTypeInfo().GetAllMembers().Where(m => m.Name == name).ToArray();
 #else
 			return type.GetMember(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 #endif
@@ -474,7 +532,7 @@ namespace LinqToDB.Extensions
 		public static MemberInfo[] GetPublicMemberEx(this Type type, string name)
 		{
 #if NETFX_CORE
-			return type.GetTypeInfo().DeclaredMembers.Where(m => m.Name == name).ToArray();
+			return type.GetTypeInfo().GetAllMembers().Where(m => m.Name == name).ToArray();
 #else
 			return type.GetMember(name);
 #endif
@@ -1014,11 +1072,7 @@ namespace LinqToDB.Extensions
 		public static EventInfo GetEventEx(this Type type, string eventName)
 		{
 #if NETFX_CORE
-#if !NETSTANDARD
-			return type.GetTypeInfo().GetDeclaredEvent(eventName);
-#else
-			return type.GetTypeInfo().GetEvent(eventName);
-#endif
+			return type.GetTypeInfo().GetAllEvents().FirstOrDefault(_ => _.Name == eventName);
 #else
 			return type.GetEvent(eventName);
 #endif

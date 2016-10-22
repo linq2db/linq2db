@@ -10,7 +10,7 @@ using LinqToDB.Expressions;
 using NUnit.Framework;
 using LinqToDB.Extensions;
 
-namespace Tests.NetCore
+namespace Tests
 {
 	[TestFixture]
 	public class ConfigurationTest
@@ -77,6 +77,17 @@ namespace Tests.NetCore
 
 			System.IO.Directory.SetCurrentDirectory(oldPath);
 
+		}
+	}
+
+	[TestFixture]
+	public class OverrideTests : TestBase
+	{
+		[Test]
+		public void InheritanceMappingIssueTest()
+		{
+			var t = new Tests.Linq.InheritanceTests();
+			t.InheritanceMappingIssueTest();
 		}
 	}
 }
