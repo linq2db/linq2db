@@ -15,7 +15,7 @@ namespace LinqToDB.Common
 	{
 		static readonly ConcurrentDictionary<object,LambdaExpression> _expressions = new ConcurrentDictionary<object,LambdaExpression>();
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 		static XmlDocument CreateXmlDocument(string str)
 		{
 			var xml = new XmlDocument();
@@ -32,7 +32,7 @@ namespace LinqToDB.Common
 			SetConverter<Binary,         byte[]>     (v => v.ToArray());
 			SetConverter<bool,           decimal>    (v => v ? 1m : 0m);
 			SetConverter<DateTimeOffset, DateTime>   (v => v.LocalDateTime);
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 			SetConverter<string,         XmlDocument>(v => CreateXmlDocument(v));
 #endif
 			SetConverter<string,         byte[]>     (v => Convert.FromBase64String(v));

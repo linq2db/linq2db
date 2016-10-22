@@ -982,7 +982,7 @@ namespace LinqToDB.Extensions
 				|| type == typeof(Binary)
 				|| type == typeof(Stream)
 				|| type == typeof(XmlReader)
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 				|| type == typeof(XmlDocument)
 #endif
 				;
