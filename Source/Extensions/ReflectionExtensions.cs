@@ -1257,12 +1257,17 @@ namespace LinqToDB.Extensions
 
 						var map = member1.DeclaringType.GetInterfaceMapEx(member2.DeclaringType);
 
-						foreach (var mi in map.InterfaceMethods)
-							if ((getter2 == null || (getter2.Name == mi.Name && getter2.DeclaringType == mi.DeclaringType)) &&
-								(getter1 == null || (getter1.Name == mi.Name && getter1.DeclaringType == mi.DeclaringType)))
+						for (var i = 0; i < map.InterfaceMethods.Length; i++)
+						{
+							var imi = map.InterfaceMethods[i];
+							var tmi = map.TargetMethods[i];
+
+							if ((getter2 == null || (getter2.Name == imi.Name && getter2.DeclaringType == imi.DeclaringType)) &&
+							    (getter1 == null || (getter1.Name == tmi.Name && getter1.DeclaringType == tmi.DeclaringType)))
 							{
 								return true;
 							}
+						}
 					}
 				}
 			}
