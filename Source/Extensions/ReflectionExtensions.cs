@@ -208,7 +208,29 @@ namespace LinqToDB.Extensions
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
 #if NETFX_CORE
-			return type.GetRuntimeMethod(name, types);
+			// https://github.com/dotnet/corefx/issues/12921
+			return type.GetMethodsEx().FirstOrDefault(mi =>
+			{
+				var res = mi.IsPublic && mi.Name == name;
+				if (!res)
+					return res;
+
+				var pars = mi.GetParameters().Select(_ => _.ParameterType).ToArray();
+
+				if (types.Length == 0 && pars.Length == 0)
+					return true;
+
+				if (pars.Length != types.Length)
+					return false;
+
+				for (var i = 0; i < types.Length; i++)
+				{
+					if (types[i] != pars[i])
+						return false;
+				}
+
+				return true;
+			});
 #else
 			return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, types, null);
 #endif
