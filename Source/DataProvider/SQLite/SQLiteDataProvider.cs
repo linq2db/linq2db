@@ -129,6 +129,9 @@ namespace LinqToDB.DataProvider.SQLite
 				providerType = fieldType = toType;
 			}
 
+			if (reader.IsDBNull(idx))
+				goto DEFAULT; 
+
 			if (fieldType == null)
 			{
 				throw new LinqToDBException("Can't create '{0}' type or '{1}' specific type for {2}.".Args(
@@ -173,7 +176,7 @@ namespace LinqToDB.DataProvider.SQLite
 			    FindExpression(new ReaderInfo { ToType = toType                                                                                   }, out expr) ||
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
-
+DEFAULT:
 			return Expression.Convert(
 				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
