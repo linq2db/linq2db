@@ -115,5 +115,28 @@ namespace Tests.NetCore
 				Assert.AreEqual(UInt64.MaxValue, value, $"{value.GetType().FullName} {value}");
 			}
 		}
+
+		/// <summary>
+		/// https://github.com/aspnet/Microsoft.Data.Sqlite/issues/300
+		/// </summary>
+		[Test]
+	    public void DecimalTest()
+	    {
+			using (var connection = new SqliteConnection(@"Data Source=Database\TestData.sqlite"))
+			{
+				connection.Open();
+				var command = connection.CreateCommand();
+
+				command.CommandText = "SELECT MoneyValue FROM LinqDataTypes";
+
+				var r = command.ExecuteReader();
+				while (r.Read())
+				{
+					var value = r.GetValue(0);
+					Console.WriteLine($"{value.GetType().FullName} {value}, {r.GetFieldType(0)}");
+					Assert.AreNotEqual(typeof(long), r.GetFieldType(0), $"{value.GetType().FullName} {value}");
+				}
+			}
+		}
 	}
 }

@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
+		protected static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider
 				fieldType);
 		}
 
-		bool FindExpression(ReaderInfo info, out Expression expr)
+		protected bool FindExpression(ReaderInfo info, out Expression expr)
 		{
 #if DEBUG1
 				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"
