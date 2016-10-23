@@ -54,11 +54,40 @@ namespace LinqToDB.Extensions
 		}
 
 		private static IEnumerable<T> GetAll<T>(TypeInfo typeInfo, Func<TypeInfo, IEnumerable<T>> accessor)
+			where T : MemberInfo
 		{
+			var distinct = new HashSet<T>();
+			var distinctProperty = new HashSet<string>();
+			
 			while (typeInfo != null)
 			{
 				foreach (var t in accessor(typeInfo))
 				{
+					var m = t as MethodInfo;
+					if (m != null && m.IsVirtual)
+					{
+						var b = m.GetBaseDefinition();
+						if (b != m && !distinct.Contains(b as T))
+							distinct.Add(b as T);
+					}
+
+					if (distinct.Contains(t))
+						continue;
+					
+					distinct.Add(t);
+
+					var p = t as PropertyInfo;
+					if (p != null)
+					{
+						if (distinctProperty.Contains(p.Name))
+							continue;
+
+						distinctProperty.Add(p.Name);
+					}
+
+
+
+
 					yield return t;
 				}
 
@@ -77,7 +106,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsGenericTypeEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsGenericType;
 #else
 			return type.IsGenericType;
@@ -95,7 +124,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsValueTypeEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsValueType;
 #else
 			return type.IsValueType;
@@ -104,7 +133,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsAbstractEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsAbstract;
 #else
 			return type.IsAbstract;
@@ -113,7 +142,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsPublicEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsPublic;
 #else
 			return type.IsPublic;
@@ -122,7 +151,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsClassEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsClass;
 #else
 			return type.IsClass;
@@ -131,7 +160,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsEnumEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsEnum;
 #else
 			return type.IsEnum;
@@ -140,7 +169,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsPrimitiveEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsPrimitive;
 #else
 			return type.IsPrimitive;
@@ -149,7 +178,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsInterfaceEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsInterface;
 #else
 			return type.IsInterface;
@@ -158,7 +187,7 @@ namespace LinqToDB.Extensions
 
 		public static Type BaseTypeEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().BaseType;
 #else
 			return type.BaseType;
@@ -176,7 +205,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this Type type, Type attributeType, bool inherit)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
 #else
 			return type.GetCustomAttributes(attributeType, inherit);
@@ -207,7 +236,7 @@ namespace LinqToDB.Extensions
 
 		public static MethodInfo GetMethodEx(this Type type, string name, params Type[] types)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			// https://github.com/dotnet/corefx/issues/12921
 			return type.GetMethodsEx().FirstOrDefault(mi =>
 			{
@@ -251,7 +280,7 @@ namespace LinqToDB.Extensions
 		}
 		public static ConstructorInfo GetDefaultConstructorEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(p => p.GetParameters().Length == 0);
 #else
 			return type.GetConstructor(
@@ -326,7 +355,7 @@ namespace LinqToDB.Extensions
 
 		public static Type[] GetGenericArgumentsEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE && !NETSTANDARD
 			return type.GetTypeInfo().GenericTypeArguments;
 #else
 			return type.GetGenericArguments();
@@ -371,7 +400,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this Type type, bool inherit)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return type.GetCustomAttributes(inherit);
@@ -380,7 +409,7 @@ namespace LinqToDB.Extensions
 
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().GetRuntimeInterfaceMap(interfaceType);
 #else
 			return type.GetInterfaceMap(interfaceType);
@@ -416,7 +445,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, Type attributeType, bool inherit)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return memberInfo.GetCustomAttributes(attributeType, inherit).Cast<object>().ToArray();
 #else
 			return memberInfo.GetCustomAttributes(attributeType, inherit);
@@ -425,7 +454,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsSubclassOfEx(this Type type, Type c)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsSubclassOf(c);
 #else
 			return type.IsSubclassOf(c);
@@ -434,7 +463,7 @@ namespace LinqToDB.Extensions
 
 		public static bool IsGenericTypeDefinitionEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().IsGenericTypeDefinition;
 #else
 			return type.IsGenericTypeDefinition;
@@ -454,7 +483,7 @@ namespace LinqToDB.Extensions
 		public static PropertyInfo[] GetPropertiesEx(this Type type, BindingFlags flags)
 		{
 #if NETSTANDARD
-			return type.GetTypeInfo().GetProperties(flags);
+			return type.GetProperties(flags);
 #else
 			return type.GetProperties(flags);
 #endif
@@ -481,7 +510,7 @@ namespace LinqToDB.Extensions
 
 		public static Assembly AssemblyEx(this Type type)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return type.GetTypeInfo().Assembly;
 #else
 			return type.Assembly;
@@ -535,7 +564,7 @@ namespace LinqToDB.Extensions
 
 		public static Type ReflectedTypeEx(this MemberInfo memberInfo)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return memberInfo.DeclaringType;
 #else
 			return memberInfo.ReflectedType;
@@ -562,7 +591,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this MemberInfo memberInfo, bool inherit)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return memberInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return memberInfo.GetCustomAttributes(inherit);
@@ -571,7 +600,7 @@ namespace LinqToDB.Extensions
 
 		public static object[] GetCustomAttributesEx(this ParameterInfo parameterInfo, bool inherit)
 		{
-#if NETFX_CORE
+#if NETFX_CORE || NETSTANDARD
 			return parameterInfo.GetCustomAttributes(inherit).Cast<object>().ToArray();
 #else
 			return parameterInfo.GetCustomAttributes(inherit);

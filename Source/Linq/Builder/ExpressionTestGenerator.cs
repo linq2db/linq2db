@@ -518,7 +518,7 @@ namespace LinqToDB.Linq.Builder
 
 			var ctors = type.GetConstructorsEx().Select(c =>
 			{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 				var attrs = c.GetCustomAttributes(false).ToList();
 #else
 				var attrs = c.GetCustomAttributesData();
@@ -539,7 +539,7 @@ namespace LinqToDB.Linq.Builder
 
 			var members = type.GetFieldsEx().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 				var attrs = f.GetCustomAttributes(false).ToList();
 #else
 				var attrs = f.GetCustomAttributesData();
@@ -553,7 +553,7 @@ namespace LinqToDB.Linq.Builder
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 					var attrs = p.GetCustomAttributes(false).ToList();
 #else
 					var attrs = p.GetCustomAttributesData();
@@ -568,7 +568,7 @@ namespace LinqToDB.Linq.Builder
 			.Concat(
 				type.GetMethodsEx().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
 				{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 					var attrs = m.GetCustomAttributes(false).ToList();
 #else
 					var attrs = m.GetCustomAttributesData();
@@ -592,7 +592,7 @@ namespace LinqToDB.Linq.Builder
 			.ToArray();
 
 			{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 				var attrs = type.GetCustomAttributesEx(false).ToList();
 #else
 				var attrs = type.GetCustomAttributesData();
