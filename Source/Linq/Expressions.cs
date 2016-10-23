@@ -414,18 +414,19 @@ namespace LinqToDB.Linq
 					{ M(() => string.Concat("","","","")                            ), N(() => L<String,String,String,String,String>((String p0,String p1,String p2,String p3) => p0 + p1 + p2 + p3))       },
 					{ M(() => string.Concat((string[])null)                         ), N(() => L<String[],String>                   ((String[] ps)                             => Sql.Concat(ps)))          },
 
-					{ M(() => string.IsNullOrEmpty ("")    ),                                        N(() => L<String,Boolean>                               ((String p0)                                               => p0 == null || p0.Length == 0)) },
-					{ M(() => string.CompareOrdinal("","")),                                         N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
-					{ M(() => string.CompareOrdinal("",0,"",0,0)),                                   N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
-					{ M(() => string.Compare       ("","")),                                         N(() => L<String,String,Int32>                          ((String s1,String s2)                                     => s1.CompareTo(s2))) },
-					{ M(() => string.Compare       ("",0,"",0,0)),                                   N(() => L<String,Int32,String,Int32,Int32,Int32>        ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)           => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#if !SILVERLIGHT && !NETFX_CORE										                                
-					{ M(() => string.Compare       ("","",true)),                                    N(() => L<String,String,Boolean,Int32>                  ((String s1,String s2,Boolean b)                           => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+					{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<String,Boolean>                                        ((String p0)                                                         => p0 == null || p0.Length == 0)) },
+					{ M(() => string.CompareOrdinal("","")),                                          N(() => L<String,String,Int32>                                   ((String s1,String s2)                                               => s1.CompareTo(s2))) },
+					{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+					{ M(() => string.Compare       ("","")),                                          N(() => L<String,String,Int32>                                   ((String s1,String s2)                                               => s1.CompareTo(s2))) },
+					{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<String,Int32,String,Int32,Int32,Int32>                 ((String s1,Int32 i1,String s2,Int32 i2,Int32 l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
+#if !SILVERLIGHT && !NETFX_CORE										                                 														           															            
+					{ M(() => string.Compare       ("","",true)),                                     N(() => L<String,String,Boolean,Int32>                           ((String s1,String s2,Boolean b)                                     => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+#endif																								 
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD														 
+					{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>         ((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b)           => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 #endif
-#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
-					{ M(() => string.Compare       ("",0,"",0,0,true)),                              N(() => L<String,Int32,String,Int32,Int32,Boolean,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,Boolean b) => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
-#endif
-					{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),      N(() => L<String,String,StringComparison,Int32>         ((String s1,String s2,StringComparison sc)                 => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+					{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<String,Int32,String,Int32,Int32,StringComparison,Int32>((String s1,Int32 i1,String s2,Int32 i2,Int32 l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+					{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<String,String,StringComparison,Int32>                  ((String s1,String s2,StringComparison sc)                           => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 
 					{ M(() => AltStuff("",0,0,"")), N(() => L<String,Int32?,Int32?,String,String>((String p0,Int32? p1,Int32 ?p2,String p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
