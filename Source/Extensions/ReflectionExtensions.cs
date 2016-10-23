@@ -66,7 +66,7 @@ namespace LinqToDB.Extensions
 					var m = t as MethodInfo;
 					if (m != null && m.IsVirtual)
 					{
-						var b = m.GetBaseDefinition();
+						var b = m.GetRuntimeBaseDefinition();
 						if (b != m && !distinct.Contains(b as T))
 							distinct.Add(b as T);
 					}
