@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -900,4 +901,13 @@ namespace Tests
 			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
 		}
 	}
+
+    public static class Helpers
+    {
+        public static string ToInvariantString<T>(this T data)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+                .Replace(',', '.').Trim(' ', '.', '0');
+        }
+    }
 }
