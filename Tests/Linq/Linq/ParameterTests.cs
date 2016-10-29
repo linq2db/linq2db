@@ -123,8 +123,10 @@ namespace Tests.Linq
 
 		class AllTypes
 		{
+#pragma warning disable 0649
 			public decimal DecimalDataType;
 			public byte[]  BinaryDataType;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource(false)]

@@ -1001,9 +1001,11 @@ namespace Tests.DataProvider
 
 		class XmlData
 		{
+#pragma warning disable 0649
 			public int    Field1;
 			[Column(Length = 2)]
 			public string Field2;
+#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1249,9 +1251,11 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow
 		{
+#pragma warning disable 0649
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
+#pragma warning restore 0649
 		}
 
 		[Test, OracleDataContext]
@@ -1292,9 +1296,11 @@ namespace Tests.DataProvider
 		[Table("DecimalOverflow")]
 		class DecimalOverflow2
 		{
+#pragma warning disable 0649
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal1;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal2;
 			[Column] public Oracle.ManagedDataAccess.Types.OracleDecimal Decimal3;
+#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.OracleManaged)]

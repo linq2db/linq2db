@@ -122,8 +122,10 @@ namespace Tests.SchemaProvider
 
 		class PKTest
 		{
+#pragma warning disable 0649
 			[PrimaryKey(1)] public int ID1;
 			[PrimaryKey(2)] public int ID2;
+#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]

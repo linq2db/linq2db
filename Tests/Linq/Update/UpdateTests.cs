@@ -498,6 +498,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+#pragma warning disable 0649
 		[Table("LinqDataTypes")]
 		class Table1
 		{
@@ -517,6 +518,7 @@ namespace Tests.xUpdate
 			[Association(ThisKey = "ParentID", OtherKey = "ID", CanBeNull = false)]
 			public Table1 Table1;
 		}
+#pragma warning restore 0649
 
 		[Test, DataContextSource(false,
 			ProviderName.Access, 

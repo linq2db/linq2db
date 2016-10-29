@@ -14,10 +14,12 @@ namespace Tests.xUpdate
 	{
 		class TestTable
 		{
+#pragma warning disable 0649
 			public int       ID;
 			public string    Field1;
 			public string    Field2;
 			public DateTime? CreatedOn;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]
@@ -240,10 +242,12 @@ namespace Tests.xUpdate
 
 		class TestCreateFormat
 		{
-			[Column(CreateFormat="{0}{1}{2}{3}/* test */"), NotNull]
+#pragma warning disable 0649
+			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;
 			[Column]
 			public int Field2;
+#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)]

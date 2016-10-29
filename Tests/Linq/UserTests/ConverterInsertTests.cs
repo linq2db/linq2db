@@ -16,11 +16,13 @@ namespace Tests.UserTests
 		[Table]
 		new class Person
 		{
+#pragma warning disable 0649
 			[Identity] public int                       PersonID;
 			[Column]   public Dictionary<string,string> FirstName;
 			[Column]   public string                    LastName;
 			[Column]   public string                    MiddleName;
 			[Column]   public string                    Gender;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]

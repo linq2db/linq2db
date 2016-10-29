@@ -523,11 +523,13 @@ namespace Tests.Linq
 		[Table("Parent")]
 		class Parent170
 		{
+#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170 Parent;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]
@@ -544,10 +546,12 @@ namespace Tests.Linq
 		[Table("Child")]
 		class StorageTestClass
 		{
+#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int ChildID;
 
 			Parent _parent;
+#pragma warning restore 0649
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent")]
 			public Parent Parent

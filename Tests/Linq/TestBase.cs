@@ -157,8 +157,10 @@ namespace Tests
 			return basePath;
 		}
 
+#if !NETSTANDARD
 		const int IP = 22654;
 		static bool _isHostOpen;
+#endif
 
 		static void OpenHost()
 		{
@@ -360,8 +362,9 @@ namespace Tests
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				return dx;
-#endif
+#else
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
+#endif
 			}
 			Debug.WriteLine(configuration, "Provider ");
 

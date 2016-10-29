@@ -145,8 +145,6 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		protected static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
-
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
@@ -198,8 +196,9 @@ namespace LinqToDB.DataProvider
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
+			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
 		}
 

@@ -557,8 +557,10 @@ namespace Tests.Linq
 
 		class User
 		{
+#pragma warning disable 0649
 			public string FirstName;
 			public int?   Status;
+#pragma warning restore 0649
 		}
 
 		// https://github.com/linq2db/linq2db/issues/191

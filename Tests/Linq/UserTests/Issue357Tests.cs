@@ -17,7 +17,9 @@ namespace Tests.UserTests
 			[Column(DbType="int"), PrimaryKey, Identity]
 			public int ID { get; set; }
 
-			DateTimeOffset? _dateTime;
+#pragma warning disable 0649
+			private DateTimeOffset? _dateTime;
+#pragma warning restore 0649
 
 			[Column("datetimeoffsetDataType", DbType="datetimeoffset(7)", Storage = "_dateTime"), Nullable]
 			public DateTime? DateTime
