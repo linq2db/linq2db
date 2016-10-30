@@ -252,12 +252,26 @@ namespace Tests.Linq
 			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds);
 		}
 
-		[Test, DataContextSource]
-		public void TimeOfDay(string context)
+		static TimeSpan RoundMiliseconds(TimeSpan ts)
+		{
+			return new TimeSpan(ts.Hours, ts.Minutes, ts.Seconds + (ts.Milliseconds >= 500 ? 1 : 0));
+		}
+
+		[Test, DataContextSource(TestProvName.MySql57)]
+		public void TimeOfDay1(string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
+					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
+		}
+
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]
+		public void TimeOfDay2(string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select RoundMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)),
 					from t in db.Types select TruncMiliseconds(Sql.AsSql(t.DateTimeValue.TimeOfDay)));
 		}
 

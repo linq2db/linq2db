@@ -281,7 +281,8 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0));
+				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan( 5, 0, 0));
+				var lto = new DateTimeOffset(2012, 12, 12, 13, 12, 12, 12, new TimeSpan(-4, 0, 0));
 
 				Assert.That(conn.Execute<DateTimeOffset>(
 					"SELECT Cast('2012-12-12 12:12:12.012' as datetime2)"),
@@ -293,11 +294,11 @@ namespace Tests.DataProvider
 
 				Assert.That(conn.Execute<DateTime>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
-					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+					Is.EqualTo(lto.LocalDateTime));
 
 				Assert.That(conn.Execute<DateTime?>(
 					"SELECT Cast('2012-12-12 13:12:12.012 -04:00' as datetimeoffset)"),
-					Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+					Is.EqualTo(lto.LocalDateTime));
 
 				Assert.That(conn.Execute<DateTimeOffset>(
 					"SELECT Cast('2012-12-12 12:12:12.012 +05:00' as datetimeoffset)"),
