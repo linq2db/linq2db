@@ -53,7 +53,7 @@ before_test:
       Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
       Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
       cd $env:appveyor_build_folder
-      . ".\Av-InitDatabases.ps1"'
+      . ".\Av-InitDatabases.ps1"
 
 after_test:
 - ps: Pop-Location
