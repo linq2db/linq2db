@@ -158,7 +158,7 @@ CREATE TABLE AllTypes
 	timestampDataType   timestamp                    NULL,
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
-	year2DataType       year(2)                      NULL,
+	year2DataType       year(4)                      NULL,
 	year4DataType       year(4)                      NULL,
 
 	charDataType        char(1)                      NULL,
