@@ -42,7 +42,19 @@ namespace LinqToDB.Mapping
 
 			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
 			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale    ()) Scale     =  columnAttribute.Scale;
+			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+
+			if (Storage == null)
+			{
+				StorageType = MemberType;
+				StorageInfo = MemberInfo;
+			}
+			else
+			{
+				var expr = Expression.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				StorageType = expr.Type;
+				StorageInfo = expr.Member;
+			}
 
 			var defaultCanBeNull = false;
 
@@ -109,7 +121,9 @@ namespace LinqToDB.Mapping
 		public MappingSchema  MappingSchema   { get; private set; }
 		public MemberAccessor MemberAccessor  { get; private set; }
 		public MemberInfo     MemberInfo      { get; private set; }
+		public MemberInfo     StorageInfo     { get; private set; }
 		public Type           MemberType      { get; private set; }
+		public Type           StorageType     { get; private set; }
 		public string         MemberName      { get; private set; }
 		public string         ColumnName      { get; private set; }
 		public string         Storage         { get; private set; }

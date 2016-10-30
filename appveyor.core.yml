@@ -23,6 +23,7 @@ before_build:
 - cmd: dotnet restore Source/project.json
 - cmd: dotnet restore Tests/Model/project.json
 - cmd: dotnet restore Tests/Linq/project.json
+- cmd: dotnet restore Tests/Tests.NetCore/project.json
 
 build:
   project: linq2db.core.sln
