@@ -21,7 +21,11 @@ namespace Tests.Model
 #if MONO
 			: base(ProviderName.SqlServer2008)
 #else
+#if NETSTANDARD
+			: base("SQLiteMs")
+#else
 			: base(ProviderName.SQLite)
+#endif
 #endif
 		{
 		}

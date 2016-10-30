@@ -113,6 +113,8 @@ namespace Tests
 
 #if NETSTANDARD
 			DataConnection.DefaultSettings = TxtSettings.Instance;
+			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
+
 			foreach (var provider in UserProviders.Values)
 			{
 				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
@@ -223,7 +225,8 @@ namespace Tests
 			ProviderName.SapHana,
 			TestProvName.SqlAzure,
 			TestProvName.MariaDB,
-			TestProvName.MySql57
+			TestProvName.MySql57,
+			TestProvName.SQLiteMs
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]

@@ -309,7 +309,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf11(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -319,7 +319,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -329,7 +329,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -341,7 +341,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access)]
+			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void IndexOf3(string context)
 		{
 			var s = "e";
@@ -356,7 +356,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -366,7 +366,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -377,7 +377,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -388,7 +388,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void CharIndex1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -398,7 +398,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void CharIndex2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -408,7 +408,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Left(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -418,7 +418,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Right(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -428,7 +428,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void RightInSelect(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -458,7 +458,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void Reverse(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -468,7 +468,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Stuff1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -522,7 +522,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Insert(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -532,7 +532,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Remove1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -542,7 +542,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Remove2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -552,7 +552,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Space(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -562,7 +562,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -572,7 +572,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -582,7 +582,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -592,7 +592,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -602,7 +602,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -612,7 +612,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft2(string context)
 		{
 			using (var db = GetDataContext(context))

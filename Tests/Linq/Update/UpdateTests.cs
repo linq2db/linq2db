@@ -238,7 +238,8 @@ namespace Tests.xUpdate
 			ProviderName.MySql,
 			TestProvName.MariaDB, 
 			TestProvName.MySql57,
-			ProviderName.SQLite,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update9(string context)
@@ -280,7 +281,8 @@ namespace Tests.xUpdate
 			ProviderName.MySql,
 			TestProvName.MariaDB, 
 			TestProvName.MySql57,
-			ProviderName.SQLite,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.Access,
 			ProviderName.SapHana)]
 		public void Update10(string context)
@@ -327,7 +329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update12(string context)
 		{
@@ -344,7 +346,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SqlCe, ProviderName.SQLite, ProviderName.DB2, ProviderName.Informix,
+			ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.DB2, ProviderName.Informix,
 			ProviderName.Firebird, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.PostgreSQL)]
 		public void Update13(string context)
 		{
@@ -532,6 +534,7 @@ namespace Tests.xUpdate
 			ProviderName.PostgreSQL, 
 			ProviderName.SqlCe, 
 			ProviderName.SQLite, 
+			TestProvName.SQLiteMs, 
 			ProviderName.SapHana)]
 		public void UpdateAssociation5(string context)
 		{
@@ -616,7 +619,8 @@ namespace Tests.xUpdate
 			ProviderName.Firebird,
 			ProviderName.Informix,
 			ProviderName.PostgreSQL,
-			ProviderName.SQLite,
+			ProviderName.SQLite, 
+			TestProvName.SQLiteMs,
 			ProviderName.SqlCe,
 			ProviderName.SqlServer2000,
 			ProviderName.SapHana
@@ -681,7 +685,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, DataContextSource(
-			ProviderName.SQLite, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
+			ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
 			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase)]
 		public void UpdateIssue319Regression(string context)
 		{
