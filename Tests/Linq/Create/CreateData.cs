@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.Access;
 
 using NUnit.Framework;
 
+// ReSharper disable once CheckNamespace
 namespace Tests._Create
 {
 	using Model;

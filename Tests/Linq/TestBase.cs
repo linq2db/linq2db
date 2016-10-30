@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-
+using System.Text;
 #if !NETSTANDARD
 using System.ServiceModel;
 using System.ServiceModel.Description;
@@ -849,13 +849,18 @@ namespace Tests
 
 			var exceptExpected = exceptExpectedList.Count;
 			var exceptResult   = exceptResultList.  Count;
+			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+				{ 
+					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendLine  ();
+				}
 
-			Assert.AreEqual(0, exceptExpected);
-			Assert.AreEqual(0, exceptResult);
+			Assert.AreEqual(0, exceptExpected, "Expect Expected" + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
