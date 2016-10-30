@@ -184,6 +184,7 @@ namespace Tests._Create
 		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(TestProvName.MariaDB)]       public void MariaDB      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }

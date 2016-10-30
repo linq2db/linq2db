@@ -236,7 +236,8 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL, 
 			ProviderName.MySql,
-			TestProvName.MariaDB,
+			TestProvName.MariaDB, 
+			TestProvName.MySql57,
 			ProviderName.SQLite,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -277,7 +278,8 @@ namespace Tests.xUpdate
 			ProviderName.OracleManaged,
 			ProviderName.PostgreSQL,
 			ProviderName.MySql,
-			TestProvName.MariaDB,
+			TestProvName.MariaDB, 
+			TestProvName.MySql57,
 			ProviderName.SQLite,
 			ProviderName.Access,
 			ProviderName.SapHana)]
@@ -680,7 +682,7 @@ namespace Tests.xUpdate
 
 		[Test, DataContextSource(
 			ProviderName.SQLite, ProviderName.Access, ProviderName.Informix, ProviderName.Firebird, ProviderName.PostgreSQL,
-			ProviderName.MySql, TestProvName.MariaDB, ProviderName.Sybase)]
+			ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57, ProviderName.Sybase)]
 		public void UpdateIssue319Regression(string context)
 		{
 			using (var db = GetDataContext(context))

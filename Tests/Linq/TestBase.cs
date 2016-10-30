@@ -223,6 +223,7 @@ namespace Tests
 			ProviderName.SapHana,
 			TestProvName.SqlAzure,
 			TestProvName.MariaDB,
+			TestProvName.MySql57
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]

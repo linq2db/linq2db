@@ -87,7 +87,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB)]
+		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void MySqlTest(string context)
 		{
 			using (var conn = new DataConnection(context))
@@ -106,7 +106,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB)]
+		[Test, IncludeDataContextSource(ProviderName.MySql, TestProvName.MariaDB, TestProvName.MySql57)]
 		public void MySqlPKTest(string context)
 		{
 			using (var conn = new DataConnection(context))
