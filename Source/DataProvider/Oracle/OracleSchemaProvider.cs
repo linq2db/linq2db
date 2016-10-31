@@ -91,24 +91,25 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection)
 		{
-			var tcs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
-
-			return
-			(
-				from c in tcs.AsEnumerable()
-				select new ColumnInfo
-				{
-					TableID      = c.Field<string>("OWNER") + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
-					DataType     = c.Field<string>("DATATYPE"),
-					IsNullable   = Converter.ChangeTypeTo<string>(c["NULLABLE"]) == "Y",
-					Ordinal      = Converter.ChangeTypeTo<int>   (c["ID"]),
-					Length       = Converter.ChangeTypeTo<long?> (c["LENGTH"]),
-					Precision    = Converter.ChangeTypeTo<int?>  (c["PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int?>  (c["SCALE"]),
-					IsIdentity   = false,
-				}
-			).ToList();
+			return dataConnection.Query<ColumnInfo>(@"
+				SELECT 
+					c.OWNER || '.' || c.TABLE_NAME as TableID,
+					c.COLUMN_NAME as Name,
+					c.DATA_TYPE as DataType,
+					CASE c.NULLABLE WHEN 'Y' THEN 1 ELSE 0 END as IsNullable,
+					c.COLUMN_ID as Ordinal,
+					c.DATA_LENGTH as Length,
+					c.DATA_PRECISION as Precision,
+					c.DATA_SCALE as Scale,
+					0 as IsIdentity,
+					cc.COMMENTS as Description
+				FROM ALL_TAB_COLUMNS c
+					JOIN USER_COL_COMMENTS cc
+						ON c.TABLE_NAME = cc.TABLE_NAME
+						AND c.COLUMN_NAME = cc.COLUMN_NAME
+				ORDER BY TableID, Ordinal
+				")
+			.ToList();
 		}
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
