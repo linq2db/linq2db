@@ -115,14 +115,14 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			return
 				dataConnection.Query<ForeingKeyInfo>(@"
-                    SELECT
+					SELECT
 						FKCON.CONSTRAINT_NAME                  as Name,
 						FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
 						FKCOLS.COLUMN_NAME                     as ThisColumn,
 						PKCOLS.OWNER || '.' || PKCOLS.TABLE_NAME as OtherTableID,
 						PKCOLS.COLUMN_NAME                     as OtherColumn,
 						FKCOLS.POSITION                        as Ordinal
-                    FROM
+					FROM
 						USER_CONSTRAINTS FKCON
 							JOIN USER_CONS_COLUMNS FKCOLS ON
 								FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
