@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Oracle
 						c.DATA_SCALE                                   as Scale,
 						0                                              as IsIdentity,
 						cc.COMMENTS                                    as Description
-				    FROM USER_TAB_COLUMNS c
+					FROM USER_TAB_COLUMNS c
 						JOIN USER_COL_COMMENTS cc ON
 							c.TABLE_NAME  = cc.TABLE_NAME AND
 							c.COLUMN_NAME = cc.COLUMN_NAME
