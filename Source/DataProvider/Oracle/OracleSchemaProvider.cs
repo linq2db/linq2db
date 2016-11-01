@@ -35,38 +35,57 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			_currentUser = dataConnection.Execute<string>("select user from dual");
 
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views");
-
-			return
-			(
-				from t in tables.AsEnumerable()
-				let schema  = t.Field<string>("OWNER")
-				let name    = t.Field<string>("TABLE_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
-				select new TableInfo
-				{
-					TableID         = schema + '.' + name,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema == _currentUser,
-					IsView          = false
-				}
-			).Concat
-			(
-				from t in views.AsEnumerable()
-				let schema  = t.Field<string>("OWNER")
-				let name    = t.Field<string>("VIEW_NAME")
-				where IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0 || schema == _currentUser
-				select new TableInfo
-				{
-					TableID         = schema + '.' + name,
-					SchemaName      = schema,
-					TableName       = name,
-					IsDefaultSchema = schema == _currentUser,
-					IsView          = true
-				}
-			).ToList();
+			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			{
+				// This is very slow
+				return dataConnection.Query<TableInfo>(
+					@"
+					SELECT
+						d.OWNER || '.' || d.NAME                         as TableID,
+						d.OWNER                                          as SchemaName,
+						d.NAME                                           as TableName,
+						d.IsView                                         as IsView,
+						CASE :CurrentUser WHEN d.OWNER THEN 1 ELSE 0 END as IsDefaultSchema,
+						tc.COMMENTS                                      as Description
+					FROM
+					(
+						SELECT t.OWNER, t.TABLE_NAME NAME, 0 as IsView FROM ALL_TABLES t
+							UNION ALL
+							SELECT v.OWNER, v.VIEW_NAME NAME, 1 as IsView FROM ALL_VIEWS v
+					) d
+						JOIN ALL_TAB_COMMENTS tc ON
+							d.OWNER = tc.OWNER AND
+							d.NAME  = tc.TABLE_NAME
+					ORDER BY TableID, isView
+					",
+					new { CurrentUser = _currentUser })
+				.ToList();
+			}
+			else
+			{
+				// This is significally faster
+				return dataConnection.Query<TableInfo>(
+					@"
+					SELECT
+						:CurrentUser || '.' || d.NAME as TableID,
+						:CurrentUser                  as SchemaName,
+						d.NAME                        as TableName,
+						d.IsView                      as IsView,
+						1                             as IsDefaultSchema,
+						tc.COMMENTS                   as Description
+					FROM
+					(
+						SELECT t.TABLE_NAME NAME, 0 as IsView FROM USER_TABLES t
+							UNION ALL
+							SELECT v.VIEW_NAME NAME, 1 as IsView FROM USER_VIEWS v
+					) d
+						JOIN USER_TAB_COMMENTS tc ON
+							d.NAME = tc.TABLE_NAME
+					ORDER BY TableID, isView
+					",
+					new { CurrentUser = _currentUser })
+				.ToList();
+			}
 		}
 
 		protected override List<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection)
