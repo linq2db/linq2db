@@ -115,6 +115,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
 			{
+				// This is very slow
 				return
 					dataConnection.Query<ForeingKeyInfo>(@"
 						SELECT
@@ -147,15 +148,16 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
+				// This is significally faster
 				return
 					dataConnection.Query<ForeingKeyInfo>(@"
 						SELECT
-							FKCON.CONSTRAINT_NAME                  as Name,
-							FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
-							FKCOLS.COLUMN_NAME                     as ThisColumn,
+							FKCON.CONSTRAINT_NAME                    as Name,
+							FKCON.OWNER || '.' || FKCON.TABLE_NAME   as ThisTableID,
+							FKCOLS.COLUMN_NAME                       as ThisColumn,
 							PKCOLS.OWNER || '.' || PKCOLS.TABLE_NAME as OtherTableID,
-							PKCOLS.COLUMN_NAME                     as OtherColumn,
-							FKCOLS.POSITION                        as Ordinal
+							PKCOLS.COLUMN_NAME                       as OtherColumn,
+							FKCOLS.POSITION                          as Ordinal
 						FROM
 							USER_CONSTRAINTS FKCON
 								JOIN USER_CONS_COLUMNS FKCOLS ON
@@ -163,8 +165,8 @@ namespace LinqToDB.DataProvider.Oracle
 								JOIN USER_CONS_COLUMNS PKCOLS ON
 									PKCOLS.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
 						WHERE 
-							FKCON.CONSTRAINT_TYPE = 'R' 
-							AND    FKCOLS.POSITION       = PKCOLS.POSITION
+							FKCON.CONSTRAINT_TYPE = 'R' AND
+							FKCOLS.POSITION       = PKCOLS.POSITION
 						")
 						.ToList();
 			}
