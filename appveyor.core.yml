@@ -30,7 +30,7 @@ build:
   verbosity: minimal
 
 after_build:
-- cmd: dotnet pack --no-build Source/project.json --version-suffix=beta%APPVEYOR_BUILD_NUMBER%
+- cmd: dotnet pack --no-build Source/project.json --version-suffix=beta%APPVEYOR_BUILD_NUMBER% -c=Release
 
 before_test:
 - ps: |
