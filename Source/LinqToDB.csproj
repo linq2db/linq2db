@@ -73,9 +73,25 @@
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
-    <Compile Include="DataProvider\ISeries\iSeriesDataProvider.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesBulkCopy.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesFactory.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesMappingSchema.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesIdentifierQuoteMode.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesNamingConvention.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesDataProvider.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesSchemaProvider.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesSqlBuilder.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesSqlOptimizer.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesTypeCreator.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesTypes.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesTools.cs" />
+    <Compile Include="DataProvider\DB2iSeries\DB2iSeriesMerge.cs" />
+    <Compile Include="DataProvider\DB2\DB2TypeCreator.cs" />
     <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
+    <Compile Include="DataProvider\TypeCreator.cs" />
+    <Compile Include="DataProvider\TypeCreatorBase.cs" />
+    <Compile Include="DataProvider\TypeCreatorNoDefault.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
     <Compile Include="DataProvider\Access\AccessSqlOptimizer.cs" />

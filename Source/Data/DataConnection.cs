@@ -255,8 +255,9 @@ namespace LinqToDB.Data
 			LinqToDB.DataProvider.Sybase.    SybaseTools.    GetDataProvider();
 			LinqToDB.DataProvider.Oracle.    OracleTools.    GetDataProvider();
 			LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.GetDataProvider();
-			LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
-			LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
+      LinqToDB.DataProvider.DB2.       DB2Tools.       GetDataProvider();
+      LinqToDB.DataProvider.DB2iSeries.DB2iSeriesTools.GetDataProvider();
+      LinqToDB.DataProvider.Informix.  InformixTools.  GetDataProvider();
 			LinqToDB.DataProvider.SapHana.   SapHanaTools.   GetDataProvider(); 
 
 			var section = LinqToDBSection.Instance;

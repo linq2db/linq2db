@@ -207,9 +207,9 @@ namespace LinqToDB
 		[Sql.Property(                  "SmallInt",       ServerSideOnly=true)] public static Int16          SmallInt                          { get { return 0; } }
 
 		[Sql.Property(PN.DB2,           "SmallInt",       ServerSideOnly=true)]
-		[Sql.Property(PN.Informix,      "SmallInt",       ServerSideOnly=true)]
+    [Sql.Property(PN.DB2iSeries,    "SmallInt",       ServerSideOnly=true)]
+    [Sql.Property(PN.Informix,      "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.Oracle,        "Number(3)",      ServerSideOnly=true)]
-		[Sql.Property(PN.DB2,           "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "SmallInt",       ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Unsigned",       ServerSideOnly=true)]
@@ -294,20 +294,24 @@ namespace LinqToDB
 		[Sql.Property(                  "VarChar",        ServerSideOnly=true)] public static String  DefaultVarChar                           { get { return ""; } }
 
 		[Sql.Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Function(                                    ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
+    [Sql.Function(PN.DB2iSeries,    "Char",           ServerSideOnly=true)]
+    [Sql.Function(                                    ServerSideOnly=true)] public static String         NChar(int length)                 {       return ""; }
 
 		[Sql.Property(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Property(                  "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
+    [Sql.Property(PN.DB2iSeries,    "Char",           ServerSideOnly=true)]
+    [Sql.Property(                  "NChar",          ServerSideOnly=true)] public static String  DefaultNChar                             { get { return ""; } }
 
 		[Sql.Function(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Function(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
+    [Sql.Property(PN.DB2iSeries,    "Char",           ServerSideOnly=true)]
+    [Sql.Function(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
 		[Sql.Function(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
 		[Sql.Function(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
 		[Sql.Function(PN.MySql,         "Char",           ServerSideOnly=true)]
 		[Sql.Function(                                    ServerSideOnly=true)] public static String         NVarChar(int length)              {       return ""; }
 
 		[Sql.Property(PN.DB2,           "Char",           ServerSideOnly=true)]
-		[Sql.Property(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
+    [Sql.Property(PN.DB2iSeries,    "Char",           ServerSideOnly=true)]
+    [Sql.Property(PN.Oracle,        "VarChar2",       ServerSideOnly=true)]
 		[Sql.Property(PN.Firebird,      "VarChar",        ServerSideOnly=true)]
 		[Sql.Property(PN.PostgreSQL,    "VarChar",        ServerSideOnly=true)]
 		[Sql.Property(PN.MySql,         "Char",           ServerSideOnly=true)]
@@ -331,7 +335,8 @@ namespace LinqToDB
 		[Sql.Function  (                                                PreferServerSide = true)]
 		[Sql.Function  (PN.Access,   "Mid",                             PreferServerSide = true)]
 		[Sql.Function  (PN.DB2,      "Substr",                          PreferServerSide = true)]
-		[Sql.Function  (PN.Informix, "Substr",                          PreferServerSide = true)]
+    [Sql.Function  (PN.DB2iSeries,"Substr",                         PreferServerSide = true)]
+    [Sql.Function  (PN.Informix, "Substr",                          PreferServerSide = true)]
 		[Sql.Function  (PN.Oracle,   "Substr",                          PreferServerSide = true)]
 		[Sql.Function  (PN.SQLite,   "Substr",                          PreferServerSide = true)]
 		[Sql.Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true)]
@@ -366,7 +371,8 @@ namespace LinqToDB
 		[CLSCompliant(false)]
 		[Sql.Function]
 		[Sql.Function(PN.DB2,     "Locate")]
-		[Sql.Function(PN.MySql,   "Locate")]
+    [Sql.Function(PN.DB2iSeries,"Locate")]
+    [Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate", 1, 0)]
 		public static int? CharIndex(string value, string str)
 		{
@@ -378,7 +384,8 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function  (ProviderName.DB2,   "Locate")]
-		[Sql.Function  (ProviderName.MySql, "Locate")]
+    [Sql.Function(ProviderName.DB2iSeries,"Locate")]
+    [Sql.Function  (ProviderName.MySql, "Locate")]
 		[Sql.Expression(PN.SapHana,         "Locate(Substring({1},{2} + 1),{0}) + {2}")]
 		public static int? CharIndex(string value, string str, int? startLocation)
 		{
@@ -390,7 +397,8 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(PN.DB2,     "Locate")]
-		[Sql.Function(PN.MySql,   "Locate")]
+    [Sql.Function(PN.DB2iSeries,"Locate")]
+    [Sql.Function(PN.MySql,   "Locate")]
 		[Sql.Function(PN.SapHana, "Locate")]
 		public static int? CharIndex(char? value, string str)
 		{
@@ -402,7 +410,8 @@ namespace LinqToDB
 
 		[Sql.Function]
 		[Sql.Function(ProviderName.DB2,   "Locate")]
-		[Sql.Function(ProviderName.MySql, "Locate")]
+    [Sql.Function(ProviderName.DB2iSeries,"Locate")]
+    [Sql.Function(ProviderName.MySql, "Locate")]
 		[Sql.Function(PN.SapHana,         "Locate")]
 		public static int? CharIndex(char? value, string str, int? startLocation)
 		{
@@ -513,21 +522,24 @@ namespace LinqToDB
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, B, {1})")]
-		[Sql.Function]
+    [Sql.Expression(PN.DB2iSeries, "Strip({0}, B, {1})")]
+    [Sql.Function]
 		public static string Trim(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.Trim(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, L, {1})")]
-		[Sql.Function  (                  "LTrim")]
+    [Sql.Expression(PN.DB2iSeries, "Strip({0}, L, {1})")]
+    [Sql.Function  (                  "LTrim")]
 		public static string TrimLeft(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimStart(ch.Value);
 		}
 
 		[Sql.Expression(PN.DB2, "Strip({0}, T, {1})")]
-		[Sql.Function  (                  "RTrim")]
+    [Sql.Expression(PN.DB2iSeries, "Strip({0}, T, {1})")]
+    [Sql.Function  (                  "RTrim")]
 		public static string TrimRight(string str, char? ch)
 		{
 			return str == null || ch == null ? null : str.TrimEnd(ch.Value);
@@ -733,7 +745,8 @@ namespace LinqToDB
 		[Sql.Function] // FIXME: LinqToDB.Sql.DatePartAttribute -> DatePart
 		[LinqToDB.Sql.DatePartAttribute(PN.Oracle,     "Add{0}",                              false, 0, 2, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.DB2,        "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
-		[LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
+    [LinqToDB.Sql.DatePartAttribute(PN.DB2iSeries, "{{1}} + {0}",                         Precedence.Additive, true, new[] { "{0} Year", "({0} * 3) Month", "{0} Month", "{0} Day", "{0} Day", "({0} * 7) Day", "{0} Day", "{0} Hour", "{0} Minute", "{0} Second", "({0} * 1000) Microsecond" }, 0, 1, 2)]
+    [LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{{1}} + Interval({0}",                Precedence.Additive, true, new[] { "{0}) Year to Year", "{0}) Month to Month * 3", "{0}) Month to Month", "{0}) Day to Day", "{0}) Day to Day", "{0}) Day to Day * 7", "{0}) Day to Day", "{0}) Hour to Hour", "{0}) Minute to Minute", "{0}) Second to Second", null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "{{1}} + {{0}} * Interval '1 {0}",     Precedence.Additive, true, new[] { "Year'", "Month' * 3", "Month'", "Day'", "Day'", "Day' * 7", "Day'", "Hour'", "Minute'", "Second'", "Millisecond'" }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.MySql,      "Date_Add({{1}}, Interval {{0}} {0})", true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
 		[LinqToDB.Sql.DatePartAttribute(PN.SQLite,     "DateTime({{1}}, '{{0}} {0}')",        true, new[] { null, null, null, "Day", null, null, "Day", null, null, null, null }, 0, 1, 2)]
@@ -765,7 +778,8 @@ namespace LinqToDB
 		[CLSCompliant(false)]
 		[Sql.Function]
 		[LinqToDB.Sql.DatePartAttribute(PN.DB2,        "{0}",                               false, new[] { null,     null,  null,   null,      null,   null,  "DayOfWeek", null,     null,   null,   null   }, 0, 1)]
-		[LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{0}",                                      0, 1)]
+    [LinqToDB.Sql.DatePartAttribute(PN.DB2iSeries, "{0}",                               false, new[] { null, null, null, null, null, null, "DayOfWeek", null, null, null, null }, 0, 1)]
+    [LinqToDB.Sql.DatePartAttribute(PN.Informix,   "{0}",                                      0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.MySql,      "Extract({0} from {{0}})",           true,  0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.PostgreSQL, "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "DOY",     null,   null,   "DOW",      null,     null,   null,   null   }, 0, 1)]
 		[LinqToDB.Sql.DatePartAttribute(PN.Firebird,   "Extract({0} from {{0}})",           true,  new[] { null,     null,  null,   "YearDay", null,   null,   null,       null,     null,   null,   null   }, 0, 1)]
@@ -861,7 +875,8 @@ namespace LinqToDB
 		[CLSCompliant(false)]
 		[Sql.Function(PN.SqlServer, "Atn2")]
 		[Sql.Function(PN.DB2,       "Atan2", 1, 0)]
-		[Sql.Function(PN.SqlCe,     "Atn2")]
+    [Sql.Function(PN.DB2iSeries,"Atan2", 1, 0)]
+    [Sql.Function(PN.SqlCe,     "Atn2")]
 		[Sql.Function(PN.Sybase,    "Atn2")]
 		[Sql.Function] public static Double?  Atan2  (Double? x, Double? y) { return x == null || y == null? null : (Double?)Math.Atan2(x.Value, y.Value); }
 
@@ -1016,7 +1031,8 @@ namespace LinqToDB
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
 		[Sql.Expression(PN.DB2,        "Truncate({0}, 0)")]
-		[Sql.Expression(PN.Informix,   "Trunc({0}, 0)")]
+    [Sql.Expression(PN.DB2iSeries, "Truncate({0}, 0)")]
+    [Sql.Expression(PN.Informix,   "Trunc({0}, 0)")]
 		[Sql.Expression(PN.Oracle,     "Trunc({0}, 0)")]
 		[Sql.Expression(PN.Firebird,   "Trunc({0}, 0)")]
 		[Sql.Expression(PN.PostgreSQL, "Trunc({0}, 0)")]
@@ -1035,7 +1051,8 @@ namespace LinqToDB
 
 		[Sql.Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
 		[Sql.Expression(PN.DB2,        "Truncate({0}, 0)")]
-		[Sql.Expression(PN.Informix,   "Trunc({0}, 0)")]
+    [Sql.Expression(PN.DB2iSeries, "Truncate({0}, 0)")]
+    [Sql.Expression(PN.Informix,   "Trunc({0}, 0)")]
 		[Sql.Expression(PN.Oracle,     "Trunc({0}, 0)")]
 		[Sql.Expression(PN.Firebird,   "Trunc({0}, 0)")]
 		[Sql.Expression(PN.PostgreSQL, "Trunc({0}, 0)")]
