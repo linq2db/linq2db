@@ -18,6 +18,51 @@ namespace LinqToDB.DataProvider.DB2iSeries {
       _sqlOptimizer = new DB2iSeriesSqlOptimizer(SqlProviderFlags);
     }
 
+    readonly DB2iSeriesSqlOptimizer _sqlOptimizer;
+    static Action<IDbDataParameter> _setBlob;
+    DB2iSeriesBulkCopy _bulkCopy;
+
+    #region "overrides"
+
+    public override string ConnectionNamespace { get; }
+    protected override string ConnectionTypeName { get; }
+    protected override string DataReaderTypeName { get; }
+
+    public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source) {
+      if (_bulkCopy == null)
+        _bulkCopy = new DB2iSeriesBulkCopy(GetConnectionType());
+
+      return _bulkCopy.BulkCopy(
+        options.BulkCopyType == BulkCopyType.Default ? DB2iSeriesTools.DefaultBulkCopyType : options.BulkCopyType,
+        dataConnection,
+        options,
+        source);
+    }
+    public override ISqlBuilder CreateSqlBuilder() {
+      //      Return New iSeriesSqlBuilder_DB2(GetSqlOptimizer, SqlProviderFlags, MappingSchema.ValueToSqlConverter)
+      return new DB2iSeriesSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
+    }
+    public override ISchemaProvider GetSchemaProvider() {
+      return new DB2iSeriesSchemaProvider();
+    }
+    public override ISqlOptimizer GetSqlOptimizer() {
+      return _sqlOptimizer;
+    }
+    public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters) {
+      dataConnection.DisposeCommand();
+      base.InitCommand(dataConnection, commandType, commandText, parameters);
+    }
+    public override MappingSchema MappingSchema {
+      get {
+        return new DB2iSeriesMappingSchema();
+      }
+    }
+    public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> deletePredicate, bool delete, IEnumerable<T> source, string tableName, string databaseName, string schemaName) {
+      if (delete) {
+        throw new LinqToDBException("DB2 iSeries MERGE statement does not support DELETE by source.");
+      }
+      return new DB2iSeriesMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
+    }
     protected override void OnConnectionTypeCreated(Type connectionType) {
       DB2iSeriesTypes.ConnectionType = connectionType;
 
@@ -109,47 +154,6 @@ namespace LinqToDB.DataProvider.DB2iSeries {
       }
       DB2iSeriesTools.Initialized();
     }
-
-    private static object GetNullValue(Type type) {
-      dynamic getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-      return getValue.Compile;
-    }
-
-    public override string ConnectionNamespace { get; }
-    protected override string ConnectionTypeName { get; }
-    protected override string DataReaderTypeName { get; }
-
-    private sealed class MappingSchemaInstance {
-      public static readonly DB2iSeriesMappingSchema db2iSeriesMappingSchema = new DB2iSeriesMappingSchema();
-    }
-
-    public override MappingSchema MappingSchema {
-      get {
-        return MappingSchemaInstance.db2iSeriesMappingSchema;
-      }
-    }
-
-    public override ISchemaProvider GetSchemaProvider() {
-      return new DB2iSeriesSchemaProvider();
-    }
-
-    public override ISqlBuilder CreateSqlBuilder() {
-      //      Return New iSeriesSqlBuilder_DB2(GetSqlOptimizer, SqlProviderFlags, MappingSchema.ValueToSqlConverter)
-      return new DB2iSeriesSqlBuilder(GetSqlOptimizer(), SqlProviderFlags, MappingSchema.ValueToSqlConverter);
-    }
-
-    readonly DB2iSeriesSqlOptimizer _sqlOptimizer;
-    public override ISqlOptimizer GetSqlOptimizer() {
-      return _sqlOptimizer;
-    }
-
-    public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[] parameters) {
-      dataConnection.DisposeCommand();
-      base.InitCommand(dataConnection, commandType, commandText, parameters);
-    }
-
-
-    static Action<IDbDataParameter> _setBlob;
     public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType__1, object value) {
       if (value is sbyte) {
         value = Convert.ToInt16(Convert.ToSByte(value));
@@ -211,33 +215,12 @@ namespace LinqToDB.DataProvider.DB2iSeries {
       base.SetParameter(parameter, Convert.ToString("@") + name, dataType__1, value);
     }
 
-    #region "BulkCopy"
-
-    DB2iSeriesBulkCopy _bulkCopy;
-
-    public override BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source) {
-      if (_bulkCopy == null)
-        _bulkCopy = new DB2iSeriesBulkCopy(GetConnectionType());
-
-      return _bulkCopy.BulkCopy(
-        options.BulkCopyType == BulkCopyType.Default ? DB2iSeriesTools.DefaultBulkCopyType : options.BulkCopyType,
-        dataConnection,
-        options,
-        source);
+    #endregion
+    
+    private static object GetNullValue(Type type) {
+      dynamic getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
+      return getValue.Compile;
     }
 
-    #endregion
-
-    #region "Merge"
-
-    public override int Merge<T>(DataConnection dataConnection, Expression<Func<T, bool>> deletePredicate, bool delete, IEnumerable<T> source,
-       string tableName, string databaseName, string schemaName) {
-      if (delete)
-        throw new LinqToDBException("DB2 iSeries MERGE statement does not support DELETE by source.");
-
-      return new DB2iSeriesMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
-    }
-
-    #endregion
   }
 }

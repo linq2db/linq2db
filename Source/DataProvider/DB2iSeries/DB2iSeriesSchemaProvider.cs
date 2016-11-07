@@ -7,8 +7,11 @@ namespace LinqToDB.DataProvider.DB2iSeries {
   using Common;
   using Data;
   using SchemaProvider;
+  using System.Data.Common;
 
   public class DB2iSeriesSchemaProvider : SchemaProviderBase {
+    //http://wiki.midrange.com/index.php/DB2_catalog
+
     protected override List<ColumnInfo> GetColumns(DataConnection dataConnection) {
       var sql = $@"
                 Select 
@@ -23,7 +26,6 @@ namespace LinqToDB.DataProvider.DB2iSeries {
                 , System_Table_Name
                 , System_Table_Schema
                 From QSYS2/SYSCOLUMNS
-                Where system_table_schema = 'OSLMTGF3'
                  ";
       Func<IDataReader, ColumnInfo> drf = (IDataReader dr) => {
         var ci = new ColumnInfo {
@@ -33,7 +35,7 @@ namespace LinqToDB.DataProvider.DB2iSeries {
           IsNullable = dr["Is_Nullable"].ToString() == "Y",
           Name = dr["System_Column_Name"].ToString(),
           Ordinal = Converter.ChangeTypeTo<int>(dr["Ordinal_Position"]),
-          TableID = Convert.ToString(dr["System_Table_Schema"]).Trim(' ') + "." + Convert.ToString(dr["System_Table_Name"]).Trim(' ')
+          TableID = dataConnection.Connection.Database + "." + Convert.ToString(dr["System_Table_Schema"]) + "." + Convert.ToString(dr["System_Table_Name"])
         };
         SetColumnParameters(ci, Convert.ToInt64(dr["Length"]), Convert.ToInt32(dr["Numeric_Scale"]));
         return ci;
@@ -44,45 +46,31 @@ namespace LinqToDB.DataProvider.DB2iSeries {
 
     protected override DataType GetDataType(string _dataType, string columnType, long? length, int? prec, int? scale) {
       switch (_dataType) {
-        //case "BIGINT": return DataType.Int64;
+        case "BIGINT": return DataType.Int64;
         case "BINARY": return DataType.Binary;
         case "BLOB": return DataType.Blob;
         case "CHAR": return DataType.Char;
-        //case "CHARACTER": return DataType.Char;
-        //case "CHAR() FOR BIT DATA": return DataType.Binary;
-        //case "CLOB": return DataType.Text;    
+        case "CHAR FOR BIT DATA": return DataType.Binary;
+        case "CLOB": return DataType.Text;
+        case "DATALINK": return DataType.Undefined;
         case "DATE": return DataType.Date;
-        //case "DBCLOB": return DataType.Text;
-        //case "DECFLOAT16": return DataType.Decimal;
-        //case "DECFLOAT34": return DataType.Decimal;
+        case "DBCLOB": return DataType.Undefined;
         case "DECIMAL": return DataType.Decimal;
         case "DOUBLE": return DataType.Double;
-        //case "GRAPHIC": return DataType.Text;
-        //case "INTEGER": return DataType.Int32;
-        //case "LONG VARCHAR": return DataType.VarChar;
-        //case "LONG VARCHAR FOR BIT DATA": return DataType.VarBinary;
-        //case "LONG VARGRAPHIC": return DataType.Text;
+        case "GRAPHIC": return DataType.Text;
+        case "INTEGER": return DataType.Int32;
         case "NUMERIC": return DataType.Decimal;
-        //case "REAL": return DataType.Single;
-        //case "ROWID": return DataType.Undefined;
-        //case "SMALLINT": return DataType.Int16;
+        case "REAL": return DataType.Single;
+        case "ROWID": return DataType.Undefined;
+        case "SMALLINT": return DataType.Int16;
         case "TIME": return DataType.Time;
-        case "TIMESTMP": return DataType.Timestamp;
         case "TIMESTAMP": return DataType.Timestamp;
-        //case "VARBIN": return DataType.VarBinary;
+        case "VARBINARY": return DataType.VarBinary;
         case "VARCHAR": return DataType.VarChar;
-        //case "VARCHAR() FOR BIT DATA": return DataType.VarBinary;
-        //case "VARGRAPHIC": return DataType.Text;
-        //case "XML": return DataType.Xml;
-        default:
-          throw new NotImplementedException($"data type: {_dataType}");
-          return DataType.Undefined;
+        case "VARCHAR FOR BIT DATA": return DataType.VarBinary;
+        case "VARGRAPHIC": return DataType.Text;
+        default: return DataType.Undefined;
       }
-    }
-
-    protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) {
-      throw new NotImplementedException("TODO");
-      return base.GetDataTypes(dataConnection);
     }
 
     protected override string GetDbType(string columnType, DataTypeInfo dataType, long? length, int? prec, int? scale) {
@@ -116,28 +104,30 @@ namespace LinqToDB.DataProvider.DB2iSeries {
     }
 
     protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection) {
-      throw new NotImplementedException("TODO");
       var sql = $@"
-          Select 
-                 cst.constraint_Name 
-               , col.Ordinal_position
-               , col.system_Column_Name 
-               , cst.system_table_SCHEMA
-               , cst.system_table_NAME 
-          From QSYS2/SYSCST Cst
-          Join QSYS2/SYSKEYCST col On(col.constraint_SCHEMA, col.constraint_NAME)=(cst.constraint_SCHEMA, cst.constraint_NAME)
-          Where cst.constraint_type = 'FOREIGN KEY' And cst.constraint_SCHEMA In('xOSLMTGF3', 'OSLSLF3', 'OSLD1F3', 'TRAVISB')
-          Order By TableID, PrimaryKeyName, Ordinal
+          Select ref.Constraint_Name 
+          , fk.Ordinal_Position
+          , fk.System_Column_Name  As ThisColumn
+          , fk.System_Table_Name   As ThisTable
+          , fk.System_Table_Schema As ThisSchema
+          , uk.System_Column_Name  As OtherColumn
+          , uk.System_Table_Schema As OtherSchema
+          , uk.System_Table_Name   As OtherTable
+          From QSYS2/SYSREFCST ref
+          Join QSYS2/SYSKEYCST fk on(fk.Constraint_Schema, fk.Constraint_Name) = (ref.Constraint_Schema, ref.Constraint_Name)
+          Join QSYS2/SYSKEYCST uk on(uk.Constraint_Schema, uk.Constraint_Name) = (ref.Unique_Constraint_Schema, ref.Unique_Constraint_Name)
+          Where uk.Ordinal_Position = fk.Ordinal_Position
+          Order By ThisSchema, ThisTable, Constraint_Name, Ordinal_Position
           ";
       //And {GetSchemaFilter("col.TBCREATOR")}
       Func<IDataReader, ForeingKeyInfo> drf = (IDataReader dr) => {
-        return new ForeingKeyInfo {
-          Name = dr["Name"].ToString(),
-          Ordinal = Converter.ChangeTypeTo<int>(dr["Ordinal"]),
+        return new ForeingKeyInfo { 
+          Name = dr["Constraint_Name"].ToString(),
+          Ordinal = Converter.ChangeTypeTo<int>(dr["Ordinal_Position"]),
           OtherColumn = dr["OtherColumn"].ToString(),
-          OtherTableID = dr["OtherTableID"].ToString(),
+          OtherTableID = dataConnection.Connection.Database + "." + Convert.ToString(dr["OtherSchema"]) + "." + Convert.ToString(dr["OtherTable"]),
           ThisColumn = dr["ThisColumn"].ToString(),
-          ThisTableID = Convert.ToString(dr["System_Table_Schema"]).Trim(' ') + "." + Convert.ToString(dr["System_Table_Name"]).Trim(' ')
+          ThisTableID = dataConnection.Connection.Database + "." + Convert.ToString(dr["ThisSchema"]) + "." + Convert.ToString(dr["ThisTable"])
         };
       };
       List<ForeingKeyInfo> _list = dataConnection.Query(drf, sql).ToList();
@@ -151,19 +141,16 @@ namespace LinqToDB.DataProvider.DB2iSeries {
                , cst.system_table_NAME 
                , col.Ordinal_position 
                , col.system_Column_Name   
-          From QSYS2/SYSCST    cst
-          Join QSYS2/SYSKEYCST col On(col.constraint_SCHEMA, col.constraint_NAME)=(cst.constraint_SCHEMA, cst.constraint_NAME)
-          Where cst.constraint_type= 'PRIMARY KEY' 
-            And cst.constraint_SCHEMA In('OSLMTGF3')
-          Order By TableID, PrimaryKeyName, Ordinal
+          From QSYS2/SYSKEYCST col
+          Join QSYS2/SYSCST    cst On(cst.constraint_SCHEMA, cst.constraint_NAME, cst.constraint_type) = (col.constraint_SCHEMA, col.constraint_NAME, 'PRIMARY KEY')
+          Order By cst.system_table_SCHEMA, cst.system_table_NAME, col.Ordinal_position
           ";
-      //And {GetSchemaFilter("col.TBCREATOR")}
       Func<IDataReader, PrimaryKeyInfo> drf = (IDataReader dr) => {
         return new PrimaryKeyInfo {
-          ColumnName = Convert.ToString(dr["system_Column_Name"]).Trim(' '),
+          ColumnName = Convert.ToString(dr["system_Column_Name"]),
           Ordinal = Converter.ChangeTypeTo<int>(dr["Ordinal_position"]),
-          PrimaryKeyName = Convert.ToString(dr["constraint_Name"]).Trim(' '),
-          TableID = Convert.ToString(dr["system_table_SCHEMA"]).Trim(' ') + "." + Convert.ToString(dr["system_table_NAME"]).Trim(' ')
+          PrimaryKeyName = Convert.ToString(dr["constraint_Name"]),
+          TableID = dataConnection.Connection.Database + "." + Convert.ToString(dr["system_table_SCHEMA"]) + "." + Convert.ToString(dr["system_table_NAME"])
         };
       };
       List<PrimaryKeyInfo> _list = dataConnection.Query(drf, sql).ToList();
@@ -171,13 +158,68 @@ namespace LinqToDB.DataProvider.DB2iSeries {
     }
 
     protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection) {
-      throw new NotImplementedException("TODO");
-      return base.GetProcedures(dataConnection);
+      var sql = $@"
+          Select
+            CAST(CURRENT_SERVER AS VARCHAR(128)) AS Catalog_Name
+          , Function_Type
+          , Routine_Definition
+          , Routine_Name
+          , Routine_Schema
+          , Routine_Type
+          , Specific_Name
+          , Specific_Schema
+          From QSYS2/SYSROUTINES 
+          Order By Specific_Schema, Specific_Name
+          ";
+      //And {GetSchemaFilter("col.TBCREATOR")}
+      var defaultSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+      Func<IDataReader, ProcedureInfo> drf = (IDataReader dr) => {
+        return new ProcedureInfo {
+          CatalogName = Convert.ToString(dr["Catalog_Name"]),
+          IsDefaultSchema= Convert.ToString(dr["Routine_Schema"]) == defaultSchema,
+          IsFunction = Convert.ToString(dr["Routine_Type"]) == "FUNCTION",
+          IsTableFunction = Convert.ToString(dr["Function_Type"]) == "T",
+          ProcedureDefinition  = Convert.ToString(dr["Routine_Definition"]),
+          ProcedureID = dataConnection.Connection.Database + "." + Convert.ToString(dr["Specific_Schema"]) +"." + Convert.ToString(dr["Specific_Name"]),
+          ProcedureName = Convert.ToString(dr["Routine_Name"]),
+          SchemaName = Convert.ToString(dr["Routine_Schema"])
+        };
+      };
+      List<ProcedureInfo> _list = dataConnection.Query(drf, sql).ToList();
+      return _list;
     }
 
     protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection) {
-      throw new NotImplementedException("TODO");
-      return base.GetProcedureParameters(dataConnection);
+      var sql = $@"
+          Select 
+            CHARACTER_MAXIMUM_LENGTH
+          , Data_Type
+          , Numeric_Precision
+          , Numeric_Scale
+          , Ordinal_position
+          , Parameter_Mode
+          , Parameter_Name
+          , Specific_Name
+          , Specific_Schema
+          From QSYS2/SYSPARMS 
+          Order By Specific_Schema, Specific_Name, Parameter_Name
+          ";
+      //And {GetSchemaFilter("col.TBCREATOR")}
+      Func<IDataReader, ProcedureParameterInfo> drf = (IDataReader dr) => {
+        return new ProcedureParameterInfo {
+          DataType = Convert.ToString(dr["Parameter_Name"]),
+          IsIn = dr["Parameter_Mode"].ToString().Contains("IN"),
+          IsOut = dr["Parameter_Mode"].ToString().Contains("OUT"),
+          Length = Converter.ChangeTypeTo<long?>(dr["CHARACTER_MAXIMUM_LENGTH"]),
+          Ordinal = Converter.ChangeTypeTo<int>(dr["Ordinal_position"]),
+          ParameterName = Convert.ToString(dr["Parameter_Name"]),
+          Precision = Converter.ChangeTypeTo<int?>(dr["Numeric_Precision"]),
+          ProcedureID = dataConnection.Connection.Database + "." + Convert.ToString(dr["Specific_Schema"]) + "." + Convert.ToString(dr["Specific_Name"]),
+          Scale = Converter.ChangeTypeTo<int?>(dr["Numeric_Scale"]),
+        };
+      };
+      List<ProcedureParameterInfo> _list = dataConnection.Query(drf, sql).ToList();
+      return _list;
     }
 
     protected override string GetProviderSpecificTypeNamespace() {
@@ -186,16 +228,26 @@ namespace LinqToDB.DataProvider.DB2iSeries {
 
     protected override List<TableInfo> GetTables(DataConnection dataConnection) {
       var sql = $@"
+                  Select 
+                    CAST(CURRENT_SERVER AS VARCHAR(128)) AS Catalog_Name
+                  , System_Table_Schema 
+                  , System_Table_Name
+                  , Table_Text
+                  , Table_Type
+                  From QSYS2/SYSTABLES 
+                  Where Table_Type In('L', 'P', 'T', 'V')
+                  Order By System_Table_Schema, System_Table_Name
                  ";
+      var defaultSchema = dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
       Func<IDataReader, TableInfo> drf = (IDataReader dr) => {
         return new TableInfo {
-          CatalogName = dr["CatalogName"].ToString(),
-          Description = dr["Description"].ToString(),
-          IsDefaultSchema = dr["IsDefaultSchema"].ToString() == "Y",
-          IsView = dr["IsView"].ToString() == "Y",
-          SchemaName = dr["SchemaName"].ToString(),
-          TableID = dr["TableID"].ToString(),
-          TableName = dr["TableName"].ToString()
+          CatalogName = dr["Catalog_Name"].ToString(),
+          Description = dr["Table_Text"].ToString(),
+          IsDefaultSchema = dr["System_Table_Schema"].ToString() == defaultSchema,
+          IsView = new[] { "L", "V" }.Contains<string>(dr["Table_Type"].ToString()),
+          SchemaName = dr["System_Table_Schema"].ToString(),
+          TableID = dataConnection.Connection.Database + "." + dr["System_Table_Schema"].ToString() + "." + dr["System_Table_Name"].ToString(),
+          TableName = dr["System_Table_Name"].ToString()
         };
       };
       List<TableInfo> _list = dataConnection.Query(drf, sql).ToList();
@@ -206,7 +258,8 @@ namespace LinqToDB.DataProvider.DB2iSeries {
 
     public static void SetColumnParameters(ColumnInfo ci, long? size, int? scale) {
       switch (ci.DataType) {
-        case "DECIMAL": //, "NUMERIC" ' "DECFLOAT"
+        case "DECIMAL":
+        case "NUMERIC":
           if (((size ?? 0)) > 0) {
             ci.Precision = (int?)size.Value;
           }
@@ -214,13 +267,18 @@ namespace LinqToDB.DataProvider.DB2iSeries {
             ci.Scale = scale;
           }
           break;
+        case "BINARY":
+        case "BLOB":
         case "CHAR":
+        case "CHAR FOR BIT DATA":
+        case "CLOB":
+        case "DATALINK":
+        case "DBCLOB":
+        case "GRAPHIC":
+        case "VARBINARY":
         case "VARCHAR":
-          //"BLOB", "CLOB", "DBCLOB",
-          //"LONG VARGRAPHIC", "VARGRAPHIC", "GRAPHIC",
-          //"LONG VARCHAR FOR BIT DATA", "VARCHAR () FOR BIT DATA",
-          //"VARBIN", "BINARY",
-          //"CHAR () FOR BIT DATA", "LONG VARCHAR", "CHARACTER"
+        case "VARCHAR FOR BIT DATA":
+        case "VARGRAPHIC":
           ci.Length = size;
           break;
         default:
