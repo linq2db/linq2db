@@ -35,7 +35,7 @@ namespace Tests.DataProvider {
         Assert.That(conn.Execute<int>("SELECT @p2 + @p1 FROM SYSIBM.SYSDUMMY1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
       }
     }
-
+     
     [Test, IncludeDataContextSource(CurrentProvider)]
     public void TestDataTypes(string context) {
       using (var conn = new DataConnection(context)) {
