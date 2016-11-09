@@ -150,7 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
+      <Project>{ad3c3ce6-68f9-4444-a2c9-7e1c9c2ec033}</Project>
       <Name>LinqToDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Tests.Model.csproj">

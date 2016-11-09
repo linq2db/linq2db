@@ -30,6 +30,7 @@ namespace LinqToDB.DataProvider.DB2iSeries {
     public static readonly TypeCreator<string> VarChar = new TypeCreator<string>();
     public static readonly TypeCreator<byte[]> VarCharBitData = new TypeCreator<byte[]>();
     public static readonly TypeCreator<string> VarGraphic = new TypeCreator<string>();
+
     public static readonly TypeCreator<string> Xml = new TypeCreator<string>();
     public static Type ConnectionType { get; set; }
 

@@ -42,7 +42,7 @@
     <DefineConstants>TRACE;DEBUG;FW4;MOBILE1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>
     </NoWarn>
@@ -135,6 +135,10 @@
       <HintPath>..\..\Redist\IBM\IBM.Data.DB2.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="IBM.Data.DB2.iSeries, Version=12.0.0.0, Culture=neutral, PublicKeyToken=9cdb2ebfb1f93a26, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\..\packages\IBM.Data.DB2.iSeries.7.1.0\lib\IBM.Data.DB2.iSeries.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="IBM.Data.Informix, Version=9.7.4.4, Culture=neutral, PublicKeyToken=7c307b91aa13d208, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
@@ -222,6 +226,7 @@
     <Compile Include="Common\ChangeTypeTests.cs" />
     <Compile Include="Common\ConvertTests.cs" />
     <Compile Include="Common\DefaultValueTests.cs" />
+    <Compile Include="DataProvider\DB2iSeriesTests.cs" />
     <Compile Include="DataProvider\SapHanaTests.cs" />
     <Compile Include="DataProvider\InformixTests.cs" />
     <Compile Include="DataProvider\DB2Tests.cs" />
@@ -349,6 +354,9 @@
     <Content Include="..\..\Data\Create Scripts\DB2.sql">
       <Link>Database\Create Scripts\DB2.sql</Link>
     </Content>
+    <Content Include="..\..\Data\Create Scripts\DB2iSeries.sql">
+      <Link>Database\Create Scripts\DB2iSeries.sql</Link>
+    </Content>
     <Content Include="..\..\Data\Create Scripts\Firebird.sql">
       <Link>Database\Create Scripts\Firebird.sql</Link>
     </Content>
@@ -420,7 +428,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
+      <Project>{ad3c3ce6-68f9-4444-a2c9-7e1c9c2ec033}</Project>
       <Name>LinqToDB</Name>
     </ProjectReference>
     <ProjectReference Include="..\Model\Tests.Model.csproj">
@@ -472,7 +480,7 @@
 xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\x86\*.*" "$(TargetDir)x86"
 if not exist "$(TargetDir)amd64" md "$(TargetDir)amd64"
 xcopy /s /y "$(SolutionDir)packages\Microsoft.SqlServer.Compact.4.0.8876.1\NativeBinaries\amd64\*.*" "$(TargetDir)amd64"
-if not exist "$(TargetDir)sybdrvado20.dll" xcopy /d /c /y "$(SolutionDir)Redist\Sybase\*.*" "$(TargetDir)"</PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\..\packages\System.Data.SQLite.Core.1.0.101.0\build\net45\System.Data.SQLite.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
