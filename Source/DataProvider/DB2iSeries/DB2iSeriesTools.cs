@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.DB2iSeries {
 
     #region BulkCopy
 
-    public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+    public static BulkCopyType DefaultBulkCopyType = BulkCopyType.MultipleRows;
 
     public static BulkCopyRowsCopied MultipleRowsCopy<T>(DataConnection dataConnection, IEnumerable<T> source, int maxBatchSize = 1000, Action<BulkCopyRowsCopied> rowsCopiedCallback = null) {
       return dataConnection.BulkCopy(new BulkCopyOptions {
