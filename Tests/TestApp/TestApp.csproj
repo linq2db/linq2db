@@ -58,12 +58,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7cbd2975-3d0c-4bc3-bb4e-932f910778cf}</Project>
-      <Name>LinqToDB</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="..\..\packages\Microsoft.SqlServer.Types.11.0.2\nativeBinaries\x64\msvcr100.dll">
       <Link>SqlServerTypes\x64\msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -81,6 +75,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="SqlServerTypes\readme.htm" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
+      <Project>{ad3c3ce6-68f9-4444-a2c9-7e1c9c2ec033}</Project>
+      <Name>LinqToDB</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -175,7 +175,8 @@ namespace Tests._Create
 		}
 
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
-		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
+    [Test, IncludeDataContextSource(ProviderName.DB2iSeries)]    public void DB2iSeries   (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2iSeries"); }
+    [Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
 		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
 		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }

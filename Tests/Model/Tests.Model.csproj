@@ -180,17 +180,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
-      <Project>{7CBD2975-3D0C-4BC3-BB4E-932F910778CF}</Project>
-      <Name>LinqToDB</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="linq2db.Tests.snk" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Source\LinqToDB.csproj">
+      <Project>{ad3c3ce6-68f9-4444-a2c9-7e1c9c2ec033}</Project>
+      <Name>LinqToDB</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
