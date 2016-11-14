@@ -167,6 +167,7 @@ namespace LinqToDB.DataProvider.Oracle
 						WHERE 
 							FKCON.CONSTRAINT_TYPE = 'R' AND
 							FKCOLS.POSITION       = PKCOLS.POSITION
+						ORDER BY Ordinal, Name
 						")
 						.ToList();
 			}
