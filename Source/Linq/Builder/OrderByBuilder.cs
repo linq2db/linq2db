@@ -50,8 +50,8 @@ namespace LinqToDB.Linq.Builder
 
 			builder.ReplaceParent(order, sparent);
 
-			if (!methodCall.Method.Name.StartsWith("Then"))
-				sequence.SelectQuery.OrderBy.Items.Clear();
+			//if (!methodCall.Method.Name.StartsWith("Then"))
+			//	sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)
 			{
