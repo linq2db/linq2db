@@ -159,6 +159,30 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource]
+		public void OrderBy7(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				LinqToDB.Common.Configuration.Linq.DoNotClearOrderBys = true;
+
+				var expected =
+					from ch in Child
+					orderby ch.ChildID % 2, ch.ChildID
+					select new { ch };
+
+				var result =
+					from ch in db.Child
+					orderby ch.ChildID % 2
+					select new { ch };
+
+				result = result.OrderBy(x => x.ch.ChildID);
+
+
+				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+			}
+		}
+
+		[Test, DataContextSource]
 		public void OrderBySelf1(string context)
 		{
 			using (var db = GetDataContext(context))
