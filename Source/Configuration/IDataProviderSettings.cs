@@ -1,7 +1,8 @@
+using System;
+using System.Collections.Generic;
+
 namespace LinqToDB.Configuration
 {
-	using System.Collections.Generic;
-
 	public interface IDataProviderSettings
 	{
 		/// <summary>
