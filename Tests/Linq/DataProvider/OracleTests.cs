@@ -1301,15 +1301,20 @@ namespace Tests.DataProvider
 		public void OverflowTest2(string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
-
-			OracleTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
 
-			OracleTools.DataReaderGetDecimal = func;
+				OracleTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
+
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow2>().ToList();
+				}
+			}
+			finally
+			{
+				OracleTools.DataReaderGetDecimal = func;
+			}
 		}
 	}
 }
