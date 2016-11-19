@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
+
 	using Model;
 
 	[TestFixture]
@@ -1315,6 +1317,39 @@ namespace Tests.DataProvider
 			{
 				OracleTools.DataReaderGetDecimal = func;
 			}
+		}
+
+		public class UseAlternativeBulkCopy
+		{
+			public int Id;
+			public int Value;
+		}
+
+		[Test, OracleDataContext]
+		public void UseAlternativeBulkCopyTest(string context)
+		{
+			var data = new List<UseAlternativeBulkCopy>(100);
+			for (var i = 0; i < 100; i++)
+				data.Add(new UseAlternativeBulkCopy() {Id = i, Value = i});
+
+			using (var db = new DataConnection(context))
+			{
+				OracleTools.UseAlternativeBulkCopy = true;
+				db.CreateTable<UseAlternativeBulkCopy>();
+				try
+				{
+					db.BulkCopy(25, data);
+
+					var count = db.GetTable<UseAlternativeBulkCopy>().Count();
+					Assert.AreEqual(data.Count, count);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = false;
+					db.DropTable<UseAlternativeBulkCopy>();
+				}
+			}
+
 		}
 	}
 }
