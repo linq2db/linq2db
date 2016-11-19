@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Collections.Generic;
+
 	using Model;
 
 	[TestFixture]
@@ -1301,15 +1303,53 @@ namespace Tests.DataProvider
 		public void OverflowTest2(string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
+			try
+			{
 
-			OracleTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
+				OracleTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
+
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow2>().ToList();
+				}
+			}
+			finally
+			{
+				OracleTools.DataReaderGetDecimal = func;
+			}
+		}
+
+		public class UseAlternativeBulkCopy
+		{
+			public int Id;
+			public int Value;
+		}
+
+		[Test, OracleDataContext]
+		public void UseAlternativeBulkCopyTest(string context)
+		{
+			var data = new List<UseAlternativeBulkCopy>(100);
+			for (var i = 0; i < 100; i++)
+				data.Add(new UseAlternativeBulkCopy() {Id = i, Value = i});
 
 			using (var db = new DataConnection(context))
 			{
-				var list = db.GetTable<DecimalOverflow2>().ToList();
+				OracleTools.UseAlternativeBulkCopy = true;
+				db.CreateTable<UseAlternativeBulkCopy>();
+				try
+				{
+					db.BulkCopy(25, data);
+
+					var count = db.GetTable<UseAlternativeBulkCopy>().Count();
+					Assert.AreEqual(data.Count, count);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = false;
+					db.DropTable<UseAlternativeBulkCopy>();
+				}
 			}
 
-			OracleTools.DataReaderGetDecimal = func;
 		}
 	}
 }
