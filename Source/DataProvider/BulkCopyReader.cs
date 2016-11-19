@@ -8,8 +8,7 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider
 {
-    using Data;
-    using Mapping;
+	using Mapping;
 
 	class BulkCopyReader : IDataReader
 	{
@@ -62,10 +61,6 @@ namespace LinqToDB.DataProvider
 			var value = _columns[i].GetValue(_enumerator.Current);
 
 			_dataProvider.SetParameter(_valueConverter, string.Empty, _columnTypes[i], value);
-
-			var dataParameter = _valueConverter.Value as DataParameter;
-			if (dataParameter != null)
-				return dataParameter.Value;
 
 			return _valueConverter.Value;
 		}
