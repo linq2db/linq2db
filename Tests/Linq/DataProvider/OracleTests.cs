@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -16,8 +17,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Collections.Generic;
-
 	using Model;
 
 	[TestFixture]
@@ -29,6 +28,16 @@ namespace Tests.DataProvider
 			public OracleDataContextAttribute()
 				: base(ProviderName.OracleNative, ProviderName.OracleManaged)
 			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Method)]
+		class OracleDataContextWithBulkCopyAttribute : OracleDataContextAttribute
+		{
+			protected override IEnumerable<object[]> GetParameters(string provider)
+			{
+				yield return new object[] {provider, false};
+				yield return new object[] {provider, true};
 			}
 		}
 
@@ -744,16 +753,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopyLinqTypesMultipleRows(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopyLinqTypesMultipleRows(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopyLinqTypesProviderSpecific(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopyLinqTypesProviderSpecific(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
 		[System.Data.Linq.Mapping.Table(Name = "stg_trade_information")]
@@ -798,16 +825,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy1MultipleRows(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy1MultipleRows(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy1(context, BulkCopyType.MultipleRows);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy1(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy1ProviderSpecific(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy1ProviderSpecific(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy1(context, BulkCopyType.ProviderSpecific);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy1(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
 		static void BulkCopy21(string context, BulkCopyType bulkCopyType)
@@ -843,16 +888,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy21MultipleRows(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy21MultipleRows(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy21(context, BulkCopyType.MultipleRows);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy21(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy21ProviderSpecific(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy21ProviderSpecific(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy21(context, BulkCopyType.ProviderSpecific);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy21(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
 		static void BulkCopy22(string context, BulkCopyType bulkCopyType)
@@ -885,16 +948,34 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy22MultipleRows(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy22MultipleRows(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy22(context, BulkCopyType.MultipleRows);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy22(context, BulkCopyType.MultipleRows);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
-		[Test, OracleDataContext]
-		public void BulkCopy22ProviderSpecific(string context)
+		[Test, OracleDataContextWithBulkCopy]
+		public void BulkCopy22ProviderSpecific(string context, bool useAlternativeBulkCopy)
 		{
-			BulkCopy22(context, BulkCopyType.ProviderSpecific);
+			try
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				BulkCopy22(context, BulkCopyType.ProviderSpecific);
+			}
+			finally
+			{
+				OracleTools.UseAlternativeBulkCopy = false;
+			}
 		}
 
 		#endregion
@@ -1323,6 +1404,18 @@ namespace Tests.DataProvider
 		{
 			public int Id;
 			public int Value;
+
+			public override int GetHashCode()
+			{
+				return Id;
+			}
+
+			public override bool Equals(object obj)
+			{
+				var e = (UseAlternativeBulkCopy) obj;
+
+				return e.Id == Id && e.Value == Value;
+			}
 		}
 
 		[Test, OracleDataContext]
@@ -1340,8 +1433,8 @@ namespace Tests.DataProvider
 				{
 					db.BulkCopy(25, data);
 
-					var count = db.GetTable<UseAlternativeBulkCopy>().Count();
-					Assert.AreEqual(data.Count, count);
+					var selected = db.GetTable<UseAlternativeBulkCopy>().ToList();
+					AreEqual(data, selected);
 				}
 				finally
 				{
@@ -1350,6 +1443,87 @@ namespace Tests.DataProvider
 				}
 			}
 
+		}
+
+		public class ClobEntity
+		{
+			public ClobEntity()
+			{ }
+
+			public ClobEntity(int id)
+			{
+				Id         = id;
+				ClobValue  = "Clob" .PadRight(4001, id.ToString()[0]);
+				NClobValue = "NClob".PadRight(4001, id.ToString()[0]);
+			}
+			public int Id;
+
+			[Column(DataType = DataType.Text)]
+			public string ClobValue;
+
+			[Column(DataType = DataType.NText)]
+			public string NClobValue;
+
+			public override int GetHashCode()
+			{
+				return Id;
+			}
+
+			public override bool Equals(object obj)
+			{
+				var clob = (ClobEntity) obj;
+				return    clob.Id         == Id
+					   && clob.ClobValue  == ClobValue
+					   && clob.NClobValue == NClobValue;
+			}
+		}
+
+		[Test, OracleDataContext]
+		public void ClobTest1(string context)
+		{
+			using (var db = new DataConnection(context))
+			{
+				db.CreateTable<ClobEntity>();
+				try
+				{
+					var obj = new ClobEntity(1);
+					db.Insert(obj);
+
+					var selected = db.GetTable<ClobEntity>().First(_ => _.Id == 1);
+					Assert.AreEqual(obj, selected);
+				}
+				finally
+				{
+					db.DropTable<ClobEntity>();
+				}
+				
+			}
+		}
+
+		[Test, OracleDataContextWithBulkCopyAttribute]
+		public void ClobBulkCopyTest(string context, bool useAlternativeBulkCopy)
+		{
+			var data = new List<ClobEntity>(new[] {new ClobEntity(1), new ClobEntity(2)});
+
+			using (var db = new DataConnection(context))
+			{
+				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
+
+				db.CreateTable<ClobEntity>();
+				try
+				{
+					db.BulkCopy(data);
+
+					var selected = db.GetTable<ClobEntity>().ToList();
+					AreEqual(data, selected);
+				}
+				finally
+				{
+					OracleTools.UseAlternativeBulkCopy = false;
+					db.DropTable<ClobEntity>();
+				}
+
+			}
 		}
 	}
 }
