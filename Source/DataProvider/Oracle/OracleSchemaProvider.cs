@@ -161,35 +161,64 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override List<ForeingKeyInfo> GetForeignKeys(DataConnection dataConnection)
 		{
-			return
-				dataConnection.Query<ForeingKeyInfo>(@"
-					SELECT
-						FKCON.CONSTRAINT_NAME                  as Name,
-						FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
-						FKCOLS.COLUMN_NAME                     as ThisColumn,
-						PKCON.OWNER || '.' || PKCON.TABLE_NAME as OtherTableID,
-						PKCOLS.COLUMN_NAME                     as OtherColumn,
-						FKCOLS.POSITION                        as Ordinal
-					FROM
-						ALL_CONSTRAINTS FKCON
-							JOIN ALL_CONS_COLUMNS FKCOLS ON
-								FKCOLS.OWNER           = FKCON.OWNER      AND
-								FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME AND
-								FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
-						JOIN
-						ALL_CONSTRAINTS  PKCON
-							JOIN ALL_CONS_COLUMNS PKCOLS ON
-								PKCOLS.OWNER           = PKCON.OWNER      AND
-								PKCOLS.TABLE_NAME      = PKCON.TABLE_NAME AND
-								PKCOLS.CONSTRAINT_NAME = PKCON.CONSTRAINT_NAME
-						ON
-							PKCON.OWNER           = FKCON.R_OWNER AND
-							PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
-					WHERE 
-						FKCON.CONSTRAINT_TYPE = 'R'          AND
-						FKCOLS.POSITION       = PKCOLS.POSITION
-					")
-				.ToList();
+			if (IncludedSchemas.Length != 0 || ExcludedSchemas.Length != 0)
+			{
+				// This is very slow
+				return
+					dataConnection.Query<ForeingKeyInfo>(@"
+						SELECT
+							FKCON.CONSTRAINT_NAME                  as Name,
+							FKCON.OWNER || '.' || FKCON.TABLE_NAME as ThisTableID,
+							FKCOLS.COLUMN_NAME                     as ThisColumn,
+							PKCON.OWNER || '.' || PKCON.TABLE_NAME as OtherTableID,
+							PKCOLS.COLUMN_NAME                     as OtherColumn,
+							FKCOLS.POSITION                        as Ordinal
+						FROM
+							ALL_CONSTRAINTS FKCON
+								JOIN ALL_CONS_COLUMNS FKCOLS ON
+									FKCOLS.OWNER           = FKCON.OWNER      AND
+									FKCOLS.TABLE_NAME      = FKCON.TABLE_NAME AND
+									FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
+							JOIN
+							ALL_CONSTRAINTS  PKCON
+								JOIN ALL_CONS_COLUMNS PKCOLS ON
+									PKCOLS.OWNER           = PKCON.OWNER      AND
+									PKCOLS.TABLE_NAME      = PKCON.TABLE_NAME AND
+									PKCOLS.CONSTRAINT_NAME = PKCON.CONSTRAINT_NAME
+							ON
+								PKCON.OWNER           = FKCON.R_OWNER AND
+								PKCON.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
+						WHERE 
+							FKCON.CONSTRAINT_TYPE = 'R'          AND
+							FKCOLS.POSITION       = PKCOLS.POSITION
+						")
+					.ToList();
+			}
+			else
+			{
+				// This is significally faster
+				return
+					dataConnection.Query<ForeingKeyInfo>(@"
+						SELECT
+							FKCON.CONSTRAINT_NAME                    as Name,
+							FKCON.OWNER || '.' || FKCON.TABLE_NAME   as ThisTableID,
+							FKCOLS.COLUMN_NAME                       as ThisColumn,
+							PKCOLS.OWNER || '.' || PKCOLS.TABLE_NAME as OtherTableID,
+							PKCOLS.COLUMN_NAME                       as OtherColumn,
+							FKCOLS.POSITION                          as Ordinal
+						FROM
+							USER_CONSTRAINTS FKCON
+								JOIN USER_CONS_COLUMNS FKCOLS ON
+									FKCOLS.CONSTRAINT_NAME = FKCON.CONSTRAINT_NAME
+								JOIN USER_CONS_COLUMNS PKCOLS ON
+									PKCOLS.CONSTRAINT_NAME = FKCON.R_CONSTRAINT_NAME
+						WHERE 
+							FKCON.CONSTRAINT_TYPE = 'R' AND
+							FKCOLS.POSITION       = PKCOLS.POSITION
+						ORDER BY Ordinal, Name
+						")
+						.ToList();
+			}
 		}
 
 		protected override List<ProcedureInfo> GetProcedures(DataConnection dataConnection)
