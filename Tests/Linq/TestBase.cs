@@ -180,6 +180,11 @@ namespace Tests
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
 			}
 
+			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			{
+				yield return new object[] {provider};
+			}
+
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
 				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
@@ -196,41 +201,48 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
-					var data = new TestCaseParameters(new object[] { provider });
-
-					test = builder.BuildTestMethod(method, suite, data);
-
-					foreach (var attr in explic)
-						attr.ApplyToTest(test);
-
-					test.Properties.Set(PropertyNames.Category, provider);
-					SetName(test, method, provider, false);
-
-					if (isIgnore)
+					foreach (var parameters in GetParameters(provider))
 					{
-						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
-							test.RunState = RunState.Ignored;
+						var data = new TestCaseParameters(parameters);
 
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
-						continue;
-					}
-
-					hasTest = true;
-
-					yield return test;
-
-					if (_includeLinqService)
-					{
-						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
 						test = builder.BuildTestMethod(method, suite, data);
 
 						foreach (var attr in explic)
 							attr.ApplyToTest(test);
 
 						test.Properties.Set(PropertyNames.Category, provider);
-						SetName(test, method, provider, true);
+						SetName(test, method, provider, false);
+
+						if (isIgnore)
+						{
+							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+								test.RunState = RunState.Ignored;
+
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							continue;
+						}
+
+						hasTest = true;
 
 						yield return test;
+					}
+
+					if (_includeLinqService)
+					{
+						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						{
+
+							var data = new TestCaseParameters(paremeters);
+							test = builder.BuildTestMethod(method, suite, data);
+
+							foreach (var attr in explic)
+								attr.ApplyToTest(test);
+
+							test.Properties.Set(PropertyNames.Category, provider);
+							SetName(test, method, provider, true);
+
+							yield return test;
+						}
 					}
 				}
 

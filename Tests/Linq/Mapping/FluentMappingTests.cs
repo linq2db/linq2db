@@ -1,5 +1,5 @@
 ﻿using System;
-
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -16,6 +16,19 @@ namespace Tests.Mapping
 
 			[NotColumn]
 			public MyClass Parent;
+		}
+
+		class MyClass2
+		{
+			public int ID { get; set; }
+
+			public MyClass3 Class3 { get; set; }
+		}
+
+		[Table]
+		class MyClass3
+		{
+			public int ID { get; set; }
 		}
 
 		[Test]
@@ -146,6 +159,22 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.That(ed.Associations, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void PropertyIncluded()
+		{
+			var ms = new MappingSchema();
+
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.Entity<MyClass2>()
+				.Property(e => e.ID).IsPrimaryKey()
+				.Property(e => e.Class3);
+
+			var ed = ms.GetEntityDescriptor(typeof(MyClass2));
+
+			Assert.That(ed["Class3"], Is.Not.Null);
 		}
 	}
 }

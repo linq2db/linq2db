@@ -140,7 +140,7 @@ namespace LinqToDB.Mapping
 
 				if (expr != null)
 				{
-					getterExpr = expr.GetBody(getterExpr);
+					getterExpr = Expression.PropertyOrField(expr.GetBody(getterExpr), "Value");
 				}
 				else
 				{

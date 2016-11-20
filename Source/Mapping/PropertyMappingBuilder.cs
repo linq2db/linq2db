@@ -20,6 +20,8 @@ namespace LinqToDB.Mapping
 			_entity       = entity;
 			_memberGetter = memberGetter;
 			_memberInfo   = MemberHelper.MemberOf(memberGetter);
+			
+			SetColumn(a => a.IsColumn = true);
 		}
 
 		readonly Expression<Func<T,object>> _memberGetter;
