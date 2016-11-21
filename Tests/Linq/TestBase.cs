@@ -201,6 +201,7 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
+
 					foreach (var parameters in GetParameters(provider))
 					{
 						var data = new TestCaseParameters(parameters);
@@ -227,7 +228,7 @@ namespace Tests
 						yield return test;
 					}
 
-					if (_includeLinqService)
+					if (!isIgnore && _includeLinqService)
 					{
 						foreach (var paremeters in GetParameters(provider + ".LinqService"))
 						{
