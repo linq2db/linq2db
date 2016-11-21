@@ -9,6 +9,7 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
@@ -294,7 +295,7 @@ namespace Tests
 			}
 		}
 
-		protected ITestDataContext GetDataContext(string configuration)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -305,12 +306,18 @@ namespace Tests
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
+				if (ms != null)
+					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+
 				return dx;
 			}
 
 			Debug.WriteLine(configuration, "Provider ");
 
-			return new TestDataConnection(configuration);
+			var res = new TestDataConnection(configuration);
+			if (ms != null)
+				res.AddMappingSchema(ms);
+			return res;
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
