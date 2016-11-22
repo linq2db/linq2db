@@ -1,7 +1,7 @@
 configuration: Debug
 
 environment:
-  packageVersion: 1.7.4
+  packageVersion: 1.7.5
 
 version: $(packageVersion).{build}
 
@@ -10,7 +10,8 @@ cache:
 
 services:
 - mssql2012sp1
-- mysql56
+- mysql
+- postgresql
 
 init:
 - cmd: git config --global core.autocrlf true
@@ -44,11 +45,15 @@ after_build:
 - ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion"
 - ps: Push-AppveyorArtifact linq2db.$env:nugetVersion.nupkg
 
-test: off
+test: 
+  assemblies:
+    - \Tests\**\linq2db.Tests.dll
 
 before_test:
-- ps: Rename-Item Tests\Linq\AppveyorDataProviders.txt UserDataProviders.txt
-- ps: Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+- ps: |
+      Push-Location -Path Tests\Linq\bin\$env:CONFIGURATION
+      cd $env:appveyor_build_folder
+      . ".\Av-InitDatabases.ps1"
 
 after_test:
 - ps: Pop-Location

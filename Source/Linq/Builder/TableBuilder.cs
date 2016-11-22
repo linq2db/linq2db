@@ -309,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 					select new
 					{
 						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.MemberType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
+						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.n, Builder.DataReaderLocal, Builder.DataContextInfo.DataContext)
 					}
 				).ToList();
 
@@ -317,11 +317,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.New(objectType),
 					members
 						.Where (m => !m.Column.MemberAccessor.IsComplex)
-						.Select(m => (MemberBinding)Expression.Bind(
-							m.Column.Storage == null ?
-								m.Column.MemberAccessor.MemberInfo :
-								Expression.PropertyOrField(Expression.Constant(null, objectType), m.Column.Storage).Member,
-							m.Expr)));
+						.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
 				var hasComplex = members.Any(m => m.Column.MemberAccessor.IsComplex);
 				var loadWith   = GetLoadWith();

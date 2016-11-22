@@ -38,6 +38,7 @@ namespace Tests.Linq
 			Value2,
 		}
 
+#pragma warning disable 0649
 		[Table("LinqDataTypes")]
 		class TestTable1
 		{
@@ -75,6 +76,7 @@ namespace Tests.Linq
 			[Column("BigIntValue")]    public long TestField;
 			[Column("IntValue")]       public int  Int32Field;
 		}
+#pragma warning restore 0649
 
 		class Cleaner : IDisposable
 		{
@@ -1148,6 +1150,7 @@ namespace Tests.Linq
 		[Table("LinqDataTypes")]
 		class TestTable3
 		{
+#pragma warning disable 0649
 			[PrimaryKey]
 			public int ID;
 			
@@ -1156,6 +1159,7 @@ namespace Tests.Linq
 
 			[Column("IntValue")]
 			public int? TargetID;
+#pragma warning restore 0649
 		}
 
 		struct ObjectReference
@@ -1202,6 +1206,7 @@ namespace Tests.Linq
 		[Table("LinqDataTypes")]
 		class TestTable4
 		{
+#pragma warning disable 0649
 			[PrimaryKey]
 			public int ID;
 
@@ -1210,6 +1215,7 @@ namespace Tests.Linq
 
 			[Column("IntValue")]
 			public int? TargetID;
+#pragma warning restore 0649
 		}
 
 		struct ObjectReference2
@@ -1297,8 +1303,10 @@ namespace Tests.Linq
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
 		class TestTable5
 		{
+#pragma warning disable 0649
 			public int      ID;
 			public TestFlag IntValue;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource(ProviderName.Access)]

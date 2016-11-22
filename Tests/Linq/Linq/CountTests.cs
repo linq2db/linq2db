@@ -495,7 +495,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Count = db.Parent.Where(p1 => p1.ParentID == p.ParentID).Count() });
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, ProviderName.Sybase)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Sybase)]
 		public void SubQuery6(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -636,11 +636,13 @@ namespace Tests.Linq
 		[Table("Child")]
 		class Child2
 		{
+#pragma warning disable 0649
 			[Column] public int? ParentID;
 			[Column] public int  ChildID;
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
 			public Parent Parent;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -64,22 +65,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void OnConnectionTypeCreated(Type connectionType)
 		{
-			BitStringType         = connectionType.Assembly.GetType("NpgsqlTypes.BitString",         false);
-			NpgsqlIntervalType    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInterval",    false);
-			NpgsqlInetType        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlInet",        true);
-			NpgsqlTimeType        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTime",        false);
-			NpgsqlTimeTZType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeTZ",      false);
-			NpgsqlPointType       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPoint",       true);
-			NpgsqlLSegType        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlLSeg",        true);
-			NpgsqlBoxType         = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlBox",         true);
-			NpgsqlPathType        = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPath",        true);
-			_npgsqlTimeStamp      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
-			_npgsqlTimeStampTZ    = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
-			_npgsqlDate           = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDate",        true);
-			_npgsqlDateTime       = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlDateTime",    false);
-			NpgsqlMacAddressType  = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
-			NpgsqlCircleType      = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlCircle",      true);
-			NpgsqlPolygonType     = connectionType.Assembly.GetType("NpgsqlTypes.NpgsqlPolygon",     true);
+			BitStringType         = connectionType.AssemblyEx().GetType("NpgsqlTypes.BitString",         false);
+			NpgsqlIntervalType    = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlInterval",    false);
+			NpgsqlInetType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlInet",        true);
+			NpgsqlTimeType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTime",        false);
+			NpgsqlTimeTZType      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeTZ",      false);
+			NpgsqlPointType       = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPoint",       true);
+			NpgsqlLSegType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlLSeg",        true);
+			NpgsqlBoxType         = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlBox",         true);
+			NpgsqlPathType        = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPath",        true);
+			_npgsqlTimeStamp      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeStamp",   false);
+			_npgsqlTimeStampTZ    = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlTimeStampTZ", false);
+			_npgsqlDate           = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlDate",        true);
+			_npgsqlDateTime       = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlDateTime",    false);
+			NpgsqlMacAddressType  = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlMacAddress",  false);
+			NpgsqlCircleType      = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlCircle",      true);
+			NpgsqlPolygonType     = connectionType.AssemblyEx().GetType("NpgsqlTypes.NpgsqlPolygon",     true);
 
 			if (BitStringType        != null) SetProviderField(BitStringType,        BitStringType,        "GetBitString");
 			if (NpgsqlIntervalType   != null) SetProviderField(NpgsqlIntervalType,   NpgsqlIntervalType,   "GetInterval");
@@ -186,10 +187,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new PostgreSQLSchemaProvider();
 		}
+#endif 
 
 		static Action<IDbDataParameter> _setMoney;
 		static Action<IDbDataParameter> _setVarBinary;
@@ -234,7 +237,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -246,6 +249,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				source);
 		}
 
-		#endregion
+#endregion
 	}
 }

@@ -284,7 +284,8 @@ namespace Tests.Linq
 					.Select(ch => ch.ChildID)
 					.OrderBy(x => x)
 					.ToList();
-				Assert.IsTrue(childIDs.SequenceEqual(new [] {11, 21} ));
+
+				Assert.IsTrue(childIDs.SequenceEqual(new [] {11, 21} ), "{0}: {1}, {2}", childIDs.Count, childIDs[0], childIDs[1]);
 			}
 		}
 

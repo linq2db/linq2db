@@ -274,7 +274,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.Access, ProviderName.DB2, ProviderName.OracleNative, ProviderName.OracleManaged, ProviderName.MySql,
-			TestProvName.MariaDB, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
+			TestProvName.MariaDB, TestProvName.MySql57, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Informix, ProviderName.SapHana)]
 		public void SubSub2(string context)
 		{
 			using (var db = GetDataContext(context))

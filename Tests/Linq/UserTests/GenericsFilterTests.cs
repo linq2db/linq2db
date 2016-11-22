@@ -39,13 +39,19 @@ namespace Tests.UserTests
 
 		void CheckPredicate(Expression<Func<Firm, bool>> predicate)
 		{
-			using (var db = new DataConnection(ProviderName.SQLite, "Data Source=:memory:;Version=3;New=True;"))
+			using (var db = new DataConnection(ProviderName.SQLite,
+#if NETSTANDARD
+				"Data Source=:memory:;"
+#else
+				"Data Source=:memory:;Version=3;New=True;"
+#endif
+				))
 			{
 				db.CreateTable<TypeA>();
 				db.CreateTable<TypeB>();
 
 				var query = db.GetTable<TypeA>()
-					.Select(a => new Firm {Id = a.Id, Value = db.GetTable<TypeB>().Select(b => b.Id).FirstOrDefault()});
+					.Select(a => new Firm { Id = a.Id, Value = db.GetTable<TypeB>().Select(b => b.Id).FirstOrDefault() });
 
 				query.Where(predicate).GetEnumerator();
 			}

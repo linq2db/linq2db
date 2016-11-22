@@ -1,0 +1,62 @@
+version: 1.7.5.{build}
+
+configuration: Release
+
+cache:
+- packages -> **\packages.config
+- '%USERPROFILE%\.nuget\packages -> **\project.json'
+
+
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+
+services:
+- mssql2012sp1
+- mysql
+- postgresql
+
+before_build:
+- cmd: dotnet restore Source/project.json
+- cmd: dotnet restore Tests/Model/project.json
+- cmd: dotnet restore Tests/Linq/project.json
+- cmd: dotnet restore Tests/Tests.NetCore/project.json
+
+build:
+  project: linq2db.core.sln
+  verbosity: minimal
+
+after_build:
+- cmd: dotnet pack --no-build Source/project.json --version-suffix=beta%APPVEYOR_BUILD_NUMBER% -c=Release
+
+before_test:
+- ps: |
+      cd $env:appveyor_build_folder
+      . ".\Av-InitDatabases.ps1"
+
+
+test_script:
+- ps: |
+    dotnet test tests\linq -c Release -f netcoreapp1.0 
+    $test1res = $LASTEXITCODE 
+    # upload results to AppVeyor
+    $wc = New-Object 'System.Net.WebClient'
+    $wc.UploadFile("https://ci.appveyor.com/api/testresults/nunit3/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+    # try nunit3 
+    # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net40\win7-x64\linq2db.Tests.dll) --x86
+    # nunit3-console.exe (Resolve-Path Tests\Linq\bin\Release\net45\win7-x64\linq2db.Tests.dll) --x86
+    IF ($test1res -ne 0) { exit -1 }
+
+
+artifacts:
+- path: Source\**\*.nupkg
+
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/ili/api/v2
+  api_key:
+    secure: pFvgey1/w68ZvVHFN/GWZdDFjSABpBRfb0XfLnW3wvhlfyEUiSyfr3dAUcbmlpsk
+  skip_symbols: true

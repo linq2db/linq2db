@@ -145,8 +145,6 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		static readonly MethodInfo _getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
-
 		public virtual Expression GetReaderExpression(MappingSchema mappingSchema, IDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
@@ -198,12 +196,13 @@ namespace LinqToDB.DataProvider
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
+			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, _getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
 				fieldType);
 		}
 
-		bool FindExpression(ReaderInfo info, out Expression expr)
+		protected bool FindExpression(ReaderInfo info, out Expression expr)
 		{
 #if DEBUG1
 				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"
@@ -227,8 +226,12 @@ namespace LinqToDB.DataProvider
 
 		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
+#if !NETSTANDARD
 			var st = ((DbDataReader)reader).GetSchemaTable();
 			return st == null || (bool)st.Rows[idx]["AllowDBNull"];
+#else
+			return true;
+#endif
 		}
 
 		#endregion
@@ -320,7 +323,9 @@ namespace LinqToDB.DataProvider
 		}
 
 		public abstract bool            IsCompatibleConnection(IDbConnection connection);
+#if !NETSTANDARD
 		public abstract ISchemaProvider GetSchemaProvider     ();
+#endif
 
 		protected virtual void SetParameterType(IDbDataParameter parameter, DataType dataType)
 		{
@@ -360,9 +365,9 @@ namespace LinqToDB.DataProvider
 			parameter.DbType = dbType;
 		}
 
-		#endregion
+#endregion
 
-		#region Create/Drop Database
+#region Create/Drop Database
 
 		internal static void CreateFileDatabase(
 			string databaseName,
@@ -405,18 +410,18 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region BulkCopy
+#region BulkCopy
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 		{
 			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, dataConnection, options, source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public virtual int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -425,6 +430,6 @@ namespace LinqToDB.DataProvider
 			return new BasicMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

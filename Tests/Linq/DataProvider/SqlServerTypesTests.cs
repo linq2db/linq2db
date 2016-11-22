@@ -76,7 +76,9 @@ namespace Tests.DataProvider
 		[Table("#tmp")]
 		class MyTable
 		{
+#pragma warning disable 0649
 			[Column] public SqlHierarchyId ID;
+#pragma warning restore 0649
 		}
 
 		[Test, SqlServerDataContext]

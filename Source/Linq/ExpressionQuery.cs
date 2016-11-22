@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 
 		protected void Init(IDataContextInfo dataContextInfo, Expression expression)
 		{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE && !NETSTANDARD
 			if (dataContextInfo == null) throw new ArgumentNullException("dataContextInfo");
 
 			DataContextInfo = dataContextInfo;

@@ -1,15 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+
+#if !NETSTANDARD
+
 using System.ServiceModel;
 using System.ServiceModel.Description;
+
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
+
+#if !NETSTANDARD
+
+using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
+
+#endif 
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -26,7 +40,13 @@ namespace Tests
 	{
 		static TestBase()
 		{
-			Console.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+			Console.WriteLine("Tests started in {0}...",
+#if NETSTANDARD
+				System.IO.Directory.GetCurrentDirectory()
+#else
+				Environment.CurrentDirectory
+#endif
+				);
 
 			var traceCount = 0;
 
@@ -41,17 +61,35 @@ namespace Tests
 
 			//Configuration.AvoidSpecificDataProviderAPI = true;
 			//Configuration.Linq.GenerateExpressionTest = true;
-
-			var assemblyPath = typeof(TestBase).Assembly.CodeBase;
+			var assemblyPath = typeof(TestBase).AssemblyEx().CodeBase;
 
 			assemblyPath = Path.GetDirectoryName(assemblyPath.Substring("file:///".Length));
 
-			Environment.CurrentDirectory = assemblyPath;
+			ProjectPath = FindProjectPath(assemblyPath);
 
+#if NETSTANDARD
+			System.IO.Directory.SetCurrentDirectory(assemblyPath);
+#else
+			Environment.CurrentDirectory = assemblyPath;
+#endif
+#if NETSTANDARD
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.Core.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.Core.txt");
+#else
+			var userDataProviders    = Path.Combine(ProjectPath, @"UserDataProviders.txt");
+			var defaultDataProviders = Path.Combine(ProjectPath, @"DefaultDataProviders.txt");
+#endif
+			
 			var providerListFile =
-				File.Exists(Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt")) ?
-					Path.Combine(assemblyPath, @"..\..\UserDataProviders.txt") :
-					Path.Combine(assemblyPath, @"..\..\DefaultDataProviders.txt");
+				File.Exists(userDataProviders) ? userDataProviders : defaultDataProviders;
+
+			if (Directory.Exists(@"Database\Data"))
+				Directory.Delete(@"Database\Data", true);
+
+			Directory.CreateDirectory(@"Database\Data");
+
+			foreach (var file in Directory.GetFiles(@"Database", "*.*"))
+				File.Copy(file, Path.Combine(@"Database\Data\",  Path.GetFileName(file)), true);
 
 			UserProviders =
 				File.ReadAllLines(providerListFile)
@@ -63,8 +101,9 @@ namespace Tests
 						switch (ss.Length)
 						{
 							case 0 : return null;
-							case 1 : return new UserProviderInfo { Name = ss[0].Trim() };
-							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim() };
+							case 1 : return new UserProviderInfo { Name = ss[0].Trim(),                                  ProviderName = ss[0]        };
+							case 2 : return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[0]        };
+							default: return new UserProviderInfo { Name = ss[0].Trim(), ConnectionString = ss[1].Trim(), ProviderName = ss[2].Trim() };
 						}
 					})
 					.ToDictionary(i => i.Name);
@@ -78,12 +117,30 @@ namespace Tests
 
 			//DataConnection.SetConnectionStrings(config);
 
+#if NETSTANDARD
+			DataConnection.DefaultSettings = TxtSettings.Instance;
+			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
+
+			foreach (var provider in UserProviders.Values)
+			{
+				if (string.IsNullOrWhiteSpace(provider.ConnectionString))
+					throw new InvalidOperationException("ConnectionString should be provided");
+
+				if (string.IsNullOrWhiteSpace(provider.ProviderName))
+					throw new InvalidOperationException("provider.ProviderName should be provided");
+
+				TxtSettings.Instance.AddConnectionString(provider.Name,provider.ProviderName, provider.ConnectionString);
+			}
+#else
 			foreach (var provider in UserProviders.Values)
 				if (provider.ConnectionString != null)
 					DataConnection.SetConnectionString(provider.Name, provider.ConnectionString);
+#endif
+
 
 			DataConnection.TurnTraceSwitchOn();
 
+#if !NETSTANDARD
 			LinqService.TypeResolver = str =>
 			{
 				switch (str)
@@ -93,13 +150,29 @@ namespace Tests
 					default                   : return null;
 				}
 			};
+#endif
 		}
 
+		protected static readonly string ProjectPath;
+
+		protected static string FindProjectPath(string basePath)
+		{
+			while (!File.Exists(Path.Combine(basePath, "DefaultDataProviders.txt")))
+			{
+				basePath = Path.Combine(basePath, @"..\");
+			}
+
+			return basePath;
+		}
+
+#if !NETSTANDARD
 		const int IP = 22654;
 		static bool _isHostOpen;
+#endif
 
 		static void OpenHost()
 		{
+#if !NETSTANDARD
 			if (_isHostOpen)
 				return;
 
@@ -125,12 +198,14 @@ namespace Tests
 				"LinqOverWCF");
 
 			host.Open();
+#endif
 		}
 
 		public class UserProviderInfo
 		{
 			public string Name;
 			public string ConnectionString;
+			public string ProviderName;
 		}
 
 		internal static readonly Dictionary<string,UserProviderInfo> UserProviders;
@@ -156,6 +231,8 @@ namespace Tests
 			ProviderName.SapHana,
 			TestProvName.SqlAzure,
 			TestProvName.MariaDB,
+			TestProvName.MySql57,
+			TestProvName.SQLiteMs
 		};
 
 		[AttributeUsage(AttributeTargets.Method)]
@@ -173,11 +250,15 @@ namespace Tests
 			static void SetName(TestMethod test, IMethodInfo method, string provider, bool isLinqService)
 			{
 				var name = method.Name + "." + provider;
-
 				if (isLinqService)
 					name += ".LinqService";
 
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
+			}
+
+			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			{
+				yield return new object[] {provider};
 			}
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
@@ -196,42 +277,53 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
-					var data = new TestCaseParameters(new object[] { provider });
 
-					test = builder.BuildTestMethod(method, suite, data);
-
-					foreach (var attr in explic)
-						attr.ApplyToTest(test);
-
-					test.Properties.Set(PropertyNames.Category, provider);
-					SetName(test, method, provider, false);
-
-					if (isIgnore)
+					foreach (var parameters in GetParameters(provider))
 					{
-						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
-							test.RunState = RunState.Ignored;
+						var data = new TestCaseParameters(parameters);
 
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
-						continue;
-					}
-
-					hasTest = true;
-
-					yield return test;
-
-					if (_includeLinqService)
-					{
-						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
 						test = builder.BuildTestMethod(method, suite, data);
 
 						foreach (var attr in explic)
 							attr.ApplyToTest(test);
 
 						test.Properties.Set(PropertyNames.Category, provider);
-						SetName(test, method, provider, true);
+						SetName(test, method, provider, false);
+
+						if (isIgnore)
+						{
+							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+								test.RunState = RunState.Ignored;
+
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							continue;
+						}
+
+						hasTest = true;
 
 						yield return test;
+
+#if !NETSTANDARD
 					}
+
+					if (!isIgnore && _includeLinqService)
+					{
+						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						{
+
+							var data = new TestCaseParameters(paremeters);
+							test = builder.BuildTestMethod(method, suite, data);
+
+							foreach (var attr in explic)
+								attr.ApplyToTest(test);
+
+							test.Properties.Set(PropertyNames.Category, provider);
+							SetName(test, method, provider, true);
+
+							yield return test;
+						}
+					}
+#endif
 				}
 
 				if (!hasTest)
@@ -281,10 +373,11 @@ namespace Tests
 			}
 		}
 
-		protected ITestDataContext GetDataContext(string configuration)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
+#if !NETSTANDARD
 				OpenHost();
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -292,12 +385,20 @@ namespace Tests
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
-				return dx;
-			}
+				if (ms != null)
+					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
 
+				return dx;
+#else
+				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
+#endif
+			}
 			Debug.WriteLine(configuration, "Provider ");
 
-			return new TestDataConnection(configuration);
+			var res = new TestDataConnection(configuration);
+			if (ms != null)
+				res.AddMappingSchema(ms);
+			return res;
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
@@ -407,7 +508,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private          List<Parent> _parent;
 		protected IEnumerable<Parent>  Parent
@@ -588,9 +689,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Northwind
+#region Northwind
 
 		private List<Northwind.Category> _category;
 		public  List<Northwind.Category>  Category
@@ -763,7 +864,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result)
 		{
@@ -778,13 +879,18 @@ namespace Tests
 
 			var exceptExpected = exceptExpectedList.Count;
 			var exceptResult   = exceptResultList.  Count;
+			var message        = new StringBuilder();
 
 			if (exceptResult != 0 || exceptExpected != 0)
 				for (var i = 0; i < resultList.Count; i++)
-					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+				{ 
+					Debug.  WriteLine   ("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendFormat("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
+					message.AppendLine  ();
+				}
 
-			Assert.AreEqual(0, exceptExpected);
-			Assert.AreEqual(0, exceptResult);
+			Assert.AreEqual(0, exceptExpected, "Expect Expected" + Environment.NewLine + message.ToString());
+			Assert.AreEqual(0, exceptResult,   "Expect Result"   + Environment.NewLine + message.ToString());
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
@@ -833,4 +939,13 @@ namespace Tests
 			Assert.AreEqual(string.Join("\n", ss), result.Trim('\r', '\n'));
 		}
 	}
+
+    public static class Helpers
+    {
+        public static string ToInvariantString<T>(this T data)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}", data)
+                .Replace(',', '.').Trim(' ', '.', '0');
+        }
+    }
 }

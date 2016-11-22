@@ -326,7 +326,7 @@ namespace Tests.Linq
 			public int GrandChildID;
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void TestTernary1(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -346,7 +346,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void TestTernary2(string context)
 		{
 			var ids = new[] { 1, 5 };
@@ -523,11 +523,13 @@ namespace Tests.Linq
 		[Table("Parent")]
 		class Parent170
 		{
+#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170 Parent;
+#pragma warning restore 0649
 		}
 
 		[Test, DataContextSource]
@@ -544,10 +546,12 @@ namespace Tests.Linq
 		[Table("Child")]
 		class StorageTestClass
 		{
+#pragma warning disable 0649
 			[Column] public int ParentID;
 			[Column] public int ChildID;
 
 			Parent _parent;
+#pragma warning restore 0649
 
 			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent")]
 			public Parent Parent
