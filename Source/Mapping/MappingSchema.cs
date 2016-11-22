@@ -1021,5 +1021,26 @@ namespace LinqToDB.Mapping
 		//}
 
 		#endregion
+
+		#region Enum
+
+		public Type GetDefaultFromEnumType(Type enumType)
+		{
+			foreach (var info in Schemas)
+			{
+				var type = info.GetDefaultFromEnumType(enumType);
+				if (type != null)
+					return type;
+			}
+			return null;
+		}
+
+		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
+		{
+			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
+		}
+
+		#endregion
+
 	}
 }

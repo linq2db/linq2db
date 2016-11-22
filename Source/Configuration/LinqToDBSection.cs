@@ -1,13 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Security;
 
 namespace LinqToDB.Configuration
 {
-	using System.Collections;
-	using System.Collections.Generic;
-	using System.Linq;
-
 	/// <summary>
 	/// Implementation of custom configuration section.
 	/// </summary>

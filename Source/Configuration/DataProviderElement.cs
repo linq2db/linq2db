@@ -1,10 +1,13 @@
+using System;
 using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.DataProvider;
+
 namespace LinqToDB.Configuration
 {
-	public class DataProviderElement : ElementBase, IDataProviderSettings
+	public sealed class DataProviderElement : ElementBase, IDataProviderSettings
 	{
 		static readonly ConfigurationProperty _propTypeName = new ConfigurationProperty("type",    typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 		static readonly ConfigurationProperty _propName     = new ConfigurationProperty("name",    typeof(string), string.Empty, ConfigurationPropertyOptions.None);

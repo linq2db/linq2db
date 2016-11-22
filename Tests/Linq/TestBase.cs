@@ -13,9 +13,13 @@ using System.ServiceModel.Description;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+<<<<<<< HEAD
 using LinqToDB.Extensions;
 
 #if !NETSTANDARD
+=======
+using LinqToDB.Mapping;
+>>>>>>> 2578a777d61663ac7311430d2d44f94a382187a2
 using LinqToDB.ServiceModel;
 #endif 
 
@@ -250,6 +254,11 @@ namespace Tests
 				test.Name = method.TypeInfo.FullName.Replace("Tests.", "") + "." + name;
 			}
 
+			protected virtual IEnumerable<object[]> GetParameters(string provider)
+			{
+				yield return new object[] {provider};
+			}
+
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
 			{
 				var explic = method.GetCustomAttributes<ExplicitAttribute>(true)
@@ -266,42 +275,54 @@ namespace Tests
 				{
 					var isIgnore = !UserProviders.ContainsKey(provider);
 
-					var data = new TestCaseParameters(new object[] { provider });
 
-					test = builder.BuildTestMethod(method, suite, data);
-
-					foreach (var attr in explic)
-						attr.ApplyToTest(test);
-
-					test.Properties.Set(PropertyNames.Category, provider);
-					SetName(test, method, provider, false);
-
-					if (isIgnore)
+					foreach (var parameters in GetParameters(provider))
 					{
-						if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
-							test.RunState = RunState.Ignored;
+						var data = new TestCaseParameters(parameters);
 
-						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
-						continue;
-					}
-
-					hasTest = true;
-
-					yield return test;
-
-#if !NETSTANDARD
-					if (_includeLinqService)
-					{
-						data = new TestCaseParameters(new object[] { provider + ".LinqService" });
 						test = builder.BuildTestMethod(method, suite, data);
 
 						foreach (var attr in explic)
 							attr.ApplyToTest(test);
 
 						test.Properties.Set(PropertyNames.Category, provider);
-						SetName(test, method, provider, true);
+						SetName(test, method, provider, false);
 
+						if (isIgnore)
+						{
+							if (test.RunState != RunState.NotRunnable && test.RunState != RunState.Explicit)
+								test.RunState = RunState.Ignored;
+
+							test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See UserDataProviders.txt");
+							continue;
+						}
+
+						hasTest = true;
+
+<<<<<<< HEAD
+#if !NETSTANDARD
+					if (_includeLinqService)
+=======
 						yield return test;
+					}
+
+					if (!isIgnore && _includeLinqService)
+>>>>>>> 2578a777d61663ac7311430d2d44f94a382187a2
+					{
+						foreach (var paremeters in GetParameters(provider + ".LinqService"))
+						{
+
+							var data = new TestCaseParameters(paremeters);
+							test = builder.BuildTestMethod(method, suite, data);
+
+							foreach (var attr in explic)
+								attr.ApplyToTest(test);
+
+							test.Properties.Set(PropertyNames.Category, provider);
+							SetName(test, method, provider, true);
+
+							yield return test;
+						}
 					}
 #endif
 				}
@@ -353,7 +374,7 @@ namespace Tests
 			}
 		}
 
-		protected ITestDataContext GetDataContext(string configuration)
+		protected ITestDataContext GetDataContext(string configuration, MappingSchema ms = null)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -365,6 +386,9 @@ namespace Tests
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
+				if (ms != null)
+					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+
 				return dx;
 #else
 				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
@@ -372,7 +396,10 @@ namespace Tests
 			}
 			Debug.WriteLine(configuration, "Provider ");
 
-			return new TestDataConnection(configuration);
+			var res = new TestDataConnection(configuration);
+			if (ms != null)
+				res.AddMappingSchema(ms);
+			return res;
 		}
 
 		protected void TestOnePerson(int id, string firstName, IQueryable<Person> persons)

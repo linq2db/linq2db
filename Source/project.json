@@ -1,5 +1,5 @@
-﻿{
-	"name": "linq2db.core",
+{
+	"name": "linq2db.Core",
 	"version": "1.7.5-*",
 	"authors": ["Igor Tkachev"],
 	"description":

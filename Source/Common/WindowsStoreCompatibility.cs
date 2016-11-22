@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 // ReSharper disable CheckNamespace
 
 namespace System
 {
-	using Linq;
-	using LinqToDB.Extensions;
-
 	[ComVisible(true)]
 	public interface ICloneable
 	{

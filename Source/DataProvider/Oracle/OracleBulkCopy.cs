@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.Oracle
 				helper.StringBuilder.Length -= 2;
 
 				helper.StringBuilder.Append(") VALUES (");
-				helper.BuildColumns(item);
+				helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
 				helper.StringBuilder.AppendLine(")");
 
 				helper.RowsCopied.RowsCopied++;
@@ -186,6 +186,8 @@ namespace LinqToDB.DataProvider.Oracle
 			for (var i = 0; i < helper.Columns.Length; i++)
 				helper.StringBuilder.Append(":p" + ( i + 1)).Append(", ");
 
+			helper.StringBuilder.Length -= 2;
+
 			helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
@@ -202,6 +204,8 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (!Execute(dataConnection, helper, list))
 						return helper.RowsCopied;
+
+					list.Clear();
 				}
 			}
 

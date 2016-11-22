@@ -421,7 +421,12 @@ namespace LinqToDB.Data
 		{
 			ConfigurationInfo ci;
 
-			if (_configurations.TryGetValue(configurationString ?? DefaultConfiguration, out ci))
+			var key = configurationString ?? DefaultConfiguration;
+
+			if (key == null)
+				throw new LinqToDBException("Configuration string is not provided.");
+
+			if (_configurations.TryGetValue(key, out ci))
 				return ci;
 
 			throw new LinqToDBException("Configuration '{0}' is not defined.".Args(configurationString));
