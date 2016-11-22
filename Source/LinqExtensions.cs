@@ -969,6 +969,42 @@ namespace LinqToDB
 
 		#endregion
 
+		#region IOrderedQueryable
+
+		static readonly MethodInfo _thenOrBy = MemberHelper.MethodOf(() => ThenOrBy((IQueryable<int>)null,(Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
+
+		public static IOrderedQueryable<TSource> ThenOrBy<TSource, TKey>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
+		{
+			if (source      == null) throw new ArgumentNullException("source");
+			if (keySelector == null) throw new ArgumentNullException("keySelector");
+
+			return (IOrderedQueryable<TSource>)source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					_thenOrBy.MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }),
+					new[] { source.Expression, Expression.Quote(keySelector) }));
+		}
+
+		static readonly MethodInfo _thenOrByDescending = MemberHelper.MethodOf(() => ThenOrByDescending((IQueryable<int>)null, (Expression<Func<int, int>>)null)).GetGenericMethodDefinition();
+
+		public static IOrderedQueryable<TSource> ThenOrByDescending<TSource, TKey>(
+			[NotNull]                this IQueryable<TSource> source,
+			[NotNull, InstantHandle] Expression<Func<TSource, TKey>> keySelector)
+		{
+			if (source      == null) throw new ArgumentNullException("source");
+			if (keySelector == null) throw new ArgumentNullException("keySelector");
+
+			return (IOrderedQueryable<TSource>)source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					_thenOrByDescending.MakeGenericMethod(new[] { typeof(TSource), typeof(TKey) }),
+					new[] { source.Expression, Expression.Quote(keySelector) }));
+		}
+
+		#endregion
+
 		static readonly MethodInfo _setMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null)).GetGenericMethodDefinition();
 
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
