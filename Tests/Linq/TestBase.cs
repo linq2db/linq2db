@@ -5,22 +5,24 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 #if !NETSTANDARD
+
 using System.ServiceModel;
 using System.ServiceModel.Description;
-#endif 
+
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-<<<<<<< HEAD
 using LinqToDB.Extensions;
 
 #if !NETSTANDARD
-=======
+
 using LinqToDB.Mapping;
->>>>>>> 2578a777d61663ac7311430d2d44f94a382187a2
 using LinqToDB.ServiceModel;
+
 #endif 
 
 using NUnit.Framework;
@@ -299,15 +301,12 @@ namespace Tests
 
 						hasTest = true;
 
-<<<<<<< HEAD
-#if !NETSTANDARD
-					if (_includeLinqService)
-=======
 						yield return test;
+
+#if !NETSTANDARD
 					}
 
 					if (!isIgnore && _includeLinqService)
->>>>>>> 2578a777d61663ac7311430d2d44f94a382187a2
 					{
 						foreach (var paremeters in GetParameters(provider + ".LinqService"))
 						{
