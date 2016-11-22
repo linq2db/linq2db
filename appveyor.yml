@@ -53,7 +53,7 @@ after_build:
 - ps: nuget pack Nuget\linq2db.nuspec -version "$env:nugetVersion" 
 
 artifacts:
-- path: \**\*.nupkg
+- path: \**\linq2db*.nupkg
 
 test: 
   assemblies:
