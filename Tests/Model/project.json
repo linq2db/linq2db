@@ -7,7 +7,9 @@
 	},
 
 	"dependencies": {
-		"Source": "1.7.5-*"
+			"Source": {
+				"target": "project"
+			}
 	},
 
 	"frameworks": {

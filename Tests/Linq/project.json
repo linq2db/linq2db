@@ -12,9 +12,11 @@
 	},
 
 	"dependencies": {
-		"Model": "1.0.0-*",
-		"NUnit": "3.4.1"
-	},
+			"Model": {
+				"target": "project"
+			},
+				"NUnit": "3.4.1"
+			},
 
 	"testRunner": "nunit",
 

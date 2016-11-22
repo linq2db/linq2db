@@ -17,10 +17,10 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 #if !NETSTANDARD
 
-using LinqToDB.Mapping;
 using LinqToDB.ServiceModel;
 
 #endif 
@@ -303,8 +303,8 @@ namespace Tests
 
 						yield return test;
 
-#if !NETSTANDARD
 					}
+#if !NETSTANDARD
 
 					if (!isIgnore && _includeLinqService)
 					{

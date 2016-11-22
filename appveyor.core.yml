@@ -1,6 +1,10 @@
-version: 1.7.5.{build}
-
 configuration: Release
+
+environment:
+  packageVersion: 1.7.5
+
+version: $(packageVersion).{build}
+
 
 cache:
 - packages -> **\packages.config
@@ -20,17 +24,22 @@ services:
 - postgresql
 
 before_build:
-- cmd: dotnet restore Source/project.json
-- cmd: dotnet restore Tests/Model/project.json
-- cmd: dotnet restore Tests/Linq/project.json
-- cmd: dotnet restore Tests/Tests.NetCore/project.json
+- cmd: dotnet restore 
 
 build:
   project: linq2db.core.sln
   verbosity: minimal
 
 after_build:
-- cmd: dotnet pack --no-build Source/project.json --version-suffix=beta%APPVEYOR_BUILD_NUMBER% -c=Release
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -eq "release") 
+    {
+       dotnet pack --no-build Source/project.json -c=Release
+    }
+    else
+    {
+       dotnet pack --no-build Source/project.json --version-suffix="rc$env:APPVEYOR_BUILD_NUMBER" -c=Release
+    }
 
 before_test:
 - ps: |
@@ -56,7 +65,7 @@ artifacts:
 
 deploy:
 - provider: NuGet
-  server: https://www.myget.org/F/ili/api/v2
+  server: https://www.myget.org/F/linq2db/api/v2
   api_key:
-    secure: pFvgey1/w68ZvVHFN/GWZdDFjSABpBRfb0XfLnW3wvhlfyEUiSyfr3dAUcbmlpsk
+    secure: LDw0jeA1Yo3R4/TKv2kmlgJR8dTT6Wun2MONq3uDvtVQJG4LOU9LjvVTAc7IgRfm
   skip_symbols: true

@@ -13,16 +13,15 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class ConverterInsertTests : TestBase
 	{
+#pragma warning disable 0649
 		[Table]
 		new class Person
 		{
-#pragma warning disable 0649
 			[Identity] public int                       PersonID;
 			[Column]   public Dictionary<string,string> FirstName;
 			[Column]   public string                    LastName;
 			[Column]   public string                    MiddleName;
 			[Column]   public string                    Gender;
-#pragma warning restore 0649
 		}
 
 		public enum Gender
@@ -32,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Person")]
-		new class Person2
+		class Person2
 		{
 			[Identity] public int                       PersonID;
 			[Column]   public Dictionary<string,string> FirstName;
@@ -42,7 +41,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Person")]
-		new class PurePerson
+		class PurePerson
 		{
 			[Identity] public int                       PersonID;
 			[Column]   public string                    FirstName;
@@ -50,6 +49,7 @@ namespace Tests.UserTests
 			[Column]   public string                    MiddleName;
 			[Column]   public string                    Gender;
 		}
+#pragma warning restore 0649
 
 		[Test, DataContextSource]
 		public void Test(string context)
