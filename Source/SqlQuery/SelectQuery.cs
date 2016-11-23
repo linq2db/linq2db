@@ -17,25 +17,6 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		static readonly Dictionary<string,object> _reservedWords = new Dictionary<string,object>();
-
-		static SelectQuery()
-		{
-			var assembly = typeof(SelectQuery).AssemblyEx();
-			var name     = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt"));
-#if NETFX_CORE
-			using (var stream = assembly.GetManifestResourceStream(name))
-#else
-			using (var stream = assembly.GetManifestResourceStream(name))
-#endif
-			using (var reader = new StreamReader(stream))
-			{
-				string s;
-				while ((s = reader.ReadLine()) != null)
-					_reservedWords.Add(s, s);
-			}
-		}
-
 		public SelectQuery()
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
@@ -3580,7 +3561,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var s = alias.ToUpper();
 
-				if (!_aliases.ContainsKey(s) && !_reservedWords.ContainsKey(s))
+				if (!_aliases.ContainsKey(s) && !ReservedWords.ReservedWordsDictionary.ContainsKey(s))
 				{
 					_aliases.Add(s, s);
 					break;
