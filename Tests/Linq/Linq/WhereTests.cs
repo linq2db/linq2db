@@ -909,9 +909,9 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SelectNestedCalculatedTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					from r in from o in    Order select o.Freight * 1000 where r > 100000 select r / 1000,
+					from r in from o in GetNorthwindAsList(context).Order select o.Freight * 1000 where r > 100000 select r / 1000,
 					from r in from o in db.Order select o.Freight * 1000 where r > 100000 select r / 1000);
 		}
 

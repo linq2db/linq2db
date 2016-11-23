@@ -12,7 +12,7 @@ namespace Tests.Model
 {
 	public class NorthwindDB : DataConnection
 	{
-		public NorthwindDB() : base("Northwind")
+		public NorthwindDB(string configurationString) : base(configurationString)
 		{
 		}
 

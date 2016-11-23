@@ -424,6 +424,10 @@
     <Content Include="AppveyorDataProviders.txt" />
     <Content Include="DefaultDataProviders.txt" />
     <Content Include="SqlServerTypes\readme.htm" />
+    <Content Include="..\..\Data\Northwind.sqlite">
+      <Link>Database\Northwind.sqlite</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="..\..\Data\TestData.sqlite">
       <Link>Database\TestData.sqlite</Link>
     </None>

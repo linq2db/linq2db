@@ -249,10 +249,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void AllNestedTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					from c in    Customer
-					where    Order.Where(o => o.Customer == c).All(o =>    Employee.Where(e => o.Employee == e).Any(e => e.FirstName.StartsWith("A")))
+					from c in GetNorthwindAsList(context).Customer
+					where GetNorthwindAsList(context).Order.Where(o => o.Customer == c).All(o => GetNorthwindAsList(context).Employee.Where(e => o.Employee == e).Any(e => e.FirstName.StartsWith("A")))
 					select c,
 					from c in db.Customer
 					where db.Order.Where(o => o.Customer == c).All(o => db.Employee.Where(e => o.Employee == e).Any(e => e.FirstName.StartsWith("A")))
@@ -262,12 +262,12 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void ComplexAllTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					from o in Order
+					from o in GetNorthwindAsList(context).Order
 					where
-						Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
-						Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
+						GetNorthwindAsList(context).Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
+						GetNorthwindAsList(context).Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
 					select o,
 					from o in db.Order
 					where

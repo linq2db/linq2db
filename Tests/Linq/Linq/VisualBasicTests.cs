@@ -57,10 +57,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SearchCondition2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				AreEqual(
-					from cust in Customer
+					from cust in GetNorthwindAsList(context).Customer
 					where cust.Orders.Count > 0 && cust.CompanyName.StartsWith("H")
 					select cust.CustomerID,
 					VisualBasicCommon.SearchCondition2(db));
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SearchCondition3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var cQuery =
 					from order in db.Order
@@ -90,7 +90,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SearchCondition4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var cQuery =
 					from order in db.Order

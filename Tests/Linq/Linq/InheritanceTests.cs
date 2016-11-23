@@ -143,9 +143,9 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastAsTest1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					   DiscontinuedProduct.ToList()
+					   GetNorthwindAsList(context).DiscontinuedProduct.ToList()
 						.Select(p => p as Northwind.Product)
 						.Select(p => p == null ? "NULL" : p.ProductName),
 					db.DiscontinuedProduct
@@ -156,9 +156,9 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastAsTest11(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					   DiscontinuedProduct.ToList()
+					   GetNorthwindAsList(context).DiscontinuedProduct.ToList()
 						.Select(p => new { p = p as Northwind.Product })
 						.Select(p => p.p == null ? "NULL" : p.p.ProductName),
 					db.DiscontinuedProduct
@@ -169,9 +169,9 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastAsTest2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
-					   Product.ToList()
+					   GetNorthwindAsList(context).Product.ToList()
 						.Select(p => p as Northwind.DiscontinuedProduct)
 						.Select(p => p == null ? "NULL" : p.ProductName),
 					db.Product
@@ -182,9 +182,9 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void FirstOrDefault(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				Assert.AreEqual(
-					   DiscontinuedProduct.FirstOrDefault().ProductID,
+					   GetNorthwindAsList(context).DiscontinuedProduct.FirstOrDefault().ProductID,
 					db.DiscontinuedProduct.FirstOrDefault().ProductID);
 		}
 
@@ -292,7 +292,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void ReferenceNavigation(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result =
 					from od in db.OrderDetail
@@ -318,7 +318,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastIsChildConditional1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
@@ -333,7 +333,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastIsChildConditional2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct);
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct);
@@ -349,10 +349,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void TypeCastIsChild(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result   = db.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
-				var expected =    Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
+				var expected = GetNorthwindAsList(context).Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 
 				Assert.Greater(result.Count, 0);
 				Assert.AreEqual(result.Count, expected.Count);
@@ -394,10 +394,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Test15(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result   = db.DiscontinuedProduct.Select(p => p).ToList();
-				var expected =    DiscontinuedProduct.Select(p => p).ToList();
+				var expected = GetNorthwindAsList(context).DiscontinuedProduct.Select(p => p).ToList();
 
 				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
 			}
@@ -406,10 +406,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Test16(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result   = db.DiscontinuedProduct.ToList();
-				var expected =    DiscontinuedProduct.ToList();
+				var expected = GetNorthwindAsList(context).DiscontinuedProduct.ToList();
 
 				Assert.That(result.Count, Is.Not.EqualTo(0).And.EqualTo(expected.Count));
 			}

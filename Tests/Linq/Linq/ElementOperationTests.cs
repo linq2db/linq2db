@@ -194,10 +194,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void FirstOrDefaultEntitySet(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				AreEqual(
-					   Customer.Select(c => c.Orders.FirstOrDefault()),
+					   GetNorthwindAsList(context).Customer.Select(c => c.Orders.FirstOrDefault()),
 					db.Customer.Select(c => c.Orders.FirstOrDefault()));
 			}
 		}
@@ -205,10 +205,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void NestedSingleOrDefaultTest(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				AreEqual(
-					   Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
+					   GetNorthwindAsList(context).Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
 					db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()));
 			}
 		}
@@ -216,7 +216,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void MultipleQuery(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q =
 					from p in db.Product

@@ -1,6 +1,7 @@
 ﻿Access
 SqlCe
 SQLite
+NorthwindSqlite
 
 MySql57        * Server=localhost;Port=3306;Database=TestData;Uid=root;Pwd=Password12!;charset=utf8;                                            * MySql.Data.MySqlClient
 PostgreSQL     * Server=localhost;Port=5432;Database=TestData;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100 * Npgsql

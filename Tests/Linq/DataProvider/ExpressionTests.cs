@@ -5,7 +5,9 @@ using System.Linq.Expressions;
 using NUnit.Framework;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.SQLite;
 
 namespace Tests.DataProvider
 {
@@ -19,12 +21,22 @@ namespace Tests.DataProvider
 		public void Test1(string context)
 		{
 #if !NETSTANDARD
-			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+			var connectionString = ConfigurationManager.ConnectionStrings[context].ConnectionString;
 #else
 			var connectionString = "TODO";
 #endif
 
-			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
+			IDataProvider provider;
+			if (context == "NorthwindSqlite")
+			{
+				provider = new SQLiteDataProvider();
+			}
+			else
+			{
+				provider = SqlServerTools.GetDataProvider();
+			}
+
+			using (var conn = new DataConnection(provider, connectionString))
 			{
 				conn.InitCommand(CommandType.Text, "SELECT 1", null, null);
 
