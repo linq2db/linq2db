@@ -194,12 +194,17 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void FirstOrDefaultEntitySet(string context)
 		{
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
 			using (var db = new NorthwindDB(context))
 			{
 				AreEqual(
 					   GetNorthwindAsList(context).Customer.Select(c => c.Orders.FirstOrDefault()),
 					db.Customer.Select(c => c.Orders.FirstOrDefault()));
 			}
+
+			LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
+
 		}
 
 		[Test, NorthwindDataContext]

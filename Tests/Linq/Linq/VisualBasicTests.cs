@@ -70,6 +70,8 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void SearchCondition3(string context)
 		{
+			LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.WrapDateTimeParametersInDateFunction = true;
+
 			using (var db = new NorthwindDB(context))
 			{
 				var cQuery =
@@ -85,11 +87,15 @@ namespace Tests.Linq
 					cSharpResults,
 					vbResults);
 			}
+
+			LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.WrapDateTimeParametersInDateFunction = false;
 		}
 
 		[Test, NorthwindDataContext]
 		public void SearchCondition4(string context)
 		{
+			LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.WrapDateTimeParametersInDateFunction = true;
+
 			using (var db = new NorthwindDB(context))
 			{
 				var cQuery =
@@ -105,6 +111,8 @@ namespace Tests.Linq
 					cSharpResults,
 					vbResults);
 			}
+
+			LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.WrapDateTimeParametersInDateFunction = false;
 		}
 	}
 }
