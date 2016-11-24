@@ -5,10 +5,10 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using SqlQuery;
-	using SqlProvider;
+    using SqlQuery;
+    using SqlProvider;
 
-	public class SQLiteSqlBuilder : BasicSqlBuilder
+    public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
 		public SQLiteSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -119,6 +119,12 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append(fieldNames.Aggregate((f1,f2) => f1 + ", " + f2));
 				StringBuilder.Append(")");
 			}
+		}
+
+		protected override void BuildUnion(int commandNumber, IList<SelectQuery.Union> unions, System.Text.StringBuilder sb, bool skipAlias)
+		{
+			sb.AppendLine("SELECT * FROM ");
+			base.BuildUnion(commandNumber, unions, sb, skipAlias);
 		}
 	}
 }

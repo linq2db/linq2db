@@ -272,7 +272,7 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
-		[Test, DataContextSource(ProviderName.Informix)]
+		[Test, DataContextSource]
 		public void Concat89(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -283,7 +283,21 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID                        })));
 		}
 
-		[Test, DataContextSource]
+	    [Test, DataContextSource]
+	    public void ConcatWithUnion(string context)
+	    {
+		    using (var db = GetDataContext(context))
+			    AreEqual(
+				    Parent.Select(c => new Parent { ParentID = c.ParentID }).Union(
+				    Parent.Select(c => new Parent { ParentID = c.ParentID })).Concat(
+					    Parent.Select(c => new Parent { ParentID = c.ParentID })),
+
+			      db.Parent.Select(c => new Parent { ParentID = c.ParentID }).Union(
+			      db.Parent.Select(c => new Parent { ParentID = c.ParentID })).Concat(
+				     db.Parent.Select(c => new Parent { ParentID = c.ParentID })));
+	    }
+
+	   [Test, DataContextSource]
 		public void Union1(string context)
 		{
 			using (var db = GetDataContext(context))
