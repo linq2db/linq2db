@@ -112,7 +112,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SQLite)]
+		[Test, DataContextSource(ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void TakeDistinct(string context)
 		{
 			using (var db = GetDataContext(context))

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		static readonly Dictionary<MemberInfo,object> _cache = new Dictionary<MemberInfo,object>();
+		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
 
 		public T[] GetAttributes<T>(MemberInfo memberInfo, bool inherit)
 			where T : Attribute
@@ -65,7 +66,7 @@ namespace LinqToDB.Metadata
 					else
 					{
 						var pi = (PropertyInfo)memberInfo;
-						var gm = pi.GetGetMethod();
+						var gm = pi.GetGetMethodEx();
 
 						if (gm != null)
 						{

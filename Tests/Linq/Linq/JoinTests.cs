@@ -856,7 +856,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		[Test, IncludeDataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs)]
 		public void LeftJoinTest2(string context)
 		{
 			// THIS TEST MUST BE RUN IN RELEASE CONFIGURATION (BECAUSE IT PASSES UNDER DEBUG CONFIGURATION)

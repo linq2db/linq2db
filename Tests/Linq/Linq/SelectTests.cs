@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+#if !NETSTANDARD
 using System.Windows.Forms;
+#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -308,7 +311,7 @@ namespace Tests.Linq
 
 				var selectCount = ((DataConnection)db).LastQuery
 					.Split(' ', '\t', '\n', '\r')
-					.Count(s => s.Equals("select", StringComparison.InvariantCultureIgnoreCase));
+					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
 				Assert.AreEqual(1, selectCount, "Why do we need \"select from select\"??");
 			}
@@ -450,6 +453,7 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource]
 		public void ConstractClass(string context)
 		{
@@ -462,6 +466,7 @@ namespace Tests.Linq
 						Tag        = f.ParentID
 					}).ToList();
 		}
+#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{
@@ -524,14 +529,14 @@ namespace Tests.Linq
 		{
 			public class Factory : IObjectFactory
 			{
-				#region IObjectFactory Members
+#region IObjectFactory Members
 
 				public object CreateInstance(TypeAccessor typeAccessor)
 				{
 					return typeAccessor.CreateInstance();
 				}
 
-				#endregion
+#endregion
 			}
 
 			public int    PersonID;

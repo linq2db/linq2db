@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -25,7 +26,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			try
 			{
-				var path = typeof(SapHanaTools).Assembly.CodeBase.Replace("file:///", "");
+				var path = typeof(SapHanaTools).AssemblyEx().CodeBase.Replace("file:///", "");
 
 				path = Path.GetDirectoryName(path);
 

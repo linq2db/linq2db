@@ -158,7 +158,7 @@ namespace Tests.Linq
 				select p;
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void MethodExpression8(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -177,10 +177,10 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test]
-		public void MethodExpression9()
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void MethodExpression9(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new TestDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -196,10 +196,10 @@ namespace Tests.Linq
 					select ch);
 		}
 
-		[Test]
-		public void MethodExpression10()
+		[Test, IncludeDataContextSource(ProviderName.SQLite)]
+		public void MethodExpression10(string context)
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new TestDataConnection(context))
 				AreEqual(
 					from ch in Child
 					from p in

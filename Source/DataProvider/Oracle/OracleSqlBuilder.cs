@@ -182,7 +182,10 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Length > 0)
 						StringBuilder.Append('(').Append(type.Length).Append(')');
 					break;
-				default                   : base.BuildDataType(type);            break;
+				case DataType.Boolean    : StringBuilder.Append("Char(1)");      break;
+				case DataType.NText      : StringBuilder.Append("NClob");        break;
+				case DataType.Text       : StringBuilder.Append("Clob");         break;
+				default                  : base.BuildDataType(type);             break;
 			}
 		}
 

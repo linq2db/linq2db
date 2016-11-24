@@ -150,7 +150,7 @@ namespace Tests.Linq
 				AreEqual(Child.Skip(n), db.Child.Skip(() => n));
 		}
 
-		[Test, DataContextSource(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SkipCount(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -192,7 +192,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SQLite, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.Access)]
 		public void SkipTake4(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -242,7 +242,7 @@ namespace Tests.Linq
 			AreEqual(q4, q2);
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SkipTake6(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -252,7 +252,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.SqlCe, ProviderName.SqlServer2000, ProviderName.Sybase, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void SkipTakeCount(string context)
 		{
 			using (var db = GetDataContext(context))

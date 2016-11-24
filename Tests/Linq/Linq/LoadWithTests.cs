@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+#if !NOIMMUTABLE
 using System.Collections.Immutable;
+#endif
 using System.Linq;
 
 using LinqToDB;
@@ -54,8 +56,10 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
+#if !NOIMMUTABLE
 				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
 					t => ImmutableList.Create(t.ToArray()));
+#endif
 
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
@@ -77,8 +81,10 @@ namespace Tests.Linq
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
+#if !NOIMMUTABLE
 				mappingSchema.SetConvertExpression<IEnumerable<T>,ImmutableList<T>>(
 					t => ImmutableList.Create(t.ToArray()));
+#endif
 			}
 		}
 

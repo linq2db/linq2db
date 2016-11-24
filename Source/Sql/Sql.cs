@@ -344,7 +344,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern)
 		{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null &&
@@ -355,7 +355,7 @@ namespace LinqToDB
 		[Sql.Function(ServerSideOnly = true)]
 		public static bool Like(string matchExpression, string pattern, char? escapeCharacter)
 		{
-#if SILVERLIGHT || NETFX_CORE
+#if SILVERLIGHT || NETFX_CORE || NETSTANDARD
 			throw new InvalidOperationException();
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&

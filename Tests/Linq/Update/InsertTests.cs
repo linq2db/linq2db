@@ -17,7 +17,7 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertTests : TestBase
 	{
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void DistinctInsert1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, ProviderName.Access)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.PostgreSQL, ProviderName.SQLite, TestProvName.SQLiteMs, ProviderName.Access)]
 		public void DistinctInsert2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -460,7 +460,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void InsertUnion1(string context)
 		{
 			Child.Count();
@@ -766,9 +766,10 @@ namespace Tests.xUpdate
 
 		class GuidID
 		{
-			[Identity]
-			public Guid ID;
-			public int  Field1;
+#pragma warning disable 0649
+			[Identity] public Guid ID;
+			           public int  Field1;
+#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(
@@ -783,8 +784,9 @@ namespace Tests.xUpdate
 
 		class GuidID2
 		{
-			[Identity]
-			public Guid ID;
+#pragma warning disable 0649
+			[Identity] public Guid ID;
+#pragma warning restore 0649
 		}
 
 		[Test, IncludeDataContextSource(

@@ -1,5 +1,9 @@
 ﻿using System;
+#if !NETSTANDARD
 using System.Data.Linq.SqlClient;
+#else
+using System.Data;
+#endif
 using System.Linq;
 
 using LinqToDB;
@@ -263,6 +267,7 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource]
 		public void Like11(string context)
 		{
@@ -282,6 +287,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
+#endif 
 
 		[Test, DataContextSource]
 		public void Like21(string context)
@@ -303,7 +309,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf11(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -313,7 +319,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf12(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -323,7 +329,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void IndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -335,7 +341,7 @@ namespace Tests.Linq
 
 		[Test, DataContextSource(
 			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix,
-			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access)]
+			ProviderName.SqlCe, ProviderName.Sybase, ProviderName.Access, TestProvName.SQLiteMs)]
 		public void IndexOf3(string context)
 		{
 			var s = "e";
@@ -350,7 +356,7 @@ namespace Tests.Linq
 		}
 
 		[Test, DataContextSource(
-			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+			ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -360,7 +366,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -371,7 +377,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Firebird, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void LastIndexOf3(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -382,7 +388,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void CharIndex1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -392,7 +398,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix)]
+		[Test, DataContextSource(ProviderName.Firebird, ProviderName.Informix, TestProvName.SQLiteMs)]
 		public void CharIndex2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -402,7 +408,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Left(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -412,7 +418,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Right(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -422,7 +428,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void RightInSelect(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -452,7 +458,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana)]
+		[Test, DataContextSource(ProviderName.DB2, ProviderName.Informix, ProviderName.SqlCe, ProviderName.Access, ProviderName.SapHana, TestProvName.SQLiteMs)]
 		public void Reverse(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -462,7 +468,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Stuff1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -472,6 +478,7 @@ namespace Tests.Linq
 			}
 		}
 
+#pragma warning disable 0649
 		new class Category
 		{
 			[PrimaryKey, Identity] public int    Id;
@@ -490,6 +497,7 @@ namespace Tests.Linq
 			[Column, NotNull] public int TaskId;
 			[Column, NotNull] public int CategoryId;
 		}
+#pragma warning restore 0649
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
 		public void Stuff2(string context)
@@ -514,7 +522,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Insert(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -524,7 +532,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Remove1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -534,7 +542,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Remove2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -544,7 +552,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void Space(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -554,7 +562,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -564,7 +572,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -574,7 +582,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadRight2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -584,7 +592,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -594,7 +602,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft1(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -604,7 +612,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, DataContextSource]
+		[Test, DataContextSource(TestProvName.SQLiteMs)]
 		public void PadLeft2(string context)
 		{
 			using (var db = GetDataContext(context))
@@ -750,6 +758,7 @@ namespace Tests.Linq
 			}
 		}
 
+#if !NETSTANDARD
 		[Test, DataContextSource]
 		public void CompareTo3(string context)
 		{
@@ -779,6 +788,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
+#endif
 
 		[Test, DataContextSource]
 		public void CompareOrdinal1(string context)
@@ -835,7 +845,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#if !NETSTANDARD
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
+#else
+				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, StringComparison.OrdinalIgnoreCase) == 0 && p.ID == 1 select p;
+#endif
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

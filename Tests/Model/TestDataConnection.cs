@@ -21,7 +21,11 @@ namespace Tests.Model
 #if MONO
 			: base(ProviderName.SqlServer2008)
 #else
+#if NETSTANDARD
+			: base("SQLiteMs")
+#else
 			: base(ProviderName.SQLite)
+#endif
 #endif
 		{
 		}
@@ -51,7 +55,9 @@ namespace Tests.Model
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod(), id);
+			var methodInfo = (typeof(TestDataConnection)).GetMethod("GetParentByID", new [] {typeof(int?)});
+
+			return GetTable<Parent>(this, methodInfo, id);
 		}
 
 		public string GetSqlText(SelectQuery query)

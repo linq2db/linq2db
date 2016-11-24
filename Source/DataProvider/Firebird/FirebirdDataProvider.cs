@@ -64,10 +64,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return _sqlOptimizer;
 		}
 
+#if !NETSTANDARD
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
 			return new FirebirdSchemaProvider();
 		}
+#endif
 
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
@@ -101,7 +103,7 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameterType(parameter, dataType);
 		}
 
-		#region BulkCopy
+#region BulkCopy
 
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			[JetBrains.Annotations.NotNull] DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
@@ -113,9 +115,9 @@ namespace LinqToDB.DataProvider.Firebird
 				source);
 		}
 
-		#endregion
+#endregion
 
-		#region Merge
+#region Merge
 
 		public override int Merge<T>(DataConnection dataConnection, Expression<Func<T,bool>> deletePredicate, bool delete, IEnumerable<T> source,
 			string tableName, string databaseName, string schemaName)
@@ -126,6 +128,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdMerge().Merge(dataConnection, deletePredicate, delete, source, tableName, databaseName, schemaName);
 		}
 
-		#endregion
+#endregion
 	}
 }

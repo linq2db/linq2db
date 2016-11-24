@@ -16,6 +16,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class MultiPartIdentifierTests : TestBase
 	{
+#pragma warning disable 0649
 		class Table1
 		{
 			public long Field1;
@@ -72,6 +73,7 @@ namespace Tests.UserTests
 			[Association(ThisKey = "ProblematicalField", OtherKey = "Field4", CanBeNull = true)]
 			public List<Table4> Table4s { get; set; }
 		}
+#pragma warning restore 0649
 
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)]
 		public void Test(string context)
