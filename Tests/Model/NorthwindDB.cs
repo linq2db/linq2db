@@ -58,7 +58,8 @@ namespace Tests.Model
 				.Where(_ =>  _.Name == "FreeTextTable")
 				.Where(_ => _.GetParameters().Length == 2)
 				.Where(_ => _.GetParameters().First().ParameterType.IsGenericTypeEx()) 
-				.Single();
+				.Single()
+				.MakeGenericMethod(typeof(TTable), typeof(TKey));
 
 			return GetTable<FreeTextKey<TKey>>(
 				this,

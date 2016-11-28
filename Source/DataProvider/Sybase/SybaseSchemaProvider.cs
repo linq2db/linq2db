@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Sybase
 				SELECT
 					o.id                                             as TableID,
 					c.name                                           as Name,
-					Convert(bit, c.status & 0x08)                    as isNullable,
+					Convert(bit, c.status & 0x08)                    as IsNullable,
 					c.colid                                          as Ordinal,
 					t.name                                           as DataType,
 					c.length                                         as Length,
