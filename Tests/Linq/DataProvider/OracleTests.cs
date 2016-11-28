@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -143,7 +145,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -1345,15 +1347,19 @@ namespace Tests.DataProvider
 		public void OverflowTest(string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
-
-			OracleTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				OracleTools.DataReaderGetDecimal = GetDecimal;
 
-			OracleTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				OracleTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;

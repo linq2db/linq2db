@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -81,7 +83,7 @@ namespace Tests.DataProvider
 
 				var sql = sqlValue == null ?
 					"SELECT NULL FROM Dual" :
-					string.Format("SELECT Cast({0} as {1}) FROM Dual", sqlValue, sqlType);
+					string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM Dual", sqlValue, sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
