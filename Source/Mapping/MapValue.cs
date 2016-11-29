@@ -1,3 +1,5 @@
+using System;
+
 namespace LinqToDB.Mapping
 {
 	public class MapValue

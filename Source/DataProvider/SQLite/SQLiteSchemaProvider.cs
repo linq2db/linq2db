@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return dbConnection.DataSource;
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -160,6 +160,11 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			return DataType.Undefined;
+		}
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return null;
 		}
 
 		protected override Type GetSystemType(string dataType, string columnType, DataTypeInfo dataTypeInfo, long? length, int? precision, int? scale)

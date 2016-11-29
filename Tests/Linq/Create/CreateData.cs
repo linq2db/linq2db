@@ -4,22 +4,28 @@ using System.IO;
 
 using LinqToDB;
 using LinqToDB.Data;
+#if !NETSTANDARD
 using LinqToDB.DataProvider.Access;
+#endif
 
 using NUnit.Framework;
 
+// ReSharper disable once CheckNamespace
 namespace Tests._Create
 {
 	using Model;
 
 	[TestFixture]
+	[Category("Create")]
+	// ReSharper disable once InconsistentNaming
+	// ReSharper disable once TestClassNameSuffixWarning
 	public class _CreateData : TestBase
 	{
 		static void RunScript(string configString, string divider, string name, Action<IDbConnection> action = null)
 		{
 			Console.WriteLine("=== " + name + " === \n");
 
-			var text = File.ReadAllText(@"..\..\..\..\Data\Create Scripts\" + name + ".sql");
+			var text = File.ReadAllText(@"Database\Create Scripts\" + name + ".sql");
 
 			while (true)
 			{
@@ -37,6 +43,8 @@ namespace Tests._Create
 
 			using (var db = new TestDataConnection(configString))
 			{
+				//db.CommandTimeout = 20;
+
 				foreach (var cmd in cmds)
 				{
 					var command = cmd.Trim();
@@ -172,19 +180,22 @@ namespace Tests._Create
 
 		[Test, IncludeDataContextSource(ProviderName.DB2)]           public void DB2          (string ctx) { RunScript(ctx,          "\nGO\n",  "DB2");           }
 		[Test, IncludeDataContextSource(ProviderName.Informix)]      public void Informix     (string ctx) { RunScript(ctx,          "\nGO\n",  "Informix", InformixAction); }
-		[Test, IncludeDataContextSource(ProviderName.Oracle)]        public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
+		[Test, IncludeDataContextSource(ProviderName.OracleNative)]  public void Oracle       (string ctx) { RunScript(ctx,          "\n/\n",   "Oracle");        }
 		[Test, IncludeDataContextSource(ProviderName.Firebird)]      public void Firebird     (string ctx) { RunScript(ctx,          "COMMIT;", "Firebird");      }
 		[Test, IncludeDataContextSource(ProviderName.PostgreSQL)]    public void PostgreSQL   (string ctx) { RunScript(ctx,          "\nGO\n",  "PostgreSQL");    }
 		[Test, IncludeDataContextSource(ProviderName.MySql)]         public void MySql        (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(TestProvName.MySql57)]       public void MySql57      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
+		[Test, IncludeDataContextSource(TestProvName.MariaDB)]       public void MariaDB      (string ctx) { RunScript(ctx,          "\nGO\n",  "MySql");         }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2000)] public void Sql2000      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer2000"); }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2005)] public void Sql2005      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.Sybase)]        public void Sybase       (string ctx) { RunScript(ctx,          "\nGO\n",  "Sybase");        }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2008)] public void Sql2008      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2012)] public void Sql2012      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.SqlServer2014)] public void Sql2014      (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
-		[Test, IncludeDataContextSource("SqlAzure.2012")]            public void SqlAzure2012 (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
+		[Test, IncludeDataContextSource(TestProvName.SqlAzure)]      public void SqlAzure2012 (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlServer");     }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCe        (string ctx) { RunScript(ctx,          "\nGO\n",  "SqlCe");         }
 		[Test, IncludeDataContextSource(ProviderName.SqlCe)]         public void SqlCeData    (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SqlCe");         }
+		[Test, IncludeDataContextSource(TestProvName.SQLiteMs)]      public void SQLiteMs     (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLite       (string ctx) { RunScript(ctx,          "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test, IncludeDataContextSource(ProviderName.SQLite)]        public void SQLiteData   (string ctx) { RunScript(ctx+ ".Data", "\nGO\n",  "SQLite",   SQLiteAction); }
 		[Test, IncludeDataContextSource(ProviderName.Access)]        public void Access       (string ctx) { RunScript(ctx,          "\nGO\n",  "Access",   AccessAction); }
@@ -193,6 +204,7 @@ namespace Tests._Create
 
 		static void AccessAction(IDbConnection connection)
 		{
+#if !NETSTANDARD
 			using (var conn = AccessTools.CreateDataConnection(connection))
 			{
 				conn.Execute(@"
@@ -224,6 +236,7 @@ namespace Tests._Create
 						uniqueidentifierDataType = new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}"),
 					});
 			}
+#endif
 		}
 
 		static void SQLiteAction(IDbConnection connection)

@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Informix
 			}.ToList();
 		}
 
-		protected override DataType GetDataType(string dataType, string columnType)
+		protected override DataType GetDataType(string dataType, string columnType, long? length, int? prec, int? scale)
 		{
 			switch (dataType)
 			{
@@ -78,6 +78,24 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return DataType.Undefined;
+		}
+
+
+		protected override string GetProviderSpecificTypeNamespace()
+		{
+			return "IBM.Data.Informix";
+		}
+
+		protected override string GetProviderSpecificType(string dataType)
+		{
+			switch (dataType)
+			{
+				case "DATETIME" : return "IfxDateTime";
+				case "INTERVAL" : return "IfxTimeSpan";
+				case "DECIMAL"  : return "IfxDecimal";
+			}
+
+			return base.GetProviderSpecificType(dataType);
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection)

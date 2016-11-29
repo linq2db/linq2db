@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider
 {
@@ -79,7 +81,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<IDbConnection,int,IDisposable>>(
 				Expression.Convert(
 					Expression.New(
-						bulkCopyType.GetConstructor(new[] { connectionType, bulkCopyOptionType }),
+						bulkCopyType.GetConstructorEx(new[] { connectionType, bulkCopyOptionType }),
 						Expression.Convert(p1, connectionType),
 						Expression.Convert(p2, bulkCopyOptionType)),
 					typeof(IDisposable)),
@@ -95,7 +97,7 @@ namespace LinqToDB.DataProvider
 			var l  = Expression.Lambda<Func<int,string,object>>(
 				Expression.Convert(
 					Expression.New(
-						columnMappingType.GetConstructor(new[] { typeof(int), typeof(string) }),
+						columnMappingType.GetConstructorEx(new[] { typeof(int), typeof(string) }),
 						new [] { p1, p2 }),
 					typeof(object)),
 				p1, p2);
@@ -105,9 +107,9 @@ namespace LinqToDB.DataProvider
 
 		protected Action<object,Action<object>> CreateBulkCopySubscriber(object bulkCopy, string eventName)
 		{
-			var eventInfo   = bulkCopy.GetType().GetEvent(eventName);
+			var eventInfo   = bulkCopy.GetType().GetEventEx(eventName);
 			var handlerType = eventInfo.EventHandlerType;
-			var eventParams = handlerType.GetMethod("Invoke").GetParameters();
+			var eventParams = handlerType.GetMethodEx("Invoke").GetParameters();
 
 			// Expression<Func<Action<object>,Delegate>> lambda =
 			//     actionParameter => Delegate.CreateDelegate(
@@ -120,10 +122,17 @@ namespace LinqToDB.DataProvider
 			var senderParameter = Expression.Parameter(eventParams[0].ParameterType, eventParams[0].Name);
 			var argsParameter   = Expression.Parameter(eventParams[1].ParameterType, eventParams[1].Name);
 
+#if !NETSTANDARD
+			var del = Delegate.CreateDelegate(typeof(string), (object) null, "", false);
+#else
+			Func<string> func = () => null;
+			var del = func.GetMethodInfo().CreateDelegate(typeof(string));
+#endif
+
 			var lambda = Expression.Lambda<Func<Action<object>, Delegate>>(
 				Expression.Call(
 					null,
-					MemberHelper.MethodOf(() => Delegate.CreateDelegate(typeof(string), (object)null, "", false)),
+					//MemberHelper.MethodOf(() => del),
 					new Expression[]
 					{
 						Expression.Constant(handlerType, typeof(Type)),
@@ -144,9 +153,9 @@ namespace LinqToDB.DataProvider
 
 		protected void TraceAction(DataConnection dataConnection, string commandText, Func<int> action)
 		{
-			if (DataConnection.TraceSwitch.TraceInfo)
+			if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 			{
-				DataConnection.OnTrace(new TraceInfo
+				dataConnection.OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -161,9 +170,9 @@ namespace LinqToDB.DataProvider
 			{
 				var count = action();
 
-				if (DataConnection.TraceSwitch.TraceInfo)
+				if (DataConnection.TraceSwitch.TraceInfo && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = dataConnection,
@@ -175,9 +184,9 @@ namespace LinqToDB.DataProvider
 			}
 			catch (Exception ex)
 			{
-				if (DataConnection.TraceSwitch.TraceError)
+				if (DataConnection.TraceSwitch.TraceError && dataConnection.OnTraceConnection != null)
 				{
-					DataConnection.OnTrace(new TraceInfo
+					dataConnection.OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = dataConnection,
@@ -191,9 +200,9 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region MultipleRows Support
+#region MultipleRows Support
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(
 			DataConnection dataConnection, BulkCopyOptions options, bool enforceKeepIdentity, IEnumerable<T> source)
@@ -378,6 +387,6 @@ namespace LinqToDB.DataProvider
 			return helper.RowsCopied;
 		}
 
-		#endregion
+#endregion
 	}
 }

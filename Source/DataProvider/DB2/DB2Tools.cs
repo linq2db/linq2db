@@ -4,14 +4,19 @@ using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 
+using JetBrains.Annotations;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Configuration;
 	using System.Linq;
 	using System.Linq.Expressions;
 
+	using Configuration;
+
 	using Data;
 
+	[PublicAPI]
 	public static class DB2Tools
 	{
 		static readonly DB2DataProvider _db2DataProviderzOS = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
@@ -30,9 +35,9 @@ namespace LinqToDB.DataProvider.DB2
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(ConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css)
 		{
-			if (DataConnection.IsMachineConfig(css))
+			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
 
 			switch (css.ProviderName)
@@ -56,7 +61,7 @@ namespace LinqToDB.DataProvider.DB2
 						{
 							var connectionType = Type.GetType("IBM.Data.DB2.DB2Connection, IBM.Data.DB2", true);
 							var serverTypeProp = connectionType
-								.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)
+								.GetPropertiesEx (BindingFlags.NonPublic | BindingFlags.Instance)
 								.FirstOrDefault(p => p.Name == "eServerType");
 
 							if (serverTypeProp != null)

@@ -194,6 +194,5 @@ namespace LinqToDB.Mapping
 		public bool HasScale() { return _scale.HasValue; }
 
 		public string CreateFormat { get; set; }
-
 	}
 }

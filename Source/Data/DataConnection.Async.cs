@@ -27,12 +27,12 @@ namespace LinqToDB.Data
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteNonQueryAsync(cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTrace(new TraceInfo
+				OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -48,7 +48,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel      = TraceLevel.Info,
 						DataConnection  = this,
@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,
@@ -79,12 +79,12 @@ namespace LinqToDB.Data
 
 		internal async Task<DbDataReader> ExecuteReaderAsync(CommandBehavior commandBehavior, CancellationToken cancellationToken)
 		{
-			if (TraceSwitch.Level == TraceLevel.Off)
+			if (TraceSwitch.Level == TraceLevel.Off || OnTraceConnection == null)
 				return await ((DbCommand)Command).ExecuteReaderAsync(commandBehavior, cancellationToken);
 
 			if (TraceSwitch.TraceInfo)
 			{
-				OnTrace(new TraceInfo
+				OnTraceConnection(new TraceInfo
 				{
 					BeforeExecute  = true,
 					TraceLevel     = TraceLevel.Info,
@@ -101,7 +101,7 @@ namespace LinqToDB.Data
 
 				if (TraceSwitch.TraceInfo)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Info,
 						DataConnection = this,
@@ -116,7 +116,7 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitch.TraceError)
 				{
-					OnTrace(new TraceInfo
+					OnTraceConnection(new TraceInfo
 					{
 						TraceLevel     = TraceLevel.Error,
 						DataConnection = this,

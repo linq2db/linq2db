@@ -74,8 +74,19 @@
     <Compile Include="Common\DefaultValue.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
     <Compile Include="Common\Option.cs" />
-    <Compile Include="Common\Silverlight5Compatibility.cs" />
     <Compile Include="Common\Tools.cs" />
+    <Compile Include="Compatibility\System\Collections\Concurrent\ConcurrentDictionary.cs" />
+    <Compile Include="Compatibility\System\Data\DataRowVersion.cs" />
+    <Compile Include="Compatibility\System\Data\DataTable.cs" />
+    <Compile Include="Compatibility\System\Data\DbType.cs" />
+    <Compile Include="Compatibility\System\Data\IDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\IDataReader.cs" />
+    <Compile Include="Compatibility\System\Data\IDataRecord.cs" />
+    <Compile Include="Compatibility\System\Data\IDbDataParameter.cs" />
+    <Compile Include="Compatibility\System\Data\Linq\Binary.cs" />
+    <Compile Include="Compatibility\System\Data\ParameterDirection.cs" />
+    <Compile Include="Compatibility\System\Data\SqlDbType.cs" />
+    <Compile Include="Compatibility\System\SerializableAttribute.cs" />
     <Compile Include="CompiledQuery.cs" />
     <Compile Include="DataExtensions.cs" />
     <Compile Include="DataProvider\Access\AccessSqlBuilder.cs" />
@@ -198,6 +209,7 @@
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Mapping\ColumnAttribute.cs" />
     <Compile Include="Mapping\ColumnDescriptor.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
     <Compile Include="Mapping\EntityDescriptor.cs" />
     <Compile Include="Mapping\EntityMappingBuilder.cs" />
     <Compile Include="Mapping\FluentMappingBuilder.cs" />
@@ -213,8 +225,10 @@
     <Compile Include="Mapping\NullableAttribute.cs" />
     <Compile Include="Mapping\PrimaryKeyAttribute.cs" />
     <Compile Include="Mapping\PropertyMappingBuilder.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ScalarTypeAttribute.cs" />
     <Compile Include="Mapping\SequenceNameAttribute.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
     <Compile Include="Mapping\TableAttribute.cs" />
     <Compile Include="Metadata\AttributeInfo.cs" />
     <Compile Include="Metadata\AttributeReader.cs" />
@@ -255,6 +269,7 @@
     <Compile Include="SqlProvider\SqlProviderFlags.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\Extensions.cs" />
     <Compile Include="SqlQuery\ICloneableElement.cs" />
     <Compile Include="SqlQuery\IQueryElement.cs" />
@@ -294,6 +309,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Compatibility\System\Security\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>

@@ -57,7 +57,7 @@ namespace Tests.Linq
 				db.Update(t1);
 			}
 		}
-
+#if !NETSTANDARD
 		// https://github.com/linq2db/linq2db/issues/60
 		//
 		[Test, IncludeDataContextSource(
@@ -66,7 +66,7 @@ namespace Tests.Linq
 			ProviderName.SqlServer2008,
 			ProviderName.SqlServer2012,
 			ProviderName.SqlServer2014,
-			"SqlAzure.2012",
+			TestProvName.SqlAzure,
 			ProviderName.SqlCe)]
 		public void Issue60Test(string context)
 		{
@@ -86,7 +86,7 @@ namespace Tests.Linq
 				Assert.That(column, Is.Null);
 			}
 		}
-
+#endif
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test, DataContextSource()]

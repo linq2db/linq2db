@@ -53,6 +53,8 @@ namespace LinqToDB
 			public bool   ServerSideOnly   { get; set; }
 			public bool   PreferServerSide { get; set; }
 			public bool   InlineParameters { get; set; }
+			public bool   ExpectExpression { get; set; }
+			public bool   IsPredicate      { get; set; }
 
 			private bool? _canBeNull;
 			public  bool   CanBeNull

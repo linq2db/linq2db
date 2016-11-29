@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 // ReSharper disable CheckNamespace
 
 namespace System
 {
-	using Linq;
-	using LinqToDB.Extensions;
-
 	[ComVisible(true)]
 	public interface ICloneable
 	{
 		object Clone();
 	}
 
+#if !NETSTANDARD
 	[ComVisible(true)]
 	[Serializable]
 	public enum TypeCode
@@ -64,6 +61,7 @@ namespace System
 			return TypeCode.DBNull;
 		}
 	}
+#endif
 }
 
 namespace System.Threading

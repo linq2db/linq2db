@@ -63,7 +63,7 @@ namespace LinqToDB.Common
 		{
 		}
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if !SILVERLIGHT && !NETFX_CORE && !NETSTANDARD
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Reflection;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -9,12 +11,28 @@ namespace LinqToDB.DataProvider.Sybase
 
 	public static class SybaseTools
 	{
-		public static string AssemblyName = "Sybase.AdoNet2.AseClient";
+		public static string AssemblyName;
 
 		static readonly SybaseDataProvider _sybaseDataProvider = new SybaseDataProvider();
 
 		static SybaseTools()
 		{
+			try
+			{
+				var path = typeof(SybaseTools).AssemblyEx().CodeBase.Replace("file:///", "");
+
+				path = Path.GetDirectoryName(path);
+
+				var _ =
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet45.AseClient") + ".dll")) ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet4.AseClient")  + ".dll"))  ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet35.AseClient") + ".dll")) ||
+					File.Exists(Path.Combine(path, (AssemblyName = "Sybase.AdoNet2.AseClient")  + ".dll"));
+			}
+			catch (Exception)
+			{
+			}
+
 			DataConnection.AddDataProvider(_sybaseDataProvider);
 		}
 

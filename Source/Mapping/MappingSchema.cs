@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -11,7 +12,7 @@ using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 using System.Xml;
 #endif
 
@@ -728,7 +729,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(Guid),            DataType.Guid);
 				AddScalarType(typeof(Guid?),           DataType.Guid);
 				AddScalarType(typeof(object),          DataType.Variant);
-#if !SILVERLIGHT && !NETFX_CORE
+#if (!SILVERLIGHT && !NETFX_CORE) || NETSTANDARD
 				AddScalarType(typeof(XmlDocument),     DataType.Xml);
 #endif
 				AddScalarType(typeof(XDocument),       DataType.Xml);
@@ -754,6 +755,8 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float?),          DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 				AddScalarType(typeof(double?),         DataType.Double);
+
+				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				ValueToSqlConverter.SetDefauls();
 			}
@@ -1018,5 +1021,26 @@ namespace LinqToDB.Mapping
 		//}
 
 		#endregion
+
+		#region Enum
+
+		public Type GetDefaultFromEnumType(Type enumType)
+		{
+			foreach (var info in Schemas)
+			{
+				var type = info.GetDefaultFromEnumType(enumType);
+				if (type != null)
+					return type;
+			}
+			return null;
+		}
+
+		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
+		{
+			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
+		}
+
+		#endregion
+
 	}
 }

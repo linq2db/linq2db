@@ -3,6 +3,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
 namespace LinqToDB.DataProvider.DB2
 {
 	using SqlQuery;
@@ -206,10 +210,16 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !NETFX_CORE
 
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
+			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal)
+			{
+				var d = new SqlDecimal((decimal)parameter.Value);
+				return "(" + d.Precision + "," + d.Scale + ")";
+			}
+
 			dynamic p = parameter;
 			return p.DB2Type.ToString();
 		}

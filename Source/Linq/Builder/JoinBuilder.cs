@@ -436,7 +436,8 @@ namespace LinqToDB.Linq.Builder
 							var memberExpression = GetMemberExpression(
 								((MemberExpression)levelExpression).Member,
 								ReferenceEquals(levelExpression, expression),
-								levelExpression.Type);
+								levelExpression.Type,
+								expression);
 
 							if (memberExpression.Find(Lambda.Parameters[1]) != null)
 								replaceExpression = levelExpression;

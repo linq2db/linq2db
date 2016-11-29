@@ -18,7 +18,11 @@ namespace LinqToDB
 		public const string SqlServer2014 = "SqlServer.2014";
 		public const string MySql         = "MySql";
 		public const string Oracle        = "Oracle";
+		public const string OracleNative  = "Oracle.Native";
+		public const string OracleManaged = "Oracle.Managed";
 		public const string PostgreSQL    = "PostgreSQL";
+		public const string PostgreSQL92  = "PostgreSQL.9.2";
+		public const string PostgreSQL93  = "PostgreSQL.9.3";
 		public const string SqlCe         = "SqlCe";
 		public const string SQLite        = "SQLite";
 		public const string Sybase        = "Sybase";

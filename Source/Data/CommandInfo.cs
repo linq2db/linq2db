@@ -707,7 +707,7 @@ namespace LinqToDB.Data
 											Expression.Constant(m.ColumnName));
 									}
 
-									if (memberType.IsEnum)
+									if (memberType.IsEnumEx())
 									{
 										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType);
 										var convExpr = dataConnection.MappingSchema.GetConvertExpression(m.MemberType, mapType);
@@ -793,6 +793,12 @@ namespace LinqToDB.Data
 
 		static readonly ConcurrentDictionary<QueryKey,Delegate> _objectReaders = new ConcurrentDictionary<QueryKey,Delegate>();
 
+		public static void ClearObjectReaderCache()
+		{
+			_objectReaders.   Clear();
+			_parameterReaders.Clear();
+		}
+
 		static Func<IDataReader,T> GetObjectReader<T>(DataConnection dataConnection, IDataReader dataReader, string sql)
 		{
 			var key = new QueryKey(typeof(T), dataConnection.ID, sql);
@@ -845,7 +851,7 @@ namespace LinqToDB.Data
 
 				expr = null;
 
-				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
+				var ctors = typeof(T).GetConstructorsEx().Select(c => new { c, ps = c.GetParameters() }).ToList();
 
 				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
 				{

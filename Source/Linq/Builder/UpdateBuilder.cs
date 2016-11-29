@@ -236,7 +236,9 @@ namespace LinqToDB.Linq.Builder
 						if (expr.ElementType == QueryElementType.SqlParameter)
 						{
 							var parm  = (SqlParameter)expr;
-							var field = (SqlField)column[0].Sql;
+							var field = column[0].Sql is SqlField
+								? (SqlField)column[0].Sql
+								: (SqlField)((SelectQuery.Column)column[0].Sql).Expression;
 
 							if (parm.DataType == DataType.Undefined)
 								parm.DataType = field.DataType;

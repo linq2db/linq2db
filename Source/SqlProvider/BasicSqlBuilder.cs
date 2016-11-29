@@ -5,6 +5,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
 namespace LinqToDB.SqlProvider
 {
 	using Common;
@@ -213,6 +217,15 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("Unknown query type '{0}'.", SelectQuery.QueryType);
 		}
 
+		public virtual StringBuilder ConvertTableName(StringBuilder sb, string database, string owner, string table)
+		{
+			if (database != null) database = Convert(database, ConvertType.NameToDatabase).  ToString();
+			if (owner    != null) owner    = Convert(owner,    ConvertType.NameToOwner).     ToString();
+			if (table    != null) table    = Convert(table,    ConvertType.NameToQueryTable).ToString();
+
+			return BuildTableName(sb, database, owner, table);
+		}
+
 		public virtual StringBuilder BuildTableName(StringBuilder sb, string database, string owner, string table)
 		{
 			if (database != null)
@@ -323,9 +336,16 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildUpdateTableName()
 		{
 			if (SelectQuery.Update.Table != null && SelectQuery.Update.Table != SelectQuery.From.Tables[0].Source)
+			{
 				BuildPhysicalTable(SelectQuery.Update.Table, null);
+			}
 			else
+			{
+				if (SelectQuery.From.Tables[0].Source is SelectQuery)
+					StringBuilder.Length--;
+
 				BuildTableName(SelectQuery.From.Tables[0], true, true);
+			}
 		}
 
 		protected virtual void BuildUpdateSet()
@@ -2437,9 +2457,11 @@ namespace LinqToDB.SqlProvider
 		{
 			return
 				precedence == 0 ||
+				/* maybe it will be no harm to put "<=" here? */
 				precedence < parentPrecedence ||
 				(precedence == parentPrecedence && 
-					(parentPrecedence == Precedence.Subtraction ||
+					(parentPrecedence == Precedence.Subtraction    ||
+					 parentPrecedence == Precedence.Multiplicative ||
 					 parentPrecedence == Precedence.LogicalNegation));
 		}
 
@@ -2600,6 +2622,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual string GetProviderTypeName(IDbDataParameter parameter)
 		{
+			switch (parameter.DbType)
+			{
+				case DbType.AnsiString           : return "VarChar";
+				case DbType.AnsiStringFixedLength: return "Char";
+				case DbType.String               : return "NVarChar";
+				case DbType.StringFixedLength    : return "NChar";
+				case DbType.Decimal              : return "Decimal";
+				case DbType.Binary               : return "Binary";
+			}
+
 			return null;
 		}
 
@@ -2617,6 +2649,61 @@ namespace LinqToDB.SqlProvider
 			var t2 = parameter.DbType.ToString();
 
 			sb.Append(t1);
+
+			if (t1 != null)
+			{
+				if (parameter.Size != 0)
+				{
+					if (t1.IndexOf('(') < 0)
+						sb.Append('(').Append(parameter.Size).Append(')');
+				}
+				else if (parameter.Precision != 0)
+				{
+					if (t1.IndexOf('(') < 0)
+						sb.Append('(').Append(parameter.Precision).Append(',').Append(parameter.Scale).Append(')');
+				}
+				else
+				{
+					switch (parameter.DbType)
+					{
+						case DbType.AnsiString           :
+						case DbType.AnsiStringFixedLength:
+						case DbType.String               :
+						case DbType.StringFixedLength    :
+							{
+								var value = parameter.Value as string;
+
+								if (!string.IsNullOrEmpty(value))
+									sb.Append('(').Append(value.Length).Append(')');
+
+								break;
+							}
+#if !SILVERLIGHT && !NETFX_CORE
+						case DbType.Decimal              :
+							{
+								var value = parameter.Value;
+
+								if (value is decimal)
+								{
+									var d = new SqlDecimal((decimal)value);
+									sb.Append('(').Append(d.Precision).Append(',').Append(d.Scale).Append(')');
+								}
+
+								break;
+							}
+#endif
+						case DbType.Binary                :
+							{
+								var value = parameter.Value as byte[];
+
+								if (value != null)
+									sb.Append('(').Append(value.Length).Append(')');
+
+								break;
+							}
+					}
+				}
+			}
 
 			if (t1 != t2)
 				sb.Append(" -- ").Append(t2);
@@ -2662,12 +2749,12 @@ namespace LinqToDB.SqlProvider
 			return sb.ToString();
 		}
 
-		private        string _name;
-		public virtual string  Name
+		private string _name;
+
+		public virtual string Name
 		{
 			get { return _name ?? (_name = GetType().Name.Replace("SqlBuilder", "")); }
 		}
-
 		#endregion
 	}
 }

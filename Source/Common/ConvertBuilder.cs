@@ -5,6 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+#if !SILVERLIGHT && !NETFX_CORE
+using System.Data.SqlTypes;
+#endif
+
 namespace LinqToDB.Common
 {
 	using Expressions;
@@ -20,7 +24,7 @@ namespace LinqToDB.Common
 			try
 			{
 				return Convert.ChangeType(value, conversionType
-#if !NETFX_CORE
+#if !NETFX_CORE && !NETSTANDARD
 					, Thread.CurrentThread.CurrentCulture
 #endif
 					);
@@ -110,7 +114,23 @@ namespace LinqToDB.Common
 			if (from == typeof(string))
 			{
 				var mi = to.GetMethodEx("Parse", from);
-				return mi != null ? Expression.Convert(p, to, mi) : null;
+
+				if (mi != null)
+				{
+					return Expression.Convert(p, to, mi);
+				}
+
+#if !SILVERLIGHT && !NETFX_CORE
+				mi = to.GetMethodEx("Parse", typeof(SqlString));
+
+				if (mi != null)
+				{
+					p = GetCtor(from, typeof(SqlString), p);
+					return Expression.Convert(p, to, mi);
+				}
+#endif
+
+				return null;
 			}
 
 			return null;
@@ -148,7 +168,7 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i);
 					var lv  = (long)Convert.ChangeType(val, typeof(long)
-#if !NETFX_CORE
+#if !NETFX_CORE && !NETSTANDARD
 						, Thread.CurrentThread.CurrentCulture
 #endif
 						);
@@ -597,7 +617,10 @@ namespace LinqToDB.Common
 			}
 
 			if (defaultType == null)
-				defaultType = Enum.GetUnderlyingType(type);
+				defaultType = 
+					   mappingSchema.GetDefaultFromEnumType(enumType)
+					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
+					?? Enum.GetUnderlyingType(type);
 
 			if (enumType.IsNullable() && !defaultType.IsClassEx() && !defaultType.IsNullable())
 				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);

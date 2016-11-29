@@ -73,6 +73,11 @@
   <ItemGroup>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Common\LinqToDBConvertException.cs" />
+    <Compile Include="Configuration\IConnectionStringSettings.cs" />
+    <Compile Include="Configuration\IDataProviderSettings.cs" />
+    <Compile Include="Configuration\ILinqToDBSettings.cs" />
+    <Compile Include="Configuration\NamedValue.cs" />
+    <Compile Include="DataProvider\PostgreSQL\SqlServerVersion.cs" />
     <Compile Include="DataProvider\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="KeepConnectionAliveScope.cs" />
     <Compile Include="DataProvider\Access\AccessTools.cs" />
@@ -178,8 +183,12 @@
     <Compile Include="Linq\Builder\LoadWithBuilder.cs" />
     <Compile Include="Linq\Builder\WithTableExpressionBuilder.cs" />
     <Compile Include="Linq\IExpressionInfo.cs" />
+    <Compile Include="Mapping\Relationship.cs" />
     <Compile Include="Mapping\ColumnAliasAttribute.cs" />
     <Compile Include="Expressions\IGenericInfoProvider.cs" />
+    <Compile Include="Mapping\DataTypeAttribute.cs" />
+    <Compile Include="Mapping\StoredProcedure.cs" />
+    <Compile Include="Metadata\SystemDataSqlServerAttributeReader.cs" />
     <Compile Include="SchemaProvider\ColumnInfo.cs" />
     <Compile Include="SchemaProvider\DataTypeInfo.cs" />
     <Compile Include="SchemaProvider\ForeingKeyInfo.cs" />
@@ -387,6 +396,7 @@
     <Compile Include="Linq\ReflectionHelper.cs" />
     <Compile Include="SqlProvider\ValueToSqlConverter.cs" />
     <Compile Include="SqlQuery\DefaulNullable.cs" />
+    <Compile Include="SqlQuery\ReservedWords.cs" />
     <Compile Include="SqlQuery\SelectQueryOptimizer.cs" />
     <Compile Include="Sql\Sql.cs" />
     <Compile Include="Sql\Sql.EnumAttribute.cs" />
@@ -469,6 +479,7 @@
   <ItemGroup>
     <None Include="Compile.bat" />
     <None Include="linq2db.snk" />
+    <None Include="LinqToDB.project.json" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

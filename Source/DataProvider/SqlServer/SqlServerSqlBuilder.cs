@@ -179,8 +179,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						if (name.Length > 0 && name[0] == '[')
 							return value;
 
-						if (name.IndexOf('.') > 0)
-							value = string.Join("].[", name.Split('.'));
+//						if (name.IndexOf('.') > 0)
+//							value = string.Join("].[", name.Split('.'));
 
 						return "[" + value + "]";
 					}
@@ -276,11 +276,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 #endif
 
+#if !NETSTANDARD
 		protected override string GetUdtTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).UdtTypeName;
 		}
-
+#endif
 		protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			return ((System.Data.SqlClient.SqlParameter)parameter).SqlDbType.ToString();
