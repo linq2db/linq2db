@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Globalization;
 using LinqToDB.Data;
 
 
@@ -100,6 +101,19 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			base.SetParameterType(parameter, dataType);
+		}
+
+		public override void SetParameter(IDbDataParameter parameter, string name, DataType dataType, object value)
+		{
+			if (dataType == DataType.Decimal && value != null)
+			{
+				if (AccessMappingSchema.NumberDecimalSeparator != ".")
+				{
+					value    = string.Format(CultureInfo.InvariantCulture, "{0}", value);
+					dataType = DataType.VarChar;
+				}
+			}
+			base.SetParameter(parameter, name, dataType, value);
 		}
 
 		[ComImport, Guid("00000602-0000-0010-8000-00AA006D2EA4")]
