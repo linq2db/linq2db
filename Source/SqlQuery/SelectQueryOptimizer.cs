@@ -1075,6 +1075,33 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		bool IsDependent(SelectQuery.JoinedTable joinedTable, SelectQuery.JoinedTable tested)
+		{
+			var dependent = false;
+			var sourceId = tested.Table.Source.SourceID;
+
+			// check everyting that can be dependent on specific table
+			new QueryVisitor().VisitParentFirst(joinedTable, e =>
+			{
+				if (dependent)
+					return false;
+
+				// do not check tested join
+				if (e == tested)
+					return false;
+
+				if (e.ElementType == QueryElementType.SqlField)
+				{
+					var sqlField = (SqlField) e;
+
+					dependent = sqlField.Table.SourceID == sourceId;
+				}
+
+				return !dependent;
+			});
+
+			return dependent;
+		}
 
 		void FlattenInnerJoins()
 		{
@@ -1088,7 +1115,7 @@ namespace LinqToDB.SqlQuery
 					for (int si = 0; si < j.Table.Joins.Count; si++)
 					{
 						var sj = j.Table.Joins[si];
-						if (sj.JoinType == SelectQuery.JoinType.Inner)
+						if (sj.JoinType == SelectQuery.JoinType.Inner && !IsDependent(j, sj))
 						{
 							table.Joins.Add(sj);
 							j.Table.Joins.RemoveAt(si);
