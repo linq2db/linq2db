@@ -1782,20 +1782,34 @@ namespace LinqToDB.SqlProvider
 
 								addAlias = alias != field.PhysicalName;
 
-								StringBuilder
-									.Append(table)
-									.Append('.');
+								if (field == field.Table.All)
+								{
+									StringBuilder
+										.Append(table)
+										.Append('.')
+										.Append("*");
+								}
+								else
+								{
+									StringBuilder
+										.Append(WrapParmeter(table + '.' + Convert(field.PhysicalName, ConvertType.NameToQueryField), field.DataType));
+								}
 							}
-						}
-
-						if (field == field.Table.All)
-						{
-							StringBuilder.Append("*");
 						}
 						else
 						{
-							StringBuilder.Append(Convert(field.PhysicalName, ConvertType.NameToQueryField));
+							if (field == field.Table.All)
+							{
+								StringBuilder.Append("*");
+
+							}
+							else
+							{
+								StringBuilder.Append(WrapParmeter(Convert(field.PhysicalName, ConvertType.NameToQueryField), field.DataType));
+							}
 						}
+
+						
 					}
 
 					break;
@@ -1897,7 +1911,7 @@ namespace LinqToDB.SqlProvider
 						if (parm.IsQueryParameter)
 						{
 							var name = Convert(parm.Name, ConvertType.NameToQueryParameter);
-							StringBuilder.Append(name);
+							StringBuilder.Append(WrapParmeter(name, parm.DataType));
 						}
 						else
 						{
@@ -1920,6 +1934,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		protected virtual object WrapParmeter(object name, DataType dataType)
+		{
+			return name;
 		}
 
 		void BuildExpression(int parentPrecedence, ISqlExpression expr, string alias, ref bool addAlias)

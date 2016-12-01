@@ -1084,7 +1084,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GrooupByAssociation3(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result = 
 					from p in db.Product
@@ -1100,7 +1100,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GrooupByAssociation4(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var result = 
 					from p in db.Product
@@ -1160,10 +1160,10 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void GroupByAggregate2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 				AreEqual(
 					(
-						from c in Customer
+						from c in GetNorthwindAsList(context).Customer
 						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) >= 80
 					).ToList().Select(k => k.Key),
 					(

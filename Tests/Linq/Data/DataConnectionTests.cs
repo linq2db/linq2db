@@ -22,7 +22,7 @@ namespace Tests.Data
 		public void Test1(string context)
 		{
 #if !NETSTANDARD
-			var connectionString = ConfigurationManager.ConnectionStrings["Northwind"].ConnectionString;
+			var connectionString = ConfigurationManager.ConnectionStrings[context].ConnectionString;
 #else
 			var connectionString = "TODO";
 #endif

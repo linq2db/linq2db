@@ -90,6 +90,17 @@ namespace LinqToDB.DataProvider.SQLite
 			return value;
 		}
 
+		public static bool WrapDateTimeParametersInDateFunction = false;
+
+		protected override object WrapParmeter(object name, DataType dataType)
+		{
+			if (WrapDateTimeParametersInDateFunction && (dataType == DataType.DateTime || dataType == DataType.DateTime2))
+			{
+				return "date(" + name + ")";
+			}
+			return name;
+		}
+
 		protected override void BuildDataType(SqlDataType type, bool createDbType = false)
 		{
 			switch (type.DataType)
