@@ -9,8 +9,6 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessMappingSchema : MappingSchema
 	{
-		internal static readonly string NumberDecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-
 		public AccessMappingSchema() : this(ProviderName.Access)
 		{
 		}
@@ -27,10 +25,6 @@ namespace LinqToDB.DataProvider.Access
 
 			SetValueToSqlConverter(typeof(String),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()));
 			SetValueToSqlConverter(typeof(Char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-
-			if (NumberDecimalSeparator != ".")
-				SetConvertExpression<string, decimal>(s => decimal.Parse(s.Replace(NumberDecimalSeparator, "."), CultureInfo.InvariantCulture));
-			//SetConvertExpression<decimal, string>(d => d.ToString(CultureInfo.InvariantCulture));
 		}
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
