@@ -157,9 +157,12 @@ namespace Tests.Linq
 		public void Concat7(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					   GetNorthwindAsList(context).Customer.Where(c => c.Orders.Count <= 1).Concat(GetNorthwindAsList(context).Customer.Where(c => c.Orders.Count > 1)),
+					dd.Customer.Where(c => c.Orders.Count <= 1).Concat(dd.Customer.Where(c => c.Orders.Count > 1)),
 					db.Customer.Where(c => c.Orders.Count <= 1).Concat(db.Customer.Where(c => c.Orders.Count > 1)));
+			}
 		}
 
 		[Test, DataContextSource]

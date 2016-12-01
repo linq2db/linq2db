@@ -59,8 +59,9 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from cust in GetNorthwindAsList(context).Customer
+					from cust in dd.Customer
 					where cust.Orders.Count > 0 && cust.CompanyName.StartsWith("H")
 					select cust.CustomerID,
 					VisualBasicCommon.SearchCondition2(db));

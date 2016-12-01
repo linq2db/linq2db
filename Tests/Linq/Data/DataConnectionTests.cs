@@ -21,13 +21,10 @@ namespace Tests.Data
 		[Test, NorthwindDataContext]
 		public void Test1(string context)
 		{
-#if !NETSTANDARD
-			var connectionString = ConfigurationManager.ConnectionStrings[context].ConnectionString;
-#else
-			var connectionString = "TODO";
-#endif
+			var connectionString = DataConnection.GetConnectionString(context);
+			var dataProvider = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(SqlServerTools.GetDataProvider(), connectionString))
+			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
 				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
 				Assert.That(conn.ConfigurationString, Is.Null);

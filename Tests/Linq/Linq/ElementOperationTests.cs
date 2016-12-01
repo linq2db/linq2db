@@ -194,22 +194,41 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void FirstOrDefaultEntitySet(string context)
 		{
-			using (var db = new NorthwindDB(context))
+			try
 			{
-				AreEqual(
-					   GetNorthwindAsList(context).Customer.Select(c => c.Orders.FirstOrDefault()),
-					db.Customer.Select(c => c.Orders.FirstOrDefault()));
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+
+				using (var db = new NorthwindDB(context))
+				{
+					var dd = GetNorthwindAsList(context);
+					AreEqual(
+						dd.Customer.Select(c => c.Orders.FirstOrDefault()),
+						db.Customer.Select(c => c.Orders.FirstOrDefault()));
+				}
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void NestedSingleOrDefaultTest(string context)
 		{
-			using (var db = new NorthwindDB(context))
+			try
 			{
-				AreEqual(
-					   GetNorthwindAsList(context).Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
-					db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()));
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = true;
+				using (var db = new NorthwindDB(context))
+				{
+					var dd = GetNorthwindAsList(context);
+					AreEqual(
+						dd.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()),
+						db.Customer.Select(c => c.Orders.Take(1).SingleOrDefault()));
+				}
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Linq.AllowMultipleQuery = false;
 			}
 		}
 

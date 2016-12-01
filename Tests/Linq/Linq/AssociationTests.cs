@@ -205,36 +205,48 @@ namespace Tests.Linq
 		public void EqualsNull1(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in GetNorthwindAsList(context).Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull2(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in GetNorthwindAsList(context).Employee where employee.ReportsToEmployee != null select employee, 
+					from employee in dd.Employee where employee.ReportsToEmployee != null select employee, 
 					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void EqualsNull3(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
-					from employee in GetNorthwindAsList(context).Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
+					from employee in dd.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
 					from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
+			}
 		}
 
 		[Test, NorthwindDataContext]
 		public void StackOverflow1(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				Assert.AreEqual(
-					(from employee in GetNorthwindAsList(context).Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
+					(from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
 					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault());
+			}
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]

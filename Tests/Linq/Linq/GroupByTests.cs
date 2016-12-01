@@ -1161,15 +1161,18 @@ namespace Tests.Linq
 		public void GroupByAggregate2(string context)
 		{
 			using (var db = new NorthwindDB(context))
+			{
+				var dd = GetNorthwindAsList(context);
 				AreEqual(
 					(
-						from c in GetNorthwindAsList(context).Customer
+						from c in dd.Customer
 						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) >= 80
 					).ToList().Select(k => k.Key),
 					(
 						from c in db.Customer
 						group c by c.Orders.Average(o => o.Freight) >= 80
 					).ToList().Select(k => k.Key));
+			}
 		}
 
 		[Test, DataContextSource(ProviderName.SqlCe)]
