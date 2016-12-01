@@ -1011,15 +1011,19 @@ namespace Tests.DataProvider
 		public void OverflowTest(string context)
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
-
-			SqlServerTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = GetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;
@@ -1033,7 +1037,7 @@ namespace Tests.DataProvider
 				if (value.Precision > ClrPrecision)
 				{
 					var str = value.ToString();
-					var val = decimal.Parse(str);
+					var val = decimal.Parse(str, CultureInfo.InvariantCulture);
 
 					return val;
 				}
@@ -1063,14 +1067,19 @@ namespace Tests.DataProvider
 		{
 			var func = SqlServerTools.DataReaderGetDecimal;
 
-			SqlServerTools.DataReaderGetDecimal = (rd,idx) => { throw new Exception(); };
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow2>().ToList();
-			}
+				SqlServerTools.DataReaderGetDecimal = (rd, idx) => { throw new Exception(); };
 
-			SqlServerTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow2>().ToList();
+				}
+			}
+			finally
+			{
+				SqlServerTools.DataReaderGetDecimal = func;
+			}
 		}
 	}
 }

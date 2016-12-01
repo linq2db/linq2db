@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -105,7 +107,7 @@ namespace Tests.DataProvider
 				TestType(conn, "datetimeDataType",       new DateTime(2012, 12, 12, 12, 12, 12));
 				TestType(conn, "datetime2DataType",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "datetimeoffsetDataType", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
-				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-4, 0, 0)));
+				TestType(conn, "localZoneDataType",      new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow) /* new TimeSpan(-4, 0, 0)*/));
 
 				TestType(conn, "charDataType",           '1');
 				TestType(conn, "varcharDataType",        "234");
@@ -143,7 +145,7 @@ namespace Tests.DataProvider
 			{
 				var sqlValue = expectedValue is bool ? (bool)(object)expectedValue? 1 : 0 : (object)expectedValue;
 
-				var sql = string.Format("SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
+				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
 
 				Debug.WriteLine(sql + " -> " + typeof(T));
 
@@ -1345,15 +1347,19 @@ namespace Tests.DataProvider
 		public void OverflowTest(string context)
 		{
 			var func = OracleTools.DataReaderGetDecimal;
-
-			OracleTools.DataReaderGetDecimal = GetDecimal;
-
-			using (var db = new DataConnection(context))
+			try
 			{
-				var list = db.GetTable<DecimalOverflow>().ToList();
-			}
+				OracleTools.DataReaderGetDecimal = GetDecimal;
 
-			OracleTools.DataReaderGetDecimal = func;
+				using (var db = new DataConnection(context))
+				{
+					var list = db.GetTable<DecimalOverflow>().ToList();
+				}
+			}
+			finally
+			{
+				OracleTools.DataReaderGetDecimal = func;
+			}
 		}
 
 		const int ClrPrecision = 29;
