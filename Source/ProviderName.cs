@@ -26,6 +26,6 @@ namespace LinqToDB
 		public const string SqlCe         = "SqlCe";
 		public const string SQLite        = "SQLite";
 		public const string Sybase        = "Sybase";
-	    public const string SapHana       = "SapHana";
+		public const string SapHana       = "SapHana";
 	}
 }

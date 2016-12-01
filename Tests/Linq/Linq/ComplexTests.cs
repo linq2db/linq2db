@@ -290,7 +290,7 @@ namespace Tests.Linq
 					Expression.Invoke(pred2, param)
 				), param);
 
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var count = db.Customer.Count(final);
 			}

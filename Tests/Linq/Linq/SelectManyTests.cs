@@ -629,7 +629,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Test157_1(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q = db.Employee
 					.SelectMany(
@@ -748,7 +748,7 @@ namespace Tests.Linq
 		[Test, NorthwindDataContext]
 		public void Test157_2(string context)
 		{
-			using (var db = new NorthwindDB())
+			using (var db = new NorthwindDB(context))
 			{
 				var q = db.Employee
 					.SelectMany(

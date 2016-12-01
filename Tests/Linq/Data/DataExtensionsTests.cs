@@ -244,7 +244,7 @@ namespace Tests.Data
 			}
 		}
 
-		[Test, NorthwindDataContext]
+		[Test, IncludeDataContextSourceAttribute("Northwind")]
 		public void CacheTest(string context)
 		{
 			using (var dc= new DataConnection(context))
