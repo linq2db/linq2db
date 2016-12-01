@@ -32,7 +32,8 @@ namespace LinqToDB.Configuration
 				{
 					try
 					{
-						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db");
+						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db")
+							?? new LinqToDBSection();
 					}
 					catch (SecurityException)
 					{
