@@ -317,11 +317,11 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static int _isInitialized;
+		static readonly object _initSyncRoot = new object();
 
 		static void InitConfig()
 		{
-			if (Interlocked.Exchange(ref _isInitialized, 1) == 0)
+			lock (_initSyncRoot)
 				InitConnectionStrings();
 		}
 
