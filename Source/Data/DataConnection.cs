@@ -318,11 +318,18 @@ namespace LinqToDB.Data
 		}
 
 		static readonly object _initSyncRoot = new object();
+		static          bool   _initialized  = false;
 
 		static void InitConfig()
 		{
 			lock (_initSyncRoot)
-				InitConnectionStrings();
+			{
+				if (!_initialized)
+				{
+					_initialized = true;
+					InitConnectionStrings();
+				}
+			}
 		}
 
 		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders =
