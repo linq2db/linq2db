@@ -557,11 +557,20 @@ namespace LinqToDB.Linq.Builder
 											var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
 											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
 
-											var ee = Expression.Equal(
-												Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo),
-												Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo));
+                                            Expression ma1 = Expression.MakeMemberAccess(op, field2.ColumnDescriptor.MemberInfo);
+                                            Expression ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+                                            Type ut1 = Nullable.GetUnderlyingType(ma1.Type);
+                                            Type ut2 = Nullable.GetUnderlyingType(ma2.Type);
+                                            if (ut1 != null || ut2 != null)
+                                            {
+                                                if (ut1 != null && ut2 == null)
+                                                    ma2 = Expression.Convert(ma2, ma1.Type);
+                                                else if (ut2 != null && ut1 == null)
+                                                    ma1 = Expression.Convert(ma1, ma2.Type);
+                                            }
+                                            var ee = Expression.Equal(ma1, ma2);
 
-											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
+                                            ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
 
 										var expr = Expression.Call(null, method, Expression.Constant(tbl), Expression.Lambda(ex, op));
