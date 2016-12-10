@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
@@ -76,9 +76,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						try
 						{
-							var connectionString = css.ConnectionString;
+							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-							using (var conn = new SqlConnection(connectionString))
+							using (var conn = new SqlConnection(cs))
 							{
 								conn.Open();
 

@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.DB2
 			DataConnection.AddProviderDetector(ProviderDetector);
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
@@ -67,8 +67,9 @@ namespace LinqToDB.DataProvider.DB2
 							if (serverTypeProp != null)
 							{
 								var connectionCreator = DynamicDataProviderBase.CreateConnectionExpression(connectionType).Compile();
+								var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
 
-								using (var conn = connectionCreator(css.ConnectionString))
+								using (var conn = connectionCreator(cs))
 								{
 									conn.Open();
 
