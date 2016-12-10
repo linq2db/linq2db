@@ -1086,9 +1086,9 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var field in SqlTable.Fields.Values)
 									{
+										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
-											var name = levelMember.Member.Name;
 
 											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
 												name += "." + ex.Member.Name;
@@ -1096,6 +1096,8 @@ namespace LinqToDB.Linq.Builder
 											if (field.Name == name)
 												return field;
 										}
+										else if (field.Name == name)
+											return field;
 									}
 								}
 							}
@@ -1137,6 +1139,7 @@ namespace LinqToDB.Linq.Builder
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+
 							}
 
 							if (throwException &&

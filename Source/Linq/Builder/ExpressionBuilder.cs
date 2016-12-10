@@ -1349,8 +1349,20 @@ namespace LinqToDB.Linq.Builder
 					left = Expression.Convert(left, right.Type);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left.Type);
-					right = Expression.Invoke(rightConvert.Item1, right);
+					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
+					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
+
+					var leftIsPrimitive  = left. Type.IsPrimitive;
+					var rightIsPrimitive = right.Type.IsPrimitive;
+
+					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)
+						right = rightConvert.Item2.GetBody(right);
+					else if (leftIsPrimitive == false && rightIsPrimitive == true && leftConvert.Item2 != null)
+						left = leftConvert.Item2.GetBody(left);
+					else if (rightConvert.Item2 != null)
+						right = rightConvert.Item2.GetBody(right);
+					else if (leftConvert.Item2 != null)
+						left = leftConvert.Item2.GetBody(left);
 				}
 			}
 
