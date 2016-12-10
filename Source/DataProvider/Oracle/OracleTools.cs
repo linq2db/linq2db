@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		static IDataProvider ProviderDetector(IConnectionStringSettings css)
+		static IDataProvider ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
 			if (css.IsGlobal /* DataConnection.IsMachineConfig(css)*/)
 				return null;
