@@ -1328,5 +1328,21 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#endregion
+
+		#region Helpers
+
+		private static BinaryExpression GetEqual(MappingSchema mappringSchema, Expression left, Expression right)
+		{
+			if (left.Type != right.Type)
+			{
+				var ma2Convert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left.Type);
+				right = Expression.Invoke(ma2Convert.Item1, right);
+			}
+
+			var ee = Expression.Equal(left, right);
+			return ee;
+		}
+
+		#endregion
 	}
 }
