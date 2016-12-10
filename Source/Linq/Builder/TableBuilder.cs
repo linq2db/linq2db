@@ -556,9 +556,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var codeType = mapping.m.Code.GetType();
 
-						testExpr = Expression.Equal(
-							Expression.Constant(mapping.m.Code),
-							Builder.BuildSql(codeType, dindex));
+						testExpr = ExpressionBuilder.Equal(
+							Builder.MappingSchema,
+							Builder.BuildSql(codeType, dindex),
+							Expression.Constant(mapping.m.Code));
 					}
 
 					expr = Expression.Condition(
@@ -860,17 +861,8 @@ namespace LinqToDB.Linq.Builder
 							p = (SelectQuery.Predicate.ExprExpr)cond.Predicate;
 						}
 
-						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo) as Expression;
-
-						Expression e2 = Expression.MakeMemberAccess(param, ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
-
-						if (e1.Type != e2.Type)
-						{
-							if (e1.Type.CanConvertTo(e2.Type))
-								e1  = Expression.Convert(e1,  e2.Type);
-							else if (e2.Type.CanConvertTo(e1.Type))
-								e2 = Expression.Convert(e2, e1. Type);
-						}
+						var e1 = Expression.MakeMemberAccess(parent, ((SqlField)p.Expr1).ColumnDescriptor.MemberInfo);
+						var e2 = Expression.MakeMemberAccess(param,  ((SqlField)p.Expr2).ColumnDescriptor.MemberInfo);
 
 //						while (e1.Type != e2.Type)
 //						{
@@ -889,7 +881,7 @@ namespace LinqToDB.Linq.Builder
 //							e2 = Expression.Convert(e2, e1.Type);
 //						}
 
-						var ex = Expression.Equal(e1, e2);
+						var ex = ExpressionBuilder.Equal(association.Builder.MappingSchema, e1, e2);
 							
 						expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 					}
@@ -1094,9 +1086,9 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var field in SqlTable.Fields.Values)
 									{
+										var name = levelMember.Member.Name;
 										if (field.Name.IndexOf('.') >= 0)
 										{
-											var name = levelMember.Member.Name;
 
 											for (var ex = (MemberExpression)expression; ex != levelMember; ex = (MemberExpression)ex.Expression)
 												name += "." + ex.Member.Name;
@@ -1104,6 +1096,8 @@ namespace LinqToDB.Linq.Builder
 											if (field.Name == name)
 												return field;
 										}
+										else if (field.Name == name)
+											return field;
 									}
 								}
 							}
@@ -1145,6 +1139,7 @@ namespace LinqToDB.Linq.Builder
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+
 							}
 
 							if (throwException &&
@@ -1438,18 +1433,10 @@ namespace LinqToDB.Linq.Builder
 
 						for (var i = 0; i < tableContext.Association.ThisKey.Length; i++)
 						{
-							Expression thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
-							Expression otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
+							var thisProp  = Expression.PropertyOrField(Expression.Convert(lParent, parentObject.Type), tableContext.Association.ThisKey[i]);
+							var otherProp = Expression.PropertyOrField(pWhere, tableContext.Association.OtherKey[i]);
 
-							if (otherProp.Type != thisProp.Type)
-							{
-								if (otherProp.Type.CanConvertTo(thisProp.Type))
-									otherProp  = Expression.Convert(otherProp,  thisProp.Type);
-								else if (thisProp.Type.CanConvertTo(otherProp.Type))
-									thisProp = Expression.Convert(thisProp, otherProp. Type);
-							}
-
-							var ex = Expression.Equal(otherProp, thisProp);
+							var ex = ExpressionBuilder.Equal(tableContext.Builder.MappingSchema, otherProp, thisProp);
 
 							expr = expr == null ? ex : Expression.AndAlso(expr, ex);
 						}

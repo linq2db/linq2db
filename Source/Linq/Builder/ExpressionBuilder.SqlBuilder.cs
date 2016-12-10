@@ -1442,10 +1442,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression AddEqualTrue(Expression expr)
 		{
-			if (expr.Type != typeof(bool))
-				expr = Expression.Convert(expr, typeof(bool));
-
-			return Expression.Equal(expr, Expression.Constant(true));
+			return Equal(MappingSchema, Expression.Constant(true), expr);
 		}
 
 		#region ConvertCompare

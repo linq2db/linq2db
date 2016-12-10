@@ -344,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
-							Expression.Equal(innerKey, outerParam),
+							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
 							new[] { context._innerKeyLambda.Parameters[0] }));
 
 					var lambda = Expression.Lambda<Func<IDataContext,TKey,object[],IQueryable<TElement>>>(
@@ -391,7 +391,8 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
 						context._innerExpression,
 						Expression.Lambda<Func<T,bool>>(
-							Expression.Equal(
+							ExpressionBuilder.Equal(
+								context.Builder.MappingSchema,
 								context._innerKeyLambda.Body.Unwrap(),
 								context._outerKeyLambda.GetBody(context.Lambda.Parameters[0])),
 							new[] { context._innerKeyLambda.Parameters[0] }));
