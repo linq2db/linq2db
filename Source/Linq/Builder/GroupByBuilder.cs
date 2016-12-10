@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -239,7 +240,7 @@ namespace LinqToDB.Linq.Builder
 						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TSource,bool>>)null)),
 						groupExpression,
 						Expression.Lambda<Func<TSource,bool>>(
-							Expression.Equal(context._key.Lambda.Body, keyParam),
+							ExpressionBuilder.Equal(context.Builder.MappingSchema, context._key.Lambda.Body, keyParam),
 							new[] { context._key.Lambda.Parameters[0] }));
 
 					expr = Expression.Call(
@@ -556,18 +557,18 @@ namespace LinqToDB.Linq.Builder
 
 			interface IContextHelper
 			{
-				Expression GetContext(Expression sequence, ParameterExpression param, Expression expr1, Expression expr2);
+				Expression GetContext(MappingSchema mappingSchema, Expression sequence, ParameterExpression param, Expression expr1, Expression expr2);
 			}
 
 			class ContextHelper<T> : IContextHelper
 			{
-				public Expression GetContext(Expression sequence, ParameterExpression param, Expression expr1, Expression expr2)
+				public Expression GetContext(MappingSchema mappingSchema, Expression sequence, ParameterExpression param, Expression expr1, Expression expr2)
 				{
 // ReSharper disable AssignNullToNotNullAttribute
 					//ReflectionHelper.Expressor<object>.MethodExpressor(_ => Queryable.Where(null, (Expression<Func<T,bool>>)null)),
 					var mi   = MemberHelper.MethodOf(() => Enumerable.Where(null, (Func<T,bool>)null));
 // ReSharper restore AssignNullToNotNullAttribute
-					var arg2 = Expression.Lambda<Func<T,bool>>(Expression.Equal(expr1, expr2), new[] { param });
+					var arg2 = Expression.Lambda<Func<T,bool>>(ExpressionBuilder.Equal(mappingSchema, expr1, expr2), new[] { param });
 
 					return Expression.Call(null, mi, sequence, arg2);
 				}
@@ -583,6 +584,7 @@ namespace LinqToDB.Linq.Builder
 						var ctype  = typeof(ContextHelper<>).MakeGenericType(_key.Lambda.Parameters[0].Type);
 						var helper = (IContextHelper)Activator.CreateInstance(ctype);
 						var expr   = helper.GetContext(
+							Builder.MappingSchema,
 							Sequence.Expression,
 							_key.Lambda.Parameters[0],
 							Expression.PropertyOrField(sm.Lambda.Parameters[0], "Key"),
@@ -596,6 +598,7 @@ namespace LinqToDB.Linq.Builder
 						var ctype  = typeof(ContextHelper<>).MakeGenericType(_key.Lambda.Parameters[0].Type);
 						var helper = (IContextHelper)Activator.CreateInstance(ctype);
 						var expr   = helper.GetContext(
+							Builder.MappingSchema,
 							_sequenceExpr,
 							_key.Lambda.Parameters[0],
 							Expression.PropertyOrField(buildInfo.Expression, "Key"),

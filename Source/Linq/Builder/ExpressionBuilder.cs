@@ -1331,16 +1331,30 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		private static BinaryExpression GetEqual(MappingSchema mappringSchema, Expression left, Expression right)
+		/// <summary>
+		/// Gets Expression.Equal if <see cref="left"/> and <see cref="right"/> expression types are not same
+		/// <see cref="right"/> would be converted to <see cref="left"/>
+		/// </summary>
+		/// <param name="mappringSchema"></param>
+		/// <param name="left"></param>
+		/// <param name="right"></param>
+		/// <returns></returns>
+		internal static BinaryExpression Equal(MappingSchema mappringSchema, Expression left, Expression right)
 		{
 			if (left.Type != right.Type)
 			{
-				var ma2Convert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left.Type);
-				right = Expression.Invoke(ma2Convert.Item1, right);
+				if (right.Type.CanConvertTo(left.Type))
+					right = Expression.Convert(right, left.Type);
+				else if (left.Type.CanConvertTo(right.Type))
+					left = Expression.Convert(left, right.Type);
+				else
+				{
+					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left.Type);
+					right = Expression.Invoke(rightConvert.Item1, right);
+				}
 			}
 
-			var ee = Expression.Equal(left, right);
-			return ee;
+			return Expression.Equal(left, right);
 		}
 
 		#endregion

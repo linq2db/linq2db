@@ -561,10 +561,10 @@ namespace LinqToDB.Linq.Builder
 											var field1 = table.ParentAssociation.SqlTable.Fields[table.Association.ThisKey [i]];
 											var field2 = table.                  SqlTable.Fields[table.Association.OtherKey[i]];
 
-											Expression ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
-											Expression ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
+											var ma1 = Expression.MakeMemberAccess(op,            field2.ColumnDescriptor.MemberInfo);
+											var ma2 = Expression.MakeMemberAccess(me.Expression, field1.ColumnDescriptor.MemberInfo);
 
-											var ee = GetEqual(mappringSchema, ma1, ma2);
+											var ee = Equal(mappringSchema, ma1, ma2);
 
 											ex = ex == null ? ee : Expression.AndAlso(ex, ee);
 										}
