@@ -1352,8 +1352,8 @@ namespace LinqToDB.Linq.Builder
 					var rightConvert = ConvertBuilder.GetConverter(mappringSchema, right.Type, left. Type);
 					var leftConvert  = ConvertBuilder.GetConverter(mappringSchema, left. Type, right.Type);
 
-					var leftIsPrimitive  = left. Type.IsPrimitive;
-					var rightIsPrimitive = right.Type.IsPrimitive;
+					var leftIsPrimitive  = left. Type.IsPrimitiveEx();
+					var rightIsPrimitive = right.Type.IsPrimitiveEx();
 
 					if (leftIsPrimitive == true && rightIsPrimitive == false && rightConvert.Item2 != null)
 						right = rightConvert.Item2.GetBody(right);
