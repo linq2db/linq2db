@@ -362,11 +362,11 @@ namespace LinqToDB.Data
 
 		class ConfigurationInfo
 		{
-			private bool _dataProviderSetted = true;
+			private readonly bool _dataProviderSetted = false;
 			public ConfigurationInfo(string connectionString, IDataProvider dataProvider)
 			{
 				ConnectionString    = connectionString;
-				_dataProvider        = dataProvider;
+				_dataProvider       = dataProvider;
 				_dataProviderSetted = dataProvider != null;
 			}
 
