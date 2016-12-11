@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>linq2db.Oracle.x64</id>
-		<version>1.7.0.5</version>
+		<version>1.0.7.5</version>
 		<title>LINQ to Oracle (ODP.NET) x64</title>
 		<authors>Igor Tkachev</authors>
 		<owners />
