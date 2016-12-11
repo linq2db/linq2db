@@ -1,6 +1,6 @@
 {
-	"name": "linq2db.core",
-	"version": "1.7.5-*",
+	"name": "linq2db.Core",
+	"version": "1.0.8.0-*",
 	"authors": ["Igor Tkachev"],
 	"description":
 		"LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.",

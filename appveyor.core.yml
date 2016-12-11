@@ -1,9 +1,9 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.5
+  packageVersion: 1.0.8.0
 
-version: $(packageVersion).{build}
+version: $(packageVersion)
 
 
 cache:
@@ -12,7 +12,7 @@ cache:
 
 
 assembly_info:
-  patch: true
+  patch: false
   file: '**\AssemblyInfo.*'
   assembly_version: '{version}'
   assembly_file_version: '{version}'

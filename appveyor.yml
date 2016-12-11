@@ -1,9 +1,9 @@
 configuration: Release
 
 environment:
-  packageVersion: 1.7.5
+  packageVersion: 1.0.8.0
 
-version: $(packageVersion).{build}
+version: $(packageVersion)
 
 cache:
 - packages -> **\packages.config
@@ -28,7 +28,7 @@ init:
 - ps: Update-AppveyorBuild -Version $env:buildVersion
 
 assembly_info:
-  patch: true
+  patch: false
   file: '**\AssemblyInfo.*'
   assembly_version: '$(buildVersion)'
   assembly_file_version: '$(buildVersion)'
